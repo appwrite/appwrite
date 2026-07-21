@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,7 +19,6 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
@@ -239,11 +239,11 @@ Http::get('/v1/mock/github/callback')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('gitHub')
+    ->inject('vcsFactory')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -261,10 +261,11 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
 
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
+        $owner = $vcs->getOwnerName($providerInstallationId);
 
         $projectInternalId = $project->getSequence();
 
@@ -288,6 +289,62 @@ Http::get('/v1/mock/github/callback')
         ]);
 
         $installation = $dbForPlatform->createDocument('installations', $installation);
+
+        $response->json([
+            'installationId' => $installation->getId(),
+        ]);
+    });
+
+Http::get('/v1/mock/gitea/callback')
+    ->desc('Create installation document using Gitea OAuth2 tokens')
+    ->groups(['mock', 'api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID of the project where Gitea is to be installed')
+    ->param('giteaUserId', '', new Text(256), 'Gitea user ID')
+    ->param('organization', '', new Text(256), 'Gitea username or organization')
+    ->param('accessToken', '', new Text(2048), 'Gitea access token')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $giteaUserId, string $organization, string $accessToken, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project with the ID from state could not be found.');
+        }
+
+        if (empty($giteaUserId) || empty($organization) || empty($accessToken)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing Gitea installation details');
+        }
+
+        $projectInternalId = $project->getSequence();
+        $teamId = $project->getAttribute('teamId', '');
+
+        $installation = $dbForPlatform->createDocument('installations', new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'providerInstallationId' => $giteaUserId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'provider' => 'gitea',
+            'organization' => $organization,
+            'personal' => true,
+            'personalAccessToken' => $accessToken,
+            'personalRefreshToken' => '',
+            'personalAccessTokenExpiry' => null,
+        ]));
 
         $response->json([
             'installationId' => $installation->getId(),

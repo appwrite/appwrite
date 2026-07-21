@@ -1096,35 +1096,47 @@ final class RealtimeConsoleClientTest extends Scope
         // non-log attribute change, so logs are only required to never shrink;
         // the terminal assertions below guarantee they eventually streamed.
         $sawBuilding = false;
+        $sawFailed = false;
+        $logsShrank = false;
         $previousBuildLogs = null;
-        $payload = null;
-        while (true) {
-            $response = json_decode($client->receive(), true);
-            $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
-            $this->assertContains('console', $response['data']['channels']);
-            $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-            $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
 
-            $payload = $response['data']['payload'];
-            $this->assertNotEquals('failed', $payload['status']);
-
-            if ($payload['status'] === 'building') {
-                $sawBuilding = true;
-                if ($previousBuildLogs !== null) {
-                    $this->assertGreaterThanOrEqual(
-                        \strlen($previousBuildLogs),
-                        \strlen((string) $payload['buildLogs']),
-                        'Build logs must never shrink between deployment updates.'
-                    );
+        $response = $this->receiveUntilEvent(
+            $client,
+            function (array $message) use ($functionId, $deploymentId, &$sawBuilding, &$sawFailed, &$logsShrank, &$previousBuildLogs): bool {
+                $events = $message['data']['events'] ?? [];
+                if (!\in_array("functions.{$functionId}.deployments.{$deploymentId}.update", $events, true)) {
+                    return false; // Unrelated project-scoped frame; keep polling.
                 }
-                $previousBuildLogs = (string) $payload['buildLogs'];
-            }
 
-            if ($payload['status'] === 'ready' && !empty($payload['buildDuration']) && !empty($payload['buildEndedAt'])) {
-                break;
-            }
-        }
+                $payload = $message['data']['payload'] ?? [];
+                $status = $payload['status'] ?? null;
 
+                if ($status === 'failed') {
+                    $sawFailed = true;
+                    return true; // Stop; the assertion below surfaces the failure.
+                }
+
+                if ($status === 'building') {
+                    $sawBuilding = true;
+                    if ($previousBuildLogs !== null && \strlen((string) ($payload['buildLogs'] ?? '')) < \strlen($previousBuildLogs)) {
+                        $logsShrank = true;
+                    }
+                    $previousBuildLogs = (string) ($payload['buildLogs'] ?? '');
+                }
+
+                return $status === 'ready' && !empty($payload['buildDuration']) && !empty($payload['buildEndedAt']);
+            },
+            120000
+        );
+
+        $payload = $response['data']['payload'];
+
+        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
+        $this->assertArrayHasKey('buildLogs', $payload);
+        $this->assertFalse($sawFailed, 'Deployment build failed. Last payload: ' . \json_encode($payload));
+        $this->assertFalse($logsShrank, 'Build logs must never shrink between deployment updates.');
         $this->assertTrue($sawBuilding);
         $this->assertNotEmpty($payload['buildStartedAt']);
         $this->assertNotEmpty($payload['buildPath']);

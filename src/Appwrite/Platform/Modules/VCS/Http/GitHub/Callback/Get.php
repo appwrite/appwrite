@@ -6,6 +6,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -15,7 +16,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Get extends Action
 {
@@ -40,7 +40,7 @@ class Get extends Action
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
             ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -53,7 +53,7 @@ class Get extends Action
         string $setupAction,
         string $state,
         string $code,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Document $project,
         Response $response,
         Database $dbForPlatform,
@@ -101,16 +101,18 @@ class Get extends Action
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId);
+            $vcs = $vcsFactory->fromInstallation(new Document([
+                'provider' => 'github',
+                'providerInstallationId' => $providerInstallationId,
+            ]));
+            $owner = $vcs->getOwnerName($providerInstallationId);
 
             $projectInternalId = $project->getSequence();
 
             $installation = $dbForPlatform->findOne('installations', [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('projectInternalId', [$projectInternalId])
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::equal('provider', ['github'])
             ]);
 
             $personal = false;

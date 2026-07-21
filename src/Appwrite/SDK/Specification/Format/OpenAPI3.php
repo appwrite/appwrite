@@ -421,10 +421,7 @@ class OpenAPI3 extends Format
 
             $parameterNodes = [];
 
-            $parameters = \array_merge(
-                $route->getParams(),
-                $sdk->getAdditionalParameters(),
-            );
+            $parameters = $this->getMethodParameters($route, $sdk);
 
             foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {
@@ -832,11 +829,18 @@ class OpenAPI3 extends Format
                 $url = \implode('/', $segments);
             }
 
-            $methods = $route->getMethods();
-            foreach ($methods as $method) {
+            $methods = \array_values($route->getMethods());
+            foreach ($methods as $index => $method) {
                 $methodTemp = $temp;
                 if (\count($methods) > 1) {
-                    $methodTemp['operationId'] .= \ucfirst(\strtolower($method));
+                    $suffix = \ucfirst(\strtolower($method));
+                    $methodTemp['operationId'] .= $suffix;
+
+                    // Keep the first method's SDK name stable while ensuring
+                    // additional HTTP methods generate unique SDK methods.
+                    if ($index > 0) {
+                        $methodTemp['x-appwrite']['method'] .= $suffix;
+                    }
                 }
                 $body = [
                     'content' => [

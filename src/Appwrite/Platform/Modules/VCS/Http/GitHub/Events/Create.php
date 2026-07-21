@@ -2,13 +2,12 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,7 +15,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -37,53 +35,53 @@ class Create extends Action
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
-            ->inject('gitHub')
+            ->inject('vcsWebhookSecret')
+            ->inject('vcsFactory')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deploymentsFactory')
             ->inject('platform')
             ->callback($this->action(...));
     }
 
     public function action(
-        GitHub $github,
+        callable $vcsWebhookSecret,
+        VcsFactory $vcsFactory,
         Request $request,
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        callable $deploymentsFactory,
         array $platform
     ) {
         $this->preprocessEvent($request);
+
+        $vcs = $vcsFactory->fromProvider('github');
 
         $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
 
         $payload = $request->getRawPayload();
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
-        $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        $secretKey = $vcsWebhookSecret('github');
 
-        $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
         }
 
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $parsedPayload = $github->getEvent($event, $payload);
+        $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
-            $github::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-            $github::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
-            $github::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $github, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
+            GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
             default => null,
         };
 
@@ -111,6 +109,7 @@ class Create extends Action
         do {
             $installationQueries = [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('provider', ['github']),
                 Query::limit(1000),
             ];
             if ($installationCursor !== null) {
@@ -182,15 +181,12 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
-        string $githubAppId,
-        string $privateKey,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Jobs $jobs = null,
+        callable $deploymentsFactory,
     ) {
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
@@ -212,7 +208,10 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
 
         // Find associated repositories
         $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
@@ -223,21 +222,18 @@ class Create extends Action
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs);
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
         }
     }
 
     private function handlePullRequestEvent(
         array $parsedPayload,
-        string $privateKey,
-        string $githubAppId,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Jobs $jobs = null,
+        callable $deploymentsFactory,
     ) {
         $action = $parsedPayload["action"] ?? '';
 
@@ -265,10 +261,13 @@ class Create extends Action
                 return;
             }
 
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            $vcs = $vcsFactory->fromInstallation(new Document([
+                'provider' => 'github',
+                'providerInstallationId' => $providerInstallationId,
+            ]));
 
             try {
-                $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+                $commitDetails = $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
             } catch (\Throwable $e) {
                 Console::warning("Failed to fetch commit '{$providerCommitHash}': " . $e->getMessage());
                 $commitDetails = [];
@@ -276,7 +275,7 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-            $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
             $providerAffectedFiles = [
                 ...array_column($prFiles, 'filename'),
                 // Only renamed files include previous_filename; skip missing values from other file changes.
@@ -288,7 +287,7 @@ class Create extends Action
                 Query::orderDesc('$createdAt')
             ]));
 
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs);
+            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
 

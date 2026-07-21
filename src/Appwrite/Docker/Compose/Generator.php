@@ -55,6 +55,7 @@ class Generator
                 'condition' => 'service_healthy',
             ],
             'placeholders' => [
+                '${_APP_DB_HOST:-postgresql}',
                 '${_APP_DB_HOST:-mongodb}',
                 '${_APP_DB_HOST:-mariadb}',
             ],
