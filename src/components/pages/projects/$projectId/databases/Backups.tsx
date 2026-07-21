@@ -72,6 +72,13 @@ import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getBackupPoliciesPlanLimit,
+  isBackupPoliciesAtPlanLimit,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
+import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
 
@@ -139,7 +146,11 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const { plan: organizationPlan, isLoading: planLoading } =
     useOrganizationPlan(project?.teamId)
   const backupsEnabled = organizationPlan?.backupsEnabled ?? false
-  const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
+  const backupPoliciesLimit = getBackupPoliciesPlanLimit(organizationPlan)
+  const planName = resolveOrganizationPlanDisplayLabel({
+    planName: organizationPlan?.name ?? null,
+    planId: organizationPlan?.$id,
+  })
 
   // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
@@ -181,6 +192,15 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const archives: Models.BackupArchive[] = archivesData?.archives || []
   const archivesTotal = archivesData?.total || 0
+  const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
+    policies.length,
+    backupPoliciesLimit,
+  )
+  const showPlanLimitWarning =
+    backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit * 0.5
+  const createPolicyDisabledTooltip = isAtBackupPoliciesLimit
+    ? t("You've reached the limit for this resource on your plan")
+    : undefined
 
   // Only show loading if we don't have data yet (account for prefetched data from route loader)
   const isPoliciesActuallyLoading =
@@ -568,10 +588,23 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           <div className="my-6 w-full border-t border-border" />
         </>
       ) : null}
+      {organizationPlan !== undefined ? (
+        <PlanLimitWarning
+          currentCount={policies.length}
+          limit={backupPoliciesLimit}
+          planName={planName}
+          resourceName="backup policies"
+          orgId={project?.teamId}
+          fullWidth
+        />
+      ) : null}
       <div
         className={cn(
           'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
-          visibleRestorations.length === 0 && 'mt-4 sm:mt-6',
+          visibleRestorations.length === 0 &&
+            !showPlanLimitWarning &&
+            'mt-4 sm:mt-6',
+          showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
@@ -582,19 +615,16 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               <h3 className="text-[15px] font-semibold text-foreground">
                 {t('Policies')}
               </h3>
-              {policies.length > 0 &&
-                backupPoliciesLimit > 0 &&
-                backupPoliciesLimit < 10000 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[12px] font-normal"
-                  >
-                    {policies.length}/{backupPoliciesLimit}
-                  </Badge>
-                )}
+              {backupPoliciesLimit > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="text-[12px] font-normal"
+                >
+                  {policies.length}/{backupPoliciesLimit}
+                </Badge>
+              ) : null}
             </div>
-            {backupPoliciesLimit > 0 &&
-            policies.length >= backupPoliciesLimit ? (
+            {isAtBackupPoliciesLimit ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
@@ -611,18 +641,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">
-                    {t('Policy limit reached. Upgrade to create more.')}
-                  </p>
+                  <p className="text-xs">{createPolicyDisabledTooltip}</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
               <Button
                 onClick={() => setCreatePolicyDialogOpen(true)}
-                disabled={
-                  backupPoliciesLimit > 0 &&
-                  policies.length >= backupPoliciesLimit
-                }
                 variant="brandCta"
                 size="sm"
                 className="h-8 gap-1.5 text-[12px] font-medium"
@@ -1247,10 +1271,15 @@ function CreatePolicyDialog({
   const canCreateCustom =
     backupPoliciesLimit === 0 ||
     existingPoliciesCount + totalPolicies < backupPoliciesLimit
-  // Pro plan (limit = 1) only supports daily preset, no custom policies
-  // Plans with limit > 1 or limit === 0 (unlimited) support custom policies
+  // Pro (limit = 1) is daily-only; unlimited (0) or higher unlocks hourly/custom.
   const supportsCustomPolicies =
-    backupPoliciesLimit === 0 || backupPoliciesLimit > 1
+    supportsAdvancedBackupPolicies(backupPoliciesLimit)
+  const remainingSlots =
+    backupPoliciesLimit > 0
+      ? Math.max(0, backupPoliciesLimit - existingPoliciesCount - totalPolicies)
+      : null
+  const canSelectAnotherPreset =
+    remainingSlots == null || remainingSlots > 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1275,8 +1304,18 @@ function CreatePolicyDialog({
                   <Checkbox
                     id="hourly"
                     checked={selectedPresets.includes('hourly')}
+                    disabled={
+                      !selectedPresets.includes('hourly') &&
+                      !canSelectAnotherPreset
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
+                        if (
+                          selectedPresets.includes('hourly') ||
+                          !canSelectAnotherPreset
+                        ) {
+                          return
+                        }
                         setSelectedPresets([...selectedPresets, 'hourly'])
                       } else {
                         setSelectedPresets(
@@ -1297,8 +1336,17 @@ function CreatePolicyDialog({
                 <Checkbox
                   id="daily"
                   checked={selectedPresets.includes('daily')}
+                  disabled={
+                    !selectedPresets.includes('daily') && !canSelectAnotherPreset
+                  }
                   onCheckedChange={(checked) => {
                     if (checked) {
+                      if (
+                        selectedPresets.includes('daily') ||
+                        !canSelectAnotherPreset
+                      ) {
+                        return
+                      }
                       setSelectedPresets([...selectedPresets, 'daily'])
                     } else {
                       setSelectedPresets(

@@ -101,6 +101,26 @@ export function hasDedicatedDatabaseCompute(
 }
 
 /**
+ * True when replication / failover settings should be offered.
+ * Stricter than {@link hasDedicatedDatabaseCompute}: serverless product DBs
+ * (including DocumentsDB / VectorsDB without dedicated backing) are excluded.
+ */
+export function canConfigureDedicatedReplication(
+  db: DatabaseComputeHints,
+  dedicated?: DedicatedComputeHints,
+): boolean {
+  if (dedicated?.$id) return true
+
+  const spec = readDatabaseSpecification(db.specification)
+  if (spec && !isServerlessDatabaseSpecId(spec)) return true
+
+  if (typeof db.replicas === 'number') return true
+  if (readDatabaseLifecycleStatus(db.status)) return true
+
+  return isNativeDatabaseTypeValue(db.databaseType)
+}
+
+/**
  * Match a dedicated compute tier from allocated CPU/memory against the plan
  * specification catalog (product list rows sometimes omit `specification`).
  */

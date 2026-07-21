@@ -76,6 +76,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'バックアップ ID をクリップボードにコピーしました',
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
+  'backup policies': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -1374,6 +1375,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': '並列',
   'Replication': 'レプリケーション',
+  'Replication is available on dedicated databases':
+    'レプリケーションは専用データベースで利用できます',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    '読み取りレプリカとフェイルオーバーを設定するには、このデータベースを専用スペックにアップグレードしてください。',
   'Background': 'バックグラウンド',
   'Fulltext': '全文',
   'Complete': '完了',

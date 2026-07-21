@@ -12,7 +12,7 @@ import {
   keepPreviousData,
   type QueryClient,
 } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
 import { DatabaseType, coerceDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
@@ -4308,13 +4308,46 @@ export function useProjectDatabase(
   databaseId: string | null | undefined,
   routeKindHint?: DatabaseRouteKind,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: databaseData,
     isLoading,
     isPending,
     error,
     refetch,
-  } = useQuery(databaseQueryOptions(projectId, databaseId, routeKindHint))
+  } = useQuery({
+    ...databaseQueryOptions(projectId, databaseId, routeKindHint),
+    refetchInterval: (query) =>
+      shouldPollDedicatedDatabaseStatus(
+        (query.state.data as { status?: string | null } | undefined)?.status,
+      )
+        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
+        : false,
+  })
+
+  // Keep dedicated list badges in sync when product detail polling sees a status change.
+  useEffect(() => {
+    const nextStatus = (databaseData as { status?: string | null } | null)
+      ?.status
+    if (!projectId || !databaseId || !nextStatus) return
+    queryClient.setQueryData(
+      ['dedicated-databases', 'project', projectId],
+      (
+        prev:
+          | { databases: Models.DedicatedDatabase[]; total: number }
+          | undefined,
+      ) => {
+        if (!prev?.databases?.length) return prev
+        let changed = false
+        const databases = prev.databases.map((db) => {
+          if (db.$id !== databaseId || db.status === nextStatus) return db
+          changed = true
+          return { ...db, status: nextStatus }
+        })
+        return changed ? { ...prev, databases } : prev
+      },
+    )
+  }, [databaseData, databaseId, projectId, queryClient])
 
   return {
     database: databaseData || null,

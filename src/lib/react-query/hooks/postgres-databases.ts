@@ -1076,8 +1076,9 @@ export function useDeletePostgresDatabase(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
+    // Delete must stay available when the database is failed/locked so users
+    // can clean up resources that never became ready.
     mutationFn: (databaseId: string) => {
-      requireOperationalDatabase(queryClient, projectId!, databaseId)
       return deletePostgresDatabase(projectId!, databaseId)
     },
     onSuccess: async (_data, databaseId) => {

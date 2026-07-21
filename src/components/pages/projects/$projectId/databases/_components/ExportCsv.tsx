@@ -159,10 +159,10 @@ export function ExportCsv({
   const handleExport = async () => {
     if (!canExport || !table?.name) return
     const filename = `${table.name.replace(/[^a-zA-Z0-9_-]/g, '_')}_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.csv`
-    const resourceId = `${databaseId}:${tableId}`
     try {
       const migration = await createExport.mutateAsync({
-        resourceId,
+        databaseId,
+        collectionId: tableId,
         filename,
         columns: Array.from(selectedColumns),
         queries: applyFilters ? (filterQueries ?? []) : [],

@@ -1,6 +1,6 @@
 # PostgreSQL API specifications
 
-Reference extracted from `@appwrite.io/console` v15.2.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -79,6 +79,7 @@ Create a new dedicated database with the chosen engine and configuration. Status
 | `specification` | `string` | No | Specification identifier. Drives the allocated CPU, memory, storage, storage class, and connection ceiling. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5). High availability is enabled when greater than 0. |
 | `syncMode` | `string` | No | Replication sync mode preference. Allowed values: async, sync, quorum. |
+| `standbyRegion` | `string` | No | Standby region for a cross-region replica. When set, a replica is provisioned in this region for cross-region high availability. Must differ from the database region. |
 | `networkIdleTimeoutSeconds` | `number` | No | Connection idle timeout in seconds. |
 | `networkIPAllowlist` | `string[]` | No | IP addresses/CIDR ranges allowed to connect. |
 | `idleTimeoutMinutes` | `number` | No | Minutes of inactivity before container scales to zero. |
@@ -87,7 +88,7 @@ Create a new dedicated database with the chosen engine and configuration. Status
 | `storageAutoscaling` | `boolean` | No | Enable automatic storage expansion when usage exceeds threshold. |
 | `storageAutoscalingThresholdPercent` | `number` | No | Storage usage percentage (50-95) that triggers automatic expansion. |
 | `storageAutoscalingMaxGb` | `number` | No | Maximum storage size in GB for autoscaling. 0 means no limit. |
-| `api` | `string` | No | Product API that owns this database: nativedb (raw, direct-access), tablesdb, documentsdb, or vectorsdb. tablesdb/documentsdb/vectorsdb databases are reached only through their product APIs. |
+| `api` | `string` | No | Product API that owns this database: tablesdb, documentsdb, or vectorsdb. Omit for a raw database reached directly; its api is its engine. tablesdb/documentsdb/vectorsdb databases are reached only through their product APIs. |
 
 **SDK signature**
 
@@ -99,6 +100,7 @@ sdk.forProject(projectId).postgresql.create({
   specification?: string;
   replicas?: number;
   syncMode?: string;
+  standbyRegion?: string;
   networkIdleTimeoutSeconds?: number;
   networkIPAllowlist?: string[];
   idleTimeoutMinutes?: number;
@@ -235,6 +237,8 @@ Update a dedicated database configuration. All changes are applied with zero dow
 | `specification` | `string` | No | Specification. Changes cpu, memory, storage, connection ceiling, and node pool based on specification config. Resource changes are applied via rolling cutover with zero downtime. |
 | `replicas` | `number` | No | Number of high availability replicas (0-5). High availability is enabled when greater than 0. |
 | `syncMode` | `string` | No | Replication sync mode preference. Allowed values: async, sync, quorum. |
+| `crossRegionReplicas` | `number` | No | Number of cross-region standby replicas (0-1). Cross-region replication is enabled when greater than 0. |
+| `standbyRegion` | `string` | No | Standby region for the cross-region replica. Required when enabling cross-region replication and no standby region is already configured. Must differ from the database region. |
 | `networkIdleTimeoutSeconds` | `number` | No | Connection idle timeout in seconds (60-86400). |
 | `networkIPAllowlist` | `string[]` | No | IP addresses/CIDR ranges allowed to connect. |
 | `idleTimeoutMinutes` | `number` | No | Minutes before container scales to zero. |
@@ -261,6 +265,8 @@ sdk.forProject(projectId).postgresql.update({
   specification?: string;
   replicas?: number;
   syncMode?: string;
+  crossRegionReplicas?: number;
+  standbyRegion?: string;
   networkIdleTimeoutSeconds?: number;
   networkIPAllowlist?: string[];
   idleTimeoutMinutes?: number;

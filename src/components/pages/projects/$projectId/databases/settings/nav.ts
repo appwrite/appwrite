@@ -1,7 +1,11 @@
-import { Cpu, Settings, Shield } from 'lucide-react'
+import { Cpu, Settings, Shield, ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type DatabaseSettingsPathSuffix = '' | 'specification' | 'security'
+export type DatabaseSettingsPathSuffix =
+  | ''
+  | 'specification'
+  | 'replication'
+  | 'security'
 
 export type DatabaseSettingsNavItem = {
   id: string
@@ -9,6 +13,8 @@ export type DatabaseSettingsNavItem = {
   pathSuffix: DatabaseSettingsPathSuffix
   icon: LucideIcon
   keywords: string[]
+  /** When false, item is omitted from nav (e.g. serverless product DBs). */
+  visible?: boolean
 }
 
 export const DATABASE_SETTINGS_NAV: DatabaseSettingsNavItem[] = [
@@ -52,6 +58,23 @@ export const DATABASE_SETTINGS_NAV: DatabaseSettingsNavItem[] = [
       'upgrade',
       'serverless',
       'price',
+    ],
+  },
+  {
+    id: 'replication',
+    label: 'Replication',
+    pathSuffix: 'replication',
+    icon: ShieldCheck,
+    keywords: [
+      'replication',
+      'replica',
+      'replicas',
+      'failover',
+      'primary',
+      'promote',
+      'sync',
+      'async',
+      'ha',
     ],
   },
   {

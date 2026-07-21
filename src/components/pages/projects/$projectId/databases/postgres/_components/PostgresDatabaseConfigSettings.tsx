@@ -15,13 +15,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
@@ -42,12 +35,14 @@ import {
   useDedicatedDatabaseStorageChart,
   useOrganizationPlan,
   usePostgresActiveConnections,
-  usePostgresDatabaseReplicas,
+  useDedicatedDatabaseReplicas,
   useProject,
+  useUpdateDedicatedDatabaseHa,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { DedicatedReplicationSource } from '@/lib/databases/dedicated-replication'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -95,26 +90,75 @@ function useWriteAccess(canWrite: boolean, isPending: boolean) {
   return { writeDisabled, writeTooltip }
 }
 
+function useReplicationSource(
+  props: PostgresDatabaseSettingsCardProps,
+): DedicatedReplicationSource {
+  return (
+    props.replicationSource ?? {
+      type: 'engine',
+      engine: props.haEngine || props.database.engine || 'postgresql',
+    }
+  )
+}
+
+function useHaEngine(props: PostgresDatabaseSettingsCardProps): string {
+  return (
+    props.haEngine ||
+    props.database.engine ||
+    (props.replicationSource?.type === 'engine'
+      ? props.replicationSource.engine
+      : 'postgresql')
+  )
+}
+
 export function PostgresDatabaseReplicasCard({
   projectId,
   databaseId,
   database,
   canWrite,
+  replicationSource,
+  haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const source = useReplicationSource({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const engine = useHaEngine({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const updateMutation = useUpdateDedicatedDatabaseHa(
+    projectId,
+    databaseId,
+    engine,
+  )
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const isPostgresEngine =
+    engine === 'postgresql' || engine === 'postgres' || !engine
   const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
-    usePostgresActiveConnections(projectId, databaseId)
+    usePostgresActiveConnections(
+      projectId,
+      isPostgresEngine ? databaseId : null,
+    )
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const committedReplicaCount = database.replicas ?? 0
   const fetchReplicas =
     committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
   const { members, refetch: refetchReplicas } =
-    usePostgresDatabaseReplicas(
+    useDedicatedDatabaseReplicas(
       projectId,
       databaseId,
+      source,
       fetchReplicas,
       fetchReplicas ? 5000 : false,
     )
@@ -376,9 +420,23 @@ export function PostgresDatabaseSyncModeCard({
   databaseId,
   database,
   canWrite,
+  replicationSource,
+  haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
-  const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const engine = useHaEngine({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const updateMutation = useUpdateDedicatedDatabaseHa(
+    projectId,
+    databaseId,
+    engine,
+  )
   const [syncMode, setSyncMode] = useState(database.syncMode || 'async')
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,

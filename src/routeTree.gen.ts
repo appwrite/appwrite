@@ -311,6 +311,7 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComp
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.replication'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.index'
@@ -2171,6 +2172,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport.update(
+    {
+      id: '/replication',
+      path: '/replication',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport.update(
     {
@@ -2743,6 +2753,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
@@ -3034,6 +3045,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
@@ -3370,6 +3382,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
@@ -3704,6 +3717,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/domains/'
     | '/projects/$projectId/sites/$siteId/settings/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -3995,6 +4009,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/settings'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
@@ -4330,6 +4345,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/domains/'
     | '/_public/projects/$projectId/sites/$siteId/settings/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -6517,6 +6533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
+      path: '/replication'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
       path: '/$collectionId'
@@ -7291,6 +7314,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteWithChildr
   )
 
 interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren {
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
@@ -7298,6 +7322,8 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren 
 
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren: PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren =
   {
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute:

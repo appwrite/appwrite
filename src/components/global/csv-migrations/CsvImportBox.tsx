@@ -12,6 +12,7 @@ import {
   useCsvImportMigrations,
   useProjectTable,
 } from '@/lib/react-query/hooks'
+import { getMigrationTableRef } from '@/lib/migrations/csv-resource'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -22,18 +23,6 @@ const statusToProgress: Record<string, number> = {
   processing: 60,
   completed: 100,
   failed: 100,
-}
-
-function getTableNameFromResourceId(resourceId: string): {
-  databaseId: string
-  tableId: string
-} | null {
-  const idx = resourceId.indexOf(':')
-  if (idx <= 0) return null
-  return {
-    databaseId: resourceId.slice(0, idx),
-    tableId: resourceId.slice(idx + 1),
-  }
 }
 
 function MigrationItem({
@@ -48,13 +37,13 @@ function MigrationItem({
   onDismiss: () => void
 }) {
   const t = useT()
-  const parsed = getTableNameFromResourceId(migration.resourceId)
+  const parsed = getMigrationTableRef(migration)
   const { table } = useProjectTable(
     projectId,
     parsed?.databaseId ?? null,
     parsed?.tableId ?? null,
   )
-  const tableName = table?.name ?? migration.resourceId
+  const tableName = table?.name ?? parsed?.tableId ?? migration.resourceId
 
   const status = migration.status
   const progress = statusToProgress[status] ?? 50
@@ -150,7 +139,7 @@ export function CsvImportBox({ projectId }: CsvImportBoxProps) {
       if (m.status === 'completed') {
         if (!notifiedCompletedRef.current.has(m.$id)) {
           notifiedCompletedRef.current.add(m.$id)
-          const parsed = getTableNameFromResourceId(m.resourceId)
+          const parsed = getMigrationTableRef(m)
           queryClient.invalidateQueries({
             queryKey: [
               'rows',

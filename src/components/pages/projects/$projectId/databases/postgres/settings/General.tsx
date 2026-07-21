@@ -11,8 +11,14 @@ import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPa
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
 
 export function View() {
-  const { projectId, databaseId, database, canWrite, isLoading } =
-    usePostgresDatabaseSettingsPage()
+  const {
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    permissionCanWrite,
+    isLoading,
+  } = usePostgresDatabaseSettingsPage()
 
   if (isLoading) return <PostgresSettingsLoading />
   if (!database) return null
@@ -46,7 +52,8 @@ export function View() {
         <PostgresDatabaseDangerZoneCard
           projectId={projectId}
           database={database}
-          canWrite={canWrite}
+          // Keep delete available when ops are locked (e.g. failed create).
+          canWrite={permissionCanWrite}
         />
       ),
     },

@@ -16,6 +16,7 @@ export function View() {
     database,
     containersTotal,
     canWrite,
+    permissionCanWrite,
     isLoading,
   } = useDatabaseSettingsPage()
 
@@ -49,9 +50,13 @@ export function View() {
       },
       node: (
         <DatabaseDangerZoneCard
-          {...cardProps}
+          projectId={projectId}
+          databaseId={databaseId}
+          database={database}
           dbKind={dbKind}
           containersTotal={containersTotal}
+          // Keep delete available when ops are locked (e.g. failed create).
+          canWrite={permissionCanWrite}
         />
       ),
     },

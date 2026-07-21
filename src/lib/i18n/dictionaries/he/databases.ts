@@ -76,6 +76,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'מזהה הגיבוי הועתק ללוח',
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policies': 'מדיניות גיבויים',
+  'backup policies': 'מדיניות גיבויים',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
@@ -1501,6 +1502,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': 'מקביל',
   'Replication': 'שכפול',
+  'Replication is available on dedicated databases':
+    'שכפול זמין במסדי נתונים ייעודיים',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    'שדרגו את מסד הנתונים למפרט ייעודי כדי להגדיר רפליקות קריאה ו-failover.',
   'Background': 'רקע',
   'Fulltext': 'Fulltext',
   'Complete': 'הושלם',
