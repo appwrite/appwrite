@@ -774,90 +774,24 @@ return function (Container $context): void {
             }
 
             switch (true) {
-                case $document->getCollection() === 'teams':
-                    $usage->addMetric(METRIC_TEAMS, $value); // per project
-                    break;
-                case $document->getCollection() === 'users':
-                    $usage->addMetric(METRIC_USERS, $value); // per project
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage->addReduce($document);
-                    }
-                    break;
                 case $document->getCollection() === 'sessions': // sessions
                     $usage->addMetric(METRIC_SESSIONS, $value); // per project
-                    break;
-                case $document->getCollection() === 'databases': // databases
-                    $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
-                    $usage->addMetric($metric, $value); // per project
-
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage->addReduce($document);
-                    }
-                    break;
-                case str_starts_with($document->getCollection(), 'database_') && ! str_contains($document->getCollection(), 'collection'): // collections
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId = $parts[1] ?? 0;
-                    $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
-                    $usage
-                        ->setResource('database')
-                        ->setResourceInternalId((string) $databaseInternalId)
-                        ->addMetric($collectionMetric, $value); // per project
-
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage->addReduce($document);
-                    }
                     break;
                 case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): // documents
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
-                    $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
                     $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
                     $usage
                         ->setResource('database')
                         ->setResourceInternalId((string) $databaseInternalId)
-                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    break;
-                case $document->getCollection() === 'buckets': // buckets
-                    $usage->addMetric(METRIC_BUCKETS, $value); // per project
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage
-                            ->addReduce($document);
-                    }
-                    break;
-                case str_starts_with($document->getCollection(), 'bucket_'): // files
-                    $parts = explode('_', $document->getCollection());
-                    $bucketInternalId = $parts[1];
-                    $usage
-                        ->setResource('bucket')
-                        ->setResourceInternalId((string) $bucketInternalId)
-                        ->addMetric(METRIC_FILES, $value) // per project
-                        ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value); // per project
-                    break;
-                case $document->getCollection() === 'functions':
-                    $usage->addMetric(METRIC_FUNCTIONS, $value); // per project
-
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage
-                            ->addReduce($document);
-                    }
-                    break;
-                case $document->getCollection() === 'sites':
-                    $usage->addMetric(METRIC_SITES, $value); // per project
-
-                    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                        $usage
-                            ->addReduce($document);
-                    }
                     break;
                 case $document->getCollection() === 'deployments':
                     $resourceType = $document->getAttribute('resourceType');
                     $usage
                         ->setResource(rtrim($resourceType, 's'))
                         ->setResourceInternalId((string) $document->getAttribute('resourceInternalId'))
-                        ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
-                        ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
                         ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per resource type
                         ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
                     break;

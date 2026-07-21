@@ -1151,17 +1151,6 @@ class Migrations extends Action
         }
 
         switch ($resourceName) {
-            case ResourceDatabase::getName():
-                $usage->addMetric(METRIC_DATABASES, $count);
-                break;
-
-            case ResourceTable::getName():
-                $usage
-                    ->setResource('database')
-                    ->setResourceInternalId((string) $databaseInternalId)
-                    ->addMetric(METRIC_COLLECTIONS, $count);
-                break;
-
             case ResourceRow::getName():
                 $usage
                     ->setResource('database')
@@ -1173,8 +1162,7 @@ class Migrations extends Action
                             METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
                         ),
                         $count
-                    )
-                    ->addMetric(METRIC_DOCUMENTS, $count);
+                    );
                 break;
 
             default:
