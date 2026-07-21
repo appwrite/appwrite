@@ -113,7 +113,7 @@ class Create extends Action
         }
 
         try {
-            $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform);
+            $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
 
             return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {

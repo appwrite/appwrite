@@ -3,10 +3,17 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Vcs\EnvOAuth2;
 use Utopia\Fetch\Client as FetchClient;
+use Utopia\System\System;
 
-class Github extends OAuth2
+class Github extends OAuth2 implements EnvOAuth2
 {
+    public static function fromEnv(): OAuth2&EnvOAuth2
+    {
+        return new self(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), '');
+    }
+
     /**
      * @var array
      */

@@ -3,12 +3,24 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Vcs\EnvOAuth2;
+use Utopia\System\System;
 
 // Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
 
-class Gitlab extends OAuth2
+class Gitlab extends OAuth2 implements EnvOAuth2
 {
+    /**
+     * Only official gitlab.com is supported -- fixed, not configurable.
+     */
+    protected const ENDPOINT = 'https://gitlab.com';
+
+    public static function fromEnv(): OAuth2&EnvOAuth2
+    {
+        return new self(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''), '');
+    }
+
     /**
      * @var array
      */
@@ -61,7 +73,7 @@ class Gitlab extends OAuth2
                 $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->getAppSecret()['clientSecret'],
+                    'client_secret' => $this->appSecret,
                     'redirect_uri' => $this->callback,
                     'grant_type' => 'authorization_code'
                 ])
@@ -83,7 +95,7 @@ class Gitlab extends OAuth2
             $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->getAppSecret()['clientSecret'],
+                'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token'
             ])
         ), true);
@@ -216,32 +228,8 @@ class Gitlab extends OAuth2
         return $this->user;
     }
 
-    /**
-     * Decode the JSON stored in appSecret
-     *
-     * @return array
-     */
-    protected function getAppSecret(): array
-    {
-        try {
-            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Throwable $th) {
-            throw new \Exception('Invalid secret');
-        }
-        return $secret;
-    }
-
-
-    /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
-     *
-     * @return string
-     */
     protected function getEndpoint(): string
     {
-        $defaultEndpoint = 'https://gitlab.com';
-        $secret = $this->getAppSecret();
-        $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
-        return empty($endpoint) ? $defaultEndpoint : $endpoint;
+        return self::ENDPOINT;
     }
 }

@@ -1312,24 +1312,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_VCS_GITLAB_ENDPOINT',
-                'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server (e.g. for API calls and webhook token exchange). Defaults to https://gitlab.com when unset.',
-                'introduction' => '2.0.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_VCS_GITLAB_BROWSER_ENDPOINT',
-                'description' => 'URL of your GitLab instance reachable from the browser, if different from _APP_VCS_GITLAB_ENDPOINT (e.g. when Appwrite and GitLab are on the same Docker network but GitLab is exposed to the browser on a different host). Falls back to _APP_VCS_GITLAB_ENDPOINT when unset.',
-                'introduction' => '2.0.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_VCS_GITLAB_CLIENT_ID',
                 'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
                 'introduction' => '2.0.0',

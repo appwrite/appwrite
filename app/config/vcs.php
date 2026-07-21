@@ -4,6 +4,9 @@
  * VCS provider registry, read by Appwrite\Vcs\Factory.
  */
 
+use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
+use Appwrite\Auth\OAuth2\Github as OAuth2Github;
+use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
@@ -11,6 +14,7 @@ use Utopia\VCS\Adapter\Git\GitLab;
 return [
     'github' => [
         'adapter' => GitHub::class,
+        'oauth2' => OAuth2Github::class,
         'variables' => [
             'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
             'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],
@@ -22,6 +26,7 @@ return [
     ],
     'gitea' => [
         'adapter' => Gitea::class,
+        'oauth2' => OAuth2Gitea::class,
         'variables' => [
             'endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_ENDPOINT'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_ID'],
@@ -33,9 +38,10 @@ return [
     ],
     'gitlab' => [
         'adapter' => GitLab::class,
+        'oauth2' => OAuth2Gitlab::class,
+        // Only official gitlab.com is supported -- fixed, not configurable.
+        'endpoint' => 'https://gitlab.com',
         'variables' => [
-            // Unset defaults to gitlab.com; self-hosted instances override this.
-            'endpoint' => ['required' => false, 'envVariable' => '_APP_VCS_GITLAB_ENDPOINT', 'default' => 'https://gitlab.com'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],

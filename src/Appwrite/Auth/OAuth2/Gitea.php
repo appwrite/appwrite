@@ -3,8 +3,10 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Vcs\EnvOAuth2;
+use Utopia\System\System;
 
-class Gitea extends OAuth2
+class Gitea extends OAuth2 implements EnvOAuth2
 {
     protected string $endpoint = '';
 
@@ -15,6 +17,14 @@ class Gitea extends OAuth2
     protected array $scopes = [
         'read:user',
     ];
+
+    public static function fromEnv(): OAuth2&EnvOAuth2
+    {
+        $oauth2 = new self(System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITEA_CLIENT_SECRET', ''), '');
+        $oauth2->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', ''));
+
+        return $oauth2;
+    }
 
     public function setEndpoint(string $endpoint): void
     {

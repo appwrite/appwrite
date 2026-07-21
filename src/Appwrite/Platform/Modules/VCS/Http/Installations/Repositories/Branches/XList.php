@@ -84,7 +84,7 @@ class XList extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform);
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 

@@ -26,13 +26,9 @@ class Get extends Base
 
     protected function createOAuth2(string $callback): OAuth2
     {
-        // Server-to-server token exchange, so the API endpoint, not the browser one.
         return new OAuth2Gitlab(
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
-            \json_encode([
-                'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
-                'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
-            ]),
+            System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
             $callback
         );
     }

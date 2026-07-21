@@ -2,6 +2,7 @@
 
 namespace Appwrite\Vcs;
 
+use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -57,7 +58,7 @@ class Factory
 
         $adapter = new ($this->registry[$key]['adapter'])($this->cache);
 
-        $endpoint = $this->getEnv($key, 'endpoint') ?: ($this->registry[$key]['variables']['endpoint']['default'] ?? '');
+        $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
         }
@@ -92,6 +93,17 @@ class Factory
     public function getWebhookSecret(string $key): string
     {
         return $this->getEnv($key, 'webhookSecret');
+    }
+
+    public function oauth2FromProvider(string $key): OAuth2&EnvOAuth2
+    {
+        $class = $this->registry[$key]['oauth2'] ?? null;
+
+        if ($class === null || !\is_a($class, EnvOAuth2::class, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $key);
+        }
+
+        return $class::fromEnv();
     }
 
     protected function getEnv(string $key, string $name): string
