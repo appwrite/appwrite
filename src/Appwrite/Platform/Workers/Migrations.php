@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Migration;
-use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -35,8 +34,6 @@ use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
-use Utopia\Migration\Resources\Database\Row as ResourceRow;
-use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
@@ -497,7 +494,6 @@ class Migrations extends Action
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
-        $aggregatedResources = [];
         $caughtError = null;
 
         $host = System::getEnv('_APP_MIGRATION_HOST');
@@ -543,40 +539,9 @@ class Migrations extends Action
                 $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
+                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-
-                        if (!empty($resources)) {
-                            /**
-                             * @var Resource $resource
-                            */
-                            $resource = $resources[0];
-                            $count = count($resources);
-                            $databaseId = null;
-                            $tableId = null;
-                            switch ($resource->getName()) {
-                                case ResourceTable::getName():
-                                    /** @var ResourceTable $resource */
-                                    $databaseId = $resource->getDatabase()->getSequence();
-                                    break;
-                                case ResourceRow::getName():
-                                    /** @var ResourceRow $resource */
-                                    $table = $resource->getTable();
-                                    $databaseId = $table->getDatabase()->getSequence();
-                                    $tableId = $table->getSequence();
-                                    break;
-                                default:
-                                    break;
-                            }
-                            $aggregatedResources[] = [
-                                'name' => $resource->getName(),
-                                'count' => $count,
-                                'databaseId' => $databaseId,
-                                'tableId' => $tableId
-                            ];
-
-                        }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     resourceId: $context['resourceId'],
@@ -696,19 +661,6 @@ class Migrations extends Action
                     $destination?->error();
                 }
 
-                if ($migration->getAttribute('status', '') === 'completed') {
-                    foreach ($aggregatedResources as $resource) {
-                        $this->processMigrationResourceStats(
-                            $resource,
-                            $usage,
-                            $project,
-                            $publisherForUsage,
-                            $migration->getAttribute('source'),
-                            $authorization,
-                            ...$this->resolveResourceIds($migration),
-                        );
-                    }
-                }
             } finally {
                 $source?->cleanup();
                 $destination?->cleanup();
@@ -1122,59 +1074,5 @@ class Migrations extends Action
         }
 
         return $errors;
-    }
-
-    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $parentResourceId, ?string $resourceId)
-    {
-        $resourceName = $resources['name'];
-        $count = $resources['count'];
-        $databaseInternalId = $resources['databaseId'];
-        $tableInternalId = $resources['tableId'];
-
-        if ($source === CSV::getName()) {
-            if (empty($parentResourceId) || empty($resourceId)) {
-                Console::warning("Skipping CSV migration usage stats: missing parent/leaf resource ID (parent: '{$parentResourceId}', leaf: '{$resourceId}')");
-                return;
-            }
-            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $parentResourceId));
-            if ($database->isEmpty()) {
-                Console::warning("Skipping CSV migration usage stats: database '{$parentResourceId}' not found");
-                return;
-            }
-            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId));
-            if ($table->isEmpty()) {
-                Console::warning("Skipping CSV migration usage stats: collection '{$resourceId}' not found in database '{$parentResourceId}'");
-                return;
-            }
-            $databaseInternalId = (int) $database->getSequence();
-            $tableInternalId = (int) $table->getSequence();
-        }
-
-        switch ($resourceName) {
-            case ResourceRow::getName():
-                $usage
-                    ->setResource('database')
-                    ->setResourceInternalId((string) $databaseInternalId)
-                    ->addMetric(
-                        str_replace(
-                            ['{databaseInternalId}','{collectionInternalId}'],
-                            [$databaseInternalId, $tableInternalId],
-                            METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
-                        ),
-                        $count
-                    );
-                break;
-
-            default:
-                break;
-        }
-
-        $message = new UsageMessage(
-            project: $projectDocument,
-            metrics: $usage->getMetrics(),
-            reduce: $usage->getReduce()
-        );
-        $publisherForUsage->enqueue($message);
-        $usage->reset();
     }
 }
