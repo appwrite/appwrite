@@ -10,6 +10,16 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
+    /**
+     * Refreshes an installation's token, resolving the OAuth2 client for its provider.
+     */
+    public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
+    {
+        $provider = $installation->getAttribute('provider', 'github');
+
+        return $this->refresh($installation, $dbForPlatform, $vcsFactory->oauth2FromProvider($provider));
+    }
+
     public function refresh(Document $installation, Database $dbForPlatform, OAuth2 $oauth2, ?Document $identity = null): Document
     {
         $accessToken = $installation->getAttribute('personalAccessToken');

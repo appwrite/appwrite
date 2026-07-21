@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -94,6 +95,7 @@ class Create extends Action
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
             ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -105,6 +107,7 @@ class Create extends Action
         string $type,
         string $providerRootDirectory,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -114,6 +117,7 @@ class Create extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 
