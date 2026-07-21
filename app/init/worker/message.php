@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Storage\Tenant;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
@@ -165,27 +166,27 @@ return function (Container $container): void {
     }, []);
 
     $container->set('deviceForSites', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_SITES), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     $container->set('deviceForMigrations', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_IMPORTS), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     $container->set('deviceForFunctions', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_FUNCTIONS), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     $container->set('deviceForFiles', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_UPLOADS), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     $container->set('deviceForBuilds', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_BUILDS), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     $container->set('deviceForCache', function (Document $project, Telemetry $telemetry) {
-        return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
+        return new TelemetryDevice($telemetry, new Tenant(getDevice(APP_STORAGE_CACHE), 'app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
     // Only the Builds worker uses this, handing template-into-repo pushes to

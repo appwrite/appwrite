@@ -28,6 +28,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Storage\Tenant;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
@@ -1344,11 +1345,11 @@ return function (Container $context): void {
         ['project', 'plan']
     );
 
-    $context->set('deviceForFiles', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())), ['project', 'telemetry']);
-    $context->set('deviceForSites', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId())), ['project', 'telemetry']);
-    $context->set('deviceForMigrations', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId())), ['project', 'telemetry']);
-    $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
-    $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
+    $context->set('deviceForFiles', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, new Tenant(getDevice(APP_STORAGE_UPLOADS), 'app-' . $project->getId())), ['project', 'telemetry']);
+    $context->set('deviceForSites', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, new Tenant(getDevice(APP_STORAGE_SITES), 'app-' . $project->getId())), ['project', 'telemetry']);
+    $context->set('deviceForMigrations', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, new Tenant(getDevice(APP_STORAGE_IMPORTS), 'app-' . $project->getId())), ['project', 'telemetry']);
+    $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, new Tenant(getDevice(APP_STORAGE_FUNCTIONS), 'app-' . $project->getId())), ['project', 'telemetry']);
+    $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, new Tenant(getDevice(APP_STORAGE_BUILDS), 'app-' . $project->getId())), ['project', 'telemetry']);
 
     $context->set('embeddingAgent', function ($register) {
         $adapter = new AppwriteAdapter();

@@ -262,15 +262,24 @@ $container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, 
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
+/**
+ * Devices are immutable and coroutine-safe, so one instance per (root,
+ * connection) pair is shared for the worker's lifetime; roots are the storage
+ * base constants (project scoping is applied per request by the Tenant
+ * decorator), which keeps the memo bounded. All S3-family devices share one
+ * lazy pool of keep-alive connections: concurrent coroutines borrow a
+ * connection exclusively per request, and connections persist between borrows
+ * so the TCP/TLS handshake is paid per connection instead of per request.
+ */
 function getDevice(string $root, string $connection = ''): Device
 {
-    /**
-     * Shared client for the S3-family devices: a lazy pool of keep-alive
-     * connections. Concurrent coroutines borrow a connection exclusively for
-     * the duration of each request, and connections persist between borrows
-     * so the TCP/TLS handshake is paid per connection instead of per request.
-     * Devices themselves are immutable value objects and cheap to construct.
-     */
+    static $devices = [];
+
+    return $devices[$root . "\0" . $connection] ??= createDevice($root, $connection);
+}
+
+function createDevice(string $root, string $connection = ''): Device
+{
     static $client = null;
     $client ??= new ClientPool(new ConnectionsPool(
         pool: new Stack(),

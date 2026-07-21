@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Utopia\Storage\Tenant;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
@@ -659,11 +660,11 @@ class Deletes extends Action
         ]);
 
         foreach ($projects as $project) {
-            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-            $deviceForSites = getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+            $deviceForFiles = new Tenant(getDevice(APP_STORAGE_UPLOADS), 'app-' . $project->getId());
+            $deviceForSites = new Tenant(getDevice(APP_STORAGE_SITES), 'app-' . $project->getId());
+            $deviceForFunctions = new Tenant(getDevice(APP_STORAGE_FUNCTIONS), 'app-' . $project->getId());
+            $deviceForBuilds = new Tenant(getDevice(APP_STORAGE_BUILDS), 'app-' . $project->getId());
+            $deviceForCache = new Tenant(getDevice(APP_STORAGE_CACHE), 'app-' . $project->getId());
 
             $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
             $dbForPlatform->deleteDocument('projects', $project->getId());
