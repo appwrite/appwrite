@@ -95,6 +95,7 @@
         "utopia-php/system": "0.10.*",
         "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
+        "mustangostang/spyc": "0.6.*",
         "utopia-php/vcs": "^4.4.2",
         "utopia-php/websocket": "1.0.*",
         "dragonmantank/cron-expression": "3.4.*",
