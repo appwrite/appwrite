@@ -180,7 +180,12 @@ class Doctor extends Action
         ];
 
         foreach ($configs as $key => $config) {
-            foreach ($config ?? [] as $pool) {
+            if (!\is_array($config) || $config === []) {
+                Console::error('🔴 ' . str_pad($key, 47, '.') . 'disconnected');
+                continue;
+            }
+
+            foreach ($config as $pool) {
                 try {
                     $connected = match ($key) {
                         'Cache' => (new CachePool($pools->get($pool)))->ping(),
