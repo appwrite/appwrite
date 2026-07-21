@@ -95,15 +95,25 @@ class Factory
         return $this->getEnv($key, 'webhookSecret');
     }
 
-    public function oauth2FromProvider(string $key): OAuth2&EnvOAuth2
+    public function oauth2FromProvider(string $key): OAuth2
     {
-        $class = $this->registry[$key]['oauth2'] ?? null;
+        $builder = $this->registry[$key]['oauth2'] ?? null;
 
-        if ($class === null || !\is_a($class, EnvOAuth2::class, true)) {
+        if (!\is_callable($builder)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $key);
         }
 
-        return $class::fromEnv();
+        $clientId = $this->getEnv($key, 'clientId');
+        $clientSecret = $this->getEnv($key, 'clientSecret');
+        $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
+
+        $oauth2 = $builder($clientId, $clientSecret, $endpoint);
+
+        if (!$oauth2 instanceof OAuth2) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider "' . $key . '" oauth2 builder returned an invalid client');
+        }
+
+        return $oauth2;
     }
 
     protected function getEnv(string $key, string $name): string

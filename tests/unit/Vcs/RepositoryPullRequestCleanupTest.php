@@ -4,25 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
-use Appwrite\Platform\Modules\VCS\Http\Gitlab\Events\Create;
-use Appwrite\Vcs\Factory as VcsFactory;
-use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-final class GitlabClosedPullRequestEventTest extends TestCase
+final class RepositoryPullRequestCleanupTest extends TestCase
 {
-    private Create $handler;
-
-    public function setUp(): void
-    {
-        $this->handler = new Create();
-    }
-
-    public function testClosedEventOnlyUpdatesGitlabRepositories(): void
+    public function testRemoveOnlyUpdatesGitlabRepositories(): void
     {
         // A GitHub repo and a GitLab repo can share the same numeric
         // providerRepositoryId since each is scoped to its own server.
@@ -64,20 +54,6 @@ final class GitlabClosedPullRequestEventTest extends TestCase
                 return true;
             }));
 
-        $vcsFactory = $this->createStub(VcsFactory::class);
-        $installationTokens = $this->createStub(InstallationTokens::class);
-        $deploymentsFactory = fn () => null;
-
-        $this->callHandler('handlePullRequestEvent', [
-            'action' => 'closed',
-            'repositoryId' => '5',
-            'pullRequestNumber' => 5,
-            'external' => true,
-        ], $vcsFactory, $installationTokens, $dbForPlatform, $authorization, fn () => null, [], $deploymentsFactory);
-    }
-
-    private function callHandler(string $method, mixed ...$arguments): mixed
-    {
-        return (new ReflectionMethod($this->handler, $method))->invoke($this->handler, ...$arguments);
+        (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'gitlab', '5', 5);
     }
 }

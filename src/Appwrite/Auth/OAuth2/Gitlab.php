@@ -3,30 +3,20 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Vcs\EnvOAuth2;
-use Utopia\System\System;
+use Appwrite\Vcs\RepositoryOAuth2;
 
 // Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
 
-class Gitlab extends OAuth2 implements EnvOAuth2
+/**
+ * Shared with the "Sign in with GitLab" account-login OAuth2 provider, which
+ * stores its secret as JSON ({"clientSecret": "...", "endpoint": "..."}) to
+ * support self-hosted GitLab per-project. The VCS flow (see app/config/vcs.php)
+ * only supports official gitlab.com, but still encodes to that same JSON
+ * shape so getAppSecret()/getEndpoint() stay correct for both consumers.
+ */
+class Gitlab extends OAuth2 implements RepositoryOAuth2
 {
-    /**
-     * This class is shared with the "Sign in with GitLab" account-login
-     * OAuth2 provider, which stores its secret as JSON
-     * ({"clientSecret": "...", "endpoint": "..."}) to support self-hosted
-     * GitLab per-project. The VCS flow only supports official gitlab.com,
-     * but still encodes to that same JSON shape so getAppSecret()/getEndpoint()
-     * stay correct for both consumers.
-     */
-    public static function fromEnv(): OAuth2&EnvOAuth2
-    {
-        return new self(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), \json_encode([
-            'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
-            'endpoint' => 'https://gitlab.com',
-        ]), '');
-    }
-
     /**
      * @var array
      */

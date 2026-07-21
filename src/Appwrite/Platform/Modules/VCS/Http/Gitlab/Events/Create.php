@@ -9,6 +9,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -261,24 +262,7 @@ class Create extends Action
                 return;
             }
 
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::orderDesc('$createdAt'),
-                Query::limit(100),
-            ]));
-
-            foreach ($repositories as $repository) {
-                if ($this->resolveGitlabInstallation($repository, $dbForPlatform, $authorization) === null) {
-                    continue;
-                }
-
-                $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
-
-                if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                    $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
-                }
-            }
+            (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'gitlab', $providerRepositoryId, $providerPullRequestId);
         }
     }
 }

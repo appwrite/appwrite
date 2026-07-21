@@ -6,10 +6,8 @@ namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
-use Appwrite\Vcs\EnvOAuth2;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -33,7 +31,7 @@ final class FactoryTest extends TestCase
 
         foreach ($registry as $key => $entry) {
             $this->assertTrue(\is_subclass_of($entry['adapter'], Git::class), "Adapter for '{$key}' must extend Git");
-            $this->assertContains(EnvOAuth2::class, \class_implements($entry['oauth2']) ?: [], "OAuth2 client for '{$key}' must implement EnvOAuth2");
+            $this->assertIsCallable($entry['oauth2'], "OAuth2 builder for '{$key}' must be callable");
             $this->assertNotEmpty($entry['variables'], "Variables missing for '{$key}'");
             foreach ($entry['variables'] as $name => $variable) {
                 $this->assertStringStartsWith('_APP_VCS_', $variable['envVariable'] ?? '', "Env variable for '{$name}' missing or invalid for '{$key}'");
@@ -127,8 +125,7 @@ final class FactoryTest extends TestCase
         $factory = new Factory($this->cache(), ['gitlab' => $entry]);
 
         $adapter = $factory->fromProvider('gitlab');
-        $property = new ReflectionProperty($adapter, 'endpoint');
-        $this->assertSame('https://gitlab.com/api/v4', $property->getValue($adapter));
+        $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
     }
 
     public function testFromProviderFixedEndpointIgnoresEnv(): void
@@ -142,8 +139,7 @@ final class FactoryTest extends TestCase
 
         \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
         $adapter = $factory->fromProvider('gitlab');
-        $property = new ReflectionProperty($adapter, 'endpoint');
-        $this->assertSame('https://gitlab.com/api/v4', $property->getValue($adapter));
+        $this->assertSame('https://gitlab.com/owner/repo', $adapter->getRepositoryUrl('owner', 'repo'));
     }
 
     public function testGetWebhookSecret(): void
@@ -169,7 +165,7 @@ final class FactoryTest extends TestCase
     {
         return [
             'adapter' => GitHub::class,
-            'oauth2' => OAuth2Github::class,
+            'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($clientId, $clientSecret, ''),
             'variables' => [
                 'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
                 'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],

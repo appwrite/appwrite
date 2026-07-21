@@ -14,7 +14,10 @@ use Utopia\VCS\Adapter\Git\GitLab;
 return [
     'github' => [
         'adapter' => GitHub::class,
-        'oauth2' => OAuth2Github::class,
+        // Each provider owns its own construction quirks (Gitea calls
+        // setEndpoint(), GitLab JSON-encodes its secret); Factory just
+        // supplies the resolved env values, so no per-provider branching lives there.
+        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($clientId, $clientSecret, ''),
         'variables' => [
             'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
             'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],
@@ -26,7 +29,11 @@ return [
     ],
     'gitea' => [
         'adapter' => Gitea::class,
-        'oauth2' => OAuth2Gitea::class,
+        'oauth2' => function (string $clientId, string $clientSecret, string $endpoint) {
+            $oauth2 = new OAuth2Gitea($clientId, $clientSecret, '');
+            $oauth2->setEndpoint($endpoint);
+            return $oauth2;
+        },
         'variables' => [
             'endpoint' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_ENDPOINT'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_ID'],
@@ -38,7 +45,13 @@ return [
     ],
     'gitlab' => [
         'adapter' => GitLab::class,
-        'oauth2' => OAuth2Gitlab::class,
+        // Auth\OAuth2\Gitlab is shared with the "Sign in with GitLab" account-login
+        // provider, which JSON-encodes its secret as {"clientSecret","endpoint"}
+        // to support a per-project self-hosted endpoint -- match that shape here too.
+        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Gitlab($clientId, \json_encode([
+            'clientSecret' => $clientSecret,
+            'endpoint' => $endpoint,
+        ]), ''),
         // Only official gitlab.com is supported -- fixed, not configurable.
         'endpoint' => 'https://gitlab.com',
         'variables' => [
