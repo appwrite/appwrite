@@ -53,7 +53,7 @@ class Functions extends Action
             ->inject('bus')
             ->inject('log')
             ->inject('executor')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->callback($this->action(...));
     }
 
@@ -68,7 +68,7 @@ class Functions extends Action
         Bus $bus,
         Log $log,
         Executor $executor,
-        callable $isResourceBlocked
+        callable $getIsResourceBlocked
     ): void {
         $payload = $message->getPayload();
 
@@ -152,7 +152,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
@@ -196,7 +196,7 @@ class Functions extends Action
             return;
         }
 
-        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+        if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
             Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
@@ -313,10 +313,13 @@ class Functions extends Action
             'requestPath' => $path,
             'requestMethod' => $method,
             'requestHeaders' => $headersFiltered,
-            'errors' => $message,
+            'errors' => '',
             'logs' => '',
             'duration' => 0.0,
         ]);
+
+        $executionForEvent = (new Document($execution->getArrayCopy()))
+            ->setAttribute('errors', $message);
 
         Span::add('function.id', $function->getId());
         Span::add('execution.id', $execution->getId());
@@ -325,7 +328,7 @@ class Functions extends Action
         Span::add('execution.status', $execution->getAttribute('status', ''));
 
         $bus->dispatch(new ExecutionCompleted(
-            execution: $execution->getArrayCopy(),
+            execution: $executionForEvent->getArrayCopy(),
             project: $project->getArrayCopy(),
             resource: $function->getArrayCopy(),
         ));
@@ -547,8 +550,7 @@ class Functions extends Action
             }
 
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
-            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),

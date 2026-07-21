@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Template;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -26,7 +27,7 @@ use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -81,8 +82,9 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('authorization')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -102,8 +104,9 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Authorization $authorization,
+        Backend $deployments,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -135,9 +138,10 @@ class Create extends Base
                 dbForPlatform: $dbForPlatform,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
                 authorization: $authorization,
+                deployments: $deployments,
                 platform: $platform
             );
 
@@ -160,6 +164,18 @@ class Create extends Base
             $commands[] = $site->getAttribute('buildCommand', '');
         }
 
+        // Templates can pin a version range (e.g. "0.3.*"); codeload only takes
+        // a concrete ref, so resolve it to the highest matching tag via GitHub.
+        $ref = $reference;
+        if ($type === Git::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
+            try {
+                $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
+                $ref = \end($tags) ?: $reference;
+            } catch (\Throwable) {
+                // Fall back to the raw reference; the build surfaces a bad ref.
+            }
+        }
+
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -178,7 +194,9 @@ class Create extends Base
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+            // The resolved concrete ref, so a duplicate can re-fetch the source.
+            'providerBranch' => $ref,
+            'providerRootDirectory' => $rootDirectory,
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
@@ -214,14 +232,18 @@ class Create extends Base
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $site,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
+        // Public template: pull the source straight from GitHub's public repo
+        // (codeload tarball on the jobs backend, a plain git clone on the
+        // executor); unarchive/checkout strips down to the rootDirectory.
+        $deployment = $deployments->createFromRef(
+            $site,
+            $deployment,
+            $owner,
+            $repository,
+            $type,
+            $ref,
+            $rootDirectory,
+        );
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

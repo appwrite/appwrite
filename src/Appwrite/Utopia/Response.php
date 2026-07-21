@@ -157,8 +157,6 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
-    public const MODEL_FOLDER = 'folder';
-    public const MODEL_FOLDER_LIST = 'folderList';
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
@@ -327,6 +325,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
     public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
     public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_APPWRITE = 'oAuth2Appwrite';
     public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
     public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
     public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';

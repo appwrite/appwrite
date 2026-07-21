@@ -4,10 +4,6 @@ namespace Appwrite\Platform\Modules\Health\Http\Health\PubSub;
 
 use Appwrite\Extend\Exception;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -32,20 +28,6 @@ class Get extends Action
             ->desc('Get pubsub')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'health',
-                name: 'getPubSub',
-                description: '/docs/references/health/get-pubsub.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_STATUS_LIST,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->inject('response')
             ->inject('pools')
             ->callback($this->action(...));

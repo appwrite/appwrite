@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -11,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -21,7 +23,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -74,8 +75,9 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('authorization')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -92,8 +94,9 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Authorization $authorization,
+        Backend $deployments,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -119,9 +122,10 @@ class Create extends Base
             dbForPlatform: $dbForPlatform,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $github,
+            vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
             authorization: $authorization,
+            deployments: $deployments,
             reference: $reference,
             referenceType: $type,
             platform: $platform

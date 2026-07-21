@@ -8,20 +8,20 @@ class Generator
 {
     private const array SELECTABLE_SERVICE_GROUPS = [
         'database' => [
-            'default' => 'mongodb',
+            'default' => 'postgresql',
             'services' => [
+                'postgresql',
                 'mariadb',
                 'mongodb',
-                'postgresql',
             ],
         ],
     ];
 
     private const array SELECTABLE_VOLUME_GROUPS = [
         'database' => [
+            'postgresql' => ['appwrite-postgresql'],
             'mariadb' => ['appwrite-mariadb'],
             'mongodb' => ['appwrite-mongodb', 'appwrite-mongodb-keyfile'],
-            'postgresql' => ['appwrite-postgresql'],
         ],
     ];
 
@@ -43,7 +43,7 @@ class Generator
 
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
-        'database' => 'mongodb',
+        'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
     ];
@@ -55,6 +55,7 @@ class Generator
                 'condition' => 'service_healthy',
             ],
             'placeholders' => [
+                '${_APP_DB_HOST:-postgresql}',
                 '${_APP_DB_HOST:-mongodb}',
                 '${_APP_DB_HOST:-mariadb}',
             ],
@@ -77,9 +78,9 @@ class Generator
     private array $params = [];
 
     private array $selectableServices = [
+        'postgresql',
         'mariadb',
         'mongodb',
-        'postgresql',
     ];
 
     public function __construct(string $compose)

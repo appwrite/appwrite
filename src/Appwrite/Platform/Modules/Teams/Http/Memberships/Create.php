@@ -17,8 +17,6 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -35,7 +33,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -327,6 +327,19 @@ class Create extends Action
             $url = Template::unParseURL($url);
             if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+                if ($project->getId() === 'console') {
+                    $projectName = $platform['platformName'];
+                }
+
+                $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+                if (! (new FileName())->isValid($smtpBaseTemplate)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+                }
+                $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/' . $smtpBaseTemplate . '.tpl';
+                if (! \is_readable($bodyTemplate)) {
+                    $smtpBaseTemplate = 'email-base';
+                    $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/email-base.tpl';
+                }
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
@@ -413,16 +426,32 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $emailVariables = [
+                        ...$emailVariables,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
+                    ];
+                }
+
                 $publisherForMails->enqueue(new MailMessage(
                     project: $project,
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
                     subject: $subject,
                     template: MAIL_TEMPLATE_INVITATION,
+                    bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,
                     smtp: $smtpConfig,
                     variables: $emailVariables,
+                    customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
                 ));
             } elseif (! empty($phone)) {
@@ -450,15 +479,9 @@ class Create extends Action
                     providerType: 'SMS',
                 ));
 
-                $helper = PhoneNumberUtil::getInstance();
-                try {
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (! empty($countryCode)) {
-                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                } catch (NumberParseException $e) {
-                    // Ignore invalid phone number for country code stats
+                $countryCode = CallingCode::fromPhoneNumber($phone);
+                if (! empty($countryCode)) {
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
             }
