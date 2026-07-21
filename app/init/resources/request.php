@@ -1132,9 +1132,9 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, UsageContext $usage) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request) {
 
-        return function (Document $database) use ($databaseFactory, $project, $request, $usage): Database {
+        return function (Document $database) use ($databaseFactory, $project, $request): Database {
             $databaseType = $database->getAttribute('type', '');
 
             $database = $databaseFactory->tenant(
@@ -1157,7 +1157,7 @@ return function (Container $context): void {
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request', 'usage']);
+    }, ['databaseFactory', 'project', 'request']);
 
     $context->set(
         'transactionState',
