@@ -106,7 +106,7 @@ class Action extends PlatformAction
 
         $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         foreach (\explode(',', $functionsDomains) as $functionsDomain) {
-            if (empty($functionsDomains)) {
+            if (empty($functionsDomain)) {
                 continue;
             }
 
