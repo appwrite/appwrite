@@ -15,6 +15,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -125,7 +126,8 @@ class Create extends Action
                     $projectRegion = $project->getAttribute('region', '');
                     $currentRegion = System::getEnv('_APP_REGION', 'default');
                     if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
-                        throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+                        Console::warning("Skipping project {$projectId}: not accessible in region {$currentRegion} (project region: {$projectRegion})");
+                        continue;
                     }
 
                     $dbForProject = $getProjectDB($project);
