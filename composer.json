@@ -106,7 +106,7 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.2.2",
-        "open-runtimes/sdk-for-php": "0.6.*"
+        "open-runtimes/sdk-for-php": "0.6.* || 0.7.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",
