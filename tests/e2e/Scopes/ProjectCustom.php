@@ -33,7 +33,7 @@ trait ProjectCustom
     }
 
     /**
-     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     * Create a new project with team, API key, webhook, and SMTP config.
      */
     protected function createNewProject(): array
     {

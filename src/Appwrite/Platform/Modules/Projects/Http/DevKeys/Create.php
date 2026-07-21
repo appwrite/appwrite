@@ -10,9 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -62,35 +59,6 @@ class Create extends Action
 
     public function action(string $projectId, string $name, ?string $expire, Document $user, Response $response, Database $dbForPlatform)
     {
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $devKeyId = ID::unique();
-        $key = new Document([
-            '$id' => $devKeyId,
-            '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
-            'name' => $name,
-            'expire' => $expire,
-            'sdks' => [],
-            'accessedAt' => null,
-            'secret' => \bin2hex(\random_bytes(128)),
-        ]);
-
-        $key = $dbForPlatform->createDocument('devKeys', $key);
-
-        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($key, Response::MODEL_DEV_KEY);
+        throw new Exception(Exception::DEV_KEY_GONE);
     }
 }

@@ -6247,6 +6247,24 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testCreateDevKeyGone(): void
+    {
+        $id = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Dev Key Gone Project',
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/dev-keys', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), [
+            'name' => 'Dev Key',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+
+        $this->assertEquals(410, $response['headers']['status-code']);
+        $this->assertEquals(Exception::DEV_KEY_GONE, $response['body']['type']);
+    }
+
     public function testProjectLabels(): void
     {
         // Setup: Prepare team
