@@ -10,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
-use Appwrite\Vcs\RepositoryOAuth2;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -81,7 +80,7 @@ class Create extends Action
         if ($installation->getAttribute('personal', false) === true) {
             $oauth2 = $vcsFactory->oauth2FromProvider($provider);
 
-            if (!$oauth2 instanceof RepositoryOAuth2) {
+            if (!\method_exists($oauth2, 'createRepository')) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider does not support repository creation: ' . $provider);
             }
 

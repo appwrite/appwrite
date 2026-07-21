@@ -3,9 +3,8 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Vcs\RepositoryOAuth2;
 
-class Gitea extends OAuth2 implements RepositoryOAuth2
+class Gitea extends OAuth2
 {
     protected string $endpoint = '';
 

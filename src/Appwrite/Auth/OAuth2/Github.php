@@ -3,10 +3,9 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Vcs\RepositoryOAuth2;
 use Utopia\Fetch\Client as FetchClient;
 
-class Github extends OAuth2 implements RepositoryOAuth2
+class Github extends OAuth2
 {
     /**
      * @var array

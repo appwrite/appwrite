@@ -3,7 +3,6 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Vcs\RepositoryOAuth2;
 
 // Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
@@ -15,7 +14,7 @@ use Appwrite\Vcs\RepositoryOAuth2;
  * only supports official gitlab.com, but still encodes to that same JSON
  * shape so getAppSecret()/getEndpoint() stay correct for both consumers.
  */
-class Gitlab extends OAuth2 implements RepositoryOAuth2
+class Gitlab extends OAuth2
 {
     /**
      * @var array
