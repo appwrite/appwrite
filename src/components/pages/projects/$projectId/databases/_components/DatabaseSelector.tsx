@@ -42,7 +42,7 @@ import {
   engineFromDatabaseTypeValue,
   productFromDatabaseTypeValue,
 } from '@/lib/databases/database-type'
-import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
+import { resolveDatabaseComputeSpecId } from '@/lib/databases/database-compute'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -209,6 +209,15 @@ export function DatabaseSelector({
   const items = useMemo((): DatabaseSelectorItem[] => {
     return (consoleData?.databases ?? []).map((db) => {
       const dedicated = dedicatedById.get(db.$id)
+      const productHints = {
+        databaseType: db.type,
+        status: db.status,
+        replicas: typeof db.replicas === 'number' ? db.replicas : null,
+        specification:
+          typeof (db as { specification?: unknown }).specification === 'string'
+            ? ((db as { specification?: string }).specification ?? null)
+            : null,
+      }
       return {
         id: db.$id,
         // Prefer the live selected name so a rename shows up before the console
@@ -224,8 +233,8 @@ export function DatabaseSelector({
           productFromDatabaseTypeValue(db.type) ??
           dedicated?.api ??
           null,
-        specSlug: dedicated?.specSlug ?? SERVERLESS_DATABASE_SPEC_ID,
-        status: dedicated?.status ?? db.status ?? null,
+        specSlug: resolveDatabaseComputeSpecId(productHints, dedicated),
+        status: dedicated?.status ?? (typeof db.status === 'string' ? db.status : null),
       }
     })
   }, [consoleData?.databases, dedicatedById, selectedName, value])

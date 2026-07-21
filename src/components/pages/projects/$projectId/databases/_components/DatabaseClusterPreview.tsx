@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { SchemaVisualizerRelationshipEdges } from '@/components/global/shared/SchemaVisualizerRelationshipEdges'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import type { SchemaVisualizerRelationshipPath } from '@/lib/schema-visualizer-relationship-paths'
 import { Button } from '@/components/ui/button'
 import {
@@ -668,6 +669,9 @@ type DatabaseClusterPreviewProps = {
    * leave off for compact list cards.
    */
   interactive?: boolean
+  /** Shown in the interactive toolbar; refreshes live metrics and member status. */
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 function resolveNodeResourceMetrics(
@@ -752,6 +756,8 @@ export function DatabaseClusterPreview({
   className,
   withSectionDivider = true,
   interactive = false,
+  onRefresh,
+  isRefreshing = false,
 }: DatabaseClusterPreviewProps) {
   const t = useT()
   const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
@@ -869,6 +875,14 @@ export function DatabaseClusterPreview({
     >
       <div className="pointer-events-none absolute end-3 top-3 z-30 flex items-center gap-1.5">
         <div className="pointer-events-auto flex items-center gap-1.5">
+          {onRefresh ? (
+            <RefreshButton
+              onClick={onRefresh}
+              isRefreshing={isRefreshing}
+              className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm text-foreground hover:bg-accent"
+            />
+          ) : null}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

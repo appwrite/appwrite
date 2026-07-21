@@ -885,6 +885,14 @@ export function useDedicatedDatabaseCardMetrics(
       ? Math.round(getUsageChartLatestValue(connectionPoints))
       : null
 
+  const refetch = useCallback(async () => {
+    await Promise.all([
+      connectionsQuery.refetch(),
+      ...cpuQueries.map((query) => query.refetch()),
+      ...memoryQueries.map((query) => query.refetch()),
+    ])
+  }, [connectionsQuery, cpuQueries, memoryQueries])
+
   return {
     nodeMetrics,
     connections,
@@ -893,6 +901,12 @@ export function useDedicatedDatabaseCardMetrics(
       (connectionsQuery.isLoading ||
         cpuQueries.some((query) => query.isLoading) ||
         memoryQueries.some((query) => query.isLoading)),
+    isFetching:
+      canFetch &&
+      (connectionsQuery.isFetching ||
+        cpuQueries.some((query) => query.isFetching) ||
+        memoryQueries.some((query) => query.isFetching)),
+    refetch,
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { Info, Minus, Plus, X } from 'lucide-react'
@@ -105,18 +105,19 @@ export function PostgresDatabaseReplicasCard({
   const { features } = useConsoleProfile()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
-  const { connections, isLoading: connectionsLoading } =
+  const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
     usePostgresActiveConnections(projectId, databaseId)
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const committedReplicaCount = database.replicas ?? 0
   const fetchReplicas =
     committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
-  const { members } = usePostgresDatabaseReplicas(
-    projectId,
-    databaseId,
-    fetchReplicas,
-    fetchReplicas ? 5000 : false,
-  )
+  const { members, refetch: refetchReplicas } =
+    usePostgresDatabaseReplicas(
+      projectId,
+      databaseId,
+      fetchReplicas,
+      fetchReplicas ? 5000 : false,
+    )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -162,12 +163,28 @@ export function PostgresDatabaseReplicasCard({
     memberReplicaCount,
   )
 
-  const { nodeMetrics } = useDedicatedDatabaseCardMetrics(
+  const [topologyRefreshing, setTopologyRefreshing] = useState(false)
+
+  const {
+    nodeMetrics,
+    refetch: refetchMetrics,
+  } = useDedicatedDatabaseCardMetrics(
     projectId,
     databaseId,
     presentReplicaCount,
     features.usageStats,
   )
+
+  const handleTopologyRefresh = useCallback(() => {
+    setTopologyRefreshing(true)
+    void Promise.all([
+      refetchReplicas(),
+      refetchConnections(),
+      refetchMetrics(),
+    ]).finally(() => {
+      setTopologyRefreshing(false)
+    })
+  }, [refetchConnections, refetchMetrics, refetchReplicas])
 
   const memberStatuses = useMemo(
     () =>
@@ -333,6 +350,8 @@ export function PostgresDatabaseReplicasCard({
               proxy={clusterProxy}
               withSectionDivider={false}
               interactive
+              onRefresh={handleTopologyRefresh}
+              isRefreshing={topologyRefreshing}
             />
           </div>
         </div>
