@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\Databases\VectorsDB\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiVectorsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
@@ -19,6 +20,7 @@ final class DatabasesPermissionsGuestTest extends Scope
     use ProjectCustom;
     use SideClient;
     use DatabasesPermissionsScope;
+    use ApiVectorsDB;
 
     private $authorization;
 
