@@ -61,6 +61,8 @@ When `TYPE` can be:
 
 **All PRs must include a commit message with the description of the changes made!**
 
+⚠️ **Important:** Please be careful when creating a new branch from the source branch. In this repository, the `main` branch is behind other active branches, so make sure you’re branching off the correct one before starting your work.
+
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
