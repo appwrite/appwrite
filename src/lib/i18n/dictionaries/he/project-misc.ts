@@ -655,6 +655,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Hide: 'הסתרה',
   Show: 'הצגה',
   'No data for this date range': 'אין נתונים לטווח תאריכים זה',
+  'Drag on the chart to select a date range': 'גררו על התרשים כדי לבחור טווח תאריכים',
   'Filter activities by': 'סינון פעילויות לפי',
   Database: 'מסד נתונים',
   Function: 'פונקציה',

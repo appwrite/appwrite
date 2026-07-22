@@ -370,6 +370,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Hide volume chart': 'ボリュームチャートを非表示',
   'Show volume chart': 'ボリュームチャートを表示',
   'No data for this date range': 'この日付範囲のデータがありません',
+  'Drag on the chart to select a date range': 'チャート上をドラッグして日付範囲を選択',
   'Filter activities by': 'アクティビティのフィルター',
   // Analytics
   'Linked to Appwrite Sites deployment': 'Appwrite Sites デプロイにリンク済み',

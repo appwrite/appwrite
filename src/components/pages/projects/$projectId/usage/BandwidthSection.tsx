@@ -27,6 +27,7 @@ import {
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
+import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useT } from '@/lib/i18n/translate'
 import {
   formatBandwidthTotal,
@@ -61,6 +62,7 @@ import {
   UsageMetricCardShell,
 } from './_components/UsageMetricCard'
 import { UsageSectionChartError } from './_components/UsageSectionChartError'
+import { UsageChartBrushReferenceArea } from './_components/UsageChartBrushReferenceArea'
 
 const BANDWIDTH_DESCRIPTION =
   'Total inbound and outbound network traffic during the selected period. Includes API responses, file transfers, and function I/O.'
@@ -147,7 +149,7 @@ function BandwidthChartCard({
   onRetry,
 }: BandwidthChartCardProps) {
   const t = useT()
-  const { dateRange, chartInterval } = useUsageFilters()
+  const { dateRange, chartInterval, onDateRangeChange } = useUsageFilters()
   const chartData = useMemo(
     () =>
       dualChartPoints.map((point) => ({
@@ -159,6 +161,18 @@ function BandwidthChartCard({
       })),
     [dualChartPoints],
   )
+  const {
+    canSelect,
+    isSelecting,
+    brushLeft,
+    brushRight,
+    surfaceClassName,
+    chartProps,
+  } = useUsageChartBrushSelect({
+    points: dualChartPoints,
+    chartInterval,
+    onDateRangeChange,
+  })
 
   const formattedTotal = formatBandwidthTotal(total)
   const changeLabel =
@@ -256,134 +270,149 @@ function BandwidthChartCard({
           </UsageBandwidthChartArea>
         ) : (
           <UsageBandwidthChartArea>
-            <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-              <AreaChart
-                data={chartData}
-                margin={USAGE_CHART_MARGIN}
-              >
-                <defs>
-                  <linearGradient
-                    id="usage-bandwidth-inbound-gradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient
-                    id="usage-bandwidth-outbound-gradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="var(--chart-brand)"
-                      stopOpacity={0.2}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="var(--chart-brand)"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <UsageChartXAxis
-                  points={dualChartPoints}
-                  dateRange={dateRange}
-                  chartInterval={chartInterval}
-                />
-                <UsageChartYAxis
-                  tickFormatter={yAxisTickFormatter}
-                  domain={bandwidthYAxisDomain}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null
-                    const data = payload[0].payload as {
-                      fullDate: string
-                      inbound: number
-                      outbound: number
-                    }
-                    return (
-                      <div className="rounded-md border border-border bg-popover px-3 py-2">
-                        <p className="mb-1 text-[11px] text-muted-foreground">
-                          {data.fullDate}
-                        </p>
-                        {showDualSeries ? (
-                          <div className="space-y-0.5">
-                            <p className="text-[13px] font-medium text-foreground">
-                              {formatBandwidthValue(data.inbound)}{' '}
-                              <span className="font-normal text-muted-foreground">
-                                {t('inbound')}
-                              </span>
-                            </p>
-                            <p className="text-[13px] font-medium text-foreground">
-                              {formatBandwidthValue(data.outbound)}{' '}
-                              <span className="font-normal text-muted-foreground">
-                                {t('outbound')}
-                              </span>
-                            </p>
-                            <p className="border-t border-border pt-1 text-[13px] font-medium text-foreground">
-                              {formatBandwidthValue(data.inbound + data.outbound)}{' '}
-                              <span className="font-normal text-muted-foreground">
-                                {t('total')}
-                              </span>
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-[13px] font-medium text-foreground">
-                            {formatBandwidthValue(data.inbound + data.outbound)}
+            <div
+              className={surfaceClassName}
+              aria-label={
+                canSelect
+                  ? t('Drag on the chart to select a date range')
+                  : undefined
+              }
+            >
+              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                <AreaChart
+                  data={chartData}
+                  margin={USAGE_CHART_MARGIN}
+                  {...chartProps}
+                >
+                  <defs>
+                    <linearGradient
+                      id="usage-bandwidth-inbound-gradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient
+                      id="usage-bandwidth-outbound-gradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="var(--chart-brand)"
+                        stopOpacity={0.2}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--chart-brand)"
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <UsageChartXAxis
+                    points={dualChartPoints}
+                    dateRange={dateRange}
+                    chartInterval={chartInterval}
+                  />
+                  <UsageChartYAxis
+                    tickFormatter={yAxisTickFormatter}
+                    domain={bandwidthYAxisDomain}
+                  />
+                  <Tooltip
+                    cursor={!isSelecting}
+                    content={({ active, payload }) => {
+                      if (isSelecting || !active || !payload?.length) return null
+                      const data = payload[0].payload as {
+                        fullDate: string
+                        inbound: number
+                        outbound: number
+                      }
+                      return (
+                        <div className="rounded-md border border-border bg-popover px-3 py-2">
+                          <p className="mb-1 text-[11px] text-muted-foreground">
+                            {data.fullDate}
                           </p>
-                        )}
-                      </div>
-                    )
-                  }}
-                />
-                {showDualSeries ? (
-                  <>
+                          {showDualSeries ? (
+                            <div className="space-y-0.5">
+                              <p className="text-[13px] font-medium text-foreground">
+                                {formatBandwidthValue(data.inbound)}{' '}
+                                <span className="font-normal text-muted-foreground">
+                                  {t('inbound')}
+                                </span>
+                              </p>
+                              <p className="text-[13px] font-medium text-foreground">
+                                {formatBandwidthValue(data.outbound)}{' '}
+                                <span className="font-normal text-muted-foreground">
+                                  {t('outbound')}
+                                </span>
+                              </p>
+                              <p className="border-t border-border pt-1 text-[13px] font-medium text-foreground">
+                                {formatBandwidthValue(data.inbound + data.outbound)}{' '}
+                                <span className="font-normal text-muted-foreground">
+                                  {t('total')}
+                                </span>
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[13px] font-medium text-foreground">
+                              {formatBandwidthValue(data.inbound + data.outbound)}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    }}
+                  />
+                  {showDualSeries ? (
+                    <>
+                      <Area
+                        type="monotone"
+                        dataKey="inbound"
+                        name="Inbound"
+                        stackId="bandwidth"
+                        stroke="var(--chart-2)"
+                        strokeWidth={2}
+                        fill="url(#usage-bandwidth-inbound-gradient)"
+                        {...CHART_ANIMATION_DISABLED}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="outbound"
+                        name="Outbound"
+                        stackId="bandwidth"
+                        stroke="var(--chart-brand)"
+                        strokeWidth={2}
+                        fill="url(#usage-bandwidth-outbound-gradient)"
+                        {...CHART_ANIMATION_DISABLED}
+                      />
+                    </>
+                  ) : (
                     <Area
                       type="monotone"
-                      dataKey="inbound"
-                      name="Inbound"
-                      stackId="bandwidth"
-                      stroke="var(--chart-2)"
-                      strokeWidth={2}
-                      fill="url(#usage-bandwidth-inbound-gradient)"
-                      {...CHART_ANIMATION_DISABLED}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="outbound"
-                      name="Outbound"
-                      stackId="bandwidth"
+                      dataKey="total"
                       stroke="var(--chart-brand)"
                       strokeWidth={2}
                       fill="url(#usage-bandwidth-outbound-gradient)"
+                      name="Bandwidth"
                       {...CHART_ANIMATION_DISABLED}
                     />
-                  </>
-                ) : (
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="var(--chart-brand)"
-                    strokeWidth={2}
-                    fill="url(#usage-bandwidth-outbound-gradient)"
-                    name="Bandwidth"
-                    {...CHART_ANIMATION_DISABLED}
+                  )}
+                  <UsageChartBrushReferenceArea
+                    left={brushLeft}
+                    right={brushRight}
                   />
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </UsageBandwidthChartArea>
         )}
       </div>

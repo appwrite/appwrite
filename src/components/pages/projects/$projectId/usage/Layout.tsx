@@ -800,6 +800,7 @@ function UsageLayoutContent({
                     usageLogRetentionDays,
                     dateRange: usageDateRange,
                     chartInterval,
+                    onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,
                     eventFilterQueries: usageEventFilterQueries,
                     gaugeFilterQueries: usageGaugeFilterQueries,
