@@ -65,6 +65,36 @@ export async function fetchRepository(
 }
 
 /**
+ * Query function to fetch installation details (includes `provider`).
+ */
+export async function fetchInstallation(
+  projectId: string,
+  installationId: string,
+): Promise<Models.Installation> {
+  if (!projectId || !installationId) {
+    throw new Error('Project ID and Installation ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.vcs.getInstallation(installationId)
+}
+
+/**
+ * Hook to fetch installation details (includes `provider`).
+ */
+export function useInstallation(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
  * Sort branches with main/master first, then alphabetically.
  */
 export function sortRepositoryBranches(branches: Models.Branch[]) {
@@ -317,12 +347,14 @@ export function useRepositoryBranches(
   providerRepositoryId: string | null | undefined,
   search?: string,
 ) {
-  return useQuery(repositoryBranchesQueryOptions(
-    projectId,
-    installationId,
-    providerRepositoryId,
-    search,
-  ))
+  return useQuery(
+    repositoryBranchesQueryOptions(
+      projectId,
+      installationId,
+      providerRepositoryId,
+      search,
+    ),
+  )
 }
 
 /**

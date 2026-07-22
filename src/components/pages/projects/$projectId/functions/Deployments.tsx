@@ -4,12 +4,14 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useContext} from 'react'
+  useContext,
+} from 'react'
 import {
   useParams,
   Link,
   useNavigate,
-  useLocation} from '@tanstack/react-router'
+  useLocation,
+} from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   Info,
@@ -29,7 +31,8 @@ import {
   Package,
   ChevronDown,
   ExternalLink,
-  ScrollText} from 'lucide-react'
+  ScrollText,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   MenuItemContent,
@@ -40,13 +43,15 @@ import {
   isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
-  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS} from '@/lib/utils/deployment-status'
+  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+} from '@/lib/utils/deployment-status'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -62,7 +67,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,13 +77,15 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -97,7 +105,8 @@ import {
   deleteFunctionDeployment,
   cancelFunctionDeployment,
   DEFAULT_PAGE_SIZE,
-  buildFunctionUpdateParams} from '@/lib/react-query/hooks'
+  buildFunctionUpdateParams,
+} from '@/lib/react-query/hooks'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
@@ -107,6 +116,7 @@ import {
   SpecificationType,
 } from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getVcsProvider } from '@/lib/vcs/providers'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
@@ -133,69 +143,24 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-// GitHub Icon Component
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  )
-}
-
-// GitLab Icon Component
-function GitLabIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M23.955 13.587l-1.1-3.38-.02-.05-.02-.05-2.1-6.45a.74.74 0 00-.68-.47.74.74 0 00-.68.47l-2.1 6.45-1.1 3.38a.74.74 0 00.28.85l9.5 6.9a.74.74 0 00.85 0l9.5-6.9a.74.74 0 00.28-.85zm-2.1-3.38l1.1 3.38-8.5 6.18-8.5-6.18 1.1-3.38 1.1 3.38a.74.74 0 00.28.85l7.12 5.17 7.12-5.17a.74.74 0 00.28-.85l1.1-3.38z" />
-    </svg>
-  )
-}
-
-// Bitbucket Icon Component
-function BitbucketIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M.778 1.213a.768.768 0 00-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 00.77-.646l3.27-20.03a.768.768 0 00-.768-.891L.778 1.213zM14.52 15.53H9.522L8.17 8.466h7.561l.529 7.064h-1.74z" />
-    </svg>
-  )
-}
-
 // Detect VCS provider from deployment
-function getVcsProvider(
+function detectVcsProvider(
   deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   // Check for providerRepositoryUrl which contains the provider domain
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) {
-      return {
-        name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('github')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (url.includes('gitlab.com')) {
-      return {
-        name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
-      return {
-        name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
 
@@ -203,19 +168,16 @@ function getVcsProvider(
   if (deployment.vcsProvider) {
     const provider = deployment.vcsProvider.toLowerCase()
     if (provider === 'github') {
-      return {
-        name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('github')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (provider === 'gitlab') {
-      return {
-        name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (provider === 'bitbucket') {
-      return {
-        name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
 
@@ -225,7 +187,8 @@ function getVcsProvider(
     if (deployment.providerRepositoryUrl || deployment.providerRepositoryId) {
       return {
         name: 'Git',
-        icon: <GitBranch className="h-4 w-4" />}
+        icon: <GitBranch className="h-4 w-4" />,
+      }
     }
   }
 
@@ -299,7 +262,8 @@ export function View() {
   const {
     total,
     isLoading: deploymentsLoading,
-    isFetching: deploymentsFetching} = useFunctionDeployments(
+    isFetching: deploymentsFetching,
+  } = useFunctionDeployments(
     projectId,
     functionId,
     requestedPage,
@@ -388,14 +352,16 @@ export function View() {
       deployments?: Models.Deployment[]
     }>({
       queryKey: ['deployments', 'function', projectId, functionId],
-      exact: false})
+      exact: false,
+    })
     const hasInProgressInCache = queries.some(([, data]) =>
       data?.deployments?.some((d) => isDeploymentInProgress(d.status)),
     )
     if (!hasInProgressInCache) return
     void queryClient.refetchQueries({
       queryKey: ['deployments', 'function', projectId, functionId],
-      exact: false})
+      exact: false,
+    })
   }, [projectId, functionId, queryClient])
 
   // Fetch domains for the function (filter by active deployment)
@@ -453,7 +419,9 @@ export function View() {
     : t('Not set')
 
   // Get VCS provider info
-  const vcsProvider = activeDeployment ? getVcsProvider(activeDeployment) : null
+  const vcsProvider = activeDeployment
+    ? detectVcsProvider(activeDeployment)
+    : null
 
   // Initialize selected specification when dialog opens
   useEffect(() => {
@@ -484,18 +452,21 @@ export function View() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update(
         buildFunctionUpdateParams(func, {
-          runtimeSpecification: specificationSlug}),
+          runtimeSpecification: specificationSlug,
+        }),
       )
     },
     onSuccess: () => {
       toast.success(t('Runtime limits updated successfully'))
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       setRuntimeLimitsDialogOpen(false)
     },
     onError: (error: unknown) => {
       toast.error(error.message || t('Failed to update runtime limits'))
-    }})
+    },
+  })
 
   const handleSaveSpecification = () => {
     updateSpecificationMutation.mutate(selectedSpecification)
@@ -520,7 +491,8 @@ export function View() {
       const url = projectSdk.functions.getDeploymentDownload({
         functionId,
         deploymentId: activeDeployment.$id,
-        type: DeploymentDownloadType.Source})
+        type: DeploymentDownloadType.Source,
+      })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
@@ -536,7 +508,8 @@ export function View() {
       const url = projectSdk.functions.getDeploymentDownload({
         functionId,
         deploymentId: activeDeployment.$id,
-        type: DeploymentDownloadType.Output})
+        type: DeploymentDownloadType.Output,
+      })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
@@ -556,19 +529,23 @@ export function View() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.createDuplicateDeployment({
         functionId,
-        deploymentId: activeDeployment.$id})
+        deploymentId: activeDeployment.$id,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId]})
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to redeploy'))
-    }})
+    },
+  })
 
   // Activate mutation (disabled for active deployment, but included for consistency)
   const activateMutation = useMutation({
@@ -581,19 +558,23 @@ export function View() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.updateFunctionDeployment({
         functionId,
-        deploymentId: activeDeployment.$id})
+        deploymentId: activeDeployment.$id,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['deployments', 'project', projectId, functionId]})
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
       queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       toast.success(t('Deployment activated successfully'))
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to activate deployment'))
-    }})
+    },
+  })
 
   // Cancel build mutation (stop the build, deployment remains with status canceled)
   const cancelBuildMutation = useMutation({
@@ -611,14 +592,17 @@ export function View() {
       setCancelBuildDialogOpen(false)
       setCancelTargetDeploymentId(null)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId]})
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
       await queryClient.refetchQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
-    }})
+    },
+  })
 
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
@@ -637,15 +621,18 @@ export function View() {
     onSuccess: async () => {
       // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
-        queryKey: ['deployments', 'project', projectId, functionId]})
+        queryKey: ['deployments', 'project', projectId, functionId],
+      })
       await queryClient.refetchQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       toast.success(t('Deployment deleted successfully'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployment'))
-    }})
+    },
+  })
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -674,9 +661,11 @@ export function View() {
     onSuccess: async () => {
       // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
-        queryKey: Dependencies.DEPLOYMENTS})
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
       await queryClient.refetchQueries({
-        queryKey: ['function', 'project', projectId, functionId]})
+        queryKey: ['function', 'project', projectId, functionId],
+      })
       toast.success(
         `${t('Successfully deleted')} ${selectedDeployments.size} ${selectedDeployments.size > 1 ? t('deployments') : t('deployment')}`,
       )
@@ -685,7 +674,8 @@ export function View() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
-    }})
+    },
+  })
 
   const handleBulkDelete = () => {
     if (selectedDeployments.size === 0) return
@@ -743,7 +733,8 @@ export function View() {
         ...prev,
         page: undefined, // Remove page param to go to page 1
       }),
-      replace: true})
+      replace: true,
+    })
     setRequestedPage(0)
     setDisplayedPage(0)
     setSelectedDeployments(new Set()) // Clear selection on page size change
@@ -753,7 +744,8 @@ export function View() {
     navigate({
       to: location.pathname,
       search: (prev) => ({ ...prev, query: undefined }),
-      replace: true})
+      replace: true,
+    })
     setSelectedDeployments(new Set())
   }
 
@@ -785,7 +777,9 @@ export function View() {
                 >
                   <Info className="h-4 w-4 text-blue-500 shrink-0" />
                   <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    <span>{t('Your function is currently being redeployed.')}</span>
+                    <span>
+                      {t('Your function is currently being redeployed.')}
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1041,7 +1035,8 @@ export function View() {
                       </div>
                       {hasMoreDomains && (
                         <p className="text-[11px] text-muted-foreground mt-1.5">
-                          +{totalActiveDomains - activeDomains.length} {t('more')}
+                          +{totalActiveDomains - activeDomains.length}{' '}
+                          {t('more')}
                         </p>
                       )}
                       <div
@@ -1060,7 +1055,8 @@ export function View() {
                             to="/projects/$projectId/functions/$functionId/domains"
                             params={{
                               projectId: projectId!,
-                              functionId: functionId!}}
+                              functionId: functionId!,
+                            }}
                           >
                             {t('View all domains')}
                             {hasMoreDomains && (
@@ -1084,7 +1080,8 @@ export function View() {
                             to="/projects/$projectId/functions/$functionId/domains"
                             params={{
                               projectId: projectId!,
-                              functionId: functionId!}}
+                              functionId: functionId!,
+                            }}
                           >
                             {t('Add domain')}
                           </Link>
@@ -1108,7 +1105,8 @@ export function View() {
                           to="/projects/$projectId/functions/$functionId/domains"
                           params={{
                             projectId: projectId!,
-                            functionId: functionId!}}
+                            functionId: functionId!,
+                          }}
                         >
                           {t('View all domains')}
                         </Link>
@@ -1124,7 +1122,8 @@ export function View() {
                           to="/projects/$projectId/functions/$functionId/domains"
                           params={{
                             projectId: projectId!,
-                            functionId: functionId!}}
+                            functionId: functionId!,
+                          }}
                         >
                           {t('Add domain')}
                         </Link>
@@ -1187,7 +1186,9 @@ export function View() {
                       params: {
                         projectId: projectId!,
                         functionId: functionId!,
-                        deploymentId: activeDeployment.$id}})
+                        deploymentId: activeDeployment.$id,
+                      },
+                    })
                   }}
                   className="h-9 text-[13px]"
                 >
@@ -1231,7 +1232,9 @@ export function View() {
                         params: {
                           projectId: projectId!,
                           functionId: functionId!,
-                          deploymentId: activeDeployment.$id}})
+                          deploymentId: activeDeployment.$id,
+                        },
+                      })
                     }
                   }}
                 >
@@ -1364,7 +1367,9 @@ export function View() {
                                 params: {
                                   projectId: projectId!,
                                   functionId: functionId!,
-                                  deploymentId: deployment.$id}})
+                                  deploymentId: deployment.$id,
+                                },
+                              })
                             }}
                           >
                             <TableCell
@@ -1417,7 +1422,8 @@ export function View() {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               {(() => {
-                                const vcsProvider = getVcsProvider(deployment)
+                                const vcsProvider =
+                                  detectVcsProvider(deployment)
                                 if (vcsProvider) {
                                   const repositoryOwner =
                                     deployment.providerRepositoryOwner
@@ -1481,7 +1487,8 @@ export function View() {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               {(() => {
-                                const vcsProvider = getVcsProvider(deployment)
+                                const vcsProvider =
+                                  detectVcsProvider(deployment)
                                 if (!vcsProvider) {
                                   return (
                                     <span className="text-[12px] text-muted-foreground">
@@ -1670,7 +1677,8 @@ export function View() {
                                           await projectSdk.functions.updateFunctionDeployment(
                                             {
                                               functionId: functionId!,
-                                              deploymentId: deployment.$id},
+                                              deploymentId: deployment.$id,
+                                            },
                                           )
                                           queryClient.invalidateQueries({
                                             queryKey: [
@@ -1678,16 +1686,20 @@ export function View() {
                                               'project',
                                               projectId,
                                               functionId,
-                                            ]})
+                                            ],
+                                          })
                                           queryClient.invalidateQueries({
                                             queryKey: [
                                               'function',
                                               'project',
                                               projectId,
                                               functionId,
-                                            ]})
+                                            ],
+                                          })
                                           toast.success(
-                                            t('Deployment activated successfully'),
+                                            t(
+                                              'Deployment activated successfully',
+                                            ),
                                           )
                                         } catch {
                                           toast.error(
@@ -1696,7 +1708,9 @@ export function View() {
                                         }
                                       }}
                                     >
-                                      <MenuItemContent icon={Play}>{t('Activate')}</MenuItemContent>
+                                      <MenuItemContent icon={Play}>
+                                        {t('Activate')}
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
@@ -1709,7 +1723,8 @@ export function View() {
                                         await projectSdk.functions.createDuplicateDeployment(
                                           {
                                             functionId: functionId!,
-                                            deploymentId: deployment.$id},
+                                            deploymentId: deployment.$id,
+                                          },
                                         )
                                         queryClient.invalidateQueries({
                                           queryKey: [
@@ -1717,7 +1732,8 @@ export function View() {
                                             'project',
                                             projectId,
                                             functionId,
-                                          ]})
+                                          ],
+                                        })
                                         toast.success(
                                           t('Deployment rebuild started'),
                                         )
@@ -1751,7 +1767,8 @@ export function View() {
                                                 {
                                                   functionId,
                                                   deploymentId: deployment.$id,
-                                                  type: DeploymentDownloadType.Source},
+                                                  type: DeploymentDownloadType.Source,
+                                                },
                                               )
                                             const urlWithMode =
                                               url +
@@ -1761,7 +1778,9 @@ export function View() {
                                             toast.success(t('Download started'))
                                           } catch {
                                             toast.error(
-                                              t('Failed to download source code'),
+                                              t(
+                                                'Failed to download source code',
+                                              ),
                                             )
                                           }
                                         }}
@@ -1802,7 +1821,8 @@ export function View() {
                                                 {
                                                   functionId,
                                                   deploymentId: deployment.$id,
-                                                  type: DeploymentDownloadType.Output},
+                                                  type: DeploymentDownloadType.Output,
+                                                },
                                               )
                                             const urlWithMode =
                                               url +
@@ -1812,7 +1832,9 @@ export function View() {
                                             toast.success(t('Download started'))
                                           } catch {
                                             toast.error(
-                                              t('Failed to download build output'),
+                                              t(
+                                                'Failed to download build output',
+                                              ),
                                             )
                                           }
                                         }}
@@ -1856,14 +1878,16 @@ export function View() {
                                             'project',
                                             projectId,
                                             functionId,
-                                          ]})
+                                          ],
+                                        })
                                         await queryClient.refetchQueries({
                                           queryKey: [
                                             'function',
                                             'project',
                                             projectId,
                                             functionId,
-                                          ]})
+                                          ],
+                                        })
                                         toast.success(
                                           t('Deployment deleted successfully'),
                                         )
@@ -1876,7 +1900,9 @@ export function View() {
                                       }
                                     }}
                                   >
-                                    <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+                                    <MenuItemContent icon={Trash2}>
+                                      {t('Delete')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                   {isDeploymentInProgress(
                                     deployment.status,
@@ -1890,7 +1916,9 @@ export function View() {
                                         setCancelBuildDialogOpen(true)
                                       }}
                                     >
-                                      <MenuItemContent icon={XCircle}>{t('Cancel')}</MenuItemContent>
+                                      <MenuItemContent icon={XCircle}>
+                                        {t('Cancel')}
+                                      </MenuItemContent>
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -1958,7 +1986,9 @@ export function View() {
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedDeployments.size}{' '}
-              {selectedDeployments.size > 1 ? t('deployments') : t('deployment')}{' '}
+              {selectedDeployments.size > 1
+                ? t('deployments')
+                : t('deployment')}{' '}
               {t('selected')}
             </Badge>
             <div className="flex items-center gap-2">
@@ -2119,8 +2149,10 @@ export function View() {
           <div className="px-6 pb-4 pt-4">
             <DialogDescription className="text-[13px] mb-4">
               {t('Are you sure you want to delete')} {selectedDeployments.size}{' '}
-              {selectedDeployments.size > 1 ? t('deployments') : t('deployment')}?{' '}
-              {t('This action cannot be undone.')}
+              {selectedDeployments.size > 1
+                ? t('deployments')
+                : t('deployment')}
+              ? {t('This action cannot be undone.')}
             </DialogDescription>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {displayedDeployments

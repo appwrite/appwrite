@@ -4,7 +4,8 @@ import {
   useParams,
   Link,
   useNavigate,
-  useLocation} from '@tanstack/react-router'
+  useLocation,
+} from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   Clock,
@@ -25,7 +26,8 @@ import {
   Globe,
   ExternalLink,
   XCircle,
-  ScrollText} from 'lucide-react'
+  ScrollText,
+} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
   MenuItemContent,
@@ -36,17 +38,20 @@ import {
   isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
-  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS} from '@/lib/utils/deployment-status'
+  DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
+} from '@/lib/utils/deployment-status'
 import { getDeploymentRepositoryWebUrl } from '@/lib/utils/deployment-repository-url'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger} from '@/components/ui/popover'
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -61,7 +66,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,13 +76,15 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -89,8 +97,10 @@ import {
   useSiteDomains,
   deleteSiteDeployment,
   cancelSiteDeployment,
-  Dependencies} from '@/lib/react-query/hooks'
+  Dependencies,
+} from '@/lib/react-query/hooks'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { getVcsProvider } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_CARD_WIDTH,
@@ -121,75 +131,31 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-// GitHub Icon Component
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  )
-}
-
-// GitLab Icon Component
-function GitLabIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M23.955 13.587l-1.1-3.38-.02-.05-.02-.05-2.1-6.45a.74.74 0 00-.68-.47.74.74 0 00-.68.47l-2.1 6.45-1.1 3.38a.74.74 0 00.28.85l9.5 6.9a.74.74 0 00.85 0l9.5-6.9a.74.74 0 00.28-.85zm-2.1-3.38l1.1 3.38-8.5 6.18-8.5-6.18 1.1-3.38 1.1 3.38a.74.74 0 00.28.85l7.12 5.17 7.12-5.17a.74.74 0 00.28-.85l1.1-3.38z" />
-    </svg>
-  )
-}
-
-// Bitbucket Icon Component
-function BitbucketIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M.778 1.213a.768.768 0 00-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 00.77-.646l3.27-20.03a.768.768 0 00-.768-.891L.778 1.213zM14.52 15.53H9.522L8.17 8.466h7.561l.529 7.064h-1.74z" />
-    </svg>
-  )
-}
-
 // Detect VCS provider from deployment
-function getVcsProvider(
+function detectVcsProvider(
   deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) {
-      return {
-        name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('github')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (url.includes('gitlab.com')) {
-      return {
-        name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
-      return {
-        name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />}
+      const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
   if (deployment.type === 'git' || deployment.type === 'vcs') {
     if (deployment.providerRepositoryUrl || deployment.providerRepositoryId) {
       return {
         name: 'Git',
-        icon: <GitBranch className="h-4 w-4" />}
+        icon: <GitBranch className="h-4 w-4" />,
+      }
     }
   }
   return null
@@ -260,7 +226,8 @@ export function SiteDeploymentsView() {
   const {
     total,
     isLoading: deploymentsLoading,
-    isFetching: deploymentsFetching} = useSiteDeployments(projectId, siteId, requestedPage, pageSize, [
+    isFetching: deploymentsFetching,
+  } = useSiteDeployments(projectId, siteId, requestedPage, pageSize, [
     Query.select([
       'buildSize',
       'sourceSize',
@@ -393,10 +360,7 @@ export function SiteDeploymentsView() {
   const activeDomains = useMemo(() => {
     const filtered =
       siteDomainsRules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(
-          rule,
-          activeDeploymentResolved?.$id,
-        ),
+        proxyRuleServesActiveDeployment(rule, activeDeploymentResolved?.$id),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -406,10 +370,7 @@ export function SiteDeploymentsView() {
   const totalActiveDomains = useMemo(
     () =>
       siteDomainsRules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(
-          rule,
-          activeDeploymentResolved?.$id,
-        ),
+        proxyRuleServesActiveDeployment(rule, activeDeploymentResolved?.$id),
       ).length ?? 0,
     [siteDomainsRules, activeDeploymentResolved?.$id],
   )
@@ -417,7 +378,7 @@ export function SiteDeploymentsView() {
 
   // Get VCS provider info
   const vcsProvider = activeDeploymentForCard
-    ? getVcsProvider(activeDeploymentForCard)
+    ? detectVcsProvider(activeDeploymentForCard)
     : null
 
   // Clear selection when navigating between pages
@@ -437,7 +398,8 @@ export function SiteDeploymentsView() {
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
         deploymentId: activeDeploymentResolved.$id,
-        type: DeploymentDownloadType.Source})
+        type: DeploymentDownloadType.Source,
+      })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
@@ -453,7 +415,8 @@ export function SiteDeploymentsView() {
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
         deploymentId: activeDeploymentResolved.$id,
-        type: DeploymentDownloadType.Output})
+        type: DeploymentDownloadType.Output,
+      })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success(t('Download started'))
@@ -471,19 +434,23 @@ export function SiteDeploymentsView() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createDuplicateDeployment({
         siteId,
-        deploymentId: activeDeploymentResolved.$id})
+        deploymentId: activeDeploymentResolved.$id,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS]})
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId]})
+        queryKey: ['site', 'project', projectId, siteId],
+      })
       toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to redeploy'))
-    }})
+    },
+  })
 
   // Activate mutation (disabled for active deployment, but included for consistency)
   const activateMutation = useMutation({
@@ -494,43 +461,46 @@ export function SiteDeploymentsView() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.updateSiteDeployment({
         siteId,
-        deploymentId: activeDeploymentResolved.$id})
+        deploymentId: activeDeploymentResolved.$id,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS]})
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId]})
+        queryKey: ['site', 'project', projectId, siteId],
+      })
       toast.success(t('Deployment activated successfully'))
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to activate deployment'))
-    }})
+    },
+  })
 
   const cancelBuildMutation = useMutation({
     mutationFn: async (deploymentIdToCancel: string) => {
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
-      return await cancelSiteDeployment(
-        projectId,
-        siteId,
-        deploymentIdToCancel,
-      )
+      return await cancelSiteDeployment(projectId, siteId, deploymentIdToCancel)
     },
     onSuccess: async () => {
       setCancelBuildDialogOpen(false)
       setCancelTargetDeploymentId(null)
       await queryClient.refetchQueries({
-        queryKey: Dependencies.DEPLOYMENTS})
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
       await queryClient.refetchQueries({
-        queryKey: ['site', 'project', projectId, siteId]})
+        queryKey: ['site', 'project', projectId, siteId],
+      })
       toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
-    }})
+    },
+  })
 
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
@@ -546,15 +516,18 @@ export function SiteDeploymentsView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [...Dependencies.DEPLOYMENTS]})
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId]})
+        queryKey: ['site', 'project', projectId, siteId],
+      })
       toast.success(t('Deployment deleted successfully'))
       setDeleteActiveDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployment'))
-    }})
+    },
+  })
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -582,9 +555,11 @@ export function SiteDeploymentsView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: Dependencies.DEPLOYMENTS})
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
       queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId]})
+        queryKey: ['site', 'project', projectId, siteId],
+      })
       toast.success(
         selectedDeployments.size === 1
           ? t('Deployment deleted successfully')
@@ -595,7 +570,8 @@ export function SiteDeploymentsView() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
-    }})
+    },
+  })
 
   const handleBulkDelete = () => {
     if (selectedDeployments.size === 0) return
@@ -638,7 +614,8 @@ export function SiteDeploymentsView() {
         ...prev,
         page: page === 1 ? undefined : page, // Remove page param if it's page 1
       }),
-      replace: true})
+      replace: true,
+    })
     setSelectedDeployments(new Set()) // Clear selection on page change
   }
 
@@ -651,7 +628,8 @@ export function SiteDeploymentsView() {
         ...prev,
         page: undefined, // Remove page param to go to page 1
       }),
-      replace: true})
+      replace: true,
+    })
     setRequestedPage(0)
     setDisplayedPage(0)
     setSelectedDeployments(new Set()) // Clear selection on page size change
@@ -707,7 +685,8 @@ export function SiteDeploymentsView() {
                           fileId: screenshotId,
                           width: SITE_SCREENSHOT_CARD_WIDTH,
                           height: SITE_SCREENSHOT_CARD_HEIGHT,
-                          output: avifSupported ? ImageFormat.Avif : undefined},
+                          output: avifSupported ? ImageFormat.Avif : undefined,
+                        },
                       )
 
                       return (
@@ -924,13 +903,13 @@ export function SiteDeploymentsView() {
                                     "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.", // pragma: allowlist secret
                                   )}
                                 </p>
-                                  <DocsRouteLink
-                                    href="/docs/products/network/cdn"
-                                    className="link-neutral text-[11px] mt-1.5 inline-block"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {t('Learn more →')}
-                                  </DocsRouteLink>
+                                <DocsRouteLink
+                                  href="/docs/products/network/cdn"
+                                  className="link-neutral text-[11px] mt-1.5 inline-block"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {t('Learn more →')}
+                                </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -967,13 +946,13 @@ export function SiteDeploymentsView() {
                                     "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.", // pragma: allowlist secret
                                   )}
                                 </p>
-                                  <DocsRouteLink
-                                    href="/docs/products/network"
-                                    className="link-neutral text-[11px] mt-1.5 inline-block"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {t('Learn more →')}
-                                  </DocsRouteLink>
+                                <DocsRouteLink
+                                  href="/docs/products/network"
+                                  className="link-neutral text-[11px] mt-1.5 inline-block"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {t('Learn more →')}
+                                </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -1030,7 +1009,8 @@ export function SiteDeploymentsView() {
                                 to="/projects/$projectId/sites/$siteId/domains"
                                 params={{
                                   projectId: projectId!,
-                                  siteId: siteId!}}
+                                  siteId: siteId!,
+                                }}
                               >
                                 {t('View all domains')}
                                 {hasMoreDomains && (
@@ -1054,7 +1034,8 @@ export function SiteDeploymentsView() {
                                 to="/projects/$projectId/sites/$siteId/domains"
                                 params={{
                                   projectId: projectId!,
-                                  siteId: siteId!}}
+                                  siteId: siteId!,
+                                }}
                               >
                                 {t('Add domain')}
                               </Link>
@@ -1078,7 +1059,8 @@ export function SiteDeploymentsView() {
                               to="/projects/$projectId/sites/$siteId/domains"
                               params={{
                                 projectId: projectId!,
-                                siteId: siteId!}}
+                                siteId: siteId!,
+                              }}
                             >
                               {t('View all domains')}
                             </Link>
@@ -1094,7 +1076,8 @@ export function SiteDeploymentsView() {
                               to="/projects/$projectId/sites/$siteId/domains"
                               params={{
                                 projectId: projectId!,
-                                siteId: siteId!}}
+                                siteId: siteId!,
+                              }}
                             >
                               {t('Add domain')}
                             </Link>
@@ -1126,14 +1109,10 @@ export function SiteDeploymentsView() {
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
                       disabled={
-                        !isDeploymentCompleted(
-                          activeDeploymentForCard?.status,
-                        )
+                        !isDeploymentCompleted(activeDeploymentForCard?.status)
                       }
                       title={
-                        !isDeploymentCompleted(
-                          activeDeploymentForCard?.status,
-                        )
+                        !isDeploymentCompleted(activeDeploymentForCard?.status)
                           ? t(
                               'Build output is available after the deployment has completed.',
                             )
@@ -1159,7 +1138,8 @@ export function SiteDeploymentsView() {
                   params={{
                     projectId: projectId!,
                     siteId: siteId!,
-                    deploymentId: activeDeploymentResolved.$id}}
+                    deploymentId: activeDeploymentResolved.$id,
+                  }}
                 >
                   <Button
                     size="sm"
@@ -1209,7 +1189,8 @@ export function SiteDeploymentsView() {
                                 to="/projects/$projectId/sites/$siteId/domains"
                                 params={{
                                   projectId: projectId!,
-                                  siteId: siteId!}}
+                                  siteId: siteId!,
+                                }}
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
                               >
                                 <span>
@@ -1340,519 +1321,544 @@ export function SiteDeploymentsView() {
                                 params: {
                                   projectId: projectId!,
                                   siteId: siteId!,
-                                  deploymentId: deploymentData.$id}})
+                                  deploymentId: deploymentData.$id,
+                                },
+                              })
                             }}
                           >
-                          <TableCell
-                            className="px-4 py-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedDeployments.has(
-                                deploymentData.$id,
+                            <TableCell
+                              className="px-4 py-3"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedDeployments.has(
+                                  deploymentData.$id,
+                                )}
+                                onCheckedChange={() =>
+                                  toggleDeployment(deploymentData.$id)
+                                }
+                                disabled={isActive}
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <CopyableId
+                                id={deploymentData.$id}
+                                size="sm"
+                                maxWidth={180}
+                              />
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                'px-4 py-3',
+                                DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
                               )}
-                              onCheckedChange={() =>
-                                toggleDeployment(deploymentData.$id)
-                              }
-                              disabled={isActive}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <CopyableId
-                              id={deploymentData.$id}
-                              size="sm"
-                              maxWidth={180}
-                            />
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              'px-4 py-3',
-                              DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
-                            )}
-                          >
-                            {isActive ? (
-                              <Badge
-                                variant="active"
-                                className="gap-1.5 text-[11px] font-medium"
-                              >
-                                <CheckCircle2 className="h-3 w-3" />
-                                {t('Active')}
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant={statusBadge.badgeVariant}
-                                className="gap-1.5 text-[11px] font-medium"
-                              >
-                                {(() => {
-                                  const StatusIcon = statusBadge.icon
-                                  return <StatusIcon className="h-3 w-3" />
-                                })()}
-                                {t(statusBadge.label)}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {(() => {
-                              const vcsProvider = getVcsProvider(deploymentData)
-                              if (vcsProvider) {
-                                const repositoryOwner =
-                                  deploymentData.providerRepositoryOwner
-                                const repositoryName =
-                                  deploymentData.providerRepositoryName
-                                const hasRepository =
-                                  repositoryOwner && repositoryName
+                            >
+                              {isActive ? (
+                                <Badge
+                                  variant="active"
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {t('Active')}
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant={statusBadge.badgeVariant}
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  {(() => {
+                                    const StatusIcon = statusBadge.icon
+                                    return <StatusIcon className="h-3 w-3" />
+                                  })()}
+                                  {t(statusBadge.label)}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              {(() => {
+                                const vcsProvider =
+                                  detectVcsProvider(deploymentData)
+                                if (vcsProvider) {
+                                  const repositoryOwner =
+                                    deploymentData.providerRepositoryOwner
+                                  const repositoryName =
+                                    deploymentData.providerRepositoryName
+                                  const hasRepository =
+                                    repositoryOwner && repositoryName
 
-                                if (hasRepository) {
-                                  const repoUrl = getDeploymentRepositoryWebUrl(
-                                    deploymentData,
-                                  )
-                                  const label = `${repositoryOwner}/${repositoryName}`
+                                  if (hasRepository) {
+                                    const repoUrl =
+                                      getDeploymentRepositoryWebUrl(
+                                        deploymentData,
+                                      )
+                                    const label = `${repositoryOwner}/${repositoryName}`
+                                    return (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
+                                      >
+                                        {vcsProvider.icon}
+                                        {repoUrl ? (
+                                          <a
+                                            href={repoUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="link-neutral truncate"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {label}
+                                          </a>
+                                        ) : (
+                                          <span className="truncate">
+                                            {label}
+                                          </span>
+                                        )}
+                                      </Badge>
+                                    )
+                                  }
                                   return (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[11px] h-6 px-2.5 gap-1.5 max-w-full"
-                                    >
+                                    <div className="flex items-center gap-1.5 text-[12px] text-foreground">
                                       {vcsProvider.icon}
-                                      {repoUrl ? (
-                                        <a
-                                          href={repoUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="link-neutral truncate"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {label}
-                                        </a>
-                                      ) : (
-                                        <span className="truncate">{label}</span>
-                                      )}
-                                    </Badge>
+                                      <span>{vcsProvider.name}</span>
+                                    </div>
                                   )
                                 }
+                                const typeLabel =
+                                  deploymentData.type === 'cli'
+                                    ? 'CLI'
+                                    : deploymentData.type === 'manual'
+                                      ? 'Manual'
+                                      : deploymentData.type || 'N/A'
                                 return (
                                   <div className="flex items-center gap-1.5 text-[12px] text-foreground">
-                                    {vcsProvider.icon}
-                                    <span>{vcsProvider.name}</span>
+                                    {deploymentData.type === 'cli' && (
+                                      <GitBranch className="h-3.5 w-3.5" />
+                                    )}
+                                    <span>{t(typeLabel)}</span>
                                   </div>
                                 )
-                              }
-                              const typeLabel =
-                                deploymentData.type === 'cli'
-                                  ? 'CLI'
-                                  : deploymentData.type === 'manual'
-                                    ? 'Manual'
-                                    : deploymentData.type || 'N/A'
-                              return (
-                                <div className="flex items-center gap-1.5 text-[12px] text-foreground">
-                                  {deploymentData.type === 'cli' && (
-                                    <GitBranch className="h-3.5 w-3.5" />
-                                  )}
-                                  <span>{t(typeLabel)}</span>
-                                </div>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {(() => {
-                              const vcsProvider = getVcsProvider(deploymentData)
-                              if (!vcsProvider) {
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              {(() => {
+                                const vcsProvider =
+                                  detectVcsProvider(deploymentData)
+                                if (!vcsProvider) {
+                                  return (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      -
+                                    </span>
+                                  )
+                                }
+
+                                const commitMessage =
+                                  deploymentData.providerCommitMessage
+                                const commitHash =
+                                  deploymentData.providerCommitHash
+                                const commitUrl =
+                                  deploymentData.providerCommitUrl
+                                const commitAuthor =
+                                  deploymentData.providerCommitAuthor
+                                const commitAuthorUrl =
+                                  deploymentData.providerCommitAuthorUrl
+                                const branch = deploymentData.providerBranch
+
+                                if (!commitMessage && !branch && !commitHash) {
+                                  return (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      -
+                                    </span>
+                                  )
+                                }
+
                                 return (
-                                  <span className="text-[12px] text-muted-foreground">
-                                     - 
-                                  </span>
-                                )
-                              }
-
-                              const commitMessage =
-                                deploymentData.providerCommitMessage
-                              const commitHash =
-                                deploymentData.providerCommitHash
-                              const commitUrl = deploymentData.providerCommitUrl
-                              const commitAuthor =
-                                deploymentData.providerCommitAuthor
-                              const commitAuthorUrl =
-                                deploymentData.providerCommitAuthorUrl
-                              const branch = deploymentData.providerBranch
-
-                              if (!commitMessage && !branch && !commitHash) {
-                                return (
-                                  <span className="text-[12px] text-muted-foreground">
-                                     - 
-                                  </span>
-                                )
-                              }
-
-                              return (
-                                <div className="space-y-1.5 min-w-0">
-                                  {commitMessage && (
-                                    <div className="text-[12px] text-foreground line-clamp-1 font-mono">
-                                      {commitUrl ? (
-                                        <a
-                                          href={commitUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="link-neutral"
-                                          onClick={(e) => e.stopPropagation()}
-                                          title={
-                                            commitMessage.length > 30
-                                              ? commitMessage
-                                              : undefined
-                                          }
-                                        >
-                                          {commitMessage.length > 30
-                                            ? `${commitMessage.slice(0, 30)}...`
-                                            : commitMessage}
-                                        </a>
-                                      ) : (
-                                        <span
-                                          title={
-                                            commitMessage.length > 30
-                                              ? commitMessage
-                                              : undefined
-                                          }
-                                        >
-                                          {commitMessage.length > 30
-                                            ? `${commitMessage.slice(0, 30)}...`
-                                            : commitMessage}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  {(branch || commitHash) && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
-                                      {branch && (
-                                        <div className="flex items-center gap-1">
-                                          <GitBranch className="h-3 w-3" />
-                                          <span className="font-mono">
-                                            {branch}
+                                  <div className="space-y-1.5 min-w-0">
+                                    {commitMessage && (
+                                      <div className="text-[12px] text-foreground line-clamp-1 font-mono">
+                                        {commitUrl ? (
+                                          <a
+                                            href={commitUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="link-neutral"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={
+                                              commitMessage.length > 30
+                                                ? commitMessage
+                                                : undefined
+                                            }
+                                          >
+                                            {commitMessage.length > 30
+                                              ? `${commitMessage.slice(0, 30)}...`
+                                              : commitMessage}
+                                          </a>
+                                        ) : (
+                                          <span
+                                            title={
+                                              commitMessage.length > 30
+                                                ? commitMessage
+                                                : undefined
+                                            }
+                                          >
+                                            {commitMessage.length > 30
+                                              ? `${commitMessage.slice(0, 30)}...`
+                                              : commitMessage}
                                           </span>
-                                        </div>
-                                      )}
-                                      {commitHash && (
-                                        <>
-                                          {branch && <span>•</span>}
-                                          <div className="flex min-w-0 items-center gap-1">
-                                            <GitCommit className="h-3 w-3 shrink-0" />
-                                            <span className="shrink-0 font-mono">
-                                              {commitHash.slice(0, 7)}
+                                        )}
+                                      </div>
+                                    )}
+                                    {(branch || commitHash) && (
+                                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
+                                        {branch && (
+                                          <div className="flex items-center gap-1">
+                                            <GitBranch className="h-3 w-3" />
+                                            <span className="font-mono">
+                                              {branch}
                                             </span>
-                                            {commitAuthor ? (
-                                              <span className="min-w-0 truncate">
-                                                {` ${t('by')} `}
-                                                {commitAuthorUrl ? (
-                                                  <a
-                                                    href={commitAuthorUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="link-neutral"
-                                                    onClick={(e) =>
-                                                      e.stopPropagation()
-                                                    }
-                                                    title={commitAuthor}
-                                                  >
-                                                    {commitAuthor}
-                                                  </a>
-                                                ) : (
-                                                  commitAuthor
-                                                )}
-                                              </span>
-                                            ) : null}
                                           </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <code className="text-[12px] font-mono text-muted-foreground">
-                              {formatSize(
-                                (deploymentData.buildSize || 0) +
-                                  (deploymentData.sourceSize || 0),
-                              )}
-                            </code>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <code className="text-[12px] font-mono text-muted-foreground">
-                              {deploymentData.buildDuration &&
-                              !isDeploymentTimeout(
-                                deploymentData.status,
-                                deploymentData.$createdAt,
-                              )
-                                ? formatDuration(deploymentData.buildDuration)
-                                : '-'}
-                            </code>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <DateTooltip
-                              date={deploymentData.$createdAt}
-                              className="text-[12px] font-medium text-muted-foreground"
-                            />
-                          </TableCell>
-                          <TableCell
-                            className="px-4 py-3 text-end"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <RowActionsMenuTrigger
-                                  onClick={(e) => e.stopPropagation()}
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                align="end"
-                                className="z-[200]"
-                              >
-                                {!isActive && (
-                                  <DropdownMenuItem
-                                    disabled={
-                                      deploymentData.status !== 'ready'
-                                    }
-                                    title={
-                                      deploymentData.status !== 'ready'
-                                        ? t(
-                                            'Build must be ready before activating',
+                                        )}
+                                        {commitHash && (
+                                          <>
+                                            {branch && <span>•</span>}
+                                            <div className="flex min-w-0 items-center gap-1">
+                                              <GitCommit className="h-3 w-3 shrink-0" />
+                                              <span className="shrink-0 font-mono">
+                                                {commitHash.slice(0, 7)}
+                                              </span>
+                                              {commitAuthor ? (
+                                                <span className="min-w-0 truncate">
+                                                  {` ${t('by')} `}
+                                                  {commitAuthorUrl ? (
+                                                    <a
+                                                      href={commitAuthorUrl}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="link-neutral"
+                                                      onClick={(e) =>
+                                                        e.stopPropagation()
+                                                      }
+                                                      title={commitAuthor}
+                                                    >
+                                                      {commitAuthor}
+                                                    </a>
+                                                  ) : (
+                                                    commitAuthor
+                                                  )}
+                                                </span>
+                                              ) : null}
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {formatSize(
+                                  (deploymentData.buildSize || 0) +
+                                    (deploymentData.sourceSize || 0),
+                                )}
+                              </code>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {deploymentData.buildDuration &&
+                                !isDeploymentTimeout(
+                                  deploymentData.status,
+                                  deploymentData.$createdAt,
+                                )
+                                  ? formatDuration(deploymentData.buildDuration)
+                                  : '-'}
+                              </code>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <DateTooltip
+                                date={deploymentData.$createdAt}
+                                className="text-[12px] font-medium text-muted-foreground"
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="px-4 py-3 text-end"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <RowActionsMenuTrigger
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                  />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="z-[200]"
+                                >
+                                  {!isActive && (
+                                    <DropdownMenuItem
+                                      disabled={
+                                        deploymentData.status !== 'ready'
+                                      }
+                                      title={
+                                        deploymentData.status !== 'ready'
+                                          ? t(
+                                              'Build must be ready before activating',
+                                            )
+                                          : undefined
+                                      }
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        if (deploymentData.status !== 'ready')
+                                          return
+                                        try {
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
                                           )
-                                        : undefined
-                                    }
+                                          await projectSdk.sites.updateSiteDeployment(
+                                            {
+                                              siteId: siteId!,
+                                              deploymentId: deploymentData.$id,
+                                            },
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              ...Dependencies.DEPLOYMENTS,
+                                            ],
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'site',
+                                              'project',
+                                              projectId,
+                                              siteId,
+                                            ],
+                                          })
+                                          toast.success(
+                                            t(
+                                              'Deployment activated successfully',
+                                            ),
+                                          )
+                                        } catch {
+                                          toast.error(
+                                            t('Failed to activate deployment'),
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <MenuItemContent icon={Play}>
+                                        {t('Activate')}
+                                      </MenuItemContent>
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
                                     onClick={async (e) => {
                                       e.stopPropagation()
-                                      if (deploymentData.status !== 'ready')
-                                        return
                                       try {
                                         const projectSdk = sdk.forProject(
                                           projectId!,
                                         )
-                                        await projectSdk.sites.updateSiteDeployment(
+                                        await projectSdk.sites.createDuplicateDeployment(
                                           {
                                             siteId: siteId!,
-                                            deploymentId: deploymentData.$id},
+                                            deploymentId: deploymentData.$id,
+                                          },
                                         )
                                         queryClient.invalidateQueries({
                                           queryKey: [
                                             ...Dependencies.DEPLOYMENTS,
-                                          ]})
+                                          ],
+                                        })
+                                        toast.success(
+                                          t('Deployment rebuild started'),
+                                        )
+                                      } catch {
+                                        toast.error(t('Failed to redeploy'))
+                                      }
+                                    }}
+                                  >
+                                    <MenuItemContent icon={RefreshCw}>
+                                      {t('Redeploy')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger
+                                      onClick={(e) => e.stopPropagation()}
+                                      onPointerDown={(e) => e.stopPropagation()}
+                                    >
+                                      <MenuItemIcon icon={Download} />
+                                      {t('Download')}
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="z-[200]">
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (!projectId || !siteId) return
+                                          try {
+                                            const projectSdk =
+                                              sdk.forProject(projectId)
+                                            const url =
+                                              projectSdk.sites.getDeploymentDownload(
+                                                {
+                                                  siteId,
+                                                  deploymentId:
+                                                    deploymentData.$id,
+                                                  type: DeploymentDownloadType.Source,
+                                                },
+                                              )
+                                            const urlWithMode =
+                                              url +
+                                              (url.includes('?') ? '&' : '?') +
+                                              'mode=admin'
+                                            window.open(urlWithMode, '_blank')
+                                            toast.success(t('Download started'))
+                                          } catch {
+                                            toast.error(
+                                              t(
+                                                'Failed to download source code',
+                                              ),
+                                            )
+                                          }
+                                        }}
+                                      >
+                                        <MenuItemContent icon={FileCode}>
+                                          {t('Source code')}
+                                        </MenuItemContent>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        disabled={
+                                          !isDeploymentCompleted(
+                                            deploymentData.status,
+                                          )
+                                        }
+                                        title={
+                                          !isDeploymentCompleted(
+                                            deploymentData.status,
+                                          )
+                                            ? t(
+                                                'Build output is available after the deployment has completed.',
+                                              )
+                                            : undefined
+                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (
+                                            !isDeploymentCompleted(
+                                              deploymentData.status,
+                                            )
+                                          )
+                                            return
+                                          if (!projectId || !siteId) return
+                                          try {
+                                            const projectSdk =
+                                              sdk.forProject(projectId)
+                                            const url =
+                                              projectSdk.sites.getDeploymentDownload(
+                                                {
+                                                  siteId,
+                                                  deploymentId:
+                                                    deploymentData.$id,
+                                                  type: DeploymentDownloadType.Output,
+                                                },
+                                              )
+                                            const urlWithMode =
+                                              url +
+                                              (url.includes('?') ? '&' : '?') +
+                                              'mode=admin'
+                                            window.open(urlWithMode, '_blank')
+                                            toast.success(t('Download started'))
+                                          } catch {
+                                            toast.error(
+                                              t(
+                                                'Failed to download build output',
+                                              ),
+                                            )
+                                          }
+                                        }}
+                                      >
+                                        <MenuItemContent icon={Package}>
+                                          {t('Build output')}
+                                        </MenuItemContent>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    disabled={!canDeleteFromMenu}
+                                    title={
+                                      !canDeleteFromMenu
+                                        ? isActive
+                                          ? t(
+                                              'The active deployment cannot be deleted from the list',
+                                            )
+                                          : isDeploymentInProgress(
+                                                deploymentData.status,
+                                              )
+                                            ? t(
+                                                'Wait for the build to finish or cancel it first',
+                                              )
+                                            : undefined
+                                        : undefined
+                                    }
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (!canDeleteFromMenu) return
+                                      try {
+                                        await deleteSiteDeployment(
+                                          projectId!,
+                                          siteId!,
+                                          deploymentData.$id,
+                                        )
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            ...Dependencies.DEPLOYMENTS,
+                                          ],
+                                        })
                                         queryClient.invalidateQueries({
                                           queryKey: [
                                             'site',
                                             'project',
                                             projectId,
                                             siteId,
-                                          ]})
+                                          ],
+                                        })
                                         toast.success(
-                                          t('Deployment activated successfully'),
+                                          t('Deployment deleted successfully'),
                                         )
-                                      } catch {
+                                      } catch (error) {
                                         toast.error(
-                                          t('Failed to activate deployment'),
+                                          error instanceof Error
+                                            ? error.message
+                                            : t('Failed to delete deployment'),
                                         )
                                       }
                                     }}
                                   >
-                                    <MenuItemContent icon={Play}>
-                                      {t('Activate')}
+                                    <MenuItemContent icon={Trash2}>
+                                      {t('Delete')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={async (e) => {
-                                    e.stopPropagation()
-                                    try {
-                                      const projectSdk = sdk.forProject(
-                                        projectId!,
-                                      )
-                                      await projectSdk.sites.createDuplicateDeployment(
-                                        {
-                                          siteId: siteId!,
-                                          deploymentId: deploymentData.$id},
-                                      )
-                                      queryClient.invalidateQueries({
-                                        queryKey: [
-                                          ...Dependencies.DEPLOYMENTS,
-                                        ]})
-                                      toast.success(
-                                        t('Deployment rebuild started'),
-                                      )
-                                    } catch {
-                                      toast.error(t('Failed to redeploy'))
-                                    }
-                                  }}
-                                >
-                                  <MenuItemContent icon={RefreshCw}>
-                                    {t('Redeploy')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger
-                                    onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                  >
-                                    <MenuItemIcon icon={Download} />
-                                    {t('Download')}
-                                  </DropdownMenuSubTrigger>
-                                  <DropdownMenuSubContent className="z-[200]">
+                                  {isDeploymentInProgress(
+                                    deploymentData.status,
+                                  ) && (
                                     <DropdownMenuItem
                                       onClick={(e) => {
                                         e.stopPropagation()
-                                        if (!projectId || !siteId) return
-                                        try {
-                                          const projectSdk =
-                                            sdk.forProject(projectId)
-                                          const url =
-                                            projectSdk.sites.getDeploymentDownload(
-                                              {
-                                                siteId,
-                                                deploymentId:
-                                                  deploymentData.$id,
-                                                type: DeploymentDownloadType.Source},
-                                            )
-                                          const urlWithMode =
-                                            url +
-                                            (url.includes('?') ? '&' : '?') +
-                                            'mode=admin'
-                                          window.open(urlWithMode, '_blank')
-                                          toast.success(t('Download started'))
-                                        } catch {
-                                          toast.error(
-                                            t('Failed to download source code'),
-                                          )
-                                        }
+                                        setCancelTargetDeploymentId(
+                                          deploymentData.$id,
+                                        )
+                                        setCancelBuildDialogOpen(true)
                                       }}
                                     >
-                                      <MenuItemContent icon={FileCode}>
-                                        {t('Source code')}
+                                      <MenuItemContent icon={XCircle}>
+                                        {t('Cancel')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      disabled={
-                                        !isDeploymentCompleted(
-                                          deploymentData.status,
-                                        )
-                                      }
-                                      title={
-                                        !isDeploymentCompleted(
-                                          deploymentData.status,
-                                        )
-                                          ? t(
-                                              'Build output is available after the deployment has completed.',
-                                            )
-                                          : undefined
-                                      }
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (
-                                          !isDeploymentCompleted(
-                                            deploymentData.status,
-                                          )
-                                        )
-                                          return
-                                        if (!projectId || !siteId) return
-                                        try {
-                                          const projectSdk =
-                                            sdk.forProject(projectId)
-                                          const url =
-                                            projectSdk.sites.getDeploymentDownload(
-                                              {
-                                                siteId,
-                                                deploymentId:
-                                                  deploymentData.$id,
-                                                type: DeploymentDownloadType.Output},
-                                            )
-                                          const urlWithMode =
-                                            url +
-                                            (url.includes('?') ? '&' : '?') +
-                                            'mode=admin'
-                                          window.open(urlWithMode, '_blank')
-                                          toast.success(t('Download started'))
-                                        } catch {
-                                          toast.error(
-                                            t('Failed to download build output'),
-                                          )
-                                        }
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Package}>
-                                        {t('Build output')}
-                                      </MenuItemContent>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  disabled={!canDeleteFromMenu}
-                                  title={
-                                    !canDeleteFromMenu
-                                      ? isActive
-                                        ? t(
-                                            'The active deployment cannot be deleted from the list',
-                                          )
-                                        : isDeploymentInProgress(
-                                              deploymentData.status,
-                                            )
-                                          ? t(
-                                              'Wait for the build to finish or cancel it first',
-                                            )
-                                          : undefined
-                                      : undefined
-                                  }
-                                  onClick={async (e) => {
-                                    e.stopPropagation()
-                                    if (!canDeleteFromMenu) return
-                                    try {
-                                      await deleteSiteDeployment(
-                                        projectId!,
-                                        siteId!,
-                                        deploymentData.$id,
-                                      )
-                                      queryClient.invalidateQueries({
-                                        queryKey: [...Dependencies.DEPLOYMENTS]})
-                                      queryClient.invalidateQueries({
-                                        queryKey: [
-                                          'site',
-                                          'project',
-                                          projectId,
-                                          siteId,
-                                        ]})
-                                      toast.success(
-                                        t('Deployment deleted successfully'),
-                                      )
-                                    } catch (error) {
-                                      toast.error(
-                                        error instanceof Error
-                                          ? error.message
-                                          : t('Failed to delete deployment'),
-                                      )
-                                    }
-                                  }}
-                                >
-                                  <MenuItemContent icon={Trash2}>
-                                    {t('Delete')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                {isDeploymentInProgress(
-                                  deploymentData.status,
-                                ) && (
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setCancelTargetDeploymentId(
-                                        deploymentData.$id,
-                                      )
-                                      setCancelBuildDialogOpen(true)
-                                    }}
-                                  >
-                                    <MenuItemContent icon={XCircle}>
-                                      {t('Cancel')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
                         </DeploymentListRowContextMenu>
                       )
                     })}
