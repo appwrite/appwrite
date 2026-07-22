@@ -139,6 +139,14 @@ export function ConnectRepositorySection({
   )
   const [repositoryPrivate, setRepositoryPrivate] = useState(true)
 
+  const connectedInstallation = installations.find(
+    (installation) => installation.$id === value.installationId,
+  )
+  const {
+    Icon: ConnectedRepositoryIcon,
+    label: connectedRepositoryProviderLabel,
+  } = getVcsProvider(connectedInstallation?.provider)
+
   const createRepositoryMutation = useCreateVcsRepository(projectId)
 
   const hasRepository = !!value.installationId && !!value.providerRepositoryId
@@ -255,14 +263,14 @@ export function ConnectRepositorySection({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <GitHubIcon className="h-5 w-5" />
+                <ConnectedRepositoryIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {value.repositoryOwner}/{value.repositoryName}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {t('GitHub repository')}
+                  {t(`${connectedRepositoryProviderLabel} repository`)}
                 </p>
               </div>
             </div>
@@ -348,7 +356,9 @@ export function ConnectRepositorySection({
                 {t('Create new repository')}
               </span>
               <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Create a new Git repository and clone the template into it.')}
+                {t(
+                  'Create a new Git repository and clone the template into it.',
+                )}
               </p>
             </div>
           </Label>
