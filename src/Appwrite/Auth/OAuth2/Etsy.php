@@ -40,7 +40,7 @@ class Etsy extends OAuth2
     private function getPKCE(): string
     {
         if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
+                        $this->pkce = \rtrim(\strtr(\base64_encode(\random_bytes(64)), '+/', '-_'), '=');
         }
 
         return $this->pkce;
@@ -65,7 +65,7 @@ class Etsy extends OAuth2
             'response_type' => 'code',
             'state' => \json_encode($this->state),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+                        'code_challenge' => \rtrim(\strtr(\base64_encode(\hash('sha256', $this->getPKCE(), true)), '+/', '-_'), '='),
             'code_challenge_method' => 'S256',
         ]);
     }
