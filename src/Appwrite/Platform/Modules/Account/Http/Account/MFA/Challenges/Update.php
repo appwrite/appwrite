@@ -113,7 +113,14 @@ class Update extends Action
                 $challenge->getAttribute('type') === Type::RECOVERY_CODE
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-                if (\in_array($otp, $mfaRecoveryCodes)) {
+                $found = false;
+                foreach ($mfaRecoveryCodes as $code) {
+                    if (\hash_equals($code, $otp)) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if ($found) {
                     $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
                     $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
                     $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
