@@ -87,6 +87,10 @@ class Update extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
             throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
         }
