@@ -88,7 +88,8 @@ class Get extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $contents = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory, $providerReference);
+        $rootDirectory = $providerRootDirectory === './' ? '' : $providerRootDirectory;
+        $contents = $vcs->listRepositoryContents($owner, $repositoryName, $rootDirectory, $providerReference);
 
         $vcsContents = [];
         foreach ($contents as $content) {

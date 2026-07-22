@@ -131,6 +131,10 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
+        if ($providerRootDirectory === './') {
+            $providerRootDirectory = '';
+        }
+
         $files = $vcs->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
         $files = \array_column($files, 'name');
         $languages = $vcs->listRepositoryLanguages($owner, $repositoryName);
@@ -150,7 +154,8 @@ class Create extends Action
         if ($type === 'framework') {
             $packages = '';
             try {
-                $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $packagePath = empty($providerRootDirectory) ? 'package.json' : \rtrim($providerRootDirectory, '/') . '/package.json';
+                $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, $packagePath);
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
                 // Continue detection without package.json
@@ -282,7 +287,8 @@ class Create extends Action
             $wg->add();
             go(function () use ($vcs, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
-                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $envPath = empty($providerRootDirectory) ? $file : \rtrim($providerRootDirectory, '/') . '/' . $file;
+                    $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, $envPath);
                     $envFile = $contentResponse['content'] ?? '';
 
                     $configAdapter = new ConfigDotenv();
