@@ -2,17 +2,14 @@
 
 namespace Appwrite\Detector;
 
-use DeviceDetector\DeviceDetector;
+use Utopia\UserAgent\UserAgent;
 
 class Detector
 {
-    protected $userAgent = '';
+    protected string $userAgent;
 
-    protected $detctor;
+    protected ?UserAgent $agent = null;
 
-    /**
-     * @param string $userAgent
-     */
     public function __construct(string $userAgent)
     {
         $this->userAgent = $userAgent;
@@ -21,90 +18,83 @@ class Detector
     /**
      * Get OS info
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getOS(): array
     {
-        $os = $this->getDetector()->getOs();
+        $os = $this->getAgent()->operatingSystem();
 
         return [
-            'osCode' => (isset($os['short_name'])) ? $os['short_name'] : '',
-            'osName' => (isset($os['name'])) ? $os['name'] : '',
-            'osVersion' => (isset($os['version'])) ? $os['version'] : '',
+            'osCode' => $os->code ?? '',
+            'osName' => $os->name ?? '',
+            'osVersion' => $os->version ?? '',
         ];
     }
 
     /**
      * Get client info
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getClient(): array
     {
-        if (strpos($this->userAgent, 'AppwriteCLI') !== false) {
-            $version = explode(' ', $this->userAgent)[0];
-            $version = explode('/', $version)[1];
-            $client = [
-                'type' => 'desktop',
-                'short_name' => 'cli',
-                'name' => 'Appwrite CLI',
-                'version' => $version
+        // The CLI is not a known user agent, so it is resolved manually
+        if (\str_contains($this->userAgent, 'AppwriteCLI')) {
+            $version = \explode(' ', $this->userAgent)[0];
+            $version = \explode('/', $version)[1] ?? '';
+
+            return [
+                'clientType' => 'desktop',
+                'clientCode' => 'cli',
+                'clientName' => 'Appwrite CLI',
+                'clientVersion' => $version,
+                'clientEngine' => '',
+                'clientEngineVersion' => '',
             ];
-        } else {
-            $client = $this->getDetector()->getClient();
         }
 
+        $client = $this->getAgent()->client();
+
         return [
-            'clientType' => (isset($client['type'])) ? $client['type'] : '',
-            'clientCode' => (isset($client['short_name'])) ? $client['short_name'] : '',
-            'clientName' => (isset($client['name'])) ? $client['name'] : '',
-            'clientVersion' => (isset($client['version'])) ? $client['version'] : '',
-            'clientEngine' => (isset($client['engine'])) ? $client['engine'] : '',
-            'clientEngineVersion' => (isset($client['engine_version'])) ? $client['engine_version'] : '',
+            'clientType' => $client->type ?? '',
+            'clientCode' => $client->code ?? '',
+            'clientName' => $client->name ?? '',
+            'clientVersion' => $client->version ?? '',
+            'clientEngine' => $client->engine ?? '',
+            'clientEngineVersion' => $client->engineVersion ?? '',
         ];
     }
 
     /**
      * Get device info
      *
-     * @return array
+     * @return array<string, string|null>
      */
     public function getDevice(): array
     {
-        $deviceName = $this->getDetector()->getDeviceName();
-        $deviceBrand = $this->getDetector()->getBrandName();
-        $deviceModel = $this->getDetector()->getModel();
+        $device = $this->getAgent()->device();
 
         return [
-            'deviceName' => empty($deviceName) ? null : $deviceName,
-            'deviceBrand' => empty($deviceBrand) ? null : $deviceBrand,
-            'deviceModel' => empty($deviceModel) ? null : $deviceModel,
+            'deviceName' => empty($device->type) ? null : $device->type,
+            'deviceBrand' => empty($device->brand) ? null : $device->brand,
+            'deviceModel' => empty($device->model) ? null : $device->model,
         ];
     }
 
     /**
-     * @return DeviceDetector
-     */
-    protected function getDetector(): DeviceDetector
-    {
-        if (!$this->detctor) {
-            $this->detctor = new DeviceDetector($this->userAgent);
-            $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            $this->detctor->parse();
-        }
-
-        return $this->detctor;
-    }
-
-    /**
-     * Sets whether to skip bot detection.
-     * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
-     * or desktop, or enything else. By default all this information is not retrieved for the bots.
-     *
-     * @param bool $skip
+     * No-op kept for call site compatibility. utopia-php/user-agent never suppresses
+     * OS, client or device info for bots, so there is nothing to skip.
      */
     public function skipBotDetection(bool $skip = true): void
     {
-        $this->getDetector()->skipBotDetection($skip);
+    }
+
+    protected function getAgent(): UserAgent
+    {
+        if ($this->agent === null) {
+            $this->agent = UserAgent::parse($this->userAgent);
+        }
+
+        return $this->agent;
     }
 }
