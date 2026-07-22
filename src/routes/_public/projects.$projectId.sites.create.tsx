@@ -12,7 +12,9 @@ import {
   siteFrameworksQueryOptions,
   siteTemplatesQueryOptions,
   fetchProject,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { useQuery } from '@tanstack/react-query'
 import {
   WizardProvider,
@@ -87,6 +89,9 @@ function CreateSiteLayoutInner() {
     siteFrameworksQueryOptions(projectId),
   )
 
+  const { data: project } = useQuery(projectQueryOptions(projectId as string))
+  const { sitesDomain } = useConsoleVariables(project?.region)
+
   // Update context when data loads
   useEffect(() => {
     if (installationsData?.installations) {
@@ -100,11 +105,9 @@ function CreateSiteLayoutInner() {
     }
   }, [frameworksData, setFrameworks])
 
-  // TODO: Fetch base domain from console variables
-  // For now, use a default value
   useEffect(() => {
-    setBaseDomain('appwrite.network')
-  }, [setBaseDomain])
+    setBaseDomain(sitesDomain ?? 'appwrite.network')
+  }, [sitesDomain, setBaseDomain])
 
   return <Outlet />
 }
