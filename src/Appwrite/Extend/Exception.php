@@ -349,7 +349,7 @@ class Exception extends \Exception
     public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
     public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
 
-    /** GraphqQL */
+    /** GraphQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
     public const string GRAPHQL_TOO_MANY_QUERIES = 'graphql_too_many_queries';
 
