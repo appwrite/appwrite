@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1d913d8ccc683139c24d76d7d697e97",
+    "content-hash": "f9e477526d52de114f4bc6b07ebd21ea",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -799,76 +799,6 @@
                 }
             ],
             "time": "2023-12-29T07:34:53+00:00"
-        },
-        {
-            "name": "matomo/device-detector",
-            "version": "6.4.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "56baf981af4f192e15a4f369d4975af847a81ccb"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/56baf981af4f192e15a4f369d4975af847a81ccb",
-                "reference": "56baf981af4f192e15a4f369d4975af847a81ccb",
-                "shasum": ""
-            },
-            "require": {
-                "mustangostang/spyc": "*",
-                "php": "^7.2|^8.0"
-            },
-            "replace": {
-                "piwik/device-detector": "self.version"
-            },
-            "require-dev": {
-                "matthiasmullie/scrapbook": "^1.4.7",
-                "mayflower/mo4-coding-standard": "^v9.0.0",
-                "phpstan/phpstan": "^1.10.44",
-                "phpunit/phpunit": "^8.5.8",
-                "psr/cache": "^1.0.1",
-                "psr/simple-cache": "^1.0.1",
-                "slevomat/coding-standard": "<8.16.0",
-                "symfony/yaml": "^5.1.7"
-            },
-            "suggest": {
-                "doctrine/cache": "Can directly be used for caching purpose",
-                "ext-yaml": "Necessary for using the Pecl YAML parser"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "DeviceDetector\\": ""
-                },
-                "exclude-from-classmap": [
-                    "Tests/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "The Matomo Team",
-                    "email": "hello@matomo.org",
-                    "homepage": "https://matomo.org/team/"
-                }
-            ],
-            "description": "The Universal Device Detection library, that parses User Agents and detects devices (desktop, tablet, mobile, tv, cars, console, etc.), clients (browsers, media players, mobile apps, feed readers, libraries, etc), operating systems, devices, brands and models.",
-            "homepage": "https://matomo.org",
-            "keywords": [
-                "devicedetection",
-                "parser",
-                "useragent"
-            ],
-            "support": {
-                "forum": "https://forum.matomo.org/",
-                "issues": "https://github.com/matomo-org/device-detector/issues",
-                "source": "https://github.com/matomo-org/matomo",
-                "wiki": "https://dev.matomo.org/"
-            },
-            "time": "2025-11-26T16:02:47+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -5148,6 +5078,48 @@
                 "source": "https://github.com/utopia-php/telemetry/tree/0.4.5"
             },
             "time": "2026-07-08T11:07:25+00:00"
+        },
+        {
+            "name": "utopia-php/user-agent",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/user-agent.git",
+                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/user-agent/zipball/4f7bb7288cfe3ce8e257944c0827914901c873bc",
+                "reference": "4f7bb7288cfe3ce8e257944c0827914901c873bc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4"
+            },
+            "require-dev": {
+                "matomo/device-detector": "6.4.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\UserAgent\\": "src/UserAgent/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A fast user-agent parser and device detector for PHP",
+            "keywords": [
+                "device-detection",
+                "parser",
+                "user-agent"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/user-agent/issues",
+                "source": "https://github.com/utopia-php/user-agent/tree/0.1.1"
+            },
+            "time": "2026-07-20T09:05:28+00:00"
         },
         {
             "name": "utopia-php/validators",
