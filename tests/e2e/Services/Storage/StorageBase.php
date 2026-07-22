@@ -2143,6 +2143,7 @@ trait StorageBase
 
         $upload('');
         $upload('invoices');
+        $upload('Photos/2024');
         $upload('photos/2025');
         $julyFileId = $upload('photos/2026/july');
 
@@ -2155,12 +2156,12 @@ trait StorageBase
             return $response['body']['folders'];
         };
 
-        // top level, alphabetical
+        // top level, bytewise ordering is stable across database collations
         $folders = $listFolders([]);
-        $this->assertCount(2, $folders);
-        $this->assertEquals(['invoices/', 'photos/'], \array_column($folders, 'key'));
-        $this->assertEquals(['invoices', 'photos'], \array_column($folders, 'name'));
-        $this->assertEquals(['', ''], \array_column($folders, 'parent'));
+        $this->assertCount(3, $folders);
+        $this->assertEquals(['Photos/', 'invoices/', 'photos/'], \array_column($folders, 'key'));
+        $this->assertEquals(['Photos', 'invoices', 'photos'], \array_column($folders, 'name'));
+        $this->assertEquals(['', '', ''], \array_column($folders, 'parent'));
 
         // nested level -- deep files imply intermediate folders
         $folders = $listFolders(['folder' => 'photos']);
@@ -2171,6 +2172,8 @@ trait StorageBase
 
         // pagination
         $page = $listFolders(['limit' => 1]);
+        $this->assertEquals(['Photos/'], \array_column($page, 'key'));
+        $page = $listFolders(['limit' => 1, 'cursor' => 'Photos/']);
         $this->assertEquals(['invoices/'], \array_column($page, 'key'));
         $page = $listFolders(['limit' => 1, 'cursor' => 'invoices/']);
         $this->assertEquals(['photos/'], \array_column($page, 'key'));

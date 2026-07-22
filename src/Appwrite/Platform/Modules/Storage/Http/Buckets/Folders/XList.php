@@ -99,21 +99,15 @@ class XList extends Action
         }
 
         $collection = 'bucket_' . $bucket->getSequence();
-        $seek = $cursor === '' ? $parent : $cursor;
         $folders = [];
+        $latest = null;
+        $batch = 1000;
 
         try {
-            while (\count($folders) < $limit) {
-                $queries = [
-                    Query::greaterThan('folder', $seek),
-                    Query::orderAsc('folder'),
-                    Query::limit(1),
-                ];
-                if ($seek !== $parent) {
-                    $queries[] = Query::notStartsWith('folder', $seek);
-                }
-                if ($parent !== '') {
-                    $queries[] = Query::startsWith('folder', $parent);
+            do {
+                $queries = [Query::limit($batch)];
+                if ($latest !== null) {
+                    $queries[] = Query::cursorAfter($latest);
                 }
 
                 if ($fileSecurity && !$valid) {
@@ -126,24 +120,35 @@ class XList extends Action
                     break;
                 }
 
-                $fileParent = $results[0]->getAttribute('folder', '');
-                $segment = \explode('/', \substr($fileParent, \strlen($parent)))[0];
-                $key = $parent . $segment . '/';
+                foreach ($results as $file) {
+                    $fileParent = $file->getAttribute('folder', '');
+                    if ($fileParent === $parent || !\str_starts_with($fileParent, $parent)) {
+                        continue;
+                    }
 
-                $folders[] = new Document([
-                    'key' => $key,
-                    'name' => $segment,
-                    'parent' => $parent,
-                ]);
+                    $segment = \explode('/', \substr($fileParent, \strlen($parent)))[0];
+                    $key = $parent . $segment . '/';
+                    if ($cursor !== '' && \strcmp($key, $cursor) <= 0) {
+                        continue;
+                    }
 
-                $seek = $key;
-            }
+                    $folders[$key] = new Document([
+                        'key' => $key,
+                        'name' => $segment,
+                        'parent' => $parent,
+                    ]);
+                }
+
+                \ksort($folders, \SORT_STRING);
+                $folders = \array_slice($folders, 0, $limit, true);
+                $latest = $results[\array_key_last($results)];
+            } while (\count($results) === $batch);
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $response->dynamic(new Document([
-            'folders' => $folders,
+            'folders' => \array_values($folders),
         ]), Response::MODEL_FOLDER_LIST);
     }
 
