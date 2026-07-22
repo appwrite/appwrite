@@ -1,3 +1,27 @@
+# Version 1.9.6
+
+## What's Changed
+
+### Notable changes
+
+* Automatically repair missing `providerBranches` and `providerPaths` attributes on Functions and Sites when upgrading from 1.9.5. Operators no longer need to apply the metadata and table changes manually.
+
+### Fixes
+
+* Make migration attribute batches idempotent when some attributes already exist in [#12790](https://github.com/appwrite/appwrite/pull/12790)
+* Replace the side-effecting Appwrite container healthcheck with the public version endpoint in [#12765](https://github.com/appwrite/appwrite/pull/12765)
+* Respect `_APP_SITES_RUNTIMES` when listing frameworks and creating or updating Sites in [#12840](https://github.com/appwrite/appwrite/pull/12840)
+* Wait for a writable MongoDB replica-set primary before marking the service healthy in [#12913](https://github.com/appwrite/appwrite/pull/12913)
+* Correct database and queue connectivity reporting in the `doctor` task in [#12928](https://github.com/appwrite/appwrite/pull/12928)
+* Allow additional time for the self-hosted installer to pull images and start Compose services in [#12747](https://github.com/appwrite/appwrite/pull/12747)
+
+### Miscellaneous
+
+* Update the self-hosted Console image to [8.7.30](https://github.com/appwrite/console/releases/tag/8.7.30) for recent self-hosted VCS, error rendering, build specification, and security fixes
+* Update Open Runtimes Executor to [0.25.4](https://github.com/open-runtimes/executor/releases/tag/0.25.4) for recent build and S3 custom endpoint fixes
+* Update the Browser service to [0.3.3](https://github.com/appwrite/docker-browser/releases/tag/0.3.3) so screenshot headers work with custom internal Appwrite origins
+* Update release metadata and installation examples for 1.9.6
+
 # Version 1.9.5
 
 ## What's Changed

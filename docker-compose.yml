@@ -43,11 +43,12 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     healthcheck:
       test:
-        - CMD
-        - doctor
+        - CMD-SHELL
+        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 120s
     networks:
       - appwrite
     labels:
@@ -208,7 +209,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/console:8.7.11
+    image: appwrite/console:8.7.30
     restart: unless-stopped
     networks:
       - appwrite
@@ -1186,7 +1187,7 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.2
+    image: appwrite/browser:0.3.3
     networks:
       - appwrite
   openruntimes-executor:
@@ -1198,7 +1199,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.1
+    image: openruntimes/executor:0.25.4
     restart: unless-stopped
     networks:
       - appwrite
@@ -1315,7 +1316,7 @@ services:
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
               const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
                 quit(0);
               }
             } catch (e) {}
