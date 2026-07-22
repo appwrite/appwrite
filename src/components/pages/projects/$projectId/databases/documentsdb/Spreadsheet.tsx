@@ -83,6 +83,7 @@ import {
   useProjectTable,
   updateProjectTable,
   deleteProjectTable,
+  updateConsoleTeamPrefs,
 } from '@/lib/react-query/hooks'
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -5386,10 +5387,7 @@ export function TableSettings({
           [tableId]: names,
         },
       }
-      await sdk.forConsole.teams.updatePrefs({
-        teamId: organizationId,
-        prefs: updatedPrefs,
-      })
+      await updateConsoleTeamPrefs(organizationId, updatedPrefs)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', 'console'] })
@@ -5438,10 +5436,7 @@ export function TableSettings({
               `${tableId}#indexes`
             ]
           }
-          await sdk.forConsole.teams.updatePrefs({
-            teamId: organizationId,
-            prefs: updatedPrefs,
-          })
+          await updateConsoleTeamPrefs(organizationId, updatedPrefs)
         } catch {
           // Silently handle preference deletion error
         }

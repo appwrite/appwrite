@@ -14,6 +14,7 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Team, TeamMember } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
+import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useOrganizations } from './organizations'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
@@ -197,6 +198,7 @@ export async function fetchConsoleTeam(teamId: string) {
 /**
  * Update console team (organization) preferences.
  * Merge your keys into existing team.prefs before calling.
+ * Silently skips while console impersonation is active so the org's prefs are not mutated.
  */
 export async function updateConsoleTeamPrefs(
   teamId: string,
@@ -204,6 +206,9 @@ export async function updateConsoleTeamPrefs(
 ) {
   if (!teamId) {
     throw new Error('Team ID is required')
+  }
+  if (hasConsoleImpersonationSessionTarget()) {
+    return
   }
   await sdk.forConsole.teams.updatePrefs({ teamId, prefs })
 }

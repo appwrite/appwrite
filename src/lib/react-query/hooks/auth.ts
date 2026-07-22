@@ -34,8 +34,11 @@ import {
   hasLikelyConsoleSession,
   type FetchConsoleAccountOptions,
 } from '@/lib/console-account-get'
-import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
-import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
+import {
+  clearConsoleImpersonationSession,
+  getConsoleAccountQueryRevision,
+  hasConsoleImpersonationSessionTarget,
+} from '@/lib/console-impersonation'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
@@ -1164,8 +1167,14 @@ export function useAccountSessions() {
 /**
  * Mutation function to update account preferences.
  * Sanitizes nested/legacy values so Appwrite does not 400 on write.
+ * Silently skips while console impersonation is active so the target user's prefs are not mutated.
  */
 export async function updateAccountPrefs(prefs: Record<string, unknown>) {
+  if (hasConsoleImpersonationSessionTarget()) {
+    const current = getConsoleAccountFromSingleton()
+    if (current) return current
+    return { prefs: sanitizeAccountPrefsForWrite(prefs) } as Models.User
+  }
   return await sdk.forConsole.account.updatePrefs({
     prefs: sanitizeAccountPrefsForWrite(prefs),
   })
