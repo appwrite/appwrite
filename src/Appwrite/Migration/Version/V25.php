@@ -109,6 +109,21 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'functions':
+                case 'sites':
+                    if ($collectionType === 'projects') {
+                        $attributes = ['providerBranches', 'providerPaths'];
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+                        $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+                    }
+                    break;
+
                 case 'migrations':
                     if ($collectionType === 'projects') {
                         $attributes = [
