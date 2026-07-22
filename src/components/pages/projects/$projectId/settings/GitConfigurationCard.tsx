@@ -7,18 +7,21 @@ import {
   Zap,
   AlertTriangle,
   Settings,
-  Unplug} from 'lucide-react'
+  Unplug,
+} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useVcsInstallations,
-  useDeleteVcsInstallation} from '@/lib/react-query/hooks/vcs'
+  useDeleteVcsInstallation,
+} from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   GitLabIcon,
   getVcsProvider,
+  getProviderOwnerUrl,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import {
@@ -33,19 +36,22 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
@@ -89,11 +95,14 @@ export function GitConfigurationCard({
   getGitHubAuthUrl,
   getVcsAuthUrl,
   isSelfHosted = false,
-  isVcsEnabled = true}: GitConfigurationCardProps) {
+  isVcsEnabled = true,
+}: GitConfigurationCardProps) {
   const t = useT()
   // Fall back to the GitHub-only helper when a generalized builder isn't provided.
-  const vcsAuthUrl = (provider: VcsProviderId, mode: 'create' | 'update' = 'create') =>
-    getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl(mode)
+  const vcsAuthUrl = (
+    provider: VcsProviderId,
+    mode: 'create' | 'update' = 'create',
+  ) => (getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl(mode))
   const { data: installationsData, isLoading } = useVcsInstallations(
     projectId,
     page,
@@ -130,9 +139,11 @@ export function GitConfigurationCard({
       const response = await projectSdk.functions.list({ queries })
       return {
         functions: response.functions || [],
-        total: response.total || 0}
+        total: response.total || 0,
+      }
     },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id})
+    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
+  })
 
   const { data: affectedSites, isLoading: sitesLoading } = useQuery({
     queryKey: [
@@ -154,9 +165,11 @@ export function GitConfigurationCard({
       const response = await projectSdk.sites.list({ queries })
       return {
         sites: response.sites || [],
-        total: response.total || 0}
+        total: response.total || 0,
+      }
     },
-    enabled: disconnectModalOpen && !!selectedInstallation?.$id})
+    enabled: disconnectModalOpen && !!selectedInstallation?.$id,
+  })
 
   const handleDisconnect = async () => {
     if (!selectedInstallation) return
@@ -169,7 +182,9 @@ export function GitConfigurationCard({
       setDisconnectModalOpen(false)
       setSelectedInstallation(null)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, t('Failed to disconnect installation')))
+      toast.error(
+        getErrorMessage(error, t('Failed to disconnect installation')),
+      )
     }
   }
 
@@ -184,7 +199,7 @@ export function GitConfigurationCard({
   }
 
   const getProviderUrl = (provider: string, organization: string) => {
-    return getVcsProvider(provider).baseUrl(organization)
+    return getProviderOwnerUrl(provider, organization)
   }
 
   // Empty State: total === 0 AND (!isSelfHosted OR isVcsEnabled === true)
@@ -199,7 +214,9 @@ export function GitConfigurationCard({
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            {t('Add a Git installation to your project so you can connect repositories later through your function or site settings.')}
+            {t(
+              'Add a Git installation to your project so you can connect repositories later through your function or site settings.',
+            )}
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
@@ -257,7 +274,10 @@ export function GitConfigurationCard({
             <AlertDescription className="text-[13px]">
               <strong>{t('Installing Git on a self-hosted instance')}</strong>
               <br />
-              {t('Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.')}{' '} {/* pragma: allowlist secret */}
+              {t(
+                'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.',
+              )}{' '}
+              {/* pragma: allowlist secret */}
               <Button
                 variant="link"
                 size="sm"
@@ -290,7 +310,9 @@ export function GitConfigurationCard({
             {/* Left side - Description */}
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                {t('Add a Git installation to your project so you can connect repositories later through your function or site settings.')}
+                {t(
+                  'Add a Git installation to your project so you can connect repositories later through your function or site settings.',
+                )}
               </p>
             </div>
 
@@ -321,19 +343,22 @@ export function GitConfigurationCard({
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]" />
                       </TableRow>
                     </TableHeader>
-                      <TableBody>
-                        {installations.map((installation) => {
-                          const providerUrl = getProviderUrl(
-                            installation.provider,
-                            installation.organization,
-                          )
-                          return (
-                            <GitInstallationContextMenu
-                              key={installation.$id}
-                              installation={installation}
-                              configureHref={getGitHubAuthUrl('update')}
-                              onDisconnect={handleOpenDisconnectModal}
-                            >
+                    <TableBody>
+                      {installations.map((installation) => {
+                        const providerUrl = getProviderUrl(
+                          installation.provider,
+                          installation.organization,
+                        )
+                        return (
+                          <GitInstallationContextMenu
+                            key={installation.$id}
+                            installation={installation}
+                            configureHref={vcsAuthUrl(
+                              getVcsProvider(installation.provider).id,
+                              'update',
+                            )}
+                            onDisconnect={handleOpenDisconnectModal}
+                          >
                             <TableRow>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2">
@@ -370,7 +395,11 @@ export function GitConfigurationCard({
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem asChild>
                                       <a
-                                        href={getGitHubAuthUrl('update')}
+                                        href={vcsAuthUrl(
+                                          getVcsProvider(installation.provider)
+                                            .id,
+                                          'update',
+                                        )}
                                         target="_blank"
                                         rel="noreferrer"
                                         className={menuItemRowClassName}
@@ -393,11 +422,11 @@ export function GitConfigurationCard({
                                 </DropdownMenu>
                               </TableCell>
                             </TableRow>
-                            </GitInstallationContextMenu>
-                          )
-                        })}
-                      </TableBody>
-                    </Table>
+                          </GitInstallationContextMenu>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
 
                   {total > limit && (
                     <div className="mt-4">
@@ -452,8 +481,12 @@ export function GitConfigurationCard({
             <DialogTitle>{t('Disconnect installation')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {affectedFunctions?.total === 0 && affectedSites?.total === 0
-                ? t('Are you sure you want to disconnect this git installation?')
-                : t('Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:')}
+                ? t(
+                    'Are you sure you want to disconnect this git installation?',
+                  )
+                : t(
+                    'Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />

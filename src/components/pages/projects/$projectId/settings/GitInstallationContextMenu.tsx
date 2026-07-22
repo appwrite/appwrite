@@ -13,7 +13,7 @@ import { Copy, FileJson, Link2, Settings, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getProviderOwnerUrl } from '@/lib/vcs/providers'
 
 interface GitInstallationContextMenuProps {
   installation: Models.Installation
@@ -29,7 +29,8 @@ export function GitInstallationContextMenu({
   children,
 }: GitInstallationContextMenuProps) {
   const t = useT()
-  const providerUrl = getVcsProvider(installation.provider).baseUrl(
+  const providerUrl = getProviderOwnerUrl(
+    installation.provider,
     installation.organization,
   )
 

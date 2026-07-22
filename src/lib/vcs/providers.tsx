@@ -33,20 +33,7 @@ export function GitLabIcon({ className }: { className?: string }) {
   )
 }
 
-export function BitbucketIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M.778 1.213a.768.768 0 0 0-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.891zM14.52 15.53H9.522L8.17 8.466h7.561z" />
-    </svg>
-  )
-}
-
-export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket'
+export type VcsProviderId = 'github' | 'gitlab'
 
 export interface VcsProviderMeta {
   id: VcsProviderId
@@ -69,18 +56,39 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     Icon: GitLabIcon,
     baseUrl: (organization) => `https://gitlab.com/${organization}`,
   },
-  bitbucket: {
-    id: 'bitbucket',
-    label: 'Bitbucket',
-    Icon: BitbucketIcon,
-    baseUrl: (organization) => `https://bitbucket.org/${organization}`,
-  },
 }
 
-/** Resolve provider metadata, defaulting to GitHub for unknown/legacy values. */
+/**
+ * Resolve provider metadata for display (icon, label), defaulting to GitHub
+ * for unknown/legacy values. Safe for cosmetic rendering, but never use this
+ * to build a clickable link -- an unknown provider would silently produce a
+ * real-looking github.com URL. Use {@link getProviderOwnerUrl} for that.
+ */
 export function getVcsProvider(provider?: string): VcsProviderMeta {
   const id = provider?.toLowerCase() as VcsProviderId | undefined
   return (id && VCS_PROVIDERS[id]) || VCS_PROVIDERS.github
+}
+
+/**
+ * Resolve provider metadata strictly, returning null for unknown providers
+ * instead of falling back to GitHub.
+ */
+export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
+  const id = provider?.toLowerCase() as VcsProviderId | undefined
+  return (id && VCS_PROVIDERS[id]) || null
+}
+
+/**
+ * Build the "open in provider" owner/org URL, or null if the provider isn't
+ * recognized -- callers should hide the link entirely rather than point it
+ * at a fabricated github.com URL for an unknown provider.
+ */
+export function getProviderOwnerUrl(
+  provider: string | undefined,
+  organization: string,
+): string | null {
+  const meta = getKnownVcsProvider(provider)
+  return meta ? meta.baseUrl(organization) : null
 }
 
 /** Build the OAuth authorize URL the console redirects to for a provider. */

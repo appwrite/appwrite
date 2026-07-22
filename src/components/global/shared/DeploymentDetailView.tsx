@@ -135,10 +135,6 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('gitlab')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
-      const { label, Icon } = getVcsProvider('bitbucket')
-      return { name: label, icon: <Icon className="h-4 w-4" /> }
-    }
   }
 
   // Check for vcsProvider field (if available)
@@ -150,10 +146,6 @@ function detectVcsProvider(
     }
     if (provider === 'gitlab') {
       const { label, Icon } = getVcsProvider('gitlab')
-      return { name: label, icon: <Icon className="h-4 w-4" /> }
-    }
-    if (provider === 'bitbucket') {
-      const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -175,16 +167,12 @@ function detectVcsProvider(
 /**
  * Get VCS provider type from deployment
  */
-function getVcsProviderType(
-  deployment: unknown,
-): 'github' | 'gitlab' | 'bitbucket' | null {
+function getVcsProviderType(deployment: unknown): 'github' | 'gitlab' | null {
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) return 'github'
     if (url.includes('gitlab.com')) return 'gitlab'
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
-      return 'bitbucket'
   }
 
   // Fallback to vcsProvider field
@@ -192,7 +180,6 @@ function getVcsProviderType(
     const provider = deployment.vcsProvider.toLowerCase()
     if (provider === 'github') return 'github'
     if (provider === 'gitlab') return 'gitlab'
-    if (provider === 'bitbucket') return 'bitbucket'
   }
 
   return null
@@ -223,9 +210,6 @@ function getCommitUrl(deployment: unknown): string | null {
   if (provider === 'gitlab') {
     return `https://gitlab.com/${owner}/${repo}/-/commit/${commitHash}`
   }
-  if (provider === 'bitbucket') {
-    return `https://bitbucket.org/${owner}/${repo}/commits/${commitHash}`
-  }
 
   return null
 }
@@ -254,9 +238,6 @@ function getBranchUrl(deployment: unknown): string | null {
   }
   if (provider === 'gitlab') {
     return `https://gitlab.com/${owner}/${repo}/-/tree/${branch}`
-  }
-  if (provider === 'bitbucket') {
-    return `https://bitbucket.org/${owner}/${repo}/src/${branch}`
   }
 
   return null
