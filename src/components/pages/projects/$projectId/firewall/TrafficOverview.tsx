@@ -41,8 +41,10 @@ import {
   useProjectFirewallTrafficOverview,
 } from '@/lib/react-query/hooks'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
+import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
+import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
 
 const SERIES = [
@@ -221,6 +223,18 @@ export function TrafficOverview() {
     () => chartData.map((point) => ({ date: point.date, day: point.day })),
     [chartData],
   )
+  const {
+    canSelect,
+    isSelecting,
+    brushLeft,
+    brushRight,
+    surfaceClassName,
+    chartProps,
+  } = useUsageChartBrushSelect({
+    points: chartPoints,
+    chartInterval: resolvedChartInterval,
+    onDateRangeChange: setDateRange,
+  })
 
   // Series are stacked, so the axis max is the per-point sum of all series.
   const chartAxisMax = useMemo(
@@ -391,133 +405,153 @@ export function TrafficOverview() {
         </div>
 
         <ChartArea>
-          <ResponsiveContainer
-            {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
-            minHeight={OVERVIEW_CHART_HEIGHT}
+          <div
+            className={surfaceClassName}
+            aria-label={
+              canSelect
+                ? t('Drag on the chart to select a date range')
+                : undefined
+            }
           >
-            <AreaChart
-              data={chartData}
-              margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
+            <ResponsiveContainer
+              {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
+              minHeight={OVERVIEW_CHART_HEIGHT}
             >
-              <defs>
-                {SERIES.map((series) => (
-                  <linearGradient
-                    key={series.gradientId}
-                    id={series.gradientId}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor={series.color}
-                      stopOpacity={0.2}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor={series.color}
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                vertical={false}
-              />
-              <UsageChartXAxis
-                points={chartPoints}
-                dateRange={dateRange}
-                chartInterval={resolvedChartInterval}
-              />
-              <UsageChartYAxis
-                tickFormatter={yAxisTickFormatter}
-                domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.08) || 1]}
-              />
-              <Tooltip
-                isAnimationActive={false}
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const point = payload[0]?.payload as {
-                    fullDate?: string
-                    requests?: number
-                    denied?: number
-                    challenged?: number
-                    rateLimited?: number
-                    redirected?: number
-                  }
-
-                  const seriesValue = (
-                    entry: (typeof payload)[number],
-                  ): number => {
-                    const key = String(entry.dataKey ?? '')
-                    if (
-                      key === 'requests' ||
-                      key === 'denied' ||
-                      key === 'challenged' ||
-                      key === 'rateLimited' ||
-                      key === 'redirected'
-                    ) {
-                      return Number(point[key] ?? 0)
-                    }
-                    // Stacked areas may pass [y0, y1] as value.
-                    if (Array.isArray(entry.value)) {
-                      const [from, to] = entry.value as [number, number]
-                      return Math.abs(Number(to) - Number(from)) || 0
-                    }
-                    return Number(entry.value ?? 0)
-                  }
-
-                  const sortedPayload = [...payload].sort(
-                    (a, b) => seriesValue(b) - seriesValue(a),
-                  )
-
-                  return (
-                    <div className="rounded-md border border-border bg-popover px-3 py-2">
-                      <p className="mb-1.5 text-[11px] text-muted-foreground">
-                        {point.fullDate}
-                      </p>
-                      <div className="space-y-1">
-                        {sortedPayload.map((entry) => (
-                          <div
-                            key={String(entry.dataKey)}
-                            className="flex items-center justify-between gap-6"
-                          >
-                            <span className="text-[11px] text-muted-foreground">
-                              {entry.name}
-                            </span>
-                            <span className="text-[13px] font-medium tabular-nums text-foreground">
-                              {seriesValue(entry).toLocaleString()}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                }}
-              />
-              {/* Recharts stacks bottom-up: render lowest totals first so the
-                  highest-value series sits on top (and owns the outer stroke). */}
-              {[...seriesByValueDesc].reverse().map((series) => (
-                <Area
-                  key={series.key}
-                  type="monotone"
-                  stackId="firewall-traffic"
-                  dataKey={series.key}
-                  name={t(series.label)}
-                  stroke={
-                    seriesTotals[series.key] > 0 ? series.color : 'transparent'
-                  }
-                  strokeWidth={2}
-                  fill={`url(#${series.gradientId})`}
-                  dot={false}
-                  {...CHART_ANIMATION_DISABLED}
+              <AreaChart
+                data={chartData}
+                margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
+                {...chartProps}
+              >
+                <defs>
+                  {SERIES.map((series) => (
+                    <linearGradient
+                      key={series.gradientId}
+                      id={series.gradientId}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={series.color}
+                        stopOpacity={0.2}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={series.color}
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                  vertical={false}
                 />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
+                <UsageChartXAxis
+                  points={chartPoints}
+                  dateRange={dateRange}
+                  chartInterval={resolvedChartInterval}
+                />
+                <UsageChartYAxis
+                  tickFormatter={yAxisTickFormatter}
+                  domain={[
+                    0,
+                    (dataMax: number) => Math.ceil(dataMax * 1.08) || 1,
+                  ]}
+                />
+                <Tooltip
+                  isAnimationActive={false}
+                  cursor={!isSelecting}
+                  content={({ active, payload }) => {
+                    if (isSelecting || !active || !payload?.length) return null
+                    const point = payload[0]?.payload as {
+                      fullDate?: string
+                      requests?: number
+                      denied?: number
+                      challenged?: number
+                      rateLimited?: number
+                      redirected?: number
+                    }
+
+                    const seriesValue = (
+                      entry: (typeof payload)[number],
+                    ): number => {
+                      const key = String(entry.dataKey ?? '')
+                      if (
+                        key === 'requests' ||
+                        key === 'denied' ||
+                        key === 'challenged' ||
+                        key === 'rateLimited' ||
+                        key === 'redirected'
+                      ) {
+                        return Number(point[key] ?? 0)
+                      }
+                      // Stacked areas may pass [y0, y1] as value.
+                      if (Array.isArray(entry.value)) {
+                        const [from, to] = entry.value as [number, number]
+                        return Math.abs(Number(to) - Number(from)) || 0
+                      }
+                      return Number(entry.value ?? 0)
+                    }
+
+                    const sortedPayload = [...payload].sort(
+                      (a, b) => seriesValue(b) - seriesValue(a),
+                    )
+
+                    return (
+                      <div className="rounded-md border border-border bg-popover px-3 py-2">
+                        <p className="mb-1.5 text-[11px] text-muted-foreground">
+                          {point.fullDate}
+                        </p>
+                        <div className="space-y-1">
+                          {sortedPayload.map((entry) => (
+                            <div
+                              key={String(entry.dataKey)}
+                              className="flex items-center justify-between gap-6"
+                            >
+                              <span className="text-[11px] text-muted-foreground">
+                                {entry.name}
+                              </span>
+                              <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                {seriesValue(entry).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  }}
+                />
+                {/* Recharts stacks bottom-up: render lowest totals first so the
+                    highest-value series sits on top (and owns the outer stroke). */}
+                {[...seriesByValueDesc].reverse().map((series) => (
+                  <Area
+                    key={series.key}
+                    type="monotone"
+                    stackId="firewall-traffic"
+                    dataKey={series.key}
+                    name={t(series.label)}
+                    stroke={
+                      seriesTotals[series.key] > 0
+                        ? series.color
+                        : 'transparent'
+                    }
+                    strokeWidth={2}
+                    fill={`url(#${series.gradientId})`}
+                    dot={false}
+                    {...CHART_ANIMATION_DISABLED}
+                  />
+                ))}
+                <UsageChartBrushReferenceArea
+                  left={brushLeft}
+                  right={brushRight}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </ChartArea>
       </div>
 

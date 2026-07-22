@@ -18,10 +18,10 @@ export function UsageChartBrushReferenceArea({
     <ReferenceArea
       x1={left}
       x2={right}
-      stroke="var(--chart-brand)"
+      stroke="var(--selection-background)"
       strokeOpacity={0.35}
-      fill="var(--chart-brand)"
-      fillOpacity={0.12}
+      fill="var(--selection-background)"
+      fillOpacity={0.25}
       ifOverflow="visible"
     />
   )
