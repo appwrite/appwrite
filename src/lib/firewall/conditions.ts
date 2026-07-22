@@ -45,6 +45,7 @@ export const FIREWALL_CONDITION_OPERATORS = [
   { value: 'equal', label: 'Equals' },
   { value: 'notEqual', label: 'Not equal' },
   { value: 'contains', label: 'Contains' },
+  { value: 'notContains', label: 'Does not contain' },
   { value: 'startsWith', label: 'Starts with' },
   { value: 'endsWith', label: 'Ends with' },
   { value: 'isNull', label: 'Is empty', noValue: true },
@@ -69,6 +70,7 @@ const NO_VALUE_OPERATORS = new Set<FirewallConditionOperator>([
 /** Text-matching operators only apply to free-text attributes. */
 const TEXT_MATCH_OPERATORS = new Set<FirewallConditionOperator>([
   'contains',
+  'notContains',
   'startsWith',
   'endsWith',
 ])
@@ -112,7 +114,9 @@ const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
  * so affected-traffic estimates stay accurate.
  * - Free text (ip / path / userAgent): full set.
  * - `method`: enum-backed, equality + presence only (no text matching).
- * - `country`: picker-backed, kept to the basic set (equal / not equal / contains).
+ * - `country`: picker-backed, basic set (equal / not equal / contains /
+ *   does not contain). `notContains` has no usage equivalent, so it is skipped
+ *   in affected-traffic estimation (see buildFirewallConditionUsageQueries).
  */
 const OPERATORS_BY_ATTRIBUTE: Record<
   FirewallConditionAttribute,
@@ -122,7 +126,7 @@ const OPERATORS_BY_ATTRIBUTE: Record<
   path: FREE_TEXT_OPERATORS,
   userAgent: FREE_TEXT_OPERATORS,
   method: ['equal', 'notEqual', 'isNull', 'isNotNull'],
-  country: ['equal', 'notEqual', 'contains'],
+  country: ['equal', 'notEqual', 'contains', 'notContains'],
 }
 
 /** Operators available for a given attribute (display order is preserved). */
@@ -199,6 +203,8 @@ function buildQueryString(draft: FirewallConditionDraft): string | null {
       return Query.notEqual(draft.attribute, value)
     case 'contains':
       return Query.contains(draft.attribute, value)
+    case 'notContains':
+      return Query.notContains(draft.attribute, value)
     case 'startsWith':
       return Query.startsWith(draft.attribute, value)
     case 'endsWith':
