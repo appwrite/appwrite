@@ -131,7 +131,7 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        if ($providerRootDirectory === './') {
+        if (\in_array($providerRootDirectory, ['./', '.'], true)) {
             $providerRootDirectory = '';
         }
 
@@ -154,7 +154,7 @@ class Create extends Action
         if ($type === 'framework') {
             $packages = '';
             try {
-                $packagePath = empty($providerRootDirectory) ? 'package.json' : \rtrim($providerRootDirectory, '/') . '/package.json';
+                $packagePath = $providerRootDirectory === '' ? 'package.json' : \rtrim($providerRootDirectory, '/') . '/package.json';
                 $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, $packagePath);
                 $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
@@ -287,7 +287,7 @@ class Create extends Action
             $wg->add();
             go(function () use ($vcs, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
-                    $envPath = empty($providerRootDirectory) ? $file : \rtrim($providerRootDirectory, '/') . '/' . $file;
+                    $envPath = $providerRootDirectory === '' ? $file : \rtrim($providerRootDirectory, '/') . '/' . $file;
                     $contentResponse = $vcs->getRepositoryContent($owner, $repositoryName, $envPath);
                     $envFile = $contentResponse['content'] ?? '';
 
