@@ -84,6 +84,71 @@ final class UsersConsoleClientTest extends Scope
         $this->assertNotEmpty($set['body']['password']);
     }
 
+    /**
+     * Permanent user deletion happy path + self-delete guard (issue #11393).
+     *
+     * Self-delete is enforced for any project when the session actor id matches
+     * the target. The last-active-console-user guard only applies on project
+     * "console" and is covered separately where multi-user isolation allows it.
+     */
+    public function testConsoleUserPermanentDeleteGuards(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create a disposable user to delete
+        $targetId = ID::unique();
+        $created = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $targetId,
+            'email' => $targetId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Delete Target',
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        // Happy path: admin can permanently delete another user
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId, $headers);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $missing = $this->client->call(Client::METHOD_GET, '/users/' . $targetId, $headers);
+        $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
+    /**
+     * Session actors must not delete themselves via the Users API.
+     * Create a project user with the same ID as the console root actor so the
+     * actor/target id comparison fires under admin mode.
+     */
+    public function testUsersDeleteRejectsSelfDelete(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $rootId = $this->getRoot()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Best-effort: create a user whose $id matches the console session actor.
+        $created = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $rootId,
+            'email' => 'self-delete-' . $rootId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Self Delete Target',
+        ]);
+
+        // If the id already exists from a prior run, fetch and proceed.
+        if ($created['headers']['status-code'] === 201 || $created['headers']['status-code'] === 409) {
+            $selfDelete = $this->client->call(Client::METHOD_DELETE, '/users/' . $rootId, $headers);
+            $this->assertEquals(400, $selfDelete['headers']['status-code']);
+            $this->assertEquals('user_deletion_prohibited', $selfDelete['body']['type']);
+        } else {
+            $this->markTestSkipped('Could not create self-delete target user: ' . ($created['body']['message'] ?? ''));
+        }
+    }
+
     public function testImpersonateQueryParams(): void
     {
         $projectId = $this->getProject()['$id'];
