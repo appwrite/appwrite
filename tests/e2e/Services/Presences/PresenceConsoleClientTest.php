@@ -158,15 +158,12 @@ final class PresenceConsoleClientTest extends Scope
             (new \DateTime($expire['body']['expiresAt']))->getTimestamp()
         );
 
-        \sleep(3);
-
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
-        // Maintenance + delete workers are asynchronous; give extra time to observe cleanup.
         $this->assertEventually(function () use ($presenceId) {
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
             $get = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceId,
