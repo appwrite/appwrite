@@ -577,6 +577,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_SMTP_TEST_EMAIL',
+                'description' => 'Recipient address for the SMTP send-test performed by the `doctor` command. Leave empty (default) and `doctor` will only verify that the SMTP server is reachable without sending any email. Set this to an address you own to opt in to an end-to-end send test. Empty by default.',
+                'introduction' => '1.9.6',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
