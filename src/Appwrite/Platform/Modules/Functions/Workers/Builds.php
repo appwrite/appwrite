@@ -385,9 +385,9 @@ class Builds extends Action
                         throw new \Exception('Unable to move file');
                     }
 
-                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+                    $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                    $directorySize = $device->getFileSize($source);
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
                     $deployment
                         ->setAttribute('sourcePath', $source)
                         ->setAttribute('sourceSize', $directorySize)
@@ -572,9 +572,9 @@ class Builds extends Action
                     throw new \Exception('Unable to move file');
                 }
 
-                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
+                $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                $directorySize = $device->getFileSize($source);
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
