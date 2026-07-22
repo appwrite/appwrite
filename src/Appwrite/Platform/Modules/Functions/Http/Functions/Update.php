@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -13,8 +14,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -35,7 +37,7 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Update extends Base
 {
@@ -99,12 +101,12 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
             )), 'Build specification for the function deployments.', true, ['plan'])
-            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('runtimeSpecification', null, fn (array $plan) => new Nullable(new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
+            )), 'Runtime specification for the function executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
@@ -112,9 +114,10 @@ class Update extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('dbForPlatform')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
@@ -142,7 +145,7 @@ class Update extends Base
         ?array $providerBranches,
         ?array $providerPaths,
         ?string $buildSpecification,
-        string $runtimeSpecification,
+        ?string $runtimeSpecification,
         int $deploymentRetention,
         Request $request,
         Response $response,
@@ -150,9 +153,10 @@ class Update extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         Database $dbForPlatform,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
         array $platform
@@ -179,6 +183,7 @@ class Update extends Base
         }
 
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
+        $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
@@ -246,6 +251,18 @@ class Update extends Base
 
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
+
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
         }
 
         $live = true;
@@ -312,7 +329,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform, jobs: $jobs);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $deployments, $platform);
         }
 
         // Inform scheduler if function is still active

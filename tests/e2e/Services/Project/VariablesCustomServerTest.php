@@ -94,14 +94,18 @@ final class VariablesCustomServerTest extends Scope
             $this->assertSame($deploymentId, $function['body']['deploymentId'] ?? '');
         }, 120000, 500);
 
-        // 5. Verify the project variable was available during build
-        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apiKey,
-        ]);
-        $this->assertSame(200, $deployment['headers']['status-code']);
-        $this->assertStringContainsString('Project Variable Value', (string) $deployment['body']['buildLogs']);
+        // 5. Verify the project variable was available during build. Log
+        // callbacks stream asynchronously, so the echoed line can land in
+        // buildLogs shortly after the deployment turns ready.
+        $this->assertEventually(function () use ($projectId, $apiKey, $functionId, $deploymentId) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ]);
+            $this->assertSame(200, $deployment['headers']['status-code']);
+            $this->assertStringContainsString('Project Variable Value', (string) $deployment['body']['buildLogs']);
+        }, 30000, 500);
 
         // 6. Execute the function and verify the project variable is in runtime output
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([

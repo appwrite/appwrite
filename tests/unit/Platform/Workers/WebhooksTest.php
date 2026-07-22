@@ -32,7 +32,7 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $worker = new Webhooks();
 
-        $worker->sendAlert(
+        $this->withConsoleUrlScheme('legacy', fn () => $worker->sendAlert(
             attempts: 10,
             statusCode: 500,
             webhook: new Document([
@@ -51,7 +51,7 @@ final class WebhooksTest extends TestCase
             dbForPlatform: $database,
             publisherForNotifications: $publisherForNotifications,
             plan: []
-        );
+        ));
 
         $events = $publisher->getEvents('v1-notifications');
 
@@ -69,7 +69,7 @@ final class WebhooksTest extends TestCase
         );
         $this->assertStringContainsString('Payments', (string) $payload['body']);
         $this->assertStringContainsString('Ada Lovelace', (string) $payload['body']);
-        $this->assertStringContainsString('/projects/project-1/settings/webhooks', (string) $payload['body']);
+        $this->assertStringContainsString('/console/project-fra-project-1/settings/webhooks/webhook-1', (string) $payload['body']);
         $this->assertStringNotContainsString('{{', (string) $payload['body']);
         $this->assertSame(APP_NAME, $payload['variables']['platform']);
         $this->assertSame(APP_EMAIL_LOGO_URL, $payload['variables']['logoUrl']);
@@ -94,6 +94,43 @@ final class WebhooksTest extends TestCase
             'parentResourceId' => 'project-1',
             'parentResourceInternalId' => 'project-internal-1',
         ], $payload['recipients'][1]);
+    }
+
+    public function testSendAlertUsesRootConsolePathsWhenConfigured(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $this->seedOwnerUser($database);
+
+        $publisher = new MockPublisher();
+        $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $worker = new Webhooks();
+
+        $this->withConsoleUrlScheme('root', fn () => $worker->sendAlert(
+            attempts: 10,
+            statusCode: 500,
+            webhook: new Document([
+                '$id' => 'webhook-1',
+                '$updatedAt' => '2026-01-01T00:00:00.000+00:00',
+                'name' => 'Payments',
+                'url' => 'https://example.test/webhook',
+            ]),
+            project: new Document([
+                '$id' => 'project-1',
+                '$sequence' => 'project-internal-1',
+                'name' => 'Production',
+                'teamInternalId' => 'team-internal-1',
+                'region' => 'fra',
+            ]),
+            dbForPlatform: $database,
+            publisherForNotifications: $publisherForNotifications,
+            plan: []
+        ));
+
+        $events = $publisher->getEvents('v1-notifications');
+
+        $this->assertCount(1, $events);
+        $this->assertStringContainsString('/projects/project-1/settings/webhooks', (string) $events[0]['body']);
+        $this->assertStringNotContainsString('/console/', (string) $events[0]['body']);
     }
 
     public function testSendAlertPersonalizesBodyPerOwner(): void
@@ -221,6 +258,18 @@ final class WebhooksTest extends TestCase
         yield 'other project owner' => [['project-project-2-owner'], false];
         yield 'non owner' => [['developer'], false];
         yield 'invalid roles' => [null, false];
+    }
+
+    private function withConsoleUrlScheme(string $scheme, callable $callback): void
+    {
+        $original = \getenv('_APP_CONSOLE_URL_SCHEME');
+        \putenv("_APP_CONSOLE_URL_SCHEME={$scheme}");
+
+        try {
+            $callback();
+        } finally {
+            \putenv($original === false ? '_APP_CONSOLE_URL_SCHEME' : "_APP_CONSOLE_URL_SCHEME={$original}");
+        }
     }
 
     private function createPlatformDatabase(): Database

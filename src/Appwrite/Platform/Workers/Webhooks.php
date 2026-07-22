@@ -193,16 +193,22 @@ class Webhooks extends Action
 
             $error = $logs;
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_FAILED, 1);
         } else {
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
-                'attempts' => 0,
-            ]));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            if ($webhook->getAttribute('attempts', 0) > 0) {
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
+                    'attempts' => 0,
+                ]));
+
+                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            }
+
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_SENT, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_SENT, 1);
         }
 
         $publisherForUsage->enqueue(new UsageMessage(
@@ -259,6 +265,8 @@ class Webhooks extends Action
 
         $projectId = $project->getId();
         $projectInternalId = $project->getSequence();
+        $region = $project->getAttribute('region', 'default');
+        $webhookId = $webhook->getId();
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https';
         $consoleHostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost'));
@@ -302,7 +310,9 @@ class Webhooks extends Action
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
             $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', "/projects/$projectId/settings/webhooks");
+            $template->setParam('{{path}}', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                ? "/console/project-{$region}-{$projectId}/settings/webhooks/{$webhookId}"
+                : "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(
