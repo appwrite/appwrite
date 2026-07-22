@@ -1289,29 +1289,45 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handlePinProject = (projectId: string) => {
     if (!canPinProjectsResult) return
-    if (
-      pinnedIds.length >= MAX_PINNED_PROJECTS &&
-      !pinnedIds.includes(projectId)
-    ) {
-      toast.error(`You can pin up to ${MAX_PINNED_PROJECTS} projects`)
-      return
-    }
-    const next = pinnedIds.includes(projectId)
-      ? pinnedIds.filter((id) => id !== projectId)
-      : [...pinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
-    const prefs = {
-      ...(teamPrefs || {}),
-      ...buildPinnedProjectIdsPrefs(next)}
-    updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['projects'] })
-        toast.success(
-          next.includes(projectId)
-            ? t('Project pinned')
-            : t('Project unpinned'),
-        )
+    updateTeamPrefsMutation.mutate(
+      (freshPrefs) => {
+        const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+        if (
+          currentPinnedIds.length >= MAX_PINNED_PROJECTS &&
+          !currentPinnedIds.includes(projectId)
+        ) {
+          throw new Error(
+            `You can pin up to ${MAX_PINNED_PROJECTS} projects`,
+          )
+        }
+        const next = currentPinnedIds.includes(projectId)
+          ? currentPinnedIds.filter((id) => id !== projectId)
+          : [...currentPinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
+        return buildPinnedProjectIdsPrefs(next)
       },
-      onError: () => toast.error(t('Failed to update pinned projects'))})
+      {
+        onSuccess: (prefs) => {
+          queryClient.invalidateQueries({ queryKey: ['projects'] })
+          const nextIds = parsePinnedProjectIds(
+            prefs as Record<string, unknown> | undefined,
+          )
+          toast.success(
+            nextIds.includes(projectId)
+              ? t('Project pinned')
+              : t('Project unpinned'),
+          )
+        },
+        onError: (error) => {
+          const message =
+            error instanceof Error ? error.message : undefined
+          toast.error(
+            message?.startsWith('You can pin up to')
+              ? message
+              : t('Failed to update pinned projects'),
+          )
+        },
+      },
+    )
   }
 
   const handlePinnedDragStart = useCallback(
@@ -1381,15 +1397,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     try {
       const { index: dragIndex } = JSON.parse(raw) as { index: number }
       if (dragIndex === dropIndex) return
-      const next = reorderPinnedProjectIds(pinnedIds, dragIndex, dropIndex)
-      const prefs = {
-        ...(teamPrefs || {}),
-        ...buildPinnedProjectIdsPrefs(next)}
-      updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['projects'] })
+      updateTeamPrefsMutation.mutate(
+        (freshPrefs) => {
+          const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+          const next = reorderPinnedProjectIds(
+            currentPinnedIds,
+            dragIndex,
+            dropIndex,
+          )
+          return buildPinnedProjectIdsPrefs(next)
         },
-        onError: () => toast.error(t('Failed to reorder pinned projects'))})
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+          },
+          onError: () => toast.error(t('Failed to reorder pinned projects')),
+        },
+      )
     } catch {
       // ignore invalid payload
     }
@@ -1397,13 +1421,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handleProjectDeleted = async (projectId: string) => {
     if (!pinnedIds.includes(projectId)) return
-    const prefs = {
-      ...(teamPrefs || {}),
-      ...buildPinnedProjectIdsPrefs(pinnedIds.filter((id) => id !== projectId))}
     try {
-      await updateTeamPrefsMutation.mutateAsync(
-        prefs as Record<string, unknown>,
-      )
+      await updateTeamPrefsMutation.mutateAsync((freshPrefs) => {
+        const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+        if (!currentPinnedIds.includes(projectId)) {
+          return {}
+        }
+        return buildPinnedProjectIdsPrefs(
+          currentPinnedIds.filter((id) => id !== projectId),
+        )
+      })
     } catch {
       // Keep project deletion successful even if pin cleanup fails.
     }

@@ -707,7 +707,7 @@ export function DebugMenuPrefsPanel() {
     }
     setTeamBusy(true)
     try {
-      await updateConsoleTeamPrefs(resolvedTeamId, next)
+      await updateConsoleTeamPrefs(resolvedTeamId, next, { mode: 'replace' })
       invalidateTeam()
       await refetchTeam()
       toast.success('Team prefs updated')
@@ -762,7 +762,7 @@ export function DebugMenuPrefsPanel() {
     }
     setTeamBusy(true)
     try {
-      await updateConsoleTeamPrefs(resolvedTeamId, {})
+      await updateConsoleTeamPrefs(resolvedTeamId, {}, { mode: 'replace' })
       invalidateTeam()
       const { data } = await refetchTeam()
       setTeamDraft(stringifyPrefs(data?.prefs as Record<string, unknown>))
@@ -834,7 +834,7 @@ export function DebugMenuPrefsPanel() {
       }
       const rest = { ...base }
       delete rest[key]
-      await updateConsoleTeamPrefs(resolvedTeamId!, rest)
+      await updateConsoleTeamPrefs(resolvedTeamId!, rest, { mode: 'replace' })
       invalidateTeam()
       await refetchTeam()
       setTeamDraft(stringifyPrefs(rest))
@@ -902,7 +902,7 @@ export function DebugMenuPrefsPanel() {
       const base = parsePrefsJson(teamDraft)
       const value = parseValueInput(raw)
       const next = { ...base, [key]: value }
-      await updateConsoleTeamPrefs(resolvedTeamId, next)
+      await updateConsoleTeamPrefs(resolvedTeamId, next, { mode: 'replace' })
       invalidateTeam()
       await refetchTeam()
       setTeamDraft(stringifyPrefs(next))
