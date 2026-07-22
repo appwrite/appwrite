@@ -133,7 +133,8 @@ export function RepositoryConfigView({
   // Default site name from repo when loaded
   const repoName = repository?.name ?? ''
   const repoOwner = repository?.organization ?? ''
-  const { Icon: RepositoryProviderIcon } = getVcsProvider(repository?.provider)
+  const { Icon: RepositoryProviderIcon, label: repositoryProviderLabel } =
+    getVcsProvider(repository?.provider)
   useEffect(() => {
     if (repoName && !siteName) setSiteName(repoName)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -513,7 +514,7 @@ export function RepositoryConfigView({
                 {repoOwner}/{repoName}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {t('GitHub Repository')}
+                {t(`${repositoryProviderLabel} Repository`)}
               </p>
             </div>
           </div>
