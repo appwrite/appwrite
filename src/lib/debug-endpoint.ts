@@ -19,7 +19,7 @@ export const ENDPOINT_PRESETS: Record<
   },
   stage: {
     label: 'Stage',
-    url: 'https://stage.cloud.appwrite.io/v1',
+    url: 'https://cloud.staging.appwrite.io/v1',
     description: 'Appwrite Cloud staging',
   },
   localhost: {
