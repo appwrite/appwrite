@@ -720,6 +720,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'No headers found.': 'לא נמצאו Headers.',
   'No matching log lines.': 'אין שורות לוג תואמות.',
   'No open roles right now.': 'אין משרות פתוחות כרגע.',
+  'No one else online yet. You are connected.': 'עדיין אין אף אחד אחר אונליין. אתם מחוברים.',
   'No, the Education plan does not cover any add-ons.': 'לא, תוכנית ה-Education אינה כוללת תוספים.',
   'No, you may not use the Education plan for any non-educational or commercial purposes.': 'לא, אין להשתמש בתוכנית ה-Education למטרות שאינן לימודיות או למטרות מסחריות.',
   'Not sure yet': 'עדיין לא בטוחים',
@@ -970,6 +971,9 @@ export const heMarketingDictionary: Record<string, string> = {
     'אם תזדקקו לסיוע נוסף או שיש לכם צרכים ספציפיים מעבר למוצג בעמוד זה, אל תהססו',
   'Side-by-side comparison of the previous and refreshed Appwrite logos': 'השוואה זה לצד זה בין הלוגו הקודם והמרענן של Appwrite', // pragma: allowlist secret
   'sign in': 'התחברו',
+  'Sign in to join the event': 'התחברו כדי להצטרף לאירוע',
+  'Sign in to join the event and see who is online.':
+    'התחברו כדי להצטרף לאירוע ולראות מי אונליין.',
   'Sign in to your account': 'התחברו לחשבון שלכם',
   'Sign up': 'הירשמו',
   'Sign up for the Student Developer pack and explore the benefits.': 'הירשמו ל-Student Developer Pack וגלו את ההטבות.',

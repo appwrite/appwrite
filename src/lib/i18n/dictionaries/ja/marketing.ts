@@ -562,6 +562,7 @@ export const jaMarketingDictionary: Record<string, string> = {
   'No headers found.': 'ヘッダーは見つかりませんでした。',
   'No matching log lines.': '一致するログ行はありません。',
   'No open roles right now.': '現在、募集中のポジションはありません。',
+  'No one else online yet. You are connected.': 'まだ他にオンラインの人はいません。接続済みです。',
   'No, the Education plan does not cover any add-ons.': 'いいえ、Educationプランにはアドオンは含まれません。',
   'No, you may not use the Education plan for any non-educational or commercial purposes.': 'いいえ、Educationプランを教育以外や商用目的で使用することはできません。',
   'Not sure yet': 'まだ未定',
@@ -780,6 +781,9 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Ship pricing section': '料金セクションをリリース',
   'Side-by-side comparison of the previous and refreshed Appwrite logos': '以前と刷新されたAppwriteロゴの並列比較',
   'sign in': 'サインイン',
+  'Sign in to join the event': 'サインインしてイベントに参加',
+  'Sign in to join the event and see who is online.':
+    'サインインしてイベントに参加し、オンラインの参加者を確認しましょう。',
   'Sign in to your account': 'アカウントにサインイン',
   'Sign up': 'サインアップ',
   'Sign up for the Student Developer pack and explore the benefits.': 'Student Developer Packにサインアップして特典を確認。',

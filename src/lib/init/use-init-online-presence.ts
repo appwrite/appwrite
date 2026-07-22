@@ -461,9 +461,25 @@ export function useInitOnlinePresence(
   )
 
   useEffect(() => {
-    if (!enabled || !eventId || !accountUserId) {
+    if (!enabled || !eventId) {
       setPresenceMaps(createEmptyPresenceMaps())
       setIsReady(false)
+      baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
+      transientActivityRef.current = null
+      priorityActivityRef.current = null
+      participantOnlineRef.current = true
+      lastPublishedThemeRef.current = null
+      pendingThemePublishRef.current = null
+      initialThemeSyncDoneRef.current = false
+      setParticipantStatusState('online')
+      return
+    }
+
+    // Logged-out spectators: show the panel immediately. Presence reads require
+    // an authenticated console session (Role.users), so skip list/realtime here.
+    if (!accountUserId) {
+      setPresenceMaps(createEmptyPresenceMaps())
+      setIsReady(true)
       baselineActivityRef.current = INIT_PRESENCE_ACTIVITY_ON_INIT
       transientActivityRef.current = null
       priorityActivityRef.current = null
@@ -634,16 +650,18 @@ export function useInitOnlinePresence(
   }, [accountUserId, enabled, eventId])
 
   return useMemo(() => {
-    if (!enabled || !accountUserId || !activityAllowlist) return EMPTY_STATE
+    if (!enabled || !activityAllowlist) return EMPTY_STATE
 
     void activityDisplayVersion
-    const selfOnlineActivity = resolveActivity(false)
+    const selfOnlineActivity = accountUserId ? resolveActivity(false) : null
 
     const allOnlineUsers = mapPresencesToOnlineUsers(
       presenceMaps.online.values(),
       activityAllowlist,
     ).map((user) =>
-      user.id === accountUserId ? { ...user, activity: selfOnlineActivity } : user,
+      accountUserId && selfOnlineActivity && user.id === accountUserId
+        ? { ...user, activity: selfOnlineActivity }
+        : user,
     )
     const onlineUsers = allOnlineUsers.slice(0, SIDEBAR_USER_LIMIT)
     const recentlyOnlineUsers = mapPresencesToOnlineUsers(
