@@ -6,8 +6,9 @@ namespace Tests\Unit\Migration;
 
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
+use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
-use Utopia\Cache\Adapter\NoCache;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
@@ -33,12 +34,13 @@ final class MigrationVersionsTest extends TestCase
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
     }
+
     public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
 
         $authorization = new Authorization();
-        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database = new Database(new Memory(), new Cache(new None()));
         $database
             ->setAuthorization($authorization)
             ->setDatabase('migrationV24Functions')
@@ -81,6 +83,49 @@ final class MigrationVersionsTest extends TestCase
 
         foreach ([...$existing, ...$new] as $id) {
             $this->assertContains($id, $attributes);
+        }
+    }
+
+    public function testV25RepairsProviderAttributesIdempotently(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new None()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25ProviderAttributes')
+            ->setNamespace('migration_provider_attributes_' . \uniqid());
+        $database->create();
+        $database->createCollection('functions');
+        $database->createCollection('sites');
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migration->createAttributesFromCollection($database, 'functions', ['providerBranches']);
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach (['functions', 'sites'] as $collectionId) {
+            $attributes = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+            }
+
+            $this->assertContains('providerBranches', $attributes);
+            $this->assertContains('providerPaths', $attributes);
         }
     }
 }
