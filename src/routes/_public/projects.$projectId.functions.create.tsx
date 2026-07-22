@@ -15,6 +15,7 @@ import {
   functionSpecificationsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { SpecificationType } from '@/lib/specifications'
 import {
   CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
@@ -108,6 +109,7 @@ function CreateFunctionLayoutInner() {
     vcsInstallationsQueryOptions(projectId, 0, 100),
   )
   const { data: project } = useQuery(projectQueryOptions(projectId as string))
+  const { functionsDomain } = useConsoleVariables(project?.region)
 
   useEffect(() => {
     if (installationsData?.installations) {
@@ -116,8 +118,8 @@ function CreateFunctionLayoutInner() {
   }, [installationsData, setInstallations])
 
   useEffect(() => {
-    setBaseDomain('appwrite.network')
-  }, [setBaseDomain])
+    setBaseDomain(functionsDomain ?? 'appwrite.network')
+  }, [functionsDomain, setBaseDomain])
 
   useEffect(() => {
     if (project?.region) {
