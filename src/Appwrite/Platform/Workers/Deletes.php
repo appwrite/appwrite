@@ -1823,10 +1823,6 @@ class Deletes extends Action
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
     {
-        if ($project->getId() === 'console') {
-            return;
-        }
-
         Console::info('Delete expired presences');
 
         $dbForProject = $getProjectDB($project);
