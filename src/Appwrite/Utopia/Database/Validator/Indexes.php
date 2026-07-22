@@ -147,8 +147,12 @@ class Indexes extends Validator
                 }
 
                 foreach ($index['orders'] as $order) {
-                    if ($order !== null && $order !== '' && !in_array($order, $this->supportedOrders)) {
-                        $this->message = "Invalid order '$order' in index '" . $index['key'] . "'. Must be 'ASC' or 'DESC'";
+                    if ($order === null || $order === '') {
+                        continue;
+                    }
+
+                    if (!is_string($order) || !in_array(\strtoupper($order), $this->supportedOrders, true)) {
+                        $this->message = "Invalid order in index '" . $index['key'] . "'. Must be 'ASC' or 'DESC'";
                         return false;
                     }
                 }
