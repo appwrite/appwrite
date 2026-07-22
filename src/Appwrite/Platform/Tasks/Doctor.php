@@ -8,6 +8,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -17,6 +18,7 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -35,10 +37,11 @@ class Doctor extends Action
         $this
             ->desc('Validate server health')
             ->inject('register')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(Registry $register): void
+    public function action(Registry $register, Authorization $authorization): void
     {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
@@ -154,6 +157,7 @@ class Doctor extends Action
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $adapter->setAuthorization($authorization);
 
                     if ($adapter->ping()) {
                         Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
@@ -161,7 +165,7 @@ class Doctor extends Action
                         Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable) {
-                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -171,20 +175,26 @@ class Doctor extends Action
 
         $configs = [
             'Cache' => Config::getParam('pools-cache'),
-            'Queue' => Config::getParam('pools-queue'),
+            'Queue' => Config::getParam('pools-publisher'),
             'PubSub' => Config::getParam('pools-pubsub'),
         ];
 
         foreach ($configs as $key => $config) {
+            if (!\is_array($config) || $config === []) {
+                Console::error('🔴 ' . str_pad($key, 47, '.') . 'disconnected');
+                continue;
+            }
+
             foreach ($config as $pool) {
                 try {
-                    $adapter = match($key) {
-                        'Cache' => new CachePool($pools->get($pool)),
-                        'Queue' => new BrokerPool($pools->get($pool)),
-                        'PubSub' => new PubSubPool($pools->get($pool)),
+                    $connected = match ($key) {
+                        'Cache' => (new CachePool($pools->get($pool)))->ping(),
+                        'Queue' => (new BrokerPool(publisher: $pools->get($pool)))
+                            ->getQueueSize(new Queue('_doctor')) >= 0,
+                        'PubSub' => (new PubSubPool($pools->get($pool)))->ping(),
                     };
 
-                    if ($adapter->ping()) {
+                    if ($connected) {
                         Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
                     } else {
                         Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
