@@ -19,6 +19,7 @@
 
 * Update the self-hosted Console image to [8.7.30](https://github.com/appwrite/console/releases/tag/8.7.30) for recent self-hosted VCS, error rendering, build specification, and security fixes
 * Update Open Runtimes Executor to [0.25.4](https://github.com/open-runtimes/executor/releases/tag/0.25.4) for recent build and S3 custom endpoint fixes
+* Update the Browser service to [0.3.3](https://github.com/appwrite/docker-browser/releases/tag/0.3.3) so screenshot headers work with custom internal Appwrite origins
 * Update release metadata and installation examples for 1.9.6
 
 # Version 1.9.5

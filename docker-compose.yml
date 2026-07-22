@@ -1187,7 +1187,7 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.2
+    image: appwrite/browser:0.3.3
     networks:
       - appwrite
   openruntimes-executor:
