@@ -33,6 +33,7 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'partners/guides/provision-projects': 'partners/guides/provisioning',
   'partners/guides/marketplace': 'partners/guides/marketplaces',
   'partners/guides/multi-tenant': 'partners/guides/multi-tenancy',
+  'products/network/waf': 'products/firewall',
 }
 
 export function getDocsRedirectTarget(slug: string): DocsRedirectTarget | null {

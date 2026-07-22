@@ -1175,6 +1175,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our': 'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
   "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
+  'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
+    'הריצו את Appwrite MCP באופן מקומי עם uvx ומפתח API של הפרויקט. החליפו את YOUR_API_KEY, ואז עיינו ב',
   docs: 'דוקומנטציה',
   'for instructions.': 'להוראות.',
   'MCP server': 'שרת MCP',

@@ -174,7 +174,7 @@ After DNS is correct:
 
 Locked records on organization **Domains** (created when you attach hostnames) must not be deleted. They are required for routing and certificate renewal.
 
-All connected hostnames use Appwrite [Network](/docs/products/network) features (routing, DDoS mitigation, WAF, [TLS](/docs/products/network/tls)).
+All connected hostnames use Appwrite [Network](/docs/products/network) features (routing, DDoS mitigation, [TLS](/docs/products/network/tls)). Protect API, Functions, and Sites traffic with [Firewall](/docs/products/firewall).
 
 # Troubleshooting {% #troubleshooting %}
 

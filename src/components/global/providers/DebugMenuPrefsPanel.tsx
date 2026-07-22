@@ -195,6 +195,56 @@ function PrefsSearchBar({
   )
 }
 
+const UNKNOWN_PREF_CATEGORY = 'Unknown'
+
+function getPrefCategory(entry: ClassifiedPrefEntry): string {
+  return entry.known
+    ? (entry.catalog?.category ?? 'Known')
+    : UNKNOWN_PREF_CATEGORY
+}
+
+function collectPrefCategories(entries: ClassifiedPrefEntry[]): string[] {
+  const categories: string[] = [UNKNOWN_PREF_CATEGORY]
+  const seen = new Set<string>([UNKNOWN_PREF_CATEGORY])
+  for (const entry of entries) {
+    const category = getPrefCategory(entry)
+    if (seen.has(category)) continue
+    seen.add(category)
+    categories.push(category)
+  }
+  return categories
+}
+
+type PrefCategoryGroup = {
+  category: string
+  entries: ClassifiedPrefEntry[]
+}
+
+function groupPrefsByCategory(entries: ClassifiedPrefEntry[]): PrefCategoryGroup[] {
+  const groups: PrefCategoryGroup[] = [
+    { category: UNKNOWN_PREF_CATEGORY, entries: [] },
+  ]
+  const indexByCategory = new Map<string, number>([[UNKNOWN_PREF_CATEGORY, 0]])
+  for (const entry of entries) {
+    const category = getPrefCategory(entry)
+    const existing = indexByCategory.get(category)
+    if (existing != null) {
+      groups[existing]!.entries.push(entry)
+      continue
+    }
+    indexByCategory.set(category, groups.length)
+    groups.push({ category, entries: [entry] })
+  }
+  return groups
+}
+
+function categoryNavCount(
+  groups: PrefCategoryGroup[],
+  category: string,
+): number {
+  return groups.find((group) => group.category === category)?.entries.length ?? 0
+}
+
 function StructuredPrefsList({
   entries,
   disabled,
@@ -204,6 +254,68 @@ function StructuredPrefsList({
   disabled?: boolean
   onDeleteKey: (key: string) => void
 }) {
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const categoryHeadingRefs = useRef(new Map<string, HTMLDivElement>())
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+
+  const categories = useMemo(() => collectPrefCategories(entries), [entries])
+  const groups = useMemo(() => groupPrefsByCategory(entries), [entries])
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      setActiveCategory(null)
+      return
+    }
+    setActiveCategory((current) =>
+      current && categories.includes(current) ? current : categories[0]!,
+    )
+  }, [categories])
+
+  useEffect(() => {
+    const root = listRef.current
+    if (!root || categories.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (observerEntries) => {
+        const visible = observerEntries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (a, b) =>
+              a.boundingClientRect.top - b.boundingClientRect.top,
+          )
+        const first = visible[0]
+        if (!first) return
+        const category = (first.target as HTMLElement).dataset.prefCategory
+        if (category) setActiveCategory(category)
+      },
+      {
+        root,
+        rootMargin: '-8px 0px -70% 0px',
+        threshold: [0, 0.25, 0.5, 1],
+      },
+    )
+
+    for (const category of categories) {
+      const node = categoryHeadingRefs.current.get(category)
+      if (node) observer.observe(node)
+    }
+
+    return () => observer.disconnect()
+  }, [categories, entries])
+
+  const scrollToCategory = (category: string) => {
+    const root = listRef.current
+    const heading = categoryHeadingRefs.current.get(category)
+    if (!root || !heading) return
+    setActiveCategory(category)
+    const rootRect = root.getBoundingClientRect()
+    const headingRect = heading.getBoundingClientRect()
+    root.scrollTo({
+      top: Math.max(0, root.scrollTop + (headingRect.top - rootRect.top) - 4),
+      behavior: 'smooth',
+    })
+  }
+
   if (entries.length === 0) {
     return (
       <p className="px-3 py-4 text-center text-[11px] text-[var(--network-globe-edge)]/70">
@@ -212,80 +324,163 @@ function StructuredPrefsList({
     )
   }
 
-  let lastCategory: string | null = null
-
   return (
-    <div className="max-h-[min(48dvh,420px)] space-y-1 overflow-y-auto overscroll-contain">
-      {entries.map((entry) => {
-        const category = entry.known
-          ? (entry.catalog?.category ?? 'Known')
-          : 'Unknown'
-        const showCategory = category !== lastCategory
-        lastCategory = category
-
-        return (
-          <div key={entry.key}>
-            {showCategory ? (
-              <div className="sticky top-0 z-[1] bg-[color-mix(in_srgb,var(--background)_92%,transparent)] px-2 pb-1 pt-2 backdrop-blur-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/70">
-                  {category}
-                </span>
-              </div>
-            ) : null}
-            <div
+    <div className="flex max-h-[min(48dvh,420px)] gap-2">
+      <nav
+        aria-label="Preference categories"
+        className="flex w-[120px] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain border-e border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] pe-2"
+      >
+        {categories.map((category) => {
+          const isActive = category === activeCategory
+          const count = categoryNavCount(groups, category)
+          const isUnknown = category === UNKNOWN_PREF_CATEGORY
+          return (
+            <button
+              key={category}
+              type="button"
+              onClick={() => scrollToCategory(category)}
               className={cn(
-                'rounded-lg border px-3 py-2.5',
-                entry.known
-                  ? 'border-emerald-500/25 bg-emerald-500/5'
-                  : 'border-red-500/30 bg-red-500/5',
+                'flex items-center justify-between gap-1 rounded-md px-2 py-1.5 text-start text-[10px] font-medium leading-snug transition-colors',
+                isActive
+                  ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,transparent)] text-foreground'
+                  : 'text-[var(--network-globe-edge)]/75 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)] hover:text-foreground',
+                isUnknown && count > 0 && !isActive && 'text-red-300/90',
               )}
             >
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <code
-                      className={cn(
-                        'break-all text-[11px] font-medium',
-                        entry.known ? 'text-emerald-300' : 'text-red-300',
-                      )}
-                    >
-                      {entry.key}
-                    </code>
-                    {entry.catalog?.legacy ? (
-                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-200/90">
-                        Legacy
-                      </span>
-                    ) : null}
-                    {!entry.known ? (
-                      <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-red-200/90">
-                        Unknown
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="text-[11px] leading-snug text-[var(--network-globe-edge)]/85">
-                    {entry.catalog?.description ??
-                      'Not registered in the prefs catalog. Safe to remove if unused.'}
-                  </p>
-                  <p className="break-all font-mono text-[10px] text-[var(--network-globe-edge)]/65">
-                    {entry.preview || '(empty)'}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 shrink-0 p-0 text-[var(--network-globe-edge)]/70 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
-                  disabled={disabled}
-                  aria-label={`Delete ${entry.key}`}
-                  onClick={() => onDeleteKey(entry.key)}
+              <span className="min-w-0 truncate">{category}</span>
+              <span
+                className={cn(
+                  'shrink-0 tabular-nums',
+                  isUnknown && count > 0
+                    ? 'text-red-300/80'
+                    : 'text-[var(--network-globe-edge)]/55',
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+      <div
+        ref={listRef}
+        className="min-w-0 flex-1 space-y-3 overflow-y-auto overscroll-contain"
+      >
+        {groups.map((group) => {
+          const isUnknown = group.category === UNKNOWN_PREF_CATEGORY
+          return (
+            <section key={group.category} className="space-y-1.5">
+              <div
+                ref={(node) => {
+                  if (node) categoryHeadingRefs.current.set(group.category, node)
+                  else categoryHeadingRefs.current.delete(group.category)
+                }}
+                data-pref-category={group.category}
+                className="sticky top-0 z-[1]"
+              >
+                <div
+                  className={cn(
+                    'flex items-center gap-2 rounded-md border px-2.5 py-1.5 backdrop-blur-md',
+                    isUnknown
+                      ? 'border-red-500/25 bg-[color-mix(in_srgb,var(--background)_82%,rgb(127_29_29))] shadow-[0_1px_0_0_color-mix(in_srgb,rgb(239_68_68)_12%,transparent)]'
+                      : 'border-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--border))] bg-[color-mix(in_srgb,var(--background)_82%,transparent)] shadow-[0_1px_0_0_color-mix(in_srgb,var(--network-globe-edge)_8%,transparent)]',
+                  )}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                  <span
+                    className={cn(
+                      'shrink-0 text-[11px] font-medium',
+                      isUnknown ? 'text-red-200/95' : 'text-foreground/90',
+                    )}
+                  >
+                    {group.category}
+                  </span>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'h-px min-w-3 flex-1',
+                      isUnknown
+                        ? 'bg-red-500/25'
+                        : 'bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--border))]',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'shrink-0 rounded px-1.5 py-0.5 text-[10px] tabular-nums',
+                      isUnknown
+                        ? 'bg-red-500/15 text-red-200/90'
+                        : 'bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] text-[var(--network-globe-edge)]/80',
+                    )}
+                  >
+                    {group.entries.length}
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
-        )
-      })}
+              {group.entries.length === 0 ? (
+                <p className="px-2.5 py-2 text-[11px] leading-snug text-[var(--network-globe-edge)]/70">
+                  {isUnknown
+                    ? 'No unregistered keys. Every stored key matched the prefs catalog.'
+                    : 'No keys in this category.'}
+                </p>
+              ) : (
+                group.entries.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={cn(
+                      'rounded-lg border px-3 py-2.5',
+                      entry.known
+                        ? 'border-emerald-500/25 bg-emerald-500/5'
+                        : 'border-red-500/30 bg-red-500/5',
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <code
+                            className={cn(
+                              'break-all text-[11px] font-medium',
+                              entry.known ? 'text-emerald-300' : 'text-red-300',
+                            )}
+                          >
+                            {entry.key}
+                          </code>
+                          {entry.catalog?.legacy ? (
+                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-200/90">
+                              Legacy
+                            </span>
+                          ) : null}
+                          {!entry.known ? (
+                            <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-red-200/90">
+                              Unknown
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-[11px] leading-snug text-[var(--network-globe-edge)]/85">
+                          {entry.catalog?.description ??
+                            'Not registered in the prefs catalog. Safe to remove if unused.'}
+                        </p>
+                        <p className="break-all font-mono text-[10px] text-[var(--network-globe-edge)]/65">
+                          {entry.preview || '(empty)'}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 shrink-0 p-0 text-[var(--network-globe-edge)]/70 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
+                        disabled={disabled}
+                        aria-label={`Delete ${entry.key}`}
+                        onClick={() => onDeleteKey(entry.key)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -675,6 +675,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our': '専用 Slack チャンネルは営業時間 (EST 9:00-18:00) に監視されています。緊急の問題については、次をご利用ください',
   'priority support portal': '優先サポートポータル',
   "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite は、LLM が Appwrite の API とドキュメントと対話できる MCP サーバーを提供しています。ワンクリックでインストールするか、次をご覧ください',
+  'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
+    'Appwrite MCP を uvx とプロジェクト API キーでローカル実行します。YOUR_API_KEY を置き換えてから、次をご覧ください',
   'for instructions.': '手順について。',
   'MCP server': 'MCP サーバー',
   Install: 'インストール',

@@ -103,21 +103,50 @@ export function hasDedicatedDatabaseCompute(
 /**
  * True when replication / failover settings should be offered.
  * Stricter than {@link hasDedicatedDatabaseCompute}: serverless product DBs
- * (including DocumentsDB / VectorsDB without dedicated backing) are excluded.
+ * (including those with a lifecycle `status` or `replicas: 0`) are excluded.
  */
 export function canConfigureDedicatedReplication(
   db: DatabaseComputeHints,
   dedicated?: DedicatedComputeHints,
 ): boolean {
+  const productSpec = readDatabaseSpecification(db.specification)
+  const dedicatedSpec = readDatabaseSpecification(dedicated?.specification)
+
+  // Explicit serverless tier never gets replication settings.
+  if (productSpec && isServerlessDatabaseSpecId(productSpec)) {
+    // Unless a real non-serverless dedicated row exists for the same ID.
+    if (
+      !dedicated?.$id ||
+      (dedicatedSpec != null && isServerlessDatabaseSpecId(dedicatedSpec))
+    ) {
+      return false
+    }
+  }
+  if (dedicatedSpec && isServerlessDatabaseSpecId(dedicatedSpec)) {
+    return false
+  }
+
+  // Native engines, DocumentsDB, and VectorsDB are always dedicated compute.
+  if (isNativeDatabaseTypeValue(db.databaseType)) return true
+  const type = coerceDatabaseType(db.databaseType)
+  if (type === DatabaseType.Documentsdb || type === DatabaseType.Vectorsdb) {
+    return true
+  }
+
+  // Dedicated engine document (product-owned or native).
   if (dedicated?.$id) return true
 
-  const spec = readDatabaseSpecification(db.specification)
-  if (spec && !isServerlessDatabaseSpecId(spec)) return true
+  // Product API reports a dedicated specification slug.
+  if (productSpec && !isServerlessDatabaseSpecId(productSpec)) return true
 
-  if (typeof db.replicas === 'number') return true
-  if (readDatabaseLifecycleStatus(db.status)) return true
+  // HA replicas imply dedicated compute (0 alone does not). Status alone does
+  // not: serverless product DBs often expose a health `status` object.
+  if (typeof dedicated?.replicas === 'number' && dedicated.replicas > 0) {
+    return true
+  }
+  if (typeof db.replicas === 'number' && db.replicas > 0) return true
 
-  return isNativeDatabaseTypeValue(db.databaseType)
+  return false
 }
 
 /**

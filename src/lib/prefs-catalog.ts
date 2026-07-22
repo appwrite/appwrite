@@ -533,7 +533,7 @@ function previewPrefValue(value: unknown): string {
 
 /**
  * Classify stored prefs against the catalog.
- * Known keys first (by category then key), then unknown keys alphabetically.
+ * Unknown keys first (debug priority), then known keys by category then key.
  */
 export function classifyPrefs(
   prefs: Record<string, unknown> | null | undefined,
@@ -551,7 +551,8 @@ export function classifyPrefs(
   })
 
   return entries.sort((a, b) => {
-    if (a.known !== b.known) return a.known ? -1 : 1
+    // Unknown first so orphan keys are obvious in the debug structured view.
+    if (a.known !== b.known) return a.known ? 1 : -1
     const catA = a.catalog?.category ?? ''
     const catB = b.catalog?.category ?? ''
     if (catA !== catB) return catA.localeCompare(catB)

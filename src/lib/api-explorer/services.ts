@@ -49,13 +49,25 @@ export const API_SERVICE_ORDER = [
 /** Console-only SDK services — never shown in the explorer or API reference nav. */
 export const INTERNAL_API_SERVICES = [] as const
 
+/**
+ * Native database engines that only appear in the console OpenAPI
+ * (`platforms: ["console"]`), not in client/server specs.
+ * Merged into API reference and project explorer from the console spec.
+ */
+export const CONSOLE_ONLY_DATABASE_API_SERVICES = [
+  'postgresql',
+  'mysql',
+  'mongo',
+] as const
+
+export type ConsoleOnlyDatabaseApiService =
+  (typeof CONSOLE_ONLY_DATABASE_API_SERVICES)[number]
+
 /** Database API services shown only when a matching console profile feature is enabled. */
 export const FEATURE_GATED_DATABASE_API_SERVICES = [
   'documentsDB',
   'vectorsDB',
-  'postgresql',
-  'mysql',
-  'mongo',
+  ...CONSOLE_ONLY_DATABASE_API_SERVICES,
 ] as const
 
 export type FeatureGatedDatabaseApiService =
@@ -168,6 +180,14 @@ export function isFeatureGatedDatabaseApiService(
 ): serviceId is FeatureGatedDatabaseApiService {
   return (FEATURE_GATED_DATABASE_API_SERVICES as readonly string[]).includes(
     serviceId,
+  )
+}
+
+export function isConsoleOnlyDatabaseApiService(
+  serviceId: string,
+): serviceId is ConsoleOnlyDatabaseApiService {
+  return (CONSOLE_ONLY_DATABASE_API_SERVICES as readonly string[]).includes(
+    serviceId as ConsoleOnlyDatabaseApiService,
   )
 }
 

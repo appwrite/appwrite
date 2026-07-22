@@ -1074,7 +1074,7 @@ export function ProjectSettingsOverview({
           />
 
           {/* MCP Server Section */}
-          <MCPSection projectName={project.name} />
+          <MCPSection projectId={projectId} projectName={project.name} />
 
           {/* Change Organization Section (cloud multi-tenancy only) */}
           {supportsMultiTenancy && (

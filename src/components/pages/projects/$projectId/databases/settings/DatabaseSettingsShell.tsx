@@ -85,6 +85,9 @@ export function DatabaseSettingsShell() {
       status: (productDatabase as { status?: string | null } | null)?.status,
       replicas: (productDatabase as { replicas?: number | null } | null)
         ?.replicas,
+      specification: (
+        productDatabase as { specification?: string | null } | null
+      )?.specification,
     },
     dedicated,
   )
@@ -101,6 +104,16 @@ export function DatabaseSettingsShell() {
         if (item.id === 'replication') return showReplication
         return item.visible !== false
       }),
+    [showReplication],
+  )
+
+  const cardIndex = useMemo(
+    () =>
+      showReplication
+        ? DATABASE_SETTINGS_CARD_INDEX
+        : DATABASE_SETTINGS_CARD_INDEX.filter(
+            (card) => card.sectionId !== 'replication',
+          ),
     [showReplication],
   )
 
@@ -121,7 +134,7 @@ export function DatabaseSettingsShell() {
     <SettingsLayoutShell
       navItems={layoutNavItems}
       activeSectionId={activeSection}
-      cardIndex={DATABASE_SETTINGS_CARD_INDEX}
+      cardIndex={cardIndex}
       onNavigateToSection={(sectionId) => {
         const item = visibleNav.find((n) => n.id === sectionId)
         if (!item) return

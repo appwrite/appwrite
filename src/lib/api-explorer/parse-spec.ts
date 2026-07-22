@@ -1,4 +1,8 @@
-import { compareServices, getServiceLabel } from './services'
+import {
+  compareServices,
+  getServiceLabel,
+  isConsoleOnlyDatabaseApiService,
+} from './services'
 import type {
   ApiExplorerMethod,
   ApiExplorerService,
@@ -398,6 +402,33 @@ export function parseOpenApiSpec(
     platform,
     version: spec.info?.version,
     services,
+  }
+}
+
+/**
+ * Append console-only native database services (postgresql / mysql / mongo)
+ * from a console OpenAPI parse onto a client/server parse.
+ * Existing services with the same id are left unchanged.
+ */
+export function mergeConsoleOnlyDatabaseServices(
+  base: ParsedApiSpec,
+  consoleParsed: ParsedApiSpec,
+): ParsedApiSpec {
+  const existingIds = new Set(base.services.map((service) => service.id))
+  const extras = consoleParsed.services.filter(
+    (service) =>
+      isConsoleOnlyDatabaseApiService(service.id) &&
+      service.methods.length > 0 &&
+      !existingIds.has(service.id),
+  )
+
+  if (extras.length === 0) return base
+
+  return {
+    ...base,
+    services: [...base.services, ...extras].sort((a, b) =>
+      compareServices(a.id, b.id),
+    ),
   }
 }
 

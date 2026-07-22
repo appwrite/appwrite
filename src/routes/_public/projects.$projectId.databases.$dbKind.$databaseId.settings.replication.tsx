@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/databases/settings/Replication'
 import {
   databaseQueryOptions,
@@ -6,7 +6,10 @@ import {
   dedicatedDatabaseReplicasQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { productDedicatedEngineHints } from '@/lib/databases/database-compute'
+import {
+  canConfigureDedicatedReplication,
+  productDedicatedEngineHints,
+} from '@/lib/databases/database-compute'
 import { dedicatedReplicationSourceFromRouteKind } from '@/lib/databases/dedicated-replication'
 import {
   isDatabaseRouteKind,
@@ -44,6 +47,29 @@ export const Route = createFileRoute(
     const product = queryClient.getQueryData<Models.Database>(
       databaseQueryOptions(projectId, databaseId, dbKind).queryKey,
     )
+
+    const allowed = canConfigureDedicatedReplication(
+      {
+        $id: product?.$id,
+        name: product?.name,
+        databaseType: dbKind,
+        status: product?.status as string | null | undefined,
+        replicas: product?.replicas,
+        specification: (
+          product as { specification?: string | null } | null | undefined
+        )?.specification,
+      },
+      dedicated,
+    )
+
+    if (!allowed) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+        params: { projectId, dbKind, databaseId },
+        replace: true,
+      })
+    }
+
     const replicaCount =
       dedicated?.replicas ??
       (typeof product?.replicas === 'number' ? product.replicas : 0)

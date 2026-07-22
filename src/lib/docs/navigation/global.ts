@@ -78,6 +78,12 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         icon: 'link',
         isParent: true,
       },
+      {
+        label: 'Firewall',
+        href: '/docs/products/firewall',
+        icon: 'shield',
+        isParent: true,
+      },
     ],
   },
   {

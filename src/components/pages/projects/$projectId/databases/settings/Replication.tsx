@@ -73,6 +73,9 @@ export function View() {
     databaseType: dbKind,
     status: (productDatabase as { status?: string | null } | null)?.status,
     replicas: (productDatabase as { replicas?: number | null } | null)?.replicas,
+    specification: (
+      productDatabase as { specification?: string | null } | null
+    )?.specification,
   }
 
   if (!canConfigureDedicatedReplication(productHints, dedicated)) {

@@ -1,0 +1,51 @@
+---
+layout: article
+title: Priority
+description: Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.
+---
+
+**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Valid values range from `-100000` to `100000`. The first matching enabled rule applies its [action](/docs/products/firewall/actions) and evaluation stops for that request.
+
+# How evaluation works {% #how-evaluation-works %}
+
+1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example `10` before `100`).
+2. Rules that do not apply to the current [resource scope](/docs/products/firewall/scopes) are skipped.
+3. For each remaining rule in order, Appwrite checks whether all [conditions](/docs/products/firewall/conditions) match.
+4. On the first match, the rule action runs (deny, bypass, rate limit, or redirect).
+5. Later rules are not applied to that request.
+
+Disabled rules are not loaded. If no rule matches, the request continues.
+
+{% info title="Stop on match" %}
+**Bypass** and **rate limit** (even when the request is still under the quota) also stop evaluation. A matching bypass or under-quota rate limit prevents later deny rules from running.
+{% /info %}
+
+# Choosing priority values {% #choosing-priority-values %}
+
+The Console create wizard defaults priority to `100`. Common patterns:
+
+| Pattern | Approach |
+|---------|----------|
+| Allowlist then deny | Bypass at `10`, deny at `100` |
+| Tight path before broad rate limit | Path-specific deny at `20`, broad rate limit at `200` |
+| Temporary override | Insert a new rule at a lower number than existing policies |
+
+Leave gaps between priorities (for example `10`, `20`, `30`) so you can insert rules later without renumbering everything.
+
+# Conflicts and overlaps {% #conflicts-and-overlaps %}
+
+Overlapping conditions are normal. Priority decides which action wins:
+
+- A broad **deny** country rule at `100` will never run for an IP that already matched a **bypass** at `10`.
+- Two deny rules that could both match: only the lower priority number applies; the second is unused for those requests.
+- A **rate limit** at `50` that matches (even under quota) prevents a **deny** at `100` from running for the same request.
+
+Use [impact preview](/docs/products/firewall/monitor#impact-preview) while editing to see how many recent requests would match the rule you are about to place in the order.
+
+# Updating priority {% #updating-priority %}
+
+Change priority from [Update a rule](/docs/products/firewall/update). After saving, new requests use the updated order immediately. Historical traffic metrics are not rewritten.
+
+{% arrow_link href="/docs/products/firewall/create" %}
+Create a rule
+{% /arrow_link %}
