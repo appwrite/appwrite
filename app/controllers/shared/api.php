@@ -249,10 +249,13 @@ Http::init()
 
                     if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                    } elseif (! empty($apiKey->getUserId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                    } elseif (! empty($apiKey->getTeamId())) {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                    } else {
+                        $dbForProjectToUse = ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) ? $dbForProject : $dbForPlatform;
+                        if (! empty($apiKey->getUserId())) {
+                            $dbForProjectToUse->getAuthorization()->skip(fn () => $dbForProjectToUse->purgeCachedDocument('users', $user->getId()));
+                        } elseif (! empty($apiKey->getTeamId())) {
+                            $dbForProjectToUse->getAuthorization()->skip(fn () => $dbForProjectToUse->purgeCachedDocument('teams', $team->getId()));
+                        }
                     }
                 }
 
