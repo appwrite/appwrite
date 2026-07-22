@@ -128,4 +128,42 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerPaths', $attributes);
         }
     }
+
+    public function testV25SkipsAbsentCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new None()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25AbsentCollections')
+            ->setNamespace('migration_absent_collections_' . \uniqid());
+        $database->create();
+        $database->createCollection('functions');
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $attributes = [];
+        foreach ($database->getCollection('functions')->getAttribute('attributes', []) as $attribute) {
+            $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        $this->assertContains('providerBranches', $attributes);
+        $this->assertContains('providerPaths', $attributes);
+        $this->assertTrue($database->getCollection('sites')->isEmpty());
+    }
 }

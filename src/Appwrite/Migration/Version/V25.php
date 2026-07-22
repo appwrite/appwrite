@@ -33,6 +33,11 @@ class V25 extends Migration
             $this->dbForProject->purgeCachedCollection($collectionId);
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $collectionId);
 
+            if ($this->dbForProject->getCollection($collectionId)->isEmpty()) {
+                Console::warning("Skipping collection \"{$collectionId}\": Collection does not exist");
+                continue;
+            }
+
             $this->createAttributesFromCollection(
                 $this->dbForProject,
                 $collectionId,
