@@ -1,4 +1,5 @@
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
+import { scrollToCompanySection } from '@/lib/company/section-scroll'
 import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
 import {
@@ -188,14 +189,11 @@ function TeamCta() {
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-3">
-        <Button variant="brandCta" asChild>
-          <a
-            href={companyTeamLinks.careers}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t('View careers')}
-          </a>
+        <Button
+          variant="brandCta"
+          onClick={() => scrollToCompanySection(COMPANY_SECTION_IDS.careers)}
+        >
+          {t('View careers')}
         </Button>
         <Button variant="outline" asChild>
           <BlogPageAnchor

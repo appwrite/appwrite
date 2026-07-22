@@ -103,7 +103,6 @@ export const companyTeamValues: readonly CompanyTeamValue[] = [
 ] as const
 
 export const companyTeamLinks = {
-  careers: 'https://appwrite.careers',
   evolutionBlog: '/blog/post/the-evolution-of-team-appwrite',
   cultureBlog: '/blog/post/building-culture-remote-camp',
 } as const

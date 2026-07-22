@@ -180,7 +180,11 @@ function getExpandedFooterGroups(
         href: getMarketingPageUrl('/pricing', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: footerCopy.expanded.about.careers, href: 'https://appwrite.careers', external: true }, // pragma: allowlist secret
+      {
+        label: footerCopy.expanded.about.careers,
+        href: `${getMarketingPageUrl('/company', marketing)}#careers`,
+        external: isMarketingPageExternal(marketing),
+      },
       { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
       {
         label: footerCopy.expanded.about.contactUs,
