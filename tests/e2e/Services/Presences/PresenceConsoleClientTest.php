@@ -158,12 +158,9 @@ final class PresenceConsoleClientTest extends Scope
             (new \DateTime($expire['body']['expiresAt']))->getTimestamp()
         );
 
+        // The API hides expired presences (404) before maintenance runs, so poll for the
+        // expiry to elapse instead of sleeping on a fixed timer.
         $this->assertEventually(function () use ($presenceId) {
-            $stdout = '';
-            $stderr = '';
-            $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
-            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
             $get = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceId,
@@ -175,6 +172,13 @@ final class PresenceConsoleClientTest extends Scope
 
             $this->assertSame(404, $get['headers']['status-code']);
         }, 30000, 1000);
+
+        // Once expired, a single maintenance run must delete the stored console presence row
+        // (previously skipped for the console project).
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
     }
 
     private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient
