@@ -224,6 +224,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_URL_SCHEME',
+                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
+                'introduction' => '2.0.0',
+                'default' => 'legacy',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_HOSTNAMES',
                 'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
                 'introduction' => '1.5.0',
@@ -1252,6 +1261,87 @@ return [
                 'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
                 'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
                 'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_ENDPOINT',
+                'description' => 'URL of your self-hosted Gitea instance, reachable from the Appwrite server (e.g. for API calls and webhook token exchange).',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+                'description' => 'URL of your Gitea instance reachable from the browser, if different from _APP_VCS_GITEA_ENDPOINT (e.g. when Appwrite and Gitea are on the same Docker network but Gitea is exposed to the browser on a different host). Falls back to _APP_VCS_GITEA_ENDPOINT when unset.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_ID',
+                'description' => 'Gitea OAuth2 application client ID. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_SECRET',
+                'description' => 'Gitea OAuth2 application client secret. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_ID',
+                'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_SECRET',
+                'description' => 'GitLab OAuth2 application client secret. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming GitLab webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_WEBHOOK_URL',
+                'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
+                'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',

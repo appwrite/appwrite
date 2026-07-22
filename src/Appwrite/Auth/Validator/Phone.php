@@ -2,8 +2,7 @@
 
 namespace Appwrite\Auth\Validator;
 
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Validator;
 
 /**
@@ -14,12 +13,10 @@ use Utopia\Validator;
 class Phone extends Validator
 {
     protected bool $allowEmpty;
-    protected PhoneNumberUtil $helper;
 
     public function __construct(bool $allowEmpty = false)
     {
         $this->allowEmpty = $allowEmpty;
-        $this->helper = PhoneNumberUtil::getInstance();
     }
 
     /**
@@ -51,9 +48,7 @@ class Phone extends Validator
             return true;
         }
 
-        try {
-            $this->helper->parse($value);
-        } catch (NumberParseException $e) {
+        if (CallingCode::fromPhoneNumber($value) === null) {
             return false;
         }
 

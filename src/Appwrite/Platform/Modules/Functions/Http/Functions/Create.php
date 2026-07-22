@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -20,7 +21,8 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
-use OpenRuntimes\Orchestrator\Jobs;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -42,7 +44,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -124,13 +126,14 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -169,13 +172,14 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
     ) {
@@ -306,6 +310,18 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]));
 
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
+
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
@@ -346,9 +362,9 @@ class Create extends Base
                     installation: $installation,
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
-                    jobs: $jobs,
+                    deployments: $deployments,
                     template: $template,
-                    github: $github,
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,

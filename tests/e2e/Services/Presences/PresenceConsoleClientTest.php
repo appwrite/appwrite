@@ -31,7 +31,7 @@ final class PresenceConsoleClientTest extends Scope
 
     // `x-appwrite-mode: admin` is forbidden for the console project, so authenticate
     // as a console session user instead — `getUser()` signs them up against project=console.
-    public function getHeaders(bool $devKey = true): array
+    public function getHeaders(): array
     {
         return [
             'origin' => 'http://localhost',

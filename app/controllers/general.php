@@ -34,6 +34,7 @@ use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
 use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
+use Appwrite\Utopia\Request\Filters\V27 as RequestV27;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -46,6 +47,7 @@ use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
+use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -125,7 +127,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
-                $exception->addCTA('Start with this domain', $url);
+                $exception->addCTA('Start with this domain', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? "{$url}/console" : $url);
                 throw $exception;
             }
         }
@@ -200,7 +202,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/projects/' . $projectId . '/' . $type . '/' . $resourceId);
+            $region = $project->getAttribute('region', 'default');
+            $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                ? "/console/project-{$region}-{$projectId}/{$type}/{$resourceType}-{$resourceId}"
+                : "/projects/{$projectId}/{$type}/{$resourceId}";
+            $exception->addCTA('View deployments', $url . $ctaUrl);
             throw $exception;
         }
 
@@ -289,7 +295,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
-                    ->redirect($url . '/auth/preview?'
+                    ->redirect($url . (System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? '/console/auth/preview?' : '/auth/preview?')
                         . \http_build_query([
                             'projectId' => $projectId,
                             'origin' => $protocol . '://' . $host,
@@ -346,23 +352,28 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
+            $region = $project->getAttribute('region', 'default');
+            $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
+            $siteUrl = $legacyConsolePaths
+                ? "/console/project-{$region}-{$project->getId()}/sites/site-{$resource->getId()}"
+                : "/projects/{$project->getId()}/sites/{$resource->getId()}";
+            $deploymentUrl = $legacyConsolePaths
+                ? "{$siteUrl}/deployments/deployment-{$deployment->getId()}"
+                : "{$siteUrl}/deployments/{$deployment->getId()}";
 
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
-                    $exception->addCTA('View logs', $url . $ctaUrl);
+                    $exception->addCTA('View logs', $url . $deploymentUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments';
-                    $exception->addCTA('View deployments', $url . $ctaUrl);
+                    $exception->addCTA('View deployments', $url . $siteUrl . '/deployments');
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
                     $exception->addCTA('Reload', '/');
-                    $exception->addCTA('View logs', $url . $ctaUrl);
+                    $exception->addCTA('View logs', $url . $deploymentUrl);
                     break;
             }
             throw $exception;
@@ -372,7 +383,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/projects/' . $project->getId() . '/functions/' . $resource->getId() . '/settings');
+                $region = $project->getAttribute('region', 'default');
+                $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                    ? "/console/project-{$region}-{$project->getId()}/functions/function-{$resource->getId()}/settings"
+                    : "/projects/{$project->getId()}/functions/{$resource->getId()}/settings";
+                $exception->addCTA('View settings', $url . $ctaUrl);
                 throw $exception;
             }
         }
@@ -539,7 +554,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
             $startCommand = $runtime['startCommand'];
             if ($type === 'site') {
@@ -560,7 +574,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
-                default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
+                default => "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$startCommand\"",
             };
 
             $entrypoint = match ($type) {
@@ -905,6 +919,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.5', '<')) {
                 $request->addFilter(new RequestV26());
             }
+            if (version_compare($requestFormat, '2.0.0', '<')) {
+                $request->addFilter(new RequestV27());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
@@ -929,6 +946,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.0.0', '<')) {
+                $response->addFilter(new ResponseV27());
+            }
             if (version_compare($responseFormat, '1.9.5', '<')) {
                 $response->addFilter(new ResponseV26());
             }
@@ -1313,7 +1333,7 @@ Http::error()
             $log->setMessage($error->getMessage());
 
             $log->addTag('database', $dsn->getHost());
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
+            $log->addTag('method', \implode(',', $route?->getMethods() ?? [$request->getMethod()]));
             $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
@@ -1452,6 +1472,7 @@ Http::error()
             case 405: // Error allowed publicly
             case 408: // Error allowed publicly
             case 409: // Error allowed publicly
+            case 410: // Error allowed publicly
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 422: // Error allowed publicly

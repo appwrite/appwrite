@@ -50,18 +50,6 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
-  appwrite-worker-audits:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
   appwrite-worker-webhooks:
     build:
       context: .
@@ -138,18 +126,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-worker-certificates:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-executions:
     build:
       context: .
       target: development
@@ -239,42 +215,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-task-interval:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-task-stats-resources:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-stats-resources:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-stats-usage:
     build:
       context: .
       target: development

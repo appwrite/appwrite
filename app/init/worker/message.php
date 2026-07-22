@@ -1,12 +1,14 @@
 <?php
 
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
@@ -185,6 +187,12 @@ return function (Container $container): void {
     $container->set('deviceForCache', function (Document $project, Telemetry $telemetry) {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
+
+    // Only the Builds worker uses this, handing template-into-repo pushes to
+    // the jobs-service when _APP_BUILDS_BACKEND=orchestrator — no backend switch.
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
+        return new Orchestrator($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {

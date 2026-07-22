@@ -1179,7 +1179,8 @@ trait StorageBase
         $this->assertNotEmpty($preview['body']);
 
         $cachedPreview = [];
-        $this->assertEventually(function () use (&$cachedPreview, $bucketId, $fileId, $headers, $params) {
+        $cachedPreviewAgain = [];
+        $this->assertEventually(function () use (&$cachedPreview, &$cachedPreviewAgain, $bucketId, $fileId, $headers, $params) {
             $cachedPreview = $this->client->call(
                 Client::METHOD_GET,
                 '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
@@ -1187,20 +1188,22 @@ trait StorageBase
                 $params
             );
 
-            $this->assertEquals('hit', $cachedPreview['headers']['x-appwrite-cache']);
+            $cachedPreviewAgain = $this->client->call(
+                Client::METHOD_GET,
+                '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+                $headers,
+                $params
+            );
+
+            $this->assertSame('hit', $cachedPreview['headers']['x-appwrite-cache']);
+            $this->assertSame('hit', $cachedPreviewAgain['headers']['x-appwrite-cache']);
+            $this->assertSame($cachedPreview['body'], $cachedPreviewAgain['body']);
         });
 
         $this->assertEquals(200, $cachedPreview['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
         $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
         $this->assertNotEmpty($cachedPreview['body']);
-
-        $cachedPreviewAgain = $this->client->call(
-            Client::METHOD_GET,
-            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
-            $headers,
-            $params
-        );
 
         $this->assertEquals(200, $cachedPreviewAgain['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreviewAgain['headers']['content-type']);

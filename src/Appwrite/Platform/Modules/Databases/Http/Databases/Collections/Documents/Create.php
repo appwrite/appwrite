@@ -501,8 +501,9 @@ class Create extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $operations)); // per collection
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
