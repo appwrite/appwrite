@@ -241,8 +241,9 @@ class XList extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1));
 
         $response->dynamic(new Document([
             'total' => $total,

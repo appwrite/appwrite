@@ -2,6 +2,7 @@
 
 namespace Appwrite\Deployment;
 
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -115,6 +116,26 @@ abstract readonly class Backend
                 'activate' => false,
             ]));
         }
+    }
+
+    /**
+     * The build command for a deployment: its buildCommands, wrapped for
+     * sites with the framework's env and bundle commands.
+     */
+    public static function command(Document $resource, Document $deployment): string
+    {
+        $command = $deployment->getAttribute('buildCommands', '');
+        if ($resource->getCollection() !== 'sites') {
+            return $command;
+        }
+
+        $framework = Config::getParam('frameworks', [])[$resource->getAttribute('framework', '')] ?? [];
+
+        return \implode(' && ', \array_filter([
+            $framework['envCommand'] ?? '',
+            $command,
+            $framework['bundleCommand'] ?? '',
+        ], fn ($command) => !empty($command)));
     }
 
     /**

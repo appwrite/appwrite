@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitea\Events;
 
-use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -18,7 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
 class Create extends Action
@@ -47,7 +44,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('publisherForBuilds')
+            ->inject('deploymentsFactory')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -61,7 +58,7 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        BuildPublisher $publisherForBuilds,
+        callable $deploymentsFactory,
         array $platform
     ) {
         $vcs = $vcsFactory->fromProvider('gitea');
@@ -83,8 +80,8 @@ class Create extends Action
         $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
-            'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
             default => null,
         };
 
@@ -103,12 +100,8 @@ class Create extends Action
     }
 
     /**
-     * Resolves the adapter for a repository's installation, refreshing its
-     * OAuth2 token first. A null installation (not a Gitea installation) is
-     * not an error -- the caller silently skips it. A token-refresh/adapter
-     * failure, on the other hand, is pushed onto $errors so the caller can
-     * surface it instead of dropping it silently -- Gitea's webhook delivery
-     * gets a non-2xx response and the failure shows up in its redelivery log.
+     * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
+     * caller can surface a non-2xx response and Gitea logs it as a failed delivery.
      */
     private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
     {
@@ -119,14 +112,7 @@ class Create extends Action
         }
 
         try {
-            $oauth2 = new OAuth2Gitea(
-                System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''),
-                System::getEnv('_APP_VCS_GITEA_CLIENT_SECRET', ''),
-                ''
-            );
-            $oauth2->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', ''));
-
-            $installation = $installationTokens->refresh($installation, $dbForPlatform, $oauth2);
+            $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
 
             return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {
@@ -144,9 +130,9 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
+        callable $deploymentsFactory,
     ) {
         $providerBranchDeleted = $parsedPayload['branchDeleted'] ?? false;
         $providerBranch = $parsedPayload['branch'] ?? '';
@@ -187,7 +173,7 @@ class Create extends Action
 
             $providerInstallationId = $repository->getAttribute('installationId', '');
 
-            $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
         }
 
         if (!empty($errors)) {
@@ -201,9 +187,9 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
+        callable $deploymentsFactory,
     ) {
         $action = $parsedPayload['action'] ?? '';
 
@@ -260,7 +246,7 @@ class Create extends Action
                     ...array_filter(array_column($prFiles, 'previous_filename')),
                 ];
 
-                $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+                $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
             }
 
             if (!empty($errors)) {

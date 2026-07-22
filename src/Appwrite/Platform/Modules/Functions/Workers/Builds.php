@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Detection;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -12,11 +14,10 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Vcs\Comment;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
 use Executor\Exception as ExecutorException;
@@ -29,14 +30,11 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
-use Utopia\Detector\Detection\Rendering\XStatic;
-use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -387,9 +385,9 @@ class Builds extends Action
                         throw new \Exception('Unable to move file');
                     }
 
-                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+                    $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                    $directorySize = $device->getFileSize($source);
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
                     $deployment
                         ->setAttribute('sourcePath', $source)
                         ->setAttribute('sourceSize', $directorySize)
@@ -529,8 +527,7 @@ class Builds extends Action
                 // artifact system has no primitive for). With the commit pushed,
                 // hand the build to the jobs-service like any other VCS commit,
                 // via the same Deployments service the HTTP endpoints use.
-                if ($resource->getCollection() === 'functions'
-                    && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
                     $deployments->createFromUrl(
                         $resource,
@@ -575,9 +572,9 @@ class Builds extends Action
                     throw new \Exception('Unable to move file');
                 }
 
-                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
+                $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                $directorySize = $device->getFileSize($source);
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
@@ -745,10 +742,7 @@ class Builds extends Action
                     break;
             }
 
-            $command = $this->getCommand(
-                resource: $resource,
-                deployment: $deployment
-            );
+            $command = Backend::command($resource, $deployment);
 
             $cacheKey = $this->getNodeModulesCacheKey($project, $resource, $runtime, $version, $command);
 
@@ -960,7 +954,7 @@ class Builds extends Action
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
+                $detection = Detection::rendering($resource->getAttribute('framework', ''), \explode("\n", $detectionLogs));
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
@@ -1108,63 +1102,9 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            if ($resource->getCollection() === 'sites') {
-                // VCS branch
-                $branchName = $deployment->getAttribute('providerBranch');
-                if (! empty($branchName)) {
-                    $domain = (new BranchDomainFilter())->apply([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
-                    $ruleId = md5($domain);
-
-                    try {
-                        $dbForPlatform->createDocument('rules', new Document([
-                            '$id' => $ruleId,
-                            'projectId' => $project->getId(),
-                            'projectInternalId' => $project->getSequence(),
-                            'domain' => $domain,
-                            'type' => 'deployment',
-                            'trigger' => 'deployment',
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                            'deploymentResourceType' => 'site',
-                            'deploymentResourceId' => $resource->getId(),
-                            'deploymentResourceInternalId' => $resource->getSequence(),
-                            'deploymentVcsProviderBranch' => $branchName,
-                            'status' => 'verified',
-                            'certificateId' => '',
-                            'search' => implode(' ', [$ruleId, $domain]),
-                            'owner' => 'Appwrite',
-                            'region' => $project->getAttribute('region'),
-                        ]));
-                    } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }
-
-                    $queries = [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('type', ['deployment']),
-                        Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                        Query::equal('deploymentResourceType', ['site']),
-                        Query::equal('deploymentVcsProviderBranch', [$branchName]),
-                        Query::equal('trigger', ['manual']),
-                    ];
-
-                    $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }, $queries);
-
-                    Span::add('build.preview_rule_created', true);
-                }
+            if ($resource->getCollection() === 'sites' && ! empty($deployment->getAttribute('providerBranch'))) {
+                Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $platform['sitesDomain']);
+                Span::add('build.preview_rule_created', true);
             }
 
             $queueForRealtime
@@ -1331,35 +1271,6 @@ class Builds extends Action
         };
     }
 
-    protected function getCommand(Document $resource, Document $deployment): string
-    {
-        if ($resource->getCollection() === 'functions') {
-            return $deployment->getAttribute('buildCommands', '');
-        } elseif ($resource->getCollection() === 'sites') {
-            $commands = [];
-
-            $frameworks = Config::getParam('frameworks', []);
-            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-            $envCommand = '';
-            $bundleCommand = '';
-            if (! is_null($framework)) {
-                $envCommand = $framework['envCommand'] ?? '';
-                $bundleCommand = $framework['bundleCommand'] ?? '';
-            }
-
-            $commands[] = $envCommand;
-            $commands[] = $deployment->getAttribute('buildCommands', '');
-            $commands[] = $bundleCommand;
-
-            $commands = array_filter($commands, fn ($command) => ! empty($command));
-
-            return implode(' && ', $commands);
-        }
-
-        return '';
-    }
-
     protected function getNodeModulesCacheKey(Document $project, Document $resource, array $runtime, string $version, string $command): string
     {
         if ($version !== 'v5' || $command === '' || $command === '0') {
@@ -1422,24 +1333,6 @@ class Builds extends Action
         ];
     }
 
-    protected function detectSiteRendering(string $framework, string $detectionLogs): object
-    {
-        $files = \explode("\n", $detectionLogs);
-        $files = \array_filter($files);
-        $files = \array_map(\trim(...), $files);
-        $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
-
-        $detector = new Rendering($framework);
-        foreach ($files as $file) {
-            $detector->addInput($file);
-        }
-
-        return $detector
-            ->addOption(new SSR())
-            ->addOption(new XStatic())
-            ->detect();
-    }
-
     /**
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -1464,96 +1357,9 @@ class Builds extends Action
         $deployment = new Document();
 
         try {
-            if ($resource->getAttribute('providerSilentMode', false) === true) {
-                return;
-            }
-
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $commentId = $deployment->getAttribute('providerCommentId', '');
 
-            if (! empty($providerCommitHash)) {
-                $message = match ($status) {
-                    'ready' => 'Build succeeded.',
-                    'failed' => 'Build failed.',
-                    'processing' => 'Building...',
-                    default => $status
-                };
-
-                $state = match ($status) {
-                    'ready' => 'success',
-                    'failed' => 'failure',
-                    'processing' => 'pending',
-                    default => $status
-                };
-
-                $resourceName = $resource->getAttribute('name');
-                $projectName = $project->getAttribute('name');
-
-                $name = "{$resourceName} ({$projectName})";
-
-                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
-
-                $projectId = $project->getId();
-                $region = $project->getAttribute('region', 'default');
-                $resourceId = $resource->getId();
-                $providerTargetUrl = match ($resource->getCollection()) {
-                    'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
-                    'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
-                    default => throw new \Exception('Invalid resource type')
-                };
-
-                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
-            }
-
-            if (! empty($commentId)) {
-                $retries = 0;
-
-                while (true) {
-                    $retries++;
-
-                    try {
-                        $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                            '$id' => $commentId,
-                        ]));
-                        break;
-                    } catch (\Throwable $err) {
-                        if ($retries >= 9) {
-                            throw $err;
-                        }
-
-                        \sleep(1);
-                    }
-                }
-
-                // Wrap in try/finally to ensure lock file gets deleted
-                try {
-                    $resourceType = match ($resource->getCollection()) {
-                        'functions' => 'function',
-                        'sites' => 'site',
-                        default => throw new \Exception('Invalid resource type')
-                    };
-
-                    $rule = $dbForPlatform->findOne('rules', [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('type', ['deployment']),
-                        Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-                    ]);
-
-                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                    $previewUrl = '';
-                    if ($resource->getCollection() === 'sites' && !$rule->isEmpty()) {
-                        $previewUrl = "{$protocol}://" . $rule->getAttribute('domain', '');
-                    }
-
-                    $comment = new Comment($platform);
-                    $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
-                    $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
-                    $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-                } finally {
-                    $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
-                }
-            }
+            GitAction::run($status, $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         } catch (\Throwable $th) {
             $span = Span::current();
             $errorPrefix = $secondaryError ? 'build.error.secondary' : 'build.git_action.error';

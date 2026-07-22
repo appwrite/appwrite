@@ -119,6 +119,24 @@ trait FunctionsBase
                 }
 
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+
+                $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'queries' => [
+                        Query::equal('deploymentResourceId', [$functionId])->toString(),
+                        Query::equal('trigger', ['manual'])->toString(),
+                        Query::equal('type', ['deployment'])->toString(),
+                        Query::equal('deploymentVcsProviderBranch', [''])->toString(),
+                    ],
+                ]);
+
+                $this->assertSame(200, $rules['headers']['status-code'], 'Failed to list function domains: ' . json_encode($rules['body'], JSON_PRETTY_PRINT));
+                foreach ($rules['body']['rules'] as $rule) {
+                    $this->assertSame($deploymentId, $rule['deploymentId'] ?? '', 'Function domain is not activated, rule: ' . json_encode($rule, JSON_PRETTY_PRINT));
+                }
             }, 120000, 500);
         }
 

@@ -153,7 +153,7 @@ class Create extends Base
 
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
 
-        if (!empty($allowList) && !\in_array($buildRuntime, $allowList, true)) {
+        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
         }
 

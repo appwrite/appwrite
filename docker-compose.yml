@@ -203,6 +203,9 @@ services:
       - _APP_VCS_GITEA_CLIENT_ID
       - _APP_VCS_GITEA_CLIENT_SECRET
       - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -225,12 +228,13 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.3.24
+    image: appwrite/new:0.3.32
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - APPWRITE_ENDPOINT_SAME_ORIGIN=true
       - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
@@ -493,6 +497,9 @@ services:
       - _APP_VCS_GITEA_CLIENT_ID
       - _APP_VCS_GITEA_CLIENT_SECRET
       - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -1134,7 +1141,7 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.2
+    image: appwrite/browser:0.3.3
     networks:
       - appwrite
 
@@ -1167,7 +1174,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.2
+    image: openruntimes/executor:0.25.4
     restart: unless-stopped
     networks:
       - appwrite
@@ -1232,7 +1239,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.6.0
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.8.0
     restart: unless-stopped
     user: root
     networks:
@@ -1243,7 +1250,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - ORCHESTRATOR_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.6.0
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.8.0
 
   mariadb:
     image: mariadb:10.11
@@ -1306,7 +1313,7 @@ services:
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
               const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
                 quit(0);
               }
             } catch (e) {}

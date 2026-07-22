@@ -7,6 +7,13 @@ use Appwrite\Auth\OAuth2;
 // Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
 
+/**
+ * Shared with the "Sign in with GitLab" account-login OAuth2 provider, which
+ * stores its secret as JSON ({"clientSecret": "...", "endpoint": "..."}) to
+ * support self-hosted GitLab per-project. The VCS flow (see app/config/vcs.php)
+ * only supports official gitlab.com, but still encodes to that same JSON
+ * shape so getAppSecret()/getEndpoint() stay correct for both consumers.
+ */
 class Gitlab extends OAuth2
 {
     /**
@@ -158,6 +165,52 @@ class Gitlab extends OAuth2
     /**
      * @param string $accessToken
      *
+     * @return string
+     */
+    public function getUserSlug(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['username'] ?? '';
+    }
+
+    /**
+     * @link https://docs.gitlab.com/ee/api/projects.html#create-project
+     *
+     * @param string $accessToken
+     * @param string $repositoryName
+     * @param bool $private
+     *
+     * @return array
+     */
+    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    {
+        $repository = $this->request('POST', $this->getEndpoint() . '/api/v4/projects', ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'], \json_encode([
+            'name' => $repositoryName,
+            'visibility' => $private ? 'private' : 'public',
+        ]));
+
+        $repository = \json_decode($repository, true) ?? [];
+
+        // Normalize to the GitHub/Gitea field shape ProviderRepository expects.
+        if (isset($repository['visibility'])) {
+            $repository['private'] = $repository['visibility'] !== 'public';
+        }
+
+        if (isset($repository['last_activity_at'])) {
+            $repository['pushed_at'] = $repository['last_activity_at'];
+        }
+
+        if (isset($repository['message']) && !\is_string($repository['message'])) {
+            $repository['message'] = \json_encode($repository['message']);
+        }
+
+        return $repository;
+    }
+
+    /**
+     * @param string $accessToken
+     *
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -185,9 +238,9 @@ class Gitlab extends OAuth2
         return $secret;
     }
 
-
     /**
-     * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
+     * Extracts the endpoint from the JSON stored in appSecret. Defaults to
+     * gitlab.com as a fallback.
      *
      * @return string
      */
