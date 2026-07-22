@@ -99,7 +99,7 @@ class XList extends Action
         }
 
         $collection = 'bucket_' . $bucket->getSequence();
-        $seek = $cursor === '' ? $parent : self::seekPast($cursor);
+        $seek = $cursor === '' ? $parent : $cursor;
         $folders = [];
 
         try {
@@ -109,6 +109,9 @@ class XList extends Action
                     Query::orderAsc('folder'),
                     Query::limit(1),
                 ];
+                if ($seek !== $parent) {
+                    $queries[] = Query::notStartsWith('folder', $seek);
+                }
                 if ($parent !== '') {
                     $queries[] = Query::startsWith('folder', $parent);
                 }
@@ -133,7 +136,7 @@ class XList extends Action
                     'parent' => $parent,
                 ]);
 
-                $seek = self::seekPast($key);
+                $seek = $key;
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -144,15 +147,4 @@ class XList extends Action
         ]), Response::MODEL_FOLDER_LIST);
     }
 
-    /**
-     * Smallest string that sorts after every `folder` value inside the given
-     * folder: the trailing '/' replaced with the next code point ('0'), so a
-     * seek jumps past all of the folder's contents in one indexed query.
-     * Assumes the database orders `folder` values bytewise (binary collation),
-     * so nothing sorts between '/' (0x2F) and '0' (0x30).
-     */
-    private static function seekPast(string $folder): string
-    {
-        return \substr($folder, 0, -1) . \chr(\ord('/') + 1);
-    }
 }
