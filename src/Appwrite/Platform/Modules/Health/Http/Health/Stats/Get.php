@@ -42,7 +42,7 @@ class Get extends Action
         $cacheStats = $cache->info();
 
         $device = $deviceForFiles instanceof Telemetry ? $deviceForFiles->getDevice() : $deviceForFiles;
-        $local = $device instanceof Local ? $device : new Local($device->getRoot());
+        $local = $device instanceof Local ? $device : new Local(APP_STORAGE_UPLOADS);
 
         $response->json([
             'storage' => [
