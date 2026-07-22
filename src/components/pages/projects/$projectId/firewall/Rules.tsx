@@ -91,7 +91,7 @@ import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
 
 const SCOPE_TOGGLE_ITEM_CLASS =
-  'h-8 flex-none px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
+  'h-9 flex-none px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
 
 type RuleResourceGroup = {
   resourceId: string
@@ -290,7 +290,7 @@ export function RulesList({
     <ToggleGroup
       type="single"
       variant="outline"
-      size="sm"
+      size="default"
       value={resourceScope}
       onValueChange={(next) => {
         if (!next) return
@@ -300,7 +300,7 @@ export function RulesList({
           onResourceScopeChange(next as FirewallResourceType)
         }
       }}
-      className="h-8 w-fit shrink-0"
+      className="h-9 w-fit shrink-0"
       aria-label={t('Firewall rule scope')}
     >
       {FIREWALL_RESOURCE_TYPES.map((option) => (

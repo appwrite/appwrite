@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
@@ -22,6 +22,12 @@ import {
   DEFAULT_USAGE_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
+import {
+  getUsageLogRetentionDaysFromPlan,
+  getUsageLogRetentionHoursFromPlan,
+  hasFiniteUsageLogRetention,
+  resolveShorterUsageDateRangePreset,
+} from '@/lib/usage/usage-log-retention'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
 import {
@@ -47,6 +53,8 @@ import {
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
+import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
+import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
 import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
@@ -76,6 +84,14 @@ export function RuleImpactPreview({
     return { from: subHours(to, 24), to }
   })
   const conditionsKey = firewallUsageConditionsKey(conditions)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const usageLogRetentionDays = useMemo(
+    () => getUsageLogRetentionDaysFromPlan(organizationPlan),
+    [organizationPlan],
+  )
   const chartInterval = useMemo(
     () =>
       resolveUsageChartIntervalForRange(
@@ -85,6 +101,23 @@ export function RuleImpactPreview({
       ),
     [organizationPlan, selectedDateRange],
   )
+
+  const { showAlert: showUsageHistoryLimitAlert } =
+    useUsageHistoryLimitAlertState({
+      projectId,
+      dateRange: selectedDateRange,
+      retentionHours: usageLogRetentionHours,
+      organizationPlan,
+    })
+
+  const handleAdjustUsageDateRange = useCallback(() => {
+    const fallbackPreset = resolveShorterUsageDateRangePreset(
+      usageLogRetentionHours,
+    )
+    if (fallbackPreset) {
+      setSelectedDateRange(fallbackPreset.getRange())
+    }
+  }, [usageLogRetentionHours])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -101,6 +134,7 @@ export function RuleImpactPreview({
     resourceId,
     selectedDateRange,
     chartInterval,
+    usageLogRetentionHours,
   )
 
   const series = useMemo(() => impact?.series ?? [], [impact?.series])
@@ -165,6 +199,17 @@ export function RuleImpactPreview({
             className="h-8 w-full min-w-0"
             popoverContentAlign="start"
           />
+
+          {showUsageHistoryLimitAlert &&
+          hasFiniteUsageLogRetention(organizationPlan) ? (
+            <div className="-mx-4">
+              <UsageLogRetentionAlert
+                retentionDays={usageLogRetentionDays}
+                organizationId={project?.teamId}
+                onAdjustRange={handleAdjustUsageDateRange}
+              />
+            </div>
+          ) : null}
 
           <div
             className={cn(

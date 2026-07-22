@@ -307,9 +307,15 @@ export function useProjectFirewallTrafficOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  logRetentionHours?: number,
 ) {
   return useQuery({
-    ...firewallTrafficOverviewQueryOptions(projectId, dateRange, interval),
+    ...firewallTrafficOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      logRetentionHours,
+    ),
     enabled: !!projectId,
   })
 }

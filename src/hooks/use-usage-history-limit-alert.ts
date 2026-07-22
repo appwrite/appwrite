@@ -14,7 +14,13 @@ function isProjectUsageQueryKey(
   projectId: string,
 ): boolean {
   const root = queryKey[0]
-  if (root !== 'usage-events' && root !== 'usage-gauges') return false
+  if (
+    root !== 'usage-events' &&
+    root !== 'usage-gauges' &&
+    root !== 'firewall-impact'
+  ) {
+    return false
+  }
 
   const projectIndex = queryKey.indexOf('project')
   if (projectIndex === -1) return false
@@ -51,14 +57,25 @@ export function useUsageHistoryLimitAlertState({
     () => {
       if (!projectId) return false
 
+      const impactFrom = dateRange?.from?.toISOString() ?? ''
+      const impactTo = dateRange?.to?.toISOString() ?? ''
+
       return queryClient
         .getQueryCache()
         .getAll()
         .some((query) => {
           if (query.state.status !== 'error') return false
           if (!isProjectUsageQueryKey(query.queryKey, projectId)) return false
-          if (!query.queryKey.includes(currentRangeKeyPart)) return false
-          return isUsageHistoryLimitExceededError(query.state.error)
+          if (!isUsageHistoryLimitExceededError(query.state.error)) return false
+
+          if (query.queryKey[0] === 'firewall-impact') {
+            return (
+              query.queryKey.includes(impactFrom) &&
+              query.queryKey.includes(impactTo)
+            )
+          }
+
+          return query.queryKey.includes(currentRangeKeyPart)
         })
     },
     () => false,

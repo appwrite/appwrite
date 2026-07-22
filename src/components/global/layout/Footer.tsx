@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react'
+import { Settings2, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Accordion,
@@ -427,23 +427,21 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                 >
                   {t(link.label)}
                 </a>
+                {link.label === 'Cookies' && showCookieSettings ? (
+                  <button
+                    type="button"
+                    onClick={() => cookieConsent?.openPreferences()}
+                    className="-ms-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-label={footerCopy.links.cookieSettings}
+                  >
+                    <Settings2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                ) : null}
                 {index < legalLinks.length - 1 && (
                   <span className="text-border">·</span>
                 )}
               </div>
             ))}
-            {showCookieSettings ? (
-              <>
-                <span className="text-border">·</span>
-                <button
-                  type="button"
-                  onClick={() => cookieConsent?.openPreferences()}
-                  className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {footerCopy.links.cookieSettings}
-                </button>
-              </>
-            ) : null}
           </nav>
 
           <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />

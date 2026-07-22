@@ -13,6 +13,7 @@ import {
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
 import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
@@ -50,6 +51,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
       dateRange,
       plan,
     )
+    const logRetentionHours = getUsageLogRetentionHoursFromPlan(plan)
 
     await Promise.all([
       // Default rules tab (API) + unfiltered total for plan limit checks.
@@ -71,6 +73,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
             projectId,
             dateRange,
             chartInterval,
+            logRetentionHours,
           ),
         )
         .catch(() => {

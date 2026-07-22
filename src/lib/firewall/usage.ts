@@ -299,6 +299,7 @@ export async function fetchFirewallRuleImpact(
     resourceId?: string
     dateRange?: DateRange
     chartInterval?: UsageChartInterval
+    logRetentionHours?: number
   },
 ): Promise<FirewallRuleImpactData> {
   const to = options.dateRange?.to ?? new Date()
@@ -306,6 +307,7 @@ export async function fetchFirewallRuleImpact(
   const dateRange: DateRange = { from, to }
   const chartInterval =
     options.chartInterval ?? DEFAULT_USAGE_CHART_INTERVAL
+  const logRetentionHours = options.logRetentionHours
 
   const conditionQueries = buildFirewallConditionUsageQueries(
     options.conditions,
@@ -331,6 +333,7 @@ export async function fetchFirewallRuleImpact(
       dateRange,
       chartInterval,
       totalQueries.length > 0 ? totalQueries : undefined,
+      logRetentionHours,
     ),
     hasConditionFilters
       ? fetchProjectRequestsChartOverview(
@@ -338,6 +341,7 @@ export async function fetchFirewallRuleImpact(
           dateRange,
           chartInterval,
           matchedQueries,
+          logRetentionHours,
         )
       : Promise.resolve(null),
   ])

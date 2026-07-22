@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import {
   Area,
@@ -16,6 +16,12 @@ import {
   getUsageChartIntervalsForPlan,
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
+import {
+  getUsageLogRetentionDaysFromPlan,
+  getUsageLogRetentionHoursFromPlan,
+  hasFiniteUsageLogRetention,
+  resolveShorterUsageDateRangePreset,
+} from '@/lib/usage/usage-log-retention'
 import {
   UsageChartXAxis,
   UsageChartYAxis,
@@ -35,6 +41,8 @@ import {
   useProjectFirewallTrafficOverview,
 } from '@/lib/react-query/hooks'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
+import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
+import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { useT } from '@/lib/i18n/translate'
 
 const SERIES = [
@@ -131,10 +139,19 @@ export function TrafficOverview() {
   const {
     dateRange,
     chartInterval,
+    dateRangePresetId,
     setDateRange,
     setChartInterval,
     refreshRollingDateRange,
   } = useUsageChartFilters(organizationPlan)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const usageLogRetentionDays = useMemo(
+    () => getUsageLogRetentionDaysFromPlan(organizationPlan),
+    [organizationPlan],
+  )
   const planChartIntervals = useMemo(
     () => getUsageChartIntervalsForPlan(organizationPlan),
     [organizationPlan],
@@ -149,10 +166,29 @@ export function TrafficOverview() {
     [chartInterval, dateRange, organizationPlan],
   )
 
+  const { showAlert: showUsageHistoryLimitAlert } =
+    useUsageHistoryLimitAlertState({
+      projectId,
+      dateRange,
+      dateRangePresetId,
+      retentionHours: usageLogRetentionHours,
+      organizationPlan,
+    })
+
+  const handleAdjustUsageDateRange = useCallback(() => {
+    const fallbackPreset = resolveShorterUsageDateRangePreset(
+      usageLogRetentionHours,
+    )
+    if (fallbackPreset) {
+      setDateRange(fallbackPreset.getRange())
+    }
+  }, [setDateRange, usageLogRetentionHours])
+
   const { data: overview, refetch } = useProjectFirewallTrafficOverview(
     projectId,
     dateRange,
     resolvedChartInterval,
+    usageLogRetentionHours,
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -329,6 +365,15 @@ export function TrafficOverview() {
           />
         </div>
       </div>
+
+      {showUsageHistoryLimitAlert &&
+      hasFiniteUsageLogRetention(organizationPlan) ? (
+        <UsageLogRetentionAlert
+          retentionDays={usageLogRetentionDays}
+          organizationId={project?.teamId}
+          onAdjustRange={handleAdjustUsageDateRange}
+        />
+      ) : null}
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
