@@ -19,7 +19,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - appwrite-gitea:/gitea-data:ro
     depends_on:
       coredns:
         condition: service_started
@@ -357,6 +356,8 @@ services:
       - USER_GID=1000
       - GITEA__database__DB_TYPE=sqlite3
       - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=false
+      - GITEA__repository__DEFAULT_BRANCH=main
       - GITEA__webhook__ALLOWED_HOST_LIST=*
       - GITEA__webhook__SKIP_TLS_VERIFY=true
       - GITEA__webhook__DELIVER_TIMEOUT=10
@@ -391,11 +392,7 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "
-        su git -c \"gitea admin user create --username $$GITEA_ADMIN_USERNAME --password $$GITEA_ADMIN_PASSWORD --email $$GITEA_ADMIN_EMAIL --admin --must-change-password=false\" || true &&
-        if [ ! -f /data/gitea/token.txt ]; then
-          TOKEN=$$(su git -c \"gitea admin user generate-access-token --username $$GITEA_ADMIN_USERNAME --token-name $$GITEA_ADMIN_USERNAME-token --scopes all --raw\") &&
-          echo $$TOKEN > /data/gitea/token.txt;
-        fi
+        su git -c \"gitea admin user create --username $$GITEA_ADMIN_USERNAME --password $$GITEA_ADMIN_PASSWORD --email $$GITEA_ADMIN_EMAIL --admin --must-change-password=false\" || true
       "
   appwrite-mongo-express:
     profiles:
