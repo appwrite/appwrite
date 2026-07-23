@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/select'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { Plus } from 'lucide-react'
 import { useCreateVcsRepository } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -29,8 +28,10 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
 import {
   getVcsProvider,
+  VCS_PROVIDERS,
   GitLabIcon,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
@@ -152,6 +153,25 @@ export function ConnectRepositorySection({
     value.repositoryName || suggestedRepoName,
   )
   const [repositoryPrivate, setRepositoryPrivate] = useState(true)
+  const [orgPickerView, setOrgPickerView] = useState<'list' | 'switch'>('list')
+  const [activeOrgProvider, setActiveOrgProvider] = useState<VcsProviderId>(
+    () => getVcsProvider(installations[0]?.provider).id,
+  )
+
+  const filteredOrgInstallations = installations.filter(
+    (inst) => getVcsProvider(inst.provider).id === activeOrgProvider,
+  )
+  const hasMultipleOrgProviders = Object.keys(VCS_PROVIDERS).length > 1
+  const ActiveOrgProviderIcon = getVcsProvider(activeOrgProvider).Icon
+
+  const switchOrgProvider = (provider: VcsProviderId) => {
+    setActiveOrgProvider(provider)
+    setOrgPickerView('list')
+    const firstOfProvider = installations.find(
+      (inst) => getVcsProvider(inst.provider).id === provider,
+    )
+    setSelectedInstallationId(firstOfProvider?.$id ?? '')
+  }
 
   const connectedInstallation = installations.find(
     (installation) => installation.$id === value.installationId,
@@ -418,31 +438,78 @@ export function ConnectRepositorySection({
               <Select
                 value={selectedInstallationId}
                 onValueChange={setSelectedInstallationId}
+                onOpenChange={(open) => {
+                  if (!open) setOrgPickerView('list')
+                }}
               >
                 <SelectTrigger id="git-org" className="h-9 text-[13px]">
                   <SelectValue placeholder={t('Select organization')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {installations.map((inst) => (
-                    <SelectItem key={inst.$id} value={inst.$id}>
-                      <span className="flex items-center gap-2">
-                        <ProviderIcon
-                          provider={inst.provider}
-                          className="h-4 w-4 shrink-0"
-                        />
-                        <span>{inst.organization}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                  <div className="border-t border-border mt-1 pt-1">
-                    <a
-                      href={getGitHubAuthUrl}
-                      className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t('Add installation')}
-                    </a>
-                  </div>
+                  {orgPickerView === 'switch' ? (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setOrgPickerView('list')}
+                        className="flex w-full items-center gap-2 px-2 py-1.5 text-[12px] font-medium text-foreground hover:bg-accent/50 rounded-sm"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        {t('Back')}
+                      </button>
+                      <div className="border-t border-border mt-1 pt-1">
+                        {Object.values(VCS_PROVIDERS).map((p) => (
+                          <button
+                            type="button"
+                            key={p.id}
+                            onClick={() => switchOrgProvider(p.id)}
+                            className={cn(
+                              'flex w-full items-center gap-2 px-2 py-1.5 text-[13px] hover:bg-accent/50 rounded-sm',
+                              p.id === activeOrgProvider &&
+                                'text-foreground font-medium',
+                            )}
+                          >
+                            <p.Icon className="h-4 w-4 shrink-0" />
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {filteredOrgInstallations.map((inst) => (
+                        <SelectItem key={inst.$id} value={inst.$id}>
+                          <span className="flex items-center gap-2">
+                            <ProviderIcon
+                              provider={inst.provider}
+                              className="h-4 w-4 shrink-0"
+                            />
+                            <span>{inst.organization}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                      <div className="border-t border-border mt-1 pt-1">
+                        <a
+                          href={vcsAuthUrl(activeOrgProvider)}
+                          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                        >
+                          <ActiveOrgProviderIcon className="h-3 w-3" />
+                          {t(
+                            `Add ${getVcsProvider(activeOrgProvider).label} account`,
+                          )}
+                        </a>
+                        {hasMultipleOrgProviders && (
+                          <button
+                            type="button"
+                            onClick={() => setOrgPickerView('switch')}
+                            className="flex w-full items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                          >
+                            <ArrowLeftRight className="h-3 w-3" />
+                            {t('Switch Git Provider')}
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

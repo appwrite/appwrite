@@ -28,9 +28,10 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   Search,
-  Plus,
   Lock,
   ArrowRight,
+  ArrowLeft,
+  ArrowLeftRight,
   ChevronRight,
   LayoutTemplate,
 } from 'lucide-react'
@@ -61,6 +62,7 @@ import {
   getVcsProvider,
   buildVcsAuthUrl,
   GitLabIcon,
+  VCS_PROVIDERS,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 
@@ -230,6 +232,36 @@ export function CreateFunctionView() {
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
+  const [pickerView, setPickerView] = useState<'list' | 'switch'>('list')
+
+  const selectedInstallation = installations.find(
+    (i) => i.$id === selectedInstallationId,
+  )
+  const [activeProvider, setActiveProvider] = useState<VcsProviderId>(
+    () =>
+      getVcsProvider(
+        selectedInstallation?.provider ?? installations[0]?.provider,
+      ).id,
+  )
+  useEffect(() => {
+    if (selectedInstallation) {
+      setActiveProvider(getVcsProvider(selectedInstallation.provider).id)
+    }
+  }, [selectedInstallation])
+  const filteredInstallations = installations.filter(
+    (inst) => getVcsProvider(inst.provider).id === activeProvider,
+  )
+  const hasMultipleProviders = Object.keys(VCS_PROVIDERS).length > 1
+  const ActiveProviderIcon = getVcsProvider(activeProvider).Icon
+  const switchProvider = (provider: VcsProviderId) => {
+    setActiveProvider(provider)
+    setPickerView('list')
+    const firstOfProvider = installations.find(
+      (inst) => getVcsProvider(inst.provider).id === provider,
+    )
+    setSelectedInstallationId(firstOfProvider?.$id ?? '')
+    setRepoPage(1)
+  }
 
   useEffect(() => {
     if (installations.length > 0 && !selectedInstallationId) {
@@ -363,9 +395,6 @@ export function CreateFunctionView() {
   }, [quickStartTemplates, allTemplatesForHighlighted])
 
   const hasInstallations = installations.length > 0
-  const selectedInstallation = installations.find(
-    (i) => i.$id === selectedInstallationId,
-  )
 
   const handleSelectRepository = (repo: {
     id: string
@@ -444,6 +473,9 @@ export function CreateFunctionView() {
                     setSelectedInstallationId(v)
                     setRepoPage(1)
                   }}
+                  onOpenChange={(open) => {
+                    if (!open) setPickerView('list')
+                  }}
                 >
                   <SelectTrigger className="w-[180px] h-9 text-[13px]">
                     <SelectValue placeholder={t('Select organization')}>
@@ -461,26 +493,70 @@ export function CreateFunctionView() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {installations.map((inst) => (
-                      <SelectItem key={inst.$id} value={inst.$id}>
-                        <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={inst.provider}
-                            className="h-4 w-4 shrink-0"
-                          />
-                          <span>{inst.organization}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                    <div className="border-t border-border mt-1 pt-1">
-                      <a
-                        href={getGitHubAuthUrl}
-                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                      >
-                        <Plus className="h-3 w-3" />
-                        {t('Add account')}
-                      </a>
-                    </div>
+                    {pickerView === 'switch' ? (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setPickerView('list')}
+                          className="flex w-full items-center gap-2 px-2 py-1.5 text-[12px] font-medium text-foreground hover:bg-accent/50 rounded-sm"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5" />
+                          {t('Back')}
+                        </button>
+                        <div className="border-t border-border mt-1 pt-1">
+                          {Object.values(VCS_PROVIDERS).map((p) => (
+                            <button
+                              type="button"
+                              key={p.id}
+                              onClick={() => switchProvider(p.id)}
+                              className={cn(
+                                'flex w-full items-center gap-2 px-2 py-1.5 text-[13px] hover:bg-accent/50 rounded-sm',
+                                p.id === activeProvider &&
+                                  'text-foreground font-medium',
+                              )}
+                            >
+                              <p.Icon className="h-4 w-4 shrink-0" />
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {filteredInstallations.map((inst) => (
+                          <SelectItem key={inst.$id} value={inst.$id}>
+                            <span className="flex items-center gap-2">
+                              <ProviderIcon
+                                provider={inst.provider}
+                                className="h-4 w-4 shrink-0"
+                              />
+                              <span>{inst.organization}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                        <div className="border-t border-border mt-1 pt-1">
+                          <a
+                            href={getVcsAuthUrl(activeProvider)}
+                            className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                          >
+                            <ActiveProviderIcon className="h-3 w-3" />
+                            {t(
+                              `Add ${getVcsProvider(activeProvider).label} account`,
+                            )}
+                          </a>
+                          {hasMultipleProviders && (
+                            <button
+                              type="button"
+                              onClick={() => setPickerView('switch')}
+                              className="flex w-full items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                            >
+                              <ArrowLeftRight className="h-3 w-3" />
+                              {t('Switch Git Provider')}
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
 

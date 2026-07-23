@@ -1615,6 +1615,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Connect to GitLab': 'התחברות ל-GitLab',
   'Add GitHub': 'הוספת GitHub',
   'Add GitLab': 'הוספת GitLab',
+  'Add GitHub account': 'הוספת חשבון GitHub',
+  'Add GitLab account': 'הוספת חשבון GitLab',
+  'Switch Git Provider': 'החלפת ספק Git',
   'Consider the following before transferring your project:':
     'שימו לב לנקודות הבאות לפני העברת הפרויקט:',
   'Copy domain': 'העתקת דומיין',

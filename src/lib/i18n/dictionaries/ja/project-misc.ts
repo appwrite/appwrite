@@ -1132,6 +1132,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Connect to GitLab': 'GitLab に接続',
   'Add GitHub': 'GitHub を追加',
   'Add GitLab': 'GitLab を追加',
+  'Add GitHub account': 'GitHub アカウントを追加',
+  'Add GitLab account': 'GitLab アカウントを追加',
+  'Switch Git Provider': 'Git プロバイダーを切り替え',
   'Consider the following before transferring your project:':
     'プロジェクトを転送する前に、次を考慮してください:',
   'Copy domain': 'ドメインをコピー',

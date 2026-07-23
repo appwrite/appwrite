@@ -3,9 +3,11 @@
  * Used in site creation wizard, site settings, and function settings
  * "Connect repository" modal.
  *
- * Features: installation selector with "Add account", search, repo list with
- * framework/runtime icon, pagination, "Can't find a repository?" note, optional
- * "Create a new site" link.
+ * Features: installation selector scoped to one provider at a time (with an
+ * explicit "Switch Git Provider" action, mirroring how Vercel/Netlify keep
+ * each provider's orgs in their own list rather than interleaving them),
+ * search, repo list with framework/runtime icon, pagination, "Can't find a
+ * repository?" note, optional "Create a new site" link.
  */
 
 import { useState, useEffect, useMemo } from 'react'
@@ -23,8 +25,12 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Search, Lock, Plus } from 'lucide-react'
-import { getVcsProvider, type VcsProviderId } from '@/lib/vcs/providers'
+import { Search, Lock, ArrowLeft, ArrowLeftRight } from 'lucide-react'
+import {
+  getVcsProvider,
+  VCS_PROVIDERS,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -112,6 +118,38 @@ export function RepositoryPicker({
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
+  const [pickerView, setPickerView] = useState<'list' | 'switch'>('list')
+
+  const selectedInstallation = installations.find(
+    (i) => i.$id === selectedInstallationId,
+  )
+
+  const [activeProvider, setActiveProvider] = useState<VcsProviderId>(
+    () =>
+      getVcsProvider(
+        selectedInstallation?.provider ?? installations[0]?.provider,
+      ).id,
+  )
+
+  useEffect(() => {
+    if (selectedInstallation) {
+      setActiveProvider(getVcsProvider(selectedInstallation.provider).id)
+    }
+  }, [selectedInstallation])
+
+  const filteredInstallations = installations.filter(
+    (inst) => getVcsProvider(inst.provider).id === activeProvider,
+  )
+
+  const switchProvider = (provider: VcsProviderId) => {
+    setActiveProvider(provider)
+    setPickerView('list')
+    const firstOfProvider = installations.find(
+      (inst) => getVcsProvider(inst.provider).id === provider,
+    )
+    onInstallationChange(firstOfProvider?.$id ?? '')
+    setRepoPage(1)
+  }
 
   const vcsType =
     detectionType === 'runtime'
@@ -157,15 +195,14 @@ export function RepositoryPicker({
     )
   }, [repositoriesData, vcsType])
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
-  const selectedInstallation = installations.find(
-    (i) => i.$id === selectedInstallationId,
-  )
   const isFetching = isFetchingProp ?? reposFetching
+  const ActiveProviderIcon = getVcsProvider(activeProvider).Icon
+  const hasMultipleProviders = Object.keys(VCS_PROVIDERS).length > 1
 
   return (
     <div className={cn('flex flex-col', className)}>
       <div className="space-y-4">
-        {selectedInstallationId && (
+        {installations.length > 0 && (
           <div className="flex items-center gap-2">
             <Select
               value={selectedInstallationId}
@@ -173,10 +210,16 @@ export function RepositoryPicker({
                 onInstallationChange(value)
                 setRepoPage(1)
               }}
+              onOpenChange={(open) => {
+                if (!open) setPickerView('list')
+              }}
             >
               <SelectTrigger
                 id="repo-picker-installation"
-                className="w-[180px] shrink-0 h-9 text-[13px]"
+                className={cn(
+                  'shrink-0 h-9 text-[13px]',
+                  selectedInstallationId ? 'w-[180px]' : 'w-full',
+                )}
               >
                 <SelectValue placeholder={t('Select organization')}>
                   {selectedInstallation && (
@@ -193,86 +236,95 @@ export function RepositoryPicker({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {installations.map((inst) => (
-                  <SelectItem key={inst.$id} value={inst.$id}>
-                    <span className="flex items-center gap-2">
-                      <ProviderIcon
-                        provider={inst.provider}
-                        className="h-4 w-4 shrink-0"
-                      />
-                      <span>{inst.organization}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-                <div className="border-t border-border mt-1 pt-1">
-                  <a
-                    href={getGitHubAuthUrl}
-                    className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                  >
-                    <Plus className="h-3 w-3" />
-                    {t('Add account')}
-                  </a>
-                </div>
+                {pickerView === 'switch' ? (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setPickerView('list')}
+                      className="flex w-full items-center gap-2 px-2 py-1.5 text-[12px] font-medium text-foreground hover:bg-accent/50 rounded-sm"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      {t('Back')}
+                    </button>
+                    <div className="border-t border-border mt-1 pt-1">
+                      {Object.values(VCS_PROVIDERS).map((p) => (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => switchProvider(p.id)}
+                          className={cn(
+                            'flex w-full items-center gap-2 px-2 py-1.5 text-[13px] hover:bg-accent/50 rounded-sm',
+                            p.id === activeProvider &&
+                              'text-foreground font-medium',
+                          )}
+                        >
+                          <p.Icon className="h-4 w-4 shrink-0" />
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {filteredInstallations.map((inst) => (
+                      <SelectItem key={inst.$id} value={inst.$id}>
+                        <span className="flex items-center gap-2">
+                          <ProviderIcon
+                            provider={inst.provider}
+                            className="h-4 w-4 shrink-0"
+                          />
+                          <span>{inst.organization}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                    <div className="border-t border-border mt-1 pt-1">
+                      <a
+                        href={vcsAuthUrl(activeProvider)}
+                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                      >
+                        <ActiveProviderIcon className="h-3 w-3" />
+                        {t(
+                          `Add ${getVcsProvider(activeProvider).label} account`,
+                        )}
+                      </a>
+                      {hasMultipleProviders && (
+                        <button
+                          type="button"
+                          onClick={() => setPickerView('switch')}
+                          className="flex w-full items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                        >
+                          <ArrowLeftRight className="h-3 w-3" />
+                          {t('Switch Git Provider')}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </SelectContent>
             </Select>
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <Input
-                id="repo-picker-search"
-                value={repoSearch}
-                onChange={(e) => setRepoSearch(e.target.value)}
-                placeholder={t('Search repositories...')}
-                className="h-9 ps-9 text-[13px]"
-              />
-            </div>
-            <RefreshButton
-              onClick={() => {
-                refetchRepos()
-                onRefetch?.()
-              }}
-              isRefreshing={isFetching}
-              tooltip={t('Refresh repositories')}
-            />
+            {selectedInstallationId && (
+              <>
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="repo-picker-search"
+                    value={repoSearch}
+                    onChange={(e) => setRepoSearch(e.target.value)}
+                    placeholder={t('Search repositories...')}
+                    className="h-9 ps-9 text-[13px]"
+                  />
+                </div>
+                <RefreshButton
+                  onClick={() => {
+                    refetchRepos()
+                    onRefetch?.()
+                  }}
+                  isRefreshing={isFetching}
+                  tooltip={t('Refresh repositories')}
+                />
+              </>
+            )}
           </div>
-        )}
-
-        {!selectedInstallationId && installations.length > 0 && (
-          <Select
-            value={selectedInstallationId}
-            onValueChange={(value) => {
-              onInstallationChange(value)
-              setRepoPage(1)
-            }}
-          >
-            <SelectTrigger
-              id="repo-picker-installation"
-              className="w-full h-9 text-[13px]"
-            >
-              <SelectValue placeholder={t('Select organization')} />
-            </SelectTrigger>
-            <SelectContent>
-              {installations.map((inst) => (
-                <SelectItem key={inst.$id} value={inst.$id}>
-                  <span className="flex items-center gap-2">
-                    <ProviderIcon
-                      provider={inst.provider}
-                      className="h-4 w-4 shrink-0"
-                    />
-                    <span>{inst.organization}</span>
-                  </span>
-                </SelectItem>
-              ))}
-              <div className="border-t border-border mt-1 pt-1">
-                <a
-                  href={getGitHubAuthUrl}
-                  className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                >
-                  <Plus className="h-3 w-3" />
-                  {t('Add account')}
-                </a>
-              </div>
-            </SelectContent>
-          </Select>
         )}
 
         {selectedInstallationId && (
