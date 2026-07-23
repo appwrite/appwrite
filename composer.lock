@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "45a96f275db3fcab689375890cd5b41d",
+    "content-hash": "a811ab43bece6d9d01be1caab8a08a75",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5165,16 +5165,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "4.4.4",
+            "version": "4.4.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "37580b1a459c6b51f567b1720c118a8a0213f314"
+                "reference": "4abcc51d113697fb45ad7fab83851bc4162c6bd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/37580b1a459c6b51f567b1720c118a8a0213f314",
-                "reference": "37580b1a459c6b51f567b1720c118a8a0213f314",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/4abcc51d113697fb45ad7fab83851bc4162c6bd4",
+                "reference": "4abcc51d113697fb45ad7fab83851bc4162c6bd4",
                 "shasum": ""
             },
             "require": {
@@ -5195,7 +5195,25 @@
                     "Utopia\\VCS\\": "src/VCS"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/VCS"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test --config pint.json"
+                ],
+                "format": [
+                    "./vendor/bin/pint --config pint.json"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 8 --memory-limit 512M -c phpstan.neon src tests"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -5207,10 +5225,10 @@
                 "vcs"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/4.4.4"
+                "source": "https://github.com/utopia-php/vcs/tree/4.4.5",
+                "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-07-22T10:18:04+00:00"
+            "time": "2026-07-23T13:01:07+00:00"
         },
         {
             "name": "utopia-php/websocket",
