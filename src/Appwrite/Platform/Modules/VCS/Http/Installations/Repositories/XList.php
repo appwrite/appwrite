@@ -97,6 +97,7 @@ class XList extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('providerNamespace', '', new Text(256), 'Namespace (personal account or group) to list repositories from, as returned by listNamespaces\' `path` field. Defaults to the installation\'s own namespace.', true)
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
@@ -109,6 +110,7 @@ class XList extends Action
         string $installationId,
         string $type,
         string $search,
+        string $providerNamespace,
         array $queries,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
@@ -141,7 +143,7 @@ class XList extends Action
         }
 
         $page = ($offset / $limit) + 1;
-        $owner = $vcs->getOwnerName($providerInstallationId);
+        $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
         ['items' => $repos, 'total' => $total] = $vcs->searchRepositories($owner, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
