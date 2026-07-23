@@ -70,6 +70,22 @@ export function getVcsProvider(provider?: string): VcsProviderMeta {
 }
 
 /**
+ * Render the icon for a VCS provider, defaulting to GitHub for
+ * unknown/legacy values. Use in place of importing GitHubIcon/GitLabIcon
+ * directly so new providers only need to be added to VCS_PROVIDERS.
+ */
+export function VcsIcon({
+  type,
+  className,
+}: {
+  type?: string
+  className?: string
+}) {
+  const { Icon } = getVcsProvider(type)
+  return <Icon className={className} />
+}
+
+/**
  * Resolve provider metadata strictly, returning null for unknown providers
  * instead of falling back to GitHub.
  */

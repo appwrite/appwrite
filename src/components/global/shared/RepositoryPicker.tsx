@@ -29,6 +29,7 @@ import { Search, Lock, ArrowLeft, ArrowLeftRight } from 'lucide-react'
 import {
   getVcsProvider,
   VCS_PROVIDERS,
+  VcsIcon,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -40,22 +41,11 @@ import { RefreshButton } from '@/components/global/shared/RefreshButton'
 
 const REPO_PAGE_SIZE = 5
 
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider?: string
-  className?: string
-}) {
-  const { Icon } = getVcsProvider(provider)
-  return <Icon className={className} />
-}
-
 function RepositoryRowSkeleton({ provider }: { provider?: string }) {
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-        <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
+        <VcsIcon type={provider} className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="h-3.5 w-28 rounded bg-muted/50" />
@@ -224,8 +214,8 @@ export function RepositoryPicker({
                 <SelectValue placeholder={t('Select organization')}>
                   {selectedInstallation && (
                     <span className="flex items-center gap-2">
-                      <ProviderIcon
-                        provider={selectedInstallation.provider}
+                      <VcsIcon
+                        type={selectedInstallation.provider}
                         className="h-4 w-4 shrink-0"
                       />
                       <span className="truncate">
@@ -269,8 +259,8 @@ export function RepositoryPicker({
                     {filteredInstallations.map((inst) => (
                       <SelectItem key={inst.$id} value={inst.$id}>
                         <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={inst.provider}
+                          <VcsIcon
+                            type={inst.provider}
                             className="h-4 w-4 shrink-0"
                           />
                           <span>{inst.organization}</span>
@@ -395,8 +385,8 @@ export function RepositoryPicker({
                                 className="h-3.5 w-3.5"
                               />
                             ) : (
-                              <ProviderIcon
-                                provider={selectedInstallation?.provider}
+                              <VcsIcon
+                                type={selectedInstallation?.provider}
                                 className="h-3.5 w-3.5"
                               />
                             )}
