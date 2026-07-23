@@ -39,8 +39,8 @@ class XList extends Action
             ->label('resourceType', RESOURCE_TYPE_VCS)
             ->label('sdk', new Method(
                 namespace: 'vcs',
-                group: 'installations',
-                name: 'listNamespaces',
+                group: 'namespaces',
+                name: 'list',
                 description: '/docs/references/vcs/list-namespaces.md',
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -56,6 +56,7 @@ class XList extends Action
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
     }
@@ -67,11 +68,16 @@ class XList extends Action
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Response $response,
+        Document $project,
         Database $dbForPlatform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -91,19 +97,17 @@ class XList extends Action
 
         $page = ($offset / $limit) + 1;
 
-        // Only GitLab has more than one namespace per installation: GitHub's
-        // OAuth App flow already scopes an installation to a single org/user
-        // during authorization, so there's nothing else to list here.
         if (\method_exists($vcs, 'listNamespaces')) {
             ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
         } else {
-            $organization = $installation->getAttribute('organization', '');
-            $matches = empty($search) || \stripos($organization, $search) !== false;
+            $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
+            $owner = $vcs->getOwnerName($providerInstallationId);
+            $matches = empty($search) || \stripos($owner, $search) !== false;
             $namespaces = $matches ? [[
-                'id' => $installation->getAttribute('providerInstallationId', ''),
-                'name' => $organization,
-                'path' => $organization,
-                'kind' => 'org',
+                'id' => $providerInstallationId,
+                'name' => $owner,
+                'path' => $owner,
+                'kind' => $installation->getAttribute('personal', false) ? 'user' : 'organization',
                 'avatarUrl' => '',
             ]] : [];
             $total = \count($namespaces);

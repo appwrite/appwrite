@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54c4b8e9607f4b8b1ce387ad27d2726c",
+    "content-hash": "e1219809bb21a3a8dc73aeb0d6107641",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3212,16 +3212,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.10.0",
+            "version": "0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4"
+                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/fc6e7861a0428415a7454ba808a511cc01bf8db4",
-                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/0f1a342bceebc2659736e52a4496daf24ca4954c",
+                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c",
                 "shasum": ""
             },
             "require": {
@@ -3264,10 +3264,10 @@
                 "security"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.10.0",
+                "source": "https://github.com/utopia-php/auth/tree/0.10.1",
                 "issues": "https://github.com/utopia-php/auth/issues"
             },
-            "time": "2026-07-15T15:52:58+00:00"
+            "time": "2026-07-23T07:34:27+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4931,16 +4931,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "3.0.0",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "171746978543323c2536edacd8ad8e8d3fde401c"
+                "reference": "38bfc0c14a16a7de2a86b3331865dad1230ed739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/171746978543323c2536edacd8ad8e8d3fde401c",
-                "reference": "171746978543323c2536edacd8ad8e8d3fde401c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/38bfc0c14a16a7de2a86b3331865dad1230ed739",
+                "reference": "38bfc0c14a16a7de2a86b3331865dad1230ed739",
                 "shasum": ""
             },
             "require": {
@@ -4975,9 +4975,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/3.0.0"
+                "source": "https://github.com/utopia-php/storage/tree/3.1.0"
             },
-            "time": "2026-07-20T13:15:54+00:00"
+            "time": "2026-07-22T15:57:57+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5165,16 +5165,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "dev-feat/gitlab-list-namespaces",
+            "version": "4.4.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "2423618e32a1b3d0dd3e8e4327b5f85561d90cf3"
+                "reference": "4abcc51d113697fb45ad7fab83851bc4162c6bd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/2423618e32a1b3d0dd3e8e4327b5f85561d90cf3",
-                "reference": "2423618e32a1b3d0dd3e8e4327b5f85561d90cf3",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/4abcc51d113697fb45ad7fab83851bc4162c6bd4",
+                "reference": "4abcc51d113697fb45ad7fab83851bc4162c6bd4",
                 "shasum": ""
             },
             "require": {
@@ -5225,10 +5225,10 @@
                 "vcs"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/vcs/tree/feat/gitlab-list-namespaces",
+                "source": "https://github.com/utopia-php/vcs/tree/4.4.5",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-07-23T12:23:30+00:00"
+            "time": "2026-07-23T13:01:07+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8416,8 +8416,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/platform": 5,
-        "utopia-php/vcs": 20
+        "utopia-php/platform": 5
     },
     "prefer-stable": true,
     "prefer-lowest": false,
