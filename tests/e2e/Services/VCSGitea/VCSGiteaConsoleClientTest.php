@@ -25,10 +25,14 @@ final class VCSGiteaConsoleClientTest extends Scope
     public function testCreateInstallation(): void
     {
         $projectId = $this->getProject()['$id'];
+        $consoleUrl = 'http://localhost/console/project-default-' . $projectId . '/settings/git-installations';
 
         $authorize = $this->client->call(Client::METHOD_GET, '/vcs/gitea/authorize', array_merge([
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [], true, false);
+        ], $this->getHeaders()), [
+            'success' => $consoleUrl,
+            'failure' => $consoleUrl,
+        ], true, false);
 
         $this->assertEquals(301, $authorize['headers']['status-code']);
 
@@ -95,7 +99,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], true, false);
 
         $this->assertEquals(301, $callback['headers']['status-code']);
-        $this->assertStringContainsString('git-installations', (string) ($callback['headers']['location'] ?? ''));
+        $this->assertEquals($consoleUrl, $callback['headers']['location'] ?? '');
 
         $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', array_merge([
             'x-appwrite-project' => $projectId,
@@ -116,7 +120,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertNotEmpty($installation['$id']);
         $this->assertEquals('gitea', $installation['provider']);
         $this->assertEquals(self::GITEA_USERNAME, $installation['organization']);
-        $this->assertTrue($installation['personal']);
+        $this->assertNotEmpty($installation['providerInstallationId']);
     }
 
     // Client does not persist cookies between calls, so carry them manually and never follow redirects
