@@ -12,10 +12,11 @@ export type ProductId =
   | 'functions'
   | 'messaging'
   | 'sites'
+  | 'firewall'
 
-export type ProductGroup = 'build' | 'deploy'
+export type ProductGroup = 'build' | 'deploy' | 'protect'
 
-export type ProductNavGroup = ProductGroup | 'protect'
+export type ProductNavGroup = ProductGroup
 
 export type ProductNavItemId =
   | ProductId

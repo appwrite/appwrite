@@ -13,6 +13,7 @@ import { ProductHeroIcon } from '@/components/pages/products/_components/Product
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PRODUCT_HERO_LOGO_STRIPS } from '@/lib/products/hero-logo-strip'
+import { PRODUCT_HERO_VISUALS } from '@/lib/products/hero-visuals'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductPageContent } from '@/lib/products/types'
 import { useI18n } from '@/lib/i18n'
@@ -28,7 +29,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
   const product = PRODUCT_REGISTRY[content.id]
   const ProductIcon = product.icon
   const heroLogoStrip = PRODUCT_HERO_LOGO_STRIPS[content.id]
+  const HeroVisual = PRODUCT_HERO_VISUALS[content.id]
   const productName = productNamesCopy[content.id] ?? product.name
+  const hasHeroFooter = Boolean(
+    content.hero.stats?.length || heroLogoStrip || HeroVisual,
+  )
 
   return (
     <div className="relative min-w-0 bg-background">
@@ -36,10 +41,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         leading={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}
         description={content.hero.description}
-        wideFooter={content.hero.stats?.length === 5}
+        wideFooter={Boolean(HeroVisual) || content.hero.stats?.length === 5}
         footer={
-          content.hero.stats?.length || heroLogoStrip ? (
+          hasHeroFooter ? (
             <>
+              {HeroVisual ? <HeroVisual /> : null}
               {content.hero.stats?.length ? (
                 <MarketingHeroStats items={content.hero.stats} />
               ) : null}

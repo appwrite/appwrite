@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { AUTH_FEATURE_VISUALS } from '@/components/pages/products/features/auth'
 import { DATABASES_FEATURE_VISUALS } from '@/components/pages/products/features/databases'
+import { FIREWALL_FEATURE_VISUALS } from '@/components/pages/products/features/firewall'
 import { FUNCTIONS_FEATURE_VISUALS } from '@/components/pages/products/features/functions'
 import { MESSAGING_FEATURE_VISUALS } from '@/components/pages/products/features/messaging'
 import { SITES_FEATURE_VISUALS } from '@/components/pages/products/features/sites'
@@ -12,6 +13,7 @@ const PRODUCT_FEATURE_VISUALS: Partial<
 > = {
   auth: AUTH_FEATURE_VISUALS,
   databases: DATABASES_FEATURE_VISUALS,
+  firewall: FIREWALL_FEATURE_VISUALS,
   functions: FUNCTIONS_FEATURE_VISUALS,
   messaging: MESSAGING_FEATURE_VISUALS,
   sites: SITES_FEATURE_VISUALS,

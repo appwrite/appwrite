@@ -24,6 +24,7 @@ export const PRODUCT_IDS = [
   'functions',
   'messaging',
   'sites',
+  'firewall',
 ] as const satisfies readonly ProductId[]
 
 export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
@@ -80,6 +81,15 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     icon: Globe,
     tagline: 'Static, SSR, and CSR deploys from Git.',
     docsPath: '/docs/products/sites',
+  },
+  firewall: {
+    id: 'firewall',
+    name: 'Firewall',
+    group: 'protect',
+    path: '/products/firewall',
+    icon: Shield,
+    tagline: 'Project rules to deny, rate limit, and redirect traffic.',
+    docsPath: '/docs/products/firewall',
   },
 }
 
@@ -171,11 +181,11 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
   },
   firewall: {
     id: 'firewall',
-    name: 'Firewall',
+    name: PRODUCT_REGISTRY.firewall.name,
     group: 'protect',
-    href: '/docs/products/firewall',
-    icon: Shield,
-    tagline: 'Project rules to deny, rate limit, and redirect traffic.',
+    href: PRODUCT_REGISTRY.firewall.path,
+    icon: PRODUCT_REGISTRY.firewall.icon,
+    tagline: PRODUCT_REGISTRY.firewall.tagline,
   },
   advisor: {
     id: 'advisor',

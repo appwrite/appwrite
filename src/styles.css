@@ -1741,6 +1741,38 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   }
 }
 
+/* Product page hero: always-on twist of the home Firewall bento traffic animation. */
+.product-hero-firewall-request-pass {
+  animation: product-bento-firewall-request-pass 1.55s ease-in-out var(--fw-delay, 0ms) infinite;
+}
+
+.product-hero-firewall-request-block {
+  animation: product-bento-firewall-request-block 1.55s ease-in-out var(--fw-delay, 0ms) infinite;
+}
+
+.product-hero-firewall-shield-pulse {
+  animation: product-bento-firewall-shield-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-hero-firewall-request-pass,
+  .product-hero-firewall-request-block {
+    animation: none;
+    inset-inline-start: 72%;
+    opacity: 0.85;
+    transform: translateY(-50%) scale(1);
+  }
+
+  .product-hero-firewall-request-block {
+    inset-inline-start: 48%;
+    opacity: 0.55;
+  }
+
+  .product-hero-firewall-shield-pulse {
+    animation: none;
+  }
+}
+
 @keyframes product-bento-db-panel-reveal {
   from {
     opacity: 0;

@@ -78,7 +78,7 @@ Click **Create rule**. On success, you return to the Firewall list for that reso
 If create fails (for example plan limit reached or validation error), fix the issue and try again. No rule is added until create succeeds.
 
 {% info title="Plan limits" %}
-Free plans allow **2** rules per project. Pro and Scale allow **50**. See [Plan limits](/docs/products/firewall/rules#plan-limits).
+Free plans allow **2** rules per project. Pro allows **50**. See [Plan limits](/docs/products/firewall/rules#plan-limits).
 {% /info %}
 
 # After create {% #after-create %}

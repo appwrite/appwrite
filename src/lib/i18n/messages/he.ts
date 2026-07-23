@@ -397,7 +397,7 @@ export const heCatalog: EnCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
           firewallName: 'חומת אש',
-          firewallTagline: 'WAF מנוהל לתעבורה זדונית.',
+          firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',
           advisorTagline: 'תובנות אבטחה וביצועים.',
         },

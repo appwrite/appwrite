@@ -45,7 +45,6 @@ Firewall rule limits are **per project** and depend on your organization plan:
 |------|------------------:|
 | Free (Starter) | 2 |
 | Pro | 50 |
-| Scale | 50 |
 
 Creating a rule is blocked when you reach the limit until you [delete a rule](/docs/products/firewall/delete) or [upgrade your plan](/docs/advanced/platform/billing). Disabled rules count toward the same limit.
 

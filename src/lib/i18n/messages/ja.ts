@@ -397,7 +397,7 @@ export const jaCatalog: EnCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'ドメイン購入、DNS、TLS、アプリ接続。',
           firewallName: 'Firewall',
-          firewallTagline: '悪意のあるトラフィック向けマネージド WAF。',
+          firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',
           advisorTagline: 'セキュリティとパフォーマンスのインサイト。',
         },

@@ -394,4 +394,182 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
     'Prisma、Drizzle、Sequelize、TypeORM、SQLAlchemy、psql など、既存の SQL ツールチェーンと同じ接続文字列を使えます。Console の Connect タブから用意済みスニペットをコピーして、チームがすでに知っているスタックのまま開発を続けられます。',
   'Works with your ORM and toolstack': 'お使いの ORM とツールスタックに対応',
+
+  // Firewall product page
+  '24h ago': '24時間前',
+  '5 attributes': '5 属性',
+  'A specific Function execution endpoint.': '特定の Function 実行エンドポイント。',
+  'A specific Site deployment hostname.': '特定の Site デプロイホスト名。',
+  'Actions docs': 'アクションのドキュメント',
+  'All conditions must match (AND).': 'すべての条件が一致する必要があります (AND)。',
+  'Allow the request and skip later Firewall rules.':
+    'リクエストを許可し、後続の Firewall ルールをスキップします。',
+  'Apply policies to the project API, a specific Function, or a specific Site. Keep production APIs locked down while preview sites and health checks stay reachable.':
+    'プロジェクト API、特定の Function、または特定の Site にポリシーを適用します。プレビューサイトとヘルスチェックは到達可能なまま、本番 API をロックダウンできます。',
+  'Can I preview impact before enabling a rule?':
+    'ルールを有効にする前に影響をプレビューできますか?',
+  'Choose where the rule evaluates matching traffic.':
+    '一致するトラフィックをルールが評価する対象を選びます。',
+  'Condition matching': '条件マッチング',
+  'Conditions docs': '条件のドキュメント',
+  'Continue': '続行',
+  'Control traffic before it reaches your app':
+    'アプリに届く前にトラフィックを制御',
+  'Create your first deny, bypass, rate limit, or redirect rule from the Console and preview impact before you enable it.':
+    'Console から最初の拒否、バイパス、レート制限、またはリダイレクトルールを作成し、有効化する前に影響をプレビューできます。',
+  'Define project rules that match requests by IP, path, method, country, or user agent, then deny, bypass, rate limit, or redirect them before they hit your API, Functions, or Sites.':
+    'IP、パス、メソッド、国、またはユーザーエージェントでリクエストに一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、またはリダイレクトします。',
+  'Deny account mutations': 'アカウント変更を拒否',
+  'Deny, bypass, rate limit, or redirect': '拒否、バイパス、レート制限、リダイレクト',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, and Redirect sends clients to another location with a 3xx status. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny or rate limit rules.':
+    '一致する各ルールは 1 つのアクションを適用します。Deny は 403 を返し、Bypass はリクエストを許可して後続ルールをスキップし、Rate limit はクライアント IP ごとに制限して超過時に 429 を返し、Redirect は 3xx で別の場所へ送ります。Allow アクションは別途ありません。後続の拒否やレート制限をスキップさせたいトラフィックには Bypass を使います。',
+  'Every rule applies one action when conditions match. Deny abusive traffic with 403, bypass trusted clients past later rules, throttle per IP with rate limits, or redirect to maintenance and migration URLs.':
+    '条件が一致すると、各ルールは 1 つのアクションを適用します。不正なトラフィックは 403 で拒否し、信頼できるクライアントは後続ルールをバイパスし、IP ごとにレート制限するか、メンテナンスや移行用 URL へリダイレクトします。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, or user agent. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。条件は IP、リクエストパス、HTTP メソッド、国、ユーザーエージェントでフィルターできます。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Filter by IP address, request path, HTTP method, country, or user agent. Combine conditions with AND so a rule only fires when every filter matches.':
+    'IP アドレス、リクエストパス、HTTP メソッド、国、またはユーザーエージェントでフィルターします。条件を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'First match': '最初の一致',
+  'Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan. Disabled rules still count toward plan limits but are not evaluated.':
+    'Firewall は Appwrite Cloud で利用できます。ルール上限は組織プランに依存します。無効なルールもプラン上限には含まれますが、評価されません。',
+  'Firewall overview': 'Firewall の概要',
+  'Firewall rules run on Appwrite Cloud before traffic reaches your project resources. Scope a rule to the project API, a specific Function, or a specific Site. Console traffic is never blocked, so you can keep managing rules even when deny or rate limit policies are active.':
+    'Firewall ルールは、トラフィックがプロジェクトリソースに届く前に Appwrite Cloud で実行されます。ルールのスコープはプロジェクト API、特定の Function、または特定の Site に設定できます。Console のトラフィックはブロックされないため、拒否やレート制限ポリシーが有効でもルールを管理し続けられます。',
+  'Functions and Sites scopes': 'Functions と Sites のスコープ',
+  'How do conditions and priority work together?':
+    '条件と優先度はどのように連携しますか?',
+  'Impact before enable': '有効化前の影響',
+  'Impact preview docs': '影響プレビューのドキュメント',
+  'Is Firewall available on every plan?': 'Firewall はすべてのプランで利用できますか?',
+  'Last 24 hours': '過去 24 時間',
+  'Lower numbers evaluate first. The first match stops the chain.':
+    '小さい番号から評価されます。最初の一致でチェーンが止まります。',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny or rate limit rules so trusted traffic skips the rest of the chain.':
+    '優先度の小さい番号から評価されます。信頼できるトラフィックが後続をスキップできるよう、広い拒否やレート制限ルールより前にバイパス許可リストを置きます。',
+  'Match on the request attributes that matter': '重要なリクエスト属性で一致させる',
+  'Matched': '一致',
+  'Matched requests over time': '時間経過での一致リクエスト',
+  'Monitor denied, limited, and redirected traffic':
+    '拒否、制限、リダイレクトされたトラフィックを監視',
+  'Monitor docs': '監視のドキュメント',
+  'Now': '現在',
+  'Office IP allowlist': 'オフィス IP 許可リスト',
+  'One action per matching rule. Evaluation stops at the first match.':
+    '一致するルールごとに 1 アクション。評価は最初の一致で停止します。',
+  'Passed': '通過',
+  'Path starts with /v1/account': 'パスが /v1/account で始まる',
+  'Plan limits': 'プラン上限',
+  'Preview impact before you enable': '有効化する前に影響をプレビュー',
+  'Priority decides the first match': '優先度が最初の一致を決める',
+  'Priority docs': '優先度のドキュメント',
+  'Project REST and GraphQL endpoints.': 'プロジェクトの REST と GraphQL エンドポイント。',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, or redirect matching traffic from the Console.':
+    'Appwrite Firewall でプロジェクトの API、Functions、Sites を保護します。Console から一致するトラフィックを拒否、バイパス、レート制限、またはリダイレクトするルールを作成できます。',
+  'Rate limit public API': '公開 API をレート制限',
+  'Rate limited': 'レート制限済み',
+  'Recent requests that would match these conditions.':
+    'これらの条件に一致する直近のリクエスト。',
+  'Reject matching requests before they reach your project.':
+    'プロジェクトに届く前に一致するリクエストを拒否します。',
+  'Resource scope': 'リソーススコープ',
+  'Resource scopes': 'リソーススコープ',
+  'Rule actions': 'ルールアクション',
+  'Rule conditions': 'ルール条件',
+  'Rule priority': 'ルール優先度',
+  'Rules': 'ルール',
+  'Scope rules to API, Functions, or Sites':
+    'ルールを API、Functions、Sites にスコープ',
+  'Scopes docs': 'スコープのドキュメント',
+  'Send matching clients to another location with a 3xx status.':
+    '一致するクライアントを 3xx ステータスで別の場所へ送ります。',
+  'Skipped': 'スキップ済み',
+  'Start protecting with Firewall': 'Firewall で保護を始める',
+  'The Firewall page chart summarizes Passed request volume alongside Denied, Rate limited, Redirected, and Challenged series for the selected date range. Bypass matches and under-quota rate limit matches allow traffic without publishing a Firewall outcome metric. Use the overview with your rules list to verify policies after enablement.':
+    'Firewall ページのチャートは、選択した期間の Passed リクエスト量と、Denied、Rate limited、Redirected、Challenged の系列をまとめます。Bypass の一致とクォータ未満のレート制限一致は、Firewall の結果メトリクスを出さずにトラフィックを許可します。有効化後は概要とルール一覧でポリシーを確認できます。',
+  'Throttle matching requests that exceed a per-IP quota.':
+    'IP ごとのクォータを超える一致リクエストを制限します。',
+  'Track request volume alongside denied, rate-limited, redirected, and challenged outcomes on the Firewall page. Confirm policies after enablement without leaving the Console.':
+    'Firewall ページでリクエスト量と、拒否、レート制限、リダイレクト、チャレンジの結果を追跡します。有効化後も Console を離れずにポリシーを確認できます。',
+  'What can Firewall protect?': 'Firewall は何を保護できますか?',
+  'What does traffic overview show?': 'トラフィック概要には何が表示されますか?',
+  'Which actions can a rule take?': 'ルールはどのアクションを取れますか?',
+  'While creating a rule, estimate how many recent requests would match your conditions for the selected scope and date range. Tighten filters before traffic is affected.':
+    'ルール作成中に、選択したスコープと期間で直近リクエストが何件条件に一致するかを見積もります。トラフィックに影響する前にフィルターを絞り込めます。',
+  'Yes. While creating a rule, the Console estimates how many recent usage events would match your current conditions for the selected resource scope and date range. Use that preview to tighten filters before you enable the rule, then confirm outcomes in traffic overview.':
+    'はい。ルール作成中、Console は選択したリソーススコープと期間について、現在の条件に一致する直近の利用イベント数を見積もります。そのプレビューで有効化前にフィルターを絞り、トラフィック概要で結果を確認できます。',
+
+  // Firewall product page updates
+  '10+': '10+',
+  'Act on automated traffic with score-based conditions.':
+    'スコア条件で自動トラフィックに対応します。',
+  'ASN': 'ASN',
+  'Bot score': 'ボットスコア',
+  'Combine attributes with AND so a rule only fires when every filter matches.':
+    '属性を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Create your first deny, bypass, rate limit, redirect, or challenge rule from the Console and preview impact before you enable it.':
+    'Console から最初の拒否、バイパス、レート制限、リダイレクト、または Challenge ルールを作成し、有効化する前に影響をプレビューできます。',
+  'Define project rules that match rich request attributes, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    '豊富なリクエスト属性に一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、リダイレクト、または Challenge します。',
+  'Deny, bypass, rate limit, redirect, or challenge':
+    '拒否、バイパス、レート制限、リダイレクト、Challenge',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, Redirect sends clients to another location with a 3xx status, and Challenge verifies suspicious clients before allowing them through. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny, rate limit, or challenge rules.':
+    '一致する各ルールは 1 つのアクションを適用します。Deny は 403 を返し、Bypass はリクエストを許可して後続ルールをスキップし、Rate limit はクライアント IP ごとに制限して超過時に 429 を返し、Redirect は 3xx で別の場所へ送り、Challenge は疑わしいクライアントを通す前に検証します。Allow アクションは別途ありません。後続の拒否、レート制限、Challenge をスキップさせたいトラフィックには Bypass を使います。',
+  'Every rule applies one action when conditions match. Deny abusive traffic, bypass trusted clients, throttle per IP, redirect to maintenance URLs, or challenge suspicious requests before they continue.':
+    '条件が一致すると、各ルールは 1 つのアクションを適用します。不正なトラフィックは拒否し、信頼できるクライアントはバイパスし、IP ごとに制限し、メンテナンス URL へリダイレクトするか、疑わしいリクエストを続行前に Challenge します。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。条件は IP、リクエストパス、HTTP メソッド、国、ユーザーエージェント、ASN、ヘッダー、クエリパラメータ、TLS フィンガープリント、ボットスコアなどでフィルターできます。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Filter by IP, path, method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Combine conditions with AND so a rule only fires when every filter matches.':
+    'IP、パス、メソッド、国、ユーザーエージェント、ASN、ヘッダー、クエリパラメータ、TLS フィンガープリント、ボットスコアなどでフィルターします。条件を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Filter on query keys and values without changing path rules.':
+    'パスルールを変えずにクエリのキーと値でフィルターします。',
+  'Geo allow or deny by resolved ISO country code.':
+    '解決された ISO 国コードで許可または拒否します。',
+  'Header': 'Header',
+  'Identify clients by TLS fingerprint when IPs rotate.':
+    'IP が入れ替わるときも TLS フィンガープリントでクライアントを識別します。',
+  'JA4 fingerprint': 'JA4 フィンガープリント',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny, rate limit, or challenge rules so trusted traffic skips the rest of the chain.':
+    '優先度の小さい番号から評価されます。信頼できるトラフィックが後続をスキップできるよう、広い拒否、レート制限、Challenge ルールより前にバイパス許可リストを置きます。',
+  'Match exact client IPs for allowlists and denylists.':
+    '許可リストと拒否リスト向けに正確なクライアント IP を一致させます。',
+  'Match on rich request attributes': '豊富なリクエスト属性で一致',
+  'Match request headers for tokens, clients, or custom signals.':
+    'トークン、クライアント、カスタムシグナル向けにリクエストヘッダーを一致させます。',
+  'Match traffic by autonomous system for hosting and ISP ranges.':
+    'ホスティングや ISP レンジ向けに自律システムでトラフィックを一致させます。',
+  'Monitor denied, limited, redirected, and challenged traffic':
+    '拒否、制限、リダイレクト、Challenge されたトラフィックを監視',
+  'Present a challenge before allowing suspicious clients through.':
+    '疑わしいクライアントを通す前に Challenge を提示します。',
+  'Protect prefixes like /v1/account or sensitive routes.':
+    '/v1/account のようなプレフィックスや機微なルートを保護します。',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, redirect, or challenge matching traffic from the Console.':
+    'Appwrite Firewall でプロジェクトの API、Functions、Sites を保護します。Console から一致するトラフィックを拒否、バイパス、レート制限、リダイレクト、または Challenge するルールを作成できます。',
+  'Query parameter': 'クエリパラメータ',
+  'Restrict mutating methods such as POST, PUT, and DELETE.':
+    'POST、PUT、DELETE などの変更メソッドを制限します。',
+  'See how many recent requests would match before you enable a rule.':
+    'ルールを有効にする前に、直近リクエストが何件一致するかを確認できます。',
+  'Filter bots, scripts, monitors, and known clients.':
+    'ボット、スクリプト、モニター、既知のクライアントをフィルターします。',
+
+  'Build rules from the request properties that matter to your app. Combine conditions so a rule only fires when every filter matches.':
+    'アプリにとって重要なリクエスト属性からルールを組み立てます。条件を組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Define project rules that match the request properties you care about, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    '重視するリクエスト属性に一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、リダイレクト、または Challenge します。',
+  'Every condition on a rule must match before the action runs.':
+    'アクションが実行される前に、ルール上のすべての条件が一致する必要があります。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Match on request properties such as identity, location, path, and client signals.':
+    '識別情報、位置、パス、クライアント信号などのリクエスト属性で一致させます。',
+  'Estimate how much recent traffic a draft rule would affect, then refine conditions before you turn it on.':
+    '下書きルールが直近トラフィックにどの程度影響するかを見積もり、有効化する前に条件を絞り込みます。',
+  'See how much recent traffic a draft rule would affect.':
+    '下書きルールが直近トラフィックにどの程度影響するかを確認できます。',
+  'Incoming': '受信',
+  'Your app': 'アプリ',
 }
+
+
+

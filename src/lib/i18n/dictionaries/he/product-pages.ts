@@ -496,4 +496,177 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
     'השתמשו באותם מחרוזות חיבור עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-SQL שלכם. העתיקו snippets מוכנים מלשונית Connect בקונסולה והמשיכו לשחרר עם הסטאק שהצוות כבר מכיר.',
   'Works with your ORM and toolstack': 'עובד עם ה-ORM והסטאק שלכם',
+
+  // Firewall product page
+  '24h ago': 'לפני 24 שעות',
+  '5 attributes': '5 מאפיינים',
+  'A specific Function execution endpoint.': 'Endpoint להרצת Function ספציפית.',
+  'A specific Site deployment hostname.': 'Hostname של פריסת Site ספציפית.',
+  'Actions docs': 'תיעוד פעולות',
+  'All conditions must match (AND).': 'כל התנאים חייבים להתאים (AND).',
+  'Allow the request and skip later Firewall rules.':
+    'אפשרו את הבקשה ודלגו על כללי Firewall הבאים.',
+  'Apply policies to the project API, a specific Function, or a specific Site. Keep production APIs locked down while preview sites and health checks stay reachable.':
+    'החילו מדיניות על ה-API של הפרויקט, על Function ספציפית או על Site ספציפי. שמרו על APIs של פרודקשן נעולים בזמן שאתרי תצוגה מקדימה ובדיקות תקינות נשארים נגישים.',
+  'Can I preview impact before enabling a rule?': 'האם אפשר לצפות בהשפעה לפני הפעלת כלל?',
+  'Choose where the rule evaluates matching traffic.':
+    'בחרו איפה הכלל מעריך תעבורה תואמת.',
+  'Condition matching': 'התאמת תנאים',
+  'Conditions docs': 'תיעוד תנאים',
+  'Continue': 'המשך',
+  'Control traffic before it reaches your app': 'שלטו בתעבורה לפני שהיא מגיעה לאפליקציה',
+  'Create your first deny, bypass, rate limit, or redirect rule from the Console and preview impact before you enable it.':
+    'צרו את כלל הדחייה, העקיפה, מגבלת הקצב או ההפניה הראשון מהקונסולה וצפו בהשפעה לפני ההפעלה.',
+  'Define project rules that match requests by IP, path, method, country, or user agent, then deny, bypass, rate limit, or redirect them before they hit your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים בקשות לפי IP, נתיב, method, מדינה או user agent, ואז דחו, עקפו, הגבילו קצב או הפנו אותן לפני שהן מגיעות ל-API, ל-Functions או ל-Sites.',
+  'Deny account mutations': 'דחיית שינויי account',
+  'Deny, bypass, rate limit, or redirect': 'דחייה, עקיפה, מגבלת קצב או הפניה',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, and Redirect sends clients to another location with a 3xx status. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny or rate limit rules.':
+    'כל כלל תואם מחיל פעולה אחת: Deny מחזיר 403, Bypass מאפשר את הבקשה ומדלג על כללים הבאים, Rate limit מגביל לפי IP של לקוח עם 429 מעל המכסה, ו-Redirect שולח לקוחות ליעד אחר עם סטטוס 3xx. אין פעולת Allow נפרדת. השתמשו ב-Bypass כדי לאפשר תעבורה שצריכה לדלג על כללי דחייה או מגבלת קצב מאוחרים יותר.',
+  'Every rule applies one action when conditions match. Deny abusive traffic with 403, bypass trusted clients past later rules, throttle per IP with rate limits, or redirect to maintenance and migration URLs.':
+    'כל כלל מחיל פעולה אחת כשהתנאים מתאימים. דחו תעבורה פוגענית עם 403, עקפו לקוחות מהימנים מעבר לכללים הבאים, הגבילו לפי IP עם מגבלות קצב, או הפנו לכתובות תחזוקה ומיגרציה.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, or user agent. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). תנאים יכולים לסנן לפי IP, נתיב בקשה, HTTP method, מדינה או user agent. כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Filter by IP address, request path, HTTP method, country, or user agent. Combine conditions with AND so a rule only fires when every filter matches.':
+    'סננו לפי כתובת IP, נתיב בקשה, HTTP method, מדינה או user agent. שלבו תנאים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'First match': 'התאמה ראשונה',
+  'Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan. Disabled rules still count toward plan limits but are not evaluated.':
+    'Firewall זמין ב-Appwrite Cloud. מגבלות כללים תלויות בתוכנית הארגון. כללים מושבתים עדיין נספרים במגבלות התוכנית אבל לא מוערכים.',
+  'Firewall overview': 'סקירת Firewall',
+  'Firewall rules run on Appwrite Cloud before traffic reaches your project resources. Scope a rule to the project API, a specific Function, or a specific Site. Console traffic is never blocked, so you can keep managing rules even when deny or rate limit policies are active.':
+    'כללי Firewall רצים ב-Appwrite Cloud לפני שהתעבורה מגיעה למשאבי הפרויקט. הגדירו היקף לכלל ל-API של הפרויקט, ל-Function ספציפית או ל-Site ספציפי. תעבורת הקונסולה אף פעם לא נחסמת, כך שתוכלו להמשיך לנהל כללים גם כשמדיניות דחייה או מגבלת קצב פעילה.',
+  'Functions and Sites scopes': 'היקפי Functions ו-Sites',
+  'How do conditions and priority work together?': 'איך תנאים ועדיפות עובדים יחד?',
+  'Impact before enable': 'השפעה לפני הפעלה',
+  'Impact preview docs': 'תיעוד תצוגת השפעה',
+  'Is Firewall available on every plan?': 'האם Firewall זמין בכל תוכנית?',
+  'Last 24 hours': '24 השעות האחרונות',
+  'Lower numbers evaluate first. The first match stops the chain.':
+    'מספרים נמוכים מוערכים קודם. ההתאמה הראשונה עוצרת את השרשרת.',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny or rate limit rules so trusted traffic skips the rest of the chain.':
+    'מספרי עדיפות נמוכים מוערכים קודם. הציבו רשימות עקיפה לפני כללי דחייה או מגבלת קצב רחבים יותר כדי שתעבורה מהימנה תדלג על שאר השרשרת.',
+  'Match on the request attributes that matter': 'התאימו לפי מאפייני הבקשה שחשובים',
+  'Matched': 'תואמות',
+  'Matched requests over time': 'בקשות תואמות לאורך זמן',
+  'Monitor denied, limited, and redirected traffic': 'עקבו אחרי תעבורה שנדחתה, הוגבלה או הופנתה',
+  'Monitor docs': 'תיעוד ניטור',
+  'Now': 'עכשיו',
+  'Office IP allowlist': 'רשימת IP משרדי',
+  'One action per matching rule. Evaluation stops at the first match.':
+    'פעולה אחת לכל כלל תואם. ההערכה נעצרת בהתאמה הראשונה.',
+  'Passed': 'עברו',
+  'Path starts with /v1/account': 'הנתיב מתחיל ב-/v1/account',
+  'Plan limits': 'מגבלות תוכנית',
+  'Preview impact before you enable': 'צפו בהשפעה לפני ההפעלה',
+  'Priority decides the first match': 'עדיפות קובעת את ההתאמה הראשונה',
+  'Priority docs': 'תיעוד עדיפות',
+  'Project REST and GraphQL endpoints.': 'Endpoints של REST ו-GraphQL בפרויקט.',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, or redirect matching traffic from the Console.':
+    'הגנו על APIs, Functions ו-Sites של הפרויקט עם Appwrite Firewall. צרו כללים לדחייה, עקיפה, מגבלת קצב או הפניה של תעבורה תואמת מהקונסולה.',
+  'Rate limit public API': 'מגבלת קצב ל-API ציבורי',
+  'Rate limited': 'הוגבלו בקצב',
+  'Recent requests that would match these conditions.':
+    'בקשות אחרונות שהיו מתאימות לתנאים האלה.',
+  'Reject matching requests before they reach your project.':
+    'דחו בקשות תואמות לפני שהן מגיעות לפרויקט.',
+  'Resource scope': 'היקף משאב',
+  'Resource scopes': 'היקפי משאבים',
+  'Rule actions': 'פעולות כלל',
+  'Rule conditions': 'תנאי כלל',
+  'Rule priority': 'עדיפות כלל',
+  'Rules': 'כללים',
+  'Scope rules to API, Functions, or Sites': 'הגדירו היקף כללים ל-API, Functions או Sites',
+  'Scopes docs': 'תיעוד היקפים',
+  'Send matching clients to another location with a 3xx status.':
+    'שלחו לקוחות תואמים ליעד אחר עם סטטוס 3xx.',
+  'Skipped': 'דולגו',
+  'Start protecting with Firewall': 'התחילו להגן עם Firewall',
+  'The Firewall page chart summarizes Passed request volume alongside Denied, Rate limited, Redirected, and Challenged series for the selected date range. Bypass matches and under-quota rate limit matches allow traffic without publishing a Firewall outcome metric. Use the overview with your rules list to verify policies after enablement.':
+    'התרשים בעמוד Firewall מסכם נפח בקשות Passed לצד סדרות Denied, Rate limited, Redirected ו-Challenged לטווח התאריכים שנבחר. התאמות Bypass והתאמות מגבלת קצב מתחת למכסה מאפשרות תעבורה בלי לפרסם מדד תוצאה של Firewall. השתמשו בסקירה יחד עם רשימת הכללים כדי לאמת מדיניות אחרי הפעלה.',
+  'Throttle matching requests that exceed a per-IP quota.':
+    'הגבילו בקשות תואמות שחורגות ממכסה לפי IP.',
+  'Track request volume alongside denied, rate-limited, redirected, and challenged outcomes on the Firewall page. Confirm policies after enablement without leaving the Console.':
+    'עקבו אחרי נפח בקשות לצד תוצאות דחייה, מגבלת קצב, הפניה ו-challenge בעמוד Firewall. אשרו מדיניות אחרי הפעלה בלי לעזוב את הקונסולה.',
+  'What can Firewall protect?': 'מה Firewall יכול להגן?',
+  'What does traffic overview show?': 'מה סקירת התעבורה מציגה?',
+  'Which actions can a rule take?': 'אילו פעולות כלל יכול לבצע?',
+  'While creating a rule, estimate how many recent requests would match your conditions for the selected scope and date range. Tighten filters before traffic is affected.':
+    'בזמן יצירת כלל, העריכו כמה בקשות אחרונות היו מתאימות לתנאים שלכם להיקף ולטווח התאריכים שנבחרו. הדקו מסננים לפני שהתעבורה מושפעת.',
+  'Yes. While creating a rule, the Console estimates how many recent usage events would match your current conditions for the selected resource scope and date range. Use that preview to tighten filters before you enable the rule, then confirm outcomes in traffic overview.':
+    'כן. בזמן יצירת כלל, הקונסולה מעריכה כמה אירועי שימוש אחרונים היו מתאימים לתנאים הנוכחיים להיקף המשאב ולטווח התאריכים שנבחרו. השתמשו בתצוגה המקדימה כדי להדק מסננים לפני הפעלת הכלל, ואז אשרו תוצאות בסקירת התעבורה.',
+
+  // Firewall product page updates
+  '10+': '10+',
+  'Act on automated traffic with score-based conditions.':
+    'פעלו על תעבורה אוטומטית עם תנאים מבוססי ציון.',
+  'ASN': 'ASN',
+  'Bot score': 'ציון בוט',
+  'Combine attributes with AND so a rule only fires when every filter matches.':
+    'שלבו מאפיינים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Create your first deny, bypass, rate limit, redirect, or challenge rule from the Console and preview impact before you enable it.':
+    'צרו את כלל הדחייה, העקיפה, מגבלת הקצב, ההפניה או ה-Challenge הראשון מהקונסולה וצפו בהשפעה לפני ההפעלה.',
+  'Define project rules that match rich request attributes, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים מאפייני בקשה עשירים, ואז דחו, עקפו, הגבילו קצב, הפנו או אתגרו תעבורה לפני שהיא מגיעה ל-API, ל-Functions או ל-Sites.',
+  'Deny, bypass, rate limit, redirect, or challenge':
+    'דחייה, עקיפה, מגבלת קצב, הפניה או Challenge',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, Redirect sends clients to another location with a 3xx status, and Challenge verifies suspicious clients before allowing them through. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny, rate limit, or challenge rules.':
+    'כל כלל תואם מחיל פעולה אחת: Deny מחזיר 403, Bypass מאפשר את הבקשה ומדלג על כללים הבאים, Rate limit מגביל לפי IP של לקוח עם 429 מעל המכסה, Redirect שולח לקוחות ליעד אחר עם סטטוס 3xx, ו-Challenge מאמת לקוחות חשודים לפני שמאפשר להם להמשיך. אין פעולת Allow נפרדת. השתמשו ב-Bypass כדי לאפשר תעבורה שצריכה לדלג על כללי דחייה, מגבלת קצב או Challenge מאוחרים יותר.',
+  'Every rule applies one action when conditions match. Deny abusive traffic, bypass trusted clients, throttle per IP, redirect to maintenance URLs, or challenge suspicious requests before they continue.':
+    'כל כלל מחיל פעולה אחת כשהתנאים מתאימים. דחו תעבורה פוגענית, עקפו לקוחות מהימנים, הגבילו לפי IP, הפנו לכתובות תחזוקה, או אתגרו בקשות חשודות לפני שהן ממשיכות.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). תנאים יכולים לסנן לפי IP, נתיב בקשה, HTTP method, מדינה, user agent, ASN, headers, פרמטרי query, טביעות TLS, ציון בוט ועוד. כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Filter by IP, path, method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Combine conditions with AND so a rule only fires when every filter matches.':
+    'סננו לפי IP, נתיב, method, מדינה, user agent, ASN, headers, פרמטרי query, טביעות TLS, ציון בוט ועוד. שלבו תנאים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Filter on query keys and values without changing path rules.':
+    'סננו לפי מפתחות וערכי query בלי לשנות כללי נתיב.',
+  'Geo allow or deny by resolved ISO country code.':
+    'אפשרו או דחו לפי קוד מדינה ISO שזוהה.',
+  'Header': 'Header',
+  'Identify clients by TLS fingerprint when IPs rotate.':
+    'זהו לקוחות לפי טביעת TLS כשכתובות IP מתחלפות.',
+  'JA4 fingerprint': 'טביעת JA4',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny, rate limit, or challenge rules so trusted traffic skips the rest of the chain.':
+    'מספרי עדיפות נמוכים מוערכים קודם. הציבו רשימות עקיפה לפני כללי דחייה, מגבלת קצב או Challenge רחבים יותר כדי שתעבורה מהימנה תדלג על שאר השרשרת.',
+  'Match exact client IPs for allowlists and denylists.':
+    'התאימו כתובות IP מדויקות לרשימות היתר וחסימה.',
+  'Match on rich request attributes': 'התאימו לפי מאפייני בקשה עשירים',
+  'Match request headers for tokens, clients, or custom signals.':
+    'התאימו headers של בקשה לטוקנים, לקוחות או אותות מותאמים.',
+  'Match traffic by autonomous system for hosting and ISP ranges.':
+    'התאימו תעבורה לפי מערכת אוטונומית לטווחי hosting ו-ISP.',
+  'Monitor denied, limited, redirected, and challenged traffic':
+    'עקבו אחרי תעבורה שנדחתה, הוגבלה, הופנתה או עברה Challenge',
+  'Present a challenge before allowing suspicious clients through.':
+    'הציגו Challenge לפני שמאפשרים ללקוחות חשודים להמשיך.',
+  'Protect prefixes like /v1/account or sensitive routes.':
+    'הגנו על קידומות כמו /v1/account או נתיבים רגישים.',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, redirect, or challenge matching traffic from the Console.':
+    'הגנו על APIs, Functions ו-Sites של הפרויקט עם Appwrite Firewall. צרו כללים לדחייה, עקיפה, מגבלת קצב, הפניה או Challenge של תעבורה תואמת מהקונסולה.',
+  'Query parameter': 'פרמטר query',
+  'Restrict mutating methods such as POST, PUT, and DELETE.':
+    'הגבילו מתודות משנות כמו POST, PUT ו-DELETE.',
+  'See how many recent requests would match before you enable a rule.':
+    'ראו כמה בקשות אחרונות היו מתאימות לפני שתפעילו כלל.',
+  'Filter bots, scripts, monitors, and known clients.':
+    'סננו בוטים, סקריפטים, מוניטורים ולקוחות מוכרים.',
+
+  'Build rules from the request properties that matter to your app. Combine conditions so a rule only fires when every filter matches.':
+    'בנו כללים ממאפייני הבקשה שחשובים לאפליקציה שלכם. שלבו תנאים כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Define project rules that match the request properties you care about, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים למאפייני הבקשה שחשובים לכם, ואז דחו, עקפו, הגבילו קצב, הפנו או אתגרו תעבורה לפני שהיא מגיעה ל-API, ל-Functions או ל-Sites.',
+  'Every condition on a rule must match before the action runs.':
+    'כל תנאי בכלל חייב להתאים לפני שהפעולה רצה.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Match on request properties such as identity, location, path, and client signals.':
+    'התאימו לפי מאפייני בקשה כמו זהות, מיקום, נתיב ואותות לקוח.',
+  'Estimate how much recent traffic a draft rule would affect, then refine conditions before you turn it on.':
+    'העריכו כמה תעבורה אחרונה כלל טיוטה ישפיע עליה, ואז הדקו תנאים לפני ההפעלה.',
+  'See how much recent traffic a draft rule would affect.':
+    'ראו כמה תעבורה אחרונה כלל טיוטה ישפיע עליה.',
+  'Incoming': 'נכנסות',
+  'Your app': 'האפליקציה שלכם',
 }
+
+
+

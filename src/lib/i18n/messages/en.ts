@@ -358,6 +358,7 @@ export const enCatalog = {
         functions: 'Functions',
         messaging: 'Messaging',
         sites: 'Sites',
+        firewall: 'Firewall',
       },
       explore: {
         title: 'Explore Appwrite', // pragma: allowlist secret
@@ -386,7 +387,7 @@ export const enCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'Buy domains, DNS, TLS, and app connections.',
           firewallName: 'Firewall',
-          firewallTagline: 'Managed WAF for malicious traffic.',
+          firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',
           advisorTagline: 'Security and performance insights.',
         },

@@ -91,7 +91,7 @@ export const sitesProductContent: ProductPageContent = {
       links: [
         { label: 'Site domains', href: '/docs/products/sites/domains' },
         { label: 'Appwrite DNS', href: '/docs/products/network/dns' },
-        { label: 'Firewall', href: '/docs/products/firewall' },
+        { label: 'Firewall', href: '/products/firewall' },
       ],
     },
     {
@@ -101,7 +101,7 @@ export const sitesProductContent: ProductPageContent = {
       links: [
         { label: 'Sites overview', href: '/docs/products/sites' },
         { label: 'Appwrite Network', href: '/docs/products/network' },
-        { label: 'Firewall', href: '/docs/products/firewall' },
+        { label: 'Firewall', href: '/products/firewall' },
       ],
     },
     {
