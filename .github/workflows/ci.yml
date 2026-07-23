@@ -435,21 +435,28 @@ jobs:
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            COMPOSE_PROFILES=mariadb
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            COMPOSE_PROFILES=mongodb
             echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            COMPOSE_PROFILES=postgresql
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
+
+          # Gitea runs alongside Appwrite only where VCS tests need it.
+          if [ "${{ matrix.service.name }}" = "VCS" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
+          fi
+
+          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}

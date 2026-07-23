@@ -19,8 +19,13 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - appwrite-gitea:/gitea-data:ro
     depends_on:
-      - coredns
+      coredns:
+        condition: service_started
+      gitea-bootstrap:
+        condition: service_completed_successfully
+        required: false
     ports:
       - 9501:80
     dns:
@@ -331,6 +336,67 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  gitea:
+    profiles:
+      - gitea
+    image: gitea/gitea:1.21.5
+    container_name: appwrite-gitea
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 9515:3000
+    volumes:
+      - appwrite-gitea:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__webhook__ALLOWED_HOST_LIST=*
+      - GITEA__webhook__SKIP_TLS_VERIFY=true
+      - GITEA__webhook__DELIVER_TIMEOUT=10
+      - GITEA__server__ROOT_URL=http://gitea:3000/
+      - GITEA__server__LOCAL_ROOT_URL=http://gitea:3000/
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:3000/api/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+  gitea-bootstrap:
+    profiles:
+      - gitea
+    image: gitea/gitea:1.21.5
+    container_name: appwrite-gitea-bootstrap
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-gitea:/data
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      - GITEA_ADMIN_USERNAME=${GITEA_ADMIN_USERNAME:-appwrite}
+      - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD:-password}
+      - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL:-gitea@appwrite.io}
+    entrypoint: /bin/sh
+    command: >
+      -c "
+        su git -c \"gitea admin user create --username $$GITEA_ADMIN_USERNAME --password $$GITEA_ADMIN_PASSWORD --email $$GITEA_ADMIN_EMAIL --admin --must-change-password=false\" || true &&
+        if [ ! -f /data/gitea/token.txt ]; then
+          TOKEN=$$(su git -c \"gitea admin user generate-access-token --username $$GITEA_ADMIN_USERNAME --token-name $$GITEA_ADMIN_USERNAME-token --scopes all --raw\") &&
+          echo $$TOKEN > /data/gitea/token.txt;
+        fi
+      "
   appwrite-mongo-express:
     profiles:
       - mongodb
@@ -514,3 +580,5 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+volumes:
+  appwrite-gitea: null
