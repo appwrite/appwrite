@@ -35,6 +35,8 @@ import {
   ChevronRight,
   LayoutTemplate,
   GitBranch,
+  User,
+  Users,
 } from 'lucide-react'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -43,6 +45,7 @@ import {
   functionTemplatesPageQueryOptions,
   useRepositories,
   useProject,
+  useNamespaces,
 } from '@/lib/react-query/hooks'
 import {
   CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
@@ -247,7 +250,22 @@ export function CreateFunctionView() {
     )
     setSelectedInstallationId(firstOfProvider?.$id ?? '')
     setRepoPage(1)
+    setSelectedNamespace('')
   }
+
+  // Personal namespace + groups for the selected installation. Only GitLab
+  // returns more than one -- other providers already scope an installation
+  // to a single org/user via their OAuth flow, so this list is a no-op there.
+  const [selectedNamespace, setSelectedNamespace] = useState('')
+  const { data: namespacesData } = useNamespaces(
+    projectId,
+    selectedInstallationId || null,
+  )
+  const namespaces = namespacesData?.namespaces ?? []
+
+  useEffect(() => {
+    setSelectedNamespace('')
+  }, [selectedInstallationId])
 
   useEffect(() => {
     if (installations.length > 0 && !selectedInstallationId) {
@@ -309,6 +327,7 @@ export function CreateFunctionView() {
     repoPage - 1,
     REPO_PAGE_SIZE,
     debouncedRepoSearch || undefined,
+    selectedNamespace || undefined,
   )
 
   const repositories = useMemo(
@@ -562,6 +581,34 @@ export function CreateFunctionView() {
                   tooltip={t('Refresh repositories')}
                 />
               </div>
+
+              {namespaces.length > 1 && (
+                <Select
+                  value={selectedNamespace || namespaces[0]?.path || ''}
+                  onValueChange={(value) => {
+                    setSelectedNamespace(value)
+                    setRepoPage(1)
+                  }}
+                >
+                  <SelectTrigger className="w-full h-9 text-[13px] mb-4">
+                    <SelectValue placeholder={t('Select namespace')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {namespaces.map((namespace) => (
+                      <SelectItem key={namespace.id} value={namespace.path}>
+                        <span className="flex items-center gap-2">
+                          {namespace.kind === 'user' ? (
+                            <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span>{namespace.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <div className="rounded-lg border border-border overflow-hidden mb-4">
                 {reposLoading ? (
