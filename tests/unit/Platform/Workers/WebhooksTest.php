@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Workers\Webhooks;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -17,12 +18,87 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
 final class WebhooksTest extends TestCase
 {
+    public function testFailureThresholdSendsOneAlertForStaleConcurrentMessages(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $this->seedOwnerUser($database);
+        $database->createCollection('webhooks', [], [], [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ], false);
+        $database->createAttribute('webhooks', 'attempts', Database::VAR_INTEGER, 0, true);
+        $database->createAttribute('webhooks', 'enabled', Database::VAR_BOOLEAN, 0, true);
+        $database->createAttribute('webhooks', 'logs', Database::VAR_STRING, 20000, false);
+
+        $webhook = new Document([
+            '$id' => 'webhook-1',
+            '$sequence' => 201,
+            'attempts' => 9,
+            'enabled' => true,
+            'events' => ['documents.create'],
+            'name' => 'Payments',
+            'url' => 'http://127.0.0.1:1',
+            'signatureKey' => 'secret',
+            'httpUser' => '',
+            'httpPass' => '',
+            'security' => false,
+        ]);
+        $database->createDocument('webhooks', $webhook);
+
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 1,
+            'name' => 'Production',
+            'teamInternalId' => 'team-internal-1',
+            'region' => 'fra',
+            'webhooks' => [$webhook],
+        ]);
+        $message = new Message([
+            'pid' => 'pid',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'events' => ['documents.create'],
+                'payload' => [],
+                'user' => [],
+            ],
+        ]);
+        $publisher = new MockPublisher();
+        $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $publisherForUsage = new UsagePublisher($publisher, new Queue('v1-usage'));
+        $worker = new Webhooks();
+
+        for ($i = 0; $i < 2; $i++) {
+            try {
+                $worker->action(
+                    $message,
+                    $project,
+                    $database,
+                    $publisherForNotifications,
+                    $publisherForUsage,
+                    new Log(),
+                    []
+                );
+            } catch (\Exception) {
+                // Delivery failure is expected; both messages started with the same stale enabled webhook.
+            }
+        }
+
+        $this->assertCount(1, $publisher->getEvents('v1-notifications'));
+        $this->assertFalse($database->getDocument('webhooks', 'webhook-1')->getAttribute('enabled'));
+        $this->assertSame(11, $database->getDocument('webhooks', 'webhook-1')->getAttribute('attempts'));
+    }
+
     public function testSendAlertPublishesNotificationMessage(): void
     {
         $database = $this->createPlatformDatabase();
