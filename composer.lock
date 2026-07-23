@@ -3212,16 +3212,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.10.0",
+            "version": "0.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4"
+                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/fc6e7861a0428415a7454ba808a511cc01bf8db4",
-                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/0f1a342bceebc2659736e52a4496daf24ca4954c",
+                "reference": "0f1a342bceebc2659736e52a4496daf24ca4954c",
                 "shasum": ""
             },
             "require": {
@@ -3264,10 +3264,10 @@
                 "security"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.10.0",
+                "source": "https://github.com/utopia-php/auth/tree/0.10.1",
                 "issues": "https://github.com/utopia-php/auth/issues"
             },
-            "time": "2026-07-15T15:52:58+00:00"
+            "time": "2026-07-23T07:34:27+00:00"
         },
         {
             "name": "utopia-php/cache",
