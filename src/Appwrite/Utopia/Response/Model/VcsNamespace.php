@@ -10,7 +10,7 @@ class VcsNamespace extends Model
     public function __construct()
     {
         $this
-            ->addRule('id', [
+            ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) namespace ID.',
                 'default' => '',
@@ -24,13 +24,13 @@ class VcsNamespace extends Model
             ])
             ->addRule('path', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) namespace path, used as the owner when listing repositories.',
+                'description' => 'VCS (Version Control System) namespace path, used to filter repositories by namespace.',
                 'default' => '',
                 'example' => 'appwrite',
             ])
-            ->addRule('kind', [
+            ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Namespace kind. Either the user\'s personal namespace or a group/organization.',
+                'description' => 'Namespace type. Either the user\'s personal namespace or a group/organization.',
                 'default' => '',
                 'example' => 'user',
             ])

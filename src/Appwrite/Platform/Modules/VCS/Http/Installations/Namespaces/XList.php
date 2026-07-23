@@ -99,15 +99,22 @@ class XList extends Action
 
         if (\method_exists($vcs, 'listNamespaces')) {
             ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
+            $namespaces = \array_map(fn ($namespace) => [
+                '$id' => $namespace['id'] ?? '',
+                'name' => $namespace['name'] ?? '',
+                'path' => $namespace['path'] ?? '',
+                'type' => ($namespace['kind'] ?? '') === 'user' ? 'user' : 'organization',
+                'avatarUrl' => $namespace['avatarUrl'] ?? '',
+            ], $namespaces);
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
             $owner = $vcs->getOwnerName($providerInstallationId);
             $matches = empty($search) || \stripos($owner, $search) !== false;
             $namespaces = $matches ? [[
-                'id' => $providerInstallationId,
+                '$id' => $providerInstallationId,
                 'name' => $owner,
                 'path' => $owner,
-                'kind' => $installation->getAttribute('personal', false) ? 'user' : 'organization',
+                'type' => $installation->getAttribute('personal', false) ? 'user' : 'organization',
                 'avatarUrl' => '',
             ]] : [];
             $total = \count($namespaces);
