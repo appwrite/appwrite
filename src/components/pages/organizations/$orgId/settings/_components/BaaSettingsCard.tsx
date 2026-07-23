@@ -202,121 +202,165 @@ export function BaaSettingsCard({ organizationId }: BaaSettingsCardProps) {
     }
   }
 
+  const statusBadge = (() => {
+    if (!planSupportsBaa) {
+      return (
+        <Badge variant="info" className="text-[10px] shrink-0">
+          {t('Unavailable')}
+        </Badge>
+      )
+    }
+    if (isPending) {
+      return (
+        <Badge variant="warning" className="text-[10px] shrink-0">
+          {t('Payment pending')}
+        </Badge>
+      )
+    }
+    if (isActive && isScheduledForRemoval) {
+      return (
+        <Badge variant="warning" className="text-[10px] shrink-0">
+          {t('Scheduled for removal')}
+        </Badge>
+      )
+    }
+    if (isActive) {
+      return (
+        <Badge variant="success" className="text-[10px] shrink-0">
+          {t('Active')}
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="info" className="text-[10px] shrink-0">
+        {t('Not enabled')}
+      </Badge>
+    )
+  })()
+
+  const statusCopy = (() => {
+    if (!planSupportsBaa && canUpgradeToBaa) {
+      return t(
+        'BAA is not available on your current plan. Upgrade your plan to enable it.',
+      )
+    }
+    if (!planSupportsBaa) {
+      return t('BAA is not available on your current plan.')
+    }
+    if (isPending) {
+      return t(
+        "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.",
+      )
+    }
+    if (isActive && isScheduledForRemoval) {
+      return t(
+        'BAA will be removed at the end of your current billing cycle.',
+      )
+    }
+    if (isActive) {
+      return null
+    }
+    return t(
+      'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.',
+    ).replace('{price}', monthlyPriceLabel)
+  })()
+
+  const footerAction = (() => {
+    if (!planSupportsBaa && canUpgradeToBaa) {
+      return (
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          onClick={() => navigateToUpgradeWizard(navigate, organizationId)}
+        >
+          {t('Upgrade plan')}
+        </Button>
+      )
+    }
+    if (!planSupportsBaa) return null
+    if (isPending) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={refreshing}
+          onClick={() => void handleRefresh()}
+        >
+          {t('Refresh')}
+        </Button>
+      )
+    }
+    if (isActive && isScheduledForRemoval) {
+      return (
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={reEnabling}
+          onClick={() => void handleReEnable()}
+        >
+          {t('Keep BAA')}
+        </Button>
+      )
+    }
+    if (isActive) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 text-[13px]"
+          onClick={() => setShowDisable(true)}
+        >
+          {t('Disable')}
+        </Button>
+      )
+    }
+    return (
+      <Button
+        size="sm"
+        className="h-9 text-[13px]"
+        onClick={() => setShowEnable(true)}
+      >
+        {t('Enable BAA')}
+      </Button>
+    )
+  })()
+
   return (
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Business associate agreement (BAA)')}
-          </h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Business associate agreement (BAA)')}
+            </h3>
+            {statusBadge}
+          </div>
         </div>
+
         <div className="border-t border-border" />
+
         <div className="px-6 py-4 space-y-3">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground max-w-2xl">
             {t(
-              "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.",
+              'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.',
             )}
           </p>
-
-          {!planSupportsBaa && canUpgradeToBaa ? (
-            <>
-              <p className="text-[13px] text-muted-foreground">
-                {t(
-                  'BAA is not available on your current plan. Upgrade your plan to enable it.',
-                )}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={() =>
-                  navigateToUpgradeWizard(navigate, organizationId)
-                }
-              >
-                {t('Upgrade plan')}
-              </Button>
-            </>
-          ) : !planSupportsBaa ? (
-            <p className="text-[13px] text-muted-foreground">
-              {t('BAA is not available on your current plan.')}
-            </p>
-          ) : isPending ? (
-            <>
-              <Badge variant="warning">{t('Payment pending')}</Badge>
-              <p className="text-[13px] text-muted-foreground">
-                {t(
-                  "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.",
-                )}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                disabled={refreshing}
-                onClick={() => void handleRefresh()}
-              >
-                {t('Refresh')}
-              </Button>
-            </>
-          ) : isActive ? (
-            <>
-              <Badge variant={isScheduledForRemoval ? 'warning' : 'success'}>
-                {isScheduledForRemoval
-                  ? t('Scheduled for removal')
-                  : t('Active')}
-              </Badge>
-              <p className="text-[13px] text-muted-foreground">
-                {t('BAA is enabled for your organization ({price}/month).').replace(
-                  '{price}',
-                  monthlyPriceLabel,
-                )}
-              </p>
-              {isScheduledForRemoval ? (
-                <>
-                  <p className="text-[13px] text-muted-foreground">
-                    {t(
-                      'BAA will be removed at the end of your current billing cycle.',
-                    )}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={reEnabling}
-                    onClick={() => void handleReEnable()}
-                  >
-                    {t('Keep BAA')}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-[13px]"
-                  onClick={() => setShowDisable(true)}
-                >
-                  {t('Disable BAA')}
-                </Button>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="text-[13px] text-muted-foreground">
-                {t(
-                  'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.',
-                ).replace('{price}', monthlyPriceLabel)}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={() => setShowEnable(true)}
-              >
-                {t('Enable BAA')}
-              </Button>
-            </>
-          )}
+          {statusCopy ? (
+            <p className="text-[13px] text-muted-foreground">{statusCopy}</p>
+          ) : null}
         </div>
+
+        {footerAction ? (
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center gap-3">
+            {footerAction}
+            {isActive && !isScheduledForRemoval && monthlyPriceLabel ? (
+              <span className="text-[13px] text-muted-foreground">
+                {t('{price}/month').replace('{price}', monthlyPriceLabel)}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <EnableBaaDialog

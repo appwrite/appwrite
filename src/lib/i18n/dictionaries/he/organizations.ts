@@ -13,6 +13,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   '@ or subdomain': '@ או תת-דומיין',
   "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.":
     'הסכם BAA נדרש לפי HIPAA כאשר ספק שירות מטפל במידע רפואי מוגן (PHI) עבור גוף מכוסה. אם האפליקציה שלכם מעבדת, מאחסנת או משדרת נתוני בריאות של מטופלים בארה"ב, תצטרכו הסכם BAA בתוקף.',
+  'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
+    'הסכם BAA נדרש לפי HIPAA כאשר Appwrite מטפל במידע רפואי מוגן (PHI) עבור הארגון שלכם. הפעילו אותו אם אתם מעבדים, מאחסנים או משדרים נתוני בריאות של מטופלים בארה"ב.',
   'A DPA is a legally binding document that outlines how':
     'הסכם DPA הוא מסמך מחייב משפטית המגדיר כיצד',
   'A backup payment method ensures uninterrupted service if your primary method fails.':

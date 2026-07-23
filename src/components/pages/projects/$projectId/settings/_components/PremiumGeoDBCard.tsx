@@ -375,7 +375,12 @@ export function PremiumGeoDBCard({ projectId }: PremiumGeoDBCardProps) {
             </h3>
             {statusBadge}
           </div>
-          <p className="text-[13px] text-muted-foreground mt-2 max-w-2xl">
+        </div>
+
+        <div className="border-t border-border" />
+
+        <div className="px-6 py-4">
+          <p className="text-[13px] text-muted-foreground max-w-2xl">
             {t(
               'Enrich sessions, activity, and usage with detailed geolocation from every request.',
             )}

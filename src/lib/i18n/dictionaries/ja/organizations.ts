@@ -667,6 +667,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Payment setup did not complete': '支払い設定が完了しませんでした',
   ', all billable services will be paused until the next billing cycle or until you increase your limit.': '、次の請求サイクルまで、または上限を引き上げるまで、課金対象のすべてのサービスが一時停止されます。',
   "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.": 'サービスプロバイダーが対象事業者に代わって保護対象保健情報(PHI)を扱う場合、HIPAA の下で BAA が必要です。アプリケーションが米国の患者の健康関連データを処理、保存、または送信する場合は、BAA を締結する必要があります。',
+  'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
+    'Appwrite が組織に代わって保護対象保健情報 (PHI) を扱う場合、HIPAA の下で BAA が必要です。米国の患者の健康データを処理、保存、または送信する場合は有効にしてください。',
   'A DPA is a legally binding document that outlines how': 'DPA は、次のように個人データを取り扱うかを定める法的拘束力のある文書です:',
   'A backup payment method ensures uninterrupted service if your primary method fails.': 'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.': '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
