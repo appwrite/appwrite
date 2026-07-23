@@ -192,7 +192,7 @@ $register->set('pools', function () {
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => $fallbackForDB,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],

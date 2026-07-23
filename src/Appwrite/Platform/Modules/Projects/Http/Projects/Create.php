@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
+use Appwrite\Config\Regions;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Utopia\Database\Validator\ProjectId;
@@ -122,10 +123,8 @@ class Create extends Action
 
         if ($region !== 'default') {
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
+            $keys = \explode(',', $databaseKeys);
+            $databases = Regions::filterPoolKeysForRegion($keys, $region);
         }
 
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
