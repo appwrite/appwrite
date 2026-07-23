@@ -640,6 +640,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // history — committing on top of the stale branch makes every
             // subsequent PR conflict with the base branch. The branch holds
             // only generated output, so rewriting it loses nothing.
+            // Record the remote release-branch tip before doing any work, so
+            // the final push can be fenced with --force-with-lease: if a
+            // concurrent release run moves the branch in the meantime, the
+            // push is rejected instead of silently discarding its output.
+            $expectedTip = '';
+            $lsRemote = $repo->execute('ls-remote', 'origin', 'refs/heads/' . $gitBranch);
+            $lsRemoteLine = \trim(\implode("\n", (array) $lsRemote));
+            if ($lsRemoteLine !== '') {
+                $expectedTip = \explode("\t", $lsRemoteLine)[0];
+            }
+
             try {
                 $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
                 $repo->execute('checkout', '-f', 'FETCH_HEAD');
@@ -697,9 +708,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $repo->commit($commitMessage);
             }
 
-            // Force push: the branch is regenerated from the base branch each
-            // run, so its remote history is intentionally rewritten.
-            $repo->execute('push', '-u', 'origin', $gitBranch, '--force', '--quiet');
+            // Forced push fenced by the tip recorded above: the branch is
+            // regenerated from the base branch each run, so rewriting it is
+            // intentional — but only if no concurrent run moved it since.
+            // An empty expected tip means the branch must still be absent.
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--force-with-lease=' . $gitBranch . ':' . $expectedTip, '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
             return false;

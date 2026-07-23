@@ -833,6 +833,15 @@ class Specs extends Action
                 Console::exit(1);
             }
 
+            // Record the remote working-branch tip so the final push can be
+            // fenced with --force-with-lease against concurrent release runs.
+            $leaseOutput = [];
+            \exec('cd ' . $target . ' && git ls-remote origin ' . \escapeshellarg('refs/heads/' . $gitBranch), $leaseOutput);
+            $expectedTip = '';
+            if (! empty($leaseOutput[0])) {
+                $expectedTip = \explode("\t", \trim($leaseOutput[0]))[0];
+            }
+
             // Copy generated spec files into specs/{version}/ subdirectory
             $prPlatforms = static::getPlatformsForPR();
             $prFiles = \array_filter(
@@ -910,7 +919,7 @@ class Specs extends Action
 
             $pushOutput = [];
             $pushReturnCode = 0;
-            \exec('cd ' . $target . ' && git push -u origin ' . $gitBranch . ' --force 2>&1', $pushOutput, $pushReturnCode);
+            \exec('cd ' . $target . ' && git push -u origin ' . $gitBranch . ' --force-with-lease=' . \escapeshellarg($gitBranch . ':' . $expectedTip) . ' 2>&1', $pushOutput, $pushReturnCode);
 
             if ($pushReturnCode !== 0) {
                 Console::error("Failed to push specs to {$gitRepoName}: " . \implode("\n", $pushOutput));
