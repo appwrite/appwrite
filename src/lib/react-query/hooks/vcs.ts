@@ -6,6 +6,7 @@
 
 import {
   useQuery,
+  useQueries,
   useMutation,
   useQueryClient,
   queryOptions,
@@ -210,6 +211,39 @@ export function useNamespaces(
     enabled: !!projectId && !!installationId,
     staleTime: DEFAULT_STALE_TIME,
   })
+}
+
+/**
+ * Fetch namespaces for every installation at once, so a combined
+ * GitHub+GitLab org picker can flatten "installation -> its namespaces"
+ * into a single list without a separate account/group selection step.
+ * For providers other than GitLab this is a one-item no-op (the
+ * installation's own organization), so the same flattening logic works
+ * uniformly for every provider.
+ */
+export function useNamespacesForInstallations(
+  projectId: string | null | undefined,
+  installations: Models.Installation[],
+) {
+  const queries = useQueries({
+    queries: installations.map((installation) => ({
+      queryKey: ['vcs', 'namespaces', projectId, installation.$id],
+      queryFn: () => fetchNamespaces(projectId!, installation.$id),
+      enabled: !!projectId,
+      staleTime: DEFAULT_STALE_TIME,
+    })),
+  })
+
+  const namespacesByInstallation: Record<string, Models.VcsNamespace[]> = {}
+  installations.forEach((installation, index) => {
+    namespacesByInstallation[installation.$id] =
+      queries[index]?.data?.namespaces ?? []
+  })
+
+  return {
+    namespacesByInstallation,
+    isLoading: queries.some((query) => query.isLoading),
+  }
 }
 
 /**
