@@ -55,6 +55,7 @@ import {
 import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 
 // Fade-in image component
 function FadeImage({
@@ -158,15 +159,22 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     formData.providerRootDirectory || './',
   )
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    const redirectUrl = `${origin}/projects/${projectId}/sites/create`
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint = getApiEndpoint(project?.region)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  const getVcsAuthUrl = useMemo(() => {
+    return (provider: VcsProviderId = 'github') => {
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      const redirectUrl = `${origin}/projects/${projectId}/sites/create`
+      const projectEndpoint = getApiEndpoint(project?.region)
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
+    }
   }, [projectId, project?.region])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   // Determine theme for screenshots
   const isDark = useMemo(() => {
@@ -765,6 +773,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           projectId={projectId}
           installations={installations}
           getGitHubAuthUrl={getGitHubAuthUrl}
+          getVcsAuthUrl={getVcsAuthUrl}
           defaultRepositoryName={siteName || template?.name || ''}
           detectionType={VCSDetectionType.Framework}
           value={connectRepoValue}

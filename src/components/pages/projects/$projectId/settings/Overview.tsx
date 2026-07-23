@@ -76,6 +76,7 @@ import {
   patchProjectProtocolsInCache,
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
+import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -733,15 +734,27 @@ export function ProjectSettingsOverview({
       }))
   }, [allOrganizations, project])
 
-  // Get GitHub authorization URL
-  const getGitHubAuthUrl = (mode: 'create' | 'update' = 'create') => {
-    const endpoint = projectEndpoint
+  // Build a VCS provider authorization URL (github, gitlab, ...)
+  const getVcsAuthUrl = (
+    provider: VcsProviderId = 'github',
+    mode: 'create' | 'update' = 'create',
+  ) => {
     const alertType =
       mode === 'create' ? 'installation-created' : 'installation-updated'
     const successUrl = `${window.location.origin}/projects/${projectId}/settings?alert=${alertType}`
     const failureUrl = `${window.location.origin}/projects/${projectId}/settings`
-    return `${endpoint}/vcs/github/authorize?project=${projectId}&success=${encodeURIComponent(successUrl)}&failure=${encodeURIComponent(failureUrl)}&mode=admin`
+    return buildVcsAuthUrl({
+      endpoint: projectEndpoint,
+      provider,
+      projectId,
+      successUrl,
+      failureUrl,
+    })
   }
+
+  // Backwards-compatible GitHub-specific helper.
+  const getGitHubAuthUrl = (mode: 'create' | 'update' = 'create') =>
+    getVcsAuthUrl('github', mode)
 
   if (projectLoading) {
     return (
@@ -1069,6 +1082,7 @@ export function ProjectSettingsOverview({
             limit={installationsLimit}
             onPageChange={setInstallationsPage}
             getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
             isSelfHosted={false} // TODO: Get from organization plan
             isVcsEnabled={true} // TODO: Get from project settings
           />

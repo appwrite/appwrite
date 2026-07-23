@@ -295,17 +295,20 @@ export function RootDirectoryPicker({
         {hasRepository && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px] shrink-0"
-              disabled={disabled}
-            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px] shrink-0"
+                disabled={disabled}
+              >
                 {t('Select')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md p-0">
+            <DialogContent
+              className="z-[10000] sm:max-w-md p-0"
+              overlayClassName="z-[9999]"
+            >
               <DialogHeader className="px-6 pt-6 text-start">
                 <DialogTitle>{t('Select root directory')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">

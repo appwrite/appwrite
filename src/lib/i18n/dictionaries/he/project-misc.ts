@@ -35,7 +35,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to create API keys.":
     'אין לכם הרשאה ליצור מפתחות API.',
   'No API keys created': 'לא נוצרו מפתחות API',
-  'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.':
     'צרו מפתח API כדי לאמת את האפליקציות שלכם ולגשת לשירותי Appwrite. מפתחות API מספקים גישה מאובטחת למשאבי הפרויקט שלכם.', // pragma: allowlist secret
   'Create API key for your language': 'צרו מפתח API לשפה שלכם',
   'No API keys match your search': 'אין מפתחות API התואמים לחיפוש שלכם',
@@ -90,7 +91,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Expand all': 'הרחבת הכול',
   Soon: 'בקרוב',
   Connect: 'חיבור',
-  'Register where your app runs and add API credentials so your code can call Appwrite.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Register where your app runs and add API credentials so your code can call Appwrite.':
     'רשמו היכן האפליקציה שלכם פועלת והוסיפו פרטי גישה ל-API כדי שהקוד שלכם יוכל לקרוא ל-Appwrite.', // pragma: allowlist secret
   'Register your app platform': 'רישום פלטפורמת האפליקציה',
   "Map your app's hostname or bundle ID so the SDK can reach this project.":
@@ -154,7 +156,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Open deployments': 'פתיחת פריסות',
   'View function': 'צפייה בפונקציה',
   Messaging: 'הודעות',
-  'Send email, push, and SMS by routing messages through topics and providers.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Send email, push, and SMS by routing messages through topics and providers.':
     'שלחו אימייל, פוש ו-SMS על ידי ניתוב הודעות דרך נושאים וספקים.',
   'Create a topic': 'יצירת נושא',
   'Add a channel for push, email, or SMS broadcasts.':
@@ -162,7 +165,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create topic': 'יצירת נושא',
   'Manage topics': 'ניהול נושאים',
   'Add a provider': 'הוספת ספק',
-  'Connect SMTP, FCM, APNS, or another provider to send messages.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Connect SMTP, FCM, APNS, or another provider to send messages.':
     'חברו SMTP, FCM, APNS או ספק אחר כדי לשלוח הודעות.',
   'Add provider': 'הוספת ספק',
   'Manage providers': 'ניהול ספקים',
@@ -186,8 +190,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'התחלה מצוינת, כל אפליקציה גדולה מתחילה בצעד הראשון.',
   'You\u2019re on your way - small steps add up fast.':
     'אתם בדרך, צעדים קטנים מצטברים מהר.',
-  'Solid beginning. Keep the momentum going.':
-    'התחלה יציבה. שמרו על המומנטום.',
+  'Solid beginning. Keep the momentum going.': 'התחלה יציבה. שמרו על המומנטום.',
   'Nice - you\u2019re already moving.': 'יפה, אתם כבר בתנועה.',
   'This is how shipping starts - one checkbox at a time.':
     'כך מתחילים לשחרר, תיבת סימון אחת בכל פעם.',
@@ -203,8 +206,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'עברתם את השלב הראשוני המביך, יפה.',
   'Every checkbox is a vote for shipping - keep it up.':
     'כל תיבת סימון היא צעד לקראת שחרור, המשיכו כך.',
-  'More than halfway - you\u2019re in the zone.':
-    'יותר מחצי הדרך, אתם בזרימה.',
+  'More than halfway - you\u2019re in the zone.': 'יותר מחצי הדרך, אתם בזרימה.',
   'Strong progress - the finish line is in sight.':
     'התקדמות חזקה, קו הסיום נראה באופק.',
   'You\u2019re past the halfway mark. Don\u2019t stop now.':
@@ -217,8 +219,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'So close - you\u2019re almost there.': 'כל כך קרוב, אתם כמעט שם.',
   'Final stretch - finish strong.': 'הישורת האחרונה, סיימו בגדול.',
   'Almost done - one last push.': 'כמעט סיימתם, דחיפה אחרונה.',
-  'You\u2019re inches from the finish line.':
-    'אתם במרחק נגיעה מקו הסיום.',
+  'You\u2019re inches from the finish line.': 'אתם במרחק נגיעה מקו הסיום.',
   'The hard part\u2019s behind you - wrap it up.':
     'החלק הקשה מאחוריכם, סגרו את הפינה.',
   'Last lap - you\u2019ve got this.': 'הקפה אחרונה, אתם מסוגלים.',
@@ -570,7 +571,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'IP address': 'כתובת IP',
   Time: 'זמן',
   'Loading activities': 'טוען פעילויות',
-  'Activity log not found or unavailable.': 'יומן הפעילות לא נמצא או שאינו זמין.',
+  'Activity log not found or unavailable.':
+    'יומן הפעילות לא נמצא או שאינו זמין.',
   Retention: 'שמירת נתונים',
   '1 hour': 'שעה אחת',
   '30 days': '30 ימים',
@@ -922,7 +924,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Events: 'אירועים',
   'Payload Size': 'גודל נתונים',
   'No messages found': 'לא נמצאו הודעות', // pragma: allowlist secret
-  'Realtime messages will appear here when they are received': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Realtime messages will appear here when they are received':
     'הודעות זמן אמת יופיעו כאן כשיתקבלו',
   messages: 'הודעות', // pragma: allowlist secret
   Connections: 'חיבורים',
@@ -934,7 +937,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No data available': 'אין נתונים זמינים',
   'Select a date range to view connection data':
     'בחרו טווח תאריכים להצגת נתוני חיבורים',
-  'Select a date range to view messages data': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Select a date range to view messages data':
     'בחרו טווח תאריכים להצגת נתוני הודעות',
   'Select a date range to view channels data':
     'בחרו טווח תאריכים להצגת נתוני ערוצים',
@@ -942,7 +946,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'View messages': 'הצגת הודעות', // pragma: allowlist secret
   'Real-time connection count over time. Shows the number of active WebSocket connections at any given moment.':
     'ספירת חיבורים בזמן אמת לאורך זמן. מציג את מספר חיבורי ה-WebSocket הפעילים בכל רגע נתון.',
-  'Messages per minute over time. Tracks the rate at which realtime messages are being sent through the system.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Messages per minute over time. Tracks the rate at which realtime messages are being sent through the system.':
     'הודעות לדקה לאורך זמן. עוקב אחר הקצב שבו הודעות זמן אמת נשלחות דרך המערכת.',
   'Number of active channels over time. Displays how many different realtime channels are currently being listened to.':
     'מספר ערוצים פעילים לאורך זמן. מציג לכמה ערוצי זמן אמת שונים מאזינים כרגע.',
@@ -952,7 +957,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Add app': 'הוספת אפליקציה',
   "You don't have permission to add apps.": 'אין לכם הרשאה להוסיף אפליקציות.',
   'No apps connected': 'אין אפליקציות מחוברות',
-  'Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Connect your first app to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.':
     'חברו את האפליקציה הראשונה שלכם כדי להתחיל לבנות עם Appwrite. הוסיפו אפליקציות ווב, אפליקציות מובייל או SDK של שרת כדי להתחיל.', // pragma: allowlist secret
   'Connect with your stack': 'התחברו עם הסטאק שלכם',
   'No apps match your search': 'אין אפליקציות שתואמות לחיפוש שלכם',
@@ -966,7 +972,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'App deleted successfully': 'האפליקציה נמחקה בהצלחה',
   'Update app': 'עדכון אפליקציה',
   'App name': 'שם האפליקציה',
-  'The domain your app makes requests from. Use': 'הדומיין שממנו האפליקציה שולחת בקשות. השתמשו ב',
+  'The domain your app makes requests from. Use':
+    'הדומיין שממנו האפליקציה שולחת בקשות. השתמשו ב',
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
@@ -974,30 +981,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',
   'Package name': 'שם חבילה',
-  'Remove this app from the project. This action cannot be undone.': 'הסרת האפליקציה הזו מהפרויקט. פעולה זו אינה ניתנת לביטול.',
+  'Remove this app from the project. This action cannot be undone.':
+    'הסרת האפליקציה הזו מהפרויקט. פעולה זו אינה ניתנת לביטול.',
   'Enter an app name': 'הזינו שם אפליקציה',
-  'Enter a valid hostname (e.g. localhost or app.example.com)': 'הזינו שם מארח תקין (למשל localhost או app.example.com)',
-  'Enter a valid bundle ID (e.g. com.example.app)': 'הזינו מזהה Bundle תקין (למשל com.example.app)',
-  'Enter a valid package name (e.g. com.example.app)': 'הזינו שם חבילה תקין (למשל com.example.app)',
+  'Enter a valid hostname (e.g. localhost or app.example.com)':
+    'הזינו שם מארח תקין (למשל localhost או app.example.com)',
+  'Enter a valid bundle ID (e.g. com.example.app)':
+    'הזינו מזהה Bundle תקין (למשל com.example.app)',
+  'Enter a valid package name (e.g. com.example.app)':
+    'הזינו שם חבילה תקין (למשל com.example.app)',
   'Failed to register app': 'רישום האפליקציה נכשל',
   'Choose target': 'בחירת יעד',
   'Where this Flutter app runs.': 'היכן אפליקציית ה-Flutter הזו רצה.',
-  'Which Apple platform you are building for.': 'לאיזו פלטפורמת Apple אתם בונים.',
-  'Android or iOS for this React Native app.': 'Android או iOS עבור אפליקציית ה-React Native הזו.',
+  'Which Apple platform you are building for.':
+    'לאיזו פלטפורמת Apple אתם בונים.',
+  'Android or iOS for this React Native app.':
+    'Android או iOS עבור אפליקציית ה-React Native הזו.',
   'Connect your app': 'חיבור האפליקציה שלכם',
   Continue: 'המשך',
   'Register and continue': 'רישום והמשך',
   'Add another app': 'הוספת אפליקציה נוספת',
   'Choose your platform': 'בחרו את הפלטפורמה שלכם',
-  'Web, mobile, or desktop - pick what matches your project.': 'ווב, מובייל או דסקטופ, בחרו מה שמתאים לפרויקט שלכם.',
+  'Web, mobile, or desktop - pick what matches your project.':
+    'ווב, מובייל או דסקטופ, בחרו מה שמתאים לפרויקט שלכם.',
   'Choose a web framework': 'בחירת פריימוורק ווב',
-  'We match starters and AI prompts to the framework you pick.': 'אנחנו מתאימים פרויקטי התחלה והנחיות AI לפריימוורק שתבחרו.',
+  'We match starters and AI prompts to the framework you pick.':
+    'אנחנו מתאימים פרויקטי התחלה והנחיות AI לפריימוורק שתבחרו.',
   'App details': 'פרטי האפליקציה',
-  'These values are sent to Appwrite when you register this app.': 'הערכים האלה נשלחים ל-Appwrite כשאתם רושמים את האפליקציה הזו.', // pragma: allowlist secret
-  'Origin your app will call Appwrite from (no protocol or port). Use localhost for local development.': // pragma: allowlist secret
+  'These values are sent to Appwrite when you register this app.':
+    'הערכים האלה נשלחים ל-Appwrite כשאתם רושמים את האפליקציה הזו.', // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Origin your app will call Appwrite from (no protocol or port). Use localhost for local development.':
     'המקור שממנו האפליקציה שלכם תקרא ל-Appwrite (ללא פרוטוקול או פורט). השתמשו ב-localhost לפיתוח מקומי.', // pragma: allowlist secret
   'App registered': 'האפליקציה נרשמה',
-  'Your project is ready to accept traffic from this app.': 'הפרויקט שלכם מוכן לקבל תעבורה מהאפליקציה הזו.',
+  'Your project is ready to accept traffic from this app.':
+    'הפרויקט שלכם מוכן לקבל תעבורה מהאפליקציה הזו.',
   'Set up with AI': 'הגדרה עם AI',
   Recommended: 'מומלץ',
   'Hand off a ready-made prompt with your endpoint and project ID to your favourite AI tool, or copy it anywhere.':
@@ -1012,34 +1030,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Install and run': 'התקנה והרצה',
   'Demo URL': 'כתובת הדגמה',
   'Send a ping': 'שליחת ping',
-  'Ping received - your SDK reached Appwrite.': 'ping התקבל, ה-SDK שלכם הגיע ל-Appwrite.', // pragma: allowlist secret
-  'Waiting for client.ping() from your app...': 'ממתין ל-client.ping()‎ מהאפליקציה שלכם...',
+  'Ping received - your SDK reached Appwrite.':
+    'ping התקבל, ה-SDK שלכם הגיע ל-Appwrite.', // pragma: allowlist secret
+  'Waiting for client.ping() from your app...':
+    'ממתין ל-client.ping()‎ מהאפליקציה שלכם...',
   'Why register an app?': 'למה לרשום אפליקציה?',
-  'Apps tell Appwrite which origins or bundle IDs are allowed to call your project API. Choose the kind of client you are building - you can register more apps later.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Apps tell Appwrite which origins or bundle IDs are allowed to call your project API. Choose the kind of client you are building - you can register more apps later.':
     'אפליקציות מגדירות ל-Appwrite אילו מקורות או מזהי Bundle מורשים לקרוא ל-API של הפרויקט שלכם. בחרו את סוג הלקוח שאתם בונים, תוכלו לרשום אפליקציות נוספות מאוחר יותר.', // pragma: allowlist secret
   Web: 'ווב',
   'allowed hostnames (origins)': 'שמות מארח מורשים (מקורות)',
   'Mobile & desktop': 'מובייל ודסקטופ',
   'bundle ID or package name': 'מזהה Bundle או שם חבילה',
   Connection: 'חיבור',
-  'Your app talks to Appwrite from the hostname or bundle you register, using the project API endpoint.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Your app talks to Appwrite from the hostname or bundle you register, using the project API endpoint.':
     'האפליקציה שלכם מתקשרת עם Appwrite מהשם מארח או ה-Bundle שרשמתם, דרך נקודת הקצה של ה-API של הפרויקט.', // pragma: allowlist secret
-  'Waiting for your app to ping Appwrite…': 'ממתין שהאפליקציה שלכם תשלח ping ל-Appwrite…', // pragma: allowlist secret
-  'Connected - your SDK reached this project.': 'מחובר, ה-SDK שלכם הגיע לפרויקט הזה.',
-  'Keep this tab open while your app is running so Appwrite can confirm the connection.': // pragma: allowlist secret
+  'Waiting for your app to ping Appwrite…':
+    'ממתין שהאפליקציה שלכם תשלח ping ל-Appwrite…', // pragma: allowlist secret
+  'Connected - your SDK reached this project.':
+    'מחובר, ה-SDK שלכם הגיע לפרויקט הזה.',
+  // pragma: allowlist secret
+  'Keep this tab open while your app is running so Appwrite can confirm the connection.':
     'השאירו את הלשונית הזו פתוחה בזמן שהאפליקציה שלכם רצה כדי ש-Appwrite יוכל לאשר את החיבור.', // pragma: allowlist secret
   'More information': 'מידע נוסף',
   Change: 'שינוי',
   'Choose platform': 'בחירת פלטפורמה',
   'Pick the client stack you are building.': 'בחרו את סטאק הלקוח שאתם בונים.',
-  'Hostname or bundle ID and display name.': 'שם מארח או מזהה Bundle ושם תצוגה.',
+  'Hostname or bundle ID and display name.':
+    'שם מארח או מזהה Bundle ושם תצוגה.',
   'Connect locally': 'חיבור מקומי',
-  'Run a starter or use AI, then verify with a ping.': 'הריצו פרויקט התחלה או השתמשו ב-AI, ואז אמתו עם ping.',
+  'Run a starter or use AI, then verify with a ping.':
+    'הריצו פרויקט התחלה או השתמשו ב-AI, ואז אמתו עם ping.',
 
   // Shared project components
   'Loading API keys...': 'טוען מפתחות API...',
   'No API keys found': 'לא נמצאו מפתחות API',
-  'Create your first API key to authenticate your applications': 'צרו את מפתח ה-API הראשון שלכם כדי לאמת את האפליקציות שלכם',
+  'Create your first API key to authenticate your applications':
+    'צרו את מפתח ה-API הראשון שלכם כדי לאמת את האפליקציות שלכם',
   Expired: 'פג תוקף',
   'Expires soon': 'התוקף יפוג בקרוב',
   'No scopes': 'ללא היקפי גישה',
@@ -1049,10 +1077,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Expires: 'יפוג בתאריך',
   'No expiration': 'ללא תפוגה',
   'API Key': 'מפתח API',
-  'Copy the full API key below. Keep it secure and never share it publicly.': 'העתיקו את מפתח ה-API המלא למטה. שמרו עליו מאובטח ולעולם אל תשתפו אותו בפומבי.',
+  'Copy the full API key below. Keep it secure and never share it publicly.':
+    'העתיקו את מפתח ה-API המלא למטה. שמרו עליו מאובטח ולעולם אל תשתפו אותו בפומבי.',
   'More info': 'מידע נוסף',
   Triggers: 'טריגרים',
-  'Limit which pushes trigger deployments. Use globs; prefix with': 'הגבילו אילו פעולות push מפעילות פריסות. השתמשו בתבניות glob; הוסיפו את התחילית',
+  'Limit which pushes trigger deployments. Use globs; prefix with':
+    'הגבילו אילו פעולות push מפעילות פריסות. השתמשו בתבניות glob; הוסיפו את התחילית',
   'to exclude.': 'כדי להחריג.',
   'Learn more': 'למדו עוד',
   'Connect a repository in': 'חברו repo ב',
@@ -1076,11 +1106,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Server: 'שרת',
   Using: 'באמצעות',
   'Package manager': 'מנהל חבילות',
-  'Server and backend code need an API key with the right scopes. Create and manage keys in your project.': 'קוד שרת ו-backend זקוק למפתח API עם ההרשאות המתאימות. צרו ונהלו מפתחות בפרויקט שלכם.',
+  'Server and backend code need an API key with the right scopes. Create and manage keys in your project.':
+    'קוד שרת ו-backend זקוק למפתח API עם ההרשאות המתאימות. צרו ונהלו מפתחות בפרויקט שלכם.',
   'View API keys': 'הצגת מפתחות API',
   'Server setup guide': 'מדריך הקמת שרת',
   'Read the docs': 'קריאת הדוקומנטציה',
-  'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.': 'השתמשו ב-CLI של Appwrite כדי לנהל את הפרויקט מהטרמינל. התקינו את ה-CLI, התחברו, ואז כוונו אותו לפרויקט הזה.', // pragma: allowlist secret
+  'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.':
+    'השתמשו ב-CLI של Appwrite כדי לנהל את הפרויקט מהטרמינל. התקינו את ה-CLI, התחברו, ואז כוונו אותו לפרויקט הזה.', // pragma: allowlist secret
   'Install the CLI': 'התקנת ה-CLI',
   'Install script': 'סקריפט התקנה',
   'Full installation guide': 'מדריך התקנה מלא',
@@ -1088,40 +1120,54 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Terminal: 'טרמינל',
   'Your email (blurred)': 'האימייל שלכם (מטושטש)',
   'Connect to this project': 'התחברות לפרויקט הזה',
-  'For non-interactive use (CI/CD), add': 'לשימוש לא אינטראקטיבי (CI/CD), הוסיפו',
-  'Create API keys in your project settings.': 'צרו מפתחות API בהגדרות הפרויקט שלכם.',
+  'For non-interactive use (CI/CD), add':
+    'לשימוש לא אינטראקטיבי (CI/CD), הוסיפו',
+  'Create API keys in your project settings.':
+    'צרו מפתחות API בהגדרות הפרויקט שלכם.',
   'CLI commands': 'פקודות CLI',
-  'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.': 'תנו לסוכן ה-AI שלכם הקשר מדויק של Appwrite SDK: חתימות מתודות, תבניות ושיטות עבודה מומלצות לשפה שלכם. התקינו פעם אחת לכל פרויקט או גלובלית; עובד ב-Cursor, ב-Claude Code ובכלים תואמים נוספים.', // pragma: allowlist secret
+  'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.':
+    'תנו לסוכן ה-AI שלכם הקשר מדויק של Appwrite SDK: חתימות מתודות, תבניות ושיטות עבודה מומלצות לשפה שלכם. התקינו פעם אחת לכל פרויקט או גלובלית; עובד ב-Cursor, ב-Claude Code ובכלים תואמים נוספים.', // pragma: allowlist secret
   'Skills are available for': 'מיומנויות (Skills) זמינות עבור',
   'pick what you use during setup.': 'בחרו במה אתם משתמשים במהלך ההתקנה.',
   Docs: 'דוקומנטציה',
   'Install command': 'פקודת התקנה',
-  "Run in project root. You'll pick SDKs, tools, and scope.": 'הריצו בתיקיית השורש של הפרויקט. תבחרו SDK, כלים והיקף.',
+  "Run in project root. You'll pick SDKs, tools, and scope.":
+    'הריצו בתיקיית השורש של הפרויקט. תבחרו SDK, כלים והיקף.',
   'Then the CLI will ask:': 'לאחר מכן ה-CLI ישאל:',
   Skills: 'מיומנויות',
-  'which SDKs to install (e.g. TypeScript, Go).': 'אילו SDK להתקין (למשל TypeScript, Go).',
+  'which SDKs to install (e.g. TypeScript, Go).':
+    'אילו SDK להתקין (למשל TypeScript, Go).',
   Tools: 'כלים',
-  'which AI tools use them (Cursor, Claude, etc.).': 'אילו כלי AI ישתמשו בהן (Cursor, Claude ועוד).',
+  'which AI tools use them (Cursor, Claude, etc.).':
+    'אילו כלי AI ישתמשו בהן (Cursor, Claude ועוד).',
   'project (this repo) or global.': 'פרויקט (ה-repo הזה) או גלובלי.',
-  'prefer symlink so skills stay up to date.': 'עדיף קישור סימבולי כדי שהמיומנויות יישארו מעודכנות.',
-  'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.': 'השתמשו בנקודת קצה HTTPS ברמת הפרויקט עם חתימה תואמת SigV4 כדי לחבר את האחסון ל-rclone, ל-IaC או לצינורות מותאמים אישית. נקודת קצה, מפתח גישה וסוד הניתנים להעתקה יופיעו כאן כשהאינטגרציה תהיה מוכנה.',
-  'Work in progress - nothing to copy yet.': 'עבודה בתהליך, אין עדיין מה להעתיק.',
+  'prefer symlink so skills stay up to date.':
+    'עדיף קישור סימבולי כדי שהמיומנויות יישארו מעודכנות.',
+  'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.':
+    'השתמשו בנקודת קצה HTTPS ברמת הפרויקט עם חתימה תואמת SigV4 כדי לחבר את האחסון ל-rclone, ל-IaC או לצינורות מותאמים אישית. נקודת קצה, מפתח גישה וסוד הניתנים להעתקה יופיעו כאן כשהאינטגרציה תהיה מוכנה.',
+  'Work in progress - nothing to copy yet.':
+    'עבודה בתהליך, אין עדיין מה להעתיק.',
   'Create CLI deployment': 'יצירת פריסת CLI',
-  "If it's your first time using the CLI, remember to": 'אם זו הפעם הראשונה שלכם עם ה-CLI, זכרו',
+  "If it's your first time using the CLI, remember to":
+    'אם זו הפעם הראשונה שלכם עם ה-CLI, זכרו',
   'install the CLI': 'להתקין את ה-CLI',
   and: 'וגם',
   'log in to your account': 'להתחבר לחשבון שלכם',
   'before running the deployment command.': 'לפני הרצת פקודת הפריסה.',
   'Create deployment': 'יצירת פריסה',
   Manual: 'ידני',
-  'Deployment is in progress. It will be automatically activated after build step completes.': 'הפריסה בתהליך. היא תופעל אוטומטית לאחר השלמת שלב הבנייה.',
-  'Deployment is in progress. You can activate it after build step completes.': 'הפריסה בתהליך. תוכלו להפעיל אותה לאחר השלמת שלב הבנייה.',
+  'Deployment is in progress. It will be automatically activated after build step completes.':
+    'הפריסה בתהליך. היא תופעל אוטומטית לאחר השלמת שלב הבנייה.',
+  'Deployment is in progress. You can activate it after build step completes.':
+    'הפריסה בתהליך. תוכלו להפעיל אותה לאחר השלמת שלב הבנייה.',
   'Failed to create deployment': 'יצירת הפריסה נכשלה',
   'Please select an installation and repository': 'בחרו התקנה ו-repo',
   'Please select a branch': 'בחרו ענף',
   'Create git deployment': 'יצירת פריסת Git',
-  'Select a repository to deploy from. You can change it later in settings.': 'בחרו repo לפריסה. אפשר לשנות אותו מאוחר יותר בהגדרות.',
-  'Choose the production branch and whether to activate the deployment after the build completes.': 'בחרו את ענף הייצור והאם להפעיל את הפריסה לאחר השלמת הבנייה.',
+  'Select a repository to deploy from. You can change it later in settings.':
+    'בחרו repo לפריסה. אפשר לשנות אותו מאוחר יותר בהגדרות.',
+  'Choose the production branch and whether to activate the deployment after the build completes.':
+    'בחרו את ענף הייצור והאם להפעיל את הפריסה לאחר השלמת הבנייה.',
   Repository: 'Repo',
   'Last updated': 'עודכן לאחרונה',
   'Change repository': 'החלפת repo',
@@ -1135,18 +1181,21 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deployment created successfully': 'הפריסה נוצרה בהצלחה',
   'Please select a .tar.gz file.': 'בחרו קובץ ‎.tar.gz.',
   'Create manual deployment': 'יצירת פריסה ידנית',
-  'Upload a .tar.gz archive of your code. Maximum file size is': 'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
+  'Upload a .tar.gz archive of your code. Maximum file size is':
+    'העלו ארכיון ‎.tar.gz של הקוד שלכם. גודל הקובץ המקסימלי הוא',
   'Click to select a .tar.gz file': 'לחצו לבחירת קובץ ‎.tar.gz',
   'Uploading…': 'מעלה…',
   Redeploy: 'פריסה מחדש',
   Timeout: 'Timeout',
   Waiting: 'ממתין',
-  'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.': 'קבעו כמה זמן פריסות לא פעילות נשמרות לפני מחיקתן האוטומטית. פריסות פעילות נשמרות תמיד.',
+  'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.':
+    'קבעו כמה זמן פריסות לא פעילות נשמרות לפני מחיקתן האוטומטית. פריסות פעילות נשמרות תמיד.',
   'Keep deployments forever': 'שמירת פריסות לתמיד',
   'Retention period': 'תקופת שמירה',
   '1 Month': 'חודש',
   'Inactive deployments are deleted after': 'פריסות לא פעילות נמחקות לאחר',
-  'Inactive deployments will not be automatically deleted.': 'פריסות לא פעילות לא יימחקו אוטומטית.',
+  'Inactive deployments will not be automatically deleted.':
+    'פריסות לא פעילות לא יימחקו אוטומטית.',
   '1 Week': 'שבוע',
   '3 Months': '3 חודשים',
   '6 Months': '6 חודשים',
@@ -1173,7 +1222,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Custom: 'מותאם אישית',
   'Dedicated support for your organization': 'תמיכה ייעודית לארגון שלכם',
   'Schedule a meeting': 'קביעת פגישה',
-  'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our': 'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
+  'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our':
+    'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
   "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
   'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
@@ -1228,7 +1278,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No projects found': 'לא נמצאו פרויקטים',
   'Select an organization': 'בחרו ארגון',
   'Create Project': 'יצירת פרויקט',
-  "You've reached the limit for this resource on your plan": 'הגעתם למגבלה של המשאב הזה בתוכנית שלכם',
+  "You've reached the limit for this resource on your plan":
+    'הגעתם למגבלה של המשאב הזה בתוכנית שלכם',
   Import: 'ייבוא',
   'Expand header': 'הרחבת כותרת',
   'Collapse header': 'כיווץ כותרת',
@@ -1240,18 +1291,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Available: 'זמין',
   'Plan limit': 'מגבלת תוכנית',
   'Infrastructure as code': 'תשתית כקוד',
-  'The official Appwrite Terraform provider lets you create and update project resources from': 'ספק ה-Terraform הרשמי של Appwrite מאפשר לכם ליצור ולעדכן משאבי פרויקט מקובצי', // pragma: allowlist secret
-  'files instead of clicking through the console - ideal for staging and production parity, code review, and automated pipelines.': 'במקום ללחוץ בקונסולה, אידיאלי לשמירה על אחידות בין סביבת בדיקה לסביבת ייצור, לסקירת קוד ולצינורות אוטומטיים.',
-  'Use it when you want repeatable environments, documented changes in Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS, functions, and more) in one workflow. The registry documents resources such as': 'השתמשו בו כשאתם רוצים סביבות שניתן לשחזר, שינויים מתועדים ב-Git, או לחבר את Appwrite לסטאק Terraform רחב יותר (VPC, DNS, פונקציות ועוד) בזרימת עבודה אחת. הרישום מתעד משאבים כגון', // pragma: allowlist secret
-  'and others, with full schemas and imports.': 'ואחרים, עם סכימות מלאות וייבוא.',
-  'Terraform needs an API key with scopes for the resources you manage. Pass it with': 'Terraform זקוק למפתח API עם הרשאות למשאבים שאתם מנהלים. העבירו אותו באמצעות',
+  'The official Appwrite Terraform provider lets you create and update project resources from':
+    'ספק ה-Terraform הרשמי של Appwrite מאפשר לכם ליצור ולעדכן משאבי פרויקט מקובצי', // pragma: allowlist secret
+  'files instead of clicking through the console - ideal for staging and production parity, code review, and automated pipelines.':
+    'במקום ללחוץ בקונסולה, אידיאלי לשמירה על אחידות בין סביבת בדיקה לסביבת ייצור, לסקירת קוד ולצינורות אוטומטיים.',
+  'Use it when you want repeatable environments, documented changes in Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS, functions, and more) in one workflow. The registry documents resources such as':
+    'השתמשו בו כשאתם רוצים סביבות שניתן לשחזר, שינויים מתועדים ב-Git, או לחבר את Appwrite לסטאק Terraform רחב יותר (VPC, DNS, פונקציות ועוד) בזרימת עבודה אחת. הרישום מתעד משאבים כגון', // pragma: allowlist secret
+  'and others, with full schemas and imports.':
+    'ואחרים, עם סכימות מלאות וייבוא.',
+  'Terraform needs an API key with scopes for the resources you manage. Pass it with':
+    'Terraform זקוק למפתח API עם הרשאות למשאבים שאתם מנהלים. העבירו אותו באמצעות',
   or: 'או',
   'never commit secrets to Git.': 'לעולם אל תבצעו commit לסודות ב-Git.',
-  'Provider docs on Terraform Registry': 'דוקומנטציית הספק ב-Terraform Registry',
-  "Provider uses this project's endpoint and project ID. Run": 'הספק משתמש בנקודת הקצה ובמזהה של הפרויקט הזה. הריצו',
+  'Provider docs on Terraform Registry':
+    'דוקומנטציית הספק ב-Terraform Registry',
+  "Provider uses this project's endpoint and project ID. Run":
+    'הספק משתמש בנקודת הקצה ובמזהה של הפרויקט הזה. הריצו',
   then: 'ואז',
-  'Shell exports matching APPWRITE_* provider options. When set, you can skip duplicate fields in provider {}. Use secrets in CI, not committed files.': 'ייצוא משתני מעטפת התואמים לאפשרויות הספק APPWRITE_*. כשהם מוגדרים, אפשר לדלג על שדות כפולים ב-provider {}. השתמשו בסודות ב-CI, לא בקבצים שנשמרים ב-repo.', // pragma: allowlist secret
-  'Example database, table, columns, and index. Add alongside your provider configuration.': 'דוגמה למסד נתונים, טבלה, עמודות ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
+  'Shell exports matching APPWRITE_* provider options. When set, you can skip duplicate fields in provider {}. Use secrets in CI, not committed files.':
+    'ייצוא משתני מעטפת התואמים לאפשרויות הספק APPWRITE_*. כשהם מוגדרים, אפשר לדלג על שדות כפולים ב-provider {}. השתמשו בסודות ב-CI, לא בקבצים שנשמרים ב-repo.', // pragma: allowlist secret
+  'Example database, table, columns, and index. Add alongside your provider configuration.':
+    'דוגמה למסד נתונים, טבלה, עמודות ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
   'Install the Web SDK': 'התקנת ה-SDK לווב',
   'Install the Node.js SDK': 'התקנת ה-SDK ל-Node.js',
   'Install the Deno SDK': 'התקנת ה-SDK ל-Deno',
@@ -1267,14 +1327,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Install the Go SDK': 'התקנת ה-SDK ל-Go',
   'Install the Swift SDK': 'התקנת ה-SDK ל-Swift',
   'Install the Kotlin SDK': 'התקנת ה-SDK ל-Kotlin',
-  "Deploy your function using the Appwrite CLI by running the following command inside your function's folder.": 'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
-  "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.": 'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
-  'Historic data is not available through the new usage API.': 'נתונים היסטוריים אינם זמינים דרך ה-API החדש של נתוני שימוש.',
-  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).': 'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
+  "Deploy your function using the Appwrite CLI by running the following command inside your function's folder.":
+    'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
+  "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
+    'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
+  'Historic data is not available through the new usage API.':
+    'נתונים היסטוריים אינם זמינים דרך ה-API החדש של נתוני שימוש.',
+  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+    'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
-  'Bandwidth': 'רוחב פס',
+  Bandwidth: 'רוחב פס',
   'Bandwidth over time': 'רוחב פס לאורך זמן',
-  'Buckets': 'באקטים',
+  Buckets: 'באקטים',
   'Chart interval': 'מרווח תרשים',
   '15m': '15 דק׳',
   '1h': '1 שע׳',
@@ -1282,23 +1346,24 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range of': 'השתמשו בטווח תאריכים של',
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
-  'Compute': 'מחשוב',
+  Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',
   'Copy project ID': 'העתקת מזהה פרויקט',
-  'Couldn\'t load bandwidth': 'לא ניתן היה לטעון נתוני רוחב פס',
-  'Couldn\'t load compute': 'לא ניתן היה לטעון נתוני חישוב',
-  'Couldn\'t load executions': 'לא ניתן היה לטעון הרצות',
-  'Couldn\'t load requests': 'לא ניתן היה לטעון בקשות',
-  'Couldn\'t load storage': 'לא ניתן היה לטעון נתוני אחסון',
-  'Deployments': 'פריסות',
-  'Executions': 'הרצות',
+  "Couldn't load bandwidth": 'לא ניתן היה לטעון נתוני רוחב פס',
+  "Couldn't load compute": 'לא ניתן היה לטעון נתוני חישוב',
+  "Couldn't load executions": 'לא ניתן היה לטעון הרצות',
+  "Couldn't load requests": 'לא ניתן היה לטעון בקשות',
+  "Couldn't load storage": 'לא ניתן היה לטעון נתוני אחסון',
+  Deployments: 'פריסות',
+  Executions: 'הרצות',
   'Executions over time': 'הרצות לאורך זמן',
-  'Files': 'קבצים',
-  'GB hours (GBH). Compute time based on memory allocated to functions and sites multiplied by execution duration.': 'שעות GB (GBH). זמן חישוב המבוסס על הזיכרון שהוקצה לפונקציות ולאתרים כפול משך ההרצה.',
-  'Inbound': 'נכנס',
+  Files: 'קבצים',
+  'GB hours (GBH). Compute time based on memory allocated to functions and sites multiplied by execution duration.':
+    'שעות GB (GBH). זמן חישוב המבוסס על הזיכרון שהוקצה לפונקציות ולאתרים כפול משך ההרצה.',
+  Inbound: 'נכנס',
   'Loading usage data': 'טוען נתוני שימוש',
-  'Outbound': 'יוצא',
+  Outbound: 'יוצא',
   'Requests over time': 'בקשות לאורך זמן',
   'Storage breakdown type': 'סוג פילוח אחסון',
   'Storage over time': 'אחסון לאורך זמן',
@@ -1309,12 +1374,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Top requests': 'הבקשות המובילות',
   'Try again': 'נסו שוב',
   'View all usage': 'הצגת כל השימוש',
-  'We couldn\'t fetch usage data from the server. Check your connection and try again.': 'לא הצלחנו לאחזר נתוני שימוש מהשרת. בדקו את החיבור ונסו שוב.',
+  "We couldn't fetch usage data from the server. Check your connection and try again.":
+    'לא הצלחנו לאחזר נתוני שימוש מהשרת. בדקו את החיבור ונסו שוב.',
   'vs last week': 'לעומת שבוע שעבר',
   // Usage section
-  'Reads': 'קריאות',
+  Reads: 'קריאות',
   'Read and write operations': 'פעולות קריאה וכתיבה',
-  'Writes': 'כתיבות',
+  Writes: 'כתיבות',
   'API Requests': 'בקשות API',
   'Approaching limit': 'מתקרב למגבלה',
   'Export as CSV': 'ייצוא כ-CSV',
@@ -1325,20 +1391,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'High usage': 'שימוש גבוה',
   'Loading breakdown': 'טוען פילוח',
   'No usage data available': 'אין נתוני שימוש זמינים',
-  'Retry': 'ניסיון חוזר',
+  Retry: 'ניסיון חוזר',
   'Select category': 'בחירת קטגוריה',
   'Showing up to': 'מוצגים עד',
-  'Unlimited': 'ללא הגבלה',
-  'Usage': 'שימוש',
+  Unlimited: 'ללא הגבלה',
+  Usage: 'שימוש',
   'Usage Categories': 'קטגוריות שימוש',
   'Usage categories': 'קטגוריות שימוש',
-  'Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started.': 'מדדי שימוש יופיעו כאן ברגע שהפרויקט יתחיל לקבל תעבורה. פרסו את הפונקציה הראשונה שלכם או צרו נתונים כדי להתחיל.',
-  'We couldn\'t retrieve your usage metrics. This might be a temporary issue. Please try again.': 'לא הצלחנו לאחזר את מדדי השימוש שלכם. ייתכן שזו בעיה זמנית. נסו שוב.',
-  'inbound': 'נכנס',
-  'items': 'פריטים',
-  'outbound': 'יוצא',
-  'requests': 'בקשות',
-  'used': 'בשימוש',
+  'Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started.':
+    'מדדי שימוש יופיעו כאן ברגע שהפרויקט יתחיל לקבל תעבורה. פרסו את הפונקציה הראשונה שלכם או צרו נתונים כדי להתחיל.',
+  "We couldn't retrieve your usage metrics. This might be a temporary issue. Please try again.":
+    'לא הצלחנו לאחזר את מדדי השימוש שלכם. ייתכן שזו בעיה זמנית. נסו שוב.',
+  inbound: 'נכנס',
+  items: 'פריטים',
+  outbound: 'יוצא',
+  requests: 'בקשות',
+  used: 'בשימוש',
   'vs previous period': 'לעומת התקופה הקודמת',
   'Monthly active users': 'משתמשים פעילים חודשיים',
   'OTP attempts': 'ניסיונות OTP',
@@ -1346,7 +1414,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Screenshots generated': 'צילומי מסך שנוצרו',
   'Database reads': 'קריאות ממסד הנתונים',
   'Database writes': 'כתיבות למסד הנתונים',
-  'Collections': 'אוספים',
+  Collections: 'אוספים',
   'Total documents': 'סך הכול מסמכים',
   'Deployment storage': 'אחסון פריסות',
   'Build storage': 'אחסון בניות',
@@ -1354,124 +1422,173 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Concurrent connections': 'חיבורים בו-זמניים',
   'Messages sent': 'הודעות שנשלחו', // pragma: allowlist secret
   'Realtime bandwidth': 'רוחב פס של Realtime',
-  'Topics': 'נושאים',
+  Topics: 'נושאים',
   'SMS messages': 'הודעות SMS', // pragma: allowlist secret
   'Events sent': 'אירועים שנשלחו',
   'Events failed': 'אירועים שנכשלו',
-  'Webhooks': 'Webhooks',
+  Webhooks: 'Webhooks',
   'Function executions': 'הרצות פונקציות',
   'Site executions': 'הרצות אתרים',
   'Function GB-hours': 'GB-hours של פונקציות',
   'Site GB-hours': 'GB-hours של אתרים',
   'GB-hours': 'GB-hours',
-  'users': 'משתמשים',
-  'attempts': 'ניסיונות',
-  'screenshots': 'צילומי מסך',
-  'reads': 'קריאות',
-  'writes': 'כתיבות',
-  'collections': 'אוספים',
-  'documents': 'מסמכים',
-  'bytes': 'בייטים',
+  users: 'משתמשים',
+  attempts: 'ניסיונות',
+  screenshots: 'צילומי מסך',
+  reads: 'קריאות',
+  writes: 'כתיבות',
+  collections: 'אוספים',
+  documents: 'מסמכים',
+  bytes: 'בייטים',
   'origin images': 'תמונות מקור',
-  'topics': 'נושאים',
-  'events': 'אירועים',
-  'webhooks': 'webhooks',
-  'executions': 'הרצות',
-  'GBH': 'GBH',
-  'GB': 'GB',
-  'operations': 'פעולות',
-  'Couldn\'t load auth usage': 'לא ניתן היה לטעון נתוני שימוש של אימות',
-  'Couldn\'t load avatars usage': 'לא ניתן היה לטעון נתוני שימוש של אווטארים',
-  'Couldn\'t load compute usage': 'לא ניתן היה לטעון נתוני שימוש של חישוב',
-  'Couldn\'t load database usage': 'לא ניתן היה לטעון נתוני שימוש של מסד הנתונים',
-  'Couldn\'t load messaging usage': 'לא ניתן היה לטעון נתוני שימוש של הודעות',
-  'Couldn\'t load realtime usage': 'לא ניתן היה לטעון נתוני שימוש של Realtime',
-  'Couldn\'t load storage usage': 'לא ניתן היה לטעון נתוני שימוש של אחסון',
-  'Couldn\'t load webhooks usage': 'לא ניתן היה לטעון נתוני שימוש של webhooks',
-  'Rolling monthly active user count over time. Each point is the MAU snapshot at that moment, not new users in that interval. MAU beyond your plan limit may incur additional charges.': 'ספירת משתמשים פעילים חודשיים מתגלגלת לאורך זמן. כל נקודה היא תמונת מצב של MAU באותו רגע, לא משתמשים חדשים באותו מרווח. MAU מעבר למגבלת התוכנית עשוי לגרור חיובים נוספים.',
-  'Phone OTP verification attempts during the selected period. Each SMS or voice OTP sent counts toward your plan limit.': 'ניסיונות אימות OTP בטלפון במהלך התקופה שנבחרה. כל OTP שנשלח ב-SMS או בשיחה קולית נספר במגבלת התוכנית.',
-  'New user registrations during the selected period. Net growth in total registered users (account deletions reduce this count).': 'הרשמות משתמשים חדשים במהלך התקופה שנבחרה. גידול נטו בסך המשתמשים הרשומים (מחיקות חשבון מפחיתות ספירה זו).',
-  'Webpage screenshots generated through the Avatars Screenshots API during the selected period. Each successful screenshot request counts toward your plan limit.': 'צילומי מסך של דפי אינטרנט שנוצרו דרך ה-Avatars Screenshots API במהלך התקופה שנבחרה. כל בקשת צילום מסך מוצלחת נספרת במגבלת התוכנית.',
-  'Document read operations across all databases. Each row returned counts as one read.': 'פעולות קריאת מסמכים בכל מסדי הנתונים. כל שורה שמוחזרת נספרת כקריאה אחת.',
-  'Create, update, and delete operations across all databases. Each mutation counts as one write.': 'פעולות יצירה, עדכון ומחיקה בכל מסדי הנתונים. כל שינוי נספר ככתיבה אחת.',
-  'Total collections (tables) across all databases in your project.': 'סך האוספים (טבלאות) בכל מסדי הנתונים בפרויקט.',
-  'Total rows stored across all collections in your project.': 'סך השורות המאוחסנות בכל האוספים בפרויקט.',
-  'Total bytes stored across all buckets, including uploaded files and versions. Counts toward your plan storage limit.': 'סך הבייטים המאוחסנים בכל הבאקטים, כולל קבצים שהועלו וגרסאות. נספר במגבלת האחסון של התוכנית.',
-  'Storage used by active function and site deployment artifacts. Deployment files count toward your plan storage limit.': 'אחסון בשימוש על ידי פריסות פעילות של פונקציות ואתרים. קובצי פריסה נספרים במגבלת האחסון של התוכנית.',
-  'Storage used by function and site build artifacts and caches. Build files count toward your plan storage limit.': 'אחסון בשימוש על ידי תוצרי בנייה ומטמונים של פונקציות ואתרים. קובצי בנייה נספרים במגבלת האחסון של התוכנית.',
-  'Unique origin images transformed during the selected period. Each origin image is billed once, regardless of how many variants you generate from it.': 'תמונות מקור ייחודיות שעברו טרנספורמציה במהלך התקופה שנבחרה. כל תמונת מקור מחויבת פעם אחת, ללא קשר למספר הווריאציות שנוצרות ממנה.',
-  'Peak concurrent WebSocket connections during the selected period. Each open client connection counts toward your plan limit.': 'שיא חיבורי WebSocket מקבילים במהלך התקופה שנבחרה. כל חיבור לקוח פתוח נספר במגבלת התוכנית.',
-  'Messages sent through the Realtime service during the selected period. Includes server events delivered to subscribed clients.': 'הודעות שנשלחו דרך שירות ה-Realtime במהלך התקופה שנבחרה. כולל אירועי שרת שנמסרו ללקוחות רשומים.', // pragma: allowlist secret
-  'Inbound and outbound data transferred through Realtime WebSocket connections during the selected period.': 'נתונים נכנסים ויוצאים שהועברו דרך חיבורי WebSocket של Realtime במהלך התקופה שנבחרה.',
-  'Messages sent across all channels (push, email, SMS) during the selected period. Each delivery to an end-user target counts as one message.': 'הודעות שנשלחו בכל הערוצים (push, אימייל, SMS) במהלך התקופה שנבחרה. כל מסירה ליעד משתמש קצה נספרת כהודעה אחת.', // pragma: allowlist secret
-  'Messaging topics in your project. Topics group subscribers for broadcast and targeted notifications.': 'נושאי הודעות בפרויקט. נושאים מקבצים מנויים לצורך שידור והתראות ממוקדות.',
-  'SMS messages sent during the selected period. Each SMS segment delivered to a phone target counts as one message.': 'הודעות SMS שנשלחו במהלך התקופה שנבחרה. כל מקטע SMS שנמסר ליעד טלפון נספר כהודעה אחת.', // pragma: allowlist secret
-  'Webhook events successfully delivered during the selected period. Each HTTP request sent to your endpoint counts as one event.': 'אירועי webhook שנמסרו בהצלחה במהלך התקופה שנבחרה. כל בקשת HTTP שנשלחה לנקודת הקצה שלכם נספרת כאירוע אחד.',
-  'Webhook delivery failures during the selected period. Failed attempts include non-2xx responses and connection errors.': 'כשלי מסירת webhook במהלך התקופה שנבחרה. ניסיונות שנכשלו כוללים תגובות שאינן 2xx ושגיאות חיבור.',
-  'Webhooks configured in your project. Each webhook subscribes to one or more Appwrite events.': 'ה-webhooks שהוגדרו בפרויקט. כל webhook רשום לאירוע אחד או יותר של Appwrite.', // pragma: allowlist secret
-  'Function and site executions during the selected period. Each HTTP trigger, schedule run, event invocation, or site request counts as one execution.': 'הרצות פונקציות ואתרים במהלך התקופה שנבחרה. כל טריגר HTTP, ריצה מתוזמנת, הפעלת אירוע או בקשת אתר נספרים כהרצה אחת.',
-  'Compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions and sites multiplied by execution, request handling, and build duration.': 'זמן חישוב במהלך התקופה שנבחרה, נמדד בג\'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות ולאתרים כפול משך ההרצה, הטיפול בבקשות והבנייה.',
-  'Function executions during the selected period. Each HTTP trigger, schedule run, or event invocation counts as one execution.': 'הרצות פונקציות במהלך התקופה שנבחרה. כל טריגר HTTP, ריצה מתוזמנת או הפעלת אירוע נספרים כהרצה אחת.',
-  'Site executions during the selected period. Each HTTP request served by your site counts toward execution usage.': 'הרצות אתרים במהלך התקופה שנבחרה. כל בקשת HTTP שהאתר שלכם משרת נספרת בשימוש בהרצות.',
-  'Function compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions multiplied by execution and build duration.': 'זמן חישוב של פונקציות במהלך התקופה שנבחרה, נמדד בג\'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות כפול משך ההרצה והבנייה.',
-  'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.': 'זמן חישוב של אתרים במהלך התקופה שנבחרה, נמדד בג\'יגה-בייט-שעות (GBH). זיכרון שהוקצה לאתרים כפול משך הטיפול בבקשות והבנייה.',
+  topics: 'נושאים',
+  events: 'אירועים',
+  webhooks: 'webhooks',
+  executions: 'הרצות',
+  GBH: 'GBH',
+  GB: 'GB',
+  operations: 'פעולות',
+  "Couldn't load auth usage": 'לא ניתן היה לטעון נתוני שימוש של אימות',
+  "Couldn't load avatars usage": 'לא ניתן היה לטעון נתוני שימוש של אווטארים',
+  "Couldn't load compute usage": 'לא ניתן היה לטעון נתוני שימוש של חישוב',
+  "Couldn't load database usage":
+    'לא ניתן היה לטעון נתוני שימוש של מסד הנתונים',
+  "Couldn't load messaging usage": 'לא ניתן היה לטעון נתוני שימוש של הודעות',
+  "Couldn't load realtime usage": 'לא ניתן היה לטעון נתוני שימוש של Realtime',
+  "Couldn't load storage usage": 'לא ניתן היה לטעון נתוני שימוש של אחסון',
+  "Couldn't load webhooks usage": 'לא ניתן היה לטעון נתוני שימוש של webhooks',
+  'Rolling monthly active user count over time. Each point is the MAU snapshot at that moment, not new users in that interval. MAU beyond your plan limit may incur additional charges.':
+    'ספירת משתמשים פעילים חודשיים מתגלגלת לאורך זמן. כל נקודה היא תמונת מצב של MAU באותו רגע, לא משתמשים חדשים באותו מרווח. MAU מעבר למגבלת התוכנית עשוי לגרור חיובים נוספים.',
+  'Phone OTP verification attempts during the selected period. Each SMS or voice OTP sent counts toward your plan limit.':
+    'ניסיונות אימות OTP בטלפון במהלך התקופה שנבחרה. כל OTP שנשלח ב-SMS או בשיחה קולית נספר במגבלת התוכנית.',
+  'New user registrations during the selected period. Net growth in total registered users (account deletions reduce this count).':
+    'הרשמות משתמשים חדשים במהלך התקופה שנבחרה. גידול נטו בסך המשתמשים הרשומים (מחיקות חשבון מפחיתות ספירה זו).',
+  'Webpage screenshots generated through the Avatars Screenshots API during the selected period. Each successful screenshot request counts toward your plan limit.':
+    'צילומי מסך של דפי אינטרנט שנוצרו דרך ה-Avatars Screenshots API במהלך התקופה שנבחרה. כל בקשת צילום מסך מוצלחת נספרת במגבלת התוכנית.',
+  'Document read operations across all databases. Each row returned counts as one read.':
+    'פעולות קריאת מסמכים בכל מסדי הנתונים. כל שורה שמוחזרת נספרת כקריאה אחת.',
+  'Create, update, and delete operations across all databases. Each mutation counts as one write.':
+    'פעולות יצירה, עדכון ומחיקה בכל מסדי הנתונים. כל שינוי נספר ככתיבה אחת.',
+  'Total collections (tables) across all databases in your project.':
+    'סך האוספים (טבלאות) בכל מסדי הנתונים בפרויקט.',
+  'Total rows stored across all collections in your project.':
+    'סך השורות המאוחסנות בכל האוספים בפרויקט.',
+  'Total bytes stored across all buckets, including uploaded files and versions. Counts toward your plan storage limit.':
+    'סך הבייטים המאוחסנים בכל הבאקטים, כולל קבצים שהועלו וגרסאות. נספר במגבלת האחסון של התוכנית.',
+  'Storage used by active function and site deployment artifacts. Deployment files count toward your plan storage limit.':
+    'אחסון בשימוש על ידי פריסות פעילות של פונקציות ואתרים. קובצי פריסה נספרים במגבלת האחסון של התוכנית.',
+  'Storage used by function and site build artifacts and caches. Build files count toward your plan storage limit.':
+    'אחסון בשימוש על ידי תוצרי בנייה ומטמונים של פונקציות ואתרים. קובצי בנייה נספרים במגבלת האחסון של התוכנית.',
+  'Unique origin images transformed during the selected period. Each origin image is billed once, regardless of how many variants you generate from it.':
+    'תמונות מקור ייחודיות שעברו טרנספורמציה במהלך התקופה שנבחרה. כל תמונת מקור מחויבת פעם אחת, ללא קשר למספר הווריאציות שנוצרות ממנה.',
+  'Peak concurrent WebSocket connections during the selected period. Each open client connection counts toward your plan limit.':
+    'שיא חיבורי WebSocket מקבילים במהלך התקופה שנבחרה. כל חיבור לקוח פתוח נספר במגבלת התוכנית.',
+  'Messages sent through the Realtime service during the selected period. Includes server events delivered to subscribed clients.':
+    'הודעות שנשלחו דרך שירות ה-Realtime במהלך התקופה שנבחרה. כולל אירועי שרת שנמסרו ללקוחות רשומים.', // pragma: allowlist secret
+  'Inbound and outbound data transferred through Realtime WebSocket connections during the selected period.':
+    'נתונים נכנסים ויוצאים שהועברו דרך חיבורי WebSocket של Realtime במהלך התקופה שנבחרה.',
+  'Messages sent across all channels (push, email, SMS) during the selected period. Each delivery to an end-user target counts as one message.':
+    'הודעות שנשלחו בכל הערוצים (push, אימייל, SMS) במהלך התקופה שנבחרה. כל מסירה ליעד משתמש קצה נספרת כהודעה אחת.', // pragma: allowlist secret
+  'Messaging topics in your project. Topics group subscribers for broadcast and targeted notifications.':
+    'נושאי הודעות בפרויקט. נושאים מקבצים מנויים לצורך שידור והתראות ממוקדות.',
+  'SMS messages sent during the selected period. Each SMS segment delivered to a phone target counts as one message.':
+    'הודעות SMS שנשלחו במהלך התקופה שנבחרה. כל מקטע SMS שנמסר ליעד טלפון נספר כהודעה אחת.', // pragma: allowlist secret
+  'Webhook events successfully delivered during the selected period. Each HTTP request sent to your endpoint counts as one event.':
+    'אירועי webhook שנמסרו בהצלחה במהלך התקופה שנבחרה. כל בקשת HTTP שנשלחה לנקודת הקצה שלכם נספרת כאירוע אחד.',
+  'Webhook delivery failures during the selected period. Failed attempts include non-2xx responses and connection errors.':
+    'כשלי מסירת webhook במהלך התקופה שנבחרה. ניסיונות שנכשלו כוללים תגובות שאינן 2xx ושגיאות חיבור.',
+  'Webhooks configured in your project. Each webhook subscribes to one or more Appwrite events.':
+    'ה-webhooks שהוגדרו בפרויקט. כל webhook רשום לאירוע אחד או יותר של Appwrite.', // pragma: allowlist secret
+  'Function and site executions during the selected period. Each HTTP trigger, schedule run, event invocation, or site request counts as one execution.':
+    'הרצות פונקציות ואתרים במהלך התקופה שנבחרה. כל טריגר HTTP, ריצה מתוזמנת, הפעלת אירוע או בקשת אתר נספרים כהרצה אחת.',
+  'Compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions and sites multiplied by execution, request handling, and build duration.':
+    "זמן חישוב במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות ולאתרים כפול משך ההרצה, הטיפול בבקשות והבנייה.",
+  'Function executions during the selected period. Each HTTP trigger, schedule run, or event invocation counts as one execution.':
+    'הרצות פונקציות במהלך התקופה שנבחרה. כל טריגר HTTP, ריצה מתוזמנת או הפעלת אירוע נספרים כהרצה אחת.',
+  'Site executions during the selected period. Each HTTP request served by your site counts toward execution usage.':
+    'הרצות אתרים במהלך התקופה שנבחרה. כל בקשת HTTP שהאתר שלכם משרת נספרת בשימוש בהרצות.',
+  'Function compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to functions multiplied by execution and build duration.':
+    "זמן חישוב של פונקציות במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות כפול משך ההרצה והבנייה.",
+  'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
+    "זמן חישוב של אתרים במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לאתרים כפול משך הטיפול בבקשות והבנייה.",
   'Top storage buckets': 'באקטי האחסון המובילים',
   'Top buckets by origin images': 'באקטים מובילים לפי תמונות מקור',
   'Top executed functions': 'הפונקציות המורצות ביותר',
   'Top executed sites': 'האתרים המורצים ביותר',
   'Top function compute consumers': 'צרכני חישוב הפונקציות המובילים',
   'Top site compute consumers': 'צרכני חישוב האתרים המובילים',
-  'Total inbound and outbound network traffic during the selected period. Includes API responses, file transfers, and function I/O.': 'סך תעבורת הרשת הנכנסת והיוצאת במהלך התקופה שנבחרה. כולל תגובות API, העברות קבצים וקלט/פלט של פונקציות.',
-  'Total API requests during the selected period. Each call to your project endpoint counts as one request.': 'סך בקשות ה-API במהלך התקופה שנבחרה. כל קריאה לנקודת הקצה של הפרויקט נספרת כבקשה אחת.',
-  'Paths': 'נתיבים',
+  'Total inbound and outbound network traffic during the selected period. Includes API responses, file transfers, and function I/O.':
+    'סך תעבורת הרשת הנכנסת והיוצאת במהלך התקופה שנבחרה. כולל תגובות API, העברות קבצים וקלט/פלט של פונקציות.',
+  'Total API requests during the selected period. Each call to your project endpoint counts as one request.':
+    'סך בקשות ה-API במהלך התקופה שנבחרה. כל קריאה לנקודת הקצה של הפרויקט נספרת כבקשה אחת.',
+  Paths: 'נתיבים',
   'HTTP methods': 'מתודות HTTP',
   'Status codes': 'קודי סטטוס',
-  'Services': 'שירותים',
-  'Hostnames': 'שמות מארח',
+  Services: 'שירותים',
+  Hostnames: 'שמות מארח',
   'IP addresses': 'כתובות IP',
   'Operating systems': 'מערכות הפעלה',
   'Client types': 'סוגי לקוח',
-  'Clients': 'לקוחות',
-  'Resources': 'משאבים',
+  Clients: 'לקוחות',
+  Resources: 'משאבים',
   'Resource types': 'סוגי משאבים',
   'Resource ID': 'מזהה משאב',
   'Resource breakdown dimension': 'ממד פילוח משאבים',
   'Bandwidth (MB)': 'רוחב פס (MB)',
   'Messages/min': 'הודעות לדקה', // pragma: allowlist secret
-  'API endpoint paths with the highest request volume.': 'נתיבי נקודות קצה של API עם נפח הבקשות הגבוה ביותר.',
+  'API endpoint paths with the highest request volume.':
+    'נתיבי נקודות קצה של API עם נפח הבקשות הגבוה ביותר.',
   'Request volume grouped by HTTP method.': 'נפח בקשות מקובץ לפי מתודת HTTP.',
-  'Request volume grouped by HTTP response status.': 'נפח בקשות מקובץ לפי סטטוס תגובת HTTP.',
-  'Request volume grouped by Appwrite service segment.': 'נפח בקשות מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
-  'Request volume grouped by caller country.': 'נפח בקשות מקובץ לפי מדינת המקור.',
-  'Request volume grouped by Appwrite region.': 'נפח בקשות מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
-  'Request volume grouped by caller hostname.': 'נפח בקשות מקובץ לפי שם המארח של המקור.',
-  'Request volume grouped by caller IP address.': 'נפח בקשות מקובץ לפי כתובת IP של המקור.',
-  'Request volume grouped by client operating system.': 'נפח בקשות מקובץ לפי מערכת ההפעלה של הלקוח.',
+  'Request volume grouped by HTTP response status.':
+    'נפח בקשות מקובץ לפי סטטוס תגובת HTTP.',
+  'Request volume grouped by Appwrite service segment.':
+    'נפח בקשות מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
+  'Request volume grouped by caller country.':
+    'נפח בקשות מקובץ לפי מדינת המקור.',
+  'Request volume grouped by Appwrite region.':
+    'נפח בקשות מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
+  'Request volume grouped by caller hostname.':
+    'נפח בקשות מקובץ לפי שם המארח של המקור.',
+  'Request volume grouped by caller IP address.':
+    'נפח בקשות מקובץ לפי כתובת IP של המקור.',
+  'Request volume grouped by client operating system.':
+    'נפח בקשות מקובץ לפי מערכת ההפעלה של הלקוח.',
   'Request volume grouped by client type.': 'נפח בקשות מקובץ לפי סוג הלקוח.',
   'Request volume grouped by client name.': 'נפח בקשות מקובץ לפי שם הלקוח.',
-  'Request volume grouped by device classification.': 'נפח בקשות מקובץ לפי סיווג המכשיר.',
+  'Request volume grouped by device classification.':
+    'נפח בקשות מקובץ לפי סיווג המכשיר.',
   'Request volume grouped by resource ID.': 'נפח בקשות מקובץ לפי מזהה משאב.',
   'Request volume grouped by resource type.': 'נפח בקשות מקובץ לפי סוג משאב.',
-  'Endpoint paths with the highest bandwidth consumption.': 'נתיבי נקודות קצה עם צריכת רוחב הפס הגבוהה ביותר.',
+  'Endpoint paths with the highest bandwidth consumption.':
+    'נתיבי נקודות קצה עם צריכת רוחב הפס הגבוהה ביותר.',
   'Bandwidth grouped by HTTP method.': 'רוחב פס מקובץ לפי מתודת HTTP.',
-  'Bandwidth grouped by HTTP response status.': 'רוחב פס מקובץ לפי סטטוס תגובת HTTP.',
-  'Bandwidth grouped by Appwrite service segment.': 'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
+  'Bandwidth grouped by HTTP response status.':
+    'רוחב פס מקובץ לפי סטטוס תגובת HTTP.',
+  'Bandwidth grouped by Appwrite service segment.':
+    'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
   'Bandwidth grouped by Appwrite region.': 'רוחב פס מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
-  'Bandwidth grouped by caller hostname.': 'רוחב פס מקובץ לפי שם המארח של המקור.',
-  'Bandwidth grouped by caller IP address.': 'רוחב פס מקובץ לפי כתובת IP של המקור.',
-  'Bandwidth grouped by client operating system.': 'רוחב פס מקובץ לפי מערכת ההפעלה של הלקוח.',
+  'Bandwidth grouped by caller hostname.':
+    'רוחב פס מקובץ לפי שם המארח של המקור.',
+  'Bandwidth grouped by caller IP address.':
+    'רוחב פס מקובץ לפי כתובת IP של המקור.',
+  'Bandwidth grouped by client operating system.':
+    'רוחב פס מקובץ לפי מערכת ההפעלה של הלקוח.',
   'Bandwidth grouped by client type.': 'רוחב פס מקובץ לפי סוג הלקוח.',
   'Bandwidth grouped by client name.': 'רוחב פס מקובץ לפי שם הלקוח.',
-  'Bandwidth grouped by device classification.': 'רוחב פס מקובץ לפי סיווג המכשיר.',
+  'Bandwidth grouped by device classification.':
+    'רוחב פס מקובץ לפי סיווג המכשיר.',
   'Bandwidth grouped by resource ID.': 'רוחב פס מקובץ לפי מזהה משאב.',
   'Bandwidth grouped by resource type.': 'רוחב פס מקובץ לפי סוג משאב.',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
   'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',
-  'Operations grouped by caller IP address.': 'פעולות מקובצות לפי כתובת IP של המקור.',
-  'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).': 'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
-  'API endpoint paths driving database operations.': 'נתיבי נקודות קצה של API שמניעים פעולות מסד נתונים.',
+  'Operations grouped by caller IP address.':
+    'פעולות מקובצות לפי כתובת IP של המקור.',
+  'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).':
+    'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
+  'API endpoint paths driving database operations.':
+    'נתיבי נקודות קצה של API שמניעים פעולות מסד נתונים.',
   'API endpoint paths with the highest operation volume.':
     'נתיבי נקודות קצה של API עם נפח הפעולות הגבוה ביותר.',
   'Operations grouped by HTTP method.': 'פעולות מקובצות לפי מתודת HTTP.',
@@ -1498,21 +1615,33 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פעולות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
   'Caller IP addresses with the highest operation volume.':
     'כתובות IP של מקור עם נפח הפעולות הגבוה ביותר.',
-  'Products': 'מוצרים',
-  'Avatars': 'אווטארים',
+  Products: 'מוצרים',
+  Avatars: 'אווטארים',
   avatars: 'אווטארים',
-  'API request volume and breakdowns across paths, methods, status codes, and client attributes.': 'נפח בקשות API ופילוחים לפי נתיבים, מתודות, קודי סטטוס ומאפייני לקוח.',
-  'Network bandwidth consumption with breakdowns across paths, services, and client attributes.': 'צריכת רוחב פס ברשת עם פילוחים לפי נתיבים, שירותים ומאפייני לקוח.',
-  'Database operations including reads, writes, and resource counts.': 'פעולות מסד נתונים כולל קריאות, כתיבות וספירת משאבים.',
-  'WebSocket connections, messages sent, and bandwidth for live data synchronization.': 'חיבורי WebSocket, הודעות שנשלחו ורוחב פס לסנכרון נתונים בזמן אמת.', // pragma: allowlist secret
-  'Authentication metrics including monthly active users, phone OTP usage, and sign-up activity.': 'מדדי אימות כולל משתמשים פעילים חודשיים, שימוש ב-OTP בטלפון ופעילות הרשמה.',
-  'Combined function and site executions plus compute time across your project.': 'הרצות משולבות של פונקציות ואתרים וכן זמן חישוב בכל הפרויקט.',
-  'Function executions and compute time during the selected period.': 'הרצות פונקציות וזמן חישוב במהלך התקופה שנבחרה.',
-  'Site executions and compute time during the selected period.': 'הרצות אתרים וזמן חישוב במהלך התקופה שנבחרה.',
-  'Avatars API usage for webpage screenshots and other generated assets.': 'שימוש ב-Avatars API לצילומי מסך של דפי אינטרנט ונכסים מיוצרים נוספים.',
-  'Push notifications, emails, and SMS messages sent through the messaging service.': 'התראות push, אימיילים והודעות SMS שנשלחו דרך שירות ההודעות.', // pragma: allowlist secret
-  'Webhook event deliveries and configured endpoints for Appwrite event notifications.': 'מסירות אירועי webhook ונקודות קצה מוגדרות להתראות על אירועי Appwrite.', // pragma: allowlist secret
-  'File, deployment, and build storage usage, plus billable image transformations.': 'שימוש באחסון קבצים, פריסות ובניות, וכן טרנספורמציות תמונה בחיוב.',
+  'API request volume and breakdowns across paths, methods, status codes, and client attributes.':
+    'נפח בקשות API ופילוחים לפי נתיבים, מתודות, קודי סטטוס ומאפייני לקוח.',
+  'Network bandwidth consumption with breakdowns across paths, services, and client attributes.':
+    'צריכת רוחב פס ברשת עם פילוחים לפי נתיבים, שירותים ומאפייני לקוח.',
+  'Database operations including reads, writes, and resource counts.':
+    'פעולות מסד נתונים כולל קריאות, כתיבות וספירת משאבים.',
+  'WebSocket connections, messages sent, and bandwidth for live data synchronization.':
+    'חיבורי WebSocket, הודעות שנשלחו ורוחב פס לסנכרון נתונים בזמן אמת.', // pragma: allowlist secret
+  'Authentication metrics including monthly active users, phone OTP usage, and sign-up activity.':
+    'מדדי אימות כולל משתמשים פעילים חודשיים, שימוש ב-OTP בטלפון ופעילות הרשמה.',
+  'Combined function and site executions plus compute time across your project.':
+    'הרצות משולבות של פונקציות ואתרים וכן זמן חישוב בכל הפרויקט.',
+  'Function executions and compute time during the selected period.':
+    'הרצות פונקציות וזמן חישוב במהלך התקופה שנבחרה.',
+  'Site executions and compute time during the selected period.':
+    'הרצות אתרים וזמן חישוב במהלך התקופה שנבחרה.',
+  'Avatars API usage for webpage screenshots and other generated assets.':
+    'שימוש ב-Avatars API לצילומי מסך של דפי אינטרנט ונכסים מיוצרים נוספים.',
+  'Push notifications, emails, and SMS messages sent through the messaging service.':
+    'התראות push, אימיילים והודעות SMS שנשלחו דרך שירות ההודעות.', // pragma: allowlist secret
+  'Webhook event deliveries and configured endpoints for Appwrite event notifications.':
+    'מסירות אירועי webhook ונקודות קצה מוגדרות להתראות על אירועי Appwrite.', // pragma: allowlist secret
+  'File, deployment, and build storage usage, plus billable image transformations.':
+    'שימוש באחסון קבצים, פריסות ובניות, וכן טרנספורמציות תמונה בחיוב.',
   'Function Executions': 'הרצות פונקציות',
   'GB-Hours': 'GB-Hours',
   'Monthly Active Users': 'משתמשים פעילים חודשיים',
@@ -1529,118 +1658,174 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Screenshots Generated': 'צילומי מסך שנוצרו',
   'Events Sent': 'אירועים שנשלחו',
   'Events Failed': 'אירועים שנכשלו',
-  'Function executions and compute resources consumed by your serverless functions.': 'הרצות פונקציות ומשאבי חישוב שנצרכו על ידי הפונקציות ללא שרת שלכם.',
-  'Total number of function invocations during this billing cycle. Each time a function is triggered (via HTTP, schedule, or event), it counts as one execution. Executions beyond your plan limit are billed at $0.50 per 1,000 executions.': 'סך ההרצות במחזור החיוב הנוכחי. בכל פעם שפונקציה מופעלת (דרך HTTP, תזמון או אירוע), היא נספרת כהרצה אחת. הרצות מעבר למגבלת התוכנית מחויבות ב-$0.50 לכל 1,000 הרצות.',
-  'Compute time measured in gigabyte-hours. This represents the memory allocated to your functions multiplied by execution duration. A function using 512MB for 2 hours consumes 1 GB-hour. Additional GB-hours are billed at $0.15 per GB-hour.': 'זמן חישוב הנמדד בג\'יגה-בייט-שעות. מייצג את הזיכרון שהוקצה לפונקציות כפול משך ההרצה. פונקציה המשתמשת ב-512MB במשך שעתיים צורכת 1 GB-hour. GB-hours נוספים מחויבים ב-$0.15 לכל GB-hour.',
-  'Authentication metrics including active users, OTP usage, and sign-up activity.': 'מדדי אימות כולל משתמשים פעילים, שימוש ב-OTP ופעילות הרשמה.',
-  'Unique users who have authenticated at least once during the billing cycle. This includes all authentication methods (email, OAuth, phone, etc.). MAU beyond your plan limit are billed at $0.02 per user.': 'משתמשים ייחודיים שהתחברו לפחות פעם אחת במהלך מחזור החיוב. כולל את כל שיטות האימות (אימייל, OAuth, טלפון ועוד). MAU מעבר למגבלת התוכנית מחויבים ב-$0.02 למשתמש.',
-  'One-time password verification attempts via SMS or email. Each OTP sent counts toward this limit. Additional OTP messages are billed at $0.05 per message for email and $0.10 for SMS.': 'ניסיונות אימות סיסמה חד-פעמית ב-SMS או באימייל. כל OTP שנשלח נספר במגבלה זו. הודעות OTP נוספות מחויבות ב-$0.05 להודעת אימייל וב-$0.10 ל-SMS.', // pragma: allowlist secret
-  'New user registrations during this billing cycle. This metric helps you track user growth and onboarding patterns. Sign-ups are not directly limited but contribute to your MAU count.': 'הרשמות משתמשים חדשים במחזור החיוב הנוכחי. מדד זה עוזר לעקוב אחר צמיחת משתמשים ודפוסי קליטה. הרשמות אינן מוגבלות ישירות אך תורמות לספירת ה-MAU.',
-  'Total document read operations across all databases. Each query that retrieves documents counts as reads (one per document returned). Reads beyond your plan limit are billed at $0.30 per 1,000,000 reads.': 'סך פעולות קריאת מסמכים בכל מסדי הנתונים. כל שאילתה שמאחזרת מסמכים נספרת כקריאות (אחת לכל מסמך שהוחזר). קריאות מעבר למגבלת התוכנית מחויבות ב-$0.30 לכל 1,000,000 קריאות.',
-  'Total document write operations (create, update, delete) across all databases. Each mutation counts as one write. Writes beyond your plan limit are billed at $1.00 per 1,000,000 writes.': 'סך פעולות כתיבת מסמכים (יצירה, עדכון, מחיקה) בכל מסדי הנתונים. כל שינוי נספר ככתיבה אחת. כתיבות מעבר למגבלת התוכנית מחויבות ב-$1.00 לכל 1,000,000 כתיבות.',
-  'Total number of collections (tables) across all databases. Collections define your data schema and indexes. Additional collections beyond your plan limit require a plan upgrade.': 'סך האוספים (טבלאות) בכל מסדי הנתונים. אוספים מגדירים את סכימת הנתונים והאינדקסים. אוספים נוספים מעבר למגבלת התוכנית דורשים שדרוג תוכנית.',
-  'Total number of documents stored across all collections. This represents your data volume. Document storage is not directly limited but contributes to your storage usage.': 'סך המסמכים המאוחסנים בכל האוספים. מייצג את נפח הנתונים שלכם. אחסון מסמכים אינו מוגבל ישירות אך תורם לשימוש באחסון.',
-  'File storage usage and operations for your storage buckets.': 'שימוש באחסון קבצים ופעולות עבור באקטי האחסון שלכם.',
-  'Total bytes stored across all buckets. This includes all uploaded files and their versions. Storage beyond your plan limit is billed at $0.03 per GB per month.': 'סך הבייטים המאוחסנים בכל הבאקטים. כולל את כל הקבצים שהועלו וגרסאותיהם. אחסון מעבר למגבלת התוכנית מחויב ב-$0.03 ל-GB לחודש.',
-  'Total file operations including uploads, downloads, and deletions. Each API call to the storage service counts as one operation. Additional operations are billed at $0.10 per 10,000 operations.': 'סך פעולות הקבצים כולל העלאות, הורדות ומחיקות. כל קריאת API לשירות האחסון נספרת כפעולה אחת. פעולות נוספות מחויבות ב-$0.10 לכל 10,000 פעולות.',
-  'Network bandwidth consumption for API requests and file transfers.': 'צריכת רוחב פס ברשת עבור בקשות API והעברות קבצים.',
-  'Data transferred out from Appwrite to your users. This includes API responses, file downloads, and function outputs. Egress beyond your plan limit is billed at $0.09 per GB.': 'נתונים שהועברו החוצה מ-Appwrite למשתמשים שלכם. כולל תגובות API, הורדות קבצים ופלט פונקציות. תעבורה יוצאת מעבר למגבלת התוכנית מחויבת ב-$0.09 ל-GB.', // pragma: allowlist secret
-  'Data transferred into Appwrite from your users. This includes API requests, file uploads, and function inputs. Ingress is typically unlimited and not billed separately.': 'נתונים שהועברו אל Appwrite מהמשתמשים שלכם. כולל בקשות API, העלאות קבצים וקלט פונקציות. תעבורה נכנסת בדרך כלל אינה מוגבלת ואינה מחויבת בנפרד.', // pragma: allowlist secret
-  'WebSocket connections for real-time data synchronization.': 'חיבורי WebSocket לסנכרון נתונים בזמן אמת.',
-  'Peak number of simultaneous WebSocket connections. This represents users actively subscribed to real-time updates. Connections beyond your plan limit may be queued or rejected.': 'שיא מספר חיבורי ה-WebSocket הבו-זמניים. מייצג משתמשים הרשומים באופן פעיל לעדכונים בזמן אמת. חיבורים מעבר למגבלת התוכנית עשויים להמתין בתור או להידחות.',
-  'Total messages sent across all channels (push, email, SMS). Each notification or message counts toward this limit. Additional messages are billed based on the channel type.': 'סך ההודעות שנשלחו בכל הערוצים (push, אימייל, SMS). כל התראה או הודעה נספרת במגבלה זו. הודעות נוספות מחויבות לפי סוג הערוץ.', // pragma: allowlist secret
-  'Number of messaging topics for organizing subscribers. Topics allow you to group users for targeted notifications. Additional topics beyond your plan limit require a plan upgrade.': 'מספר נושאי ההודעות לארגון מנויים. נושאים מאפשרים לקבץ משתמשים להתראות ממוקדות. נושאים נוספים מעבר למגבלת התוכנית דורשים שדרוג תוכנית.',
-  'SMS messages sent for authentication or notifications. SMS is billed separately at carrier rates. Each SMS segment (160 characters) counts as one message.': 'הודעות SMS שנשלחו לאימות או להתראות. SMS מחויב בנפרד לפי תעריפי המפעיל. כל מקטע SMS (160 תווים) נספר כהודעה אחת.', // pragma: allowlist secret
-  'Webpage screenshots captured through the Avatars Screenshots API. Each successful request counts toward your monthly plan limit. Additional screenshots are billed per capture on paid plans.': 'צילומי מסך של דפי אינטרנט שנלכדו דרך ה-Avatars Screenshots API. כל בקשה מוצלחת נספרת במגבלת התוכנית החודשית. צילומי מסך נוספים מחויבים לפי לכידה בתוכניות בתשלום.',
-  'Webhook events successfully delivered to your endpoints. Each HTTP request sent counts as one event.': 'אירועי webhook שנמסרו בהצלחה לנקודות הקצה שלכם. כל בקשת HTTP שנשלחה נספרת כאירוע אחד.',
-  'Webhook delivery failures including non-2xx responses and connection errors.': 'כשלי מסירת webhook כולל תגובות שאינן 2xx ושגיאות חיבור.',
-  'Number of webhooks configured in your project. Each webhook can subscribe to multiple Appwrite events.': 'מספר ה-webhooks שהוגדרו בפרויקט. כל webhook יכול להירשם למספר אירועי Appwrite.', // pragma: allowlist secret
+  'Function executions and compute resources consumed by your serverless functions.':
+    'הרצות פונקציות ומשאבי חישוב שנצרכו על ידי הפונקציות ללא שרת שלכם.',
+  'Total number of function invocations during this billing cycle. Each time a function is triggered (via HTTP, schedule, or event), it counts as one execution. Executions beyond your plan limit are billed at $0.50 per 1,000 executions.':
+    'סך ההרצות במחזור החיוב הנוכחי. בכל פעם שפונקציה מופעלת (דרך HTTP, תזמון או אירוע), היא נספרת כהרצה אחת. הרצות מעבר למגבלת התוכנית מחויבות ב-$0.50 לכל 1,000 הרצות.',
+  'Compute time measured in gigabyte-hours. This represents the memory allocated to your functions multiplied by execution duration. A function using 512MB for 2 hours consumes 1 GB-hour. Additional GB-hours are billed at $0.15 per GB-hour.':
+    "זמן חישוב הנמדד בג'יגה-בייט-שעות. מייצג את הזיכרון שהוקצה לפונקציות כפול משך ההרצה. פונקציה המשתמשת ב-512MB במשך שעתיים צורכת 1 GB-hour. GB-hours נוספים מחויבים ב-$0.15 לכל GB-hour.",
+  'Authentication metrics including active users, OTP usage, and sign-up activity.':
+    'מדדי אימות כולל משתמשים פעילים, שימוש ב-OTP ופעילות הרשמה.',
+  'Unique users who have authenticated at least once during the billing cycle. This includes all authentication methods (email, OAuth, phone, etc.). MAU beyond your plan limit are billed at $0.02 per user.':
+    'משתמשים ייחודיים שהתחברו לפחות פעם אחת במהלך מחזור החיוב. כולל את כל שיטות האימות (אימייל, OAuth, טלפון ועוד). MAU מעבר למגבלת התוכנית מחויבים ב-$0.02 למשתמש.',
+  'One-time password verification attempts via SMS or email. Each OTP sent counts toward this limit. Additional OTP messages are billed at $0.05 per message for email and $0.10 for SMS.':
+    'ניסיונות אימות סיסמה חד-פעמית ב-SMS או באימייל. כל OTP שנשלח נספר במגבלה זו. הודעות OTP נוספות מחויבות ב-$0.05 להודעת אימייל וב-$0.10 ל-SMS.', // pragma: allowlist secret
+  'New user registrations during this billing cycle. This metric helps you track user growth and onboarding patterns. Sign-ups are not directly limited but contribute to your MAU count.':
+    'הרשמות משתמשים חדשים במחזור החיוב הנוכחי. מדד זה עוזר לעקוב אחר צמיחת משתמשים ודפוסי קליטה. הרשמות אינן מוגבלות ישירות אך תורמות לספירת ה-MAU.',
+  'Total document read operations across all databases. Each query that retrieves documents counts as reads (one per document returned). Reads beyond your plan limit are billed at $0.30 per 1,000,000 reads.':
+    'סך פעולות קריאת מסמכים בכל מסדי הנתונים. כל שאילתה שמאחזרת מסמכים נספרת כקריאות (אחת לכל מסמך שהוחזר). קריאות מעבר למגבלת התוכנית מחויבות ב-$0.30 לכל 1,000,000 קריאות.',
+  'Total document write operations (create, update, delete) across all databases. Each mutation counts as one write. Writes beyond your plan limit are billed at $1.00 per 1,000,000 writes.':
+    'סך פעולות כתיבת מסמכים (יצירה, עדכון, מחיקה) בכל מסדי הנתונים. כל שינוי נספר ככתיבה אחת. כתיבות מעבר למגבלת התוכנית מחויבות ב-$1.00 לכל 1,000,000 כתיבות.',
+  'Total number of collections (tables) across all databases. Collections define your data schema and indexes. Additional collections beyond your plan limit require a plan upgrade.':
+    'סך האוספים (טבלאות) בכל מסדי הנתונים. אוספים מגדירים את סכימת הנתונים והאינדקסים. אוספים נוספים מעבר למגבלת התוכנית דורשים שדרוג תוכנית.',
+  'Total number of documents stored across all collections. This represents your data volume. Document storage is not directly limited but contributes to your storage usage.':
+    'סך המסמכים המאוחסנים בכל האוספים. מייצג את נפח הנתונים שלכם. אחסון מסמכים אינו מוגבל ישירות אך תורם לשימוש באחסון.',
+  'File storage usage and operations for your storage buckets.':
+    'שימוש באחסון קבצים ופעולות עבור באקטי האחסון שלכם.',
+  'Total bytes stored across all buckets. This includes all uploaded files and their versions. Storage beyond your plan limit is billed at $0.03 per GB per month.':
+    'סך הבייטים המאוחסנים בכל הבאקטים. כולל את כל הקבצים שהועלו וגרסאותיהם. אחסון מעבר למגבלת התוכנית מחויב ב-$0.03 ל-GB לחודש.',
+  'Total file operations including uploads, downloads, and deletions. Each API call to the storage service counts as one operation. Additional operations are billed at $0.10 per 10,000 operations.':
+    'סך פעולות הקבצים כולל העלאות, הורדות ומחיקות. כל קריאת API לשירות האחסון נספרת כפעולה אחת. פעולות נוספות מחויבות ב-$0.10 לכל 10,000 פעולות.',
+  'Network bandwidth consumption for API requests and file transfers.':
+    'צריכת רוחב פס ברשת עבור בקשות API והעברות קבצים.',
+  'Data transferred out from Appwrite to your users. This includes API responses, file downloads, and function outputs. Egress beyond your plan limit is billed at $0.09 per GB.':
+    'נתונים שהועברו החוצה מ-Appwrite למשתמשים שלכם. כולל תגובות API, הורדות קבצים ופלט פונקציות. תעבורה יוצאת מעבר למגבלת התוכנית מחויבת ב-$0.09 ל-GB.', // pragma: allowlist secret
+  'Data transferred into Appwrite from your users. This includes API requests, file uploads, and function inputs. Ingress is typically unlimited and not billed separately.':
+    'נתונים שהועברו אל Appwrite מהמשתמשים שלכם. כולל בקשות API, העלאות קבצים וקלט פונקציות. תעבורה נכנסת בדרך כלל אינה מוגבלת ואינה מחויבת בנפרד.', // pragma: allowlist secret
+  'WebSocket connections for real-time data synchronization.':
+    'חיבורי WebSocket לסנכרון נתונים בזמן אמת.',
+  'Peak number of simultaneous WebSocket connections. This represents users actively subscribed to real-time updates. Connections beyond your plan limit may be queued or rejected.':
+    'שיא מספר חיבורי ה-WebSocket הבו-זמניים. מייצג משתמשים הרשומים באופן פעיל לעדכונים בזמן אמת. חיבורים מעבר למגבלת התוכנית עשויים להמתין בתור או להידחות.',
+  'Total messages sent across all channels (push, email, SMS). Each notification or message counts toward this limit. Additional messages are billed based on the channel type.':
+    'סך ההודעות שנשלחו בכל הערוצים (push, אימייל, SMS). כל התראה או הודעה נספרת במגבלה זו. הודעות נוספות מחויבות לפי סוג הערוץ.', // pragma: allowlist secret
+  'Number of messaging topics for organizing subscribers. Topics allow you to group users for targeted notifications. Additional topics beyond your plan limit require a plan upgrade.':
+    'מספר נושאי ההודעות לארגון מנויים. נושאים מאפשרים לקבץ משתמשים להתראות ממוקדות. נושאים נוספים מעבר למגבלת התוכנית דורשים שדרוג תוכנית.',
+  'SMS messages sent for authentication or notifications. SMS is billed separately at carrier rates. Each SMS segment (160 characters) counts as one message.':
+    'הודעות SMS שנשלחו לאימות או להתראות. SMS מחויב בנפרד לפי תעריפי המפעיל. כל מקטע SMS (160 תווים) נספר כהודעה אחת.', // pragma: allowlist secret
+  'Webpage screenshots captured through the Avatars Screenshots API. Each successful request counts toward your monthly plan limit. Additional screenshots are billed per capture on paid plans.':
+    'צילומי מסך של דפי אינטרנט שנלכדו דרך ה-Avatars Screenshots API. כל בקשה מוצלחת נספרת במגבלת התוכנית החודשית. צילומי מסך נוספים מחויבים לפי לכידה בתוכניות בתשלום.',
+  'Webhook events successfully delivered to your endpoints. Each HTTP request sent counts as one event.':
+    'אירועי webhook שנמסרו בהצלחה לנקודות הקצה שלכם. כל בקשת HTTP שנשלחה נספרת כאירוע אחד.',
+  'Webhook delivery failures including non-2xx responses and connection errors.':
+    'כשלי מסירת webhook כולל תגובות שאינן 2xx ושגיאות חיבור.',
+  'Number of webhooks configured in your project. Each webhook can subscribe to multiple Appwrite events.':
+    'מספר ה-webhooks שהוגדרו בפרויקט. כל webhook יכול להירשם למספר אירועי Appwrite.', // pragma: allowlist secret
   // Settings (domains, webhooks, migrations, SMTP, overview, git)
-  '(Database name, Username, Password). Admin Secret is used for files.': '(שם מסד נתונים, שם משתמש, סיסמה). ה-Admin Secret משמש לקבצים.',
+  '(Database name, Username, Password). Admin Secret is used for files.':
+    '(שם מסד נתונים, שם משתמש, סיסמה). ה-Admin Secret משמש לקבצים.',
   '(Endpoint and API key). Use the': '(נקודת קצה ומפתח API). השתמשו במפתח',
   '(Host, Port, Username, Password) and': '(מארח, פורט, שם משתמש, סיסמה) וכן',
-  '(Region, Subdomain, Admin Secret) and': '(אזור, תת-דומיין, Admin Secret) וכן',
-  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using': '(נקרא גם ALIAS או ANAME, למשל Cloudflare, DNSimple, Route 53), אפשר להשאיר את רשומת ה-CNAME שלמעלה. אחרת, יש לאמת באמצעות',
-  'A list of domain providers and their DNS settings is available': 'רשימת ספקי דומיינים והגדרות ה-DNS שלהם זמינה',
+  '(Region, Subdomain, Admin Secret) and':
+    '(אזור, תת-דומיין, Admin Secret) וכן',
+  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using':
+    '(נקרא גם ALIAS או ANAME, למשל Cloudflare, DNSimple, Route 53), אפשר להשאיר את רשומת ה-CNAME שלמעלה. אחרת, יש לאמת באמצעות',
+  'A list of domain providers and their DNS settings is available':
+    'רשימת ספקי דומיינים והגדרות ה-DNS שלהם זמינה',
   'API Endpoint': 'נקודת קצה של API',
   'API credentials': 'פרטי גישה ל-API',
-  'Access': 'גישה',
-  'Account': 'חשבון',
+  Access: 'גישה',
+  Account: 'חשבון',
   'Actions for': 'פעולות עבור',
   'Add API domain': 'הוספת דומיין API',
-  'Add a Git installation to your project so you can connect repositories later through your function or site settings.': 'הוסיפו התקנת Git לפרויקט כדי שתוכלו לחבר repos בהמשך דרך הגדרות הפונקציה או האתר.',
-  'Add a custom domain to serve your Appwrite API on your own domain': 'הוסיפו דומיין מותאם אישית כדי להגיש את ה-API של Appwrite מהדומיין שלכם', // pragma: allowlist secret
+  'Add a Git installation to your project so you can connect repositories later through your function or site settings.':
+    'הוסיפו התקנת Git לפרויקט כדי שתוכלו לחבר repos בהמשך דרך הגדרות הפונקציה או האתר.',
+  'Add a custom domain to serve your Appwrite API on your own domain':
+    'הוסיפו דומיין מותאם אישית כדי להגיש את ה-API של Appwrite מהדומיין שלכם', // pragma: allowlist secret
   'Add an installation to connect repositories': 'הוסיפו התקנה כדי לחבר repos',
   'Add installation': 'הוספת התקנה',
-  'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.': 'הוסיפו את שרתי השמות הבאים אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
-  'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.': 'הוסיפו את הרשומות הבאות אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
+  'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.':
+    'הוסיפו את שרתי השמות הבאים אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
+  'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.':
+    'הוסיפו את הרשומות הבאות אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
   'Adding...': 'מוסיף...',
   'Admin secret': 'Admin Secret',
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.': 'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
-  'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.': 'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
-  'Are you sure you want to disconnect this git installation?': 'האם אתם בטוחים שברצונכם לנתק את התקנת ה-Git הזו?',
-  'Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:': 'האם אתם בטוחים שברצונכם לנתק את התקנת ה-Git הזו? הדבר ישפיע על פריסות עתידיות לאתרים ולפונקציות הבאים:',
-  'Authentication': 'אימות',
-  'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.': 'לפני התקנת Git בפרויקט Appwrite באירוח מקומי, ודאו שמשתני הסביבה שלכם מוגדרים.', // pragma: allowlist secret
+  'Are you sure you want to delete this domain? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
+  'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
+    'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
+  'Are you sure you want to disconnect this git installation?':
+    'האם אתם בטוחים שברצונכם לנתק את התקנת ה-Git הזו?',
+  'Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:':
+    'האם אתם בטוחים שברצונכם לנתק את התקנת ה-Git הזו? הדבר ישפיע על פריסות עתידיות לאתרים ולפונקציות הבאים:',
+  Authentication: 'אימות',
+  'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.':
+    'לפני התקנת Git בפרויקט Appwrite באירוח מקומי, ודאו שמשתני הסביבה שלכם מוגדרים.', // pragma: allowlist secret
   'CNAME flattening': 'CNAME flattening',
   'Certificate verification (SSL/TLS)': 'אימות תעודה (SSL/TLS)',
-  'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.': 'בחרו אילו שירותים להפעיל או להשבית עבור ה-API של הלקוח. כאשר שירות מושבת, הוא אינו נגיש ל-SDK של לקוח אך נשאר נגיש ל-SDK של שרת.',
-  'Choose which resources to migrate. You do not need to keep the Console open; the migration continues in the background. After migrating, add platforms in Overview → Integrations → Platforms and set permissions on migrated resources.': 'בחרו אילו משאבים להעביר. אין צורך להשאיר את הקונסולה פתוחה; המיגרציה ממשיכה ברקע. לאחר המיגרציה, הוסיפו פלטפורמות בסקירה → אינטגרציות → פלטפורמות והגדירו הרשאות למשאבים שהועברו.',
-  'Complete': 'הושלם',
-  'Configure': 'הגדרה',
-  'Configure a custom SMTP server to send emails from your own domain. This allows you to customize email templates and prevents emails from being labeled as spam.': 'הגדירו שרת SMTP מותאם אישית לשליחת אימיילים מהדומיין שלכם. כך תוכלו להתאים אישית תבניות אימייל ולמנוע סימון אימיילים כספאם.',
-  'Configure security settings for your webhook': 'הגדירו את הגדרות האבטחה של ה-webhook שלכם',
+  'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.':
+    'בחרו אילו שירותים להפעיל או להשבית עבור ה-API של הלקוח. כאשר שירות מושבת, הוא אינו נגיש ל-SDK של לקוח אך נשאר נגיש ל-SDK של שרת.',
+  'Choose which resources to migrate. You do not need to keep the Console open; the migration continues in the background. After migrating, add platforms in Overview → Integrations → Platforms and set permissions on migrated resources.':
+    'בחרו אילו משאבים להעביר. אין צורך להשאיר את הקונסולה פתוחה; המיגרציה ממשיכה ברקע. לאחר המיגרציה, הוסיפו פלטפורמות בסקירה → אינטגרציות → פלטפורמות והגדירו הרשאות למשאבים שהועברו.',
+  Complete: 'הושלם',
+  Configure: 'הגדרה',
+  'Configure a custom SMTP server to send emails from your own domain. This allows you to customize email templates and prevents emails from being labeled as spam.':
+    'הגדירו שרת SMTP מותאם אישית לשליחת אימיילים מהדומיין שלכם. כך תוכלו להתאים אישית תבניות אימייל ולמנוע סימון אימיילים כספאם.',
+  'Configure security settings for your webhook':
+    'הגדירו את הגדרות האבטחה של ה-webhook שלכם',
   'Connect to GitHub': 'התחברות ל-GitHub',
-  'Consider the following before transferring your project:': 'שימו לב לנקודות הבאות לפני העברת הפרויקט:',
+  'Connect to GitLab': 'התחברות ל-GitLab',
+  'Add GitHub': 'הוספת GitHub',
+  'Add GitLab': 'הוספת GitLab',
+  'Add GitHub account': 'הוספת חשבון GitHub',
+  'Add GitLab account': 'הוספת חשבון GitLab',
+  'Switch Git Provider': 'החלפת ספק Git',
+  'Consider the following before transferring your project:':
+    'שימו לב לנקודות הבאות לפני העברת הפרויקט:',
   'Copy domain': 'העתקת דומיין',
   'Copy secret': 'העתקת הסוד',
   'Create webhook': 'יצירת webhook',
-  'Custom SMTP is available on Appwrite Cloud Pro and higher plans.': 'SMTP מותאם אישית זמין בתוכניות Appwrite Cloud Pro ומעלה.', // pragma: allowlist secret
+  'Custom SMTP is available on Appwrite Cloud Pro and higher plans.':
+    'SMTP מותאם אישית זמין בתוכניות Appwrite Cloud Pro ומעלה.', // pragma: allowlist secret
   'Custom SMTP server': 'שרת SMTP מותאם אישית',
   'Custom domains': 'דומיינים מותאמים אישית',
   'DNS Records': 'רשומות DNS',
   'Database (optional)': 'מסד נתונים (אופציונלי)',
   'Database host': 'מארח מסד הנתונים',
   'Database settings': 'הגדרות מסד נתונים',
-  'Date': 'תאריך',
+  Date: 'תאריך',
   'Defaults to subdomain': 'ברירת המחדל היא תת-הדומיין',
   'Delete Project': 'מחיקת פרויקט',
   'Delete domain': 'מחיקת דומיין',
   'Delete project': 'מחיקת פרויקט',
   'Delete webhook': 'מחיקת webhook',
-  'Depending on your role in the target organization, your level of access may change after transfer.': 'בהתאם לתפקידכם בארגון היעד, רמת הגישה שלכם עשויה להשתנות לאחר ההעברה.',
-  'Destination': 'יעד',
+  'Depending on your role in the target organization, your level of access may change after transfer.':
+    'בהתאם לתפקידכם בארגון היעד, רמת הגישה שלכם עשויה להשתנות לאחר ההעברה.',
+  Destination: 'יעד',
   'Disable all': 'השבתת הכול',
   'Disable all protocols': 'השבתת כל הפרוטוקולים',
   'Disconnect installation': 'ניתוק התקנה',
   'Domain added successfully': 'הדומיין נוסף בהצלחה',
   'Domain is required': 'נדרש דומיין',
-  'Domain verification failed. Please check your domain settings or try again later.': 'אימות הדומיין נכשל. בדקו את הגדרות הדומיין או נסו שוב מאוחר יותר.',
+  'Domain verification failed. Please check your domain settings or try again later.':
+    'אימות הדומיין נכשל. בדקו את הגדרות הדומיין או נסו שוב מאוחר יותר.',
   'Domain verified successfully': 'הדומיין אומת בהצלחה',
   'Duplicate rows': 'שורות כפולות',
   'Enable all': 'הפעלת הכול',
   'Enable all protocols': 'הפעלת כל הפרוטוקולים',
   'Enable custom SMTP server': 'הפעלת שרת SMTP מותאם אישית',
-  'Enable custom SMTP to send a test email.': 'הפעילו SMTP מותאם אישית כדי לשלוח אימייל בדיקה.',
-  'Endpoint': 'נקודת קצה',
+  'Enable custom SMTP to send a test email.':
+    'הפעילו SMTP מותאם אישית כדי לשלוח אימייל בדיקה.',
+  Endpoint: 'נקודת קצה',
   'Enter a webhook URL.': 'הזינו כתובת URL של webhook.',
   'Enter a webhook name.': 'הזינו שם ל-webhook.',
   'Enter password': 'הזינו סיסמה',
   'Enter project name': 'הזינו שם פרויקט',
-  'Enter the domain name you want to use for your API endpoint.': 'הזינו את שם הדומיין שבו תרצו להשתמש עבור נקודת הקצה של ה-API.',
+  'Enter the domain name you want to use for your API endpoint.':
+    'הזינו את שם הדומיין שבו תרצו להשתמש עבור נקודת הקצה של ה-API.',
   'Enter the webhook name and URL': 'הזינו את שם ה-webhook ואת כתובת ה-URL',
   'Enter username': 'הזינו שם משתמש',
   'Enter webhook name': 'הזינו שם webhook',
-  'Fail': 'כשל',
+  Fail: 'כשל',
   'Failed to create webhook': 'יצירת ה-webhook נכשלה',
   'Failed to delete domain': 'מחיקת הדומיין נכשלה',
   'Failed to delete project': 'מחיקת הפרויקט נכשלה',
   'Failed to delete webhook': 'מחיקת ה-webhook נכשלה',
   'Failed to disconnect installation': 'ניתוק ההתקנה נכשל',
-  'Failed to load DNS instructions. Please try again.': 'טעינת הוראות ה-DNS נכשלה. נסו שוב.',
+  'Failed to load DNS instructions. Please try again.':
+    'טעינת הוראות ה-DNS נכשלה. נסו שוב.',
   'Failed to load report': 'טעינת הדוח נכשלה',
   'Failed to retry verification': 'ניסיון האימות מחדש נכשל',
   'Failed to rotate secret': 'החלפת הסוד נכשלה',
@@ -1655,21 +1840,29 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to update services': 'עדכון השירותים נכשל',
   'Failed to update webhook': 'עדכון ה-webhook נכשל',
   'Features and usage': 'יכולות ושימוש',
-  'Fill in sender name, sender email, server host, port, and password (for new setups) before sending a test email.': 'מלאו שם שולח, אימייל שולח, מארח שרת, פורט וסיסמה (בהגדרה חדשה) לפני שליחת אימייל בדיקה.',
+  'Fill in sender name, sender email, server host, port, and password (for new setups) before sending a test email.':
+    'מלאו שם שולח, אימייל שולח, מארח שרת, פורט וסיסמה (בהגדרה חדשה) לפני שליחת אימייל בדיקה.',
   'Find these in your NHost project:': 'ניתן למצוא אותם בפרויקט ה-NHost שלכם:',
   'Git installation has been successfully updated': 'התקנת ה-Git עודכנה בהצלחה',
-  'Git installation has imported to your project': 'התקנת ה-Git יובאה לפרויקט שלכם',
+  'Git installation has imported to your project':
+    'התקנת ה-Git יובאה לפרויקט שלכם',
   'Global variables': 'משתנים גלובליים',
-  'GraphQL API access for queries and mutations.': 'גישת API של GraphQL לשאילתות ולמוטציות.',
-  'Import all deployments that are not currently active.': 'ייבוא כל הפריסות שאינן פעילות כרגע.',
+  'GraphQL API access for queries and mutations.':
+    'גישת API של GraphQL לשאילתות ולמוטציות.',
+  'Import all deployments that are not currently active.':
+    'ייבוא כל הפריסות שאינן פעילות כרגע.',
   'Import all environment variables.': 'ייבוא כל משתני הסביבה.',
   'Import all rows inside tables.': 'ייבוא כל השורות בטבלאות.',
-  'Import all teams and the team memberships of your users.': 'ייבוא כל הצוותים והחברויות בצוותים של המשתמשים שלכם.',
+  'Import all teams and the team memberships of your users.':
+    'ייבוא כל הצוותים והחברויות בצוותים של המשתמשים שלכם.',
   'Import data': 'ייבוא נתונים',
-  'Import data from another platform or export your project data': 'ייבאו נתונים מפלטפורמה אחרת או ייצאו את נתוני הפרויקט שלכם',
+  'Import data from another platform or export your project data':
+    'ייבאו נתונים מפלטפורמה אחרת או ייצאו את נתוני הפרויקט שלכם',
   'Import from': 'ייבוא מ-',
-  'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.': 'ייבוא מ-Appwrite Cloud. הזינו את נקודת הקצה (כולל אזור), את מזהה הפרויקט ומפתח API של שרת עם הרשאות קריאה למשאבים שברצונכם להעביר.', // pragma: allowlist secret
-  'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.': 'ייבוא ממופע Appwrite באירוח עצמי. הזינו את נקודת הקצה, את מזהה הפרויקט ומפתח API של שרת עם הרשאות קריאה למשאבים שברצונכם להעביר.', // pragma: allowlist secret
+  'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.':
+    'ייבוא מ-Appwrite Cloud. הזינו את נקודת הקצה (כולל אזור), את מזהה הפרויקט ומפתח API של שרת עם הרשאות קריאה למשאבים שברצונכם להעביר.', // pragma: allowlist secret
+  'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.':
+    'ייבוא ממופע Appwrite באירוח עצמי. הזינו את נקודת הקצה, את מזהה הפרויקט ומפתח API של שרת עם הרשאות קריאה למשאבים שברצונכם להעביר.', // pragma: allowlist secret
   'In Supabase:': 'ב-Supabase:',
   'Include environment variables': 'כולל משתני סביבה',
   'Include inactive deployments': 'כולל פריסות לא פעילות',
@@ -1677,65 +1870,85 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Include teams': 'כולל צוותים',
   'Installing Git on a self-hosted instance': 'התקנת Git במופע באירוח עצמי',
   'Invalid format': 'פורמט לא תקין',
-  'It will stop receiving events immediately. This action cannot be undone.': 'הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
+  'It will stop receiving events immediately. This action cannot be undone.':
+    'הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
   'Last deployed:': 'פריסה אחרונה:',
-  'Leave blank to keep current password unchanged.': 'השאירו ריק כדי לשמור על הסיסמה הנוכחית ללא שינוי.',
+  'Leave blank to keep current password unchanged.':
+    'השאירו ריק כדי לשמור על הסיסמה הנוכחית ללא שינוי.',
   'Leave blank to keep existing': 'השאירו ריק כדי לשמור על הקיים',
   'Leave empty to auto-generate': 'השאירו ריק ליצירה אוטומטית',
-  'Leave empty to clear the whole project': 'השאירו ריק כדי לנקות את כל הפרויקט',
-  'Leave empty to clear the whole collection': 'השאירו ריק כדי לנקות את כל האוסף',
+  'Leave empty to clear the whole project':
+    'השאירו ריק כדי לנקות את כל הפרויקט',
+  'Leave empty to clear the whole collection':
+    'השאירו ריק כדי לנקות את כל האוסף',
   'Leave empty to block all': 'השאירו ריק כדי לחסום הכל',
   'Enter project ID': 'הזינו מזהה פרויקט',
-  'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.': 'השאירו ריק כדי להחליף את סוד ה-webhook באופן אוטומטי, או הזינו ערך כדי להגדיר סוד מותאם אישית.',
+  'Leave this empty to rotate the webhook secret automatically, or enter a value to set a custom secret.':
+    'השאירו ריק כדי להחליף את סוד ה-webhook באופן אוטומטי, או הזינו ערך כדי להגדיר סוד מותאם אישית.',
   'Loading organizations...': 'טוען ארגונים...',
-  'Locale': 'Locale',
+  Locale: 'Locale',
   'Maximum recipients reached.': 'הגעתם למספר הנמענים המרבי.',
-  'Members who are not part of the destination organization will lose access and must be invited to the new organization to regain access.': 'חברים שאינם חלק מארגון היעד יאבדו גישה ויהיה צורך להזמין אותם לארגון החדש כדי לקבל גישה מחדש.',
+  'Members who are not part of the destination organization will lose access and must be invited to the new organization to regain access.':
+    'חברים שאינם חלק מארגון היעד יאבדו גישה ויהיה צורך להזמין אותם לארגון החדש כדי לקבל גישה מחדש.',
   'Migration ID': 'מזהה מיגרציה',
   'Migration details': 'פרטי מיגרציה',
   'Migration errors': 'שגיאות מיגרציה',
   'Migration started': 'המיגרציה החלה',
-  'Migrations': 'מיגרציות',
-  'Migrations are non-destructive. $createdAt and $updatedAt may be set to the migration date.': 'מיגרציות אינן הרסניות. הערכים $createdAt ו-$updatedAt עשויים להיקבע לתאריך המיגרציה.',
-  'Migrations import users, databases, and storage from an external platform into this project. Data is not deleted from the source.': 'מיגרציות מייבאות משתמשים, מסדי נתונים ואחסון מפלטפורמה חיצונית אל הפרויקט הזה. הנתונים אינם נמחקים מהמקור.',
-  'Move this project to another organization in your account. Ownership updates immediately; no data is imported.': 'העבירו את הפרויקט לארגון אחר בחשבונכם. הבעלות מתעדכנת מיידית; לא מיובאים נתונים.',
+  Migrations: 'מיגרציות',
+  'Migrations are non-destructive. $createdAt and $updatedAt may be set to the migration date.':
+    'מיגרציות אינן הרסניות. הערכים $createdAt ו-$updatedAt עשויים להיקבע לתאריך המיגרציה.',
+  'Migrations import users, databases, and storage from an external platform into this project. Data is not deleted from the source.':
+    'מיגרציות מייבאות משתמשים, מסדי נתונים ואחסון מפלטפורמה חיצונית אל הפרויקט הזה. הנתונים אינם נמחקים מהמקור.',
+  'Move this project to another organization in your account. Ownership updates immediately; no data is imported.':
+    'העבירו את הפרויקט לארגון אחר בחשבונכם. הבעלות מתעדכנת מיידית; לא מיובאים נתונים.',
   'Move to': 'העברה אל',
   'Name must be between 1 and': 'השם חייב להכיל בין 1 ל-',
   'No events selected': 'לא נבחרו אירועים',
-  'No installation was added to the project yet': 'עדיין לא נוספה התקנה לפרויקט',
+  'No installation was added to the project yet':
+    'עדיין לא נוספה התקנה לפרויקט',
   'No installations found': 'לא נמצאו התקנות',
   'No logs available': 'אין לוגים זמינים',
   'No migrations yet': 'אין מיגרציות עדיין',
   'No other organizations available': 'אין ארגונים אחרים זמינים',
   'No status data yet': 'אין עדיין נתוני סטטוס',
   'No webhooks yet': 'אין webhooks עדיין',
-  'Only Firestore is supported; Realtime Database is not. OAuth users and functions are not migrated automatically.': 'רק Firestore נתמך; Realtime Database אינו נתמך. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
-  'Optional. Email address where replies will be sent.': 'אופציונלי. כתובת האימייל שאליה יישלחו תשובות.',
-  'Or': 'או',
-  'Organization': 'ארגון',
-  'Overwrite': 'דריסה',
-  'Owner': 'בעלים',
+  'Only Firestore is supported; Realtime Database is not. OAuth users and functions are not migrated automatically.':
+    'רק Firestore נתמך; Realtime Database אינו נתמך. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
+  'Optional. Email address where replies will be sent.':
+    'אופציונלי. כתובת האימייל שאליה יישלחו תשובות.',
+  Or: 'או',
+  Organization: 'ארגון',
+  Overwrite: 'דריסה',
+  Owner: 'בעלים',
   'POST URL': 'כתובת POST',
-  'Paste the full service account JSON object...': 'הדביקו את אובייקט ה-JSON המלא של חשבון השירות...',
-  'Pending': 'ממתין',
-  'Permanently delete this project and all associated data. This action cannot be undone.': 'מחיקה לצמיתות של הפרויקט הזה וכל הנתונים המשויכים אליו. לא ניתן לבטל פעולה זו.',
-  'Permanently delete this webhook. It will stop receiving events immediately. This action cannot be undone.': 'מחיקה לצמיתות של ה-webhook הזה. הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
-  'Please fill endpoint, project ID, and API key': 'מלאו נקודת קצה, מזהה פרויקט ומפתח API',
+  'Paste the full service account JSON object...':
+    'הדביקו את אובייקט ה-JSON המלא של חשבון השירות...',
+  Pending: 'ממתין',
+  'Permanently delete this project and all associated data. This action cannot be undone.':
+    'מחיקה לצמיתות של הפרויקט הזה וכל הנתונים המשויכים אליו. לא ניתן לבטל פעולה זו.',
+  'Permanently delete this webhook. It will stop receiving events immediately. This action cannot be undone.':
+    'מחיקה לצמיתות של ה-webhook הזה. הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
+  'Please fill endpoint, project ID, and API key':
+    'מלאו נקודת קצה, מזהה פרויקט ומפתח API',
   'Please fill required NHost fields': 'מלאו את שדות ה-NHost הנדרשים',
   'Please fill required Supabase fields': 'מלאו את שדות ה-Supabase הנדרשים',
   'Please paste the service account JSON': 'הדביקו את ה-JSON של חשבון השירות',
-  'PostgreSQL-specific features are not migrated. OAuth users and functions are not migrated automatically.': 'יכולות ייחודיות ל-PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
-  'Press Enter, Space, or comma to add each address. You can paste multiple addresses separated by commas or spaces. Up to': 'הקישו Enter, רווח או פסיק כדי להוסיף כל כתובת. אפשר להדביק כמה כתובות מופרדות בפסיקים או ברווחים. עד',
-  'Progress': 'התקדמות',
+  'PostgreSQL-specific features are not migrated. OAuth users and functions are not migrated automatically.':
+    'יכולות ייחודיות ל-PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
+  'Press Enter, Space, or comma to add each address. You can paste multiple addresses separated by commas or spaces. Up to':
+    'הקישו Enter, רווח או פסיק כדי להוסיף כל כתובת. אפשר להדביק כמה כתובות מופרדות בפסיקים או ברווחים. עד',
+  Progress: 'התקדמות',
   'Project Settings → API': 'Project Settings → API',
   'Project Settings → Database': 'Project Settings → Database',
   'Project name has been updated': 'שם הפרויקט עודכן',
   'Project not found': 'הפרויקט לא נמצא',
-  'Protocol': 'פרוטוקול',
-  'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.': 'הגדרות הפרוטוקול שולטות בגישה דרך ממשקי REST, GraphQL ו-WebSocket ללא תלות בגישה ברמת השירות.',
-  'Protocols': 'פרוטוקולים',
-  'Realtime subscriptions over WebSocket connections.': 'הרשמות Realtime דרך חיבורי WebSocket.',
-  'Recipients': 'נמענים',
+  Protocol: 'פרוטוקול',
+  'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
+    'הגדרות הפרוטוקול שולטות בגישה דרך ממשקי REST, GraphQL ו-WebSocket ללא תלות בגישה ברמת השירות.',
+  Protocols: 'פרוטוקולים',
+  'Realtime subscriptions over WebSocket connections.':
+    'הרשמות Realtime דרך חיבורי WebSocket.',
+  Recipients: 'נמענים',
   'Region:': 'אזור:',
   'Reply to': 'כתובת למענה',
   'Resolve migration issues': 'פתרון בעיות במיגרציה',
@@ -1743,10 +1956,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Retry verification': 'ניסיון אימות מחדש',
   'Rotate secret': 'החלפת סוד',
   'Rotate webhook secret': 'החלפת סוד ה-webhook',
-  'SMTP': 'SMTP',
+  SMTP: 'SMTP',
   'SMTP server has been disabled.': 'שרת ה-SMTP הושבת.',
   'SMTP server has been enabled.': 'שרת ה-SMTP הופעל.',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.': 'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, לא נדרשת פעולה מצדכם.',
+  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
+    'תעודת SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, לא נדרשת פעולה מצדכם.',
   'Search domains...': 'חיפוש דומיינים...',
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
@@ -1755,56 +1969,75 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Select at least one event': 'בחרו לפחות אירוע אחד',
   'Select at least one resource': 'בחרו לפחות משאב אחד',
   'Select destination': 'בחירת יעד',
-  'Select events that will trigger your webhook.': 'בחרו אירועים שיפעילו את ה-webhook שלכם.',
+  'Select events that will trigger your webhook.':
+    'בחרו אירועים שיפעילו את ה-webhook שלכם.',
   'Select protocol': 'בחירת פרוטוקול',
-  'Select the events that will trigger your webhook': 'בחרו את האירועים שיפעילו את ה-webhook שלכם',
-  'Send': 'שליחה',
+  'Select the events that will trigger your webhook':
+    'בחרו את האירועים שיפעילו את ה-webhook שלכם',
+  Send: 'שליחה',
   'Send test email': 'שליחת אימייל בדיקה',
   'Sender email': 'אימייל השולח',
   'Sender information': 'פרטי השולח',
   'Sender name': 'שם השולח',
   'Sending test email…': 'שולח אימייל בדיקה…',
   'Server API key with read scopes': 'מפתח API של שרת עם הרשאות קריאה',
-  'Server API key with read scopes for users, databases, storage, etc. The source project must be reachable from the internet.': 'מפתח API של שרת עם הרשאות קריאה למשתמשים, מסדי נתונים, אחסון ועוד. פרויקט המקור חייב להיות נגיש מהאינטרנט.',
+  'Server API key with read scopes for users, databases, storage, etc. The source project must be reachable from the internet.':
+    'מפתח API של שרת עם הרשאות קריאה למשתמשים, מסדי נתונים, אחסון ועוד. פרויקט המקור חייב להיות נגיש מהאינטרנט.',
   'Server configuration': 'הגדרות שרת',
   'Server host': 'מארח השרת',
   'Server port': 'פורט השרת',
   'Service account JSON': 'JSON של חשבון שירות',
   'Service account must be valid JSON': 'חשבון השירות חייב להיות JSON תקין',
-  'Set an optional basic HTTP authentication username and password to protect your endpoint from unauthorized access.': 'הגדירו שם משתמש וסיסמה אופציונליים לאימות HTTP בסיסי כדי להגן על נקודת הקצה שלכם מפני גישה לא מורשית.',
+  'Set an optional basic HTTP authentication username and password to protect your endpoint from unauthorized access.':
+    'הגדירו שם משתמש וסיסמה אופציונליים לאימות HTTP בסיסי כדי להגן על נקודת הקצה שלכם מפני גישה לא מורשית.',
   'Set custom secret': 'הגדרת סוד מותאם אישית',
-  'Set the environment variables or secret keys that will be passed to all Functions and Sites within your project.': 'הגדירו את משתני הסביבה או מפתחות הסוד שיועברו לכל הפונקציות והאתרים בפרויקט שלכם.',
-  'Set the events that will trigger your webhook. Maximum': 'הגדירו את האירועים שיפעילו את ה-webhook שלכם. מקסימום',
-  'Set up webhooks to receive real-time notifications about events in your project': 'הגדירו webhooks כדי לקבל התראות בזמן אמת על אירועים בפרויקט שלכם',
+  'Set the environment variables or secret keys that will be passed to all Functions and Sites within your project.':
+    'הגדירו את משתני הסביבה או מפתחות הסוד שיועברו לכל הפונקציות והאתרים בפרויקט שלכם.',
+  'Set the events that will trigger your webhook. Maximum':
+    'הגדירו את האירועים שיפעילו את ה-webhook שלכם. מקסימום',
+  'Set up webhooks to receive real-time notifications about events in your project':
+    'הגדירו webhooks כדי לקבל התראות בזמן אמת על אירועים בפרויקט שלכם',
   'Showing first': 'מוצגות',
-  'Since': 'מכיוון ש-',
-  'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.': 'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
-  'Some entities failed to migrate. Check status counts above.': 'העברת חלק מהישויות נכשלה. בדקו את ספירות הסטטוס למעלה.',
+  Since: 'מכיוון ש-',
+  'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
+    'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
+  'Some entities failed to migrate. Check status counts above.':
+    'העברת חלק מהישויות נכשלה. בדקו את ספירות הסטטוס למעלה.',
   'Source project ID': 'מזהה פרויקט המקור',
-  'Standard HTTP API requests from client SDKs.': 'בקשות HTTP API סטנדרטיות מ-SDK של לקוח.',
+  'Standard HTTP API requests from client SDKs.':
+    'בקשות HTTP API סטנדרטיות מ-SDK של לקוח.',
   'Start migration': 'התחלת מיגרציה',
   'Starting...': 'מתחיל...',
-  'Subdomain': 'תת-דומיין',
-  'Summary': 'סיכום',
+  Subdomain: 'תת-דומיין',
+  Summary: 'סיכום',
   'Supabase endpoint': 'נקודת קצה של Supabase',
-  'TablesDB': 'TablesDB',
-  'Teams': 'צוותים',
+  TablesDB: 'TablesDB',
+  Teams: 'צוותים',
   'Test email sent to': 'אימייל בדיקה נשלח אל',
-  'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.': 'תוכנית התמחור של ארגון היעד עשויה להגביל יכולות או שימוש (למשל הרצות, אחסון או גודל צוות) עבור הפרויקט הזה.',
-  'This secret is only shown once after webhook creation or secret rotation.': 'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד.',
-  'This secret is only shown once after webhook creation or secret rotation. Copy it now.': 'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד. העתיקו אותו עכשיו.',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.': 'כדי להעביר את הפרויקט, עליכם להיות חברים גם בארגון הנוכחי וגם בארגון היעד. בחרו יעד למטה.',
+  'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.':
+    'תוכנית התמחור של ארגון היעד עשויה להגביל יכולות או שימוש (למשל הרצות, אחסון או גודל צוות) עבור הפרויקט הזה.',
+  'This secret is only shown once after webhook creation or secret rotation.':
+    'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד.',
+  'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
+    'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד. העתיקו אותו עכשיו.',
+  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
+    'כדי להעביר את הפרויקט, עליכם להיות חברים גם בארגון הנוכחי וגם בארגון היעד. בחרו יעד למטה.',
   'Transfer between organizations': 'העברה בין ארגונים',
   'Transfer project': 'העברת פרויקט',
-  'Transfer this project to the selected organization': 'העברת הפרויקט לארגון שנבחר',
+  'Transfer this project to the selected organization':
+    'העברת הפרויקט לארגון שנבחר',
   'URL is required': 'נדרשת כתובת URL',
   'Update webhook': 'עדכון webhook',
-  'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).': 'השתמשו במפתח JSON של חשבון שירות. ב-Firebase Console: Project Settings → Service Accounts → Create service account, ואז הוסיפו מפתחות וצרו מפתח JSON חדש. תפקידים נדרשים: Firebase Viewer (מסד נתונים ואחסון), Identity Toolkit Viewer (משתמשים).',
-  'Used to validate incoming webhook payloads with the X-Appwrite-Webhook-Signature header.': 'משמש לאימות תוכני webhook נכנסים באמצעות הכותרת X-Appwrite-Webhook-Signature.', // pragma: allowlist secret
-  'Used to validate incoming webhook payloads.': 'משמש לאימות תוכני webhook נכנסים.',
-  'Users': 'משתמשים',
-  'Verification': 'אימות',
-  'Verify your SMTP configuration by sending a test email to one or more recipients.': 'ודאו שתצורת ה-SMTP תקינה על ידי שליחת אימייל בדיקה לנמען אחד או יותר.',
+  'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
+    'השתמשו במפתח JSON של חשבון שירות. ב-Firebase Console: Project Settings → Service Accounts → Create service account, ואז הוסיפו מפתחות וצרו מפתח JSON חדש. תפקידים נדרשים: Firebase Viewer (מסד נתונים ואחסון), Identity Toolkit Viewer (משתמשים).',
+  'Used to validate incoming webhook payloads with the X-Appwrite-Webhook-Signature header.':
+    'משמש לאימות תוכני webhook נכנסים באמצעות הכותרת X-Appwrite-Webhook-Signature.', // pragma: allowlist secret
+  'Used to validate incoming webhook payloads.':
+    'משמש לאימות תוכני webhook נכנסים.',
+  Users: 'משתמשים',
+  Verification: 'אימות',
+  'Verify your SMTP configuration by sending a test email to one or more recipients.':
+    'ודאו שתצורת ה-SMTP תקינה על ידי שליחת אימייל בדיקה לנמען אחד או יותר.',
   'View full list in Logs': 'צפייה ברשימה המלאה בלוגים',
   'Webhook ID': 'מזהה webhook',
   'Webhook created': 'ה-webhook נוצר',
@@ -1816,61 +2049,75 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Webhook secret rotated': 'סוד ה-webhook הוחלף',
   'Webhook secret rotated.': 'סוד ה-webhook הוחלף.',
   'Webhook secret updated.': 'סוד ה-webhook עודכן.',
-  'When a row with an existing ID is encountered during import.': 'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
-  'When enabled, all emails will be sent through your configured SMTP server.': 'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'You do not have any organizations you can transfer this project to.': 'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה.',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.': 'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה. צרו ארגון אחר או הצטרפו אליו כדי להעביר.',
+  'When a row with an existing ID is encountered during import.':
+    'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
+  'When enabled, all emails will be sent through your configured SMTP server.':
+    'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
+  'You do not have any organizations you can transfer this project to.':
+    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה.',
+  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
+    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה. צרו ארגון אחר או הצטרפו אליו כדי להעביר.',
   'an A or AAAA record': 'רשומת A או AAAA',
-  'and all its databases, functions, and files? This action cannot be undone.': 'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
-  'characters': 'תווים',
-  'error': 'שגיאה',
-  'errors': 'שגיאות',
+  'and all its databases, functions, and files? This action cannot be undone.':
+    'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
+  characters: 'תווים',
+  error: 'שגיאה',
+  errors: 'שגיאות',
   'errors.': 'שגיאות.',
   'events allowed.': 'אירועים מותרים.',
-  'failed': 'נכשלו',
-  'global': 'גלובלי',
+  failed: 'נכשלו',
+  global: 'גלובלי',
   'has been disconnected from this project': 'נותק מהפרויקט הזה',
   'has been transferred to': 'הועבר אל',
   'has been verified': 'אומת',
   'have been disabled.': 'הושבתו.',
   'have been enabled.': 'הופעלו.',
-  'here': 'כאן',
-  'installations': 'התקנות',
+  here: 'כאן',
+  installations: 'התקנות',
   'instead.': 'במקום זאת.',
-  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports': 'הוא דומיין שורש (apex), ולכן רשומות CNAME אינן נתמכות אצל כל ספקי ה-DNS. אם הספק שלכם תומך ב-',
-  'item': 'פריט',
+  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports':
+    'הוא דומיין שורש (apex), ולכן רשומות CNAME אינן נתמכות אצל כל ספקי ה-DNS. אם הספק שלכם תומך ב-',
+  item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
-  'nameservers': 'שרתי שמות',
+  nameservers: 'שרתי שמות',
   'protocol has been disabled': 'הושבת',
   'protocol has been enabled': 'הופעל',
-  'recipient': 'נמען',
-  'recipients': 'נמענים',
+  recipient: 'נמען',
+  recipients: 'נמענים',
   'recipients.': 'נמענים.',
-  'recorded': 'נרשמו',
+  recorded: 'נרשמו',
   'service has been disabled': 'הושבת',
   'service has been enabled': 'הופעל',
-  'succeeded': 'הצליחו',
+  succeeded: 'הצליחו',
   'this webhook': 'ה-webhook הזה',
   'to confirm': 'לאישור',
-  'variables': 'משתנים',
-  'warning': 'אזהרה',
-  'API keys and provider-specific fields from the console API.': 'מפתחות API ושדות ייחודיים לספק מתוך ה-API של הקונסולה.',
+  variables: 'משתנים',
+  warning: 'אזהרה',
+  'API keys and provider-specific fields from the console API.':
+    'מפתחות API ושדות ייחודיים לספק מתוך ה-API של הקונסולה.',
   'API secret': 'סוד API',
   'Account SID': 'Account SID',
   'Add attachment': 'הוספת קובץ מצורף',
-  'Add files from your project\'s Storage buckets.': 'הוסיפו קבצים מבאקטי האחסון בפרויקט שלכם.',
-  'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.': 'הוסיפו משתמשי פרויקט כדי לשלוח לכל יעד ערוץ תואם בחשבונם (אימייל, SMS או Push), בנוסף לנושאים שבחרתם.',
+  "Add files from your project's Storage buckets.":
+    'הוסיפו קבצים מבאקטי האחסון בפרויקט שלכם.',
+  'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.':
+    'הוסיפו משתמשי פרויקט כדי לשלוח לכל יעד ערוץ תואם בחשבונם (אימייל, SMS או Push), בנוסף לנושאים שבחרתם.',
   'Add subscriber': 'הוספת מנוי',
   'Add subscriber functionality coming soon': 'אפשרות הוספת מנויים תגיע בקרוב',
   'Add subscribers': 'הוספת מנויים',
   'Add subscribers to this topic': 'הוסיפו מנויים לנושא הזה',
-  'Add subscribers to this topic to start sending messages': 'הוסיפו מנויים לנושא הזה כדי להתחיל לשלוח הודעות', // pragma: allowlist secret
+  'Add subscribers to this topic to start sending messages':
+    'הוסיפו מנויים לנושא הזה כדי להתחיל לשלוח הודעות', // pragma: allowlist secret
   'Add users': 'הוספת משתמשים',
-  'Are you sure you want to cancel the scheduling of': 'האם אתם בטוחים שברצונכם לבטל את התזמון של',
-  'Are you sure you want to delete this message? This action cannot be undone.': 'האם אתם בטוחים שברצונכם למחוק את ההודעה הזו? פעולה זו אינה ניתנת לביטול.',
-  'Are you sure you want to delete this provider? This action cannot be undone.': 'האם אתם בטוחים שברצונכם למחוק את הספק הזה? פעולה זו אינה ניתנת לביטול.',
-  'Are you sure you want to delete this topic? This action cannot be undone.': 'האם אתם בטוחים שברצונכם למחוק את הנושא הזה? פעולה זו אינה ניתנת לביטול.',
-  'Attachments': 'קבצים מצורפים',
+  'Are you sure you want to cancel the scheduling of':
+    'האם אתם בטוחים שברצונכם לבטל את התזמון של',
+  'Are you sure you want to delete this message? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את ההודעה הזו? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to delete this provider? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הספק הזה? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to delete this topic? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הנושא הזה? פעולה זו אינה ניתנת לביטול.',
+  Attachments: 'קבצים מצורפים',
   'Audit log entries for this message.': 'רשומות יומן ביקורת עבור ההודעה הזו.',
   'Audit log events for subscriber': 'אירועי יומן ביקורת עבור המנוי',
   'Auth Key': 'Auth Key',
@@ -1882,32 +2129,43 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Back to providers': 'חזרה לספקים',
   'Back to topics': 'חזרה לנושאים',
   'Badge (iOS)': 'Badge (iOS)',
-  'Build title, body, optional image and custom data. Advanced fields control action, appearance, and iOS-specific options.': 'הגדירו כותרת, גוף, תמונה אופציונלית ונתונים מותאמים. שדות מתקדמים שולטים בפעולה, במראה ובאפשרויות ייחודיות ל-iOS.',
+  'Build title, body, optional image and custom data. Advanced fields control action, appearance, and iOS-specific options.':
+    'הגדירו כותרת, גוף, תמונה אופציונלית ונתונים מותאמים. שדות מתקדמים שולטים בפעולה, במראה ובאפשרויות ייחודיות ל-iOS.',
   'CC targets': 'יעדי CC',
   'Cancel scheduling': 'ביטול תזמון',
   'Channel type': 'סוג ערוץ',
-  'Choose email targets for copy. Targets must match the email channel.': 'בחרו יעדי אימייל לעותק. היעדים חייבים להתאים לערוץ האימייל.',
-  'Choose one or more topics to send this message to.': 'בחרו נושא אחד או יותר לשליחת ההודעה אליו.',
-  'Choose user targets for this message. Each user can have multiple targets per channel.': 'בחרו יעדי משתמשים להודעה זו. לכל משתמש יכולים להיות מספר יעדים בכל ערוץ.',
-  'Choose users using Add to target every matching channel target for each user.': 'בחרו משתמשים באמצעות \'הוספה\' כדי לשלוח לכל יעד ערוץ תואם של כל משתמש.',
-  'Choose when this message should be delivered. Time uses your local timezone.': 'בחרו מתי ההודעה תישלח. השעה לפי אזור הזמן המקומי שלכם.',
-  'Color': 'צבע',
-  'Compose': 'כתיבה',
+  'Choose email targets for copy. Targets must match the email channel.':
+    'בחרו יעדי אימייל לעותק. היעדים חייבים להתאים לערוץ האימייל.',
+  'Choose one or more topics to send this message to.':
+    'בחרו נושא אחד או יותר לשליחת ההודעה אליו.',
+  'Choose user targets for this message. Each user can have multiple targets per channel.':
+    'בחרו יעדי משתמשים להודעה זו. לכל משתמש יכולים להיות מספר יעדים בכל ערוץ.',
+  'Choose users using Add to target every matching channel target for each user.':
+    "בחרו משתמשים באמצעות 'הוספה' כדי לשלוח לכל יעד ערוץ תואם של כל משתמש.",
+  'Choose when this message should be delivered. Time uses your local timezone.':
+    'בחרו מתי ההודעה תישלח. השעה לפי אזור הזמן המקומי שלכם.',
+  Color: 'צבע',
+  Compose: 'כתיבה',
   'Confirm sending message': 'אישור שליחת הודעה',
   'Connect any SMTP server.': 'התחברו לכל שרת SMTP.',
-  'Connection details for this provider instance.': 'פרטי חיבור עבור מופע ספק זה.',
-  'Content': 'תוכן',
+  'Connection details for this provider instance.':
+    'פרטי חיבור עבור מופע ספק זה.',
+  Content: 'תוכן',
   'Content available (iOS)': 'תוכן זמין (iOS)',
   'Could not create message': 'לא ניתן ליצור הודעה',
   'Could not create provider': 'לא ניתן ליצור ספק',
   'Could not create topic': 'לא ניתן ליצור נושא',
   'Create message': 'יצירת הודעה',
   'Create provider': 'יצירת ספק',
-  'Create your first message to start sending notifications': 'צרו את ההודעה הראשונה שלכם כדי להתחיל לשלוח התראות',
-  'Create your first provider to send messages': 'צרו את הספק הראשון שלכם כדי לשלוח הודעות', // pragma: allowlist secret
-  'Create your first topic to organize subscribers': 'צרו את הנושא הראשון שלכם כדי לארגן מנויים',
+  'Create your first message to start sending notifications':
+    'צרו את ההודעה הראשונה שלכם כדי להתחיל לשלוח התראות',
+  'Create your first provider to send messages':
+    'צרו את הספק הראשון שלכם כדי לשלוח הודעות', // pragma: allowlist secret
+  'Create your first topic to organize subscribers':
+    'צרו את הנושא הראשון שלכם כדי לארגן מנויים',
   'Credentials (JSON)': 'פרטי גישה (JSON)',
-  'Credentials and options must be valid JSON': 'פרטי הגישה והאפשרויות חייבים להיות JSON תקין',
+  'Credentials and options must be valid JSON':
+    'פרטי הגישה והאפשרויות חייבים להיות JSON תקין',
   'Critical (iOS)': 'קריטי (iOS)',
   'Current image:': 'תמונה נוכחית:',
   'Custom Data': 'נתונים מותאמים',
@@ -1919,17 +2177,22 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deliver in the background when possible.': 'מסירה ברקע כשאפשר.',
   'Delivered at': 'נמסרה בתאריך',
   'Delivery errors': 'שגיאות מסירה',
-  'Draft': 'טיוטה',
+  Draft: 'טיוטה',
   'Draft message created': 'טיוטת הודעה נוצרה',
   'Draft updated': 'הטיוטה עודכנה',
   'EU region': 'אזור האיחוד האירופי',
   'Email content': 'תוכן האימייל',
   'Email subject': 'נושא האימייל',
-  'Enable for development builds, disable for production.': 'הפעילו עבור גרסאות פיתוח, השביתו עבור סביבת ייצור.',
-  'Enable or disable this provider for your project.': 'הפעילו או השביתו את הספק הזה עבור הפרויקט שלכם.',
-  'Enable the HTML mode if your message contains HTML tags.': 'הפעילו את מצב HTML אם ההודעה שלכם מכילה תגיות HTML.',
-  'Enable when your Mailgun account is hosted in the EU.': 'הפעילו כאשר חשבון ה-Mailgun שלכם מאוחסן באיחוד האירופי.',
-  'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.': 'הזינו את גוף ה-SMS עבור ההודעה הזו. השליחה משתמשת בנושאים, במשתמשים וביעדים שתוסיפו בעמוד זה.',
+  'Enable for development builds, disable for production.':
+    'הפעילו עבור גרסאות פיתוח, השביתו עבור סביבת ייצור.',
+  'Enable or disable this provider for your project.':
+    'הפעילו או השביתו את הספק הזה עבור הפרויקט שלכם.',
+  'Enable the HTML mode if your message contains HTML tags.':
+    'הפעילו את מצב HTML אם ההודעה שלכם מכילה תגיות HTML.',
+  'Enable when your Mailgun account is hosted in the EU.':
+    'הפעילו כאשר חשבון ה-Mailgun שלכם מאוחסן באיחוד האירופי.',
+  'Enter the SMS body for this message. Delivery uses topics, users, and targets you add on this page.':
+    'הזינו את גוף ה-SMS עבור ההודעה הזו. השליחה משתמשת בנושאים, במשתמשים וביעדים שתוסיפו בעמוד זה.',
   'Failed to add subscribers': 'הוספת המנויים נכשלה',
   'Failed to cancel scheduling': 'ביטול התזמון נכשל',
   'Failed to delete items': 'מחיקת הפריטים נכשלה',
@@ -1948,12 +2211,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'From Email': 'אימייל שולח',
   'From Name': 'שם שולח',
   'HTML mode': 'מצב HTML',
-  'High': 'גבוהה',
-  'Icon': 'אייקון',
-  'Include the leading + and country code.': 'כללו את סימן ה-+ ואת קידומת המדינה.',
+  High: 'גבוהה',
+  Icon: 'אייקון',
+  'Include the leading + and country code.':
+    'כללו את סימן ה-+ ואת קידומת המדינה.',
   'Invalid attachment': 'קובץ מצורף לא תקין',
   'Keep scheduled': 'השארת התזמון',
-  'Link topics so this message reaches their subscribers when you send. Subscriber counts reflect targets registered on each topic.': 'קשרו נושאים כדי שההודעה תגיע למנויים שלהם בעת השליחה. ספירת המנויים משקפת יעדים רשומים בכל נושא.',
+  'Link topics so this message reaches their subscribers when you send. Subscriber counts reflect targets registered on each topic.':
+    'קשרו נושאים כדי שההודעה תגיע למנויים שלהם בעת השליחה. ספירת המנויים משקפת יעדים רשומים בכל נושא.',
   'Loading logs…': 'טוען לוגים…',
   'Loading provider...': 'טוען ספק...',
   'Loading subscribers...': 'טוען מנויים...',
@@ -1961,7 +2226,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Loading topic...': 'טוען נושא...',
   'Loading topics...': 'טוען נושאים...',
   'Log entries': 'רשומות יומן',
-  'Marketing': 'שיווק',
+  Marketing: 'שיווק',
   'Media (Optional)': 'מדיה (אופציונלי)',
   'Message ID and delivery timestamps.': 'מזהה ההודעה וחותמות זמן של המסירה.',
   'Message deleted': 'ההודעה נמחקה',
@@ -1975,30 +2240,40 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No content': 'אין תוכן',
   'No log entries': 'אין רשומות יומן',
   'No log entries for this subscriber.': 'אין רשומות יומן עבור המנוי הזה.',
-  'No log entries returned for this message.': 'לא הוחזרו רשומות יומן עבור ההודעה הזו.',
+  'No log entries returned for this message.':
+    'לא הוחזרו רשומות יומן עבור ההודעה הזו.',
   'No log entries.': 'אין רשומות יומן.',
-  'No new targets selected (or all are already subscribed)': 'לא נבחרו יעדים חדשים (או שכולם כבר מנויים)',
+  'No new targets selected (or all are already subscribed)':
+    'לא נבחרו יעדים חדשים (או שכולם כבר מנויים)',
   'No providers yet': 'אין ספקים עדיין',
   'No subscribers found': 'לא נמצאו מנויים',
   'No subscribers yet': 'אין מנויים עדיין',
   'No targets': 'אין יעדים',
-  'No targets have been selected for this message.': 'לא נבחרו יעדים עבור ההודעה הזו.',
+  'No targets have been selected for this message.':
+    'לא נבחרו יעדים עבור ההודעה הזו.',
   'No targets yet': 'אין יעדים עדיין',
   'No topics': 'אין נושאים',
   'No topics yet': 'אין נושאים עדיין',
   'No users': 'אין משתמשים',
-  'Normal': 'רגילה',
+  Normal: 'רגילה',
   'Notification body': 'גוף ההתראה',
   'Notification title': 'כותרת ההתראה',
   'Optional provider options object.': 'אובייקט אפשרויות ספק אופציונלי.',
   'Options (JSON)': 'אפשרויות (JSON)',
-  'Paste the contents of the FCM service account JSON file from the Firebase console.': 'הדביקו את תוכן קובץ ה-JSON של חשבון השירות של FCM מקונסולת Firebase.',
-  'Permanently delete this message. This action cannot be undone.': 'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
-  'Permanently delete this topic and all its subscribers. This action cannot be undone.': 'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
-  'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.': 'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
-  'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).': 'בחרו יעדי ערוץ ספציפיים להודעה זו. היעדים חייבים להתאים לספק ההודעה (אימייל, SMS או Push).',
-  'Please confirm you want to send this message now. It will be delivered to an estimated': 'אשרו שברצונכם לשלוח את ההודעה כעת. היא תימסר לכ-',
-  'Provider ID, channel type, and timestamps.': 'מזהה הספק, סוג הערוץ וחותמות זמן.',
+  'Paste the contents of the FCM service account JSON file from the Firebase console.':
+    'הדביקו את תוכן קובץ ה-JSON של חשבון השירות של FCM מקונסולת Firebase.',
+  'Permanently delete this message. This action cannot be undone.':
+    'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
+  'Permanently delete this topic and all its subscribers. This action cannot be undone.':
+    'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
+  'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.':
+    'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
+  'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).':
+    'בחרו יעדי ערוץ ספציפיים להודעה זו. היעדים חייבים להתאים לספק ההודעה (אימייל, SMS או Push).',
+  'Please confirm you want to send this message now. It will be delivered to an estimated':
+    'אשרו שברצונכם לשלוח את ההודעה כעת. היא תימסר לכ-',
+  'Provider ID, channel type, and timestamps.':
+    'מזהה הספק, סוג הערוץ וחותמות זמן.',
   'Provider ID:': 'מזהה ספק:',
   'Provider deleted': 'הספק נמחק',
   'Provider deleted successfully': 'הספק נמחק בהצלחה',
@@ -2007,82 +2282,103 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Provider not found': 'הספק לא נמצא',
   'Provider settings updated successfully': 'הגדרות הספק עודכנו בהצלחה',
   'Provider status updated successfully': 'סטטוס הספק עודכן בהצלחה',
-  'Providers': 'ספקים',
+  Providers: 'ספקים',
   'Remove subscriber?': 'להסיר את המנוי?',
   'Reply Name': 'שם למענה',
   'Reply To Email': 'אימייל למענה',
   'Reply To Name': 'שם למענה',
   'Requires critical notification entitlement.': 'דורש הרשאת התראות קריטיות.',
-  'Reschedule': 'תזמון מחדש',
-  'SMS': 'SMS',
+  Reschedule: 'תזמון מחדש',
+  SMS: 'SMS',
   'SMS content': 'תוכן ה-SMS',
-  'SSL': 'SSL',
+  SSL: 'SSL',
   'Save selection': 'שמירת הבחירה',
   'Schedule a time in the future': 'יש לתזמן מועד עתידי',
   'Schedule message': 'תזמון הודעה',
-  'Scheduled': 'מתוזמנת',
+  Scheduled: 'מתוזמנת',
   'Scheduled at': 'מתוזמנת לתאריך',
   'Scheduled for': 'מתוזמנת לתאריך',
-  'Search by name, email, phone or ID...': 'חיפוש לפי שם, אימייל, טלפון או מזהה…',
+  'Search by name, email, phone or ID...':
+    'חיפוש לפי שם, אימייל, טלפון או מזהה…',
   'Search messages...': 'חיפוש הודעות...', // pragma: allowlist secret
   'Search subscribers...': 'חיפוש מנויים...',
   'Search topics...': 'חיפוש נושאים...',
-  'Search users by name, email, or ID...': 'חיפוש משתמשים לפי שם, אימייל או מזהה…',
+  'Search users by name, email, or ID...':
+    'חיפוש משתמשים לפי שם, אימייל או מזהה…',
   'Select BCC targets': 'בחירת יעדי BCC',
   'Select CC targets': 'בחירת יעדי CC',
   'Select bucket for image upload': 'בחרו באקט להעלאת התמונה',
   'Select targets': 'בחירת יעדים',
-  'Select targets using Add to deliver this message on the matching channel.': 'בחרו יעדים באמצעות \'הוספה\' כדי לשלוח את ההודעה בערוץ המתאים.',
+  'Select targets using Add to deliver this message on the matching channel.':
+    "בחרו יעדים באמצעות 'הוספה' כדי לשלוח את ההודעה בערוץ המתאים.",
   'Select topics': 'בחירת נושאים',
-  'Select topics using Add to reach their subscribers when you send.': 'בחרו נושאים באמצעות \'הוספה\' כדי להגיע למנויים שלהם בעת השליחה.',
-  'Select user targets to subscribe to this topic. Targets already subscribed are skipped.': 'בחרו יעדי משתמשים לרישום לנושא הזה. יעדים שכבר מנויים ידולגו.',
+  'Select topics using Add to reach their subscribers when you send.':
+    "בחרו נושאים באמצעות 'הוספה' כדי להגיע למנויים שלהם בעת השליחה.",
+  'Select user targets to subscribe to this topic. Targets already subscribed are skipped.':
+    'בחרו יעדי משתמשים לרישום לנושא הזה. יעדים שכבר מנויים ידולגו.',
   'Send SMS through MSG91.': 'שליחת SMS דרך MSG91.',
   'Send SMS through Telesign.': 'שליחת SMS דרך Telesign.',
   'Send SMS through Textmagic.': 'שליחת SMS דרך Textmagic.',
   'Send SMS through Twilio.': 'שליחת SMS דרך Twilio.',
   'Send SMS through Vonage.': 'שליחת SMS דרך Vonage.',
   'Send at': 'מועד שליחה',
-  'Send push notifications via APNS (iOS).': 'שליחת התראות Push דרך APNS (iOS).',
-  'Send push notifications via FCM (Android, iOS, web).': 'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
-  'Send transactional email through Mailgun.': 'שליחת אימייל טרנזקציוני דרך Mailgun.',
-  'Send transactional email through Resend.': 'שליחת אימייל טרנזקציוני דרך Resend.',
-  'Send transactional email through SendGrid.': 'שליחת אימייל טרנזקציוני דרך SendGrid.',
+  'Send push notifications via APNS (iOS).':
+    'שליחת התראות Push דרך APNS (iOS).',
+  'Send push notifications via FCM (Android, iOS, web).':
+    'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send transactional email through Mailgun.':
+    'שליחת אימייל טרנזקציוני דרך Mailgun.',
+  'Send transactional email through Resend.':
+    'שליחת אימייל טרנזקציוני דרך Resend.',
+  'Send transactional email through SendGrid.':
+    'שליחת אימייל טרנזקציוני דרך SendGrid.',
   'Sender ID': 'מזהה שולח',
   'Sender Name': 'שם שולח',
   'Sender phone': 'טלפון שולח',
-  'Sent': 'נשלחה',
+  Sent: 'נשלחה',
   'Service Account JSON': 'JSON של חשבון שירות',
-  'Service account JSON must be valid JSON': 'ה-JSON של חשבון השירות חייב להיות JSON תקין',
+  'Service account JSON must be valid JSON':
+    'ה-JSON של חשבון השירות חייב להיות JSON תקין',
   'Settings tab coming soon': 'לשונית ההגדרות תגיע בקרוב',
   'Settings update functionality coming soon': 'אפשרות עדכון הגדרות תגיע בקרוב',
-  'Sound': 'צליל',
+  Sound: 'צליל',
   'Subscriber ID': 'מזהה מנוי',
   'Subscriber actions': 'פעולות מנוי',
   'Subscriber logs': 'יומני מנוי',
   'Subscriber removed': 'המנוי הוסר',
-  'TLS': 'TLS',
-  'Tag': 'תגית',
+  TLS: 'TLS',
+  Tag: 'תגית',
   'Template ID': 'מזהה תבנית',
   'The draft message has been deleted': 'טיוטת ההודעה נמחקה',
-  'The message failed to deliver. See the details below.': 'מסירת ההודעה נכשלה. ראו פרטים למטה.',
-  'The message has already been sent. After deleting it, you will no longer see it here.': 'ההודעה כבר נשלחה. לאחר מחיקתה, לא תראו אותה כאן יותר.',
+  'The message failed to deliver. See the details below.':
+    'מסירת ההודעה נכשלה. ראו פרטים למטה.',
+  'The message has already been sent. After deleting it, you will no longer see it here.':
+    'ההודעה כבר נשלחה. לאחר מחיקתה, לא תראו אותה כאן יותר.',
   'The message has been deleted': 'ההודעה נמחקה',
-  'The message has been scheduled and will be sent to an estimated': 'ההודעה תוזמנה ותישלח לכ-',
+  'The message has been scheduled and will be sent to an estimated':
+    'ההודעה תוזמנה ותישלח לכ-',
   'The message has been sent to an estimated': 'ההודעה נשלחה לכ-',
-  'The message has been sent with errors. After deleting it, you will no longer see it here.': 'ההודעה נשלחה עם שגיאות. לאחר מחיקתה, לא תראו אותה כאן יותר.',
+  'The message has been sent with errors. After deleting it, you will no longer see it here.':
+    'ההודעה נשלחה עם שגיאות. לאחר מחיקתה, לא תראו אותה כאן יותר.',
   'The message returns to draft.': 'ההודעה תחזור למצב טיוטה.',
-  'The provider\'s instance will be permanently deleted. This action is irreversible.': 'מופע הספק יימחק לצמיתות. פעולה זו אינה הפיכה.',
-  'The scheduled message has been deleted, and its delivery was cancelled': 'ההודעה המתוזמנת נמחקה ומסירתה בוטלה',
+  "The provider's instance will be permanently deleted. This action is irreversible.":
+    'מופע הספק יימחק לצמיתות. פעולה זו אינה הפיכה.',
+  'The scheduled message has been deleted, and its delivery was cancelled':
+    'ההודעה המתוזמנת נמחקה ומסירתה בוטלה',
   'The scheduling has been cancelled.': 'התזמון בוטל.',
   'This action is irreversible.': 'פעולה זו אינה הפיכה.',
   'This file is already attached': 'הקובץ הזה כבר מצורף',
-  'This is a scheduled message. Deleting it will result in the cancellation of its delivery.': 'זוהי הודעה מתוזמנת. מחיקתה תגרום לביטול מסירתה.',
-  'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.': 'זוהי הודעה מתוזמנת. מחיקתה תגרום לביטול מסירתה. פעולה זו אינה הפיכה.',
+  'This is a scheduled message. Deleting it will result in the cancellation of its delivery.':
+    'זוהי הודעה מתוזמנת. מחיקתה תגרום לביטול מסירתה.',
+  'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.':
+    'זוהי הודעה מתוזמנת. מחיקתה תגרום לביטול מסירתה. פעולה זו אינה הפיכה.',
   'This message has no linked topics.': 'להודעה זו אין נושאים מקושרים.',
   'This message has no selected users.': 'להודעה זו אין משתמשים נבחרים.',
-  'This message may have been deleted or the link is incorrect.': 'ייתכן שההודעה נמחקה או שהקישור שגוי.',
-  'This subscriber will be removed from the topic. You can add them again later.': 'המנוי יוסר מהנושא. תוכלו להוסיף אותו שוב מאוחר יותר.',
-  'Title': 'כותרת',
+  'This message may have been deleted or the link is incorrect.':
+    'ייתכן שההודעה נמחקה או שהקישור שגוי.',
+  'This subscriber will be removed from the topic. You can add them again later.':
+    'המנוי יוסר מהנושא. תוכלו להוסיף אותו שוב מאוחר יותר.',
+  Title: 'כותרת',
   'Topic ID': 'מזהה נושא',
   'Topic created': 'הנושא נוצר',
   'Topic deleted': 'הנושא נמחק',
@@ -2090,35 +2386,49 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic name': 'שם הנושא',
   'Topic name updated successfully': 'שם הנושא עודכן בהצלחה',
   'Topic not found': 'הנושא לא נמצא',
-  'Topics group subscribers for email, SMS, or push.': 'נושאים מקבצים מנויים לאימייל, SMS או Push.',
+  'Topics group subscribers for email, SMS, or push.':
+    'נושאים מקבצים מנויים לאימייל, SMS או Push.',
   'Type:': 'סוג:',
   'Update draft': 'עדכון טיוטה',
-  'Update your provider\'s display name. This will be visible to all organization members.': 'עדכנו את שם התצוגה של הספק. השם יהיה גלוי לכל חברי הארגון.',
-  'Update your topic\'s display name. This will be visible to all organization members.': 'עדכנו את שם התצוגה של הנושא. השם יהיה גלוי לכל חברי הארגון.',
+  "Update your provider's display name. This will be visible to all organization members.":
+    'עדכנו את שם התצוגה של הספק. השם יהיה גלוי לכל חברי הארגון.',
+  "Update your topic's display name. This will be visible to all organization members.":
+    'עדכנו את שם התצוגה של הנושא. השם יהיה גלוי לכל חברי הארגון.',
   'Upload bucket': 'באקט העלאה',
-  'Uploading replaces the push image with a Storage file reference (bucket:file).': 'העלאה מחליפה את תמונת ה-Push בהפניה לקובץ באחסון (באקט:קובץ).',
+  'Uploading replaces the push image with a Storage file reference (bucket:file).':
+    'העלאה מחליפה את תמונת ה-Push בהפניה לקובץ באחסון (באקט:קובץ).',
   'Use sandbox environment': 'שימוש בסביבת sandbox',
-  'Users receive this message on every target matching the message channel for their account.': 'משתמשים יקבלו את ההודעה בכל יעד בחשבונם התואם את ערוץ ההודעה.',
-  'When delivery fails, API errors are included below when available.': 'כאשר המסירה נכשלת, שגיאות API יוצגו למטה כשהן זמינות.',
-  'Write the subject and body, enable HTML if your content uses tags, add optional CC and BCC targets, and attach files from Storage.': 'כתבו את הנושא והגוף, הפעילו HTML אם התוכן משתמש בתגיות, הוסיפו יעדי CC ו-BCC אופציונליים וצרפו קבצים מאחסון.',
-  'You do not have permission to create this resource.': 'אין לכם הרשאה ליצור את המשאב הזה.',
-  'You don\'t have permission to create messages.': 'אין לכם הרשאה ליצור הודעות.', // pragma: allowlist secret
-  'You don\'t have permission to create providers.': 'אין לכם הרשאה ליצור ספקים.',
-  'You don\'t have permission to create topics.': 'אין לכם הרשאה ליצור נושאים.',
-  'You don\'t have permission to manage topic subscribers.': 'אין לכם הרשאה לנהל מנויי נושא.',
-  'added': 'נוספו',
+  'Users receive this message on every target matching the message channel for their account.':
+    'משתמשים יקבלו את ההודעה בכל יעד בחשבונם התואם את ערוץ ההודעה.',
+  'When delivery fails, API errors are included below when available.':
+    'כאשר המסירה נכשלת, שגיאות API יוצגו למטה כשהן זמינות.',
+  'Write the subject and body, enable HTML if your content uses tags, add optional CC and BCC targets, and attach files from Storage.':
+    'כתבו את הנושא והגוף, הפעילו HTML אם התוכן משתמש בתגיות, הוסיפו יעדי CC ו-BCC אופציונליים וצרפו קבצים מאחסון.',
+  'You do not have permission to create this resource.':
+    'אין לכם הרשאה ליצור את המשאב הזה.',
+  "You don't have permission to create messages.":
+    'אין לכם הרשאה ליצור הודעות.', // pragma: allowlist secret
+  "You don't have permission to create providers.":
+    'אין לכם הרשאה ליצור ספקים.',
+  "You don't have permission to create topics.": 'אין לכם הרשאה ליצור נושאים.',
+  "You don't have permission to manage topic subscribers.":
+    'אין לכם הרשאה לנהל מנויי נושא.',
+  added: 'נוספו',
   'created successfully': 'נוצר בהצלחה',
-  'entries': 'רשומות',
-  'from': 'מתוך',
-  'subscriber': 'מנוי',
-  'subscribers': 'מנויים',
-  'targets': 'יעדים',
+  entries: 'רשומות',
+  from: 'מתוך',
+  subscriber: 'מנוי',
+  subscribers: 'מנויים',
+  targets: 'יעדים',
   'targets.': 'יעדים.',
   'this message': 'ההודעה הזו',
-  'Access Appwrite services using this project\'s API Endpoint and Project ID.': 'גשו לשירותי Appwrite באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט הזה.', // pragma: allowlist secret
-  'You don\'t have permission to add domains.': 'אין לכם הרשאה להוסיף דומיינים.',
-  'You don\'t have permission to create migrations.': 'אין לכם הרשאה ליצור מיגרציות.',
-  'You don\'t have permission to create webhooks.': 'אין לכם הרשאה ליצור webhooks.',
+  "Access Appwrite services using this project's API Endpoint and Project ID.":
+    'גשו לשירותי Appwrite באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט הזה.', // pragma: allowlist secret
+  "You don't have permission to add domains.": 'אין לכם הרשאה להוסיף דומיינים.',
+  "You don't have permission to create migrations.":
+    'אין לכם הרשאה ליצור מיגרציות.',
+  "You don't have permission to create webhooks.":
+    'אין לכם הרשאה ליצור webhooks.',
   // Project selector
   Organizations: 'ארגונים',
   'Organization:': 'ארגון:',

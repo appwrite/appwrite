@@ -6,7 +6,7 @@
  * and after-selection summary with optional branch/root directory.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/select'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { Plus } from 'lucide-react'
 import { useCreateVcsRepository } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -29,33 +28,13 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  )
-}
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider?: string
-  className?: string
-}) {
-  const normalizedProvider = provider?.toLowerCase() || 'github'
-  if (normalizedProvider === 'github') {
-    return <GitHubIcon className={className} />
-  }
-  return <GitHubIcon className={className} />
-}
+import { GitBranch } from 'lucide-react'
+import {
+  getVcsProvider,
+  VCS_PROVIDERS,
+  VcsIcon,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 export interface ConnectRepositoryValue {
   installationId: string | undefined
@@ -68,6 +47,11 @@ export interface ConnectRepositorySectionProps {
   projectId: string | null | undefined
   installations: Models.Installation[]
   getGitHubAuthUrl: string
+  /** Build the OAuth authorize URL for a specific provider/mode. Falls back to getGitHubAuthUrl (create-mode GitHub) when omitted. */
+  getVcsAuthUrl?: (
+    provider?: VcsProviderId,
+    mode?: 'create' | 'update',
+  ) => string
   /** Default repository name (e.g. derived from site/function name) */
   defaultRepositoryName: string
   /** Framework for sites, Runtime for functions */
@@ -100,6 +84,7 @@ export function ConnectRepositorySection({
   projectId,
   installations,
   getGitHubAuthUrl,
+  getVcsAuthUrl,
   defaultRepositoryName,
   detectionType,
   value,
@@ -119,6 +104,10 @@ export function ConnectRepositorySection({
   className,
 }: ConnectRepositorySectionProps) {
   const t = useT()
+  const vcsAuthUrl = (
+    provider?: VcsProviderId,
+    mode: 'create' | 'update' = 'create',
+  ) => (getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl)
   const suggestedRepoName = useMemo(
     () =>
       defaultRepositoryName
@@ -141,6 +130,14 @@ export function ConnectRepositorySection({
   )
   const [repositoryPrivate, setRepositoryPrivate] = useState(true)
 
+  const connectedInstallation = installations.find(
+    (installation) => installation.$id === value.installationId,
+  )
+  const {
+    Icon: ConnectedRepositoryIcon,
+    label: connectedRepositoryProviderLabel,
+  } = getVcsProvider(connectedInstallation?.provider)
+
   const createRepositoryMutation = useCreateVcsRepository(projectId)
 
   const hasRepository = !!value.installationId && !!value.providerRepositoryId
@@ -153,9 +150,18 @@ export function ConnectRepositorySection({
     }
   }, [defaultRepositoryName, hasRepository])
 
-  // Initialize selected installation when installations load
+  // Initialize selected installation when installations load. Runs only
+  // once, so a later intentional clear (e.g. after deleting an installation)
+  // isn't silently re-defaulted back to the first installation.
+  const hasAutoSelectedInstallation = useRef(false)
   useEffect(() => {
-    if (hasInstallations && !selectedInstallationId && installations[0]?.$id) {
+    if (
+      hasInstallations &&
+      !selectedInstallationId &&
+      installations[0]?.$id &&
+      !hasAutoSelectedInstallation.current
+    ) {
+      hasAutoSelectedInstallation.current = true
       setSelectedInstallationId(installations[0].$id)
     }
   }, [hasInstallations, installations, selectedInstallationId])
@@ -225,14 +231,22 @@ export function ConnectRepositorySection({
         <div className="border-t border-border" />
         <div className="px-6 py-6 flex flex-col items-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
-            <GitHubIcon className="h-6 w-6 text-muted-foreground" />
+            <GitBranch className="h-6 w-6 text-muted-foreground" />
           </div>
-          <Button asChild>
-            <a href={getGitHubAuthUrl}>
-              <GitHubIcon className="me-1.5 h-4 w-4" />
-              {t('Connect to GitHub')}
-            </a>
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button variant="secondary" asChild>
+              <a href={getGitHubAuthUrl}>
+                <VcsIcon type="github" className="me-1.5 h-4 w-4" />
+                {t('Connect to GitHub')}
+              </a>
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('gitlab')}>
+                <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
+                {t('Connect to GitLab')}
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -257,14 +271,14 @@ export function ConnectRepositorySection({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <GitHubIcon className="h-5 w-5" />
+                <ConnectedRepositoryIcon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {value.repositoryOwner}/{value.repositoryName}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {t('GitHub repository')}
+                  {t(`${connectedRepositoryProviderLabel} repository`)}
                 </p>
               </div>
             </div>
@@ -350,7 +364,9 @@ export function ConnectRepositorySection({
                 {t('Create new repository')}
               </span>
               <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Create a new Git repository and clone the template into it.')}
+                {t(
+                  'Create a new Git repository and clone the template into it.',
+                )}
               </p>
             </div>
           </Label>
@@ -396,8 +412,8 @@ export function ConnectRepositorySection({
                   {installations.map((inst) => (
                     <SelectItem key={inst.$id} value={inst.$id}>
                       <span className="flex items-center gap-2">
-                        <ProviderIcon
-                          provider={inst.provider}
+                        <VcsIcon
+                          type={inst.provider}
                           className="h-4 w-4 shrink-0"
                         />
                         <span>{inst.organization}</span>
@@ -405,13 +421,16 @@ export function ConnectRepositorySection({
                     </SelectItem>
                   ))}
                   <div className="border-t border-border mt-1 pt-1">
-                    <a
-                      href={getGitHubAuthUrl}
-                      className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {t('Add installation')}
-                    </a>
+                    {Object.values(VCS_PROVIDERS).map((p) => (
+                      <a
+                        key={p.id}
+                        href={vcsAuthUrl(p.id)}
+                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                      >
+                        <p.Icon className="h-3 w-3" />
+                        {t(`Add ${p.label} account`)}
+                      </a>
+                    ))}
                   </div>
                 </SelectContent>
               </Select>
@@ -459,6 +478,7 @@ export function ConnectRepositorySection({
           <RepositoryPicker
             projectId={projectId}
             getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
             installations={installations}
             selectedInstallationId={selectedInstallationId}
             onInstallationChange={setSelectedInstallationId}

@@ -6,7 +6,7 @@
  * - Right: Repository import
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -27,15 +27,12 @@ import { SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { SiteTemplateGallery } from '@/components/pages/projects/$projectId/sites/_components/SiteTemplateGallery'
-import {
-  Search,
-  Lock,
-  Plus,
-} from 'lucide-react'
+import { Search, Lock, GitBranch } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepositories,
   useProject,
+  useNamespacesForInstallations,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
@@ -43,52 +40,17 @@ import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import {
+  getKnownVcsProvider,
+  buildVcsAuthUrl,
+  VcsIcon,
+  VCS_PROVIDERS,
+  buildVcsOrgOptions,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
-
-// Provider icons
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  )
-}
-
-function GitLabIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" />
-    </svg>
-  )
-}
-
-function BitbucketIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M.778 1.213a.768.768 0 0 0-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.891zM14.52 15.53H9.522L8.17 8.466h7.561z" />
-    </svg>
-  )
-}
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider?: string
-  className?: string
-}) {
-  const normalizedProvider = provider?.toLowerCase() || 'github'
-  switch (normalizedProvider) {
-    case 'gitlab':
-      return <GitLabIcon className={className} />
-    case 'bitbucket':
-      return <BitbucketIcon className={className} />
-    default:
-      return <GitHubIcon className={className} />
-  }
-}
 
 // Helper to safely extract framework string
 function getFrameworkString(framework: unknown): string {
@@ -117,7 +79,7 @@ function RepositorySkeleton({
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-        <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
+        <VcsIcon type={provider} className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <Skeleton
@@ -151,32 +113,112 @@ export function CreateSiteView() {
   const [selectedInstallationId, setSelectedInstallationId] =
     useState<string>('')
 
-  // Build GitHub authorization URL with proper redirect (includes current installation ID)
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    // Include current installation ID in redirect so we can restore selection
-    let redirectUrl = `${origin}/projects/${projectId}/sites/create`
-    if (selectedInstallationId) {
-      redirectUrl += `?installation=${selectedInstallationId}`
+  // Build VCS authorization URL with proper redirect (includes current installation ID)
+  const getVcsAuthUrl = useMemo(() => {
+    return (
+      provider: VcsProviderId = 'github',
+      mode: 'create' | 'update' = 'create',
+    ) => {
+      void mode // this redirect doesn't distinguish create/update, unlike Overview.tsx
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      // Include current installation ID in redirect so we can restore selection
+      let redirectUrl = `${origin}/projects/${projectId}/sites/create`
+      if (selectedInstallationId) {
+        redirectUrl += `?installation=${selectedInstallationId}`
+      }
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
     }
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
   }, [projectEndpoint, projectId, selectedInstallationId])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
+
+  const selectedInstallation = installations.find(
+    (i) => i.$id === selectedInstallationId,
+  )
+
+  // Personal namespace vs. group selected within a GitLab installation.
+  const [selectedNamespace, setSelectedNamespace] = useState('')
+
+  const { namespacesByInstallation } = useNamespacesForInstallations(
+    projectId,
+    installations,
+  )
+  const orgOptions = useMemo(
+    () => buildVcsOrgOptions(installations, namespacesByInstallation),
+    [installations, namespacesByInstallation],
+  )
+  const selectedOptionKey = selectedNamespace
+    ? `${selectedInstallationId}:${selectedNamespace}`
+    : selectedInstallationId
+  const selectedOption = orgOptions.find((o) => o.key === selectedOptionKey)
+
+  // Whenever the selected installation changes (including on initial load)
+  // or its namespaces finish loading, make sure the namespace is a valid
+  // row for that installation -- an installation with multiple namespaces
+  // has no bare-installationId row, so without this the picker would show
+  // blank until the user manually picks one.
+  useEffect(() => {
+    if (!selectedInstallationId) {
+      if (selectedNamespace) setSelectedNamespace('')
+      return
+    }
+    const isValid = orgOptions.some((o) => o.key === selectedOptionKey)
+    if (!isValid) {
+      const firstForInstallation = orgOptions.find(
+        (o) => o.installationId === selectedInstallationId,
+      )
+      setSelectedNamespace(firstForInstallation?.providerNamespace ?? '')
+    }
+  }, [selectedInstallationId, orgOptions, selectedOptionKey, selectedNamespace])
+
+  // Filter the combined org list client-side -- it's already fully loaded
+  // (every installation's namespaces are fetched up front), so there's no
+  // need for a server round-trip just to narrow a list this size.
+  const [orgFilter, setOrgFilter] = useState('')
+  const filteredOrgOptions = useMemo(
+    () =>
+      orgFilter.trim()
+        ? orgOptions.filter((o) =>
+            o.label.toLowerCase().includes(orgFilter.trim().toLowerCase()),
+          )
+        : orgOptions,
+    [orgOptions, orgFilter],
+  )
+
+  const selectOption = (key: string) => {
+    const option = orgOptions.find((o) => o.key === key)
+    if (!option) return
+    setSelectedInstallationId(option.installationId)
+    setSelectedNamespace(option.providerNamespace ?? '')
+    setRepoPage(1)
+  }
 
   // Set current path
   useEffect(() => {
     setCurrentPath('repository')
   }, [setCurrentPath])
 
-  // Initialize selected installation - prioritize recently created, then URL param, then first
+  // Initialize selected installation - prioritize recently created, then URL param, then first.
+  // Runs only once, so a later intentional clear isn't silently re-defaulted.
+  const hasAutoSelectedInstallation = useRef(false)
   useEffect(() => {
-    if (installations.length > 0 && !selectedInstallationId) {
+    if (
+      installations.length > 0 &&
+      !selectedInstallationId &&
+      !hasAutoSelectedInstallation.current
+    ) {
+      hasAutoSelectedInstallation.current = true
+
       // Check for recently created installation (within last 30s)
       const twoMinutesAgo = new Date(Date.now() - 30 * 1000)
       const recentInstallation = installations.find((inst) => {
@@ -230,6 +272,7 @@ export function CreateSiteView() {
     repoPage - 1,
     REPO_PAGE_SIZE,
     debouncedRepoSearch || undefined,
+    selectedNamespace || undefined,
   )
 
   const repositories = useMemo(() => {
@@ -239,9 +282,6 @@ export function CreateSiteView() {
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
   const hasInstallations = installations.length > 0
-  const selectedInstallation = installations.find(
-    (i) => i.$id === selectedInstallationId,
-  )
 
   const handleSelectRepository = (repo: unknown) => {
     const installationId = selectedInstallationId!
@@ -296,7 +336,7 @@ export function CreateSiteView() {
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+                  <GitBranch className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
@@ -305,62 +345,90 @@ export function CreateSiteView() {
               <p className="text-[11px] text-muted-foreground mb-3">
                 {t('Import repositories for automatic deployments')}
               </p>
-              <Button size="sm" asChild>
-                <a href={getGitHubAuthUrl}>
-                  <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
-                  {t('Connect GitHub')}
-                </a>
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getGitHubAuthUrl}>
+                    <VcsIcon type="github" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitHub')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('gitlab')}>
+                    <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitLab')}
+                  </a>
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-1 flex-col">
               {/* Controls */}
               <div className="mb-4 flex items-center gap-2">
                 <Select
-                  value={selectedInstallationId}
-                  onValueChange={(value) => {
-                    setSelectedInstallationId(value)
-                    setRepoPage(1)
+                  value={selectedOptionKey}
+                  onValueChange={(key) => selectOption(key)}
+                  onOpenChange={(open) => {
+                    if (!open) setOrgFilter('')
                   }}
                 >
-                  <SelectTrigger className="w-[180px] h-9 text-[13px]">
+                  <SelectTrigger className="w-[200px] h-9 text-[13px]">
                     <SelectValue placeholder={t('Select organization')}>
-                      {selectedInstallation && (
+                      {selectedOption && (
                         <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={selectedInstallation.provider}
+                          <VcsIcon
+                            type={selectedOption.provider}
                             className="h-4 w-4 shrink-0"
                           />
                           <span className="truncate">
-                            {selectedInstallation.organization}
+                            {selectedOption.label}
                           </span>
                         </span>
                       )}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {installations.map((installation) => (
-                      <SelectItem
-                        key={installation.$id}
-                        value={installation.$id}
-                      >
-                        <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={installation.provider}
-                            className="h-4 w-4 shrink-0"
-                          />
-                          <span>{installation.organization}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
+                    <div
+                      className="px-1 pb-1 mb-1 border-b border-border"
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="relative">
+                        <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <Input
+                          value={orgFilter}
+                          onChange={(e) => setOrgFilter(e.target.value)}
+                          placeholder={t('Filter organizations...')}
+                          className="h-8 ps-7 text-[12px]"
+                        />
+                      </div>
+                    </div>
+                    {filteredOrgOptions.length > 0 ? (
+                      filteredOrgOptions.map((option) => (
+                        <SelectItem key={option.key} value={option.key}>
+                          <span className="flex items-center gap-2">
+                            <VcsIcon
+                              type={option.provider}
+                              className="h-4 w-4 shrink-0"
+                            />
+                            <span>{option.label}</span>
+                          </span>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <p className="px-2 py-1.5 text-[12px] text-muted-foreground">
+                        {t('No matches')}
+                      </p>
+                    )}
                     <div className="border-t border-border mt-1 pt-1">
-                      <a
-                        href={getGitHubAuthUrl}
-                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                      >
-                        <Plus className="h-3 w-3" />
-                        {t('Add account')}
-                      </a>
+                      {Object.values(VCS_PROVIDERS).map((p) => (
+                        <a
+                          key={p.id}
+                          href={getVcsAuthUrl(p.id)}
+                          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                        >
+                          <p.Icon className="h-3 w-3" />
+                          {t(`Add ${p.label} account`)}
+                        </a>
+                      ))}
                     </div>
                   </SelectContent>
                 </Select>
@@ -413,8 +481,8 @@ export function CreateSiteView() {
                               size="sm"
                             />
                           ) : (
-                            <ProviderIcon
-                              provider={selectedInstallation?.provider}
+                            <VcsIcon
+                              type={selectedInstallation?.provider}
                               className="h-3.5 w-3.5"
                             />
                           )}
@@ -463,23 +531,34 @@ export function CreateSiteView() {
               />
 
               {/* Help note for missing repos */}
-              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
-                <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
-                  {t("Can't find a repository?")}
-                </p>
-                <p className="text-[12px] text-muted-foreground leading-snug mb-3">
-                  {t(
-                    'If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.',
-                  )}
-                </p>
-                <a
-                  href={getGitHubAuthUrl}
-                  className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
-                >
-                  <GitHubIcon className="h-3.5 w-3.5" />
-                  {t('Update GitHub permissions')}
-                </a>
-              </div>
+              {(() => {
+                const knownProvider = getKnownVcsProvider(
+                  selectedInstallation?.provider,
+                )
+                if (!knownProvider) return null
+                return (
+                  <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
+                    <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
+                      {t("Can't find a repository?")}
+                    </p>
+                    <p className="text-[12px] text-muted-foreground leading-snug mb-3">
+                      {t(
+                        'If you selected specific repositories during setup, you may need to update your permissions to include additional ones.',
+                      )}
+                    </p>
+                    <a
+                      href={getVcsAuthUrl(knownProvider.id, 'update')}
+                      className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
+                    >
+                      <VcsIcon
+                        type={knownProvider.id}
+                        className="h-3.5 w-3.5"
+                      />
+                      {t(`Update ${knownProvider.label} permissions`)}
+                    </a>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </CreateWizardLeftColumn>

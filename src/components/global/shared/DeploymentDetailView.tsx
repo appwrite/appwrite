@@ -82,6 +82,7 @@ import {
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
 import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
+import { getVcsProvider } from '@/lib/vcs/providers'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
   SITE_SCREENSHOT_CARD_WIDTH,
@@ -119,72 +120,20 @@ const WIZARD_DRAWER_CONTENT_Z = 'z-[10053]'
 /** After copying a deployment URL, hide the copy control after this delay (ms). */
 const URL_COPY_HIDE_DELAY_MS = 500
 
-// GitHub Icon Component
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  )
-}
-
-// GitLab Icon Component
-function GitLabIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M23.955 13.587l-1.1-3.38-.02-.05-.02-.05-2.1-6.45a.74.74 0 00-.68-.47.74.74 0 00-.68.47l-2.1 6.45-1.1 3.38a.74.74 0 00.28.85l9.5 6.9a.74.74 0 00.85 0l9.5-6.9a.74.74 0 00.28-.85zm-2.1-3.38l1.1 3.38-8.5 6.18-8.5-6.18 1.1-3.38 1.1 3.38a.74.74 0 00.28.85l7.12 5.17 7.12-5.17a.74.74 0 00.28-.85l1.1-3.38z" />
-    </svg>
-  )
-}
-
-// Bitbucket Icon Component
-function BitbucketIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M.778 1.213a.768.768 0 00-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 00.77-.646l3.27-20.03a.768.768 0 00-.768-.891L.778 1.213zM14.52 15.53H9.522L8.17 8.466h7.561l.529 7.064h-1.74z" />
-    </svg>
-  )
-}
-
 // Detect VCS provider from deployment
-function getVcsProvider(
+function detectVcsProvider(
   deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   // Check for providerRepositoryUrl which contains the provider domain
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) {
-      return {
-        name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />,
-      }
+      const { label, Icon } = getVcsProvider('github')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (url.includes('gitlab.com')) {
-      return {
-        name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />,
-      }
-    }
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
-      return {
-        name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />,
-      }
+      const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
 
@@ -192,22 +141,12 @@ function getVcsProvider(
   if (deployment.vcsProvider) {
     const provider = deployment.vcsProvider.toLowerCase()
     if (provider === 'github') {
-      return {
-        name: 'GitHub',
-        icon: <GitHubIcon className="h-4 w-4" />,
-      }
+      const { label, Icon } = getVcsProvider('github')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
     if (provider === 'gitlab') {
-      return {
-        name: 'GitLab',
-        icon: <GitLabIcon className="h-4 w-4" />,
-      }
-    }
-    if (provider === 'bitbucket') {
-      return {
-        name: 'Bitbucket',
-        icon: <BitbucketIcon className="h-4 w-4" />,
-      }
+      const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
 
@@ -228,16 +167,12 @@ function getVcsProvider(
 /**
  * Get VCS provider type from deployment
  */
-function getVcsProviderType(
-  deployment: unknown,
-): 'github' | 'gitlab' | 'bitbucket' | null {
+function getVcsProviderType(deployment: unknown): 'github' | 'gitlab' | null {
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) return 'github'
     if (url.includes('gitlab.com')) return 'gitlab'
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
-      return 'bitbucket'
   }
 
   // Fallback to vcsProvider field
@@ -245,7 +180,6 @@ function getVcsProviderType(
     const provider = deployment.vcsProvider.toLowerCase()
     if (provider === 'github') return 'github'
     if (provider === 'gitlab') return 'gitlab'
-    if (provider === 'bitbucket') return 'bitbucket'
   }
 
   return null
@@ -276,9 +210,6 @@ function getCommitUrl(deployment: unknown): string | null {
   if (provider === 'gitlab') {
     return `https://gitlab.com/${owner}/${repo}/-/commit/${commitHash}`
   }
-  if (provider === 'bitbucket') {
-    return `https://bitbucket.org/${owner}/${repo}/commits/${commitHash}`
-  }
 
   return null
 }
@@ -308,9 +239,6 @@ function getBranchUrl(deployment: unknown): string | null {
   if (provider === 'gitlab') {
     return `https://gitlab.com/${owner}/${repo}/-/tree/${branch}`
   }
-  if (provider === 'bitbucket') {
-    return `https://bitbucket.org/${owner}/${repo}/src/${branch}`
-  }
 
   return null
 }
@@ -323,7 +251,12 @@ export interface DeploymentDetailViewConfig {
   deployment: Models.Deployment | undefined
   isLoading: boolean
   parentResource:
-    | { name?: string; deploymentId?: string; runtime?: string; framework?: string }
+    | {
+        name?: string
+        deploymentId?: string
+        runtime?: string
+        framework?: string
+      }
     | undefined // site or function
   deployments: Models.Deployment[]
   relatedData?: { total?: number } // logs or executions count
@@ -611,7 +544,7 @@ export function DeploymentDetailView({
   ])
 
   // Get VCS provider info
-  const vcsProvider = deployment ? getVcsProvider(deployment) : null
+  const vcsProvider = deployment ? detectVcsProvider(deployment) : null
 
   // Get repository URLs
   const repositoryUrl = deployment
@@ -620,10 +553,8 @@ export function DeploymentDetailView({
   const commitUrl = deployment ? getCommitUrl(deployment) : null
   const branchUrl = deployment ? getBranchUrl(deployment) : null
 
-  const resolvedCommitUrl =
-    deployment?.providerCommitUrl || commitUrl || null
-  const resolvedBranchUrl =
-    deployment?.providerBranchUrl || branchUrl || null
+  const resolvedCommitUrl = deployment?.providerCommitUrl || commitUrl || null
+  const resolvedBranchUrl = deployment?.providerBranchUrl || branchUrl || null
 
   // Get status badge
   const statusBadge = deployment
@@ -806,9 +737,7 @@ export function DeploymentDetailView({
                           toast.success(t('URL copied'))
                           el.blur()
                           if (urlCopyHideAfterCopyTimeoutRef.current) {
-                            clearTimeout(
-                              urlCopyHideAfterCopyTimeoutRef.current,
-                            )
+                            clearTimeout(urlCopyHideAfterCopyTimeoutRef.current)
                           }
                           urlCopyHideAfterCopyTimeoutRef.current =
                             window.setTimeout(() => {
@@ -976,7 +905,9 @@ export function DeploymentDetailView({
                   title={t('Copy branch name')}
                   onClick={(e) => {
                     const el = e.currentTarget as HTMLButtonElement
-                    void navigator.clipboard.writeText(deployment.providerBranch)
+                    void navigator.clipboard.writeText(
+                      deployment.providerBranch,
+                    )
                     toast.success(t('Branch copied'))
                     el.blur()
                     if (branchCopyHideAfterCopyTimeoutRef.current) {
@@ -1194,9 +1125,7 @@ export function DeploymentDetailView({
   const redeployMutation = useMutation({
     mutationFn: async () => {
       if (!onRedeploy) {
-        throw new Error(
-          t('Redeploy is not available for this deployment type'),
-        )
+        throw new Error(t('Redeploy is not available for this deployment type'))
       }
       return await onRedeploy(projectId, resourceId, apiDeploymentId)
     },
@@ -1219,9 +1148,7 @@ export function DeploymentDetailView({
   const activateMutation = useMutation({
     mutationFn: async () => {
       if (!onActivate) {
-        throw new Error(
-          t('Activate is not available for this deployment type'),
-        )
+        throw new Error(t('Activate is not available for this deployment type'))
       }
       return await onActivate(projectId, resourceId, apiDeploymentId)
     },
@@ -1538,7 +1465,9 @@ export function DeploymentDetailView({
       const isOnlySelectedLine =
         selectedLogLines.size === 1 && selectedLogLines.has(lineNumber)
       lineAnchorRef.current = lineNumber
-      const next = isOnlySelectedLine ? new Set<number>() : new Set([lineNumber])
+      const next = isOnlySelectedLine
+        ? new Set<number>()
+        : new Set([lineNumber])
       setSelectedLogLines(next)
       syncLineSearchUrl(next)
       focusLogsPane()
@@ -1748,8 +1677,8 @@ export function DeploymentDetailView({
                         </span>
                       </div>
                     )}
-                    {(isActiveDeployment || statusBadge) && (
-                      isActiveDeployment ? (
+                    {(isActiveDeployment || statusBadge) &&
+                      (isActiveDeployment ? (
                         <Badge
                           variant="active"
                           className="gap-1.5 text-[12px] font-medium shrink-0 h-6 px-2.5"
@@ -1770,8 +1699,7 @@ export function DeploymentDetailView({
                             {t(statusBadge.label)}
                           </Badge>
                         )
-                      )
-                    )}
+                      ))}
                     {isDeploymentFailed && (
                       <FixWithAgentDropdown
                         prompt={aiFixPrompt}
