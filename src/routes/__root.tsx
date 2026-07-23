@@ -35,6 +35,7 @@ import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
+import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
 import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
@@ -54,11 +55,6 @@ import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { useLocation, useMatches } from '@tanstack/react-router'
-import {
-  getAnalyticsRoutePath,
-  trackPageView,
-} from '@/lib/analytics'
-import { canTrackAnalytics, subscribeCookieConsent } from '@/lib/cookie-consent/consent-state'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -288,28 +284,6 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-function PlausibleRouteTracker() {
-  const location = useLocation()
-  const matches = useMatches()
-  const leafRoute = matches[matches.length - 1]
-  const [consentTick, setConsentTick] = useState(0)
-
-  useEffect(() => {
-    return subscribeCookieConsent(() => {
-      setConsentTick((tick) => tick + 1)
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!canTrackAnalytics() || typeof window === 'undefined') return
-
-    const routePath = getAnalyticsRoutePath(leafRoute?.routeId, location.pathname)
-    trackPageView(routePath)
-  }, [consentTick, leafRoute?.routeId, location.pathname])
-
-  return null
-}
-
 function ContextualDocumentTitle() {
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -424,10 +398,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
-        <PlausibleRouteTracker />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
           <I18nProvider>
+            <AnalyticsSessionPropsSync />
             <PageDirectionProvider>
               <CookieConsentProvider>
                 <NavigationHistoryProvider>
