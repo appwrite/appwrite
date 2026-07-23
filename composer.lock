@@ -5169,12 +5169,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "8bd586e9eae0f622b1a728c5b0269369b3efdde2"
+                "reference": "2423618e32a1b3d0dd3e8e4327b5f85561d90cf3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8bd586e9eae0f622b1a728c5b0269369b3efdde2",
-                "reference": "8bd586e9eae0f622b1a728c5b0269369b3efdde2",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/2423618e32a1b3d0dd3e8e4327b5f85561d90cf3",
+                "reference": "2423618e32a1b3d0dd3e8e4327b5f85561d90cf3",
                 "shasum": ""
             },
             "require": {
@@ -5228,7 +5228,7 @@
                 "source": "https://github.com/utopia-php/vcs/tree/feat/gitlab-list-namespaces",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-07-23T07:17:43+00:00"
+            "time": "2026-07-23T12:23:30+00:00"
         },
         {
             "name": "utopia-php/websocket",
