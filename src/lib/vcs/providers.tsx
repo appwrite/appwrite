@@ -6,6 +6,7 @@
  */
 
 import type { ReactElement } from 'react'
+import type { Models } from '@appwrite.io/console'
 
 export function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -105,6 +106,64 @@ export function getProviderOwnerUrl(
 ): string | null {
   const meta = getKnownVcsProvider(provider)
   return meta ? meta.baseUrl(organization) : null
+}
+
+/**
+ * One selectable row in the combined org picker: either a whole installation
+ * (GitHub, or any provider without multiple namespaces) or one specific
+ * namespace (personal account or group) within a GitLab installation.
+ */
+export interface VcsOrgOption {
+  /** Unique Select value: installationId, or `installationId:namespacePath` for a namespace row. */
+  key: string
+  installationId: string
+  /** Set only for a specific-namespace row; omit to use the installation's default owner. */
+  providerNamespace?: string
+  label: string
+  provider: VcsProviderId
+}
+
+/**
+ * Flatten "installations, each with their own namespaces" into one list of
+ * selectable rows -- no separate account-then-group picker, matching how a
+ * single GitHub org and a single GitLab group should look identical in the
+ * UI. For providers where every installation maps to exactly one namespace
+ * (GitHub today), this is just the installation itself. Ordered by the most
+ * recently updated installation first (an installation's groups inherit its
+ * position, so they stay grouped together rather than interleaving).
+ */
+export function buildVcsOrgOptions(
+  installations: Models.Installation[],
+  namespacesByInstallation: Record<string, Models.VcsNamespace[]>,
+): VcsOrgOption[] {
+  const orderedInstallations = [...installations].sort(
+    (a, b) =>
+      new Date(b.$updatedAt).getTime() - new Date(a.$updatedAt).getTime(),
+  )
+
+  return orderedInstallations.flatMap((installation) => {
+    const provider = getVcsProvider(installation.provider).id
+    const namespaces = namespacesByInstallation[installation.$id] ?? []
+
+    if (namespaces.length <= 1) {
+      return [
+        {
+          key: installation.$id,
+          installationId: installation.$id,
+          label: installation.organization,
+          provider,
+        },
+      ]
+    }
+
+    return namespaces.map((namespace) => ({
+      key: `${installation.$id}:${namespace.path}`,
+      installationId: installation.$id,
+      providerNamespace: namespace.path,
+      label: namespace.name,
+      provider,
+    }))
+  })
 }
 
 /** Build the OAuth authorize URL the console redirects to for a provider. */

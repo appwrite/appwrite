@@ -6,6 +6,7 @@
 
 import {
   useQuery,
+  useQueries,
   useMutation,
   useQueryClient,
   queryOptions,
@@ -137,6 +138,7 @@ export async function fetchRepositories(
   page: number = 0,
   limit: number = 5,
   search?: string,
+  providerNamespace?: string,
 ): Promise<Models.ProviderRepositoryFrameworkList> {
   if (!projectId || !installationId) {
     return {
@@ -153,8 +155,95 @@ export async function fetchRepositories(
     installationId,
     type,
     search: search?.trim() || undefined,
+    providerNamespace: providerNamespace || undefined,
     queries,
   })
+}
+
+/**
+ * Query function to fetch namespaces (personal + groups) for an installation.
+ * Only GitLab returns more than one -- other providers already scope an
+ * installation to a single org/user, so this returns that org as the only item.
+ */
+export async function fetchNamespaces(
+  projectId: string,
+  installationId: string,
+  page: number = 0,
+  limit: number = 20,
+  search?: string,
+): Promise<Models.VcsNamespaceList> {
+  if (!projectId || !installationId) {
+    return { namespaces: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
+
+  return await projectSdk.vcs.listNamespaces({
+    installationId,
+    search: search?.trim() || undefined,
+    queries,
+  })
+}
+
+/**
+ * Hook to fetch namespaces (personal + groups) for an installation.
+ */
+export function useNamespaces(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  page: number = 0,
+  limit: number = 20,
+  search?: string,
+) {
+  return useQuery({
+    queryKey: [
+      'vcs',
+      'namespaces',
+      projectId,
+      installationId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchNamespaces(projectId!, installationId!, page, limit, search),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Fetch namespaces for every installation at once, so a combined
+ * GitHub+GitLab org picker can flatten "installation -> its namespaces"
+ * into a single list without a separate account/group selection step.
+ * For providers other than GitLab this is a one-item no-op (the
+ * installation's own organization), so the same flattening logic works
+ * uniformly for every provider.
+ */
+export function useNamespacesForInstallations(
+  projectId: string | null | undefined,
+  installations: Models.Installation[],
+) {
+  const queries = useQueries({
+    queries: installations.map((installation) => ({
+      queryKey: ['vcs', 'namespaces', projectId, installation.$id],
+      queryFn: () => fetchNamespaces(projectId!, installation.$id),
+      enabled: !!projectId,
+      staleTime: DEFAULT_STALE_TIME,
+    })),
+  })
+
+  const namespacesByInstallation: Record<string, Models.VcsNamespace[]> = {}
+  installations.forEach((installation, index) => {
+    namespacesByInstallation[installation.$id] =
+      queries[index]?.data?.namespaces ?? []
+  })
+
+  return {
+    namespacesByInstallation,
+    isLoading: queries.some((query) => query.isLoading),
+  }
 }
 
 /**
@@ -367,6 +456,7 @@ export function useRepositories(
   page: number = 0,
   limit: number = 5,
   search?: string,
+  providerNamespace?: string,
 ) {
   return useQuery({
     queryKey: [
@@ -378,9 +468,18 @@ export function useRepositories(
       page,
       limit,
       search,
+      providerNamespace,
     ],
     queryFn: () =>
-      fetchRepositories(projectId!, installationId!, type, page, limit, search),
+      fetchRepositories(
+        projectId!,
+        installationId!,
+        type,
+        page,
+        limit,
+        search,
+        providerNamespace,
+      ),
     enabled: !!projectId && !!installationId,
     staleTime: DEFAULT_STALE_TIME,
   })
