@@ -36,7 +36,12 @@ import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  buildVcsAuthUrl,
+  GitLabIcon,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
@@ -117,19 +122,30 @@ export function CreateSiteView() {
   const [selectedInstallationId, setSelectedInstallationId] =
     useState<string>('')
 
-  // Build GitHub authorization URL with proper redirect (includes current installation ID)
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    // Include current installation ID in redirect so we can restore selection
-    let redirectUrl = `${origin}/projects/${projectId}/sites/create`
-    if (selectedInstallationId) {
-      redirectUrl += `?installation=${selectedInstallationId}`
+  // Build VCS authorization URL with proper redirect (includes current installation ID)
+  const getVcsAuthUrl = useMemo(() => {
+    return (
+      provider: VcsProviderId = 'github',
+      mode: 'create' | 'update' = 'create',
+    ) => {
+      void mode // this redirect doesn't distinguish create/update, unlike Overview.tsx
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      // Include current installation ID in redirect so we can restore selection
+      let redirectUrl = `${origin}/projects/${projectId}/sites/create`
+      if (selectedInstallationId) {
+        redirectUrl += `?installation=${selectedInstallationId}`
+      }
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
     }
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
   }, [projectEndpoint, projectId, selectedInstallationId])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
@@ -271,12 +287,20 @@ export function CreateSiteView() {
               <p className="text-[11px] text-muted-foreground mb-3">
                 {t('Import repositories for automatic deployments')}
               </p>
-              <Button size="sm" asChild>
-                <a href={getGitHubAuthUrl}>
-                  <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
-                  {t('Connect GitHub')}
-                </a>
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getGitHubAuthUrl}>
+                    <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitHub')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('gitlab')}>
+                    <GitLabIcon className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitLab')}
+                  </a>
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-1 flex-col">
@@ -435,15 +459,23 @@ export function CreateSiteView() {
                 </p>
                 <p className="text-[12px] text-muted-foreground leading-snug mb-3">
                   {t(
-                    'If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.',
+                    'If you selected specific repositories during setup, you may need to update your permissions to include additional ones.',
                   )}
                 </p>
                 <a
-                  href={getGitHubAuthUrl}
+                  href={getVcsAuthUrl(
+                    getVcsProvider(selectedInstallation?.provider).id,
+                    'update',
+                  )}
                   className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
                 >
-                  <GitHubIcon className="h-3.5 w-3.5" />
-                  {t('Update GitHub permissions')}
+                  <ProviderIcon
+                    provider={selectedInstallation?.provider}
+                    className="h-3.5 w-3.5"
+                  />
+                  {t(
+                    `Update ${getVcsProvider(selectedInstallation?.provider).label} permissions`,
+                  )}
                 </a>
               </div>
             </div>

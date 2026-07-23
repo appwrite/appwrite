@@ -57,7 +57,12 @@ import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  buildVcsAuthUrl,
+  GitLabIcon,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 function ProviderIcon({
   provider,
@@ -251,17 +256,28 @@ export function CreateFunctionView() {
     return () => clearTimeout(t)
   }, [repoSearch])
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    let redirectUrl = `${origin}/projects/${projectId}/functions/create`
-    if (selectedInstallationId) {
-      redirectUrl += `?installation=${selectedInstallationId}`
+  const getVcsAuthUrl = useMemo(() => {
+    return (
+      provider: VcsProviderId = 'github',
+      mode: 'create' | 'update' = 'create',
+    ) => {
+      void mode // this redirect doesn't distinguish create/update, unlike Overview.tsx
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      let redirectUrl = `${origin}/projects/${projectId}/functions/create`
+      if (selectedInstallationId) {
+        redirectUrl += `?installation=${selectedInstallationId}`
+      }
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
     }
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
   }, [projectEndpoint, projectId, selectedInstallationId])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   const {
     data: repositoriesData,
@@ -404,12 +420,20 @@ export function CreateFunctionView() {
                   'Connect a repository to deploy functions from your codebase',
                 )}
               </p>
-              <Button size="sm" asChild>
-                <a href={getGitHubAuthUrl}>
-                  <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
-                  {t('Connect GitHub')}
-                </a>
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getGitHubAuthUrl}>
+                    <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitHub')}
+                  </a>
+                </Button>
+                <Button size="sm" variant="secondary" asChild>
+                  <a href={getVcsAuthUrl('gitlab')}>
+                    <GitLabIcon className="me-1.5 h-3.5 w-3.5" />
+                    {t('Connect GitLab')}
+                  </a>
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-1 flex-col">
@@ -566,7 +590,10 @@ export function CreateFunctionView() {
                 <p className="text-[12px] text-muted-foreground">
                   {t('Missing a repository?')}{' '}
                   <a
-                    href={getGitHubAuthUrl}
+                    href={getVcsAuthUrl(
+                      getVcsProvider(selectedInstallation?.provider).id,
+                      'update',
+                    )}
                     className="link-neutral inline-flex items-center gap-1 font-medium"
                   >
                     {t('Check your permissions')}
