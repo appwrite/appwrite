@@ -727,8 +727,8 @@ class Install extends Action
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
     {
-        $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? null;
+        $name = $account['name'] ?? 'Admin';
         $password = $account['password'] ?? null;
 
         if (!$email || !$password) {
@@ -874,9 +874,7 @@ class Install extends Action
         }
 
         $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
-        $name = $account['name'] ?? 'Admin';
-        $email = $account['email'] ?? 'admin@selfhosted.local';
+$database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
         $hostIp = @gethostbyname($domain);
 
@@ -888,8 +886,6 @@ class Install extends Action
             'label' => 'self_hosted_' . $type,
             'version' => $version,
             'data' => json_encode([
-                'name' => $name,
-                'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
                 'ip' => ($hostIp !== $domain) ? $hostIp : null,
