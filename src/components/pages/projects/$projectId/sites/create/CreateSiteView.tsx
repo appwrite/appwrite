@@ -387,22 +387,20 @@ export function CreateSiteView() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {orgOptions.length > 1 && (
-                      <div
-                        className="px-1 pb-1 mb-1 border-b border-border"
-                        onKeyDown={(e) => e.stopPropagation()}
-                      >
-                        <div className="relative">
-                          <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                          <Input
-                            value={orgFilter}
-                            onChange={(e) => setOrgFilter(e.target.value)}
-                            placeholder={t('Filter organizations...')}
-                            className="h-8 ps-7 text-[12px]"
-                          />
-                        </div>
+                    <div
+                      className="px-1 pb-1 mb-1 border-b border-border"
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="relative">
+                        <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <Input
+                          value={orgFilter}
+                          onChange={(e) => setOrgFilter(e.target.value)}
+                          placeholder={t('Filter organizations...')}
+                          className="h-8 ps-7 text-[12px]"
+                        />
                       </div>
-                    )}
+                    </div>
                     {filteredOrgOptions.length > 0 ? (
                       filteredOrgOptions.map((option) => (
                         <SelectItem key={option.key} value={option.key}>
