@@ -422,8 +422,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     'התשלום נכשל - פעלו עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
-  'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
-    'התשלום נכשל - הארגון שלכם במצב קריאה בלבד עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
+  'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
+    'התשלום נכשל - לארגון שלכם יש גישה מוגבלת עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',
   Bold: 'מודגש',
   Italic: 'נטוי',
@@ -685,8 +685,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Screenshot: 'צילום מסך',
   'Payment failed - update billing to avoid interrupting your projects and services.':
     'התשלום נכשל - עדכנו את פרטי החיוב כדי למנוע שיבוש בפרויקטים ובשירותים שלכם.',
-  'Payment failed - this organization is read-only until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
-    'התשלום נכשל - הארגון במצב קריאה בלבד עד לתשלום החשבונית הפתוחה. שינויים בפרויקטים ובשירותים מוגבלים; פתחו את החיוב כדי לעדכן תשלום ולשחזר גישה.',
+  'Payment failed - this organization has restricted access until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
+    'התשלום נכשל - לארגון יש גישה מוגבלת עד לתשלום החשבונית הפתוחה. שינויים בפרויקטים ובשירותים מוגבלים; פתחו את החיוב כדי לעדכן תשלום ולשחזר גישה.',
 
   // Dynamic pass-through values: system status panel
   Operational: 'תקין',

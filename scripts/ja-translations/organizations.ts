@@ -234,8 +234,8 @@ export const jaOrganizationsTranslations: Record<string, string> = {
     'アカウントあたり無料組織は1つのみ許可されています。',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
     '組織レベルのキーは利用可能になり次第、ここで管理できるようになります。それまではサーバーサイドのアクセスにプロジェクトキーを使用してください。',
-  'Payment failed - organization in read-only mode':
-    '支払いに失敗しました。組織は読み取り専用モードです',
+  'Payment failed - organization has restricted access':
+    '支払いに失敗しました。組織は制限付きアクセスです',
   'Payment form not ready. Please try again.':
     '支払いフォームの準備ができていません。もう一度お試しください。',
   'Payment method has been added to your organization':

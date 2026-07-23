@@ -144,7 +144,7 @@ export function BillingTab() {
             <WarningAlert
               title={
                 orgBillingReadonly
-                  ? t('Payment failed - organization in read-only mode')
+                  ? t('Payment failed - organization has restricted access')
                   : t('Payment failed')
               }
             >

@@ -233,7 +233,7 @@ function AllDatabasesGridCardShell({
           <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
               <DatabaseTypeBadge
-                apiType={db.databaseType}
+                apiType={db.apiType ?? db.databaseType}
                 engine={dedicated?.engine}
                 product={dedicated?.api}
               />
@@ -726,7 +726,7 @@ export function AllDatabasesSection({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <DatabaseTypeBadge
-                          apiType={db.databaseType}
+                          apiType={db.apiType ?? db.databaseType}
                           engine={dedicated?.engine}
                           product={dedicated?.api}
                         />

@@ -12,7 +12,7 @@ const TOOLTIP_DEFAULT =
   'Payment failed - update billing to avoid interrupting your projects and services.'
 
 const TOOLTIP_READONLY =
-  'Payment failed - this organization is read-only until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.'
+  'Payment failed - this organization has restricted access until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.'
 
 type FailedInvoiceWarningIconProps = {
   show: boolean

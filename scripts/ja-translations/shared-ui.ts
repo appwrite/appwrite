@@ -72,8 +72,8 @@ export const jaSharedUiTranslations: Record<string, string> = {
     'オペレーターのコンテキストが失われました。なりすましを停止してから、もう一度開始してください。',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     '支払いに失敗しました。今すぐ対応してください。未解決の請求により、プロジェクトとサービスが中断される可能性があります。',
-  "Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.":
-    '支払いに失敗しました。未解決の請求問題により、組織は読み取り専用モードになっています。支払いが完了するまで、プロジェクトとサービスへの変更は制限されます。請求情報を更新して、完全なアクセスを回復してください。',
+  "Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.":
+    '支払いに失敗しました。未解決の請求問題により、組織は制限付きアクセスになっています。支払いが完了するまで、プロジェクトとサービスへの変更は制限されます。請求情報を更新して、完全なアクセスを回復してください。',
   'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.':
     'Appwrite の改善に役立つ、プライバシーに配慮した使用状況分析とエラーレポートです。', // pragma: allowlist secret
   'Redeploy is not available for this deployment type': 'このデプロイタイプでは再デプロイを利用できません',
@@ -121,8 +121,8 @@ export const jaSharedUiTranslations: Record<string, string> = {
     'このスコープは API キーに設定されていますが、サーバーのスコープ一覧には返されませんでした。',
   'Payment failed - update billing to avoid interrupting your projects and services.':
     '支払いに失敗しました。プロジェクトとサービスの中断を避けるため、請求情報を更新してください。',
-  'Payment failed - this organization is read-only until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
-    '支払いに失敗しました。未払いの請求書が支払われるまで、この組織は読み取り専用になります。プロジェクトとサービスの変更は制限されます。「請求」を開いて支払いを更新し、アクセスを回復してください。',
+  'Payment failed - this organization has restricted access until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
+    '支払いに失敗しました。未払いの請求書が支払われるまで、この組織は制限付きアクセスになります。プロジェクトとサービスの変更は制限されます。「請求」を開いて支払いを更新し、アクセスを回復してください。',
   'Several services may be affected while we restore them.': '復旧作業中は、複数のサービスに影響が出る可能性があります。',
   'Some Appwrite Cloud services are temporarily unavailable.':
     '一部の Appwrite Cloud サービスが一時的に利用できません。', // pragma: allowlist secret

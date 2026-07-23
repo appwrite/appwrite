@@ -1,6 +1,7 @@
 import {
   DatabaseType,
   coerceDatabaseType,
+  engineFromDatabaseTypeValue,
   isNativeDatabaseTypeValue,
 } from '@/lib/databases/database-type'
 import {
@@ -59,12 +60,18 @@ export function readDatabaseSpecification(
 
 /**
  * Engine services to probe for product-owned dedicated compute under the same ID.
- * TablesDB dedicated compute is MySQL (see product migrate-to-dedicated docs);
- * DocumentsDB uses MongoDB; VectorsDB uses PostgreSQL.
+ * Native unified `type` values (`postgresql` / `mysql` / `mongodb`) map to that
+ * engine only. Product APIs use their dedicated backend: TablesDB → MySQL,
+ * DocumentsDB → MongoDB, VectorsDB → PostgreSQL.
  */
 export function productDedicatedEngineHints(
   databaseType: string | null | undefined,
 ): string[] {
+  // Native DBs report the engine as `type`; do not fall through to TablesDB's
+  // MySQL-first hints (coerceDatabaseType maps native engines to TablesDB).
+  const nativeEngine = engineFromDatabaseTypeValue(databaseType)
+  if (nativeEngine) return [nativeEngine]
+
   const type = coerceDatabaseType(databaseType)
   if (type === DatabaseType.Documentsdb) return ['mongodb']
   if (type === DatabaseType.Vectorsdb) return ['postgresql']
