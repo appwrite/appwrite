@@ -6,14 +6,14 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### Agenda
 
-Self-hosted Appwrite can run a meta control plane plus regional API stacks. Region ids are arbitrary DNS labels (for example `france` or `eu-west-1`), not limited to Cloud city codes.
+Self-hosted Appwrite can run a meta control plane plus regional API stacks. Examples use Cloud-style ids (`fra`, `nyc`, `sfo`); custom DNS-label ids (e.g. `france`) are also supported.
 
 ### Topology
 
 | Role | `_APP_REGION` | `_APP_DB_*` | `_APP_CONNECTIONS_DATABASE` |
 |------|---------------|-------------|-----------------------------|
 | Meta | `default` | Local platform DB | All regional DSNs |
-| Regional | e.g. `france` | Meta DB host | This region only |
+| Regional | e.g. `fra` | Meta DB host | This region only |
 
 ### Environment variables
 
@@ -29,8 +29,8 @@ Self-hosted Appwrite can run a meta control plane plus regional API stacks. Regi
 ```json
 {
   "default": { "$id": "default", "name": "Default", "disabled": true, "default": false },
-  "france": { "$id": "france", "name": "France", "disabled": false, "default": true },
-  "japan": { "$id": "japan", "name": "Japan", "disabled": false, "default": false }
+  "fra": { "$id": "fra", "name": "Frankfurt", "disabled": false, "default": true },
+  "nyc": { "$id": "nyc", "name": "New York", "disabled": false, "default": false }
 }
 ```
 
@@ -48,24 +48,24 @@ Matching uses a `_db_<regionId>_` token so short ids (e.g. `us`) do not match lo
 
 ```bash
 _APP_REGION=default
-_APP_REGIONS={"default":{"$id":"default","name":"Default","disabled":true,"default":false},"france":{"$id":"france","name":"France","disabled":false,"default":true},"japan":{"$id":"japan","name":"Japan","disabled":false,"default":false}}
-_APP_PROJECT_REGIONS=france,japan
-_APP_CONNECTIONS_DATABASE=db_france_main=mariadb://user:password@mariadb-france:3306/appwrite,db_japan_main=mariadb://user:password@mariadb-japan:3306/appwrite
-_APP_DATABASE_KEYS=database_db_france_main,database_db_japan_main
+_APP_REGIONS={"default":{"$id":"default","name":"Default","disabled":true,"default":false},"fra":{"$id":"fra","name":"Frankfurt","disabled":false,"default":true},"nyc":{"$id":"nyc","name":"New York","disabled":false,"default":false}}
+_APP_PROJECT_REGIONS=fra,nyc
+_APP_CONNECTIONS_DATABASE=db_fra_main=mariadb://user:password@mariadb-fra:3306/appwrite,db_nyc_main=mariadb://user:password@mariadb-nyc:3306/appwrite
+_APP_DATABASE_KEYS=database_db_fra_main,database_db_nyc_main
 _APP_DOMAIN_TARGET_CNAME=appwrite.example.com
 ```
 
-### Regional example (`france`)
+### Regional example (`fra`)
 
 ```bash
-_APP_REGION=france
+_APP_REGION=fra
 _APP_DB_HOST=mariadb-meta
-_APP_CONNECTIONS_DATABASE=db_france_main=mariadb://user:password@mariadb-france:3306/appwrite
-_APP_DATABASE_KEYS=database_db_france_main
-_APP_DOMAIN=france.example.com
+_APP_CONNECTIONS_DATABASE=db_fra_main=mariadb://user:password@mariadb-fra:3306/appwrite
+_APP_DATABASE_KEYS=database_db_fra_main
+_APP_DOMAIN=fra.example.com
 ```
 
-Use sibling DNS hosts (`appwrite.example.com` → `france.example.com`), not Cloud `{region}.cloud…` prefixes.
+Use sibling DNS hosts (`appwrite.example.com` → `fra.example.com`), not Cloud `{region}.cloud…` prefixes.
 
 ### Monolith
 

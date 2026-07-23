@@ -465,7 +465,7 @@ return [
             ],
             [
                 'name' => '_APP_DATABASE_KEYS',
-                'description' => 'Comma-separated Utopia pool names for non-default region project create. Example: database_db_france_main,database_db_japan_main.',
+                'description' => 'Comma-separated Utopia pool names for non-default region project create. Example: database_db_fra_main,database_db_nyc_main.',
                 'introduction' => '1.9.6',
                 'default' => '',
                 'required' => false,
