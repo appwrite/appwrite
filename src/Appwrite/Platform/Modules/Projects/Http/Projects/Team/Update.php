@@ -60,6 +60,8 @@ class Update extends Action
 
     public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform)
     {
+        $errors = [];
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -84,21 +86,44 @@ class Update extends Action
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($installations as $installation) {
-            $dbForPlatform->updateDocument('installations', $installation->getId(), new Document(['$permissions' => $permissions]));
+            try {
+                $dbForPlatform->updateDocument('installations', $installation->getId(), new Document(['$permissions' => $permissions]));
+            } catch (\Throwable $e) {
+                $errors[] = $e;
+            }
         }
 
         $repositories = $dbForPlatform->find('repositories', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($repositories as $repository) {
-            $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['$permissions' => $permissions]));
+            try {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['$permissions' => $permissions]));
+            } catch (\Throwable $e) {
+                $errors[] = $e;
+            }
         }
 
         $vcsComments = $dbForPlatform->find('vcsComments', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($vcsComments as $vcsComment) {
-            $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
+            try {
+                $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
+            } catch (\Throwable $e) {
+                $errors[] = $e;
+            }
+        }
+
+        if (!empty($errors)) {
+            $errors = \array_values(\array_filter(
+                $errors,
+                fn (\Throwable $e) => $e instanceof Exception && $e->getCode() >= 400 && $e->getCode() < 500
+            ));
+
+            if (!empty($errors)) {
+                throw $errors[0];
+            }
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);

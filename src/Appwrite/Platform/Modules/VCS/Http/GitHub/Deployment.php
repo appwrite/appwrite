@@ -71,7 +71,9 @@ trait Deployment
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if ($project->isEmpty()) {
-                    throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
+                    Console::warning("Skipping stale repository {$repositoryId}: referenced project no longer exists.");
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repositoryId));
+                    continue;
                 }
 
                 $this->beforeCreateGitDeployment($project, $repository, $dbForPlatform, $authorization);
@@ -572,12 +574,19 @@ trait Deployment
                 $errors[] = $e->getMessage();
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
-                $errors[] = $e->getMessage();
+
+                if ($e instanceof Exception && $e->getType() === Exception::PROVIDER_REPOSITORY_NOT_FOUND) {
+                    Console::warning("Skipping stale repository {$repositoryId}: provider repository no longer exists.");
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repositoryId));
+                    continue;
+                }
+
+                $errors[] = $e;
             }
         }
 
         if (!empty($errors)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+            throw $errors[0];
         }
     }
 
