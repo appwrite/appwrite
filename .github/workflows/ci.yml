@@ -493,7 +493,8 @@ jobs:
         if: matrix.service.name == 'VCSGitea'
         timeout-minutes: 5
         run: |
-          docker compose up -d --wait gitea gitea-bootstrap
+          docker compose up -d --wait gitea
+          docker compose exec -T gitea /setup.sh
           CREDS=$(docker compose exec -T gitea cat /data/gitea/oauth.json)
           CLIENT_SECRET=$(echo "$CREDS" | jq -r .client_secret)
           echo "::add-mask::$CLIENT_SECRET"

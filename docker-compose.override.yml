@@ -20,11 +20,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      coredns:
-        condition: service_started
-      gitea-bootstrap:
-        condition: service_completed_successfully
-        required: false
+      - coredns
     ports:
       - 9501:80
     dns:
@@ -351,9 +347,13 @@ services:
       - 9515:3000
     volumes:
       - appwrite-gitea:/data
+      - ./dev/gitea/setup.sh:/setup.sh:ro
     environment:
       - USER_UID=1000
       - USER_GID=1000
+      - GITEA_ADMIN_USERNAME=${GITEA_ADMIN_USERNAME:-appwrite}
+      - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD:-password}
+      - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL:-gitea@appwrite.io}
       - GITEA__database__DB_TYPE=sqlite3
       - GITEA__security__INSTALL_LOCK=true
       - GITEA__service__DISABLE_REGISTRATION=false
@@ -373,25 +373,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-  gitea-bootstrap:
-    profiles:
-      - gitea
-    image: gitea/gitea:1.21.5
-    container_name: appwrite-gitea-bootstrap
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-gitea:/data
-      - ./dev/gitea/setup.sh:/setup.sh:ro
-    depends_on:
-      gitea:
-        condition: service_healthy
-    environment:
-      - GITEA_ADMIN_USERNAME=${GITEA_ADMIN_USERNAME:-appwrite}
-      - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD:-password}
-      - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL:-gitea@appwrite.io}
-    entrypoint: /bin/sh
-    command: /setup.sh
   appwrite-mongo-express:
     profiles:
       - mongodb
