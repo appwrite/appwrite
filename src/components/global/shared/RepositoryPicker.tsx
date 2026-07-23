@@ -28,6 +28,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, ArrowLeft, ArrowLeftRight } from 'lucide-react'
 import {
   getVcsProvider,
+  getKnownVcsProvider,
   VCS_PROVIDERS,
   VcsIcon,
   type VcsProviderId,
@@ -467,21 +468,24 @@ export function RepositoryPicker({
             </div>
 
             {/* Missing repos / permissions note - compact one-liner */}
-            <p className="text-[12px] text-muted-foreground">
-              {t("Can't find a repository?")}{' '}
-              <a
-                href={vcsAuthUrl(
-                  getVcsProvider(selectedInstallation?.provider).id,
-                  'update',
-                )}
-                className="link-neutral"
-              >
-                {t(
-                  `Update ${getVcsProvider(selectedInstallation?.provider).label} permissions`,
-                )}
-              </a>{' '}
-              {t('to include more repos.')}
-            </p>
+            {(() => {
+              const knownProvider = getKnownVcsProvider(
+                selectedInstallation?.provider,
+              )
+              if (!knownProvider) return null
+              return (
+                <p className="text-[12px] text-muted-foreground">
+                  {t("Can't find a repository?")}{' '}
+                  <a
+                    href={vcsAuthUrl(knownProvider.id, 'update')}
+                    className="link-neutral"
+                  >
+                    {t(`Update ${knownProvider.label} permissions`)}
+                  </a>{' '}
+                  {t('to include more repos.')}
+                </p>
+              )
+            })()}
           </>
         )}
       </div>

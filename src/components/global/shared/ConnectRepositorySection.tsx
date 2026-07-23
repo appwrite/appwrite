@@ -176,6 +176,22 @@ export function ConnectRepositorySection({
     }
   }, [hasInstallations, installations, selectedInstallationId])
 
+  // Resync the active org provider once installations load (or the
+  // selection changes) so a GitLab-only list doesn't stay stuck on the
+  // initial empty-list GitHub fallback.
+  useEffect(() => {
+    if (!hasInstallations) return
+    const selected = installations.find(
+      (inst) => inst.$id === selectedInstallationId,
+    )
+    const nextProvider = getVcsProvider(
+      selected?.provider ?? installations[0]?.provider,
+    ).id
+    setActiveOrgProvider((prev) =>
+      prev === nextProvider ? prev : nextProvider,
+    )
+  }, [hasInstallations, installations, selectedInstallationId])
+
   const handleCreateRepository = async () => {
     if (
       !projectId ||
