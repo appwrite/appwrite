@@ -6,7 +6,7 @@
  * - Right: Clone template (quick start + highlighted templates from API)
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -267,8 +267,19 @@ export function CreateFunctionView() {
     setSelectedNamespace('')
   }, [selectedInstallationId])
 
+  // Runs only once: after that, an empty selectedInstallationId means the
+  // user explicitly switched to a provider with no installations yet (e.g.
+  // via "Switch Git Provider"), and re-defaulting here would silently snap
+  // them back to a different provider's installation instead of showing the
+  // "Add account" empty state for the one they picked.
+  const hasAutoSelectedInstallation = useRef(false)
   useEffect(() => {
-    if (installations.length > 0 && !selectedInstallationId) {
+    if (
+      installations.length > 0 &&
+      !selectedInstallationId &&
+      !hasAutoSelectedInstallation.current
+    ) {
+      hasAutoSelectedInstallation.current = true
       const urlParams =
         typeof window !== 'undefined'
           ? new URLSearchParams(window.location.search)

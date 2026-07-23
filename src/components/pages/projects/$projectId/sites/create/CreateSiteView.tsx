@@ -6,7 +6,7 @@
  * - Right: Repository import
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -199,9 +199,21 @@ export function CreateSiteView() {
     setCurrentPath('repository')
   }, [setCurrentPath])
 
-  // Initialize selected installation - prioritize recently created, then URL param, then first
+  // Initialize selected installation - prioritize recently created, then URL param, then first.
+  // Runs only once: after that, an empty selectedInstallationId means the user
+  // explicitly switched to a provider with no installations yet (e.g. via
+  // "Switch Git Provider"), and re-defaulting here would silently snap them
+  // back to a different provider's installation instead of showing the
+  // "Add account" empty state for the one they picked.
+  const hasAutoSelectedInstallation = useRef(false)
   useEffect(() => {
-    if (installations.length > 0 && !selectedInstallationId) {
+    if (
+      installations.length > 0 &&
+      !selectedInstallationId &&
+      !hasAutoSelectedInstallation.current
+    ) {
+      hasAutoSelectedInstallation.current = true
+
       // Check for recently created installation (within last 30s)
       const twoMinutesAgo = new Date(Date.now() - 30 * 1000)
       const recentInstallation = installations.find((inst) => {

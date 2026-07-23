@@ -6,7 +6,7 @@
  * and after-selection summary with optional branch/root directory.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -169,9 +169,21 @@ export function ConnectRepositorySection({
     }
   }, [defaultRepositoryName, hasRepository])
 
-  // Initialize selected installation when installations load
+  // Initialize selected installation when installations load. Runs only
+  // once: after that, an empty selectedInstallationId means the user
+  // explicitly switched to a provider with no installations yet (via the
+  // org-provider switcher), and re-defaulting here would silently snap them
+  // back to a different provider's installation instead of showing the
+  // "Add account" empty state for the one they picked.
+  const hasAutoSelectedInstallation = useRef(false)
   useEffect(() => {
-    if (hasInstallations && !selectedInstallationId && installations[0]?.$id) {
+    if (
+      hasInstallations &&
+      !selectedInstallationId &&
+      installations[0]?.$id &&
+      !hasAutoSelectedInstallation.current
+    ) {
+      hasAutoSelectedInstallation.current = true
       setSelectedInstallationId(installations[0].$id)
     }
   }, [hasInstallations, installations, selectedInstallationId])
