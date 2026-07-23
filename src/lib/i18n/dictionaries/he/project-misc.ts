@@ -2462,8 +2462,69 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'ימים של היסטוריית שימוש. השתמשו בטווח קצר יותר או שדרגו לעוד.',
   'Use shorter range': 'טווח קצר יותר',
   'Date range exceeds log retention': 'טווח התאריכים חורג משמירת הלוגים',
-  'Upgrade to view usage': 'שדרגו כדי לצפות בשימוש',
-  'Usage insights are not included in your current plan. Upgrade to unlock detailed metrics and breakdowns.':
-    'תובנות שימוש אינן כלולות בתוכנית הנוכחית שלכם. שדרגו כדי לפתוח מדדים ופירוטים מפורטים.',
+  'Premium Geo DB required': 'נדרש Premium Geo DB',
+  'Enable the Premium Geo DB addon for this project to view city and country usage breakdowns.':
+    'הפעילו את תוסף Premium Geo DB בפרויקט זה כדי לצפות בפירוטי שימוש לפי עיר ומדינה.',
+  'Enable Premium Geo DB': 'הפעלת Premium Geo DB',
   'Upgrade plan': 'שדרוג תוכנית',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Enrich sessions, activity, and usage with detailed geolocation from every request.':
+    'העשירו סשנים, פעילות ושימוש עם נתוני מיקום מפורטים מכל בקשה.',
+  'Not enabled': 'לא מופעל',
+  Continent: 'יבשת',
+  'EU membership': 'חברות באיחוד האירופי',
+  Currency: 'מטבע',
+  'State / region': 'מחוז / אזור',
+  Timezone: 'אזור זמן',
+  Coordinates: 'קואורדינטות',
+  ISP: 'ISP',
+  ASN: 'ASN',
+  'Connection type': 'סוג חיבור',
+  'Connection usage': 'שימוש בחיבור',
+  'Add premium geolocation details to sessions and requests, including city, timezone, postal code, and ISP.':
+    'הוסיפו פרטי מיקום מתקדמים לסשנים ולבקשות, כולל עיר, אזור זמן, מיקוד וספק אינטרנט.',
+  'Premium Geo DB is not available on your current plan. Upgrade your plan to enable it.':
+    'Premium Geo DB אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'Premium Geo DB is not available on your current plan.':
+    'Premium Geo DB אינו זמין בתוכנית הנוכחית שלכם.',
+  'Payment pending': 'תשלום ממתין',
+  "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.":
+    'תשלום ממתין לאישור. אם השלמתם את האימות, לחצו על רענון כדי לבדוק את סטטוס התשלום.',
+  'Scheduled for removal': 'מתוזמן להסרה',
+  'Enabled for this project at {price}/month.': 'מופעל בפרויקט זה ב-{price}/חודש.',
+  'Enabled for this project.': 'מופעל בפרויקט זה.',
+  '{price}/month': '{price}/חודש',
+  'Enrich request and session data with premium geolocation. {price}/month, prorated for the current billing cycle.':
+    'העשירו נתוני בקשות וסשן עם מיקום מתקדם. {price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
+  'Enrich request and session data with premium geolocation. Billed prorated for the current cycle.':
+    'העשירו נתוני בקשות וסשן עם מיקום מתקדם. מחויב באופן יחסי למחזור הנוכחי.',
+  'Premium Geo DB will be removed at the end of your current billing cycle.':
+    'Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  'Keep Premium Geo DB': 'שמירת Premium Geo DB',
+  'Disable Premium Geo DB': 'השבתת Premium Geo DB',
+  'Premium Geo DB addon has been enabled': 'תוסף Premium Geo DB הופעל',
+  'Premium Geo DB addon is already active for this project':
+    'תוסף Premium Geo DB כבר פעיל בפרויקט זה',
+  'Premium Geo DB addon has been re-enabled': 'תוסף Premium Geo DB הופעל מחדש',
+  'Premium Geo DB addon will be removed at the end of your current billing cycle':
+    'תוסף Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי',
+  'Unable to verify Premium Geo DB addon status. Please retry.':
+    'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
+  'Payment could not be authorized. Please try enabling the addon again.':
+    'לא ניתן היה לאשר את התשלום. נסו להפעיל את התוסף שוב.',
+  'Add a payment method to your organization before enabling this addon.':
+    'הוסיפו אמצעי תשלום לארגון לפני הפעלת התוסף.',
+  'By clicking Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    'בלחיצה על הפעלה, הסכום החודשי של התוסף יתווסף למנוי שלכם ואמצעי התשלום יחויב מיד בסכום היחסי עבור הימים שנותרו במחזור החיוב.',
+  'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
+    'בלחיצה על הפעלה, אמצעי התשלום שלכם יחויב בסכום היחסי עבור הימים שנותרו במחזור החיוב, והתוסף יתווסף למנוי הפרויקט למחזורים הבאים.',
+  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
+    'Premium Geo DB מעשיר נתוני סשן ובקשות בפרטי מיקום מתקדמים כולל אזור זמן, מיקוד, ספק אינטרנט, סוג חיבור וארגון.',
+  'Due today (prorated)': 'לתשלום היום (יחסי)',
+  '* Plus applicable tax and fees': '* בתוספת מסים ועמלות רלוונטיים',
+  'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף Premium Geo DB? התוסף יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש.',
+  'Upgrade required': 'נדרש שדרוג',
+  'This feature requires an upgrade to access.':
+    'נדרש שדרוג כדי לגשת לתכונה זו.',
 }

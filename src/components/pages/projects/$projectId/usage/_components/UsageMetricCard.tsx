@@ -23,8 +23,10 @@ import {
   UsageBreakdownListSkeleton,
   UsageBreakdownRowsList,
 } from './UsageBreakdownRows'
+import { UsagePremiumGeoDBCurtain } from './UsagePremiumGeoDBCurtain'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useOptionalUsageFilters } from '../usage-filters-context'
+import { isUsageAddonNotFoundError } from '@/lib/usage/usage-history-errors'
 
 export function UsageMetricCardShell({
   className,
@@ -104,9 +106,21 @@ export function UsageBreakdownListError({
       ),
     [error, usageFilters?.usageLogRetentionDays, title, message],
   )
-  const showUpgradeCta = resolvedErrorCopy.isAddonNotFound
   const showRetry =
     !!onRetry && !shouldSuppressUsageChartRetry(resolvedErrorCopy)
+
+  if (isUsageAddonNotFoundError(error) || resolvedErrorCopy.isAddonNotFound) {
+    return (
+      <div className={overviewTopBreakdownListClass}>
+        <UsagePremiumGeoDBCurtain
+          className="absolute inset-0"
+          onEnabled={onRetry}
+        >
+          <UsageBreakdownListSkeleton showLeadingIcon={false} />
+        </UsagePremiumGeoDBCurtain>
+      </div>
+    )
+  }
 
   return (
     <div className={overviewTopBreakdownListClass}>
@@ -115,9 +129,6 @@ export function UsageBreakdownListError({
           title={t(resolvedErrorCopy.title)}
           message={<UsageChartErrorMessage copy={resolvedErrorCopy} />}
           onRetry={showRetry ? onRetry : undefined}
-          upgradeOrgId={
-            showUpgradeCta ? usageFilters?.organizationId : undefined
-          }
         />
       </div>
     </div>

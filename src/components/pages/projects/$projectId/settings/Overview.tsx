@@ -76,6 +76,7 @@ import {
   patchProjectProtocolsInCache,
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
+import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -1086,6 +1087,8 @@ export function ProjectSettingsOverview({
             isSelfHosted={false} // TODO: Get from organization plan
             isVcsEnabled={true} // TODO: Get from project settings
           />
+
+          <PremiumGeoDBCard projectId={projectId} />
 
           {/* MCP Server Section */}
           <MCPSection projectId={projectId} projectName={project.name} />

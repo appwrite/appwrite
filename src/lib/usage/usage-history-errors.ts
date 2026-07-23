@@ -70,9 +70,9 @@ export function resolveUsageChartErrorCopy(
 ): UsageChartErrorCopy {
   if (isUsageAddonNotFoundError(error)) {
     return {
-      title: 'Upgrade to view usage',
+      title: 'Premium Geo DB required',
       message:
-        'Usage insights are not included in your current plan. Upgrade to unlock detailed metrics and breakdowns.',
+        'Enable the Premium Geo DB addon for this project to view city and country usage breakdowns.',
       isRetentionLimit: false,
       isAddonNotFound: true,
     }

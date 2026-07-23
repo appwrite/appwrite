@@ -1798,7 +1798,8 @@ export function organizationBillingAggregationQueryOptions(
     enabled: !!organizationId && !!aggregationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    // Aggregation updates as usage accrues and when addons are enabled.
+    refetchOnMount: true,
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache

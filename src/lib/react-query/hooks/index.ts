@@ -17,6 +17,7 @@ export * from './dependencies'
 
 // Re-export from organized modules
 export * from './organizations'
+export * from './addons'
 export * from './teams'
 export * from './projects'
 export * from './onboarding'

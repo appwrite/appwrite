@@ -53,6 +53,11 @@ import {
   type BillingProjectResourceItem,
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
+import {
+  getBillingAddonChargesFromResources,
+  getDedicatedDbComputeCreditFromResources,
+  resolveBillingAddonDisplayName,
+} from '@/lib/billing/billing-addon-charges'
 import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
@@ -301,6 +306,17 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return additionalCount * additionalProjectPrice
   }, [plan, aggregation, projectsResource])
 
+  // Toggle addons (BAA, Premium Geo DB, …) from aggregation resources
+  const billingAddonCharges = useMemo(
+    () => getBillingAddonChargesFromResources(aggregation?.resources),
+    [aggregation?.resources],
+  )
+
+  const dedicatedDbComputeCredit = useMemo(
+    () => getDedicatedDbComputeCreditFromResources(aggregation?.resources),
+    [aggregation?.resources],
+  )
+
   // Toggle project expansion
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => {
@@ -471,11 +487,42 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         }
       })
 
+      // Project-scoped billing addons (e.g. Premium Geo DB)
+      projectResources
+        .filter(
+          (resource) =>
+            typeof resource.resourceId === 'string' &&
+            resource.resourceId.startsWith('addon_') &&
+            Number(resource.amount) > 0,
+        )
+        .forEach((addon) => {
+          const resourceId = addon.resourceId as string
+          const cost = Number(addon.amount) || 0
+          resources.push({
+            resourceId,
+            name: resolveBillingAddonDisplayName({
+              resourceId,
+              name: addon.name,
+            }),
+            usage: Number(addon.value) || 0,
+            limit: null,
+            cost,
+            formatType: 'number',
+            showLimit: false,
+            category: 'addons',
+          })
+          projectTotal += cost
+        })
+
       return {
         projectId: project.$id,
         projectName: project.name || t('Unknown Project'),
         categories: groupBillingProjectResources(resources),
-        total: projectTotal,
+        // Prefer aggregation project amount so the row matches billed totals
+        // (recalculated resource sums can miss newer metric ids).
+        total: Number.isFinite(Number(project.amount))
+          ? Number(project.amount)
+          : projectTotal,
       }
     })
   }, [aggregation, plan, dedicatedDbBillingSpecLookup, t])
@@ -665,6 +712,31 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 </span>
               </div>
             )}
+
+            {/* Billing addons (BAA, Premium Geo DB, …) */}
+            {billingAddonCharges.map((addon) => (
+              <div
+                key={addon.resourceId}
+                className="flex items-center justify-between text-[13px]"
+              >
+                <span className="text-foreground">{t(addon.name)}</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(addon.amount)}
+                </span>
+              </div>
+            ))}
+
+            {/* Dedicated DB included compute credit */}
+            {dedicatedDbComputeCredit ? (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground">
+                  {t(dedicatedDbComputeCredit.name)}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(dedicatedDbComputeCredit.amount)}
+                </span>
+              </div>
+            ) : null}
 
             {/* Credits Applied */}
             {creditsApplied > 0 && (

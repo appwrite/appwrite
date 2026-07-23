@@ -2439,8 +2439,71 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '日分の利用履歴が含まれます。短い期間を選ぶか、アップグレードで延長できます。',
   'Use shorter range': '期間を短くする',
   'Date range exceeds log retention': '期間がログ保持期間を超えています',
-  'Upgrade to view usage': 'アップグレードして使用状況を表示',
-  'Usage insights are not included in your current plan. Upgrade to unlock detailed metrics and breakdowns.':
-    '現在のプランには使用状況インサイトが含まれていません。アップグレードして詳細なメトリクスと内訳を利用できます。',
+  'Premium Geo DB required': 'Premium Geo DB が必要です',
+  'Enable the Premium Geo DB addon for this project to view city and country usage breakdowns.':
+    '都市・国別の使用状況内訳を表示するには、このプロジェクトで Premium Geo DB アドオンを有効にしてください。',
+  'Enable Premium Geo DB': 'Premium Geo DB を有効にする',
   'Upgrade plan': 'プランのアップグレード',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Enrich sessions, activity, and usage with detailed geolocation from every request.':
+    'セッション、アクティビティ、使用状況を、リクエストごとの詳細な位置情報で補強します。',
+  'Not enabled': '未有効',
+  Continent: '大陸',
+  'EU membership': 'EU 加盟',
+  Currency: '通貨',
+  'State / region': '州 / 地域',
+  Timezone: 'タイムゾーン',
+  Coordinates: '座標',
+  ISP: 'ISP',
+  ASN: 'ASN',
+  'Connection type': '接続タイプ',
+  'Connection usage': '接続の用途',
+  'Add premium geolocation details to sessions and requests, including city, timezone, postal code, and ISP.':
+    'セッションとリクエストに都市、タイムゾーン、郵便番号、ISP などの詳細な位置情報を追加します。',
+  'Premium Geo DB is not available on your current plan. Upgrade your plan to enable it.':
+    'Premium Geo DB は現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'Premium Geo DB is not available on your current plan.':
+    'Premium Geo DB は現在のプランでは利用できません。',
+  'Payment pending': '支払い保留中',
+  "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.":
+    '支払いの確認待ちです。認証が完了している場合は、更新をクリックして支払い状況を確認してください。',
+  'Scheduled for removal': '削除予定',
+  'Enabled for this project at {price}/month.':
+    'このプロジェクトで有効です ({price}/月)。',
+  'Enabled for this project.': 'このプロジェクトで有効です。',
+  '{price}/month': '{price}/月',
+  'Enrich request and session data with premium geolocation. {price}/month, prorated for the current billing cycle.':
+    'リクエストとセッションデータを詳細な位置情報で補強します。{price}/月、現在の請求サイクルに按分。',
+  'Enrich request and session data with premium geolocation. Billed prorated for the current cycle.':
+    'リクエストとセッションデータを詳細な位置情報で補強します。現在のサイクルに按分して請求されます。',
+  'Premium Geo DB will be removed at the end of your current billing cycle.':
+    'Premium Geo DB は現在の請求サイクル終了時に削除されます。',
+  'Keep Premium Geo DB': 'Premium Geo DB を維持',
+  'Disable Premium Geo DB': 'Premium Geo DB を無効にする',
+  'Premium Geo DB addon has been enabled': 'Premium Geo DB アドオンが有効になりました',
+  'Premium Geo DB addon is already active for this project':
+    'Premium Geo DB アドオンはこのプロジェクトですでに有効です',
+  'Premium Geo DB addon has been re-enabled':
+    'Premium Geo DB アドオンが再有効化されました',
+  'Premium Geo DB addon will be removed at the end of your current billing cycle':
+    'Premium Geo DB アドオンは現在の請求サイクル終了時に削除されます',
+  'Unable to verify Premium Geo DB addon status. Please retry.':
+    'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
+  'Payment could not be authorized. Please try enabling the addon again.':
+    '支払いを承認できませんでした。アドオンの有効化を再試行してください。',
+  'Add a payment method to your organization before enabling this addon.':
+    'このアドオンを有効にする前に、組織に支払い方法を追加してください。',
+  'By clicking Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    '「有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
+  'By clicking Enable, your payment method will be charged for the prorated amount for the remaining days in your billing cycle, and the addon will be added to this project subscription for future cycles.':
+    '「有効にする」をクリックすると、請求サイクルの残日数分の按分額が支払い方法に請求され、今後のサイクル向けにこのプロジェクトのサブスクリプションへアドオンが追加されます。',
+  'Premium Geo DB enriches session and request data with premium geolocation details including timezone, postal code, ISP, connection type, and organization.':
+    'Premium Geo DB は、タイムゾーン、郵便番号、ISP、接続タイプ、組織などの詳細な位置情報でセッションとリクエストデータを補強します。',
+  'Due today (prorated)': '本日お支払い (按分)',
+  '* Plus applicable tax and fees': '* 税および手数料が別途かかる場合があります',
+  'Are you sure you want to disable the Premium Geo DB addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'Premium Geo DB アドオンを無効にしますか? アドオンは現在の請求サイクル終了まで有効のままで、更新されません。',
+  'Upgrade required': 'アップグレードが必要です',
+  'This feature requires an upgrade to access.':
+    'この機能を利用するにはアップグレードが必要です。',
 }

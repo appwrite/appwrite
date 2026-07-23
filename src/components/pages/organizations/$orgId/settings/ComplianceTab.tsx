@@ -1,4 +1,4 @@
-import { FileText, Shield, ShieldCheck } from '@/lib/icons'
+import { FileText, Shield } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import {
   SettingsCardsList,
@@ -7,6 +7,8 @@ import {
 import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { useT } from '@/lib/i18n/translate'
+import { useParams } from '@tanstack/react-router'
+import { BaaSettingsCard } from './_components/BaaSettingsCard'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
 const CONTACT_SALES_URL =
@@ -15,6 +17,9 @@ const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 export function ComplianceTab() {
   const t = useT()
+  const params = useParams({ strict: false })
+  const organizationId = params.orgId as string | undefined
+
   const cards: SettingsCardItem[] = [
     {
       id: 'dpa',
@@ -75,46 +80,9 @@ export function ComplianceTab() {
         title: 'Business associate agreement (BAA)',
         keywords: ['baa', 'hipaa', 'phi', 'healthcare'],
       },
-      node: (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Business associate agreement (BAA)')}
-            </h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.",
-              )}
-            </p>
-            <div className="flex items-start gap-3 mt-3">
-              <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-              <p className="text-[13px] text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  {t('Who needs this:')}
-                </span>{' '}
-                {t(
-                  'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.',
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => {
-                window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
-              }}
-            >
-              {t('Contact sales')}
-            </Button>
-          </div>
-        </div>
-      ),
+      node: organizationId ? (
+        <BaaSettingsCard organizationId={organizationId} />
+      ) : null,
     },
     {
       id: 'soc2',

@@ -1091,4 +1091,39 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   to: 'へ',
   used: '使用済み',
   years: '年',
+  'BAA is not available on your current plan. Upgrade your plan to enable it.':
+    'BAA は現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'BAA is not available on your current plan.':
+    'BAA は現在のプランでは利用できません。',
+  'BAA is enabled for your organization ({price}/month).':
+    '組織で BAA が有効です ({price}/月)。',
+  'BAA will be removed at the end of your current billing cycle.':
+    'BAA は現在の請求サイクル終了時に削除されます。',
+  'Keep BAA': 'BAA を維持',
+  'Disable BAA': 'BAA を無効にする',
+  'Enable BAA': 'BAA を有効にする',
+  'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.':
+    '組織で BAA を有効にします。このアドオンは {price}/月で、現在の請求サイクルに按分されます。',
+  'BAA addon has been enabled': 'BAA アドオンが有効になりました',
+  'BAA addon is already active for your organization':
+    'BAA アドオンは組織ですでに有効です',
+  'BAA addon has been re-enabled': 'BAA アドオンが再有効化されました',
+  'BAA addon will be removed at the end of your current billing cycle':
+    'BAA アドオンは現在の請求サイクル終了時に削除されます',
+  'Unable to verify BAA addon status. Please retry.':
+    'BAA アドオンの状態を確認できませんでした。再試行してください。',
+  'HIPAA BAA': 'HIPAA BAA',
+  'By clicking Accept & Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    '「同意して有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
+  'By clicking Accept & Enable, you confirm acceptance of the Business Associate Agreement and related terms.':
+    '「同意して有効にする」をクリックすると、ビジネスアソシエイト契約および関連条項への同意を確認したことになります。',
+  "Your action confirms acceptance of Appwrite's Business Associate Agreement and related terms.":
+    'この操作により、Appwrite のビジネスアソシエイト契約および関連条項への同意を確認します。',
+  'View BAA': 'BAA を表示',
+  'Accept & Enable': '同意して有効にする',
+  'Are you sure you want to disable the BAA addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'BAA アドオンを無効にしますか? アドオンは現在の請求サイクル終了まで有効のままで、更新されません。',
+  Addons: 'アドオン',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Dedicated DB compute credit': '専用 DB コンピュートクレジット',
 }

@@ -15,14 +15,11 @@ import {
   DEFAULT_USAGE_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { Link } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelErrorClass,
@@ -36,10 +33,12 @@ import { useOptionalUsageFilters } from '../usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { UsageChartErrorMessage } from '../../shared/UsageChartErrorMessage'
 import {
+  isUsageAddonNotFoundError,
   resolveUsageChartErrorCopy,
   shouldSuppressUsageChartRetry,
 } from '@/lib/usage/usage-history-errors'
 import { DEFAULT_USAGE_LOG_RETENTION_DAYS } from '@/lib/usage/usage-log-retention'
+import { UsagePremiumGeoDBCurtain } from './UsagePremiumGeoDBCurtain'
 import {
   createUsageChartAxisTickFormatter,
   getChartSeriesMax,
@@ -168,12 +167,11 @@ export function UsageTimeSeriesChartCard({
       errorMessage,
     ],
   )
-  const { features } = useConsoleProfile()
-  const organizationId = usageFilters?.organizationId
-  const showUpgradeCta =
-    resolvedErrorCopy.isAddonNotFound && features.billing && !!organizationId
   const showRetry =
     !!onRetry && !shouldSuppressUsageChartRetry(resolvedErrorCopy)
+  const showGeoDbCurtain =
+    isUsageAddonNotFoundError(resolvedQueryError) ||
+    resolvedErrorCopy.isAddonNotFound
   const chartData = useMemo(
     () =>
       chartPoints.map((point) => ({
@@ -261,32 +259,31 @@ export function UsageTimeSeriesChartCard({
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
           <UsageChartArea>
-            <div className={overviewChartPanelErrorClass}>
-              <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
-              <div className="max-w-sm">
-                <p className="text-[13px] font-medium text-foreground">
-                  {t(resolvedErrorCopy.title)}
-                </p>
-                <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  <UsageChartErrorMessage copy={resolvedErrorCopy} />
-                </p>
+            {showGeoDbCurtain ? (
+              <UsagePremiumGeoDBCurtain
+                className="absolute inset-0"
+                onEnabled={onRetry}
+              >
+                <div className="h-full w-full rounded-lg bg-muted/20" />
+              </UsagePremiumGeoDBCurtain>
+            ) : (
+              <div className={overviewChartPanelErrorClass}>
+                <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
+                <div className="max-w-sm">
+                  <p className="text-[13px] font-medium text-foreground">
+                    {t(resolvedErrorCopy.title)}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                    <UsageChartErrorMessage copy={resolvedErrorCopy} />
+                  </p>
+                </div>
+                {showRetry ? (
+                  <Button variant="outline" size="sm" onClick={onRetry}>
+                    {t('Try again')}
+                  </Button>
+                ) : null}
               </div>
-              {showUpgradeCta ? (
-                <Button asChild size="sm">
-                  <Link
-                    to="/upgrade"
-                    search={{ orgId: organizationId! }}
-                    {...analyticsAttrs('upgrade-clicked')}
-                  >
-                    {t('Upgrade plan')}
-                  </Link>
-                </Button>
-              ) : showRetry ? (
-                <Button variant="outline" size="sm" onClick={onRetry}>
-                  {t('Try again')}
-                </Button>
-              ) : null}
-            </div>
+            )}
           </UsageChartArea>
         ) : isLoading ? (
           <ChartSkeleton />
