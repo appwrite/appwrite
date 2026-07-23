@@ -26,9 +26,11 @@ export const heFunctionsDictionary: Record<string, string> = {
     'אפשרו לכל אחד להריץ את הפונקציה הזו (הרשאת הרצה: any)',
   'and all its data? This action cannot be undone.':
     'ואת כל הנתונים שלה? פעולה זו אינה ניתנת לביטול.',
-  "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.":
     'רשת ה-CDN של Appwrite מספקת כיסוי גלובלי עם יותר מ-120 נקודות נוכחות ברחבי העולם, ומפחיתה זמן תגובה באמצעות מטמון קצה ואופטימיזציית תוכן. כל התוכן מועבר דרך TLS לחיבורים מאובטחים ומוצפנים.', // pragma: allowlist secret
-  "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your functions and maintaining high availability even during high traffic loads.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your functions and maintaining high availability even during high traffic loads.":
     'הרשת של Appwrite כוללת מיגון DDoS מובנה להגנה מפני מתקפות מניעת שירות מבוזרות, המבטיח גישה רציפה לפונקציות שלכם וזמינות גבוהה גם בעומסי תעבורה גבוהים.', // pragma: allowlist secret
   'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק את',
   'Are you sure you want to delete this deployment? This action cannot be undone.':
@@ -104,6 +106,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Connect Git provider': 'חיבור ספק Git',
   'Connect Git repository': 'חיבור Git repo',
   'Connect GitHub': 'חיבור GitHub',
+  'Connect GitLab': 'חיבור GitLab',
   'Connect later': 'חיבור מאוחר יותר',
   'Connect repository': 'חיבור repo',
   'Connect repository first': 'חברו קודם repo',
@@ -113,7 +116,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   Connected: 'מחובר',
   'Content Delivery Network': 'רשת אספקת תוכן (CDN)',
   Contribute: 'תרומה לפרויקט',
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
     'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
   Copy: 'העתקה',
   'Copy as JSON': 'העתקה כ-JSON',
@@ -231,7 +235,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Execution cannot be created because there is no active deployment':
     'לא ניתן ליצור הרצה מכיוון שאין פריסה פעילה',
   'Execution creation coming soon': 'יצירת הרצה תגיע בקרוב',
-  'Execution environment for this function and the file Appwrite loads as the handler. CPU and memory per run are set under Specification.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Execution environment for this function and the file Appwrite loads as the handler. CPU and memory per run are set under Specification.':
     'סביבת ההרצה של הפונקציה הזו והקובץ ש-Appwrite טוען כ-handler. מעבד וזיכרון לכל הרצה מוגדרים תחת מפרט.', // pragma: allowlist secret
   'Execution finished with status': 'ההרצה הסתיימה עם סטטוס',
   'Execution ID': 'מזהה הרצה',
@@ -413,8 +418,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Path to function code in the linked repo. Use the repository root (./) or a subdirectory that contains your function code.':
     'נתיב לקוד הפונקציה בה-repo המקושר. השתמשו בשורש ה-repo (./) או בתת-תיקייה שמכילה את קוד הפונקציה שלכם.',
-  "Path to your function's entry point":
-    'נתיב לנקודת הכניסה של הפונקציה שלכם',
+  "Path to your function's entry point": 'נתיב לנקודת הכניסה של הפונקציה שלכם',
   Permanent: 'קבוע',
   'Permanently delete this function and all its data. This action cannot be undone.':
     'מחיקה לצמיתות של הפונקציה הזו וכל הנתונים שלה. פעולה זו אינה ניתנת לביטול.',
@@ -422,8 +426,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Pick where your function runs. Both support custom domains after deployment.':
     'בחרו היכן הפונקציה שלכם תרוץ. שתי האפשרויות תומכות בדומיינים מותאמים אישית לאחר הפריסה.',
   'Please enter a domain': 'הזינו דומיין',
-  'Please fill in function name and runtime':
-    'מלאו שם פונקציה וסביבת ריצה',
+  'Please fill in function name and runtime': 'מלאו שם פונקציה וסביבת ריצה',
   'Please select a repository': 'בחרו repo',
   'Please select an installation and repository': 'בחרו התקנה ו-repo',
   'Please upload a .tar.gz file': 'העלו קובץ .tar.gz',
@@ -488,18 +491,13 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Runs once per day at noon (12:00)': 'רץ פעם ביום בצהריים (12:00)',
   'Runs once per month on the 15th at midnight':
     'רץ פעם בחודש ב-15 לחודש בחצות',
-  'Runs once per month on the 1st at midnight':
-    'רץ פעם בחודש ב-1 לחודש בחצות',
-  'Runs once per week on Friday at midnight':
-    'רץ פעם בשבוע ביום שישי בחצות',
+  'Runs once per month on the 1st at midnight': 'רץ פעם בחודש ב-1 לחודש בחצות',
+  'Runs once per week on Friday at midnight': 'רץ פעם בשבוע ביום שישי בחצות',
   'Runs once per week on Monday at midnight': 'רץ פעם בשבוע ביום שני בחצות',
   'Runs once per week on Saturday at midnight': 'רץ פעם בשבוע בשבת בחצות',
-  'Runs once per week on Sunday at midnight':
-    'רץ פעם בשבוע ביום ראשון בחצות',
-  'Runs once per week on Thursday at midnight':
-    'רץ פעם בשבוע ביום חמישי בחצות',
-  'Runs once per week on Tuesday at midnight':
-    'רץ פעם בשבוע ביום שלישי בחצות',
+  'Runs once per week on Sunday at midnight': 'רץ פעם בשבוע ביום ראשון בחצות',
+  'Runs once per week on Thursday at midnight': 'רץ פעם בשבוע ביום חמישי בחצות',
+  'Runs once per week on Tuesday at midnight': 'רץ פעם בשבוע ביום שלישי בחצות',
   'Runs once per week on Wednesday at midnight':
     'רץ פעם בשבוע ביום רביעי בחצות',
   'Runs twice per day (09:00, 21:00)': 'רץ פעמיים ביום (09:00, 21:00)',
@@ -528,8 +526,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Seconds per execution': 'שניות לכל הרצה',
   Secret: 'סודי',
   Security: 'אבטחה',
-  'Select a GitHub installation and repository to connect to this function':
-    'בחרו התקנת GitHub ו-repo לחיבור לפונקציה הזו',
+  'Select a Git installation and repository to connect to this function':
+    'בחרו התקנת Git ו-repo לחיבור לפונקציה הזו',
   'Select all': 'בחירת הכול',
   'Select an image': 'בחרו Image',
   'Select branch': 'בחירת Branch',
@@ -585,8 +583,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Timeout must be between 1 and 900 seconds':
     'ה-Timeout חייב להיות בין 1 ל-900 שניות',
   'Timeout updated successfully': 'ה-Timeout עודכן בהצלחה',
-  'to make it available to end users.':
-    'כדי להפוך אותה לזמינה למשתמשי קצה.',
+  'to make it available to end users.': 'כדי להפוך אותה לזמינה למשתמשי קצה.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
   'Total size': 'גודל כולל',
   'Total Size': 'גודל כולל',
@@ -668,6 +665,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Search body...': 'חיפוש ב-Body...',
   'Copy logs': 'העתקת לוגים',
   'Copy errors': 'העתקת שגיאות',
-  "Body data is not captured by Appwrite for your user's security and privacy. To display body data in the Logs tab, use": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Body data is not captured by Appwrite for your user's security and privacy. To display body data in the Logs tab, use":
     'נתוני ה-Body אינם נשמרים על ידי Appwrite לשם אבטחת המשתמשים שלכם ופרטיותם. כדי להציג נתוני Body בלשונית הלוגים, השתמשו ב', // pragma: allowlist secret
 }

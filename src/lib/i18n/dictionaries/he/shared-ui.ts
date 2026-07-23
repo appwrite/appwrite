@@ -30,7 +30,8 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Punctuated fragments and short segments
   '(Paused)': '(מושהה)',
-  '(Shift for range, ⌘/Ctrl to toggle)': '(Shift לבחירת טווח, ⌘/Ctrl להחלפת בחירה)',
+  '(Shift for range, ⌘/Ctrl to toggle)':
+    '(Shift לבחירת טווח, ⌘/Ctrl להחלפת בחירה)',
   '(empty)': '(ריק)',
   '. Operator': '. המפעיל:',
   copied: 'הועתק',
@@ -57,8 +58,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   Actions: 'פעולות',
   Activate: 'הפעלה',
   'Activate deployment': 'הפעלת פריסה',
-  'Activate deployment functionality coming soon': 'הפעלת פריסה תהיה זמינה בקרוב',
-  'Activate is not available for this deployment type': 'הפעלה אינה זמינה לסוג פריסה זה',
+  'Activate deployment functionality coming soon':
+    'הפעלת פריסה תהיה זמינה בקרוב',
+  'Activate is not available for this deployment type':
+    'הפעלה אינה זמינה לסוג פריסה זה',
   Active: 'פעיל',
   'Active session:': 'סשן פעיל:',
   'Add account': 'הוספת חשבון',
@@ -91,11 +94,13 @@ export const heSharedUiDictionary: Record<string, string> = {
   Bucket: 'באקט',
   Buckets: 'באקטים',
   'Build cancelled': 'הבנייה בוטלה',
-  'Build must be ready before activating.': 'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
+  'Build must be ready before activating.':
+    'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
   'Build output': 'פלט בנייה',
   'Build output is available after the deployment has completed.':
     'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
-  'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.':
     'פריסות CLI נוצרות באמצעות כלי שורת הפקודה של Appwrite, שימושי לתהליכי עבודה של מפתחים ולאוטומציה בסקריפטים.', // pragma: allowlist secret
   "Can't find a repository?": 'לא מוצאים repo?',
   Cancel: 'ביטול',
@@ -129,6 +134,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Connect: 'חיבור',
   'Connect existing repository': 'חיבור repo קיים',
   'Connect to GitHub': 'התחברות ל-GitHub',
+  'Connect to GitLab': 'התחברות ל-GitLab',
   'Console user': 'משתמש קונסולה',
   'Contact Support': 'פנייה לתמיכה',
   'Contact sales': 'פנייה למכירות',
@@ -249,18 +255,20 @@ export const heSharedUiDictionary: Record<string, string> = {
   Function: 'פונקציה',
   Functions: 'פונקציות',
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
-  'Get started by creating your first item.': 'התחילו ביצירת הפריט הראשון שלכם.',
+  'Get started by creating your first item.':
+    'התחילו ביצירת הפריט הראשון שלכם.',
   'Git organization': 'ארגון Git',
   'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
   'GitHub repository': 'GitHub repo',
+  'GitLab repository': 'GitLab repo',
   'Go to first page': 'לעמוד הראשון',
   'Go to last page': 'לעמוד האחרון',
   'Go to next page': 'לעמוד הבא',
   'Go to previous page': 'לעמוד הקודם',
   'Go to query tab': 'מעבר ללשונית שאילתה',
   'Help us improve your experience': 'עזרו לנו לשפר את החוויה שלכם',
-  'If selected, you and your team won\'t be able to read the values after creation.':
+  "If selected, you and your team won't be able to read the values after creation.":
     'אם תסומן אפשרות זו, אתם והצוות שלכם לא תוכלו לקרוא את הערכים לאחר היצירה.',
   Impersonate: 'התחזות',
   'Impersonate user': 'התחזות למשתמש',
@@ -297,7 +305,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Learn more': 'למדו עוד',
   'Light screenshot': 'צילום מסך בהיר',
   Line: 'שורה',
-  'Link this deployment to an existing repository.': 'קישור הפריסה הזו ל-repo קיים.',
+  'Link this deployment to an existing repository.':
+    'קישור הפריסה הזו ל-repo קיים.',
   'List order': 'סדר הרשימה',
   'Live traffic uses the active deployment until you activate this one.':
     'תעבורה חיה משתמשת בפריסה הפעילה עד שתפעילו את הפריסה הזו.',
@@ -333,7 +342,8 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   // Empty states
   No: 'אין',
-  'No API key scopes are available from the server.': 'אין הרשאות מפתח API זמינות מהשרת.',
+  'No API key scopes are available from the server.':
+    'אין הרשאות מפתח API זמינות מהשרת.',
   'No branches available': 'אין ענפים זמינים',
   'No branches found': 'לא נמצאו ענפים',
   'No buckets': 'אין באקטים',
@@ -354,10 +364,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No operators found': 'לא נמצאו אופרטורים',
   'No preview': 'אין תצוגה מקדימה',
   'No projects found': 'לא נמצאו פרויקטים',
-  'No proxy rules reference this deployment.': 'אין כללי פרוקסי המפנים לפריסה זו.',
+  'No proxy rules reference this deployment.':
+    'אין כללי פרוקסי המפנים לפריסה זו.',
   'No query tabs found': 'לא נמצאו לשוניות שאילתה',
   'No query tabs found.': 'לא נמצאו לשוניות שאילתה.',
-  'No repositories available for this installation': 'אין repos זמינים להתקנה זו',
+  'No repositories available for this installation':
+    'אין repos זמינים להתקנה זו',
   'No repositories found': 'לא נמצאו repos',
   'No results': 'אין תוצאות',
   'No results found': 'לא נמצאו תוצאות',
@@ -405,7 +417,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'list item': 'פריט ברשימה',
   'Nothing to preview': 'אין מה להציג בתצוגה מקדימה',
   'Previous image': 'התמונה הקודמת',
-  'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.':
     'אנליטיקת שימוש ודיווח שגיאות ששומרים על פרטיות ועוזרים לנו לשפר את Appwrite.', // pragma: allowlist secret
   Prompt: 'פרומפט',
   'Prompt copied to clipboard': 'הפרומפט הועתק ללוח',
@@ -452,7 +465,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search anything - pages, tabs, settings, resources...':
     'חיפוש בכל מקום - עמודים, לשוניות, הגדרות, משאבים…',
   'Search columns...': 'חיפוש עמודות…',
-  'Search commands and documentation pages...': 'חיפוש פקודות ועמודי דוקומנטציה…',
+  'Search commands and documentation pages...':
+    'חיפוש פקודות ועמודי דוקומנטציה…',
   'Search databases...': 'חיפוש מסדי נתונים…',
   'Search documentation...': 'חיפוש בדוקומנטציה...',
   'Search domains...': 'חיפוש דומיינים…',
@@ -476,11 +490,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Searching resources…': 'מחפש משאבים…',
   'Search...': 'חיפוש…',
   'Select…': 'בחירה…',
-  'Select': 'בחירה',
-  'Selection': 'בחירה',
-  'Enter': 'הזינו',
-  'Optional': 'אופציונלי',
-  'Searching': 'מחפש',
+  Select: 'בחירה',
+  Selection: 'בחירה',
+  Enter: 'הזינו',
+  Optional: 'אופציונלי',
+  Searching: 'מחפש',
   'Select database': 'בחירת מסד נתונים',
 
   Secret: 'סודי',
@@ -519,7 +533,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'The Appwriter mechanical keyboard': 'המקלדת המכנית The Appwriter', // pragma: allowlist secret
   'The active deployment cannot be deleted from the list':
     'לא ניתן למחוק את הפריסה הפעילה מהרשימה',
-  "The console needs an internet connection to reach Appwrite's data centers. We'll restore the page automatically when you are back online.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "The console needs an internet connection to reach Appwrite's data centers. We'll restore the page automatically when you are back online.":
     'הקונסולה זקוקה לחיבור אינטרנט כדי להגיע למרכזי הנתונים של Appwrite. נשחזר את העמוד אוטומטית כשתחזרו להיות מקוונים.', // pragma: allowlist secret
   'The deployment type indicates how this deployment was created.':
     'סוג הפריסה מציין כיצד הפריסה הזו נוצרה.',
@@ -557,7 +572,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Try a different prefix for name, email, phone, or user ID.':
     'נסו קידומת אחרת של שם, אימייל, טלפון או מזהה משתמש.',
   'Try a different search or upload a file.': 'נסו חיפוש אחר או העלו קובץ.',
-  'Try a different search term or installation': 'נסו מונח חיפוש אחר או התקנה אחרת',
+  'Try a different search term or installation':
+    'נסו מונח חיפוש אחר או התקנה אחרת',
   'Try adjusting your search or filters to see more results.':
     'נסו לשנות את החיפוש או הסינונים כדי לראות תוצאות נוספות.',
   Type: 'סוג',
@@ -569,13 +585,15 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Unmark secret': 'ביטול סימון כסודי',
   Update: 'עדכון',
   'Update GitHub permissions': 'עדכון הרשאות GitHub',
+  'Update GitLab permissions': 'עדכון הרשאות GitLab',
   'Update filter': 'עדכון סינון',
   'Update limit': 'עדכון המגבלה',
   'Update the value of this variable. The key cannot be changed.':
     'עדכון ערך המשתנה הזה. לא ניתן לשנות את המפתח.',
   'Update variable': 'עדכון משתנה',
   Upgrade: 'שדרוג',
-  'Upgrade your plan to get email support.': 'שדרגו את התוכנית כדי לקבל תמיכה באימייל.',
+  'Upgrade your plan to get email support.':
+    'שדרגו את התוכנית כדי לקבל תמיכה באימייל.',
   Upload: 'העלאה',
   'Upload a .env file to import variables. Existing variables with the same key will be updated.':
     'העלו קובץ ‎.env כדי לייבא משתנים. משתנים קיימים עם אותו מפתח יעודכנו.',
@@ -599,7 +617,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Wait for the build to finish or cancel it first':
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
-  'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
     'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
@@ -663,7 +682,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Degraded: 'ביצועים ירודים',
   'All services are available.': 'כל השירותים זמינים.',
   'Maintenance is in progress.': 'תחזוקה מתבצעת כעת.',
-  'Some services may be unavailable right now.': 'ייתכן שחלק מהשירותים אינם זמינים כרגע.',
+  'Some services may be unavailable right now.':
+    'ייתכן שחלק מהשירותים אינם זמינים כרגע.',
   'Some services are experiencing issues.': 'חלק מהשירותים חווים תקלות.',
   'Several services may be affected while we restore them.':
     'ייתכן שכמה שירותים מושפעים בזמן שאנחנו משחזרים אותם.',
@@ -794,14 +814,16 @@ export const heSharedUiDictionary: Record<string, string> = {
   Spatial: 'מרחבי',
 
   // Cloud status banner and fullscreen loader
-  'Some Appwrite Cloud services are temporarily unavailable.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Some Appwrite Cloud services are temporarily unavailable.':
     'חלק משירותי Appwrite Cloud אינם זמינים באופן זמני.', // pragma: allowlist secret
   'Scheduled maintenance is in progress.': 'תחזוקה מתוכננת מתבצעת כעת.',
   'We’re experiencing issues with some services.':
     'אנחנו חווים תקלות בחלק מהשירותים.',
   'You may have trouble accessing some services. We’re working to restore full access.':
     'ייתכן שתיתקלו בקשיים בגישה לחלק מהשירותים. אנחנו פועלים לשחזור גישה מלאה.',
-  'A subset of Appwrite Cloud services is degraded.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'A subset of Appwrite Cloud services is degraded.':
     'חלק משירותי Appwrite Cloud פועלים באופן חלקי.', // pragma: allowlist secret
   'All regions are affected.': 'כל האזורים מושפעים.',
   'View Status': 'צפייה בסטטוס',
@@ -842,7 +864,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'פנייה לתמיכה, Discord, GitHub וסטטוס מערכת',
 
   // Command center: docs entries
-  'Find guides, API references, and tutorials': 'חיפוש מדריכים, דוקומנטציית API והדרכות',
+  'Find guides, API references, and tutorials':
+    'חיפוש מדריכים, דוקומנטציית API והדרכות',
   'Docs home': 'עמוד הבית של הדוקומנטציה',
   'Appwrite documentation home': 'עמוד הבית של דוקומנטציית Appwrite', // pragma: allowlist secret
   'Quick starts': 'התחלה מהירה',
@@ -853,21 +876,25 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Client and server SDK documentation': 'דוקומנטציית SDK ללקוח ולשרת',
 
   // Command center: project navigation entries
-  'Toggle the built-in Appwrite CLI terminal': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Toggle the built-in Appwrite CLI terminal':
     'פתיחה או סגירה של טרמינל ה-CLI המובנה של Appwrite', // pragma: allowlist secret
   'All projects in this organization': 'כל הפרויקטים בארגון הזה',
   'Project dashboard and key metrics': 'לוח הבקרה של הפרויקט ומדדים מרכזיים',
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  'Browse and test Appwrite REST API endpoints': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Browse and test Appwrite REST API endpoints':
     'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
-  'Manage databases, tables and collections': 'ניהול מסדי נתונים, טבלאות ואוספים',
+  'Manage databases, tables and collections':
+    'ניהול מסדי נתונים, טבלאות ואוספים',
   'Buckets and files': 'באקטים וקבצים',
   'Serverless functions and executions': 'פונקציות serverless והרצות',
-  'Push notifications, email and SMS messages': 'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
+  'Push notifications, email and SMS messages':
+    'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
   'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
@@ -902,8 +929,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Password history, dictionary, and personal data checks':
     'בדיקות היסטוריית סיסמאות, מילון ונתונים אישיים',
   'Auth · Social providers': 'אימות · ספקי OAuth',
-  'Configure OAuth2 providers for social login':
-    'הגדרת ספקי OAuth2',
+  'Configure OAuth2 providers for social login': 'הגדרת ספקי OAuth2',
   'Auth · OAuth2 server · Server': 'אימות · שרת OAuth2 · שרת',
   'Configure OAuth2 authorization server for third-party apps':
     'הגדרת שרת הרשאות OAuth2 לאפליקציות צד שלישי',
@@ -951,16 +977,19 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Project ID and API endpoint for SDKs':
     'מזהה פרויקט ונקודת קצה של ה-API עבור ערכות SDK',
   'Settings · Services': 'הגדרות · שירותים',
-  'Enable or disable Appwrite services for this project': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Enable or disable Appwrite services for this project':
     'הפעלה או השבתה של שירותי Appwrite לפרויקט הזה', // pragma: allowlist secret
   'Settings · Transfer project': 'הגדרות · העברת פרויקט',
-  'Move this project to a different organization': 'העברת הפרויקט הזה לארגון אחר',
+  'Move this project to a different organization':
+    'העברת הפרויקט הזה לארגון אחר',
   'Settings · Delete project': 'הגדרות · מחיקת פרויקט',
   'Permanently delete this project and all its data':
     'מחיקה לצמיתות של הפרויקט הזה וכל הנתונים שלו',
 
   // Command center: organization entries
-  'Browse and publish Appwrite marketplace apps': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Browse and publish Appwrite marketplace apps':
     'עיון ופרסום של אפליקציות במרקטפלייס של Appwrite', // pragma: allowlist secret
   'Manage organization-level custom domains':
     'ניהול דומיינים מותאמים אישית ברמת הארגון',
@@ -1113,14 +1142,16 @@ export const heSharedUiDictionary: Record<string, string> = {
     'הפרויקט לא נמצא או שאין לכם גישה לצפות בו.',
   'You do not have permission to access this project. Please contact your administrator if you believe this is an error.':
     'אין לכם הרשאה לגשת לפרויקט הזה. פנו למנהל המערכת אם לדעתכם מדובר בטעות.',
-  'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.':
     'הדף הזה זקוק לחיבור ל-Appwrite. התחברו מחדש לאינטרנט ונסו שוב, נטען מחדש אוטומטית כשתחזרו להיות מקוונים.', // pragma: allowlist secret
   'Update available': 'עדכון זמין',
   'A newer version of the console was deployed while you had this tab open. Reload the page to continue.':
     'גרסה חדשה יותר של הקונסולה נפרסה בזמן שהלשונית הזו הייתה פתוחה. טענו מחדש את הדף כדי להמשיך.',
   'An unexpected error occurred.': 'אירעה שגיאה בלתי צפויה.',
   'Error details copied to clipboard': 'פרטי השגיאה הועתקו ללוח',
-  'If your connection looks fine, check our': 'אם החיבור שלכם נראה תקין, בדקו את',
+  'If your connection looks fine, check our':
+    'אם החיבור שלכם נראה תקין, בדקו את',
   'status page': 'דף הסטטוס שלנו',
   'for service updates.': 'לעדכוני שירות.',
   'No error details available': 'אין פרטי שגיאה זמינים',
