@@ -38,12 +38,13 @@ export const databasesProductContent: ProductPageContent = {
     {
       question: 'What is the difference between serverless and dedicated databases?',
       answer:
-        'Serverless databases run on a shared pool and are the fastest way to start. Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production-grade options such as read replicas, high availability, and point-in-time recovery. You pick a specification when you create the database and can upgrade later.',
+        'Serverless databases run on a shared pool and are the fastest way to start. Billing is usage-based: there is no fixed compute fee, and you pay for storage plus reads and writes against your plan quota (then overage). Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production options such as read replicas, high availability, and point-in-time recovery. Billing is a fixed monthly compute tier per database (from $10/mo), with reads and writes included in the tier. HA replicas and PITR are optional add-ons, and extra storage or bandwidth is billed as overage. You pick a specification when you create the database and can upgrade later.',
+      links: [{ label: 'Database pricing', href: '/pricing#database-pricing' }],
     },
     {
       question: 'How do replication and high availability work?',
       answer:
-        'On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.',
+        'On serverless databases, replication and high availability are abstracted and managed by the platform, so you do not configure replicas or sync mode yourself. On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.',
     },
     {
       question: 'Are backups and PITR included?',
@@ -69,15 +70,6 @@ export const databasesProductContent: ProductPageContent = {
         { label: 'Relationships', href: '/docs/products/databases/relationships' },
         { label: 'Transactions', href: '/docs/products/databases/transactions' },
         { label: 'Bulk operations', href: '/docs/products/databases/bulk-operations' },
-      ],
-    },
-    {
-      question: 'Can I migrate from a legacy document database?',
-      answer:
-        'Appwrite still supports legacy Collections APIs alongside TablesDB and DocumentsDB. Docs cover migration paths, compatibility notes, and how to move schemas and documents without disrupting clients.',
-      links: [
-        { label: 'Legacy collections', href: '/docs/products/databases/legacy/collections' },
-        { label: 'Legacy documents', href: '/docs/products/databases/legacy/documents' },
       ],
     },
   ],
