@@ -575,6 +575,12 @@ class Specs extends Action
             $message = Console::confirm('Please enter your commit message:');
         }
 
+        // Non-interactive runs get an empty confirm answer; without a message
+        // `git commit` aborts silently while the task still reports success.
+        if ($git === 'yes' && empty(\trim((string) $message))) {
+            $message = "feat: update {$version} API specifications";
+        }
+
         if (\is_null($branch)) {
             $branch = 'main';
         }
@@ -801,6 +807,11 @@ class Specs extends Action
 
             Console::info("Cloning {$gitRepoName} into {$target}...");
 
+            // Rebuild the working branch from the base branch on every run.
+            // Building on top of the previously pushed branch makes the PR
+            // conflict with the base branch as soon as another specs update
+            // lands there first — the branch is fully generated, so it is
+            // safe to rewrite.
             \exec('rm -rf ' . $target . ' && \
                 mkdir -p ' . $target . ' && \
                 cd ' . $target . ' && \
@@ -810,10 +821,8 @@ class Specs extends Action
                 git remote add origin ' . $gitUrl . ' && \
                 git fetch origin && \
                 (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
-                git pull origin ' . $repoBranch . ' && \
-                (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
-                (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
-                git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true
+                git pull origin ' . $repoBranch . ' 2>/dev/null; \
+                git checkout -B ' . $gitBranch . '
             ');
 
             // Copy generated spec files into specs/{version}/ subdirectory
@@ -865,14 +874,28 @@ class Specs extends Action
                 Console::warning("No SDK examples found at: {$examplesDir}. Skipping examples copy.");
             }
 
-            // Git add, commit, and push
-            \exec('cd ' . $target . ' && \
-                git add -A && \
-                git commit -m "' . \addslashes($message) . '" && \
-                git push -u origin ' . $gitBranch . '
-            ');
+            // Git add, commit, and push. Force push is required because the
+            // branch is rebuilt from the base branch on every run.
+            $statusOutput = [];
+            \exec('cd ' . $target . ' && git add -A && git status --porcelain', $statusOutput);
 
-            Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
+            if (empty($statusOutput)) {
+                Console::log("No spec changes to push to {$gitRepoName}, already up to date");
+            } else {
+                $pushOutput = [];
+                $pushReturnCode = 0;
+                \exec('cd ' . $target . ' && \
+                    git commit -m "' . \addslashes($message) . '" && \
+                    git push -u origin ' . $gitBranch . ' --force 2>&1
+                ', $pushOutput, $pushReturnCode);
+
+                if ($pushReturnCode !== 0) {
+                    Console::error("Failed to push specs to {$gitRepoName}: " . \implode("\n", $pushOutput));
+                    return;
+                }
+
+                Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
+            }
 
             // Create or update PR
             $prTitle = "feat: API specs update for version {$version}";

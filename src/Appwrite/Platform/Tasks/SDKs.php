@@ -628,30 +628,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             $repo->execute('config', 'advice.defaultBranchName', 'false');
             $repo->addRemote('origin', $gitUrl);
 
-            // Fetch and checkout the target branch (e.g. dev) if it exists on remote,
-            // otherwise create it from the base branch (e.g. main).
-            // We build on top of the existing remote branch so a regular push
-            // works without force-pushing against protected branches.
-            $hasBranch = false;
+            // Rebuild the release branch (e.g. dev) from the base branch
+            // (e.g. main) on every run. Release PRs are squash/merge-committed
+            // into the base branch, which orphans the release branch's own
+            // history — committing on top of the stale branch makes every
+            // subsequent PR conflict with the base branch. The branch holds
+            // only generated output, so rewriting it loses nothing.
             try {
-                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $gitBranch);
-                $hasBranch = true;
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                $repo->execute('checkout', '-f', 'FETCH_HEAD');
             } catch (\Throwable) {
-                // Branch doesn't exist on remote yet
+                // Empty repository — start the base branch from scratch
+                $repo->execute('checkout', '-b', $repoBranch);
             }
-
-            if ($hasBranch) {
-                $repo->execute('checkout', '-f', $gitBranch);
-            } else {
-                // Fetch base branch to create the target branch from it
-                try {
-                    $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
-                    $repo->execute('checkout', '-f', $repoBranch);
-                } catch (\Throwable) {
-                    $repo->execute('checkout', '-b', $repoBranch);
-                }
-                $repo->execute('checkout', '-b', $gitBranch);
-            }
+            $repo->execute('checkout', '-B', $gitBranch);
 
             // Backup .github before cleaning working tree
             $githubDir = $target . '/.github';
@@ -685,12 +675,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             try {
                 $repo->commit($commitMessage);
             } catch (\Throwable $e) {
-                // Exit code 1 (256 in PHP) = nothing to commit
+                // Exit code 1 (256 in PHP) = nothing to commit.
+                // Still push below so a stale remote release branch is
+                // synced back to the base branch.
                 Console::log('  No changes to commit, SDK is up to date');
-                return true;
             }
 
-            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+            // Force push: the branch is regenerated from the base branch each
+            // run, so its remote history is intentionally rewritten.
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--force', '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
             return false;
@@ -1163,13 +1156,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
+
+        // Preserve a manually curated PR description: only overwrite the body
+        // when the existing one is empty or still the generated default.
+        $existingBody = '';
+        $bodyOutput = [];
+        \exec('gh api ' . \escapeshellarg($apiPath) . ' --jq .body 2>/dev/null', $bodyOutput);
+        if (! empty($bodyOutput)) {
+            $existingBody = trim(implode("\n", $bodyOutput));
+        }
+        $isDefaultBody = $existingBody === ''
+            || \str_starts_with($existingBody, 'This PR contains updates to the');
+
         $updateCommand = 'gh api'
             . ' --method PATCH'
             . ' -H "Accept: application/vnd.github+json"'
             . ' -H "X-GitHub-Api-Version: 2022-11-28"'
             . ' ' . \escapeshellarg($apiPath)
             . ' -f title=' . \escapeshellarg($prTitle)
-            . ' -f body=' . \escapeshellarg($prBody)
+            . ($isDefaultBody ? ' -f body=' . \escapeshellarg($prBody) : '')
             . ' 2>&1';
 
         $updateOutput = [];
