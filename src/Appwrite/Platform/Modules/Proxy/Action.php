@@ -282,7 +282,7 @@ class Action extends PlatformAction
         }
 
         foreach ($appwriteDomains as $appwriteDomain) {
-            if (\str_ends_with($domain, $appwriteDomain)) {
+            if ($domain === $appwriteDomain || \str_ends_with($domain, '.' . $appwriteDomain)) {
                 return true;
             }
         }
