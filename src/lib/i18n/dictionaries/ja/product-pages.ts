@@ -280,4 +280,118 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys. Files larger than 20 MB skip encryption even when enabled.': 'はい。Settings からバケットごとに暗号化を有効にすると、新しいファイルは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトは鍵がなければ読み取れません。20 MB を超えるファイルは、有効にしていても暗号化の対象外です。',
   'Yes. Usage charts show requests, bandwidth, builds, and compute over selectable ranges, with breakdowns to see where traffic comes from. The Logs tab records every request with status code, method, path, and duration. Open a log entry for request and response headers. For SSR sites, console.log and console.error output appears in response logs.': 'はい。使用状況のグラフでは、選択した期間ごとにリクエスト、帯域幅、ビルド、コンピュートを確認でき、トラフィックの発生元も内訳で確認できます。Logs タブには、ステータスコード、メソッド、パス、所要時間とともにすべてのリクエストが記録されます。ログのエントリを開けば、リクエストとレスポンスのヘッダーを確認できます。SSR サイトでは、console.log と console.error の出力がレスポンスログに表示されます。',
   'Yes. Use the Server SDK from Functions, your API server, or any trusted backend with a project API key. This is the standard pattern for transactional flows such as OTP verification, password reset, order receipts, and inventory alerts triggered by platform events or custom logic.': 'はい。Functions、自前の API サーバー、またはプロジェクトの API キーを持つ信頼できる任意のバックエンドから Server SDK を利用できます。これは、プラットフォームのイベントや独自のロジックによってトリガーされる OTP 認証、パスワードリセット、注文の受領確認、在庫アラートなどのトランザクションフローに使われる標準的なパターンです。',
+  '2 filters': '2 件のフィルター',
+  '3 rules': '3 件のルール',
+  'Add read replicas on dedicated databases to absorb query load and improve failover resilience. Enable high availability when replica count is greater than zero, then tune sync mode and failover from Replication settings.':
+    '専用データベースにリードレプリカを追加してクエリ負荷を分散し、フェイルオーバー耐性を高めます。レプリカ数が 0 より大きいときに high availability が有効になります。その後、Replication 設定で同期モードとフェイルオーバーを調整できます。',
+  'Appwrite Databases include five engines in two categories. Appwrite DBs are TablesDB for relational-style tables and columns, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. Native DBs are managed PostgreSQL and MySQL for teams that need full SQL compatibility, extensions, and portable schemas.':
+    'Appwrite Databases は 2 つのカテゴリに分かれた 5 つのエンジンを含みます。Appwrite DBs は、リレーショナル風のテーブルとカラム向けの TablesDB、柔軟な JSON ドキュメント向けの DocumentsDB、埋め込みと類似検索向けの VectorsDB です。Native DBs は、フル SQL 互換性、拡張機能、移植可能なスキーマが必要なチーム向けのマネージド PostgreSQL と MySQL です。',
+  'Appwrite DBs': 'Appwrite DBs',
+  'Appwrite DBs cover tables, documents, and vectors. Native DBs bring managed PostgreSQL and MySQL when you need full SQL control. Pick the model that matches your data, then operate every engine from the same Console and project.':
+    'Appwrite DBs はテーブル、ドキュメント、ベクトルをカバーします。Native DBs は、フル SQL 制御が必要なときにマネージド PostgreSQL と MySQL を提供します。データに合うモデルを選び、同じ Console とプロジェクトからすべてのエンジンを運用できます。',
+  'Appwrite still supports legacy Collections APIs alongside TablesDB and DocumentsDB. Docs cover migration paths, compatibility notes, and how to move schemas and documents without disrupting clients.':
+    'Appwrite は TablesDB と DocumentsDB に加えて、レガシーの Collections API も引き続きサポートします。ドキュメントでは移行パス、互換性の注意点、クライアントを止めずにスキーマとドキュメントを移す方法を案内しています。',
+  'Are backups and PITR included?': 'バックアップと PITR は含まれますか?',
+  'Auth linked': '認証連携済み',
+  'Automate encrypted hot backups with policies, or create a manual backup when you need a snapshot now. Enable PITR on dedicated databases to restore to a specific moment after accidental deletes, failed migrations, or bad writes.':
+    'ポリシーで暗号化されたホットバックアップを自動化するか、今すぐスナップショットが必要なときに手動バックアップを作成します。専用データベースで PITR を有効にすると、誤削除、失敗したマイグレーション、不正な書き込みのあとでも特定時点へ復元できます。',
+  'Backups and point-in-time recovery': 'バックアップとポイントインタイムリカバリ',
+  'Backups docs': 'バックアップのドキュメント',
+  'Can I query, relate, and bulk-update data from the SDKs?': 'SDK からクエリ、リレーション、一括更新はできますか?',
+  'Choose how this database is provisioned.': 'このデータベースのプロビジョニング方法を選択します。',
+  'Choose TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, Console workflows, and Auth-aware permissions out of the box. Choose PostgreSQL or MySQL when you need advanced SQL, existing ORM tooling, extensions such as pgvector, or to run schemas you already operate elsewhere.':
+    'Appwrite SDK、Console のワークフロー、認証連携の権限をすぐ使いたいときは TablesDB、DocumentsDB、VectorsDB を選びます。高度な SQL、既存の ORM、pgvector などの拡張、または別環境で運用中のスキーマが必要なときは PostgreSQL か MySQL を選びます。',
+  'Commit multi-step writes atomically.': '複数ステップの書き込みをアトミックにコミットします。',
+  'Compute model': 'コンピュートモデル',
+  'Compute models': 'コンピュートモデル',
+  'Connect with standard SQL clients, ORMs, and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    '標準の SQL クライアント、ORM、コンソール内クエリエディタで接続できます。移植可能なスキーマを保ち、スタックに必要な拡張を使い、ロール、接続、バックアップを Appwrite プロジェクトと一緒に管理します。',
+  'Connections, schemas, and backups': '接続、スキーマ、バックアップ',
+  'Create a database, choose your engine and compute model, and query your first data in minutes.':
+    'データベースを作成し、エンジンとコンピュートモデルを選んで、数分で最初のデータをクエリできます。',
+  'Databases docs': 'データベースのドキュメント',
+  'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
+  'Do Appwrite DBs integrate with Auth permissions?': 'Appwrite DBs は認証の権限と連携しますか?',
+  'Embeddings and similarity search for semantic retrieval and AI features.':
+    'セマンティック検索と AI 機能向けの埋め込みと類似検索。',
+  'Extensions, roles, SQL editor': '拡張機能、ロール、SQL エディタ',
+  'Familiar MySQL compatibility for common relational apps and migrations.':
+    '一般的なリレーショナルアプリとマイグレーション向けの馴染みある MySQL 互換性。',
+  'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
+    'SDK と Console からフィルター、並び替え、ページネーションができます。リレーションで関連データをモデル化し、トランザクションで複数ステップの書き込みを実行し、多数の行やドキュメントを一度に更新するときは一括操作を使います。',
+  'Five engines, two categories': '5 つのエンジン、2 つのカテゴリ',
+  'Flexible JSON documents with filters and full-text search for evolving schemas.':
+    '変化するスキーマ向けに、フィルターと全文検索付きの柔軟な JSON ドキュメント。',
+  'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':
+    'リレーショナルワークロードと既存ツール向けのフル SQL、拡張機能、移植可能なスキーマ。',
+  'HA enabled': 'HA 有効',
+  'Hot backups with zero downtime and fast recovery.': 'ダウンタイムなしのホットバックアップと迅速なリカバリ。',
+  'How do replication and high availability work?': 'レプリケーションと high availability はどのように動作しますか?',
+  'Ideal for prototypes': 'プロトタイプに最適',
+  'Instant provisioning': '即座のプロビジョニング',
+  'Isolated compute with replicas, HA, and PITR.': 'レプリカ、HA、PITR 付きの分離コンピュート。',
+  'Isolated resources': '分離リソース',
+  'Legacy collections': 'レガシー Collections',
+  'Legacy documents': 'レガシー Documents',
+  'Link related tables without custom joins.': 'カスタム JOIN なしで関連テーブルをリンクします。',
+  'Native DBs': 'Native DBs',
+  'Native SQL for PostgreSQL and MySQL': 'PostgreSQL と MySQL 向けのネイティブ SQL',
+  'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
+    '専用データベースではリードレプリカを追加してクエリトラフィックをスケールし、フェイルオーバー耐性を高められます。レプリカ数が 0 より大きいときに high availability が有効になります。対応エンジンでは Console の Replication 設定から同期モードとフェイルオーバーを構成できます。',
+  'Permissions wired to Auth': '認証と連携した権限',
+  'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.':
+    'ワークロードに合うエンジンを選び、同じ方法でスケールします。Appwrite Databases は構造化テーブル、ドキュメント、ベクトル、ネイティブ SQL をカバーし、サーバーレスまたは専用コンピュート、レプリケーション、バックアップ、ポイントインタイムリカバリに対応します。',
+  'Queries docs': 'クエリのドキュメント',
+  'Queries, relationships, and transactions': 'クエリ、リレーション、トランザクション',
+  'Read replicas & HA': 'リードレプリカと HA',
+  'Relational-style tables, columns, and indexes for structured data and complex queries.':
+    '構造化データと複雑なクエリ向けのリレーショナル風テーブル、カラム、インデックス。',
+  'Relationships': 'リレーション',
+  'Replication and high availability': 'レプリケーションと high availability',
+  'Restore to a specific moment beyond the latest backup.': '最新バックアップより先の特定時点へ復元します。',
+  'Row-level permissions': '行レベルの権限',
+  'Scale query traffic and improve failover resilience.': 'クエリトラフィックをスケールし、フェイルオーバー耐性を高めます。',
+  'Scope access with Auth users, teams, and roles.': '認証ユーザー、チーム、ロールでアクセスをスコープします。',
+  'Scope TablesDB and DocumentsDB access with users, teams, and roles from Appwrite Auth. Set rules at the table, collection, row, or document level so each tenant only sees their data.':
+    'Appwrite Auth のユーザー、チーム、ロールで TablesDB と DocumentsDB へのアクセスをスコープします。テーブル、コレクション、行、ドキュメント単位でルールを設定し、各顧客が自分のデータだけを見られるようにします。',
+  'Serverless databases run on a shared pool and are the fastest way to start. Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production-grade options such as read replicas, high availability, and point-in-time recovery. You pick a specification when you create the database and can upgrade later.':
+    'サーバーレスデータベースは共有プールで動作し、いちばん早く始められます。専用データベースは分離コンピュートを確保し、予測可能な性能、高い接続上限、リードレプリカ、high availability、ポイントインタイムリカバリなどの本番向けオプションを利用できます。作成時に仕様を選び、後からアップグレードもできます。',
+  'Serverless or dedicated compute': 'サーバーレスまたは専用コンピュート',
+  'Shared compute pool': '共有コンピュートプール',
+  'Shared pool. Fast to create, no capacity planning.': '共有プール。すばやく作成でき、キャパシティ計画は不要です。',
+  'Start on a shared serverless pool when you want speed and simplicity. Move to dedicated specifications when you need isolated resources, higher connection limits, and production options like replicas and PITR. Choose at create time or upgrade later.':
+    '速さとシンプルさを優先するときは共有サーバーレスプールから始めます。分離リソース、高い接続上限、レプリカや PITR などの本番オプションが必要になったら専用仕様へ移ります。作成時に選ぶか、後からアップグレードできます。',
+  'Store and query data with TablesDB, DocumentsDB, VectorsDB, PostgreSQL, and MySQL. Choose serverless or dedicated, with replication, backups, and PITR.':
+    'TablesDB、DocumentsDB、VectorsDB、PostgreSQL、MySQL でデータを保存・クエリできます。サーバーレスまたは専用を選び、レプリケーション、バックアップ、PITR を利用できます。',
+  'Transactions': 'トランザクション',
+  'What database engines does Appwrite offer?': 'Appwrite はどのデータベースエンジンを提供しますか?',
+  'What is the difference between serverless and dedicated databases?': 'サーバーレスデータベースと専用データベースの違いは何ですか?',
+  'When should I use Appwrite DBs vs native PostgreSQL or MySQL?':
+    'Appwrite DBs とネイティブの PostgreSQL / MySQL、どちらを使うべきですか?',
+  'Yes on Appwrite Cloud for supported plans and engines. Create automated backup policies or run manual backups from the Backups tab. Point-in-time recovery (PITR) on dedicated databases lets you restore to a specific moment beyond the latest scheduled backup, which helps after accidental deletes, failed migrations, or bad writes.':
+    '対応プランとエンジンでは Appwrite Cloud で利用できます。自動バックアップポリシーを作成するか、Backups タブから手動バックアップを実行できます。専用データベースのポイントインタイムリカバリ (PITR) では、最新のスケジュールバックアップより先の特定時点へ復元でき、誤削除、失敗したマイグレーション、不正な書き込みのあとに役立ちます。',
+  'Yes. Appwrite DBs support filters, ordering, pagination, relationships, transactions, bulk operations, and geo queries through the SDKs and Console. Native PostgreSQL and MySQL databases support full SQL from the in-console editor and your existing SQL clients.':
+    'はい。Appwrite DBs は SDK と Console 経由でフィルター、並び替え、ページネーション、リレーション、トランザクション、一括操作、地理クエリをサポートします。ネイティブの PostgreSQL と MySQL は、コンソール内エディタと既存の SQL クライアントからフル SQL を使えます。',
+  'Yes. TablesDB and DocumentsDB permissions can reference users, teams, and roles from Appwrite Auth at the table, collection, row, and document level. Scope data per customer or workspace without building custom access control.':
+    'はい。TablesDB と DocumentsDB の権限は、テーブル、コレクション、行、ドキュメント単位で Appwrite Auth のユーザー、チーム、ロールを参照できます。カスタムアクセス制御を作らずに、顧客やワークスペースごとにデータをスコープできます。',
+  'Accepts writes and serves as the source of truth for replicas.': '書き込みを受け付け、レプリカの信頼できる情報源として機能します。',
+  'Active Record and Data Mapper patterns for TypeScript.':
+    'TypeScript 向けの Active Record と Data Mapper パターン。',
+  'Connect with standard SQL clients and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    '標準の SQL クライアントとコンソール内クエリエディタで接続できます。移植可能なスキーマを保ち、スタックに必要な拡張を使い、ロール、接続、バックアップを Appwrite プロジェクトと一緒に管理します。',
+  'Dedicated databases run behind a connection pooler with a primary for writes and read replicas for query scale and failover. Choose asynchronous, synchronous, or quorum sync mode, then promote a replica when you need to move write traffic.':
+    '専用データベースはコネクションプーラーの背後で動作し、書き込み用のプライマリと、クエリのスケールとフェイルオーバー向けのリードレプリカを持ちます。Asynchronous、Synchronous、Quorum の同期モードを選び、書き込みトラフィックを移す必要があるときにレプリカを昇格できます。',
+  'Lightweight TypeScript ORM with SQL-like query builder.': 'SQL 風クエリビルダー付きの軽量 TypeScript ORM。',
+  'Official PostgreSQL CLI for ad-hoc SQL and schema exploration.': 'アドホック SQL とスキーマ探索向けの公式 PostgreSQL CLI。',
+  'On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.':
+    '専用データベースでは、PgDog や ProxySQL などのコネクションプーラー経由でトラフィックを受け取れます。プライマリは読み書きを受け付け、リードレプリカはクエリトラフィックをスケールし、フェイルオーバー耐性を高めます。レプリカ数が 0 より大きいときに high availability が有効になります。Asynchronous、Synchronous、Quorum の同期モードを選び、書き込みトラフィックを移す必要があるときは Console からレプリカを昇格できます。',
+  'Promise-based ORM for Node.js with multi-dialect support.': '複数ダイアレクト対応の Node.js 向け Promise ベース ORM。',
+  'Proxy, primary, and read replicas for high availability.': 'high availability 向けの Proxy、プライマリ、リードレプリカ。',
+  'Python SQL toolkit and ORM for expressive queries.': '表現力のあるクエリ向けの Python SQL ツールキットと ORM。',
+  'Routes client connections and pools traffic to the cluster.': 'クライアント接続をルーティングし、クラスタへのトラフィックをプールします。',
+  'Scale query traffic and stand ready for failover promotion.': 'クエリトラフィックをスケールし、フェイルオーバー昇格に備えます。',
+  'Type-safe schema and client for Node.js and TypeScript.': 'Node.js と TypeScript 向けの型安全なスキーマとクライアント。',
+  'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
+    'Prisma、Drizzle、Sequelize、TypeORM、SQLAlchemy、psql など、既存の SQL ツールチェーンと同じ接続文字列を使えます。Console の Connect タブから用意済みスニペットをコピーして、チームがすでに知っているスタックのまま開発を続けられます。',
+  'Works with your ORM and toolstack': 'お使いの ORM とツールスタックに対応',
 }

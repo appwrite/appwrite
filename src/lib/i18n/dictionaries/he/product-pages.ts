@@ -373,4 +373,127 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Yes. Use the Server SDK from Functions, your API server, or any trusted backend with a project API key. This is the standard pattern for transactional flows such as OTP verification, password reset, order receipts, and inventory alerts triggered by platform events or custom logic.':
     'כן. השתמשו ב-Server SDK מפונקציות, שרת ה-API שלכם או כל backend מהימן עם מפתח API לפרויקט. זה התבנית הסטנדרטית לתהליכים טרנזקציוניים כמו אימות OTP, איפוס סיסמה, קבלות הזמנה והתראות מלאי שמופעלות על ידי אירועי פלטפורמה או לוגיקה מותאמת.',
   'gzip and zstd buckets': 'באקטים עם gzip ו-zstd',
+  '2 filters': '2 מסננים',
+  '3 rules': '3 כללים',
+  'Add read replicas on dedicated databases to absorb query load and improve failover resilience. Enable high availability when replica count is greater than zero, then tune sync mode and failover from Replication settings.':
+    'הוסיפו read replicas במסדי נתונים ייעודיים כדי לספוג עומס שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס, ואז כוונו מצב סנכרון ו-failover מהגדרות Replication.',
+  'Appwrite Databases include five engines in two categories. Appwrite DBs are TablesDB for relational-style tables and columns, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. Native DBs are managed PostgreSQL and MySQL for teams that need full SQL compatibility, extensions, and portable schemas.':
+    'Appwrite Databases כוללים חמישה מנועים בשתי קטגוריות. Appwrite DBs הם TablesDB לטבלאות ועמודות בסגנון יחסי, DocumentsDB למסמכי JSON גמישים, ו-VectorsDB ל-embeddings ולחיפוש דמיון. Native DBs הם PostgreSQL ו-MySQL מנוהלים לצוותים שצריכים תאימות SQL מלאה, הרחבות וסכמות ניידות.',
+  'Appwrite DBs': 'Appwrite DBs',
+  'Appwrite DBs cover tables, documents, and vectors. Native DBs bring managed PostgreSQL and MySQL when you need full SQL control. Pick the model that matches your data, then operate every engine from the same Console and project.':
+    'Appwrite DBs מכסים טבלאות, מסמכים ווקטורים. Native DBs מביאים PostgreSQL ו-MySQL מנוהלים כשצריך שליטת SQL מלאה. בחרו את המודל שמתאים לנתונים, ואז הפעילו כל מנוע מאותה קונסולה ואותו פרויקט.',
+  'Appwrite still supports legacy Collections APIs alongside TablesDB and DocumentsDB. Docs cover migration paths, compatibility notes, and how to move schemas and documents without disrupting clients.':
+    'Appwrite עדיין תומכת ב-APIs הישנים של Collections לצד TablesDB ו-DocumentsDB. התיעוד מכסה מסלולי מיגרציה, הערות תאימות, ואיך להעביר סכמות ומסמכים בלי לשבש לקוחות.',
+  'Are backups and PITR included?': 'האם גיבויים ו-PITR כלולים?',
+  'Auth linked': 'מקושר לאימות',
+  'Automate encrypted hot backups with policies, or create a manual backup when you need a snapshot now. Enable PITR on dedicated databases to restore to a specific moment after accidental deletes, failed migrations, or bad writes.':
+    'הגדירו גיבויי hot מוצפנים עם מדיניות, או צרו גיבוי ידני כשצריך snapshot עכשיו. הפעילו PITR במסדי נתונים ייעודיים כדי לשחזר לרגע מסוים אחרי מחיקות בטעות, מיגרציות שנכשלו או כתיבות שגויות.',
+  'Backups and point-in-time recovery': 'גיבויים ו-point-in-time recovery',
+  'Backups docs': 'תיעוד גיבויים',
+  'Can I query, relate, and bulk-update data from the SDKs?':
+    'האם אפשר לשאול, לקשר ולעדכן נתונים בכמות גדולה דרך ה-SDKs?',
+  'Choose how this database is provisioned.': 'בחרו איך מסד הנתונים הזה מסופק.',
+  'Choose TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, Console workflows, and Auth-aware permissions out of the box. Choose PostgreSQL or MySQL when you need advanced SQL, existing ORM tooling, extensions such as pgvector, or to run schemas you already operate elsewhere.':
+    'בחרו TablesDB, DocumentsDB או VectorsDB כשאתם רוצים Appwrite SDKs, תהליכי קונסולה והרשאות מודעות לאימות מהקופסה. בחרו PostgreSQL או MySQL כשצריך SQL מתקדם, כלי ORM קיימים, הרחבות כמו pgvector, או להריץ סכמות שאתם כבר מפעילים במקום אחר.',
+  'Commit multi-step writes atomically.': 'בצעו כתיבות מרובות שלבים באופן אטומי.',
+  'Compute model': 'מודל Compute',
+  'Compute models': 'מודלי Compute',
+  'Connect with standard SQL clients, ORMs, and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    'התחברו עם לקוחות SQL סטנדרטיים, ORMs ועורך השאילתות בקונסולה. שמרו על סכמות ניידות, השתמשו בהרחבות שהסטאק שלכם צריך, ונהלו תפקידים, חיבורים וגיבויים לצד פרויקט Appwrite.',
+  'Connections, schemas, and backups': 'חיבורים, סכמות וגיבויים',
+  'Create a database, choose your engine and compute model, and query your first data in minutes.':
+    'צרו מסד נתונים, בחרו מנוע ומודל Compute, ושאלו את הנתונים הראשונים שלכם תוך דקות.',
+  'Databases docs': 'תיעוד מסדי נתונים',
+  'Databases for every data model': 'מסדי נתונים לכל מודל נתונים',
+  'Do Appwrite DBs integrate with Auth permissions?': 'האם Appwrite DBs משתלבים עם הרשאות אימות?',
+  'Embeddings and similarity search for semantic retrieval and AI features.':
+    'Embeddings וחיפוש דמיון לשליפה סמנטית וליכולות AI.',
+  'Extensions, roles, SQL editor': 'הרחבות, תפקידים ועורך SQL',
+  'Familiar MySQL compatibility for common relational apps and migrations.':
+    'תאימות MySQL מוכרת לאפליקציות יחסיות נפוצות ולמיגרציות.',
+  'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
+    'סננו, מיינו ופגנו מה-SDKs ומהקונסולה. מדלו נתונים קשורים עם relationships, הריצו כתיבות מרובות שלבים ב-transactions, והשתמשו בפעולות bulk כשצריך לעדכן הרבה שורות או מסמכים בבת אחת.',
+  'Five engines, two categories': 'חמישה מנועים, שתי קטגוריות',
+  'Flexible JSON documents with filters and full-text search for evolving schemas.':
+    'מסמכי JSON גמישים עם מסננים וחיפוש טקסט מלא לסכמות שמשתנות.',
+  'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':
+    'SQL מלא, הרחבות וסכמות ניידות לעומסים יחסיים ולכלים קיימים.',
+  'HA enabled': 'HA פעיל',
+  'Hot backups with zero downtime and fast recovery.': 'גיבויי hot ללא downtime ועם שחזור מהיר.',
+  'How do replication and high availability work?': 'איך עובדים replication ו-high availability?',
+  'Ideal for prototypes': 'אידיאלי לפרוטוטיפים',
+  'Instant provisioning': 'הקצאה מיידית',
+  'Isolated compute with replicas, HA, and PITR.': 'Compute מבודד עם replicas, HA ו-PITR.',
+  'Isolated resources': 'משאבים מבודדים',
+  'Legacy collections': 'Collections ישנים',
+  'Legacy documents': 'מסמכים ישנים',
+  'Link related tables without custom joins.': 'קשרו טבלאות קשורות בלי joins מותאמים.',
+  'Native DBs': 'Native DBs',
+  'Native SQL for PostgreSQL and MySQL': 'SQL מקורי ל-PostgreSQL ו-MySQL',
+  'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
+    'במסדי נתונים ייעודיים אפשר להוסיף read replicas כדי להרחיב תעבורת שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. הגדירו מצב סנכרון ו-failover מהגדרות Replication בקונסולה למנועים נתמכים.',
+  'Permissions wired to Auth': 'הרשאות שמחוברות לאימות',
+  'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.':
+    'בחרו את המנוע שמתאים לעומס שלכם, ואז הגדילו אותו באותה דרך. Appwrite Databases מכסים טבלאות מובנות, מסמכים, וקטורים ו-SQL מקורי, עם Compute Serverless או ייעודי, replication, גיבויים ו-point-in-time recovery.',
+  'Queries docs': 'תיעוד שאילתות',
+  'Queries, relationships, and transactions': 'שאילתות, relationships ו-transactions',
+  'Read replicas & HA': 'Read replicas ו-HA',
+  'Relational-style tables, columns, and indexes for structured data and complex queries.':
+    'טבלאות, עמודות ואינדקסים בסגנון יחסי לנתונים מובנים ולשאילתות מורכבות.',
+  'Relationships': 'Relationships',
+  'Replication and high availability': 'Replication ו-high availability',
+  'Restore to a specific moment beyond the latest backup.': 'שחזרו לרגע מסוים מעבר לגיבוי האחרון.',
+  'Row-level permissions': 'הרשאות ברמת שורה',
+  'Scale query traffic and improve failover resilience.': 'הרחיבו תעבורת שאילתות ושפרו חוסן failover.',
+  'Scope access with Auth users, teams, and roles.': 'הגדירו גישה עם משתמשי אימות, צוותים ותפקידים.',
+  'Scope TablesDB and DocumentsDB access with users, teams, and roles from Appwrite Auth. Set rules at the table, collection, row, or document level so each tenant only sees their data.':
+    'הגדירו גישה ל-TablesDB ו-DocumentsDB עם משתמשים, צוותים ותפקידים מ-Appwrite Auth. הגדירו כללים ברמת טבלה, collection, שורה או מסמך כדי שכל לקוח יראה רק את הנתונים שלו.',
+  'Serverless databases run on a shared pool and are the fastest way to start. Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production-grade options such as read replicas, high availability, and point-in-time recovery. You pick a specification when you create the database and can upgrade later.':
+    'מסדי נתונים Serverless רצים על מאגר משותף והם הדרך המהירה ביותר להתחיל. מסדי נתונים ייעודיים מקצים Compute מבודד לביצועים צפויים, מגבלות חיבור גבוהות יותר ואפשרויות ברמת פרודקשן כמו read replicas, high availability ו-point-in-time recovery. בוחרים specification ביצירה ואפשר לשדרג אחר כך.',
+  'Serverless or dedicated compute': 'Compute Serverless או ייעודי',
+  'Shared compute pool': 'מאגר Compute משותף',
+  'Shared pool. Fast to create, no capacity planning.': 'מאגר משותף. יצירה מהירה, בלי תכנון קיבולת.',
+  'Start on a shared serverless pool when you want speed and simplicity. Move to dedicated specifications when you need isolated resources, higher connection limits, and production options like replicas and PITR. Choose at create time or upgrade later.':
+    'התחילו במאגר Serverless משותף כשאתם רוצים מהירות ופשטות. עברו ל-specifications ייעודיים כשצריך משאבים מבודדים, מגבלות חיבור גבוהות יותר ואפשרויות פרודקשן כמו replicas ו-PITR. בחרו ביצירה או שדרגו אחר כך.',
+  'Store and query data with TablesDB, DocumentsDB, VectorsDB, PostgreSQL, and MySQL. Choose serverless or dedicated, with replication, backups, and PITR.':
+    'שמרו ושאלו נתונים עם TablesDB, DocumentsDB, VectorsDB, PostgreSQL ו-MySQL. בחרו Serverless או ייעודי, עם replication, גיבויים ו-PITR.',
+  'Transactions': 'Transactions',
+  'What database engines does Appwrite offer?': 'אילו מנועי מסדי נתונים Appwrite מציעה?',
+  'What is the difference between serverless and dedicated databases?':
+    'מה ההבדל בין מסדי נתונים Serverless לייעודיים?',
+  'When should I use Appwrite DBs vs native PostgreSQL or MySQL?':
+    'מתי להשתמש ב-Appwrite DBs מול PostgreSQL או MySQL מקוריים?',
+  'Yes on Appwrite Cloud for supported plans and engines. Create automated backup policies or run manual backups from the Backups tab. Point-in-time recovery (PITR) on dedicated databases lets you restore to a specific moment beyond the latest scheduled backup, which helps after accidental deletes, failed migrations, or bad writes.':
+    'כן ב-Appwrite Cloud לתוכניות ולמנועים נתמכים. צרו מדיניות גיבוי אוטומטית או הריצו גיבויים ידניים מלשונית Backups. Point-in-time recovery (PITR) במסדי נתונים ייעודיים מאפשר לשחזר לרגע מסוים מעבר לגיבוי המתוזמן האחרון, וזה עוזר אחרי מחיקות בטעות, מיגרציות שנכשלו או כתיבות שגויות.',
+  'Yes. Appwrite DBs support filters, ordering, pagination, relationships, transactions, bulk operations, and geo queries through the SDKs and Console. Native PostgreSQL and MySQL databases support full SQL from the in-console editor and your existing SQL clients.':
+    'כן. Appwrite DBs תומכים במסננים, מיון, pagination, relationships, transactions, פעולות bulk ושאילתות geo דרך ה-SDKs והקונסולה. מסדי PostgreSQL ו-MySQL מקוריים תומכים ב-SQL מלא מעורך הקונסולה ומלקוחות SQL קיימים.',
+  'Yes. TablesDB and DocumentsDB permissions can reference users, teams, and roles from Appwrite Auth at the table, collection, row, and document level. Scope data per customer or workspace without building custom access control.':
+    'כן. הרשאות TablesDB ו-DocumentsDB יכולות להפנות למשתמשים, צוותים ותפקידים מ-Appwrite Auth ברמת טבלה, collection, שורה ומסמך. הגדירו נתונים לפי לקוח או workspace בלי לבנות בקרת גישה מותאמת.',
+  'Accepts writes and serves as the source of truth for replicas.':
+    'מקבל כתיבות ומשמש כמקור האמת ל-replicas.',
+  'Active Record and Data Mapper patterns for TypeScript.':
+    'תבניות Active Record ו-Data Mapper ל-TypeScript.',
+  'Connect with standard SQL clients and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    'התחברו עם לקוחות SQL סטנדרטיים ועורך השאילתות בקונסולה. שמרו על סכמות ניידות, השתמשו בהרחבות שהסטאק שלכם צריך, ונהלו תפקידים, חיבורים וגיבויים לצד פרויקט Appwrite.',
+  'Dedicated databases run behind a connection pooler with a primary for writes and read replicas for query scale and failover. Choose asynchronous, synchronous, or quorum sync mode, then promote a replica when you need to move write traffic.':
+    'מסדי נתונים ייעודיים רצים מאחורי מאגר חיבורים עם primary לכתיבות ו-read replicas להרחבת שאילתות ול-failover. בחרו מצב סנכרון Asynchronous, Synchronous או Quorum, ואז קדמו replica כשצריך להעביר תעבורת כתיבה.',
+  'Lightweight TypeScript ORM with SQL-like query builder.':
+    'ORM קל משקל ל-TypeScript עם בונה שאילתות דמוי SQL.',
+  'Official PostgreSQL CLI for ad-hoc SQL and schema exploration.':
+    'CLI רשמי של PostgreSQL ל-SQL נקודתי ולחקירת סכמות.',
+  'On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.':
+    'במסדי נתונים ייעודיים תעבורה יכולה להיכנס דרך מאגר חיבורים כמו PgDog או ProxySQL. מופע primary מקבל קריאה וכתיבה, ו-read replicas מרחיבים תעבורת שאילתות ומשפרים חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. בחרו מצב סנכרון Asynchronous, Synchronous או Quorum, וקדמו replica מהקונסולה כשצריך להעביר תעבורת כתיבה.',
+  'Promise-based ORM for Node.js with multi-dialect support.':
+    'ORM מבוסס Promise ל-Node.js עם תמיכה במספר דיאלקטים.',
+  'Proxy, primary, and read replicas for high availability.':
+    'Proxy, primary ו-read replicas ל-high availability.',
+  'Python SQL toolkit and ORM for expressive queries.':
+    'ערכת כלים ו-ORM של SQL ל-Python לשאילתות אקספרסיביות.',
+  'Routes client connections and pools traffic to the cluster.': 'מנתב חיבורי לקוח ומאגד תעבורה לאשכול.',
+  'Scale query traffic and stand ready for failover promotion.':
+    'מרחיבים תעבורת שאילתות ומוכנים לקידום ב-failover.',
+  'Type-safe schema and client for Node.js and TypeScript.': 'סכמה ולקוח type-safe ל-Node.js ול-TypeScript.',
+  'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
+    'השתמשו באותם מחרוזות חיבור עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-SQL שלכם. העתיקו snippets מוכנים מלשונית Connect בקונסולה והמשיכו לשחרר עם הסטאק שהצוות כבר מכיר.',
+  'Works with your ORM and toolstack': 'עובד עם ה-ORM והסטאק שלכם',
 }

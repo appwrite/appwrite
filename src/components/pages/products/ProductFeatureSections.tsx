@@ -1,4 +1,6 @@
 import { ProductFeatureSection } from '@/components/pages/products/ProductFeatureSection'
+import { DatabasesEnginesCatalog } from '@/components/pages/products/features/databases/DatabasesEnginesCatalog'
+import { DatabasesOrmCatalog } from '@/components/pages/products/features/databases/DatabasesOrmCatalog'
 import { MessagingProviderCatalog } from '@/components/pages/products/features/messaging/MessagingProviderCatalog'
 import { SitesDeployOptions } from '@/components/pages/products/features/sites/SitesDeployOptions'
 import { SitesDomainManagement } from '@/components/pages/products/features/sites/SitesDomainManagement'
@@ -21,7 +23,11 @@ export function ProductFeatureSections({ productId }: ProductFeatureSectionsProp
       {features.map((feature, index) => {
         const Visual = getProductFeatureVisual(productId, feature.id)
         const companion =
-          productId === 'messaging' && feature.id === 'providers' ? (
+          productId === 'databases' && feature.id === 'engines' ? (
+            <DatabasesEnginesCatalog />
+          ) : productId === 'databases' && feature.id === 'tooling' ? (
+            <DatabasesOrmCatalog />
+          ) : productId === 'messaging' && feature.id === 'providers' ? (
             <MessagingProviderCatalog />
           ) : productId === 'sites' && feature.id === 'git-previews' ? (
             <SitesGitProviders />

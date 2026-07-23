@@ -1,4 +1,5 @@
 import { authProductFeatures } from '@/lib/products/features/auth'
+import { databasesProductFeatures } from '@/lib/products/features/databases'
 import { functionsProductFeatures } from '@/lib/products/features/functions'
 import { messagingProductFeatures } from '@/lib/products/features/messaging'
 import { sitesProductFeatures } from '@/lib/products/features/sites'
@@ -10,6 +11,8 @@ export function getProductFeatures(productId: ProductId): ProductFeatureContent[
   switch (productId) {
     case 'auth':
       return authProductFeatures
+    case 'databases':
+      return databasesProductFeatures
     case 'storage':
       return storageProductFeatures
     case 'functions':

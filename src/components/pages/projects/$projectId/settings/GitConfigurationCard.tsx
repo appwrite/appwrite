@@ -446,7 +446,7 @@ export function GitConfigurationCard({
             >
               <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
                 <VcsIcon type="github" className="me-1.5 h-4 w-4" />
-                {t('Add GitHub')}
+                {t('Connect with GitHub')}
               </a>
             </Button>
             <Button
@@ -457,7 +457,7 @@ export function GitConfigurationCard({
             >
               <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
                 <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
-                {t('Add GitLab')}
+                {t('Connect with GitLab')}
               </a>
             </Button>
           </div>

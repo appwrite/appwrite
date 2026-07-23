@@ -672,6 +672,12 @@ type DatabaseClusterPreviewProps = {
   /** Shown in the interactive toolbar; refreshes live metrics and member status. */
   onRefresh?: () => void
   isRefreshing?: boolean
+  /**
+   * Override non-interactive preview height (defaults to
+   * `DATABASE_CLUSTER_PREVIEW_HEIGHT`). Useful for marketing surfaces that
+   * include a proxy node and need more vertical room.
+   */
+  previewHeight?: number
 }
 
 function resolveNodeResourceMetrics(
@@ -758,6 +764,7 @@ export function DatabaseClusterPreview({
   interactive = false,
   onRefresh,
   isRefreshing = false,
+  previewHeight = DATABASE_CLUSTER_PREVIEW_HEIGHT,
 }: DatabaseClusterPreviewProps) {
   const t = useT()
   const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
@@ -972,7 +979,7 @@ export function DatabaseClusterPreview({
   ) : (
     <div
       className={cn('min-w-0', className)}
-      style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
+      style={{ height: previewHeight }}
       role="img"
       aria-label={ariaLabel}
     >
@@ -987,7 +994,7 @@ export function DatabaseClusterPreview({
             height: layout.height,
             transform: `translate(-50%, -50%) scale(${Math.min(
               1,
-              (DATABASE_CLUSTER_PREVIEW_HEIGHT - 4) / layout.height,
+              (previewHeight - 4) / layout.height,
               (PREVIEW_FIT_WIDTH - 4) / layout.width,
             )})`,
             transformOrigin: 'center center',

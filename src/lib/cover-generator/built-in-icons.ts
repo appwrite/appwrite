@@ -59,6 +59,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
   ],
   languages: [
     'js.svg',
+    'ts.svg',
     'node.svg',
     'deno.svg',
     'bun.svg',
