@@ -1193,7 +1193,7 @@ return [
     ],
     Exception::PROJECT_REGION_UNSUPPORTED => [
         'name' => Exception::PROJECT_REGION_UNSUPPORTED,
-        'description' => 'The requested region is either inactive or unsupported. Please check the value of the _APP_REGIONS environment variable.',
+        'description' => 'The requested region is either inactive or unsupported. Check _APP_REGIONS and _APP_PROJECT_REGIONS.',
         'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [

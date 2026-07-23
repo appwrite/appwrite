@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases;
 
+use Appwrite\Config\Regions;
 use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\DSN\DSN;
@@ -55,10 +56,7 @@ final class Pool
         }
 
         if ($region !== 'default') {
-            $databases = \array_filter(
-                \explode(',', $keys),
-                fn (string $value): bool => \str_contains($value, $region)
-            );
+            $databases = Regions::filterPoolKeysForRegion(\explode(',', $keys), $region);
         }
 
         $index = \array_search($override, $databases);
