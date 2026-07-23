@@ -26,7 +26,7 @@ class Create extends XList
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')
-            ->desc('Query documents')
+            ->desc('Create query')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
