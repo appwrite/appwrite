@@ -887,7 +887,13 @@ class Specs extends Action
             // must happen even with nothing to commit, so a stale remote
             // branch is synced back to the base branch.
             $statusOutput = [];
-            \exec('cd ' . $target . ' && git add -A && git status --porcelain', $statusOutput);
+            $statusReturnCode = 0;
+            \exec('cd ' . $target . ' && git add -A && git status --porcelain 2>&1', $statusOutput, $statusReturnCode);
+
+            if ($statusReturnCode !== 0) {
+                Console::error("Failed to stage specs for {$gitRepoName}: " . \implode("\n", $statusOutput));
+                return;
+            }
 
             if (empty($statusOutput)) {
                 Console::log("No spec changes to commit for {$gitRepoName}, syncing branch");

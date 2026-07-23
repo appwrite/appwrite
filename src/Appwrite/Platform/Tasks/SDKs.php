@@ -1172,17 +1172,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         // one-liner. Anything beyond that single sentence — an AI changelog,
         // appended notes, links, or extra sections — cannot be reliably told
         // apart from curated content, so it is always preserved.
-        $existingBody = '';
         $bodyOutput = [];
-        \exec('gh api ' . \escapeshellarg($apiPath) . ' --jq .body 2>/dev/null', $bodyOutput);
-        if (! empty($bodyOutput)) {
+        $bodyReturnCode = 0;
+        \exec('gh api ' . \escapeshellarg($apiPath) . ' --jq .body 2>&1', $bodyOutput, $bodyReturnCode);
+
+        if ($bodyReturnCode !== 0) {
+            // Could not read the current body (API, auth, network, rate
+            // limit). Assume it is curated and never overwrite it blindly.
+            $isDefaultBody = false;
+        } else {
             $existingBody = trim(implode("\n", $bodyOutput));
+            $isDefaultBody = $existingBody === ''
+                || (bool) \preg_match(
+                    '/^This PR contains updates to the .+ SDK for version \S+\.$/',
+                    $existingBody
+                );
         }
-        $isDefaultBody = $existingBody === ''
-            || (bool) \preg_match(
-                '/^This PR contains updates to the .+ SDK for version \S+\.$/',
-                $existingBody
-            );
 
         $updateCommand = 'gh api'
             . ' --method PATCH'
