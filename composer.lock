@@ -3676,16 +3676,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "6.0.0",
+            "version": "6.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "fff9f0effbd40359ff925741ff9424856d8b4fde"
+                "reference": "a1796fd360d58abcc3bb3e1b615fcebc04ba9100"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/fff9f0effbd40359ff925741ff9424856d8b4fde",
-                "reference": "fff9f0effbd40359ff925741ff9424856d8b4fde",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1796fd360d58abcc3bb3e1b615fcebc04ba9100",
+                "reference": "a1796fd360d58abcc3bb3e1b615fcebc04ba9100",
                 "shasum": ""
             },
             "require": {
@@ -3693,12 +3693,12 @@
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
-                "php": ">=8.4",
-                "utopia-php/cache": "^3.0",
+                "php": ">=8.5",
+                "utopia-php/cache": "^3.1.0",
                 "utopia-php/console": "0.1.*",
                 "utopia-php/mongo": "1.*",
                 "utopia-php/pools": "1.*",
-                "utopia-php/validators": "0.2.*"
+                "utopia-php/validators": "0.3.*"
             },
             "require-dev": {
                 "fakerphp/faker": "1.23.*",
@@ -3730,9 +3730,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/6.0.0"
+                "source": "https://github.com/utopia-php/database/tree/6.4.4"
             },
-            "time": "2026-06-18T10:37:40+00:00"
+            "time": "2026-07-17T08:21:36+00:00"
         },
         {
             "name": "utopia-php/detector",
