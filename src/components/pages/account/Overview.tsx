@@ -61,7 +61,6 @@ import {
   verifyMfaReauth,
 } from '@/components/global/auth/MfaReauthForm'
 import { useT } from '@/lib/i18n/translate'
-import { getSignInIdentities } from '@/lib/account-oauth2-grants'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -445,7 +444,6 @@ export function IdentitiesSection({
   const queryClient = useQueryClient()
   const identities = data?.identities ?? initialData?.identities ?? []
   const hasResolvedData = isFetched || initialData !== undefined
-  const signInIdentities = getSignInIdentities(identities)
 
   const deleteIdentityMutation = useMutation({
     mutationFn: async (identityId: string) => {
@@ -492,7 +490,7 @@ export function IdentitiesSection({
     return null
   }
 
-  if (signInIdentities.length === 0) {
+  if (identities.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -545,7 +543,7 @@ export function IdentitiesSection({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {signInIdentities.map((identity) => (
+          {identities.map((identity) => (
             <TableRow key={identity.$id}>
               <TableCell className="px-6 py-3">
                 <Badge

@@ -3,8 +3,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import {
+  getBackupPoliciesPlanLimit,
+  isBackupPoliciesAtPlanLimit,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
 
 export type BackupPolicyPresetId = 'hourly' | 'daily'
 
@@ -34,10 +40,44 @@ export const BACKUP_POLICY_PRESETS: Record<
   },
 }
 
+/** Platform auto-created policies often use a generic label like "Default". */
+export function isGenericBackupPolicyName(
+  name: string | null | undefined,
+): boolean {
+  const normalized = (name ?? '').trim().toLowerCase()
+  return normalized === '' || normalized === 'default'
+}
+
+/** Resolve a preset policy name from a cron schedule. */
+export function backupPolicyNameForSchedule(
+  schedule: string | null | undefined,
+): string | null {
+  const normalized = schedule?.trim()
+  if (!normalized) return null
+  for (const preset of Object.values(BACKUP_POLICY_PRESETS)) {
+    if (preset.schedule === normalized) return preset.name
+  }
+  // Daily cron variants (minute hour * * *) that are not hourly.
+  if (/^\d+\s+\d+\s+\*\s+\*\s+\*$/.test(normalized)) {
+    return BACKUP_POLICY_PRESETS.daily.name
+  }
+  if (normalized === '0 * * * *') {
+    return BACKUP_POLICY_PRESETS.hourly.name
+  }
+  return null
+}
+
 type CreateDatabaseBackupPoliciesProps = {
-  /** When false, show upgrade warning and disable selection. Omit while plan is loading. */
-  backupsEnabled?: boolean
-  /** Plan policy cap. Pro (1) only gets daily; 0 or >1 also get hourly. */
+  /**
+   * Organization plan `backupsEnabled`. When false and the console profile
+   * supports database backups, an upgrade warning is shown. Omit while the
+   * plan is still loading. Ignored when the profile disables `databaseBackups`.
+   */
+  planBackupsEnabled?: boolean
+  /**
+   * Plan `backupPolicies` cap. Same convention as databases/functions/buckets:
+   * `0` = unlimited; `> 0` = hard cap. Pro (`1`) is daily-only.
+   */
   backupPoliciesLimit?: number
   selectedPresets: BackupPolicyPresetId[]
   onSelectedPresetsChange: (presets: BackupPolicyPresetId[]) => void
@@ -45,21 +85,35 @@ type CreateDatabaseBackupPoliciesProps = {
 }
 
 export function CreateDatabaseBackupPolicies({
-  backupsEnabled,
+  planBackupsEnabled,
   backupPoliciesLimit = 0,
   selectedPresets,
   onSelectedPresetsChange,
   orgId,
 }: CreateDatabaseBackupPoliciesProps) {
   const t = useT()
-  const canSelect = backupsEnabled === true
+  const { features } = useConsoleProfile()
+
+  // Console profile gate: hide entirely when backups are not part of this deployment.
+  if (!features.databaseBackups) {
+    return null
+  }
+
+  const canSelect = planBackupsEnabled === true
+  const showUpgradeWarning = planBackupsEnabled === false
+  const limit = getBackupPoliciesPlanLimit({ backupPolicies: backupPoliciesLimit })
   const supportsHourly =
-    canSelect && (backupPoliciesLimit === 0 || backupPoliciesLimit > 1)
+    canSelect && supportsAdvancedBackupPolicies(limit)
+  const atSelectionLimit = isBackupPoliciesAtPlanLimit(
+    selectedPresets.length,
+    limit,
+  )
 
   const togglePreset = (preset: BackupPolicyPresetId, checked: boolean) => {
     if (!canSelect) return
     if (checked) {
       if (selectedPresets.includes(preset)) return
+      if (atSelectionLimit) return
       onSelectedPresetsChange([...selectedPresets, preset])
       return
     }
@@ -84,7 +138,7 @@ export function CreateDatabaseBackupPolicies({
           <div className="border-t border-border" />
 
           <div className="px-6 py-4 space-y-3">
-            {backupsEnabled === false && (
+            {showUpgradeWarning && (
               <Alert
                 variant="default"
                 className="border-amber-500/30 bg-amber-500/5"
@@ -127,7 +181,7 @@ export function CreateDatabaseBackupPolicies({
 
             {canSelect &&
               !supportsHourly &&
-              backupPoliciesLimit === 1 && (
+              limit === 1 && (
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
                   {t(
                     'Your plan only supports the daily preset policy. Upgrade to create custom policies.',

@@ -4,7 +4,7 @@
  * Generates database schema in various formats for AI agents and IDEs
  */
 
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
 import {
@@ -64,7 +64,7 @@ function toSchemaNumber(v: unknown): number | null {
 
 function readRowSecurity(
   table: Record<string, unknown>,
-  kind: DatabaseType,
+  kind: DatabaseType | string,
 ): boolean {
   if (kind === DatabaseType.Documentsdb || kind === DatabaseType.Vectorsdb) {
     return table.documentSecurity === true

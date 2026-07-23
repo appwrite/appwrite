@@ -11,5 +11,4 @@ export const companyHero = {
     body: 'A complete development platform, backed by the open source community, built to keep teams efficient by cutting context switching and integration overhead. From auth, databases, storage, and functions to MCP servers, Skills, and agent integrations, everything lives in one place so Appwrite moves with you from ideation to scale.',
   },
   tagline: 'Build like a team of hundreds.',
-  careersUrl: 'https://appwrite.careers',
 } as const

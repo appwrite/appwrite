@@ -79,7 +79,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import type { Models } from '@appwrite.io/console'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
@@ -1925,6 +1925,7 @@ export function Workspace({
             projectId={projectId}
             databaseId={databaseId}
             tableId={tableId}
+            filterQueries={rowsFilterQueries}
             open={exportCsvOpen}
             onOpenChange={setExportCsvOpen}
           />

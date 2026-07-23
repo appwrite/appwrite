@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,

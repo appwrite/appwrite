@@ -1,6 +1,6 @@
 /**
  * Searchable ID selector for event builder.
- * Lets users choose specific database, table, bucket, file, row, function, team, user, topic, or provider instead of *.
+ * Lets users choose specific database, table, bucket, file, row, function, site, team, user, topic, or provider instead of *.
  */
 import { useState, useEffect, useMemo } from 'react'
 import {
@@ -18,6 +18,7 @@ import {
   Rows3,
   Columns3,
   Hash,
+  Globe,
 } from 'lucide-react'
 import {
   Popover,
@@ -44,6 +45,7 @@ import {
   bucketFilesQueryOptions,
 } from '@/lib/react-query/hooks/storage'
 import { functionsQueryOptions } from '@/lib/react-query/hooks/functions'
+import { sitesQueryOptions } from '@/lib/react-query/hooks/sites'
 import {
   teamsQueryOptions,
   usersQueryOptions,
@@ -65,6 +67,7 @@ export type ResourceIdType =
   | 'column'
   | 'index'
   | 'function'
+  | 'site'
   | 'team'
   | 'user'
   | 'topic'
@@ -94,6 +97,7 @@ const ICONS = {
   column: Columns3,
   index: Hash,
   function: Terminal,
+  site: Globe,
   team: Users,
   user: User,
   topic: MessageSquare,
@@ -102,13 +106,14 @@ const ICONS = {
 
 const SEARCH_PLACEHOLDERS: Record<ResourceIdType, string> = {
   database: 'Search databases...',
-    table: 'Search',
+  table: 'Search',
   bucket: 'Search buckets...',
   file: 'Search files...',
   row: 'Search rows...',
   column: 'Search columns...',
   index: 'Search indexes...',
   function: 'Search functions...',
+  site: 'Search sites...',
   team: 'Search teams...',
   user: 'Search users...',
   topic: 'Search topics...',
@@ -216,6 +221,12 @@ export function EventResourceIdSelector({
     placeholderData: keepPreviousData,
   })
 
+  const siteQuery = useQuery({
+    ...sitesQueryOptions(projectId, 0, 20, debouncedSearch || undefined),
+    enabled: !!projectId && open && type === 'site',
+    placeholderData: keepPreviousData,
+  })
+
   const teamQuery = useQuery({
     ...teamsQueryOptions(projectId, 0, 20, debouncedSearch || undefined),
     enabled: !!projectId && open && type === 'team',
@@ -258,15 +269,17 @@ export function EventResourceIdSelector({
                     ? (indexQuery.data?.indexes ?? [])
                     : type === 'function'
                       ? (functionQuery.data?.functions ?? [])
-                      : type === 'team'
-                        ? (teamQuery.data?.teams ?? [])
-                        : type === 'user'
-                          ? (userQuery.data?.users ?? [])
-                          : type === 'topic'
-                            ? (topicQuery.data?.topics ?? [])
-                            : type === 'provider'
-                              ? (providerQuery.data?.providers ?? [])
-                              : []
+                      : type === 'site'
+                        ? (siteQuery.data?.sites ?? [])
+                        : type === 'team'
+                          ? (teamQuery.data?.teams ?? [])
+                          : type === 'user'
+                            ? (userQuery.data?.users ?? [])
+                            : type === 'topic'
+                              ? (topicQuery.data?.topics ?? [])
+                              : type === 'provider'
+                                ? (providerQuery.data?.providers ?? [])
+                                : []
 
     if ((type === 'column' || type === 'index') && debouncedSearch.trim()) {
       const q = debouncedSearch.trim().toLowerCase()
@@ -293,6 +306,7 @@ export function EventResourceIdSelector({
     columnQuery.data,
     indexQuery.data,
     functionQuery.data,
+    siteQuery.data,
     teamQuery.data,
     userQuery.data,
     topicQuery.data,
@@ -316,13 +330,15 @@ export function EventResourceIdSelector({
                   ? indexQuery.isFetching
                   : type === 'function'
                     ? functionQuery.isFetching
-                    : type === 'team'
-                      ? teamQuery.isFetching
-                      : type === 'user'
-                        ? userQuery.isFetching
-                        : type === 'topic'
-                          ? topicQuery.isFetching
-                          : providerQuery.isFetching
+                    : type === 'site'
+                      ? siteQuery.isFetching
+                      : type === 'team'
+                        ? teamQuery.isFetching
+                        : type === 'user'
+                          ? userQuery.isFetching
+                          : type === 'topic'
+                            ? topicQuery.isFetching
+                            : providerQuery.isFetching
 
   const getItemId = (x: {
     $id?: string

@@ -2,6 +2,10 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
+import {
+  isFirewallDocsEnabled,
+  isFirewallDocsSlug,
+} from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsEnabled, isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { getDocsMetaTags } from '@/lib/docs/route-meta'
@@ -9,6 +13,12 @@ import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
 } from '@/lib/docs/seo'
+
+function isFeatureGatedDocsSlugHidden(slug: string): boolean {
+  if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) return true
+  if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
+  return false
+}
 
 export const Route = createFileRoute('/docs/$')({
   ssr: true,
@@ -22,7 +32,7 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) {
+        if (isFeatureGatedDocsSlugHidden(slug)) {
           return new Response('Not found', { status: 404 })
         }
 
@@ -44,7 +54,7 @@ export const Route = createFileRoute('/docs/$')({
     const splat = params._splat ?? ''
     if (splat.endsWith('.md')) return
 
-    if (isPartnersDocsSlug(splat) && !isPartnersDocsEnabled()) {
+    if (isFeatureGatedDocsSlugHidden(splat)) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
@@ -56,6 +66,12 @@ export const Route = createFileRoute('/docs/$')({
 
     const redirectTarget = getDocsRedirectTarget(splat)
     if (redirectTarget) {
+      const targetSlug = redirectTarget.pathname
+        .replace(/^\/docs\/?/, '')
+        .replace(/\/+$/, '')
+      if (isFeatureGatedDocsSlugHidden(targetSlug)) {
+        throw redirect({ to: '/docs', replace: true })
+      }
       throw redirect({
         to: redirectTarget.pathname,
         hash: redirectTarget.hash,

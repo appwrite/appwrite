@@ -13,10 +13,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { SheetClose } from '@/components/ui/sheet'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   MARKETING_PRODUCT_NAV_CATEGORIES,
   PRODUCT_NAV_REGISTRY,
   isProductId,
+  type ProductNavCategory,
 } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
@@ -71,6 +73,23 @@ type ProductNavigationCopy = {
   viewOverview: string
   categories: ProductNavigationCategoriesCopy
   items: ProductNavigationItemsCopy
+}
+
+function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
+  const { features } = useConsoleProfile()
+
+  return useMemo(
+    () =>
+      MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
+        ...category,
+        productIds: category.productIds.filter((id) => {
+          if (id === 'firewall') return features.firewall
+          if (id === 'domains') return features.domains
+          return true
+        }),
+      })).filter((category) => category.productIds.length > 0),
+    [features.domains, features.firewall],
+  )
 }
 
 function getLocalizedCategoryLabel(
@@ -296,11 +315,13 @@ function ProductsNavCategorySection({
 }
 
 function DesktopProductsNavPanel({
+  categories,
   activeNavItemId,
   onNavigate,
   productNamesCopy,
   navigationCopy,
 }: {
+  categories: readonly ProductNavCategory[]
   activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
@@ -308,17 +329,14 @@ function DesktopProductsNavPanel({
 }) {
   return (
     <div className="text-start">
-      <div className="flex items-baseline justify-between gap-4 border-b border-border bg-muted/15 px-4 py-2.5">
-        <p className="shrink-0 text-start text-[13px] font-semibold text-foreground">
+      <div className="border-b border-border bg-muted/15 px-4 py-2.5">
+        <p className="text-start text-[13px] font-semibold text-foreground">
           {navigationCopy.desktopTitle}
-        </p>
-        <p className="min-w-0 truncate text-start text-[11px] text-muted-foreground">
-          {navigationCopy.desktopSubtitle}
         </p>
       </div>
 
       <div className="space-y-4 p-3">
-        {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <ProductsNavCategorySection
             key={category.id}
             label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
@@ -346,11 +364,13 @@ function DesktopProductsNavPanel({
 }
 
 function MobileProductsNavPanel({
+  categories,
   activeNavItemId,
   productNamesCopy,
   navigationCopy,
   closeSheet,
 }: {
+  categories: readonly ProductNavCategory[]
   activeNavItemId?: ProductNavItemId
   productNamesCopy: ProductNamesCopy
   navigationCopy: ProductNavigationCopy
@@ -358,7 +378,7 @@ function MobileProductsNavPanel({
 }) {
   return (
     <div className="space-y-4 px-1 pb-1 text-start">
-      {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
+      {categories.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
           label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
@@ -397,10 +417,12 @@ export function MarketingProductsNavPanel({
   const { catalog } = useI18n()
   const productNamesCopy = catalog.website.products.productNames
   const navigationCopy = catalog.website.products.navigation
+  const categories = useVisibleMarketingProductNavCategories()
 
   if (compact) {
     return (
       <MobileProductsNavPanel
+        categories={categories}
         activeNavItemId={activeNavItemId}
         productNamesCopy={productNamesCopy}
         navigationCopy={navigationCopy}
@@ -411,6 +433,7 @@ export function MarketingProductsNavPanel({
 
   return (
     <DesktopProductsNavPanel
+      categories={categories}
       activeNavItemId={activeNavItemId}
       onNavigate={onNavigate}
       productNamesCopy={productNamesCopy}

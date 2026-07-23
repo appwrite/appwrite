@@ -56,6 +56,7 @@ import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
 import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
+import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
 import {
   getDocsAudienceFromPathname,
@@ -443,8 +444,12 @@ export function DocsGlobalSidebar({
   useEffect(() => {
     if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
     }
-  }, [features.partnersDocs, navigate, pathname])
+    if (!features.firewall && isFirewallDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+    }
+  }, [features.firewall, features.partnersDocs, navigate, pathname])
 
   return (
     <TooltipProvider>

@@ -76,6 +76,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'バックアップ ID をクリップボードにコピーしました',
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
+  'backup policies': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -206,7 +207,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'まず列を作成',
   'Create database': 'データベースの作成',
   'Creating database': 'データベースを作成中',
-  'Creating backup policies': 'バックアップポリシーを作成中',
   'Allocating dedicated compute for your database.':
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
@@ -217,8 +217,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'コンピュートをプロビジョニング中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
-  'Setting up scheduled backups for your database.':
-    'データベースのスケジュールバックアップを設定しています。',
   'Setting up your database': 'データベースをセットアップ中',
   'Setting up your database resource.': 'データベースリソースをセットアップしています。',
   'Create database or table': 'データベースまたはテーブルの作成',
@@ -316,7 +314,12 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'データベース名を更新しました',
   'Database not found': 'データベースが見つかりません',
   'Database restore initiated': 'データベースの復元を開始しました',
-  'Database password reset': 'データベースパスワードをリセットしました',
+  'Preparing restore': '復元を準備中',
+  'Restore completed': '復元が完了しました',
+  'Restore failed': '復元に失敗しました',
+  'Restoring database': 'データベースを復元中',
+  'Open database': 'データベースを開く',
+  'Open new database': '新しいデータベースを開く',
   'Database password reset': 'データベースパスワードをリセットしました',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'データベース行の最大サイズは 64 KB です。varchar 列は文字あたり 4 バイトと小さなオーバーヘッドを使用します。text、mediumtext、longtext 列はコンテンツの長さに関係なく約 20 バイトのみを使用します。',
   'database selected': 'データベースを選択',
@@ -434,6 +437,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Enable': '有効化',
   'Enable it in the Settings tab': '設定タブで有効にしてください',
   'Enable PITR': 'PITR を有効化',
+  'Enabling PITR will incur an additional charge of':
+    'PITR を有効にすると、追加で',
   'Enabled': '有効',
   'Encrypted': '暗号化済み',
   'Encrypted string columns require a minimum size of 150.': '暗号化された string 列には最小サイズ 150 が必要です。',
@@ -1303,6 +1308,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': '各レプリカの課金額',
   'of your compute tier per month.': 'コンピュートティア/月の',
   'of your compute tier per month when enabled.': '有効時のコンピュートティア/月の',
+  'of your database price': 'のデータベース料金',
   'Coming soon in your project region. Available in': 'プロジェクトリージョンでは近日公開予定。利用可能:',
   'No PostgreSQL databases found': 'PostgreSQL データベースが見つかりません',
   'No MySQL databases found': 'MySQL データベースが見つかりません',
@@ -1369,6 +1375,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': '並列',
   'Replication': 'レプリケーション',
+  'Replication is available on dedicated databases':
+    'レプリケーションは専用データベースで利用できます',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    '読み取りレプリカとフェイルオーバーを設定するには、このデータベースを専用スペックにアップグレードしてください。',
   'Background': 'バックグラウンド',
   'Fulltext': '全文',
   'Complete': '完了',

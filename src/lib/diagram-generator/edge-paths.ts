@@ -335,12 +335,12 @@ function buildDiagramEdgePathFromLayout(
     },
   )
 
-  const labelX = verticalFirst
-    ? snapDiagramCoord((startStub.x + endStub.x) / 2)
-    : startStub.x
-  const labelY = verticalFirst
-    ? snapDiagramCoord((startStub.y + endStub.y) / 2)
-    : snapDiagramCoord((startStub.y + endStub.y) / 2)
+  const labelX = snapDiagramCoord(
+    options?.busX ?? (startStub.x + endStub.x) / 2,
+  )
+  const labelY = snapDiagramCoord(
+    options?.busY ?? (startStub.y + endStub.y) / 2,
+  )
 
   return {
     id: edge.id,

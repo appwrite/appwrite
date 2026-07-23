@@ -1,4 +1,4 @@
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import {
   Braces,
   Layers,

@@ -83,6 +83,7 @@ import {
   useProjectTable,
   updateProjectTable,
   deleteProjectTable,
+  updateConsoleTeamPrefs,
 } from '@/lib/react-query/hooks'
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -5377,22 +5378,17 @@ export function TableSettings({
   const updateDisplayNamesMutation = useMutation({
     mutationFn: async (names: string[]) => {
       if (!organizationId) throw new Error('Organization ID not available')
-      const team = await sdk.forConsole.teams.get({ teamId: organizationId })
-      const prefs = team.prefs || {}
-      const updatedPrefs = {
-        ...prefs,
+      await updateConsoleTeamPrefs(organizationId, (freshPrefs) => ({
         displayNames: {
-          ...((prefs.displayNames as Record<string, string[]>) || {}),
+          ...((freshPrefs.displayNames as Record<string, string[]>) || {}),
           [tableId]: names,
         },
-      }
-      await sdk.forConsole.teams.updatePrefs({
-        teamId: organizationId,
-        prefs: updatedPrefs,
-      })
+      }))
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams', 'console'] })
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', organizationId],
+      })
       toast.success(t('Display names have been updated'))
     },
     onError: (error: Error) => {
@@ -5409,38 +5405,46 @@ export function TableSettings({
       // Delete table preferences
       if (organizationId) {
         try {
-          const team = await sdk.forConsole.teams.get({
-            teamId: organizationId,
-          })
-          const prefs = team.prefs || {}
-          const updatedPrefs = { ...prefs }
-          if (updatedPrefs.displayNames) {
-            delete (updatedPrefs.displayNames as Record<string, unknown>)[
-              tableId
-            ]
-          }
-          if (updatedPrefs.tables) {
-            delete (updatedPrefs.tables as Record<string, unknown>)[tableId]
-          }
-          if (updatedPrefs.columnOrder) {
-            delete (updatedPrefs.columnOrder as Record<string, unknown>)[
-              tableId
-            ]
-          }
-          if (updatedPrefs.columnWidths) {
-            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
-              tableId
-            ]
-            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
-              `${tableId}#columns`
-            ]
-            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
-              `${tableId}#indexes`
-            ]
-          }
-          await sdk.forConsole.teams.updatePrefs({
-            teamId: organizationId,
-            prefs: updatedPrefs,
+          await updateConsoleTeamPrefs(
+            organizationId,
+            (freshPrefs) => {
+              const updatedPrefs = { ...freshPrefs }
+              if (updatedPrefs.displayNames) {
+                const displayNames = {
+                  ...(updatedPrefs.displayNames as Record<string, unknown>),
+                }
+                delete displayNames[tableId]
+                updatedPrefs.displayNames = displayNames
+              }
+              if (updatedPrefs.tables) {
+                const tables = {
+                  ...(updatedPrefs.tables as Record<string, unknown>),
+                }
+                delete tables[tableId]
+                updatedPrefs.tables = tables
+              }
+              if (updatedPrefs.columnOrder) {
+                const columnOrder = {
+                  ...(updatedPrefs.columnOrder as Record<string, unknown>),
+                }
+                delete columnOrder[tableId]
+                updatedPrefs.columnOrder = columnOrder
+              }
+              if (updatedPrefs.columnWidths) {
+                const columnWidths = {
+                  ...(updatedPrefs.columnWidths as Record<string, unknown>),
+                }
+                delete columnWidths[tableId]
+                delete columnWidths[`${tableId}#columns`]
+                delete columnWidths[`${tableId}#indexes`]
+                updatedPrefs.columnWidths = columnWidths
+              }
+              return updatedPrefs
+            },
+            { mode: 'replace' },
+          )
+          queryClient.invalidateQueries({
+            queryKey: ['team', 'console', organizationId],
           })
         } catch {
           // Silently handle preference deletion error

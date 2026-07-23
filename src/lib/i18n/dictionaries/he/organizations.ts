@@ -748,8 +748,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
   'Payment failed': 'התשלום נכשל',
-  'Payment failed - organization in read-only mode':
-    'התשלום נכשל, הארגון במצב קריאה בלבד',
+  'Payment failed - organization has restricted access':
+    'התשלום נכשל, לארגון יש גישה מוגבלת',
   'Payment form not ready. Please try again.':
     'טופס התשלום אינו מוכן. נסו שוב.',
   'Payment history': 'היסטוריית תשלומים',

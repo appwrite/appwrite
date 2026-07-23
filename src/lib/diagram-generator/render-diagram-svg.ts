@@ -8,18 +8,28 @@ import {
   getDiagramEdgeOpacity,
   getDiagramEdgeStroke,
 } from '@/lib/diagram-generator/edge-appearance'
+import { getDiagramEdgeLabelMetrics } from '@/lib/diagram-generator/edge-label'
+import {
+  getDiagramEdgeLabelSurfaceColors,
+  getDiagramNodeSurfaceColors,
+} from '@/lib/diagram-generator/node-chrome'
 import {
   buildCoverBrandBackgroundParts,
   buildCoverExportFontStyleBlock,
   resolveCoverImageHref,
 } from '@/lib/cover-generator/brand-background'
 import { getCoverBrandThemeForSvgExport } from '@/lib/cover-generator/brand-theme'
+import {
+  COVER_BRAND_ICON_COLOR,
+  getCoverLucideIconStrokeColor,
+} from '@/lib/cover-generator/cover-icon-tone'
 import { getCoverFontFaceCss } from '@/lib/cover-generator/font-embed'
 import {
   isCoverLucideIconValue,
   parseCoverLucideIconName,
 } from '@/lib/cover-generator/lucide-icon-utils'
 import { loadCoverLucideIconSvgBuffer } from '@/lib/cover-generator/lucide-icon-render'
+import { readCoverPublicAssetBuffer } from '@/lib/cover-generator/public-assets'
 import { buildCoverTableFrameComposition } from '@/lib/cover-generator/table/render-frame'
 import type { CoverEditorThemeId } from '@/lib/cover-generator/themes'
 import { DIAGRAM_NODE_KIND_LABELS } from '@/lib/diagram-generator/constants'
@@ -103,6 +113,7 @@ function buildDiagramEdgeLabelsSvg(
   brand: ReturnType<typeof getCoverBrandThemeForSvgExport>,
 ): string {
   const paths = buildDiagramEdgePaths(document.nodes, document.edges)
+  const labelSurface = getDiagramEdgeLabelSurfaceColors(brand, document.theme)
 
   return paths
     .filter((path) => path.label)
@@ -111,20 +122,30 @@ function buildDiagramEdgeLabelsSvg(
         selected: false,
         part: 'label',
       })
+      const metrics = getDiagramEdgeLabelMetrics(path.label ?? '')
 
       return `
         <g opacity="${labelOpacity}">
-          <rect x="${path.labelX - 36}" y="${path.labelY - 11}" width="72" height="22" rx="11" fill="${brand.background}" stroke="${brand.border}" stroke-width="1" />
-          <text x="${path.labelX}" y="${path.labelY + 4}" text-anchor="middle" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(path.label ?? '')}</text>
+          <rect x="${path.labelX - metrics.offsetX}" y="${path.labelY - metrics.offsetY}" width="${metrics.width}" height="${metrics.height}" rx="${metrics.rx}" fill="${labelSurface.fill}" stroke="${labelSurface.stroke}" stroke-width="1" />
+          <text x="${path.labelX}" y="${path.labelY + 5}" text-anchor="middle" fill="${brand.mutedForeground}" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="500">${escapeXml(path.label ?? '')}</text>
         </g>
       `
     })
     .join('')
 }
 
+/** Recolor bundled `/icons/*.svg` fills so they match Lucide stroke for the theme. */
+function recolorCoverBrandIconSvg(svg: string, color: string): string {
+  const brandColor = COVER_BRAND_ICON_COLOR
+  return svg
+    .replaceAll(brandColor, color)
+    .replaceAll(brandColor.toLowerCase(), color)
+    .replaceAll(brandColor.toUpperCase(), color)
+}
+
 async function buildNodeIconSvg(
   node: DiagramNode,
-  brand: ReturnType<typeof getCoverBrandThemeForSvgExport>,
+  themeId: CoverEditorThemeId,
   x: number,
   y: number,
   size: number,
@@ -132,13 +153,23 @@ async function buildNodeIconSvg(
   if (!node.iconSrc?.trim()) return ''
 
   const iconSrc = node.iconSrc.trim()
+  const iconColor = getCoverLucideIconStrokeColor(themeId)
+
   if (isCoverLucideIconValue(iconSrc)) {
     const iconName = parseCoverLucideIconName(iconSrc)
     if (!iconName) return ''
-    const iconBuffer = await loadCoverLucideIconSvgBuffer(iconName, brand.foreground)
+    const iconBuffer = await loadCoverLucideIconSvgBuffer(iconName, iconColor)
     if (!iconBuffer) return ''
     const href = `data:image/svg+xml;base64,${iconBuffer.toString('base64')}`
     return `<image href="${href}" x="${x}" y="${y}" width="${size}" height="${size}" />`
+  }
+
+  if (iconSrc.startsWith('/icons/') && iconSrc.toLowerCase().endsWith('.svg')) {
+    const buffer = await readCoverPublicAssetBuffer(iconSrc)
+    if (!buffer) return ''
+    const recolored = recolorCoverBrandIconSvg(buffer.toString('utf-8'), iconColor)
+    const href = `data:image/svg+xml;base64,${Buffer.from(recolored, 'utf-8').toString('base64')}`
+    return `<image href="${href}" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" />`
   }
 
   const href = await resolveCoverImageHref(iconSrc)
@@ -255,6 +286,8 @@ async function buildDiagramNodeSvg(
   const servicePaddingX = 16
   const serviceGap = 12
 
+  const surface = getDiagramNodeSurfaceColors(brand, themeId)
+
   if (node.kind === 'icon') {
     const defaultLabel = DIAGRAM_NODE_KIND_LABELS.icon
     const showCaption = Boolean(label.trim() && label !== defaultLabel)
@@ -265,11 +298,11 @@ async function buildDiagramNodeSvg(
     const iconSize = Math.max(24, Math.min(availableWidth, availableHeight))
     const iconX = x + (width - iconSize) / 2
     const iconY = y + chromePadding + (availableHeight - iconSize) / 2
-    const iconMarkup = await buildNodeIconSvg(node, brand, iconX, iconY, iconSize)
+    const iconMarkup = await buildNodeIconSvg(node, themeId, iconX, iconY, iconSize)
 
     return `
       <g>
-        <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
+        <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${surface.fill}" stroke="${surface.stroke}" stroke-width="${surface.strokeWidth}" />
         ${iconMarkup}
         ${
           showCaption
@@ -284,7 +317,7 @@ async function buildDiagramNodeSvg(
   const iconBoxY = y + (height - serviceIconBoxSize) / 2
   const iconX = iconBoxX + (serviceIconBoxSize - serviceIconRenderSize) / 2
   const iconY = iconBoxY + (serviceIconBoxSize - serviceIconRenderSize) / 2
-  const iconMarkup = await buildNodeIconSvg(node, brand, iconX, iconY, serviceIconRenderSize)
+  const iconMarkup = await buildNodeIconSvg(node, themeId, iconX, iconY, serviceIconRenderSize)
   const hasIcon = Boolean(iconMarkup)
   const textX = hasIcon ? x + servicePaddingX + serviceIconBoxSize + serviceGap : x + servicePaddingX
   const titleBaseline = y + (node.subtitle ? height / 2 - 6 : height / 2 + 5)
@@ -292,7 +325,7 @@ async function buildDiagramNodeSvg(
 
   return `
     <g>
-      <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${withAlpha(brand.background, 0.92)}" stroke="${brand.border}" stroke-width="1" />
+      <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12" fill="${surface.fill}" stroke="${surface.stroke}" stroke-width="${surface.strokeWidth}" />
       ${hasIcon ? `<rect x="${iconBoxX}" y="${iconBoxY}" width="${serviceIconBoxSize}" height="${serviceIconBoxSize}" rx="8" fill="${withAlpha(brand.muted, 0.85)}" />` : ''}
       ${iconMarkup}
       <text x="${textX}" y="${titleBaseline}" fill="${brand.foreground}" font-size="14" font-family="Inter, system-ui, sans-serif" font-weight="600">${escapeXml(label)}</text>

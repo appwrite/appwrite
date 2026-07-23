@@ -6,8 +6,8 @@ import { CompanyTeam } from '@/components/pages/company/CompanyTeam'
 import { CompanyTimeline } from '@/components/pages/company/CompanyTimeline'
 import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
-import { Button } from '@/components/ui/button'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
+import { companyOpenRoles } from '@/lib/company/open-roles'
 import { useT } from '@/lib/i18n/translate'
 import {
   angelInvestors,
@@ -31,8 +31,6 @@ export function View() {
   const t = useT()
   return (
     <div className="relative overflow-x-hidden">
-      <HomeSoftLights variant="hero" />
-
       <CompanyHero />
 
       <CompanySectionNav />
@@ -132,25 +130,47 @@ export function View() {
         className="relative scroll-mt-28 border-t border-border"
       >
         <HomeSoftLights variant="testimonials" className="opacity-50" />
-        <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-20">
-          <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight text-foreground sm:text-[36px]">
-            {t('Join the team')}
-            <span className="text-[var(--brand-cta)]">_</span>
-          </h2>
-          <p className="mt-4 text-[14px] leading-7 text-muted-foreground">
-            {t(
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <PricingSectionHeading
+            title={t('Open roles')}
+            description={t(
               'Find your next career at Appwrite and join a remote team building the platform developers and agents rely on.', // pragma: allowlist secret
             )}
-          </p>
-          <Button variant="outline" className="mt-6" asChild>
-            <a
-              href="https://appwrite.careers"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('Careers')}
-            </a>
-          </Button>
+            size="md"
+          />
+
+          {companyOpenRoles.length === 0 ? (
+            <div className="mx-auto mt-10 max-w-xl rounded-xl border border-border bg-card/50 px-6 py-12 text-center">
+              <p className="text-[14px] text-muted-foreground">
+                {t('No open roles right now.')}
+              </p>
+            </div>
+          ) : (
+            <ul className="mx-auto mt-10 max-w-3xl divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/50">
+              {companyOpenRoles.map((role) => (
+                <li key={role.id}>
+                  <a
+                    href={role.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                  >
+                    <div>
+                      <p className="text-[14px] font-medium text-foreground">
+                        {t(role.title)}
+                      </p>
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">
+                        {t(role.department)}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[13px] text-muted-foreground">
+                      {t(role.location)}
+                    </p>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
     </div>

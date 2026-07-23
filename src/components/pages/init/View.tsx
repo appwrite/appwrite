@@ -10,6 +10,7 @@ import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { isLaunchEventDayLocked } from '@/lib/init/types'
 import { InitPresenceProvider, useInitPresence } from '@/lib/init/init-presence-context'
 import { scrollToInitDayFromHash } from '@/lib/init/scroll-to-day-card'
+import { hasLikelyConsoleSession } from '@/lib/console-account-get'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { cn } from '@/lib/utils'
 import { EventHero } from './_components/EventHero'
@@ -48,11 +49,9 @@ import type { InitDisplayEvent } from '@/lib/init/types'
 function InitPageContent({
   baseEvent,
   account,
-  accountReady,
 }: {
   baseEvent: InitDisplayEvent
   account?: Models.User | null
-  accountReady: boolean
 }) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [onlineNavOpen, setOnlineNavOpen] = useState(false)
@@ -63,7 +62,7 @@ function InitPageContent({
   })
 
   const event = useMemo(() => {
-    if (!baseEvent.presenceEnabled || !account) {
+    if (!baseEvent.presenceEnabled) {
       return baseEvent
     }
     return {
@@ -73,7 +72,7 @@ function InitPageContent({
       onlineCount: presence.onlineCount,
       othersOnlineCount: presence.othersOnlineCount,
     }
-  }, [account, baseEvent, presence])
+  }, [baseEvent, presence])
 
   useKeyboardShortcut('meta+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
   useKeyboardShortcut('control+k', () => setCommandCenterOpen(true), OPEN_COMMAND_CENTER_SHORTCUT_OPTIONS)
@@ -87,7 +86,6 @@ function InitPageContent({
     !event.isRecapMode &&
     hasOnlineUsersNav(event, {
       presenceEnabled: baseEvent.presenceEnabled,
-      isAuthenticated: Boolean(account),
     })
 
   return (
@@ -145,7 +143,6 @@ function InitPageContent({
               <InitTicketSection
                 event={event}
                 account={account}
-                accountReady={accountReady}
               />
             </div>
           </div>
@@ -243,7 +240,10 @@ export function View() {
     isSuccess: isAccountSuccess,
     isError: isAccountError,
   } = useQuery(consoleAccountQueryOptions())
-  const isAccountReady = isAccountSuccess || isAccountError
+  // No session: treat as ready immediately so guest ticket / presence UI are not
+  // blocked on an account query that can remain pending after cache purge.
+  const isAccountReady =
+    isAccountSuccess || isAccountError || !hasLikelyConsoleSession()
 
   if (!baseEvent) {
     return <InitEmptyState />
@@ -253,17 +253,13 @@ export function View() {
     <InitPresenceProvider
       event={baseEvent}
       enabled={Boolean(
-        baseEvent.presenceEnabled &&
-          !baseEvent.isRecapMode &&
-          isAccountReady &&
-          account,
+        baseEvent.presenceEnabled && !baseEvent.isRecapMode && isAccountReady,
       )}
     >
       <InitGiveawayRaffleProvider event={baseEvent}>
         <InitPageContent
           baseEvent={baseEvent}
           account={account}
-          accountReady={isAccountReady}
         />
       </InitGiveawayRaffleProvider>
     </InitPresenceProvider>

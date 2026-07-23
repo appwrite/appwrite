@@ -185,4 +185,148 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
       },
     ],
   },
+  {
+    prefix: 'products/network',
+    parent: {
+      href: '/docs',
+      label: 'Network',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/network',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Regions',
+            href: '/docs/products/network/regions',
+          },
+          {
+            label: 'Edges',
+            href: '/docs/products/network/edges',
+          },
+          {
+            label: 'CDN',
+            href: '/docs/products/network/cdn',
+          },
+          {
+            label: 'Endpoints',
+            href: '/docs/products/network/endpoints',
+          },
+        ],
+      },
+      {
+        label: 'Features',
+        items: [
+          {
+            label: 'Custom domains',
+            href: '/docs/products/network/custom-domains',
+          },
+          {
+            label: 'DNS',
+            href: '/docs/products/network/dns',
+          },
+          {
+            label: 'CAA records',
+            href: '/docs/products/network/caa-records',
+          },
+          {
+            label: 'DDoS mitigation',
+            href: '/docs/products/network/ddos',
+          },
+          {
+            label: 'TLS',
+            href: '/docs/products/network/tls',
+          },
+          {
+            label: 'Firewall',
+            href: '/docs/products/firewall',
+          },
+          {
+            label: 'Compression',
+            href: '/docs/products/network/compression',
+          },
+          {
+            label: 'Caching',
+            href: '/docs/products/network/caching',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'products/firewall',
+    parent: {
+      href: '/docs',
+      label: 'Firewall',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/firewall',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/firewall/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Rules',
+            href: '/docs/products/firewall/rules',
+          },
+          {
+            label: 'Actions',
+            href: '/docs/products/firewall/actions',
+          },
+          {
+            label: 'Conditions',
+            href: '/docs/products/firewall/conditions',
+          },
+          {
+            label: 'Resource scopes',
+            href: '/docs/products/firewall/scopes',
+          },
+          {
+            label: 'Priority',
+            href: '/docs/products/firewall/priority',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Create a rule',
+            href: '/docs/products/firewall/create',
+          },
+          {
+            label: 'Update a rule',
+            href: '/docs/products/firewall/update',
+          },
+          {
+            label: 'Monitor traffic',
+            href: '/docs/products/firewall/monitor',
+          },
+          {
+            label: 'Delete a rule',
+            href: '/docs/products/firewall/delete',
+          },
+        ],
+      },
+    ],
+  },
 ]

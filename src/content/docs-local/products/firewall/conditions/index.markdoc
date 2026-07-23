@@ -1,0 +1,66 @@
+---
+layout: article
+title: Conditions
+description: Learn how Firewall conditions match requests by IP, path, method, country, and user agent in Appwrite.
+---
+
+**Conditions** define which requests a Firewall rule matches. A rule must include **at least one** condition. Every condition on the rule must match for the rule to apply (logical AND).
+
+Incomplete conditions (operators that need a value but have an empty value) are not saved. The Console requires complete conditions before create or update.
+
+# Attributes {% #attributes %}
+
+| Attribute | Matches | Typical use |
+|-----------|---------|-------------|
+| **IP address** | Client IP as seen by Appwrite | Block or allowlist known addresses |
+| **Request path** | URL path only (query string stripped) | Protect `/v1/...` prefixes or sensitive routes |
+| **HTTP method** | Method enum (`GET`, `POST`, and others), uppercased | Restrict mutating methods on a path |
+| **Country** | ISO country code from geo lookup (uppercased) | Geo allow or deny lists |
+| **User agent** | `User-Agent` header | Filter bots, scripts, or known clients |
+
+# Matching details {% #matching-details %}
+
+- **IP address**: Compared as an exact string. CIDR ranges (for example `203.0.113.0/24`) are **not** supported. Use equals / not equal for specific IPs.
+- **Request path**: Taken from the request URI with the query string removed. An empty path is treated as `/`. Prefer `starts with` for prefixes such as `/v1/account`.
+- **HTTP method**: Normalized to uppercase before matching.
+- **Country**: Uses the resolved geo country code. When geo cannot be resolved, the value is `unresolved`. Country inputs in the Console are stored uppercase.
+
+# Operators {% #operators %}
+
+Available operators depend on the attribute.
+
+| Operator | Meaning | Needs a value |
+|----------|---------|---------------|
+| Equals | Exact match | Yes |
+| Not equal | Does not equal | Yes |
+| Contains | Value contains the substring | Yes |
+| Starts with | Value begins with the string | Yes |
+| Ends with | Value ends with the string | Yes |
+| Is empty | Attribute is empty | No |
+| Is not empty | Attribute is present | No |
+
+Notes:
+
+- **IP**, **path**, and **user agent** support the full operator set above.
+- **HTTP method** supports equals, not equal, is empty, and is not empty (no contains / starts with / ends with).
+- **Country** supports equals, not equal, and contains.
+
+# Multiple conditions {% #multiple-conditions %}
+
+Add several conditions on one rule when you need a narrow match. Examples:
+
+- Path starts with `/v1/users` **and** method equals `DELETE`
+- Country equals `US` **and** path starts with `/v1`
+- IP not equal to your office address **and** path starts with `/v1`
+
+For allowlists, prefer a [bypass](/docs/products/firewall/actions#bypass) rule with IP equals your trusted address at a **lower priority number** than a broad deny rule.
+
+# Impact estimation {% #impact-estimation %}
+
+When you create or edit conditions, the Console can estimate how many recent usage events would have matched. Use that preview to tighten overly broad filters before enabling deny or rate limit.
+
+See [Monitor traffic](/docs/products/firewall/monitor) for overview metrics after rules are live.
+
+{% arrow_link href="/docs/products/firewall/create" %}
+Create a rule
+{% /arrow_link %}

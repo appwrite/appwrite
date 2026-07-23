@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { Check, ChevronDown, ChevronRight, Lock, Minus } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Lock,
+  Minus,
+} from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -52,6 +59,7 @@ import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
+import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
 
 type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
 
@@ -175,14 +183,16 @@ function OnboardingProgressPanel({
   connectComplete: boolean
 }) {
   const t = useT()
+  const { previewOnboardingComplete } = useDebugOverrides()
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const c = RING_VB / 2
   const radius = (RING_VB - RING_STROKE) / 2
   const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference * (1 - progress / 100)
-  const complete = !showSkeleton && progress === 100
+  const displayProgress = previewOnboardingComplete ? 100 : progress
+  const strokeDashoffset = circumference * (1 - displayProgress / 100)
+  const complete = !showSkeleton && displayProgress === 100
 
-  const encouragementBand = getEncouragementBand(progress)
+  const encouragementBand = getEncouragementBand(displayProgress)
   const headline = useMemo(
     () => pickEncouragementForBand(encouragementBand),
     [encouragementBand, projectId],
@@ -280,7 +290,9 @@ function OnboardingProgressPanel({
       </h2>
       <p className="text-[11px] text-muted-foreground leading-snug mt-1.5">
         {t(
-          'Connect this project, then complete each product area - one clear action at a time.',
+          complete
+            ? "We're focused on building a product Appwriters love. The best way we grow is when the community helps spread the word."
+            : 'Connect this project, then complete each product area - one clear action at a time.',
         )}
       </p>
     </>
@@ -363,12 +375,24 @@ function OnboardingProgressPanel({
 
       <div className="border-t border-border" />
 
-      <div className="px-4 py-4 sm:px-5 sm:py-4 bg-muted/30">
+      <div className="px-4 py-4 sm:px-5 sm:py-4 bg-muted/30 flex flex-col gap-2">
         <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
           <Link to="/projects/$projectId" params={{ projectId }}>
             {t('Go to dashboard')}
           </Link>
         </Button>
+        {complete ? (
+          <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
+            <a
+              href={MARKETING_SOCIAL_STATS.github.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('Star on GitHub')}
+              <ExternalLink className="ms-1.5 h-3.5 w-3.5 shrink-0" />
+            </a>
+          </Button>
+        ) : null}
       </div>
     </div>
   )

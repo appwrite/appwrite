@@ -210,6 +210,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Enter text that matches the start of a name, email, phone, or user ID.':
     'הזינו טקסט התואם את תחילת השם, האימייל, הטלפון או מזהה המשתמש.',
   'Enter value': 'הזינו ערך',
+  'Show value': 'הצגת ערך',
+  'Hide value': 'הסתרת ערך',
   'Enterprise & 24/7 support': 'תמיכת אנטרפרייז מסביב לשעון',
   Essential: 'חיוניות',
   'Execute function': 'הרצת פונקציה',
@@ -283,6 +285,35 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
+  'Skip for now': 'דילוג לעכשיו',
+  'Help other Appwriters on Discord and grow with the community.':
+    'עזרו ל-Appwriters אחרים ב-Discord וצמחו יחד עם הקהילה.',
+  'Star us on GitHub': 'תנו לנו כוכב ב-GitHub',
+  'A star helps more developers discover Appwrite.':
+    'כוכב עוזר ליותר מפתחים לגלות את Appwrite.',
+  'Spread the word on X': 'שתפו ב-X',
+  'Tell others what you are building with Appwrite.':
+    'ספרו לאחרים מה אתם בונים עם Appwrite.',
+  'Write content': 'כתיבת תוכן',
+  'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
+    'פרסמו בלוגים, סרטונים או מדריכים שעוזרים למפתחים לגלות את Appwrite.',
+  'Build integrations': 'בניית אינטגרציות',
+  'Connect Appwrite to the tools your stack already uses.':
+    'חברו את Appwrite לכלים שכבר נמצאים בסטאק שלכם.',
+  'A note from the team': 'הערה מהצוות',
+  'Hey,': 'היי,',
+  'Sorry to interrupt. We know you came here to build, not to read a message from us.':
+    'סליחה על ההפרעה. אנחנו יודעים שבאתם לכאן כדי לבנות, לא כדי לקרוא הודעה מאיתנו.',
+  'We are a product-obsessed team. Our job is to make Appwrite something you love building on. The part we cannot do alone is spreading the word and welcoming the next wave of developers.':
+    'אנחנו צוות אובססיבי למוצר. התפקיד שלנו הוא להפוך את Appwrite למשהו שתאהבו לבנות עליו. את מה שאי אפשר לעשות לבד, הפצה וקבלת המפתחים הבאים, אנחנו צריכים אתכם.',
+  'If you have a minute, here is how you can help. If not, skip and get back to work.':
+    'אם יש לכם דקה, כך אפשר לעזור. אם לא, דלגו וחזרו לעבודה.',
+  'Write something true to your experience, or start from one of these examples.':
+    'כתבו משהו אמיתי מהחוויה שלכם, או התחילו מאחת הדוגמאות האלה.',
+  'Try another example': 'דוגמה אחרת',
+  'Share message': 'הודעה לשיתוף',
+  'Spread the word': 'הפיצו את הבשורה',
+  'Thank you for building with us.': 'תודה שאתם בונים איתנו.',
   'Just now': 'הרגע',
   'Ago relative time': 'לפני',
   'In relative time': 'בעוד',
@@ -355,6 +386,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No files match your search': 'אין קבצים התואמים את החיפוש',
   'No functions found': 'לא נמצאו פונקציות',
   'No functions found.': 'לא נמצאו פונקציות.',
+  'No sites found': 'לא נמצאו אתרים',
   'No items found': 'לא נמצאו פריטים',
   'No items match your criteria.': 'אין פריטים התואמים את הקריטריונים.',
   'No items yet': 'אין פריטים עדיין',
@@ -402,8 +434,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
     'התשלום נכשל - פעלו עכשיו. בעיית חיוב שלא נפתרה עלולה לשבש את הפרויקטים והשירותים שלכם.',
-  'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
-    'התשלום נכשל - הארגון שלכם במצב קריאה בלבד עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
+  'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
+    'התשלום נכשל - לארגון שלכם יש גישה מוגבלת עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',
   Bold: 'מודגש',
   Italic: 'נטוי',
@@ -672,8 +704,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   Screenshot: 'צילום מסך',
   'Payment failed - update billing to avoid interrupting your projects and services.':
     'התשלום נכשל - עדכנו את פרטי החיוב כדי למנוע שיבוש בפרויקטים ובשירותים שלכם.',
-  'Payment failed - this organization is read-only until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
-    'התשלום נכשל - הארגון במצב קריאה בלבד עד לתשלום החשבונית הפתוחה. שינויים בפרויקטים ובשירותים מוגבלים; פתחו את החיוב כדי לעדכן תשלום ולשחזר גישה.',
+  'Payment failed - this organization has restricted access until the outstanding invoice is paid. Project and service changes are limited; open Billing to update payment and restore access.':
+    'התשלום נכשל - לארגון יש גישה מוגבלת עד לתשלום החשבונית הפתוחה. שינויים בפרויקטים ובשירותים מוגבלים; פתחו את החיוב כדי לעדכן תשלום ולשחזר גישה.',
 
   // Dynamic pass-through values: system status panel
   Operational: 'תקין',

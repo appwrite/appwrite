@@ -5,8 +5,7 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
-import type { Database as DatabaseListItem } from '@/lib/utils/mock-data'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
@@ -40,18 +39,6 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
-
-type DatabaseWithBackup = {
-  $id: string
-  name: string
-  enabled?: boolean
-  createdAt?: string
-  updatedAt?: string
-  hasBackupPolicy?: boolean
-  backupPolicy?: { name?: string }
-  backupPolicyCount?: number
-  databaseType?: ApiDatabaseType
-}
 
 type ProductDatabasesSectionProps = {
   projectId: string
@@ -248,7 +235,7 @@ function ProductDatabasesSectionContent({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {databases.map((db: DatabaseWithBackup & DatabaseListItem) => (
+                  {databases.map((db) => (
                     <TableRow
                       key={db.$id}
                       className="cursor-pointer border-b border-border/50 hover:bg-muted/30"
@@ -300,7 +287,8 @@ function ProductDatabasesSectionContent({
                                 <CheckCircle2 className="h-3 w-3" />
                                 {db.backupPolicyCount && db.backupPolicyCount > 0
                                   ? `${db.backupPolicyCount} ${db.backupPolicyCount === 1 ? t('policy') : t('policies')}`
-                                  : db.backupPolicy?.name || t('Enabled')}
+                                  : (db.backupPolicy as { name?: string } | null)
+                                      ?.name || t('Enabled')}
                               </Badge>
                             ) : (
                               <Badge
@@ -371,7 +359,7 @@ function ProductDatabasesSectionContent({
             </Alert>
           ) : null}
           <div className={cn(RESOURCE_CARD_GRID_CLASSNAME)}>
-            {databases.map((db: DatabaseWithBackup & DatabaseListItem) => (
+            {databases.map((db) => (
               <DatabaseContextMenu
                 key={db.$id}
                 projectId={projectId}
@@ -410,7 +398,8 @@ function ProductDatabasesSectionContent({
                                 >
                                   {db.backupPolicyCount && db.backupPolicyCount > 0
                                     ? `${db.backupPolicyCount} ${db.backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                    : db.backupPolicy?.name || 'Backup enabled'}
+                                    : (db.backupPolicy as { name?: string } | null)
+                                        ?.name || 'Backup enabled'}
                                 </Badge>
                               ) : (
                                 <Badge

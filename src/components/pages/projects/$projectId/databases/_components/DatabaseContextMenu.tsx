@@ -35,7 +35,7 @@ import {
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import {
   deleteProjectDatabase,
   fetchProjectDatabase,

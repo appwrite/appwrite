@@ -4,6 +4,7 @@ import { Bell, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useToggleFeatureNotification } from '@/lib/react-query/hooks'
+import { USER_PREFS_KEY_FEATURE_NOTIFICATIONS } from '@/lib/user-prefs-keys'
 import { toast } from 'sonner'
 
 interface ComingSoonCurtainProps {
@@ -32,7 +33,7 @@ interface ComingSoonCurtainProps {
  * that are coming soon, with a CTA to get notified when available.
  *
  * When clicked, it saves the feature ID in the user's preferences under
- * the 'featureNotifications' key as an array.
+ * the featureNotifications key (see USER_PREFS_KEY_FEATURE_NOTIFICATIONS).
  *
  * Usage:
  * ```tsx
@@ -52,7 +53,8 @@ export function ComingSoonCurtain({
   const [isAnimating, setIsAnimating] = useState(false)
 
   // Check if user has already requested notification for this feature
-  const featureNotificationsRaw = account?.prefs?.featureNotifications
+  const featureNotificationsRaw =
+    account?.prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
 
   // Handle different data types (string, array, or undefined)
   let featureNotifications: string[] = []

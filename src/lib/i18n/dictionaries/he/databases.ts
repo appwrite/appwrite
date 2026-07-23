@@ -76,6 +76,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'מזהה הגיבוי הועתק ללוח',
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policies': 'מדיניות גיבויים',
+  'backup policies': 'מדיניות גיבויים',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
@@ -206,7 +207,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'צרו עמודות תחילה',
   'Create database': 'יצירת מסד נתונים',
   'Creating database': 'יוצר מסד נתונים',
-  'Creating backup policies': 'יוצר מדיניות גיבויים',
   'Allocating dedicated compute for your database.':
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
@@ -217,8 +217,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'מספק compute',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
-  'Setting up scheduled backups for your database.':
-    'מגדיר גיבויים מתוזמנים למסד הנתונים שלכם.',
   'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
   'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
@@ -317,6 +315,12 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'שם מסד הנתונים עודכן בהצלחה',
   'Database not found': 'מסד הנתונים לא נמצא',
   'Database restore initiated': 'שחזור מסד הנתונים החל',
+  'Preparing restore': 'מכינים שחזור',
+  'Restore completed': 'השחזור הושלם',
+  'Restore failed': 'השחזור נכשל',
+  'Restoring database': 'משחזרים מסד נתונים',
+  'Open database': 'פתיחת מסד נתונים',
+  'Open new database': 'פתיחת מסד נתונים חדש',
   'Database password reset': 'סיסמת מסד הנתונים אופסה',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'לשורות במסד הנתונים יש גודל מרבי של 64 KB. עמודות varchar משתמשות ב-4 בייטים לכל תו בתוספת תקורה קטנה. עמודות text, mediumtext ו-longtext משתמשות רק בכ-20 בייטים ללא תלות באורך התוכן.',
   'database selected': 'מסד נתונים נבחר',
@@ -434,6 +438,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Enable': 'הפעלה',
   'Enable it in the Settings tab': 'הפעילו זאת בכרטיסיית ההגדרות',
   'Enable PITR': 'הפעלת PITR',
+  'Enabling PITR will incur an additional charge of':
+    'הפעלת PITR תגרור חיוב נוסף של',
   'Enabled': 'מופעל',
   'Encrypted': 'מוצפן',
   'Encrypted string columns require a minimum size of 150.': 'עמודות מחרוזת מוצפנות דורשות גודל מינימלי של 150.',
@@ -1421,6 +1427,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': 'כל replica מחויב ב-',
   'of your compute tier per month.': 'מרמת המחשוב שלכם בחודש.',
   'of your compute tier per month when enabled.': 'מרמת המחשוב שלכם בחודש כשהאפשרות מופעלת.',
+  'of your database price': 'ממחיר מסד הנתונים שלכם',
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No PostgreSQL databases found': 'לא נמצאו מסדי PostgreSQL',
   'No MySQL databases found': 'לא נמצאו מסדי MySQL',
@@ -1495,6 +1502,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': 'מקביל',
   'Replication': 'שכפול',
+  'Replication is available on dedicated databases':
+    'שכפול זמין במסדי נתונים ייעודיים',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    'שדרגו את מסד הנתונים למפרט ייעודי כדי להגדיר רפליקות קריאה ו-failover.',
   'Background': 'רקע',
   'Fulltext': 'Fulltext',
   'Complete': 'הושלם',

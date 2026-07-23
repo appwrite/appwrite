@@ -1,9 +1,11 @@
+import { Link } from '@tanstack/react-router'
 import type {
   LaunchEvent,
   LaunchEventOnlineUser,
   LaunchEventUserPresence,
 } from '@/lib/init/types'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useInitPresence } from '@/lib/init/init-presence-context'
 import { parseInitReactingActivity, formatInitPresenceActivityDisplay } from '@/lib/init/reactions'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS,
@@ -24,7 +27,7 @@ import {
   SIDEBAR_EDGE_TOGGLE_OVERFLOW,
 } from '@/lib/layout/offcanvas-classes'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronLeft, LogIn, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
@@ -628,6 +631,7 @@ function OnlineUsersNavContent({
   isMobile = false,
   showPanel = false,
   isLoading = false,
+  isAuthenticated = false,
   selfUserId,
   reactionPulse,
   raffleWinnerId = null,
@@ -637,12 +641,18 @@ function OnlineUsersNavContent({
   isMobile?: boolean
   showPanel?: boolean
   isLoading?: boolean
+  isAuthenticated?: boolean
   selfUserId?: string
   reactionPulse?: number
   raffleWinnerId?: string | null
 }) {
+  const t = useT()
   const hasUsers =
     event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
+
+  const emptyMessage = isAuthenticated
+    ? t('No one else online yet. You are connected.')
+    : t('Sign in to join the event and see who is online.')
 
   return (
     <div className={cn('relative', ONLINE_USERS_LIST_MIN_HEIGHT)}>
@@ -656,7 +666,7 @@ function OnlineUsersNavContent({
             collapsed && !isMobile && 'text-center text-[12px]',
           )}
         >
-          {collapsed && !isMobile ? '…' : 'No one else online yet. You are connected.'}
+          {collapsed && !isMobile ? '…' : emptyMessage}
         </p>
       ) : (
         <div className={cn('space-y-6', ONLINE_USERS_LIST_CLASS)}>
@@ -685,11 +695,62 @@ function OnlineUsersNavContent({
   )
 }
 
+function OnlineUsersLoginCta({
+  collapsed = false,
+  isMobile = false,
+}: {
+  collapsed?: boolean
+  isMobile?: boolean
+}) {
+  const t = useT()
+
+  if (collapsed && !isMobile) {
+    return (
+      <div className="flex justify-center py-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="brandCta"
+              size="icon"
+              className="size-9"
+              asChild
+            >
+              <Link
+                to="/sign-in"
+                search={{ redirect: '/init' }}
+                aria-label={t('Sign in to join the event')}
+              >
+                <LogIn className="size-4" aria-hidden />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-[12px]">
+            {t('Sign in to join the event')}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn('space-y-2 px-2.5 py-3', isMobile && 'px-0 py-0')}>
+      <p className="text-[12px] leading-snug text-muted-foreground">
+        {t('Sign in to join the event')}
+      </p>
+      <Button variant="brandCta" size="sm" className="h-8 w-full text-[12px]" asChild>
+        <Link to="/sign-in" search={{ redirect: '/init' }}>
+          {t('Sign in')}
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
 export function hasOnlineUsersNav(
   event: LaunchEvent,
-  options?: { presenceEnabled?: boolean; isAuthenticated?: boolean },
+  options?: { presenceEnabled?: boolean },
 ) {
-  if (options?.presenceEnabled && options.isAuthenticated) {
+  if (options?.presenceEnabled) {
     return true
   }
   return event.onlineUsers.length > 0 || event.recentlyOnlineUsers.length > 0
@@ -706,7 +767,8 @@ export function OnlineUsersNav({
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const { isReady: isPresenceReady, onlineThemeCounts } = useInitPresence()
   const raffle = useInitGiveawayRaffleContext()
-  const isLoadingPresence = showPanel && !isPresenceReady
+  const isAuthenticated = Boolean(account)
+  const isLoadingPresence = showPanel && isAuthenticated && !isPresenceReady
   const selfUserId = account?.$id
 
   if (!showPanel && !hasOnlineUsersNav(event)) return null
@@ -737,13 +799,14 @@ export function OnlineUsersNav({
                 collapsed={collapsed}
                 showPanel={showPanel}
                 isLoading={isLoadingPresence}
+                isAuthenticated={isAuthenticated}
                 selfUserId={selfUserId}
                 reactionPulse={reactionPulse}
                 raffleWinnerId={raffle?.raffleWinnerId ?? null}
               />
             </nav>
 
-            {showPanel ? (
+            {showPanel && isAuthenticated ? (
               <InitPresenceReactions
                 eventId={event.id}
                 collapsed={collapsed}
@@ -751,7 +814,7 @@ export function OnlineUsersNav({
               />
             ) : null}
 
-            {showPanel ? (
+            {showPanel && isAuthenticated ? (
               <InitPresenceThemeBar
                 light={onlineThemeCounts.light}
                 dark={onlineThemeCounts.dark}
@@ -763,7 +826,11 @@ export function OnlineUsersNav({
 
           {showPanel ? (
             <div className="shrink-0 border-t border-border bg-muted/20">
-              <InitPresenceStatusControl collapsed={collapsed} />
+              {isAuthenticated ? (
+                <InitPresenceStatusControl collapsed={collapsed} />
+              ) : (
+                <OnlineUsersLoginCta collapsed={collapsed} />
+              )}
             </div>
           ) : null}
         </aside>
@@ -822,13 +889,14 @@ export function OnlineUsersNav({
               isMobile
               showPanel={showPanel}
               isLoading={isLoadingPresence}
+              isAuthenticated={isAuthenticated}
               selfUserId={selfUserId}
               reactionPulse={reactionPulse}
               raffleWinnerId={raffle?.raffleWinnerId ?? null}
             />
           </nav>
 
-          {showPanel ? (
+          {showPanel && isAuthenticated ? (
             <InitPresenceReactions
               eventId={event.id}
               isMobile
@@ -836,7 +904,7 @@ export function OnlineUsersNav({
             />
           ) : null}
 
-          {showPanel ? (
+          {showPanel && isAuthenticated ? (
             <InitPresenceThemeBar
               light={onlineThemeCounts.light}
               dark={onlineThemeCounts.dark}
@@ -848,7 +916,11 @@ export function OnlineUsersNav({
 
         {showPanel ? (
           <div className="shrink-0 border-t border-border bg-muted/20 px-4 py-3">
-            <InitPresenceStatusControl isMobile />
+            {isAuthenticated ? (
+              <InitPresenceStatusControl isMobile />
+            ) : (
+              <OnlineUsersLoginCta isMobile />
+            )}
           </div>
         ) : null}
       </aside>

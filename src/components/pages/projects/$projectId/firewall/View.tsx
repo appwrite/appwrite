@@ -1,126 +1,162 @@
-import { useMemo, useState } from 'react'
-import { useParams, useLocation } from '@tanstack/react-router'
-import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Shield } from 'lucide-react'
+import {
+  firewallRulesQueryOptions,
+  useProject,
+  useOrganizationPlan,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { RulesTab } from './Rules'
-import { AnalyticsTab } from './Analytics'
-import { LogsTab } from './Logs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { ServiceHeader } from '../shared/ServiceHeader'
+import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { TrafficOverview } from './TrafficOverview'
+import { RulesList } from './Rules'
+import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
 
 export function View() {
   const t = useT()
+  const navigate = useNavigate()
   const params = useParams({ strict: false })
-  const location = useLocation()
   const projectId = params.projectId as string
-
-  const [searchValue, setSearchValue] = useState('')
-
-  // Derive active tab from pathname
-  const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const firewallIndex = pathParts.findIndex((part) => part === 'firewall')
-
-    if (firewallIndex >= 0) {
-      if (pathParts[firewallIndex + 1]) {
-        const tabFromPath = pathParts[firewallIndex + 1]
-        if (['analytics', 'logs'].includes(tabFromPath)) {
-          return tabFromPath
-        }
-      }
-    }
-
-    return 'rules'
-  }, [location.pathname])
-
-  const tabs: Tab[] = useMemo(
-    () => [
-      {
-        id: 'rules',
-        label: t('Rules'),
-        to: '/projects/$projectId/firewall',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'analytics',
-        label: t('Analytics'),
-        to: '/projects/$projectId/firewall/analytics',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'logs',
-        label: t('Logs'),
-        to: '/projects/$projectId/firewall/logs',
-        params: { projectId: projectId as string },
-      },
-    ],
-    [projectId, t],
-  )
+  const { resourceType: resourceScope = 'api' } = Route.useSearch()
 
   const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const noCreatePermission =
-    activeTab === 'rules' && !canWriteRules(access, features)
+  const canWrite = canWriteRules(access, features)
 
-  const hasSearch = activeTab === 'rules' || activeTab === 'logs'
-  const searchPlaceholder = hasSearch
-    ? activeTab === 'rules'
-      ? t('Search rules...')
-      : t('Search logs...')
-    : undefined
+  // Unfiltered total for plan limit checks (independent of the rules list search).
+  const { data: totalRulesData } = useQuery(
+    firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
+  )
+  const totalRulesCount = totalRulesData?.total || 0
+
+  const wafRulesLimit =
+    getBillingPlanResourceLimit(organizationPlan, 'wafRules') ?? 0
+
+  const noCreatePermission = !canWrite
+  const isAtPlanLimit = wafRulesLimit > 0 && totalRulesCount >= wafRulesLimit
+  const isCreateDisabled = noCreatePermission || isAtPlanLimit
+  const createDisabledTooltip = noCreatePermission
+    ? t("You don't have permission to create firewall rules.")
+    : isAtPlanLimit
+      ? t("You've reached the limit for this resource on your plan")
+      : undefined
+
+  const planName = resolveOrganizationPlanDisplayLabel({
+    planName: organizationPlan?.name ?? null,
+    planId: organizationPlan?.$id,
+  })
+
+  const rulesLimitIndicator =
+    wafRulesLimit > 0 ? (
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                'inline-flex max-w-[10.5rem] shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-start sm:max-w-[13rem]',
+                'border border-transparent text-muted-foreground',
+                'hover:border-border hover:bg-muted/50 hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              )}
+            >
+              <Shield className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="min-w-0 truncate text-[11px] leading-tight">
+                <span className="text-muted-foreground">{t('Rules')} </span>
+                <span className="font-medium text-foreground">
+                  {totalRulesCount.toLocaleString()}/
+                  {wafRulesLimit.toLocaleString()}
+                </span>
+              </span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            align="end"
+            className="max-w-sm text-[12px] leading-snug text-balance"
+          >
+            <p className="font-medium text-background">
+              {t('Firewall rules')}
+            </p>
+            <p className="mt-1.5 text-background/85">
+              {t('Your plan')} ({planName}) {t('includes up to')}{' '}
+              <span className="font-medium text-background">
+                {wafRulesLimit.toLocaleString()}
+              </span>{' '}
+              {t('firewall rules')}.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ) : null
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col">
       <ServiceHeader
         title={t('Firewall')}
-        tabs={tabs}
-        activeTab={activeTab}
         showFilters={false}
         fullWidthBorder
-        searchPlaceholder={searchPlaceholder}
-        searchValue={hasSearch ? searchValue : undefined}
-        onSearchChange={hasSearch ? setSearchValue : undefined}
-        createLabel={activeTab === 'rules' ? t('Create rule') : undefined}
-        onCreate={
-          activeTab === 'rules'
-            ? () => {
-                if (typeof window !== 'undefined') {
-                  const event = new CustomEvent('firewall-create-rule')
-                  window.dispatchEvent(event)
-                }
-              }
-            : undefined
-        }
-        createDisabled={noCreatePermission}
-        createDisabledTooltip={
-          noCreatePermission
-            ? t("You don't have permission to create firewall rules.")
-            : undefined
-        }
-        showRefresh={activeTab === 'analytics'}
-        onRefresh={
-          activeTab === 'analytics'
-            ? () => {
-                // Refresh analytics data
-                if (typeof window !== 'undefined') {
-                  const event = new CustomEvent('firewall-refresh-analytics')
-                  window.dispatchEvent(event)
-                }
-              }
-            : undefined
+        fullWidth
+        titleRightContent={rulesLimitIndicator}
+        contentAfterBorder={
+          project &&
+          organizationPlan !== undefined &&
+          totalRulesData !== undefined ? (
+            <PlanLimitWarning
+              currentCount={totalRulesCount}
+              limit={wafRulesLimit}
+              planName={planName}
+              resourceName="firewall rules"
+              orgId={project?.teamId}
+              fullWidth={false}
+            />
+          ) : undefined
         }
       />
 
-      <div className="flex-1">
-        {activeTab === 'rules' && (
-          <RulesTab projectId={projectId} searchValue={searchValue} />
-        )}
-        {activeTab === 'analytics' && <AnalyticsTab projectId={projectId} />}
-        {activeTab === 'logs' && (
-          <LogsTab projectId={projectId} searchValue={searchValue} />
-        )}
+      <div className="flex-1 overflow-y-auto">
+        <TrafficOverview />
+
+        <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+          <RulesList
+            projectId={projectId}
+            canWrite={canWrite}
+            resourceScope={resourceScope}
+            onResourceScopeChange={(next) => {
+              void navigate({
+                to: '/projects/$projectId/firewall',
+                params: { projectId },
+                search: { resourceType: next },
+                replace: true,
+              })
+            }}
+            createDisabled={isCreateDisabled}
+            createDisabledTooltip={createDisabledTooltip}
+            onCreate={() =>
+              navigate({
+                to: '/projects/$projectId/firewall/create',
+                params: { projectId },
+                search: { resourceType: resourceScope },
+              })
+            }
+          />
+        </div>
       </div>
     </div>
   )

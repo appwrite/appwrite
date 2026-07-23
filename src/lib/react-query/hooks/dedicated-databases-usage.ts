@@ -809,6 +809,9 @@ export type DedicatedDatabaseCardNodeMetrics = {
 /**
  * Card-sized dedicated metrics: latest CPU/memory per ordinal and connections.
  * Uses the same usage.listGauges queries as the database monitor page (last 24h).
+ *
+ * Ordinal filtering matches Monitor: omit `ordinal` for single-node instances
+ * (gauges are not tagged until HA is enabled); pass 0..N when replicas exist.
  */
 export function useDedicatedDatabaseCardMetrics(
   projectId: string | null | undefined,
@@ -819,7 +822,9 @@ export function useDedicatedDatabaseCardMetrics(
   const dateRange = useMemo(() => getStableUsageChartDateRange(), [])
   const nodeCount = 1 + Math.max(0, Math.floor(replicaCount))
   const canFetch = Boolean(projectId && databaseId && enabled)
-  const connectionsOrdinal = replicaCount > 0 ? 0 : undefined
+  // Match Monitor: only scope by ordinal when the cluster has replicas.
+  const hasReplicas = replicaCount > 0
+  const connectionsOrdinal = hasReplicas ? 0 : undefined
 
   const connectionsQuery = useDedicatedDatabaseConnectionsChart(
     projectId,
@@ -831,26 +836,26 @@ export function useDedicatedDatabaseCardMetrics(
   )
 
   const cpuQueries = useQueries({
-    queries: Array.from({ length: nodeCount }, (_, ordinal) => ({
+    queries: Array.from({ length: nodeCount }, (_, index) => ({
       ...dedicatedDatabaseCpuChartQueryOptions(
         projectId,
         databaseId,
         dateRange,
         DEFAULT_USAGE_CHART_INTERVAL,
-        ordinal,
+        hasReplicas ? index : undefined,
       ),
       enabled: canFetch,
     })),
   })
 
   const memoryQueries = useQueries({
-    queries: Array.from({ length: nodeCount }, (_, ordinal) => ({
+    queries: Array.from({ length: nodeCount }, (_, index) => ({
       ...dedicatedDatabaseMemoryChartQueryOptions(
         projectId,
         databaseId,
         dateRange,
         DEFAULT_USAGE_CHART_INTERVAL,
-        ordinal,
+        hasReplicas ? index : undefined,
       ),
       enabled: canFetch,
     })),
@@ -880,6 +885,14 @@ export function useDedicatedDatabaseCardMetrics(
       ? Math.round(getUsageChartLatestValue(connectionPoints))
       : null
 
+  const refetch = useCallback(async () => {
+    await Promise.all([
+      connectionsQuery.refetch(),
+      ...cpuQueries.map((query) => query.refetch()),
+      ...memoryQueries.map((query) => query.refetch()),
+    ])
+  }, [connectionsQuery, cpuQueries, memoryQueries])
+
   return {
     nodeMetrics,
     connections,
@@ -888,6 +901,12 @@ export function useDedicatedDatabaseCardMetrics(
       (connectionsQuery.isLoading ||
         cpuQueries.some((query) => query.isLoading) ||
         memoryQueries.some((query) => query.isLoading)),
+    isFetching:
+      canFetch &&
+      (connectionsQuery.isFetching ||
+        cpuQueries.some((query) => query.isFetching) ||
+        memoryQueries.some((query) => query.isFetching)),
+    refetch,
   }
 }
 

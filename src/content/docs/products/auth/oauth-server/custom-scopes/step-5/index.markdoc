@@ -1,0 +1,142 @@
+---
+layout: tutorial
+title: Protect the API route
+description: Serve tasks only to tokens that carry tasks.read.
+step: 5
+---
+
+With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule.
+
+# The task data {% #data %}
+
+Create `provider/src/lib/tasks.ts` with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side:
+
+```ts
+// provider/src/lib/tasks.ts
+// TaskFlow's task data, keyed by the owner's user ID. A stand-in for
+// your product's database so the guide stays focused on OAuth.
+import '@tanstack/react-start/server-only'
+
+export type Task = {
+  id: string
+  title: string
+  project: string
+  due: string
+  done: boolean
+}
+
+const seed: Task[] = [
+  { id: 'tsk_01', title: 'Finalize Q3 launch checklist', project: 'Launch', due: '2026-07-17', done: false },
+  { id: 'tsk_02', title: 'Review onboarding copy', project: 'Growth', due: '2026-07-15', done: true },
+  { id: 'tsk_03', title: 'Ship dark mode to beta', project: 'Product', due: '2026-07-21', done: false },
+  { id: 'tsk_04', title: 'Prepare investor update', project: 'Ops', due: '2026-07-24', done: false },
+]
+
+const store = new Map<string, Task[]>()
+
+/** Every TaskFlow user gets the same starter tasks the first time
+ *  their list is read. */
+export function tasksFor(userId: string): Task[] {
+  let tasks = store.get(userId)
+  if (!tasks) {
+    tasks = seed.map((t) => ({ ...t }))
+    store.set(userId, tasks)
+  }
+  return tasks
+}
+
+export function addTaskFor(userId: string, title: string): Task {
+  const tasks = tasksFor(userId)
+  const task: Task = {
+    id: `tsk_${String(tasks.length + 1).padStart(2, '0')}`,
+    title,
+    project: 'Inbox',
+    due: '2026-07-31',
+    done: false,
+  }
+  tasks.push(task)
+  return task
+}
+```
+
+# The guarded route {% #route %}
+
+Create `provider/src/routes/api.tasks.ts`. TanStack Start serves the `GET` and `POST` handlers at `/api/tasks`:
+
+```ts
+// provider/src/routes/api.tasks.ts
+import { createFileRoute } from '@tanstack/react-router'
+import {
+  hasScope,
+  verifyAccessToken,
+  type AccessToken,
+} from '../lib/resource-server'
+import { addTaskFor, tasksFor } from '../lib/tasks'
+
+// Standard OAuth resource server errors (RFC 6750): 401 when the token
+// itself is bad, 403 when it's valid but missing the required scope.
+function unauthorized() {
+  return Response.json(
+    { error: 'invalid_token' },
+    { status: 401, headers: { 'WWW-Authenticate': 'Bearer error="invalid_token"' } },
+  )
+}
+
+function forbidden(scope: string) {
+  return Response.json(
+    { error: 'insufficient_scope', required_scope: scope },
+    {
+      status: 403,
+      headers: {
+        'WWW-Authenticate': `Bearer error="insufficient_scope", scope="${scope}"`,
+      },
+    },
+  )
+}
+
+async function authenticate(request: Request): Promise<AccessToken | null> {
+  try {
+    return await verifyAccessToken(request.headers.get('authorization'))
+  } catch {
+    return null
+  }
+}
+
+export const Route = createFileRoute('/api/tasks')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        const token = await authenticate(request)
+        if (!token) return unauthorized()
+        if (!hasScope(token, 'tasks.read')) return forbidden('tasks.read')
+
+        // The token's subject is the TaskFlow user who approved access.
+        return Response.json({ tasks: tasksFor(token.sub!) })
+      },
+
+      POST: async ({ request }) => {
+        const token = await authenticate(request)
+        if (!token) return unauthorized()
+        if (!hasScope(token, 'tasks.write')) return forbidden('tasks.write')
+
+        const { title } = await request.json()
+        return Response.json(
+          { task: addTaskFor(token.sub!, title) },
+          { status: 201 },
+        )
+      },
+    },
+  },
+})
+```
+
+Each handler applies the same two checks, in order:
+
+1. **Authentication**: is the token real? A missing, forged, or expired token gets `401 invalid_token`.
+2. **Authorization**: was this token granted the scope this operation needs? A valid token without it gets `403 insufficient_scope`.
+
+The two error shapes follow RFC 6750, including the `WWW-Authenticate` header, so standard OAuth client libraries understand the refusal. The distinction matters to callers: a 401 means get a new token, a 403 means ask the user for more scopes.
+
+Note what the `POST` handler implies: a client can hold a perfectly valid token and still be refused a write with it, whenever the user granted `tasks.read` but withheld `tasks.write` on the consent screen.
+
+Continue to call the API from Vantage.

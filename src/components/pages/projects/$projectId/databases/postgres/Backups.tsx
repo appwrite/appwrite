@@ -63,7 +63,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
+import {
+  getBackupPoliciesPlanLimit,
+  isBackupPoliciesAtPlanLimit,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
+import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
 
@@ -139,6 +153,13 @@ type ViewProps = {
 export function View({ projectId, databaseId }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const backupPoliciesLimit = getBackupPoliciesPlanLimit(organizationPlan)
+  const planName = resolveOrganizationPlanDisplayLabel({
+    planName: organizationPlan?.name ?? null,
+    planId: organizationPlan?.$id,
+  })
   const [backupsPage, setBackupsPage] = useState(1)
   const [backupsPageSize, setBackupsPageSize] = useState(
     POSTGRES_BACKUPS_PAGE_SIZE,
@@ -168,6 +189,13 @@ export function View({ projectId, databaseId }: ViewProps) {
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const backups: Models.DedicatedDatabaseBackup[] = backupsData?.backups || []
   const backupsTotal = backupsData?.total || 0
+  const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
+    policies.length,
+    backupPoliciesLimit,
+  )
+  const createPolicyDisabledTooltip = isAtBackupPoliciesLimit
+    ? t("You've reached the limit for this resource on your plan")
+    : undefined
 
   const isPoliciesActuallyLoading =
     policiesLoading && policies.length === 0 && !policiesData
@@ -177,7 +205,7 @@ export function View({ projectId, databaseId }: ViewProps) {
   const invalidatePolicies = () => {
     queryClient.invalidateQueries({
       queryKey: [
-        'postgres-backup-policies',
+        'dedicated-backup-policies',
         'project',
         projectId,
         databaseId,
@@ -362,23 +390,76 @@ export function View({ projectId, databaseId }: ViewProps) {
     setSelectedBackups(new Set())
   }
 
+  const showPlanLimitWarning =
+    backupPoliciesLimit > 0 &&
+    policies.length >= backupPoliciesLimit * 0.5
+
   return (
-    <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+    <div className="w-full">
+      {organizationPlan !== undefined ? (
+        <PlanLimitWarning
+          currentCount={policies.length}
+          limit={backupPoliciesLimit}
+          planName={planName}
+          resourceName="backup policies"
+          orgId={project?.teamId}
+          fullWidth
+        />
+      ) : null}
+      <div
+        className={cn(
+          'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
+          !showPlanLimitWarning && 'mt-4 sm:mt-6',
+          showPlanLimitWarning && 'pt-4 sm:pt-6',
+        )}
+      >
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         <div className="lg:col-span-1 flex flex-col">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Policies')}
-            </h3>
-            <Button
-              onClick={() => setCreatePolicyDialogOpen(true)}
-              variant="brandCta"
-              size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Create policy')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                {t('Policies')}
+              </h3>
+              {backupPoliciesLimit > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="text-[12px] font-normal"
+                >
+                  {policies.length}/{backupPoliciesLimit}
+                </Badge>
+              ) : null}
+            </div>
+            {isAtBackupPoliciesLimit ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      onClick={() => setCreatePolicyDialogOpen(true)}
+                      variant="brandCta"
+                      disabled
+                      size="sm"
+                      className="h-8 gap-1.5 text-[12px] font-medium"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {t('Create policy')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{createPolicyDisabledTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={() => setCreatePolicyDialogOpen(true)}
+                variant="brandCta"
+                size="sm"
+                className="h-8 gap-1.5 text-[12px] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('Create policy')}
+              </Button>
+            )}
           </div>
           <div className="flex-1">
             {isPoliciesActuallyLoading ? (
@@ -790,6 +871,8 @@ export function View({ projectId, databaseId }: ViewProps) {
         onOpenChange={setCreatePolicyDialogOpen}
         onSubmit={(items) => createPolicyMutation.mutate(items)}
         isLoading={createPolicyMutation.isPending}
+        existingPoliciesCount={policies.length}
+        backupPoliciesLimit={backupPoliciesLimit}
       />
 
       <CreateManualBackupDialog
@@ -828,6 +911,7 @@ export function View({ projectId, databaseId }: ViewProps) {
           isLoading={deleteBackupMutation.isPending}
         />
       )}
+      </div>
     </div>
   )
 }
@@ -845,6 +929,8 @@ interface CreatePolicyDialogProps {
     }>,
   ) => void
   isLoading: boolean
+  existingPoliciesCount: number
+  backupPoliciesLimit: number
 }
 
 function CreatePolicyDialog({
@@ -852,6 +938,8 @@ function CreatePolicyDialog({
   onOpenChange,
   onSubmit,
   isLoading,
+  existingPoliciesCount,
+  backupPoliciesLimit,
 }: CreatePolicyDialogProps) {
   const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
@@ -952,6 +1040,17 @@ function CreatePolicyDialog({
   }
 
   const totalPolicies = selectedPresets.length + customPolicies.length
+  const canCreateCustom =
+    backupPoliciesLimit === 0 ||
+    existingPoliciesCount + totalPolicies < backupPoliciesLimit
+  const supportsCustomPolicies =
+    supportsAdvancedBackupPolicies(backupPoliciesLimit)
+  const remainingSlots =
+    backupPoliciesLimit > 0
+      ? Math.max(0, backupPoliciesLimit - existingPoliciesCount - totalPolicies)
+      : null
+  const canSelectAnotherPreset =
+    remainingSlots == null || remainingSlots > 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -959,7 +1058,11 @@ function CreatePolicyDialog({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create backup policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t('Choose preset policies or create custom backup schedules.')}
+            {supportsCustomPolicies
+              ? t('Choose preset policies or create custom backup schedules.')
+              : t(
+                  'Your plan only supports the daily preset policy. Upgrade to create custom policies.',
+                )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -967,33 +1070,56 @@ function CreatePolicyDialog({
           <div className="space-y-3">
             <Label className="text-[13px]">{t('Preset Policies')}</Label>
             <div className="space-y-2">
-              <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
-                <Checkbox
-                  id="hourly"
-                  checked={selectedPresets.includes('hourly')}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedPresets([...selectedPresets, 'hourly'])
-                    } else {
-                      setSelectedPresets(
-                        selectedPresets.filter((preset) => preset !== 'hourly'),
-                      )
+              {supportsCustomPolicies ? (
+                <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                  <Checkbox
+                    id="hourly"
+                    checked={selectedPresets.includes('hourly')}
+                    disabled={
+                      !selectedPresets.includes('hourly') &&
+                      !canSelectAnotherPreset
                     }
-                  }}
-                />
-                <Label htmlFor="hourly" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px]">{t('Hourly')}</div>
-                  <div className="text-[12px] text-muted-foreground">
-                    {t('Runs every hour, retained for 24 hours')}
-                  </div>
-                </Label>
-              </div>
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        if (
+                          selectedPresets.includes('hourly') ||
+                          !canSelectAnotherPreset
+                        ) {
+                          return
+                        }
+                        setSelectedPresets([...selectedPresets, 'hourly'])
+                      } else {
+                        setSelectedPresets(
+                          selectedPresets.filter(
+                            (preset) => preset !== 'hourly',
+                          ),
+                        )
+                      }
+                    }}
+                  />
+                  <Label htmlFor="hourly" className="flex-1 cursor-pointer">
+                    <div className="font-medium text-[13px]">{t('Hourly')}</div>
+                    <div className="text-[12px] text-muted-foreground">
+                      {t('Runs every hour, retained for 24 hours')}
+                    </div>
+                  </Label>
+                </div>
+              ) : null}
               <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
                 <Checkbox
                   id="daily"
                   checked={selectedPresets.includes('daily')}
+                  disabled={
+                    !selectedPresets.includes('daily') && !canSelectAnotherPreset
+                  }
                   onCheckedChange={(checked) => {
                     if (checked) {
+                      if (
+                        selectedPresets.includes('daily') ||
+                        !canSelectAnotherPreset
+                      ) {
+                        return
+                      }
                       setSelectedPresets([...selectedPresets, 'daily'])
                     } else {
                       setSelectedPresets(
@@ -1012,6 +1138,7 @@ function CreatePolicyDialog({
             </div>
           </div>
 
+          {supportsCustomPolicies ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-[13px]">{t('Custom Policies')}</Label>
@@ -1019,7 +1146,9 @@ function CreatePolicyDialog({
                 type="button"
                 variant="outline"
                 size="sm"
+                disabled={!canCreateCustom}
                 onClick={() => {
+                  if (!canCreateCustom) return
                   setCustomPolicies([
                     ...customPolicies,
                     {
@@ -1215,6 +1344,7 @@ function CreatePolicyDialog({
               </Card>
             ))}
           </div>
+          ) : null}
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button

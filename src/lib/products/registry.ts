@@ -173,9 +173,9 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     id: 'firewall',
     name: 'Firewall',
     group: 'protect',
-    href: '/docs/products/network/waf',
+    href: '/docs/products/firewall',
     icon: Shield,
-    tagline: 'Managed WAF for malicious traffic.',
+    tagline: 'Project rules to deny, rate limit, and redirect traffic.',
   },
   advisor: {
     id: 'advisor',

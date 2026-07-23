@@ -13,30 +13,24 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronRight,
-  CheckCircle2,
   AlertCircle,
   Cpu,
 } from 'lucide-react'
 import {
   databases,
   collections,
-  type Database as DatabaseType,
 } from '@/lib/utils/mock-data'
 import { useState, useEffect, useRef, useMemo } from 'react'
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
-  useProjectProductDatabases,
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
   databasesQueryOptions,
   createProjectDatabase,
   createProjectTable,
-  invalidateDatabaseModel,
-  deleteProjectDatabase,
-  refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -46,63 +40,21 @@ import {
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable, createTableVariantForDbRoute } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
-import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
 import { AllDatabasesSection } from './_components/AllDatabasesSection'
-import { DedicatedDatabasesSection } from './_components/DedicatedDatabasesSection'
-import { ProductDatabasesSection } from './_components/ProductDatabasesSection'
 
-import {
-  canCreateDatabase,
-  canShowDatabaseSecuritySettings,
-} from '@/lib/console-access-checks'
+import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { Models } from '@appwrite.io/console'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
-import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
-import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
-
-const TABLESDB_LIST_ICON =
-  getDatabaseServiceLucideIcon('tablesdb') ?? Database
-
-/** Database list item: API may return extra backup/createdAt fields */
-type DatabaseWithBackup = Models.Database & {
-  hasBackupPolicy?: boolean
-  backupPolicyCount?: number
-  backupPolicy?: { name?: string }
-  createdAt?: string
-  updatedAt?: string
-}
-
 import { ServiceHeader } from '../shared/ServiceHeader'
-import { sdk } from '@/lib/appwrite/sdk'
-import {
-  ResourceCard,
-  RESOURCE_CARD_GRID_CLASSNAME,
-} from '../shared/ResourceCard'
-import { Pagination } from '@/components/global/shared/Pagination'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import {
   Link,
   useNavigate,
@@ -111,7 +63,6 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import {
-  queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
   parseListSearch,
@@ -127,14 +78,6 @@ import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DatabaseTypeFilterDropdown } from './_components/DatabaseTypeFilterDropdown'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useT } from '@/lib/i18n/translate'
 
 export type {
@@ -161,8 +104,6 @@ export function View() {
   }
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
-  const supportsDedicatedDatabaseCompute =
-    projectSupportsDedicatedDatabaseCompute(project?.region)
   const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const queryClient = useQueryClient()
   const databaseDeepLink = (
@@ -222,34 +163,9 @@ export function View() {
     () => getSelectedDatabaseTypesFromFilterMap(filterMap),
     [filterQueryString],
   )
-  // Product TablesDB list has no `type` attribute; keep type filters for All Databases only.
-  const tablesDbFilterMap = useMemo(
-    () => omitDatabaseTypeFilters(filterMap),
-    [filterQueryString],
-  )
-  const tablesDbFilterQueries =
-    tablesDbFilterMap.size > 0
-      ? Array.from(tablesDbFilterMap.values())
-      : undefined
-
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
-  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
-    undefined,
-  )
-  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
-    useState('')
-  const displayedFilterQueries = useMemo(() => {
-    if (!displayedFilterQueryString) return undefined
-    const map = omitDatabaseTypeFilters(
-      queryParamToMap(displayedFilterQueryString),
-    )
-    return map.size > 0 ? Array.from(map.values()) : undefined
-  }, [displayedFilterQueryString])
-  const hasInitedDisplayedRef = useRef(false)
   const isMountedRef = useRef(false)
   useEffect(() => {
     isMountedRef.current = true
@@ -257,11 +173,6 @@ export function View() {
       isMountedRef.current = false
     }
   }, [])
-  const [pageSize, setPageSize] = useState(GRID_DEFAULT_PAGE_SIZE)
-  const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
-    new Set(),
-  )
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -311,28 +222,6 @@ export function View() {
 
   useEffect(() => {
     if (!isDatabasesIndex) return
-    setRequestedPage((prev) => (prev === urlPage ? prev : urlPage))
-    setPageSize((prev) => (prev === urlLimit ? prev : urlLimit))
-  }, [isDatabasesIndex, urlPage, urlLimit])
-
-  useEffect(() => {
-    if (!isDatabasesIndex || !databaseListParams) return
-    if (!hasInitedDisplayedRef.current) {
-      setDisplayedPage(urlPage)
-      setDisplayedSearch(urlSearch ?? undefined)
-      setDisplayedFilterQueryString(filterQueryString)
-      hasInitedDisplayedRef.current = true
-    }
-  }, [
-    isDatabasesIndex,
-    databaseListParams,
-    urlPage,
-    urlSearch,
-    filterQueryString,
-  ])
-
-  useEffect(() => {
-    if (!isDatabasesIndex) return
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = setTimeout(() => {
       if (!isMountedRef.current) return
@@ -371,40 +260,6 @@ export function View() {
     isDatabasesIndex,
   ])
 
-  const {
-    total: databasesTotal,
-    isLoading: databasesLoading,
-    isFetching: databasesFetching,
-    isFetched: databasesFetched,
-  } = useProjectProductDatabases(
-    projectId,
-    ApiDatabaseType.Tablesdb,
-    features.dedicatedDbsSupport ? 0 : requestedPage - 1,
-    features.dedicatedDbsSupport ? GRID_DEFAULT_PAGE_SIZE : urlLimit,
-    urlSearch ?? undefined,
-    tablesDbFilterQueries,
-  )
-
-  const {
-    databases: apiDatabases,
-    total: displayedDatabasesTotal,
-    isLoading: displayedLoading,
-    isFetching: displayedDatabasesFetching,
-    error: displayedDatabasesError,
-    refetch: refetchDisplayedDatabases,
-  } = useProjectProductDatabases(
-    projectId,
-    ApiDatabaseType.Tablesdb,
-    features.dedicatedDbsSupport ? 0 : displayedPage - 1,
-    features.dedicatedDbsSupport ? GRID_DEFAULT_PAGE_SIZE : urlLimit,
-    features.dedicatedDbsSupport
-      ? (urlSearch ?? undefined)
-      : (displayedSearch ?? undefined),
-    features.dedicatedDbsSupport
-      ? tablesDbFilterQueries
-      : displayedFilterQueries,
-  )
-
   const applyDatabaseTypesFilter = (
     types: ApiDatabaseType[],
   ) => {
@@ -429,43 +284,6 @@ export function View() {
     })
   }
 
-  const databasesListErrorMessage = displayedDatabasesError
-    ? getErrorMessage(displayedDatabasesError)
-    : null
-
-  useEffect(() => {
-    if (
-      !isDatabasesIndex ||
-      databasesFetching ||
-      databasesLoading ||
-      !databasesFetched
-    )
-      return
-    const match =
-      urlPage === displayedPage &&
-      (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
-    if (!match) {
-      setDisplayedPage(urlPage)
-      setDisplayedSearch(urlSearch ?? undefined)
-      setDisplayedFilterQueryString(filterQueryString)
-    }
-  }, [
-    isDatabasesIndex,
-    databasesFetching,
-    databasesLoading,
-    databasesFetched,
-    urlPage,
-    urlSearch,
-    filterQueryString,
-    displayedPage,
-    displayedSearch,
-    displayedFilterQueryString,
-  ])
-
-  // Only show full loading when we have no data to display (initial load)
-  const showLoading = displayedLoading && apiDatabases.length === 0
-
   // Get total count (no search/filters) for plan limit check - uses same query as route loader prefetch to avoid layout shift when showing PlanLimitWarning
   const { data: totalDatabasesData } = useQuery(
     databasesQueryOptions(
@@ -477,20 +295,12 @@ export function View() {
     ),
   )
 
-  // Paginated data - databases are already paginated by the API
-  const paginatedDatabases = apiDatabases
-
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
-
-  const showDbSecuritySettings = canShowDatabaseSecuritySettings(
-    access,
-    features,
-  )
 
   // Check if create button should be disabled (plan limit or missing write scope)
   const noCreateDbPermission = !canCreateDatabase(access, features)
@@ -499,17 +309,8 @@ export function View() {
     noCreateDbPermission ||
     (databasesLimit > 0 && totalDatabasesCount >= databasesLimit)
 
-  // Clear selection when navigating or when search/filters change
-  useEffect(() => {
-    setSelectedDatabases(new Set())
-    setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, urlSearch, filterMap.size])
-
   const handleSearchChange = (value: string) => {
     setSearchInput(value)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedDatabases(new Set())
   }
 
   const applyFilter = (
@@ -593,34 +394,6 @@ export function View() {
     setFiltersOpen(false)
   }
 
-  // Bulk delete mutation
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (databaseIds: string[]) => {
-      if (!projectId) {
-        throw new Error('Project ID is required')
-      }
-      await Promise.all(
-        databaseIds.map((databaseId) =>
-          deleteProjectDatabase(projectId, databaseId),
-        ),
-      )
-      databaseIds.forEach((id) => invalidateDatabaseModel(projectId, id))
-    },
-    onSuccess: async () => {
-      await refetchProjectDatabaseLists(queryClient, projectId!)
-      toast.success(
-        selectedDatabases.size === 1
-          ? t('Database deleted successfully')
-          : t('Databases deleted successfully'),
-      )
-      setSelectedDatabases(new Set())
-      setDeleteDialogOpen(false)
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to delete databases'))
-    },
-  })
-
   // Create database mutation
   const createDatabaseMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) =>
@@ -643,39 +416,7 @@ export function View() {
     },
   })
 
-  const handleBulkDelete = () => {
-    if (selectedDatabases.size === 0) return
-    setDeleteDialogOpen(true)
-  }
-
-  const confirmBulkDelete = () => {
-    if (selectedDatabases.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedDatabases))
-  }
-
-  const toggleDatabase = (databaseId: string) => {
-    const newSelected = new Set(selectedDatabases)
-    if (newSelected.has(databaseId)) {
-      newSelected.delete(databaseId)
-    } else {
-      newSelected.add(databaseId)
-    }
-    setSelectedDatabases(newSelected)
-  }
-
-  const toggleAllDatabases = () => {
-    if (selectedDatabases.size === paginatedDatabases.length) {
-      setSelectedDatabases(new Set())
-    } else {
-      setSelectedDatabases(
-        new Set(paginatedDatabases.map((db: DatabaseType) => db.$id)),
-      )
-    }
-  }
-
   const handlePageChange = (page: number) => {
-    setRequestedPage(page)
-    setSelectedDatabases(new Set())
     navigate({
       to: '/projects/$projectId/databases/',
       params: { projectId: projectId! },
@@ -693,10 +434,6 @@ export function View() {
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedDatabases(new Set())
     navigate({
       to: '/projects/$projectId/databases/',
       params: { projectId: projectId! },
@@ -831,7 +568,7 @@ export function View() {
       />
 
       <div className="w-full flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {features.dedicatedDbsSupport && projectId ? (
+        {projectId ? (
           <AllDatabasesSection
             projectId={projectId}
             viewMode={viewMode}
@@ -843,515 +580,6 @@ export function View() {
             onPageSizeChange={handlePageSizeChange}
           />
         ) : null}
-
-        <div className="mb-4">
-          <h2 className="text-[15px] font-semibold text-foreground">TablesDB</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            {t(
-              'Serverless and dedicated TablesDB databases for structured app data.',
-            )}
-          </p>
-        </div>
-
-        {databasesListErrorMessage && paginatedDatabases.length > 0 ? (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{t("Couldn't refresh databases")}</AlertTitle>
-            <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[13px]">{databasesListErrorMessage}</p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0 border-destructive/40 bg-background"
-                onClick={() => void refetchDisplayedDatabases()}
-                disabled={displayedDatabasesFetching}
-              >
-                {t('Try again')}
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {showLoading ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <div className="text-muted-foreground">
-              {t('Loading databases...')}
-            </div>
-          </div>
-        ) : databasesListErrorMessage && paginatedDatabases.length === 0 ? (
-          <div className="rounded-lg border border-destructive/30 bg-card py-12 px-6 text-center">
-            <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
-            <h3 className="mt-4 text-[15px] font-semibold text-foreground">
-              {t('Failed to load databases')}
-            </h3>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              {databasesListErrorMessage}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-6"
-              onClick={() => void refetchDisplayedDatabases()}
-              disabled={displayedDatabasesFetching}
-            >
-              {t('Try again')}
-            </Button>
-          </div>
-        ) : viewMode === 'list' ? (
-          paginatedDatabases.length > 0 ? (
-            <>
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b border-border">
-                      <TableHead className="w-[40px] px-4">
-                        <Checkbox
-                          checked={
-                            paginatedDatabases.length > 0 &&
-                            selectedDatabases.size === paginatedDatabases.length
-                          }
-                          onCheckedChange={toggleAllDatabases}
-                        />
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t('Database')}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                        {t('Status')}
-                      </TableHead>
-                      {features.databaseBackups && (
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                          {t('Backups')}
-                        </TableHead>
-                      )}
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        {t('Created')}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        {t('Updated')}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedDatabases.map(
-                      (
-                        db: DatabaseType & {
-                          createdAt?: string
-                          updatedAt?: string
-                          enabled?: boolean
-                          hasBackupPolicy?: boolean
-                          backupPolicy?: unknown
-                          backupPolicyCount?: number
-                        },
-                      ) => (
-                        <TableRow
-                          key={db.$id}
-                          className={cn(
-                            'cursor-pointer transition-colors border-b border-border/50',
-                            selectedDatabases.has(db.$id)
-                              ? 'bg-muted'
-                              : 'hover:bg-muted/30',
-                          )}
-                          onClick={(e) => {
-                            // Don't navigate if clicking on checkbox, link, or their containers
-                            const target = e.target as HTMLElement
-                            if (
-                              target.closest('button') ||
-                              target.closest('[role="checkbox"]') ||
-                              target.closest('a')
-                            ) {
-                              return
-                            }
-                            navigate({
-                              ...databaseDeepLink(
-                                db.$id,
-                                (db as { databaseType?: ApiDatabaseType })
-                                  .databaseType,
-                              ),
-                            })
-                          }}
-                        >
-                          <TableCell
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-4 py-3"
-                          >
-                            <Checkbox
-                              checked={selectedDatabases.has(db.$id)}
-                              onCheckedChange={() => toggleDatabase(db.$id)}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              {...databaseDeepLink(
-                                db.$id,
-                                (db as { databaseType?: ApiDatabaseType })
-                                  .databaseType,
-                              )}
-                              className="block group"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <TABLESDB_LIST_ICON className="h-4 w-4 shrink-0 text-muted-foreground/60" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
-                                    {db.name}
-                                  </p>
-                                  <div className="mt-0.5">
-                                    <CopyableId id={db.$id} size="xs" />
-                                  </div>
-                                </div>
-                              </div>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center justify-center">
-                              {db.enabled === false ? (
-                                <Badge
-                                  variant="error"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  {t('Disabled')}
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="success"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  {t('Enabled')}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          {features.databaseBackups && (
-                            <TableCell className="px-4 py-3">
-                              <div className="flex items-center justify-center">
-                                {(db as DatabaseWithBackup).hasBackupPolicy ? (
-                                  <Badge
-                                    variant="success"
-                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {(db as DatabaseWithBackup)
-                                      .backupPolicyCount > 0
-                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? t('policy') : t('policies')}`
-                                      : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || t('Enabled')}
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="warning"
-                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                  >
-                                    <AlertCircle className="h-3 w-3" />
-                                    {t('None')}
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                          )}
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              {...databaseDeepLink(
-                                db.$id,
-                                (db as { databaseType?: ApiDatabaseType })
-                                  .databaseType,
-                              )}
-                              className="block text-end"
-                            >
-                              <DateTooltip
-                                date={
-                                  new Date(
-                                    (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
-                                  )
-                                }
-                                className="text-[12px] text-muted-foreground font-mono"
-                              />
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              {...databaseDeepLink(
-                                db.$id,
-                                (db as { databaseType?: ApiDatabaseType })
-                                  .databaseType,
-                              )}
-                              className="block text-end"
-                            >
-                              <DateTooltip
-                                date={
-                                  new Date(
-                                    (db as DatabaseWithBackup).updatedAt ||
-                                      (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
-                                  )
-                                }
-                                className="text-[12px] text-muted-foreground font-mono"
-                              />
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ),
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              {!features.dedicatedDbsSupport ? (
-                <Pagination
-                  currentPage={displayedPage}
-                  totalItems={displayedDatabasesTotal ?? databasesTotal}
-                  pageSize={pageSize}
-                  pageSizeOptions={[12, 18, 36, 72]}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  itemLabel={t('databases')}
-                />
-              ) : null}
-            </>
-          ) : (
-            <EmptyState
-              icon={TABLESDB_LIST_ICON}
-              title={
-                urlSearch || filterMap.size > 0 ? undefined : t('No databases yet')
-              }
-              description={
-                urlSearch || filterMap.size > 0
-                  ? undefined
-                  : t('Create your first database to get started')
-              }
-              isEmpty={!urlSearch && filterMap.size === 0}
-              hasFilters={!!urlSearch || filterMap.size > 0}
-              variant="card"
-            />
-          )
-        ) : (
-          <>
-            <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-              {paginatedDatabases.map(
-                (
-                  db: DatabaseType & {
-                    createdAt?: string
-                    updatedAt?: string
-                    hasBackupPolicy?: boolean
-                    backupPolicy?: unknown
-                    backupPolicyCount?: number
-                  },
-                ) => (
-                  <DatabaseContextMenu
-                    key={db.$id}
-                    projectId={projectId}
-                    database={{
-                      $id: db.$id,
-                      name: db.name,
-                      databaseType:
-                        (db as { databaseType?: ApiDatabaseType })
-                          .databaseType ?? ApiDatabaseType.Tablesdb,
-                    }}
-                    showSecuritySettings={showDbSecuritySettings}
-                    showMonitor={features.usageStats}
-                    showBackups={features.databaseBackups}
-                  >
-                    <Link
-                      {...databaseDeepLink(
-                        db.$id,
-                        (db as { databaseType?: ApiDatabaseType }).databaseType,
-                      )}
-                    >
-                      <ResourceCard
-                        title={db.name}
-                        resourceId={db.$id}
-                        icon={TABLESDB_LIST_ICON}
-                        iconColor="bg-muted text-muted-foreground"
-                        status={db.enabled === false ? 'error' : undefined}
-                        statusLabel={
-                          db.enabled === false ? t('Disabled') : undefined
-                        }
-                        metadata={
-                          features.databaseBackups
-                            ? [
-                                {
-                                  label: '',
-                                  value: (db as DatabaseWithBackup)
-                                    .hasBackupPolicy ? (
-                                    <Badge
-                                      variant="success"
-                                      className="gap-1.5 text-[11px] font-medium"
-                                    >
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      {(db as DatabaseWithBackup)
-                                        .backupPolicyCount > 0
-                                        ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? t('policy') : t('policies')}`
-                                        : (db as DatabaseWithBackup)
-                                            .backupPolicy?.name ||
-                                          t('Backup Enabled')}
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      variant="warning"
-                                      className="gap-1.5 text-[11px] font-medium"
-                                    >
-                                      <AlertCircle className="h-3 w-3" />
-                                      {t('No backup policies')}
-                                    </Badge>
-                                  ),
-                                },
-                              ]
-                            : []
-                        }
-                      />
-                    </Link>
-                  </DatabaseContextMenu>
-                ),
-              )}
-
-              {paginatedDatabases.length === 0 && (
-                <div className="col-span-full">
-                  <EmptyState
-                    icon={TABLESDB_LIST_ICON}
-                    title={
-                      urlSearch || filterMap.size > 0
-                        ? undefined
-                        : t('No databases yet')
-                    }
-                    description={
-                      urlSearch || filterMap.size > 0
-                        ? undefined
-                        : t('Create your first database to get started')
-                    }
-                    isEmpty={!urlSearch && filterMap.size === 0}
-                    hasFilters={!!urlSearch || filterMap.size > 0}
-                    variant="card"
-                  />
-                </div>
-              )}
-            </div>
-            {paginatedDatabases.length > 0 && !features.dedicatedDbsSupport && (
-              <Pagination
-                currentPage={displayedPage}
-                totalItems={displayedDatabasesTotal ?? databasesTotal}
-                pageSize={pageSize}
-                pageSizeOptions={[12, 18, 36, 72]}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                itemLabel={t('databases')}
-              />
-            )}
-          </>
-        )}
-
-        {features.dedicatedDbsDocumentsDB && projectId ? (
-          <ProductDatabasesSection
-            projectId={projectId}
-            backend={ApiDatabaseType.Documentsdb}
-            title="DocumentsDB"
-            description={t('Document-based databases with flexible schemas and dedicated compute.')}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-          />
-        ) : null}
-
-        {features.dedicatedDbsVectorsDB && projectId ? (
-          <ProductDatabasesSection
-            projectId={projectId}
-            backend={ApiDatabaseType.Vectorsdb}
-            title="VectorsDB"
-            description={t('Vector databases for embeddings, semantic search, and AI workloads.')}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-          />
-        ) : null}
-
-        {features.nativeDbsPostgres && projectId ? (
-          <DedicatedDatabasesSection
-            projectId={projectId}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-            nativeEngine="postgres"
-          />
-        ) : null}
-
-        {features.nativeDbsMySQL && projectId ? (
-          <DedicatedDatabasesSection
-            projectId={projectId}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-            nativeEngine="mysql"
-          />
-        ) : null}
-
-        {features.nativeDbsMongo && projectId ? (
-          <DedicatedDatabasesSection
-            projectId={projectId}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-            nativeEngine="mongo"
-          />
-        ) : null}
-
-        {/* Bulk Delete Action Bar */}
-        {selectedDatabases.size > 0 && (
-          <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
-            <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
-              <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedDatabases.size}{' '}
-                {selectedDatabases.size > 1
-                  ? t('databases selected')
-                  : t('database selected')}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedDatabases(new Set())}
-                  className="h-8 text-xs"
-                >
-                  {t('Cancel')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={bulkDeleteMutation.isPending}
-                  className="h-8 gap-2"
-                >
-                  {t('Delete')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bulk Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>{t('Delete Databases')}</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                {selectedDatabases.size > 1
-                  ? t('Are you sure you want to delete the selected databases? This action cannot be undone.')
-                  : t('Are you sure you want to delete this database? This action cannot be undone.')}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-                disabled={bulkDeleteMutation.isPending}
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmBulkDelete}
-                disabled={bulkDeleteMutation.isPending}
-              >
-                {t('Delete')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         <CreateDatabase
           open={createDatabaseDialogOpen}

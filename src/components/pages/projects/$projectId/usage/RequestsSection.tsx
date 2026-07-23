@@ -45,6 +45,7 @@ import {
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
+import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useT } from '@/lib/i18n/translate'
 import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
@@ -55,6 +56,7 @@ import {
   UsageMetricCardShell,
 } from './_components/UsageMetricCard'
 import { UsageSectionChartError } from './_components/UsageSectionChartError'
+import { UsageChartBrushReferenceArea } from './_components/UsageChartBrushReferenceArea'
 import { Skeleton } from '@/components/ui/skeleton'
 const API_REQUESTS_DESCRIPTION =
   'Total API requests during the selected period. Each call to your project endpoint counts as one request.'
@@ -140,7 +142,7 @@ function RequestsChartCard({
   onRetry,
 }: RequestsChartCardProps) {
   const t = useT()
-  const { dateRange, chartInterval } = useUsageFilters()
+  const { dateRange, chartInterval, onDateRangeChange } = useUsageFilters()
   const chartData = useMemo(
     () =>
       chartPoints.map((point) => ({
@@ -150,6 +152,18 @@ function RequestsChartCard({
       })),
     [chartPoints],
   )
+  const {
+    canSelect,
+    isSelecting,
+    brushLeft,
+    brushRight,
+    surfaceClassName,
+    chartProps,
+  } = useUsageChartBrushSelect({
+    points: chartPoints,
+    chartInterval,
+    onDateRangeChange,
+  })
 
   const chartColor = 'var(--chart-brand)'
   const formattedTotal = formatRequestsTotal(total)
@@ -222,75 +236,90 @@ function RequestsChartCard({
           </UsageRequestsChartArea>
         ) : (
           <UsageRequestsChartArea>
-            <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-              <AreaChart
-                data={chartData}
-                margin={USAGE_CHART_MARGIN}
-              >
-                <defs>
-                  <linearGradient
-                    id="usage-requests-gradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor={chartColor}
-                      stopOpacity={0.2}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor={chartColor}
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <UsageChartXAxis
-                  points={chartPoints}
-                  dateRange={dateRange}
-                  chartInterval={chartInterval}
-                />
-                <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null
-                    const data = payload[0].payload as {
-                      fullDate: string
-                      value: number
-                    }
-                    return (
-                      <div className="rounded-md border border-border bg-popover px-3 py-2">
-                        <p className="mb-1 text-[11px] text-muted-foreground">
-                          {data.fullDate}
-                        </p>
-                        <p className="text-[13px] font-medium text-foreground">
-                          {formatRequestsValue(data.value)}{' '}
-                          <span className="font-normal text-muted-foreground">
-                            {t('requests')}
-                          </span>
-                        </p>
-                      </div>
-                    )
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke={chartColor}
-                  strokeWidth={2}
-                  fill="url(#usage-requests-gradient)"
-                  name="Requests over time"
-                  {...CHART_ANIMATION_DISABLED}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div
+              className={surfaceClassName}
+              aria-label={
+                canSelect
+                  ? t('Drag on the chart to select a date range')
+                  : undefined
+              }
+            >
+              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
+                <AreaChart
+                  data={chartData}
+                  margin={USAGE_CHART_MARGIN}
+                  {...chartProps}
+                >
+                  <defs>
+                    <linearGradient
+                      id="usage-requests-gradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={chartColor}
+                        stopOpacity={0.2}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={chartColor}
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <UsageChartXAxis
+                    points={chartPoints}
+                    dateRange={dateRange}
+                    chartInterval={chartInterval}
+                  />
+                  <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
+                  <Tooltip
+                    cursor={!isSelecting}
+                    content={({ active, payload }) => {
+                      if (isSelecting || !active || !payload?.length) return null
+                      const data = payload[0].payload as {
+                        fullDate: string
+                        value: number
+                      }
+                      return (
+                        <div className="rounded-md border border-border bg-popover px-3 py-2">
+                          <p className="mb-1 text-[11px] text-muted-foreground">
+                            {data.fullDate}
+                          </p>
+                          <p className="text-[13px] font-medium text-foreground">
+                            {formatRequestsValue(data.value)}{' '}
+                            <span className="font-normal text-muted-foreground">
+                              {t('requests')}
+                            </span>
+                          </p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke={chartColor}
+                    strokeWidth={2}
+                    fill="url(#usage-requests-gradient)"
+                    name="Requests over time"
+                    {...CHART_ANIMATION_DISABLED}
+                  />
+                  <UsageChartBrushReferenceArea
+                    left={brushLeft}
+                    right={brushRight}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </UsageRequestsChartArea>
         )}
       </div>

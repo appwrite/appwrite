@@ -23,6 +23,7 @@ import {
 } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { migrationMatchesDatabaseTables } from '@/lib/migrations/csv-resource'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** Query options for project migrations list (for route loader prefetch). */
@@ -118,22 +119,22 @@ export async function fetchCsvImportMigrations(projectId: string) {
   }
 }
 
-/** Limit for list view; we filter by resourceId client-side so fetch more. */
+/** Limit for list view; we filter by database/table client-side so fetch more. */
 const MIGRATIONS_LIST_LIMIT = 100
 
 /**
  * Fetch CSV export/import migrations in one API call, then filter client-side
- * by resourceId (API does not support querying by resourceId).
- * Only returns migrations whose resourceId is in the given set (databaseId:tableId).
+ * to tables in the given database.
  *
- * @param projectId - Project ID
- * @param resourceIds - Set of "databaseId:tableId" for tables in the database
+ * Matches both the current migration shape (`parentResourceId` + `resourceId`)
+ * and legacy composite `resourceId` values (`databaseId:tableId`).
  */
 export async function fetchDatabaseCsvMigrations(
   projectId: string,
-  resourceIds: string[],
+  databaseId: string,
+  tableIds: string[],
 ) {
-  if (!projectId) {
+  if (!projectId || !databaseId) {
     return { migrations: [] as Models.Migration[] }
   }
   const projectSdk = sdk.forProject(projectId)
@@ -148,9 +149,13 @@ export async function fetchDatabaseCsvMigrations(
     ],
   })
   const all = (response.migrations || []) as Models.Migration[]
-  const set = resourceIds.length > 0 ? new Set(resourceIds) : new Set<string>()
+  const tableIdSet = new Set(tableIds)
   const migrations =
-    set.size > 0 ? all.filter((m) => set.has(m.resourceId)) : []
+    tableIdSet.size > 0
+      ? all.filter((m) =>
+          migrationMatchesDatabaseTables(m, databaseId, tableIdSet),
+        )
+      : []
   return { migrations }
 }
 
@@ -182,19 +187,26 @@ export function useProjectMigrations(
   }
 }
 
+const IN_PROGRESS_MIGRATION_STATUSES = new Set([
+  'pending',
+  'processing',
+  'uploading',
+  'downloading',
+])
+
 /**
- * Hook to get a single migration
- *
- * @param projectId - The project ID
- * @param region - The project region
- * @param migrationId - The migration ID
+ * Query options for a single migration (`migrations.get`).
+ * Polls while the migration is in progress so restore/CSV-style progress stays live
+ * even if a realtime event is missed.
  */
-export function useProjectMigration(
+export function projectMigrationQueryOptions(
   projectId: string | null | undefined,
   region: string | undefined,
   migrationId: string | null | undefined,
+  options?: { pollWhileInProgress?: boolean },
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const pollWhileInProgress = options?.pollWhileInProgress ?? false
+  return queryOptions({
     queryKey: ['migration', 'project', projectId, region, migrationId],
     queryFn: async () => {
       if (!projectId || !migrationId) {
@@ -204,8 +216,37 @@ export function useProjectMigration(
       return await projectSdk.migrations.get({ migrationId })
     },
     enabled: !!projectId && !!migrationId,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: pollWhileInProgress ? 0 : DEFAULT_STALE_TIME,
+    refetchInterval: pollWhileInProgress
+      ? (query) => {
+          const status = query.state.data?.status
+          if (status && IN_PROGRESS_MIGRATION_STATUSES.has(status)) {
+            return 2000
+          }
+          return false
+        }
+      : false,
+    refetchOnWindowFocus: false,
   })
+}
+
+/**
+ * Hook to get a single migration
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param migrationId - The migration ID
+ * @param options.pollWhileInProgress - Poll every 2s while status is in progress
+ */
+export function useProjectMigration(
+  projectId: string | null | undefined,
+  region: string | undefined,
+  migrationId: string | null | undefined,
+  options?: { pollWhileInProgress?: boolean },
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    projectMigrationQueryOptions(projectId, region, migrationId, options),
+  )
 
   return {
     migration: data || null,
@@ -333,17 +374,13 @@ export function useCsvImportMigrations(
 
 /**
  * Query options for fetching CSV export/import migrations for a database.
- * Uses resourceId filter (databaseId:tableId) and source/destination CSV.
  */
 export function databaseCsvMigrationsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableIds: string[],
 ) {
-  const resourceIds =
-    projectId && databaseId && tableIds.length > 0
-      ? tableIds.map((tableId) => `${databaseId}:${tableId}`)
-      : []
+  const sortedTableIds = tableIds.slice().sort()
   return queryOptions({
     queryKey: [
       'migrations',
@@ -352,10 +389,11 @@ export function databaseCsvMigrationsQueryOptions(
       'database',
       databaseId,
       'csv',
-      resourceIds.slice().sort(),
+      sortedTableIds,
     ],
-    queryFn: () => fetchDatabaseCsvMigrations(projectId!, resourceIds),
-    enabled: !!projectId && resourceIds.length > 0,
+    queryFn: () =>
+      fetchDatabaseCsvMigrations(projectId!, databaseId!, sortedTableIds),
+    enabled: !!projectId && !!databaseId && sortedTableIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -367,7 +405,7 @@ export function databaseCsvMigrationsQueryOptions(
 
 /**
  * Hook to fetch CSV export/import migrations for a database in one API call.
- * Pass table IDs from useProjectTables; resourceIds are built as databaseId:tableId.
+ * Pass table IDs from useProjectTables.
  */
 export function useDatabaseCsvMigrations(
   projectId: string | null | undefined,
@@ -385,7 +423,8 @@ export function useDatabaseCsvMigrations(
 }
 
 export interface CreateCSVExportParams {
-  resourceId: string
+  databaseId: string
+  collectionId: string
   filename: string
   columns?: string[]
   queries?: string[]
@@ -404,7 +443,8 @@ export function useCreateCSVExport(projectId: string | null | undefined) {
       if (!projectId) throw new Error('Project ID is required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.migrations.createCSVExport({
-        resourceId: params.resourceId,
+        databaseId: params.databaseId,
+        collectionId: params.collectionId,
         filename: params.filename,
         columns: params.columns,
         queries: params.queries ?? [],
@@ -424,7 +464,8 @@ export function useCreateCSVExport(projectId: string | null | undefined) {
 export interface CreateCSVImportParams {
   bucketId: string
   fileId: string
-  resourceId: string
+  databaseId: string
+  collectionId: string
   internalFile?: boolean
   onDuplicate?: OnDuplicate
 }
@@ -441,7 +482,8 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
       return await projectSdk.migrations.createCSVImport({
         bucketId: params.bucketId,
         fileId: params.fileId,
-        resourceId: params.resourceId,
+        databaseId: params.databaseId,
+        collectionId: params.collectionId,
         internalFile: params.internalFile ?? false,
         onDuplicate: params.onDuplicate,
       })

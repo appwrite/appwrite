@@ -4,11 +4,15 @@ import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  USAGE_API_MAX_LIMIT,
+} from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
   computeChangePercent,
   fillGaugeChartPointsGaps,
+  getUsageChartFirstHalfPoints,
   resolveOverviewUsagePeriod,
   type ProjectUsageChartOverview,
   type UsageTopEndpoint,
@@ -70,11 +74,15 @@ async function listUsageGaugeGroupsByMetric(
     dimensions?: string[]
     queries?: string[]
     orderDir?: string
+    limit?: number
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
     orderDir: 'asc',
+    // Without an explicit limit, the API default truncates long 1h series
+    // (oldest buckets only when orderDir is asc), leaving the chart zero-filled.
+    limit: USAGE_API_MAX_LIMIT,
   }
 
   if (params.interval) {
@@ -299,45 +307,53 @@ export async function fetchProjectUsageGaugeChartSeries(
     previousFrom,
     previousTo,
     interval: resolvedInterval,
+    comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
-  const [currentGroups, previousGroups] = await Promise.all([
-    listUsageGaugeGroupsForMetrics(projectId, metrics, {
-      interval: resolvedInterval,
-      startAt: from.toISOString(),
-      endAt: to.toISOString(),
-      queries,
-      resourceId,
-      resourceType,
-      ordinal,
-    }),
-    listUsageGaugeGroupsForMetrics(projectId, metrics, {
-      interval: resolvedInterval,
-      startAt: previousFrom.toISOString(),
-      endAt: previousTo.toISOString(),
-      queries,
-      resourceId,
-      resourceType,
-      ordinal,
-    }),
-  ])
+  const currentGroups = await listUsageGaugeGroupsForMetrics(projectId, metrics, {
+    interval: resolvedInterval,
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+    queries,
+    resourceId,
+    resourceType,
+    ordinal,
+  })
 
-  const currentMerged = mergeGaugeValuesByTime(currentGroups)
-  const previousMerged = mergeGaugeValuesByTime(previousGroups)
+  // First-half comparison reuses the current series; a second fetch would
+  // request the same buckets we already have.
+  const previousGroups =
+    comparisonMode === 'prior_window'
+      ? await listUsageGaugeGroupsForMetrics(projectId, metrics, {
+          interval: resolvedInterval,
+          startAt: previousFrom.toISOString(),
+          endAt: previousTo.toISOString(),
+          queries,
+          resourceId,
+          resourceType,
+          ordinal,
+        })
+      : []
+
+  const chartPoints = fillGaugeChartPointsGaps(
+    mergeGaugeValuesByTime(currentGroups),
+    from,
+    to,
+    resolvedInterval,
+  )
+  const previousChartPoints =
+    comparisonMode === 'first_half'
+      ? getUsageChartFirstHalfPoints(chartPoints)
+      : fillGaugeChartPointsGaps(
+          mergeGaugeValuesByTime(previousGroups),
+          previousFrom,
+          previousTo,
+          resolvedInterval,
+        )
 
   return {
-    chartPoints: fillGaugeChartPointsGaps(
-      currentMerged,
-      from,
-      to,
-      resolvedInterval,
-    ),
-    previousChartPoints: fillGaugeChartPointsGaps(
-      previousMerged,
-      previousFrom,
-      previousTo,
-      resolvedInterval,
-    ),
+    chartPoints,
+    previousChartPoints,
   }
 }
 

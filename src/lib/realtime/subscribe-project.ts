@@ -65,6 +65,17 @@ function mergeMigrationPayloadIntoCache(
       return { ...data, migrations: next }
     },
   )
+
+  // Single-migration caches from migrations.get (e.g. backup restore progress)
+  queryClient.setQueriesData(
+    { queryKey: ['migration', 'project', projectId], exact: false },
+    (old: unknown) => {
+      if (!old || typeof old !== 'object') return old
+      const migration = old as Record<string, unknown>
+      if (migration.$id !== id) return old
+      return { ...migration, ...normalized }
+    },
+  )
 }
 
 type DeploymentResourceType = 'site' | 'function'
@@ -482,6 +493,9 @@ function handleRealtimeEvent(
   if (hasEvent(events, REALTIME_EVENTS.POLICIES_ANY)) {
     queryClient.invalidateQueries({
       queryKey: ['backup-policies', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['dedicated-backup-policies', 'project', projectId],
     })
   }
 

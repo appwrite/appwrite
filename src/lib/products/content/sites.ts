@@ -87,19 +87,21 @@ export const sitesProductContent: ProductPageContent = {
     {
       question: 'Can I buy a domain and manage DNS in Appwrite?',
       answer:
-        'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and WAF.',
+        'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and Firewall.',
       links: [
         { label: 'Site domains', href: '/docs/products/sites/domains' },
         { label: 'Appwrite DNS', href: '/docs/products/network/dns' },
+        { label: 'Firewall', href: '/docs/products/firewall' },
       ],
     },
     {
       question: 'What edge network and security features are included?',
       answer:
-        'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Web Application Firewall (WAF), and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.',
+        'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Firewall, and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.',
       links: [
         { label: 'Sites overview', href: '/docs/products/sites' },
         { label: 'Appwrite Network', href: '/docs/products/network' },
+        { label: 'Firewall', href: '/docs/products/firewall' },
       ],
     },
     {

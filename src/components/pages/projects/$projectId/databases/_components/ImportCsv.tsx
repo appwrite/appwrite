@@ -291,7 +291,8 @@ export function ImportCsv({
       const migration = await createImport.mutateAsync({
         bucketId: uploaded.bucketId ?? 'default',
         fileId: uploaded.$id,
-        resourceId: `${databaseId}:${tableId}`,
+        databaseId,
+        collectionId: tableId,
         internalFile: true,
       })
       if (migration?.$id) addImportId(projectId, migration.$id)
@@ -313,7 +314,8 @@ export function ImportCsv({
       const migration = await createImport.mutateAsync({
         bucketId: selectedStorageFile.bucketId,
         fileId: selectedStorageFile.fileId,
-        resourceId: `${databaseId}:${tableId}`,
+        databaseId,
+        collectionId: tableId,
         internalFile: false,
       })
       if (migration?.$id) addImportId(projectId, migration.$id)

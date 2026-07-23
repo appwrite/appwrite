@@ -94,7 +94,7 @@ export async function fetchProjectSite(
   return await projectSdk.sites.get({ siteId })
 }
 
-/** Fetch up to 8 sites by ID in a single list call (overview compute breakdown). */
+/** Fetch sites by ID in a single list call. */
 export async function fetchProjectSitesByIds(
   projectId: string,
   siteIds: string[],
@@ -105,7 +105,7 @@ export async function fetchProjectSitesByIds(
 
   const validIds = [
     ...new Set(siteIds.filter((id) => typeof id === 'string' && id.trim())),
-  ].slice(0, 8)
+  ]
   if (validIds.length === 0) {
     return { sites: [] }
   }
@@ -328,44 +328,30 @@ export async function fetchSiteSpecifications(
 }
 
 /**
- * Query function to fetch sites usage (all sites in project)
+ * Query function to fetch sites usage (all sites in project).
+ *
+ * `sites.listUsage` was removed from the console SDK. Project usage now comes
+ * from the usage events / gauges APIs. Kept as a no-op so existing routes and
+ * hooks continue to compile until the Sites usage screens are wired up.
  */
 export async function fetchSitesUsage(
-  projectId: string,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
+  _projectId: string,
+  _range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
 ) {
-  if (!projectId) {
-    return undefined
-  }
-
-  const projectSdk = sdk.forProject(projectId)
-  try {
-    const response = await projectSdk.sites.listUsage({ range })
-    return response
-  } catch {
-    return undefined
-  }
+  return undefined
 }
 
 /**
- * Query function to fetch site usage (single site)
+ * Query function to fetch site usage (single site).
+ *
+ * `sites.getUsage` was removed from the console SDK. See `fetchSitesUsage`.
  */
 export async function fetchSiteUsage(
-  projectId: string,
-  siteId: string,
-  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
+  _projectId: string,
+  _siteId: string,
+  _range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
 ) {
-  if (!projectId || !siteId) {
-    return undefined
-  }
-
-  const projectSdk = sdk.forProject(projectId)
-  try {
-    const response = await projectSdk.sites.getUsage({ siteId, range })
-    return response
-  } catch {
-    return undefined
-  }
+  return undefined
 }
 
 /**

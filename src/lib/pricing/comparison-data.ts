@@ -464,22 +464,16 @@ export const comparisonTables: ComparisonTable[] = [
                     enterprise: true
                 },
                 {
+                    title: 'Firewall rules',
+                    free: '2 per project',
+                    pro: '50 per project',
+                    enterprise: 'Custom'
+                },
+                {
                     title: 'Logs',
                     free: '-',
                     pro: '-',
                     enterprise: 'Coming soon'
-                },
-                {
-                    title: 'Firewall',
-                    free: '-',
-                    pro: '-',
-                    enterprise: 'Custom rules'
-                },
-                {
-                    title: 'WAF',
-                    free: '-',
-                    pro: '-',
-                    enterprise: 'Custom rules'
                 }
             ]
         },

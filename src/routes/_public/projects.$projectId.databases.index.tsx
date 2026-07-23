@@ -11,7 +11,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,

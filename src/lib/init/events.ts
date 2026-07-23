@@ -101,10 +101,10 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     prizes: INIT_JULY_2026_PRIZES,
     releaseAvailability: {
       unlockDay: 5,
-      sectionTitle: 'The full release is live',
+      sectionTitle: 'Cloud and Self-host are live.',
       sectionDescription:
-        'On Cloud, each Init feature went live the day it dropped. Self-host Community Edition for the complete Appwrite 2.0 release on your infrastructure.',
-      lockedTitle: 'Cloud ships daily. Self-host unlocks later.',
+        'Every Init feature is available on Appwrite Cloud, and Community Edition ships the complete Appwrite 2.0 release for self-hosting.',
+      lockedTitle: 'Cloud ships daily. Self-host unlocks soon.',
       lockedDescription:
         'Every Init feature goes live on Appwrite Cloud the same day. Community Edition unlocks with the complete release when Init week wraps up.',
       cloud: {

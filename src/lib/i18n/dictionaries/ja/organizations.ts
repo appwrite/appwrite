@@ -780,7 +780,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.': '組織がマーケットプレイスに公開している OAuth2 アプリ。',
   'Only one free organization is allowed per account.': 'アカウントあたり無料組織は1つのみ許可されています。',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.': '組織レベルのキーは利用可能になり次第、ここで管理できるようになります。それまではサーバーサイドのアクセスにプロジェクトキーを使用してください。',
-  'Payment failed - organization in read-only mode': '支払いに失敗しました。組織は読み取り専用モードです',
+  'Payment failed - organization has restricted access': '支払いに失敗しました。組織は制限付きアクセスです',
   'Payment form not ready. Please try again.': '支払いフォームの準備ができていません。もう一度お試しください。',
   'Payment method has been added to your organization': '支払い方法が組織に追加されました',
   'Permanently delete this app and revoke all associated tokens. This action cannot be undone.': 'このアプリを完全に削除し、関連するすべてのトークンを取り消します。この操作は元に戻せません。',

@@ -34,8 +34,11 @@ import {
   hasLikelyConsoleSession,
   type FetchConsoleAccountOptions,
 } from '@/lib/console-account-get'
-import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
-import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
+import {
+  clearConsoleImpersonationSession,
+  getConsoleAccountQueryRevision,
+  hasConsoleImpersonationSessionTarget,
+} from '@/lib/console-impersonation'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
@@ -114,6 +117,8 @@ import {
   readLegacyBuildNotificationsOptedOutFromLocalStorage,
   readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
+  sanitizeAccountPrefsForWrite,
+  USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import {
@@ -1160,10 +1165,19 @@ export function useAccountSessions() {
 // ============================================================================
 
 /**
- * Mutation function to update account preferences
+ * Mutation function to update account preferences.
+ * Sanitizes nested/legacy values so Appwrite does not 400 on write.
+ * Silently skips while console impersonation is active so the target user's prefs are not mutated.
  */
 export async function updateAccountPrefs(prefs: Record<string, unknown>) {
-  return await sdk.forConsole.account.updatePrefs({ prefs })
+  if (hasConsoleImpersonationSessionTarget()) {
+    const current = getConsoleAccountFromSingleton()
+    if (current) return current
+    return { prefs: sanitizeAccountPrefsForWrite(prefs) } as Models.User
+  }
+  return await sdk.forConsole.account.updatePrefs({
+    prefs: sanitizeAccountPrefsForWrite(prefs),
+  })
 }
 
 /**
@@ -1211,7 +1225,8 @@ export function useToggleFeatureNotification() {
       }
 
       // Get current feature notifications (handle both string and legacy array formats)
-      const currentNotificationsRaw = account.prefs?.featureNotifications
+      const currentNotificationsRaw =
+        account.prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
 
       // Parse into an array, handling different data types
       let currentNotifications: string[] = []
@@ -1235,7 +1250,7 @@ export function useToggleFeatureNotification() {
       // Update preferences with the new string
       const updatedPrefs = {
         ...account.prefs,
-        featureNotifications: updatedNotificationsStr,
+        [USER_PREFS_KEY_FEATURE_NOTIFICATIONS]: updatedNotificationsStr,
       }
 
       return await updateAccountPrefs(updatedPrefs)
@@ -2672,28 +2687,20 @@ export function useSavedFilters(
       query: string
       sort?: string
     }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
-        name: trimmedName,
-        query,
-        ...(sort ? { sort } : {}),
-      }
-      const next = [newFilter, ...current]
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        const newFilter: SavedFilter = {
+          id: crypto.randomUUID(),
+          name: trimmedName,
+          query,
+          ...(sort ? { sort } : {}),
+        }
+        return buildSavedFiltersPrefs(scope, [newFilter, ...current])
       })
     },
     onSuccess: () => {
@@ -2725,20 +2732,15 @@ export function useSavedFilters(
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
-      const next = current.filter((f) => f.id !== id)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        return buildSavedFiltersPrefs(
+          scope,
+          current.filter((f) => f.id !== id),
+        )
       })
     },
     onSuccess: () => {
@@ -2768,16 +2770,12 @@ export function useSavedFilters(
 
   const reorderTeamMutation = useMutation({
     mutationFn: async (orderedFilters: SavedFilter[]) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, orderedFilters),
-      })
+      await updateTeamPrefs.mutateAsync(
+        buildSavedFiltersPrefs(scope, orderedFilters),
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -2850,24 +2848,17 @@ export function useSavedFilters(
 
   const updateTeamFilterMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const next = current.map((f) =>
-        f.id === id ? { ...f, name: trimmedName } : f,
-      )
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        const next = current.map((f) =>
+          f.id === id ? { ...f, name: trimmedName } : f,
+        )
+        return buildSavedFiltersPrefs(scope, next)
       })
     },
     onSuccess: () => {
@@ -3012,28 +3003,26 @@ export function useImageTransformSavedPresets(
 
   const addTeamMutation = useMutation({
     mutationFn: async ({ name, json }: { name: string; json: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
+      if (!teamId) throw new Error('Team not available')
       if (json.length > MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS) {
         throw new Error('Preset data is too large')
       }
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
-      const trimmedName = name.trim().slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      const trimmedName = name
+        .trim()
+        .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
-        throw new Error(`Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`)
-      }
-      const next: SavedImageTransformPreset[] = [
-        { id: crypto.randomUUID(), name: trimmedName, json },
-        ...current,
-      ]
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
+          throw new Error(
+            `Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`,
+          )
+        }
+        const next: SavedImageTransformPreset[] = [
+          { id: crypto.randomUUID(), name: trimmedName, json },
+          ...current,
+        ]
+        return buildSavedImageTransformPresetsPrefs(next)
       })
     },
     onSuccess: () => {
@@ -3061,17 +3050,12 @@ export function useImageTransformSavedPresets(
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
-      const next = current.filter((p) => p.id !== id)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      if (!teamId) throw new Error('Team not available')
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        return buildSavedImageTransformPresetsPrefs(
+          current.filter((p) => p.id !== id),
+        )
       })
     },
     onSuccess: () => {
@@ -3097,14 +3081,10 @@ export function useImageTransformSavedPresets(
 
   const reorderTeamMutation = useMutation({
     mutationFn: async (ordered: SavedImageTransformPreset[]) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(ordered),
-      })
+      if (!teamId) throw new Error('Team not available')
+      await updateTeamPrefs.mutateAsync(
+        buildSavedImageTransformPresetsPrefs(ordered),
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
@@ -3137,23 +3117,17 @@ export function useImageTransformSavedPresets(
 
   const updateTeamPresetNameMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
+      if (!teamId) throw new Error('Team not available')
       const trimmedName = name
         .trim()
         .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const next = current.map((p) =>
-        p.id === id ? { ...p, name: trimmedName } : p,
-      )
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        const next = current.map((p) =>
+          p.id === id ? { ...p, name: trimmedName } : p,
+        )
+        return buildSavedImageTransformPresetsPrefs(next)
       })
     },
     onSuccess: () => {

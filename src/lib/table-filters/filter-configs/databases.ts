@@ -2,7 +2,7 @@
  * Predefined filter columns for project databases list.
  */
 
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
 import { buildFilterQueryString } from '../operators'

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   Tooltip,
@@ -18,9 +18,12 @@ import {
   isServerlessDatabaseMonitoring,
   mapDedicatedDatabaseSpecifications,
   resolveDatabaseSpecDisplayParts,
-  SERVERLESS_DATABASE_SPEC_ID,
   type SpecOption,
 } from '@/lib/database-specs'
+import {
+  hasDedicatedDatabaseCompute,
+  resolveDatabaseComputeSpecId,
+} from '@/lib/databases/database-compute'
 import {
   projectSupportsDedicatedDatabaseCompute,
   formatDedicatedDatabaseRegionUnavailableDescription,
@@ -170,31 +173,53 @@ export function DatabaseSidebarComputeSpec({
       (productDatabase as { databaseType?: ApiDatabaseType } | null)
         ?.databaseType ?? ApiDatabaseType.Tablesdb
     const dedicated = dedicatedById.get(databaseId)
-    const apiSpecId = dedicated?.specification?.trim() || null
-    const specSlug = getEffectiveDatabaseSpecIdForMonitoring(
-      databaseType,
-      apiSpecId,
-    )
-    const serverless = isServerlessDatabaseMonitoring(databaseType, specSlug)
-    const effectiveSpecSlug =
-      specSlug === SERVERLESS_DATABASE_SPEC_ID
-        ? SERVERLESS_DATABASE_SPEC_ID
-        : specSlug
-    const displayParts = resolveDatabaseSpecDisplayParts(
-      specs,
-      effectiveSpecSlug,
+    const productHints = {
+      databaseType:
+        (productDatabase as { apiType?: string | null } | null)?.apiType ??
+        databaseType,
+      status:
+        (productDatabase as { status?: string | null } | null)?.status ?? null,
+      replicas:
+        (productDatabase as { replicas?: number | null } | null)?.replicas ??
+        null,
+      specification:
+        (productDatabase as { specification?: string | null } | null)
+          ?.specification ?? null,
+    }
+    const resolvedSpecId = resolveDatabaseComputeSpecId(
+      productHints,
+      dedicated,
       {
-        forceServerless: serverless,
-        fallbackLabel:
-          getSpecOptionById(specSlug)?.label ??
-          (serverless ? t('Serverless') : specSlug),
+        specs,
+        rawSpecifications: specificationsData?.specifications ?? null,
       },
     )
+    const dedicatedBacking = hasDedicatedDatabaseCompute(
+      productHints,
+      dedicated,
+    )
+    const serverless =
+      !dedicatedBacking &&
+      (resolvedSpecId == null ||
+        isServerlessDatabaseMonitoring(databaseType, resolvedSpecId))
+    const apiSpecId =
+      resolvedSpecId &&
+      !isServerlessDatabaseMonitoring(databaseType, resolvedSpecId)
+        ? resolvedSpecId
+        : dedicatedBacking
+          ? null
+          : getEffectiveDatabaseSpecIdForMonitoring(databaseType, null)
+    const displayParts = resolveDatabaseSpecDisplayParts(specs, apiSpecId, {
+      forceServerless: serverless,
+      fallbackLabel:
+        (apiSpecId ? getSpecOptionById(apiSpecId)?.label : undefined) ??
+        (serverless ? t('Serverless') : apiSpecId || t('Dedicated')),
+    })
     const specTooltip =
       displayParts.variant === 'serverless'
         ? t('Serverless')
         : formatDatabaseSpecDisplayTooltip(displayParts, connectionsUnit) ??
-          (serverless ? t('Serverless') : specSlug)
+          (serverless ? t('Serverless') : apiSpecId || t('Dedicated'))
 
     const tableNavParams = {
       projectId,
@@ -206,7 +231,7 @@ export function DatabaseSidebarComputeSpec({
     return {
       displayParts,
       specTooltip,
-      specSlug,
+      specSlug: apiSpecId,
       serverless,
       computeLink: dbNavLink(tableNavParams.dbKind).dbSpecificationSettings(
         tableNavParams,
@@ -220,16 +245,17 @@ export function DatabaseSidebarComputeSpec({
     postgresDatabase,
     productDatabase,
     projectId,
+    specificationsData?.specifications,
     specs,
     t,
   ])
 
   const nextEnabledSpec = useMemo(
-    () => getNextEnabledSpec(specs, resolved.specSlug),
+    () => getNextEnabledSpec(specs, resolved.specSlug ?? undefined),
     [resolved.specSlug, specs],
   )
   const nextLockedSpec = useMemo(
-    () => getNextLockedSpec(specs, resolved.specSlug),
+    () => getNextLockedSpec(specs, resolved.specSlug ?? undefined),
     [resolved.specSlug, specs],
   )
 

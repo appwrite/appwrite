@@ -12,27 +12,22 @@ import {
   keepPreviousData,
   type QueryClient,
 } from '@tanstack/react-query'
-import { useMemo } from 'react'
-import {
-  Query,
-  ID,
-  DatabaseType,
-  DocumentsDBIndexType,
-  TablesDBIndexType,
-  VectorsDBIndexType,
-  OrderBy,
-  RelationshipType,
-  RelationMutate,
-} from '@appwrite.io/console'
+import { useEffect, useMemo } from 'react'
+import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
+import { DatabaseType, coerceDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
-import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
+import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
+import {
+  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  shouldPollDedicatedDatabaseStatus,
+} from '@/lib/databases/dedicated-database-status'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
 import {
   normalizePostgresExecutionResult,
@@ -284,6 +279,29 @@ function seedDatabaseModelCache(
   databaseTypeCache.set(key, { value: backend, expiresAt })
 }
 
+function readProductDatabaseSpecification(
+  db: Models.Database,
+): string | null {
+  const value = (db as Models.Database & { specification?: unknown }).specification
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function readProductDatabaseLifecycleStatus(
+  db: Models.Database,
+): string | null {
+  const value = db.status as unknown
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  // SDK types `status` as DatabaseStatus (health object). Treat ready as the
+  // lifecycle string the rest of the console expects for badges/cards.
+  if (value && typeof value === 'object') {
+    const status = value as Models.DatabaseStatus
+    if (status.ready === true) return 'ready'
+    if (status.health === 'unhealthy') return 'failed'
+    if (status.health === 'degraded') return 'provisioning'
+  }
+  return null
+}
+
 function buildProjectDatabaseDetail(db: Models.Database) {
   const backupPolicies = db.policies ?? []
   const backupPolicyCount = backupPolicies.length
@@ -301,7 +319,11 @@ function buildProjectDatabaseDetail(db: Models.Database) {
     hasBackupPolicy,
     backupPolicy,
     backupPolicyCount,
-    databaseType: db.type,
+    databaseType: coerceDatabaseType(db.type),
+    apiType: db.type,
+    status: readProductDatabaseLifecycleStatus(db),
+    replicas: typeof db.replicas === 'number' ? db.replicas : null,
+    specification: readProductDatabaseSpecification(db),
   }
 }
 
@@ -496,7 +518,7 @@ export async function getDatabaseModel(
     })
     if (value?.type) {
       databaseTypeCache.set(key, {
-        value: value.type,
+        value: coerceDatabaseType(value.type),
         expiresAt: Date.now() + DEFAULT_STALE_TIME,
       })
     }
@@ -506,7 +528,7 @@ export async function getDatabaseModel(
   }
 }
 
-function databaseTypeRank(type: DatabaseType | undefined): number {
+function databaseTypeRank(type: string | undefined): number {
   switch (type) {
     case DatabaseType.Documentsdb:
       return 0
@@ -521,12 +543,12 @@ function databaseTypeRank(type: DatabaseType | undefined): number {
 
 function normalizeProductDatabase(
   db: Models.Database,
-  sourceType: DatabaseType,
+  sourceType: DatabaseType | string,
 ): Models.Database {
   return {
     ...db,
     // The probing API is authoritative; `type` on the payload is unreliable.
-    type: sourceType,
+    type: String(sourceType),
   }
 }
 
@@ -1348,13 +1370,13 @@ export async function createNativeDatabase(
   const haReplicaCount = Math.max(0, data.haReplicaCount ?? 0)
   const pitrEnabled = data.pitrEnabled === true
 
+  // Omit `api` for native (raw) databases; the API sets api from the engine.
   return await dedicatedEngineService(projectSdk, data.engine).create({
     databaseId,
     name: data.name.trim(),
     specification: data.specification.trim(),
     replicas: haReplicaCount,
     pitr: pitrEnabled,
-    api: 'nativedb',
   })
 }
 
@@ -1419,28 +1441,80 @@ function isNativeDatabasesSupported(): boolean {
   )
 }
 
+/**
+ * True when dedicated engine list/get should run. Product dedicated compute
+ * (TablesDB / DocumentsDB / VectorsDB) uses the same engine endpoints even when
+ * native DB UI flags are off.
+ */
+function isDedicatedEngineAccessSupported(): boolean {
+  const features = getActiveProfileFeatures()
+  return (
+    isNativeDatabasesSupported() ||
+    features.dedicatedDbsSupport ||
+    features.dedicatedDbsDocumentsDB ||
+    features.dedicatedDbsVectorsDB
+  )
+}
+
+/** Engines to list/probe for native + product-owned dedicated compute. */
+function dedicatedEnginesForProfile(): Array<
+  'postgresql' | 'mysql' | 'mongodb'
+> {
+  const features = getActiveProfileFeatures()
+  const engines: Array<'postgresql' | 'mysql' | 'mongodb'> = []
+  if (
+    features.nativeDbsPostgres ||
+    features.dedicatedDbsVectorsDB ||
+    features.dedicatedDbsSupport
+  ) {
+    engines.push('postgresql')
+  }
+  if (features.nativeDbsMySQL || features.dedicatedDbsSupport) {
+    engines.push('mysql')
+  }
+  if (
+    features.nativeDbsMongo ||
+    features.dedicatedDbsDocumentsDB ||
+    features.dedicatedDbsSupport
+  ) {
+    engines.push('mongodb')
+  }
+  return engines
+}
+
+function allowedDedicatedEngineKeys(): Set<string> {
+  const allowed = new Set<string>()
+  for (const engine of dedicatedEnginesForProfile()) {
+    if (engine === 'postgresql') {
+      allowed.add('postgresql')
+      allowed.add('postgres')
+    } else if (engine === 'mysql') {
+      allowed.add('mysql')
+      allowed.add('mariadb')
+    } else {
+      allowed.add('mongodb')
+      allowed.add('mongo')
+    }
+  }
+  return allowed
+}
+
 export async function fetchProjectDedicatedDatabases(projectId: string) {
   if (!projectId) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
   }
 
-  // List native PostgreSQL, MySQL, and MongoDB databases and merge for selectors.
-  // Each engine's endpoint only exists when its profile flag is on.
-  const features = getActiveProfileFeatures()
+  // List engine databases (native + product-owned dedicated compute) and merge.
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     Query.orderDesc('$createdAt'),
     Query.limit(MERGED_DATABASE_LIST_LIMIT),
   ]
   const engineLists: Promise<Models.DedicatedDatabaseList>[] = []
-  if (features.nativeDbsPostgres) {
-    engineLists.push(projectSdk.postgresql.list({ queries }))
-  }
-  if (features.nativeDbsMySQL) {
-    engineLists.push(projectSdk.mysql.list({ queries }))
-  }
-  if (features.nativeDbsMongo) {
-    engineLists.push(projectSdk.mongo.list({ queries }))
+  for (const engine of dedicatedEnginesForProfile()) {
+    engineLists.push(
+      dedicatedEngineService(projectSdk, engine).list({ queries }),
+    )
   }
   if (engineLists.length === 0) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
@@ -1482,18 +1556,161 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   return { databases, total }
 }
 
+function productBackendsFromEngineHints(
+  engineHints: string[],
+): DatabaseType[] {
+  const backends: DatabaseType[] = []
+  const seen = new Set<DatabaseType>()
+  const add = (backend: DatabaseType) => {
+    if (seen.has(backend)) return
+    seen.add(backend)
+    backends.push(backend)
+  }
+  for (const hint of engineHints) {
+    const key = hint.trim().toLowerCase()
+    if (key === 'mongodb' || key === 'mongo') {
+      add(DatabaseType.Documentsdb)
+      continue
+    }
+    if (key === 'mysql' || key === 'mariadb') {
+      add(DatabaseType.Tablesdb)
+      continue
+    }
+    if (key === 'postgresql' || key === 'postgres') {
+      // VectorsDB is Postgres-backed; TablesDB dedicated may also be.
+      add(DatabaseType.Vectorsdb)
+      add(DatabaseType.Tablesdb)
+    }
+  }
+  return backends
+}
+
+function dedicatedCardSourceFromProductDatabase(
+  db: Models.Database,
+  backend: DatabaseType,
+): Models.DedicatedDatabase | null {
+  const specification = readProductDatabaseSpecification(db)
+  if (!specification || isServerlessDatabaseSpecId(specification)) {
+    return null
+  }
+
+  const engine =
+    dedicatedComputeEngineForProductBackend(backend) === 'mongodb'
+      ? 'mongodb'
+      : dedicatedComputeEngineForProductBackend(backend) === 'postgres'
+        ? 'postgresql'
+        : 'mysql'
+
+  // Product get/list can carry the compute slug without a full engine document.
+  // Card UI only needs identity + tier fields; cast keeps Map typing simple.
+  return {
+    $id: db.$id,
+    name: db.name,
+    api: computeApiForDatabaseType(backend),
+    engine,
+    specification,
+    status: readProductDatabaseLifecycleStatus(db) ?? 'ready',
+    replicas: typeof db.replicas === 'number' ? db.replicas : 0,
+    cpu: 0,
+    memory: 0,
+  } as Models.DedicatedDatabase
+}
+
+/**
+ * Resolve a dedicated database by ID. Product-owned dedicated compute often
+ * shares the product database ID but may be omitted from engine `list`
+ * responses; `get` / id-filtered `list` still return the row on the right engine.
+ * When the engine row is missing, fall back to the product get payload's
+ * (untyped) `specification` field so list cards can show the compute tier.
+ */
+export async function fetchDedicatedDatabaseById(
+  projectId: string,
+  databaseId: string,
+  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+): Promise<Models.DedicatedDatabase | null> {
+  if (!projectId || !databaseId) return null
+
+  const projectSdk = sdk.forProject(projectId)
+  const allowed = allowedDedicatedEngineKeys()
+
+  const seen = new Set<string>()
+  for (const hint of engineHints) {
+    const key = hint.trim().toLowerCase()
+    if (!key || seen.has(key) || !allowed.has(key)) continue
+    seen.add(key)
+    const engine = dedicatedEngineService(projectSdk, key)
+    try {
+      const database = await engine.get({ databaseId })
+      if (database?.$id) return database
+    } catch {
+      /* try list filter, then next engine */
+    }
+    try {
+      const listed = await engine.list({
+        queries: [Query.equal('$id', databaseId), Query.limit(1)],
+      })
+      const database = listed.databases?.[0]
+      if (database?.$id) return database
+    } catch {
+      /* try next engine */
+    }
+  }
+
+  for (const backend of productBackendsFromEngineHints(engineHints)) {
+    const product = await getProductDatabase(projectSdk, backend, databaseId)
+    if (!product) continue
+    const fromProduct = dedicatedCardSourceFromProductDatabase(product, backend)
+    if (fromProduct) return fromProduct
+  }
+
+  return null
+}
+
+export function dedicatedDatabaseByIdQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+) {
+  return queryOptions({
+    queryKey: [
+      'dedicated-database',
+      'project',
+      projectId,
+      databaseId,
+      engineHints.join(','),
+    ],
+    queryFn: () =>
+      fetchDedicatedDatabaseById(projectId!, databaseId!, engineHints),
+    enabled: !!projectId && !!databaseId && isDedicatedEngineAccessSupported(),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function dedicatedDatabasesQueryOptions(
   projectId: string | null | undefined,
 ) {
   return queryOptions({
     queryKey: ['dedicated-databases', 'project', projectId],
     queryFn: () => fetchProjectDedicatedDatabases(projectId!),
-    enabled: !!projectId && isNativeDatabasesSupported(),
+    enabled: !!projectId && isDedicatedEngineAccessSupported(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    refetchInterval: (query) => {
+      const databases = query.state.data?.databases ?? []
+      return databases.some((db) =>
+        shouldPollDedicatedDatabaseStatus(db.status),
+      )
+        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
+        : false
+    },
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -3539,7 +3756,12 @@ function mapProjectDatabaseListItems(
       hasBackupPolicy,
       backupPolicy,
       backupPolicyCount,
-      databaseType: db.type,
+      databaseType: coerceDatabaseType(db.type),
+      // Preserve the API `type` for compute detection (native engines coerce to TablesDB).
+      apiType: db.type,
+      status: readProductDatabaseLifecycleStatus(db),
+      replicas: typeof db.replicas === 'number' ? db.replicas : null,
+      specification: readProductDatabaseSpecification(db),
     } as Database & {
       enabled: boolean
       createdAt: string
@@ -3548,6 +3770,10 @@ function mapProjectDatabaseListItems(
       backupPolicy: unknown
       backupPolicyCount: number
       databaseType?: DatabaseType
+      apiType?: string
+      status: string | null
+      replicas: number | null
+      specification: string | null
     }
   })
 
@@ -4082,13 +4308,46 @@ export function useProjectDatabase(
   databaseId: string | null | undefined,
   routeKindHint?: DatabaseRouteKind,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: databaseData,
     isLoading,
     isPending,
     error,
     refetch,
-  } = useQuery(databaseQueryOptions(projectId, databaseId, routeKindHint))
+  } = useQuery({
+    ...databaseQueryOptions(projectId, databaseId, routeKindHint),
+    refetchInterval: (query) =>
+      shouldPollDedicatedDatabaseStatus(
+        (query.state.data as { status?: string | null } | undefined)?.status,
+      )
+        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
+        : false,
+  })
+
+  // Keep dedicated list badges in sync when product detail polling sees a status change.
+  useEffect(() => {
+    const nextStatus = (databaseData as { status?: string | null } | null)
+      ?.status
+    if (!projectId || !databaseId || !nextStatus) return
+    queryClient.setQueryData(
+      ['dedicated-databases', 'project', projectId],
+      (
+        prev:
+          | { databases: Models.DedicatedDatabase[]; total: number }
+          | undefined,
+      ) => {
+        if (!prev?.databases?.length) return prev
+        let changed = false
+        const databases = prev.databases.map((db) => {
+          if (db.$id !== databaseId || db.status === nextStatus) return db
+          changed = true
+          return { ...db, status: nextStatus }
+        })
+        return changed ? { ...prev, databases } : prev
+      },
+    )
+  }, [databaseData, databaseId, projectId, queryClient])
 
   return {
     database: databaseData || null,

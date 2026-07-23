@@ -129,7 +129,150 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'ルールを検索...',
   'Search logs...': 'ログを検索...',
   'Create rule': 'ルールの作成',
+  'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'No API firewall rules': 'API のファイアウォールルールがありません',
+  'No function firewall rules': 'Functions のファイアウォールルールがありません',
+  'No site firewall rules': 'サイトのファイアウォールルールがありません',
+  'Create a firewall rule for your project API to protect it from malicious requests.':
+    '悪意のあるリクエストから保護するため、プロジェクト API 向けのファイアウォールルールを作成してください。',
+  'Create a firewall rule scoped to a function to control how it handles requests.':
+    'リクエストの扱いを制御するため、Function 向けのファイアウォールルールを作成してください。',
+  'Create a firewall rule scoped to a site to control how it handles requests.':
+    'リクエストの扱いを制御するため、サイト向けのファイアウォールルールを作成してください。',
+  'Firewall rule scope': 'ファイアウォールルールの対象',
+  API: 'API',
+  'Firewall protection': 'Firewall 保護',
+  'Firewall is evaluating rules against incoming traffic for this project.':
+    'このプロジェクトの受信トラフィックに対して Firewall がルールを評価しています。',
+  'Enable Firewall to start evaluating rules against incoming traffic.':
+    '受信トラフィックに対するルール評価を開始するには Firewall を有効にしてください。',
+  'Firewall enabled': 'Firewall を有効にしました',
+  'Firewall disabled': 'Firewall を無効にしました',
+  'Failed to update firewall settings': 'Firewall 設定の更新に失敗しました',
+  "You don't have permission to update firewall settings.":
+    'Firewall 設定を更新する権限がありません。',
+  'Applies to': '適用先',
+  'Project-wide': 'プロジェクト全体',
+  'All requests': 'すべてのリクエスト',
+  more: '件',
+  Deny: '拒否',
+  Bypass: 'バイパス',
+  'Rate limit': 'レート制限',
+  Redirect: 'リダイレクト',
+  Denied: '拒否済み',
+  Bypassed: 'バイパス済み',
+  Passed: '通過',
+  'Rate limited': 'レート制限済み',
+  Redirected: 'リダイレクト済み',
+  'Define how Firewall should handle matching requests for this project.':
+    'このプロジェクトで一致するリクエストを Firewall がどう扱うかを定義します。',
+  'e.g., Deny suspicious IPs': '例: 不審な IP を拒否',
+  'Reject matching requests before they reach your project.':
+    '一致するリクエストをプロジェクト到達前に拒否します。',
+  'Skip remaining firewall checks for matching requests.':
+    '一致するリクエストの残りの Firewall チェックをスキップします。',
+  'Throttle matching requests that exceed a request quota.':
+    'リクエスト上限を超えた一致リクエストを制限します。',
+  'Send matching requests to another location.':
+    '一致するリクエストを別の場所へ送信します。',
+  'Challenge matching requests before allowing them through.':
+    '一致するリクエストを通過させる前にチャレンジします。',
+  'Lower numbers are evaluated first.': '数値が小さいほど先に評価されます。',
+  'Resource ID': 'リソース ID',
+  'Function ID': 'Function ID',
+  'Site ID': 'サイト ID',
+  'Request limit': 'リクエスト上限',
+  'Interval (seconds)': '間隔 (秒)',
+  'Redirect location': 'リダイレクト先',
+  'Status code': 'ステータスコード',
+  'Match requests when all conditions are true.':
+    'すべての条件が真のときにリクエストに一致します。',
+  'Add condition': '条件を追加',
+  Attribute: '属性',
+  Operator: '演算子',
+  Value: '値',
+  'Remove condition': '条件を削除',
+  'IP address': 'IP アドレス',
+  'HTTP method': 'HTTP メソッド',
+  'Select method': 'メソッドを選択',
+  'e.g. curl/8.0': '例: curl/8.0',
+  'User agent': 'User agent',
+  'Request path': 'リクエストパス',
+  If: 'If',
+  Then: 'Then',
+  And: 'And',
+  'Choose which traffic this rule should evaluate.':
+    'このルールが評価するトラフィックを選択してください。',
+  'All API requests for this project': 'このプロジェクトのすべての API リクエスト',
+  'Requests to a specific function': '特定の Function へのリクエスト',
+  'Requests to a specific site': '特定のサイトへのリクエスト',
+  'Select function': 'Function を選択',
+  'Select site': 'サイトを選択',
+  Equals: '等しい',
+  'Not equal': '等しくない',
+  Contains: '含む',
+  equals: '等しい',
+  'does not equal': '等しくない',
+  contains: '含む',
+  'Firewall rule created': 'Firewall ルールを作成しました',
+  'Failed to create firewall rule': 'Firewall ルールの作成に失敗しました',
+  'Firewall rule updated': 'Firewall ルールを更新しました',
+  'Failed to update firewall rule': 'Firewall ルールの更新に失敗しました',
+  'Firewall rule deleted': 'Firewall ルールを削除しました',
+  'Failed to delete firewall rule': 'Firewall ルールの削除に失敗しました',
+  'Firewall rule disabled': 'Firewall ルールを無効にしました',
+  'Firewall rule enabled': 'Firewall ルールを有効にしました',
+  'Enable rule': 'ルールを有効化',
+  'Disable rule': 'ルールを無効化',
+  'Rule ID copied': 'ルール ID をコピーしました',
+  'Rule name copied': 'ルール名をコピーしました',
+  'Link copied': 'リンクをコピーしました',
+  'Copied as JSON': 'JSON としてコピーしました',
+  'Failed to copy': 'コピーに失敗しました',
+  'Traffic overview': 'トラフィック概要',
+  'Request volume and Firewall actions over the selected period.':
+    '選択した期間のリクエスト量と Firewall アクションです。',
+  'Mock traffic behavior matching your Firewall rules. Live metrics will replace this soon.':
+    'Firewall ルールに対応するモックのトラフィック動作です。まもなくライブ指標に置き換わります。',
+  'Estimated impact': '推定インパクト',
+  'Mock estimate of requests this rule would match over the last 24 hours.':
+    'このルールが過去 24 時間に一致したであろうリクエスト数のモック推定です。',
+  'Estimated requests this rule would match over the last 24 hours.':
+    'このルールが過去 24 時間に一致したであろうリクエスト数の推定です。',
+  'Estimated requests this rule would match during the selected period.':
+    '選択した期間にこのルールが一致したと推定されるリクエスト数です。',
+  'No traffic data for this period': 'この期間のトラフィックデータはありません',
+  'Matched requests': '一致リクエスト',
+  'Share of traffic': 'トラフィック比率',
+  'Total traffic': '総トラフィック',
+  'Matched by rule': 'ルールで一致',
+  'Add conditions to narrow which requests this rule matches.':
+    '条件を追加して、このルールが一致するリクエストを絞り込みます。',
+  'Matching estimate updates as you refine conditions.':
+    '条件を調整すると一致の推定が更新されます。',
+  'Deny rate': '拒否率',
+  'Traffic broken down by Firewall action': 'Firewall アクション別のトラフィック',
+  'Top denied IPs': '拒否数上位の IP',
+  'IP addresses with the most denied requests':
+    '拒否されたリクエストが最も多い IP アドレス',
+  'No denied IPs in this period': 'この期間に拒否された IP はありません',
+  'Top denied countries': '拒否数上位の国',
+  'Countries with the most denied requests':
+    '拒否されたリクエストが最も多い国',
+  'No denied countries in this period': 'この期間に拒否された国はありません',
+  'Requests throttled by rate limit rules':
+    'レート制限ルールで制限されたリクエスト',
+  'Requests sent to a redirect location': 'リダイレクト先へ送られたリクエスト',
+  'Bypass share': 'バイパス比率',
+  'Share of traffic allowed past remaining rules':
+    '残りのルールを通過したトラフィックの割合',
+  'Request logs': 'リクエストログ',
+  'Mock Firewall decisions for recent requests. Live logs will replace this soon.':
+    '最近のリクエストに対する Firewall 判定のモックです。まもなくライブログに置き換わります。',
+  'No firewall logs': 'Firewall ログがありません',
+  'Try adjusting or clearing filters': 'フィルタを調整またはクリアしてみてください',
+  'Unknown rule': '不明なルール',
   'Last Triggered': '最終トリガー',
   'IP:': 'IP:',
   'Path:': 'パス:',
@@ -235,6 +378,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Hide volume chart': 'ボリュームチャートを非表示',
   'Show volume chart': 'ボリュームチャートを表示',
   'No data for this date range': 'この日付範囲のデータがありません',
+  'Drag on the chart to select a date range': 'チャート上をドラッグして日付範囲を選択',
   'Filter activities by': 'アクティビティのフィルター',
   // Analytics
   'Linked to Appwrite Sites deployment': 'Appwrite Sites デプロイにリンク済み',
@@ -588,8 +732,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our':
     '専用 Slack チャンネルは営業時間 (EST 9:00-18:00) に監視されています。緊急の問題については、次をご利用ください',
   'priority support portal': '優先サポートポータル',
-  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the":
-    'Appwrite は、LLM が Appwrite の API とドキュメントと対話できる MCP サーバーを提供しています。ワンクリックでインストールするか、次をご覧ください',
+  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite は、LLM が Appwrite の API とドキュメントと対話できる MCP サーバーを提供しています。ワンクリックでインストールするか、次をご覧ください',
+  'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
+    'Appwrite MCP を uvx とプロジェクト API キーでローカル実行します。YOUR_API_KEY を置き換えてから、次をご覧ください',
   'for instructions.': '手順について。',
   'MCP server': 'MCP サーバー',
   Install: 'インストール',
@@ -1826,143 +1971,80 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '.env or xcconfig': '.env または xcconfig',
   '.env or env vars': '.env または環境変数',
   'Build config / env': 'ビルド設定 / 環境変数',
-  "You don't have permission to create API keys.":
-    'API キーを作成する権限がありません。',
-  'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.':
-    'アプリケーションを認証し、Appwrite サービスへアクセスするための API キーを作成します。API キーはプロジェクトリソースへの安全なアクセスを提供します。',
-  'Copy and store it securely. You can view the full key anytime from the API keys list.':
-    'コピーして安全に保存してください。完全なキーは API キー一覧からいつでも表示できます。',
-  "The full key value isn't shown here. Find this key in the API keys list to view and copy it.":
-    '完全なキー値はここには表示されません。表示してコピーするには、API キー一覧でこのキーを見つけてください。',
-  'Select the scopes this API key will have access to.':
-    'この API キーがアクセスできるスコープを選択してください。',
-  'Connect this project, then complete each product area - one clear action at a time.':
-    'このプロジェクトを接続し、各プロダクト領域を 1 つずつ明確なアクションで完了しましょう。',
-  'Register where your app runs and add API credentials so your code can call Appwrite.':
-    'アプリの実行場所を登録し、コードから Appwrite を呼び出せるように API 認証情報を追加します。',
-  "Map your app's hostname or bundle ID so the SDK can reach this project.":
-    'SDK がこのプロジェクトに到達できるように、アプリのホスト名またはバンドル ID を紐付けます。',
-  'Add a scoped secret for servers and CI; client apps use sessions instead.':
-    'サーバーと CI 用にスコープ付きシークレットを追加します。クライアントアプリでは代わりにセッションを使用します。',
-  'Sign users in, organize teams, and control who can access each part of your product.':
-    'ユーザーをサインインさせ、チームを整理し、プロダクトの各部分にアクセスできるユーザーを制御します。',
-  'Register, import, or invite someone so Auth is in use.':
-    'Auth を使い始めるには、ユーザーの登録、インポート、または招待を行ってください。',
-  'Group users and assign roles for access control.':
-    'ユーザーをグループ化し、アクセス制御のためにロールを割り当てます。',
-  'Store and query structured data - add indexes and vector search when you need them.':
-    '構造化データを保存してクエリします。必要に応じてインデックスやベクトル検索を追加できます。',
-  'Spin up a database (tables or documents) for your app data.':
-    'アプリデータ用のデータベース (テーブルまたはドキュメント) を作成します。',
-  'Add collections or tables, attributes, and indexes; then insert rows.':
-    'コレクションまたはテーブル、属性、インデックスを追加してから、行を挿入します。',
-  'Upload files to buckets and serve or download them with secure, scoped access.':
-    'ファイルをバケットにアップロードし、安全なスコープ付きアクセスで配信またはダウンロードします。',
-  'Add a bucket and set who can read or write files.':
-    'バケットを追加し、ファイルを読み書きできるユーザーを設定します。',
-  'Put an object in a bucket; use signed URLs or previews as needed.':
-    'バケットにオブジェクトを配置します。必要に応じて署名付き URL やプレビューを使用できます。',
-  'Run backend code on HTTP requests, schedules, or events from other services.':
-    'HTTP リクエスト、スケジュール、または他のサービスからのイベントでバックエンドコードを実行します。',
-  'Add serverless code and choose a runtime.':
-    'サーバーレスコードを追加し、ランタイムを選択します。',
-  'Deploy your code so executions can run.':
-    '実行を開始できるようにコードをデプロイします。',
-  'Send email, push, and SMS by routing messages through topics and providers.':
-    'トピックとプロバイダーを通じてメッセージをルーティングし、メール、プッシュ、SMS を送信します。',
-  'Add a channel for push, email, or SMS broadcasts.':
-    'プッシュ、メール、または SMS 配信用のチャンネルを追加します。',
-  'Connect SMTP, FCM, APNS, or another provider to send messages.':
-    'メッセージ送信用に SMTP、FCM、APNS、または別のプロバイダーを接続します。',
-  'Connect a Git repo and ship your frontend with builds, deploys, and custom domains.':
-    'Git リポジトリを接続し、ビルド、デプロイ、カスタムドメインでフロントエンドをリリースします。',
-  'Connect a repository and configure your build.':
-    'リポジトリを接続し、ビルドを設定します。',
-  'Ship a build to production and tune environments.':
-    'ビルドを本番環境へリリースし、環境を調整します。',
-  'Great start - every big app begins with step one.':
-    '良いスタートです。大きなアプリも最初の一歩から始まります。',
-  'You\\u2019re on your way - small steps add up fast.':
-    '順調に進んでいます。小さな一歩がすぐに大きな進捗になります。',
-  'Solid beginning. Keep the momentum going.':
-    'しっかりした出だしです。この勢いを保ちましょう。',
-  'This is how shipping starts - one checkbox at a time.':
-    'リリースはこうして始まります。チェックボックスを 1 つずつ進めましょう。',
-  'Love the energy - keep stacking those wins.':
-    'いい勢いです。成功を積み重ねていきましょう。',
-  'Nice progress - the foundation is taking shape.':
-    '順調です。土台が形になってきました。',
-  'Keep at it - you\\u2019re building something real.':
-    'そのまま続けましょう。確かなものを作っています。',
-  'You\\u2019re past the awkward early bit - nice.':
-    '最初の難しい部分を越えました。いい感じです。',
-  'Every checkbox is a vote for shipping - keep it up.':
-    'すべてのチェックがリリースへの一票です。その調子で進めましょう。',
-  'More than halfway - you\\u2019re in the zone.':
-    '半分以上進みました。集中できています。',
-  'Strong progress - the finish line is in sight.':
-    '大きく進みました。ゴールが見えてきました。',
-  'You\\u2019re past the halfway mark. Don\\u2019t stop now.':
-    '半分を越えました。ここで止まらず進めましょう。',
-  'This is where projects start to feel real.':
-    'ここからプロジェクトが本格的に形になってきます。',
-  'Huge progress - a few more wins to go.':
-    '大きな進捗です。あと少し成功を重ねましょう。',
+  "You don't have permission to create API keys.": 'API キーを作成する権限がありません。',
+  'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.': 'アプリケーションを認証し、Appwrite サービスへアクセスするための API キーを作成します。API キーはプロジェクトリソースへの安全なアクセスを提供します。',
+  'Copy and store it securely. You can view the full key anytime from the API keys list.': 'コピーして安全に保存してください。完全なキーは API キー一覧からいつでも表示できます。',
+  "The full key value isn't shown here. Find this key in the API keys list to view and copy it.": '完全なキー値はここには表示されません。表示してコピーするには、API キー一覧でこのキーを見つけてください。',
+  'Select the scopes this API key will have access to.': 'この API キーがアクセスできるスコープを選択してください。',
+  'Connect this project, then complete each product area - one clear action at a time.': 'このプロジェクトを接続し、各プロダクト領域を 1 つずつ明確なアクションで完了しましょう。',
+  "We're focused on building a product Appwriters love. The best way we grow is when the community helps spread the word.":
+    '私たちは Appwriters に愛されるプロダクトづくりに集中しています。成長の最善の道は、コミュニティが口コミで広めてくれることです。',
+  'Register where your app runs and add API credentials so your code can call Appwrite.': 'アプリの実行場所を登録し、コードから Appwrite を呼び出せるように API 認証情報を追加します。',
+  "Map your app's hostname or bundle ID so the SDK can reach this project.": 'SDK がこのプロジェクトに到達できるように、アプリのホスト名またはバンドル ID を紐付けます。',
+  'Add a scoped secret for servers and CI; client apps use sessions instead.': 'サーバーと CI 用にスコープ付きシークレットを追加します。クライアントアプリでは代わりにセッションを使用します。',
+  'Sign users in, organize teams, and control who can access each part of your product.': 'ユーザーをサインインさせ、チームを整理し、プロダクトの各部分にアクセスできるユーザーを制御します。',
+  'Register, import, or invite someone so Auth is in use.': 'Auth を使い始めるには、ユーザーの登録、インポート、または招待を行ってください。',
+  'Group users and assign roles for access control.': 'ユーザーをグループ化し、アクセス制御のためにロールを割り当てます。',
+  'Store and query structured data - add indexes and vector search when you need them.': '構造化データを保存してクエリします。必要に応じてインデックスやベクトル検索を追加できます。',
+  'Spin up a database (tables or documents) for your app data.': 'アプリデータ用のデータベース (テーブルまたはドキュメント) を作成します。',
+  'Add collections or tables, attributes, and indexes; then insert rows.': 'コレクションまたはテーブル、属性、インデックスを追加してから、行を挿入します。',
+  'Upload files to buckets and serve or download them with secure, scoped access.': 'ファイルをバケットにアップロードし、安全なスコープ付きアクセスで配信またはダウンロードします。',
+  'Add a bucket and set who can read or write files.': 'バケットを追加し、ファイルを読み書きできるユーザーを設定します。',
+  'Put an object in a bucket; use signed URLs or previews as needed.': 'バケットにオブジェクトを配置します。必要に応じて署名付き URL やプレビューを使用できます。',
+  'Run backend code on HTTP requests, schedules, or events from other services.': 'HTTP リクエスト、スケジュール、または他のサービスからのイベントでバックエンドコードを実行します。',
+  'Add serverless code and choose a runtime.': 'サーバーレスコードを追加し、ランタイムを選択します。',
+  'Deploy your code so executions can run.': '実行を開始できるようにコードをデプロイします。',
+  'Send email, push, and SMS by routing messages through topics and providers.': 'トピックとプロバイダーを通じてメッセージをルーティングし、メール、プッシュ、SMS を送信します。',
+  'Add a channel for push, email, or SMS broadcasts.': 'プッシュ、メール、または SMS 配信用のチャンネルを追加します。',
+  'Connect SMTP, FCM, APNS, or another provider to send messages.': 'メッセージ送信用に SMTP、FCM、APNS、または別のプロバイダーを接続します。',
+  'Connect a Git repo and ship your frontend with builds, deploys, and custom domains.': 'Git リポジトリを接続し、ビルド、デプロイ、カスタムドメインでフロントエンドをリリースします。',
+  'Connect a repository and configure your build.': 'リポジトリを接続し、ビルドを設定します。',
+  'Ship a build to production and tune environments.': 'ビルドを本番環境へリリースし、環境を調整します。',
+  'Great start - every big app begins with step one.': '良いスタートです。大きなアプリも最初の一歩から始まります。',
+  'You\\u2019re on your way - small steps add up fast.': '順調に進んでいます。小さな一歩がすぐに大きな進捗になります。',
+  'Solid beginning. Keep the momentum going.': 'しっかりした出だしです。この勢いを保ちましょう。',
+  'This is how shipping starts - one checkbox at a time.': 'リリースはこうして始まります。チェックボックスを 1 つずつ進めましょう。',
+  'Love the energy - keep stacking those wins.': 'いい勢いです。成功を積み重ねていきましょう。',
+  'Nice progress - the foundation is taking shape.': '順調です。土台が形になってきました。',
+  'Keep at it - you\\u2019re building something real.': 'そのまま続けましょう。確かなものを作っています。',
+  'You\\u2019re past the awkward early bit - nice.': '最初の難しい部分を越えました。いい感じです。',
+  'Every checkbox is a vote for shipping - keep it up.': 'すべてのチェックがリリースへの一票です。その調子で進めましょう。',
+  'More than halfway - you\\u2019re in the zone.': '半分以上進みました。集中できています。',
+  'Strong progress - the finish line is in sight.': '大きく進みました。ゴールが見えてきました。',
+  'You\\u2019re past the halfway mark. Don\\u2019t stop now.': '半分を越えました。ここで止まらず進めましょう。',
+  'This is where projects start to feel real.': 'ここからプロジェクトが本格的に形になってきます。',
+  'Huge progress - a few more wins to go.': '大きな進捗です。あと少し成功を重ねましょう。',
   'You\\u2019re inches from the finish line.': 'ゴールは目前です。',
-  'The hard part\\u2019s behind you - wrap it up.':
-    '難しい部分は終わりました。仕上げましょう。',
-  'Everything\\u2019s wired. Time to ship something great.':
-    'すべて接続されました。すばらしいものをリリースしましょう。',
-  'Checklist complete. You\\u2019ve got this.':
-    'チェックリストが完了しました。準備は万端です。',
-  'You did it - your stack is ready when you are.':
-    '完了です。準備ができ次第、このスタックを使い始められます。',
-  'All green - now go make something people love.':
-    'すべて完了です。ユーザーに愛されるものを作りましょう。',
-  'Turn your ideas into functional products with the most complete AI builder ever made.':
-    'これまでで最も充実した AI ビルダーで、アイデアを実用的なプロダクトに変えましょう。',
-  'Organize and discover recipes with AI suggestions':
-    'AI の提案でレシピを整理して見つける',
-  'Kanban-style project management with automations':
-    '自動化付きのカンバン形式プロジェクト管理',
-  'Personal finance tracker with spending insights':
-    '支出インサイト付きの個人向け家計トラッカー',
-  'AI-powered note taking with flashcard generation':
-    'フラッシュカード生成付きの AI ノート作成',
-  "You don't have permission to create firewall rules.":
-    'ファイアウォールルールを作成する権限がありません。',
-  'Create your first firewall rule to protect your project from malicious requests.':
-    '悪意のあるリクエストからプロジェクトを保護するために、最初のファイアウォールルールを作成してください。',
-  'Define a new rule to protect your project from malicious requests.':
-    '悪意のあるリクエストからプロジェクトを保護する新しいルールを定義します。',
-  'Optional description of what this rule does':
-    'このルールの内容を説明する任意の説明',
-  'Modify the rule configuration and conditions.':
-    'ルールの設定と条件を変更します。',
-  'Analytics data will appear here once your firewall rules start processing requests.':
-    'ファイアウォールルールがリクエストを処理し始めると、ここに分析データが表示されます。',
-  'Real-time view of requests processed by firewall rules':
-    'ファイアウォールルールで処理されたリクエストのリアルタイム表示',
-  'IP addresses with the most blocked requests':
-    'ブロックされたリクエストが最も多い IP アドレス',
-  'Countries with the most blocked requests':
-    'ブロックされたリクエストが最も多い国',
-  'Firewall logs will appear here once rules start processing requests':
-    'ルールがリクエストを処理し始めると、ここにファイアウォールログが表示されます',
-  'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.':
-    'Google Play、App Store、Microsoft Store 向けにビルドして提出するアプリを作成します。',
-  'Pick a framework and platforms to start shipping builds to the app stores.':
-    'アプリストアへビルドを配信し始めるために、Framework とプラットフォームを選択してください。',
-  'This distribution app does not exist or has been removed.':
-    'この Distribution アプリは存在しないか、削除されています。',
-  'Trigger a build to create an artifact for the stores.':
-    'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
-  'Submit a ready build to a store to track its review status here.':
-    '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
-  'Upgrade or contact sales for longer retention.':
-    'より長い保持期間が必要な場合は、アップグレードするか営業にお問い合わせください。',
-  'Activity will appear here as you use your project':
-    'プロジェクトを使用すると、ここにアクティビティが表示されます',
+  'The hard part\\u2019s behind you - wrap it up.': '難しい部分は終わりました。仕上げましょう。',
+  'Everything\\u2019s wired. Time to ship something great.': 'すべて接続されました。すばらしいものをリリースしましょう。',
+  'Checklist complete. You\\u2019ve got this.': 'チェックリストが完了しました。準備は万端です。',
+  'You did it - your stack is ready when you are.': '完了です。準備ができ次第、このスタックを使い始められます。',
+  'All green - now go make something people love.': 'すべて完了です。ユーザーに愛されるものを作りましょう。',
+  'You\u2019re ready - and the community helps Appwrite grow.':
+    '準備は整いました。コミュニティが Appwrite の成長を支えています。',
+  'Turn your ideas into functional products with the most complete AI builder ever made.': 'これまでで最も充実した AI ビルダーで、アイデアを実用的なプロダクトに変えましょう。',
+  'Organize and discover recipes with AI suggestions': 'AI の提案でレシピを整理して見つける',
+  'Kanban-style project management with automations': '自動化付きのカンバン形式プロジェクト管理',
+  'Personal finance tracker with spending insights': '支出インサイト付きの個人向け家計トラッカー',
+  'AI-powered note taking with flashcard generation': 'フラッシュカード生成付きの AI ノート作成',
+  "You don't have permission to create firewall rules.": 'ファイアウォールルールを作成する権限がありません。',
+  "You don't have permission to update firewall rules.": 'ファイアウォールルールを更新する権限がありません。',
+  'Create your first firewall rule to protect your project from malicious requests.': '悪意のあるリクエストからプロジェクトを保護するために、最初のファイアウォールルールを作成してください。',
+  'Define a new rule to protect your project from malicious requests.': '悪意のあるリクエストからプロジェクトを保護する新しいルールを定義します。',
+  'Optional description of what this rule does': 'このルールの内容を説明する任意の説明',
+  'Modify the rule configuration and conditions.': 'ルールの設定と条件を変更します。',
+  'Analytics data will appear here once your firewall rules start processing requests.': 'ファイアウォールルールがリクエストを処理し始めると、ここに分析データが表示されます。',
+  'Real-time view of requests processed by firewall rules': 'ファイアウォールルールで処理されたリクエストのリアルタイム表示',
+  'IP addresses with the most blocked requests': 'ブロックされたリクエストが最も多い IP アドレス',
+  'Countries with the most blocked requests': 'ブロックされたリクエストが最も多い国',
+  'Firewall logs will appear here once rules start processing requests': 'ルールがリクエストを処理し始めると、ここにファイアウォールログが表示されます',
+  'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.': 'Google Play、App Store、Microsoft Store 向けにビルドして提出するアプリを作成します。',
+  'Pick a framework and platforms to start shipping builds to the app stores.': 'アプリストアへビルドを配信し始めるために、Framework とプラットフォームを選択してください。',
+  'This distribution app does not exist or has been removed.': 'この Distribution アプリは存在しないか、削除されています。',
+  'Trigger a build to create an artifact for the stores.': 'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
+  'Submit a ready build to a store to track its review status here.': '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
+  'Upgrade or contact sales for longer retention.': 'より長い保持期間が必要な場合は、アップグレードするか営業にお問い合わせください。',
+  'Activity will appear here as you use your project': 'プロジェクトを使用すると、ここにアクティビティが表示されます',
   'Human vs AI traffic (last 30 days)': '人間と AI のトラフィック (過去 30 日)',
   'Add your first website to start tracking analytics':
     '分析の追跡を始めるには、最初の Web サイトを追加してください',
@@ -2329,6 +2411,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rules': 'ファイアウォールルール',
+  'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
   Import: 'インポート',
   Memory: 'メモリ',

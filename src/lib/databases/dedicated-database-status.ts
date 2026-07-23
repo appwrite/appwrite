@@ -2,6 +2,25 @@ import type { HeaderAlertVariant } from '@/components/global/shared/HeaderAlertB
 
 export const DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS = 5000
 
+/** Statuses that resolve on their own; keep polling until they leave this set. */
+const DEDICATED_DATABASE_TRANSITIONAL_STATUSES = new Set([
+  'provisioning',
+  'scaling',
+  'restoring',
+  'upgrading',
+  'migrating',
+  'pausing',
+  'resuming',
+  'deleting',
+])
+
+export type DedicatedDatabaseStatusBadgeVariant =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'info'
+  | 'inactive'
+
 export function isDedicatedDatabaseReady(
   status: string | null | undefined,
 ): boolean {
@@ -11,7 +30,34 @@ export function isDedicatedDatabaseReady(
 export function shouldPollDedicatedDatabaseStatus(
   status: string | null | undefined,
 ): boolean {
-  return !!status?.trim() && !isDedicatedDatabaseReady(status)
+  const normalized = status?.trim().toLowerCase()
+  return !!normalized && DEDICATED_DATABASE_TRANSITIONAL_STATUSES.has(normalized)
+}
+
+export function dedicatedDatabaseStatusBadgeVariant(
+  status: string | null | undefined,
+): DedicatedDatabaseStatusBadgeVariant {
+  switch (status?.trim().toLowerCase()) {
+    case 'ready':
+      return 'success'
+    case 'provisioning':
+    case 'scaling':
+    case 'restoring':
+    case 'upgrading':
+    case 'migrating':
+    case 'pausing':
+    case 'resuming':
+    case 'deleting':
+      return 'warning'
+    case 'failed':
+    case 'deleted':
+      return 'error'
+    case 'paused':
+    case 'inactive':
+      return 'inactive'
+    default:
+      return 'info'
+  }
 }
 
 export function dedicatedDatabaseHeaderAlertVariant(

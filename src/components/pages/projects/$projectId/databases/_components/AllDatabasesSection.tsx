@@ -6,15 +6,18 @@ import {
   useProject,
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
+  useDatabaseSpecifications,
+  dedicatedBackupPoliciesQueryOptions,
+  dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
-import {
-  DatabaseType as ApiDatabaseType,
-  type Models,
-} from '@appwrite.io/console'
+import { type Models } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   dedicatedDatabaseHomeLink,
+  isNativeDedicatedDatabase,
   productDatabaseListLink,
 } from '@/lib/database-routes'
+import { useQueries } from '@tanstack/react-query'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
@@ -46,9 +49,21 @@ import {
 import { DatabaseContextMenu } from './DatabaseContextMenu'
 import { DatabaseOperationsChartPreview } from './DatabaseOperationsChartPreview'
 import { NoBackupPoliciesWarningIcon } from './DatabaseBackupsNavLink'
+import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
+import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
+import {
+  buildProductDedicatedCardSource,
+  hasDedicatedDatabaseCompute,
+  productDedicatedEngineHints,
+  readDatabaseSpecification,
+  resolveDatabaseComputeLabel,
+  type DedicatedDatabaseCardSource,
+  type ResolveDatabaseComputeLabelOptions,
+} from '@/lib/databases/database-compute'
+import { mapDedicatedDatabaseSpecifications } from '@/lib/database-specs'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 
@@ -62,6 +77,46 @@ type DatabaseWithBackup = {
   backupPolicy?: unknown
   backupPolicyCount?: number
   databaseType?: ApiDatabaseType
+  /** Raw `Models.Database.type` before product coercion. */
+  apiType?: string | null
+  status?: string | null
+  replicas?: number | null
+  specification?: string | null
+}
+
+function databaseComputeHints(db: DatabaseWithBackup) {
+  return {
+    $id: db.$id,
+    name: db.name,
+    databaseType: db.apiType ?? db.databaseType,
+    status: db.status,
+    replicas: db.replicas,
+    specification: db.specification,
+  }
+}
+
+/**
+ * Product DBs expose policies on `console.listDatabases` (`db.policies`).
+ * Native dedicated DBs store policies on the engine API instead; those are
+ * resolved separately and passed via `nativeHasBackupPolicyById`.
+ * Returns `null` while a native policy lookup is still in flight (no warning flash).
+ */
+function resolveHasBackupPolicy(
+  db: DatabaseWithBackup,
+  dedicated: Models.DedicatedDatabase | undefined,
+  nativeHasBackupPolicyById: Map<string, boolean | null>,
+): boolean | null {
+  if (dedicated && isNativeDedicatedDatabase(dedicated)) {
+    return nativeHasBackupPolicyById.get(dedicated.$id) ?? null
+  }
+  return db.hasBackupPolicy ?? false
+}
+
+function shouldShowNoBackupWarning(
+  hasBackupPolicy: boolean | null,
+  showBackups: boolean,
+): boolean {
+  return showBackups && hasBackupPolicy === false
 }
 
 type AllDatabasesSectionProps = {
@@ -82,7 +137,7 @@ type AllDatabasesSectionProps = {
 function databaseCardLink(
   projectId: string,
   db: { $id: string; databaseType?: ApiDatabaseType },
-  dedicated?: Pick<Models.DedicatedDatabase, '$id' | 'api' | 'engine'> | null,
+  dedicated?: Pick<DedicatedDatabaseCardSource, '$id' | 'api' | 'engine'> | null,
 ) {
   if (dedicated) {
     const dedicatedLink = dedicatedDatabaseHomeLink(projectId, dedicated)
@@ -108,17 +163,21 @@ function AllDatabasesGridCardShell({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
   midContent,
   connectionsLabel,
+  computeLabelOptions,
 }: {
   projectId: string
   db: DatabaseWithBackup
-  dedicated?: Models.DedicatedDatabase
+  dedicated?: DedicatedDatabaseCardSource
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
   midContent: ReactNode
   connectionsLabel?: string
+  computeLabelOptions?: ResolveDatabaseComputeLabelOptions
 }) {
   const t = useT()
   const cardLink = databaseCardLink(projectId, db, dedicated)
@@ -148,9 +207,13 @@ function AllDatabasesGridCardShell({
               <h3 className="truncate text-[14px] font-medium text-foreground">
                 {db.name}
               </h3>
-              {showBackups && !db.hasBackupPolicy ? (
+              {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
                 <NoBackupPoliciesWarningIcon />
               ) : null}
+              <DedicatedDatabaseStatusBadge
+                status={dedicated?.status ?? db.status}
+                onlyWhenNotReady
+              />
               {db.enabled === false ? (
                 <Badge
                   variant="error"
@@ -170,12 +233,17 @@ function AllDatabasesGridCardShell({
           <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
               <DatabaseTypeBadge
-                apiType={db.databaseType}
+                apiType={db.apiType ?? db.databaseType}
                 engine={dedicated?.engine}
                 product={dedicated?.api}
               />
               <span className="truncate text-muted-foreground">
-                {dedicated?.specification || t('Serverless')}
+                {resolveDatabaseComputeLabel(
+                  databaseComputeHints(db),
+                  dedicated,
+                  t,
+                  computeLabelOptions,
+                )}
               </span>
               {connectionsLabel ? (
                 <span className="truncate tabular-nums text-muted-foreground">
@@ -196,12 +264,16 @@ function AllDatabasesServerlessGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
+  computeLabelOptions,
 }: {
   projectId: string
   db: DatabaseWithBackup
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
+  computeLabelOptions?: ResolveDatabaseComputeLabelOptions
 }) {
   return (
     <AllDatabasesGridCardShell
@@ -210,6 +282,8 @@ function AllDatabasesServerlessGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
+      computeLabelOptions={computeLabelOptions}
       midContent={
         <DatabaseOperationsChartPreview
           projectId={projectId}
@@ -228,13 +302,17 @@ function AllDatabasesDedicatedGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
+  computeLabelOptions,
 }: {
   projectId: string
   db: DatabaseWithBackup
-  dedicated: Models.DedicatedDatabase
+  dedicated: DedicatedDatabaseCardSource
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
+  computeLabelOptions?: ResolveDatabaseComputeLabelOptions
 }) {
   const t = useT()
   const replicaCount = dedicated.replicas ?? 0
@@ -244,7 +322,7 @@ function AllDatabasesDedicatedGridCard({
   )
   const { nodeMetrics, connections } = useDedicatedDatabaseCardMetrics(
     projectId,
-    db.$id,
+    dedicated.$id,
     replicaCount,
     showMonitor,
   )
@@ -257,6 +335,8 @@ function AllDatabasesDedicatedGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
+      computeLabelOptions={computeLabelOptions}
       midContent={
         <DatabaseClusterPreview
           replicaCount={replicaCount}
@@ -276,23 +356,34 @@ function AllDatabasesGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
+  computeLabelOptions,
 }: {
   projectId: string
   db: DatabaseWithBackup
-  dedicated?: Models.DedicatedDatabase
+  dedicated?: Models.DedicatedDatabase | DedicatedDatabaseCardSource
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
+  computeLabelOptions?: ResolveDatabaseComputeLabelOptions
 }) {
-  if (dedicated) {
+  const cardDedicated = buildProductDedicatedCardSource(
+    databaseComputeHints(db),
+    dedicated,
+  )
+
+  if (cardDedicated) {
     return (
       <AllDatabasesDedicatedGridCard
         projectId={projectId}
         db={db}
-        dedicated={dedicated}
+        dedicated={cardDedicated}
         showDbSecuritySettings={showDbSecuritySettings}
         showMonitor={showMonitor}
         showBackups={showBackups}
+        hasBackupPolicy={hasBackupPolicy}
+        computeLabelOptions={computeLabelOptions}
       />
     )
   }
@@ -304,6 +395,8 @@ function AllDatabasesGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
+      computeLabelOptions={computeLabelOptions}
     />
   )
 }
@@ -403,13 +496,111 @@ export function AllDatabasesSection({
   const { databases: dedicatedDatabases } =
     useProjectDedicatedDatabases(projectId)
 
-  const dedicatedById = useMemo(() => {
+  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const computeLabelOptions = useMemo<ResolveDatabaseComputeLabelOptions>(
+    () => ({
+      specs: mapDedicatedDatabaseSpecifications(
+        specificationsData?.specifications,
+      ),
+      rawSpecifications: specificationsData?.specifications ?? null,
+    }),
+    [specificationsData?.specifications],
+  )
+
+  const listedDedicatedById = useMemo(() => {
     const map = new Map<string, Models.DedicatedDatabase>()
     for (const db of dedicatedDatabases) {
       map.set(db.$id, db)
     }
     return map
   }, [dedicatedDatabases])
+
+  // Product-owned dedicated compute may share the product DB id but be omitted
+  // from engine list responses, or listed without a specification slug. Probe
+  // engine `get` / id-filtered `list` so the card footer can show the real tier.
+  const missingDedicatedLookups = useMemo(() => {
+    const items: Array<{ databaseId: string; engineHints: string[] }> = []
+    const seen = new Set<string>()
+    for (const db of databases) {
+      if (seen.has(db.$id)) continue
+      const hints = databaseComputeHints(db)
+      const listed = listedDedicatedById.get(db.$id)
+      const hasSpec =
+        Boolean(readDatabaseSpecification(listed?.specification)) ||
+        Boolean(readDatabaseSpecification(hints.specification))
+      if (hasSpec) continue
+      if (!hasDedicatedDatabaseCompute(hints, listed)) continue
+      seen.add(db.$id)
+      items.push({
+        databaseId: db.$id,
+        engineHints: productDedicatedEngineHints(hints.databaseType),
+      })
+    }
+    return items
+  }, [databases, listedDedicatedById])
+
+  const fetchedDedicatedQueries = useQueries({
+    queries: missingDedicatedLookups.map(({ databaseId, engineHints }) => ({
+      ...dedicatedDatabaseByIdQueryOptions(projectId, databaseId, engineHints),
+      enabled: !!projectId && !!databaseId,
+    })),
+  })
+
+  const fetchedDedicatedDataKey = fetchedDedicatedQueries
+    .map((query) => `${query.dataUpdatedAt}:${query.data?.$id ?? ''}`)
+    .join('|')
+
+  const dedicatedById = useMemo(() => {
+    const map = new Map<string, Models.DedicatedDatabase>()
+    for (const [id, db] of listedDedicatedById) {
+      map.set(id, db)
+    }
+    for (const query of fetchedDedicatedQueries) {
+      if (query.data?.$id) map.set(query.data.$id, query.data)
+    }
+    return map
+    // fetchedDedicatedDataKey tracks query result identity without depending on
+    // the unstable useQueries array reference.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+  }, [listedDedicatedById, fetchedDedicatedDataKey])
+
+  const nativeDedicatedOnPage = useMemo(() => {
+    const seen = new Set<string>()
+    const items: Models.DedicatedDatabase[] = []
+    for (const db of databases) {
+      const dedicated = dedicatedById.get(db.$id)
+      if (!dedicated || !isNativeDedicatedDatabase(dedicated)) continue
+      if (seen.has(dedicated.$id)) continue
+      seen.add(dedicated.$id)
+      items.push(dedicated)
+    }
+    return items
+  }, [databases, dedicatedById])
+
+  const showBackups = features.databaseBackups
+  const nativeBackupPolicyQueries = useQueries({
+    queries: nativeDedicatedOnPage.map((dedicated) => ({
+      ...dedicatedBackupPoliciesQueryOptions(
+        projectId,
+        dedicated.$id,
+        dedicated.engine,
+      ),
+      enabled: showBackups && !!projectId && !!dedicated.$id,
+    })),
+  })
+
+  const nativeHasBackupPolicyById = useMemo(() => {
+    const map = new Map<string, boolean | null>()
+    nativeDedicatedOnPage.forEach((dedicated, index) => {
+      const query = nativeBackupPolicyQueries[index]
+      if (!query || query.isLoading || query.isPending) {
+        map.set(dedicated.$id, null)
+        return
+      }
+      map.set(dedicated.$id, (query.data?.policies?.length ?? 0) > 0)
+    })
+    return map
+  }, [nativeBackupPolicyQueries, nativeDedicatedOnPage])
 
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =
@@ -427,7 +618,7 @@ export function AllDatabasesSection({
   }
 
   return (
-    <section className="mb-10">
+    <section>
       {showLoading ? (
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
@@ -497,7 +688,9 @@ export function AllDatabasesSection({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {databases.map((db) => (
+                  {databases.map((db) => {
+                    const dedicated = dedicatedById.get(db.$id)
+                    return (
                     <TableRow
                       key={db.$id}
                       className="cursor-pointer border-b border-border/50 hover:bg-muted/30"
@@ -507,7 +700,7 @@ export function AllDatabasesSection({
                           {...databaseCardLink(
                             projectId,
                             db,
-                            dedicatedById.get(db.$id),
+                            dedicated,
                           )}
                           className="block min-w-0 group"
                         >
@@ -515,8 +708,14 @@ export function AllDatabasesSection({
                             <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                               {db.name}
                             </p>
-                            {features.databaseBackups &&
-                            !db.hasBackupPolicy ? (
+                            {shouldShowNoBackupWarning(
+                              resolveHasBackupPolicy(
+                                db,
+                                dedicated,
+                                nativeHasBackupPolicyById,
+                              ),
+                              showBackups,
+                            ) ? (
                               <NoBackupPoliciesWarningIcon />
                             ) : null}
                           </div>
@@ -527,14 +726,22 @@ export function AllDatabasesSection({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <DatabaseTypeBadge
-                          apiType={db.databaseType}
-                          engine={dedicatedById.get(db.$id)?.engine}
-                          product={dedicatedById.get(db.$id)?.api}
+                          apiType={db.apiType ?? db.databaseType}
+                          engine={dedicated?.engine}
+                          product={dedicated?.api}
                         />
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
-                          {db.enabled === false ? (
+                          {(dedicated?.status || db.status) &&
+                          !isDedicatedDatabaseReady(
+                            dedicated?.status || db.status,
+                          ) ? (
+                            <DedicatedDatabaseStatusBadge
+                              status={dedicated?.status || db.status}
+                              className="text-[11px]"
+                            />
+                          ) : db.enabled === false ? (
                             <Badge
                               variant="error"
                               className="text-[11px] font-medium border px-2 py-0.5"
@@ -568,7 +775,8 @@ export function AllDatabasesSection({
                         />
                       </TableCell>
                     </TableRow>
-                  ))}
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -633,7 +841,13 @@ export function AllDatabasesSection({
                 dedicated={dedicatedById.get(db.$id)}
                 showDbSecuritySettings={showDbSecuritySettings}
                 showMonitor={features.usageStats}
-                showBackups={features.databaseBackups}
+                showBackups={showBackups}
+                hasBackupPolicy={resolveHasBackupPolicy(
+                  db,
+                  dedicatedById.get(db.$id),
+                  nativeHasBackupPolicyById,
+                )}
+                computeLabelOptions={computeLabelOptions}
               />
             ))}
             {databases.length === 0 ? (

@@ -59,7 +59,6 @@ import {
 interface InitTicketSectionProps {
   event: InitDisplayEvent
   account?: Models.User | null
-  accountReady?: boolean
 }
 
 function buildFallbackShareUrl(): string {
@@ -238,7 +237,6 @@ function ShareActions({
 export function InitTicketSection({
   event,
   account,
-  accountReady = true,
 }: InitTicketSectionProps) {
   const isAuthenticated = Boolean(account)
   const themeUsesDarkImage = useInitThemeUsesDarkImage()
@@ -465,9 +463,7 @@ export function InitTicketSection({
           widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
           pointerEventsNone
         >
-          {accountReady ? (
-            <InitTicketCard {...ticketCardProps} previewOnly />
-          ) : null}
+          <InitTicketCard {...ticketCardProps} previewOnly />
         </InitTicketScaledFrame>
         <div className="min-w-0 flex-1 space-y-2 text-start">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
@@ -495,13 +491,11 @@ export function InitTicketSection({
             className="w-full"
             overflowVisible
           >
-            {accountReady ? (
-              <InitTicketCard
-                ref={ticketCardRef}
-                captureMode={isCapturingVideo}
-                {...ticketCardProps}
-              />
-            ) : null}
+            <InitTicketCard
+              ref={ticketCardRef}
+              captureMode={isCapturingVideo}
+              {...ticketCardProps}
+            />
           </InitTicketScaledFrame>
         </InitTicketVideoCaptureStage>
 

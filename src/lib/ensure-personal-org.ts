@@ -24,6 +24,7 @@ import {
   fetchConsoleAccount,
   updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
+import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
@@ -34,14 +35,14 @@ export async function resolvePostAuthOrganizationId(
 ): Promise<string> {
   const resolved = account ?? (await fetchConsoleAccount())
   const prefs = (resolved.prefs || {}) as Record<string, unknown>
-  const fromPrefs = prefs.organization as string | undefined
+  const fromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION] as string | undefined
 
   if (fromPrefs) {
     const response = await fetchOrganizations()
     const exists = response.teams?.some((org) => org.$id === fromPrefs)
     if (exists) return fromPrefs
 
-    const { organization: _removed, ...restPrefs } = prefs
+    const { [USER_PREFS_KEY_ORGANIZATION]: _removed, ...restPrefs } = prefs
     const updatedAccount = await updateAccountPrefs(restPrefs)
     if (updatedAccount && typeof updatedAccount === 'object' && '$id' in updatedAccount) {
       setConsoleAccountCache(
@@ -67,7 +68,7 @@ export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
 
     await updateAccountPrefs({
       ...prefs,
-      organization: orgId,
+      [USER_PREFS_KEY_ORGANIZATION]: orgId,
     })
 
     await createConsoleProject({
@@ -78,12 +79,13 @@ export async function ensurePersonalOrgAndFirstProject(): Promise<string> {
     return orgId
   }
 
-  const orgId = (prefs.organization as string) || orgs[0].$id
+  const orgId =
+    (prefs[USER_PREFS_KEY_ORGANIZATION] as string) || orgs[0].$id
 
-  if (!prefs.organization) {
+  if (!prefs[USER_PREFS_KEY_ORGANIZATION]) {
     await updateAccountPrefs({
       ...prefs,
-      organization: orgId,
+      [USER_PREFS_KEY_ORGANIZATION]: orgId,
     })
   }
 

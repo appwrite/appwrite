@@ -38,7 +38,7 @@ export function OrganizationFailedInvoiceHeaderBanner({
     >
       {orgBillingReadonly
         ? t(
-            'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.',
+            'Payment failed - your organization has restricted access due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.',
           )
         : t(
             'Payment failed - act now. Unresolved billing may interrupt your projects and services.',

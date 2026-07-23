@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { Info, Minus, Plus, X } from 'lucide-react'
@@ -15,16 +15,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import {
+  calculateDedicatedDatabaseMonthlyCost,
   DEDICATED_DB_HA_REPLICA_OPTIONS,
+  getDedicatedDatabaseCreatePricing,
   MAX_DEDICATED_DB_HA_REPLICA_COUNT,
 } from '@/lib/database-create-pricing'
 import {
@@ -34,12 +31,18 @@ import {
 import { isPostgresClientBackend } from '@/lib/postgres-metrics'
 import {
   useDatabaseSpecifications,
+  useDedicatedDatabaseCardMetrics,
   useDedicatedDatabaseStorageChart,
+  useOrganizationPlan,
   usePostgresActiveConnections,
-  usePostgresDatabaseReplicas,
+  useDedicatedDatabaseReplicas,
+  useProject,
+  useUpdateDedicatedDatabaseHa,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import type { DedicatedReplicationSource } from '@/lib/databases/dedicated-replication'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -87,27 +90,78 @@ function useWriteAccess(canWrite: boolean, isPending: boolean) {
   return { writeDisabled, writeTooltip }
 }
 
+function useReplicationSource(
+  props: PostgresDatabaseSettingsCardProps,
+): DedicatedReplicationSource {
+  return (
+    props.replicationSource ?? {
+      type: 'engine',
+      engine: props.haEngine || props.database.engine || 'postgresql',
+    }
+  )
+}
+
+function useHaEngine(props: PostgresDatabaseSettingsCardProps): string {
+  return (
+    props.haEngine ||
+    props.database.engine ||
+    (props.replicationSource?.type === 'engine'
+      ? props.replicationSource.engine
+      : 'postgresql')
+  )
+}
+
 export function PostgresDatabaseReplicasCard({
   projectId,
   databaseId,
   database,
   canWrite,
+  replicationSource,
+  haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
-  const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const { features } = useConsoleProfile()
+  const source = useReplicationSource({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const engine = useHaEngine({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const updateMutation = useUpdateDedicatedDatabaseHa(
+    projectId,
+    databaseId,
+    engine,
+  )
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
-  const { connections, isLoading: connectionsLoading } =
-    usePostgresActiveConnections(projectId, databaseId)
+  const isPostgresEngine =
+    engine === 'postgresql' || engine === 'postgres' || !engine
+  const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
+    usePostgresActiveConnections(
+      projectId,
+      isPostgresEngine ? databaseId : null,
+    )
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const committedReplicaCount = database.replicas ?? 0
   const fetchReplicas =
     committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
-  const { members } = usePostgresDatabaseReplicas(
-    projectId,
-    databaseId,
-    fetchReplicas,
-    fetchReplicas ? 5000 : false,
-  )
+  const { members, refetch: refetchReplicas } =
+    useDedicatedDatabaseReplicas(
+      projectId,
+      databaseId,
+      source,
+      fetchReplicas,
+      fetchReplicas ? 5000 : false,
+    )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -152,6 +206,29 @@ export function PostgresDatabaseReplicasCard({
     committedReplicaCount,
     memberReplicaCount,
   )
+
+  const [topologyRefreshing, setTopologyRefreshing] = useState(false)
+
+  const {
+    nodeMetrics,
+    refetch: refetchMetrics,
+  } = useDedicatedDatabaseCardMetrics(
+    projectId,
+    databaseId,
+    presentReplicaCount,
+    features.usageStats,
+  )
+
+  const handleTopologyRefresh = useCallback(() => {
+    setTopologyRefreshing(true)
+    void Promise.all([
+      refetchReplicas(),
+      refetchConnections(),
+      refetchMetrics(),
+    ]).finally(() => {
+      setTopologyRefreshing(false)
+    })
+  }, [refetchConnections, refetchMetrics, refetchReplicas])
 
   const memberStatuses = useMemo(
     () =>
@@ -313,9 +390,12 @@ export function PostgresDatabaseReplicasCard({
             <DatabaseClusterPreview
               replicaCount={clusterPreview.displayReplicaCount}
               nodeStatuses={clusterPreview.nodeStatuses}
+              nodeMetrics={nodeMetrics}
               proxy={clusterProxy}
               withSectionDivider={false}
               interactive
+              onRefresh={handleTopologyRefresh}
+              isRefreshing={topologyRefreshing}
             />
           </div>
         </div>
@@ -340,9 +420,23 @@ export function PostgresDatabaseSyncModeCard({
   databaseId,
   database,
   canWrite,
+  replicationSource,
+  haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
-  const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const engine = useHaEngine({
+    projectId,
+    databaseId,
+    database,
+    canWrite,
+    replicationSource,
+    haEngine,
+  })
+  const updateMutation = useUpdateDedicatedDatabaseHa(
+    projectId,
+    databaseId,
+    engine,
+  )
   const [syncMode, setSyncMode] = useState(database.syncMode || 'async')
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
@@ -567,6 +661,10 @@ export function PostgresDatabasePitrCard({
   canWrite,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId)
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const [pitrEnabled, setPitrEnabled] = useState(database.pitr === true)
   const [pitrRetentionDays, setPitrRetentionDays] = useState(
@@ -576,6 +674,35 @@ export function PostgresDatabasePitrCard({
     canWrite,
     updateMutation.isPending,
   )
+
+  const pricing = useMemo(
+    () =>
+      getDedicatedDatabaseCreatePricing(
+        organizationPlan,
+        specificationsData?.pricing ?? null,
+      ),
+    [organizationPlan, specificationsData?.pricing],
+  )
+
+  const basePriceUsd = useMemo(() => {
+    const specs = mapDedicatedDatabaseSpecifications(
+      specificationsData?.specifications,
+    )
+    return (
+      specs.find((spec) => spec.id === database.specification)?.priceUsd ?? 0
+    )
+  }, [database.specification, specificationsData?.specifications])
+
+  const pitrCost = calculateDedicatedDatabaseMonthlyCost({
+    basePriceUsd,
+    replicaCount: 0,
+    pitrEnabled: true,
+    pricing,
+  }).pitrUsd
+  const pitrRatePercent = Math.round(pricing.pitrRate * 100)
+
+  const showPitrChargeAlert =
+    features.billing && database.pitr !== true && pricing.pitrRate > 0
 
   useEffect(() => {
     setPitrEnabled(database.pitr === true)
@@ -651,6 +778,21 @@ export function PostgresDatabasePitrCard({
               className="h-9 max-w-xs text-[13px]"
             />
           </div>
+        ) : null}
+
+        {showPitrChargeAlert ? (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-[12px]">
+              <p>
+                {t('Enabling PITR will incur an additional charge of')}{' '}
+                <span className="font-medium text-foreground">
+                  {formatCurrency(pitrCost, 'USD')} {t('per month')}
+                </span>{' '}
+                ({pitrRatePercent}% {t('of your database price')}).
+              </p>
+            </AlertDescription>
+          </Alert>
         ) : null}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

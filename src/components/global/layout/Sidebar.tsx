@@ -262,7 +262,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.firewall,
           icon: Shield,
           path: `/projects/${projectId}/firewall`,
-          comingSoon: true,
         },
         {
           id: 'advisor',
@@ -331,6 +330,8 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
+          if (item.id === 'firewall')
+            return features.firewall && canSeeProjectNavItem(access, features, item.id)
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))

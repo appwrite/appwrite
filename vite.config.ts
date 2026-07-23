@@ -234,7 +234,19 @@ export default defineConfig(async () => {
       ],
     },
     ssr: {
+      // Keep native/heavy packages external; bundle recharts + its Redux chain so
+      // Appwrite Sites ModClean cannot strip @reduxjs/toolkit's .mjs files from
+      // node_modules (runtime then fails with Cannot find module …modern.mjs).
       external: ['sharp', 'prismjs'],
+      noExternal: [
+        'recharts',
+        '@reduxjs/toolkit',
+        'react-redux',
+        'immer',
+        'reselect',
+        'redux',
+        'redux-thunk',
+      ],
     },
     preview: {
       port: 4173,

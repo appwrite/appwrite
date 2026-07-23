@@ -77,7 +77,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import type { Models } from '@appwrite.io/console'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
@@ -88,7 +88,7 @@ import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-w
 
 function routeKindForDatabase(
   database:
-    | { databaseType?: ApiDatabaseType; type?: ApiDatabaseType }
+    | { databaseType?: ApiDatabaseType | string; type?: ApiDatabaseType | string }
     | null
     | undefined,
 ): DatabaseRouteKind {
@@ -1769,6 +1769,7 @@ export function Workspace({
           databaseId={databaseId}
           tableId={tableId}
           dbKind={DB_KIND}
+          filterQueries={rowsFilterQueries}
           open={exportCsvOpen}
           onOpenChange={setExportCsvOpen}
         />

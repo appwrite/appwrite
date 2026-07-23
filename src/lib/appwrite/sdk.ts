@@ -45,6 +45,7 @@ import {
   Usage,
   Webhooks,
   Notifications,
+  Waf,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
@@ -71,13 +72,18 @@ import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
- * (e.g. cloud.appwrite.io or stage.cloud.appwrite.io). For those hosts we
+ * (e.g. cloud.appwrite.io or cloud.staging.appwrite.io). For those hosts we
  * build regional URLs by prefixing the region subdomain; for single-node or
  * custom hosts we do not add a region subdomain.
  */
 function isMultiRegionSupported(url: URL): boolean {
   const host = url.hostname.toLowerCase()
-  return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+  return (
+    host === 'cloud.appwrite.io' ||
+    host.endsWith('.cloud.appwrite.io') ||
+    host === 'cloud.staging.appwrite.io' ||
+    host.endsWith('.cloud.staging.appwrite.io')
+  )
 }
 
 /**
@@ -86,7 +92,7 @@ function isMultiRegionSupported(url: URL): boolean {
  * - No region: returns base endpoint (override, runtime env, or profile-aware fallback).
  * - With region: when the base is a multi-region cloud host, returns
  *   region-specific endpoint by prefixing the region subdomain to the base
- *   host (e.g. base https://stage.cloud.appwrite.io/v1 → https://fra.stage.cloud.appwrite.io/v1).
+ *   host (e.g. base https://cloud.staging.appwrite.io/v1 → https://fra.cloud.staging.appwrite.io/v1).
  *   Follows the same pattern as the reference Console (getApiEndpoint + getSubdomain).
  */
 export function getApiEndpoint(region?: string): string {
@@ -488,6 +494,7 @@ const sdkForProjectRaw = {
   tablesDB: new TablesDB(clientProject),
   documentsDB: new DocumentsDB(clientProject),
   vectorsDB: new VectorsDB(clientProject),
+  waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),
   webhooks: new Webhooks(clientProject),

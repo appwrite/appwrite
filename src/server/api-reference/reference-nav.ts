@@ -1,18 +1,30 @@
-import { parseOpenApiSpec } from '@/lib/api-explorer/parse-spec'
+import {
+  mergeConsoleOnlyDatabaseServices,
+  parseOpenApiSpec,
+} from '@/lib/api-explorer/parse-spec'
 import {
   isReferenceService,
   type ReferenceService,
   type ReferenceVersion,
 } from '@/lib/docs/references/constants'
-import { loadReferenceOpenApiSpec } from './load-spec'
+import {
+  loadReferenceConsoleSpec,
+  loadReferenceOpenApiSpec,
+} from './load-spec'
 
 export async function loadReferenceNavServiceCounts(
   version: ReferenceVersion,
   mode: 'client' | 'server',
 ): Promise<Map<ReferenceService, number>> {
   const platform = mode === 'client' ? 'client-web' : 'server-nodejs'
-  const spec = await loadReferenceOpenApiSpec(version, platform)
-  const parsed = parseOpenApiSpec(spec, mode)
+  const [spec, consoleSpec] = await Promise.all([
+    loadReferenceOpenApiSpec(version, platform),
+    loadReferenceConsoleSpec(version),
+  ])
+  const parsed = mergeConsoleOnlyDatabaseServices(
+    parseOpenApiSpec(spec, mode),
+    parseOpenApiSpec(consoleSpec, 'console'),
+  )
   const counts = new Map<ReferenceService, number>()
 
   for (const service of parsed.services) {

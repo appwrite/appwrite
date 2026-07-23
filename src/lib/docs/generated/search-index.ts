@@ -614,7 +614,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Dokploy is an open-source, self-hosted deployment platform that simplifies application management through an intuitive dashboard and one-click template deployments. Appwrite is available as a template in Dokploy's template catalog, letting you deploy the complete Appwrite stack, including the database, workers, and function executor, in a few clicks. This guide walks you through setting up Appwrite on your Dokploy instance and provides necessary configuration and troubleshooting tips. Prerequisites Before starting, ensure your server meets the minimum requirements for hosting Appwrite with…",
     "breadcrumbs": [
       "Self-hosting",
-      "platforms",
+      "Platform deployment",
       "Dokploy"
     ]
   },
@@ -1061,8 +1061,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.",
     "excerpt": "An Appwrite **Project** is the top-level container for all the resources your app uses, from users and databases to storage buckets and functions. The settings on a project control which authentication methods are available, which client platforms can connect, which protocols and services are exposed, and which policies apply to the resources inside it. Built for platform teams The Console configures one project at a time by hand. The Project API does the same configuration programmatically, which is what teams…",
     "breadcrumbs": [
-      "Partners",
-      "Project"
+      "Project",
+      "Getting started",
+      "Overview"
     ]
   },
   {
@@ -1071,8 +1072,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
     "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "API keys"
     ]
   },
@@ -1082,8 +1083,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Enable or disable authentication methods on your Appwrite project programmatically using server SDKs.",
     "excerpt": "Each Appwrite project ships with a configurable set of authentication methods, including email and password, magic URL, email OTP, phone, anonymous sessions, JWT, and team invites. Methods can be toggled on or off from the Appwrite Console under **Auth** > **Settings**, or programmatically through any server SDK using the Project service. When a method is disabled, the matching account endpoints reject requests for that project until it is re-enabled. Toggle from the Console To toggle auth methods manually: 1. Open…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Auth methods"
     ]
   },
@@ -1093,9 +1094,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Route a customer's project emails through their own SMTP server and rebrand the email templates per locale with the Project API.",
     "excerpt": "When a user on your customer's app resets their password, the email that lands in their inbox is part of your customer's brand, or it should be. Out of the box, those messages go through Appwrite's shared sender and carry Appwrite's default templates, which quietly breaks the white-label illusion the moment a user reads the \"from\" line. The Project API lets you route a project's mail through the customer's own SMTP server and rewrite every template, so verification, recovery, and…",
     "breadcrumbs": [
-      "Partners",
       "Project",
-      "White-label transactional emails"
+      "Guides",
+      "Branded emails"
     ]
   },
   {
@@ -1104,8 +1105,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.",
     "excerpt": "Appwrite sends transactional emails on your behalf for account management flows such as email verification, password recovery, and magic URL sign-in. Email templates let you customize the subject, message body, sender identity, and reply-to address of each of these emails, with a separate version for every locale you support. You can view the built-in default templates at any time, but saving a customization requires a custom SMTP server enabled on your project. See Custom SMTP server to set one up.…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Email templates"
     ]
   },
@@ -1115,8 +1116,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
     "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Environment variables"
     ]
   },
@@ -1126,9 +1127,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Manage the full life of an API key with the Project API, from issuing a scoped credential to auditing, rotating, and revoking it.",
     "excerpt": "Every connection your platform makes into a customer's project rides on an API key, and a key is a credential like any other in production. Left alone, a long-lived key with broad scopes is exactly the thing a security review flags: too much access, no expiry, no record of when it was last rotated. The Project API lets you run a key's whole life from your backend so it never becomes that liability: - Issue it scoped to one integration,…",
     "breadcrumbs": [
-      "Partners",
       "Project",
-      "Issue and rotate API keys"
+      "Guides",
+      "Key rotation"
     ]
   },
   {
@@ -1137,8 +1138,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.",
     "excerpt": "Labels are short alphanumeric tags you assign to a project. Use them to categorize your projects and filter them within an organization, for example by environment (, ), team, or region. Manage in the Console To manage labels from the Appwrite Console: 1. Navigate to your project. 2. Open the **Settings** section. The **Labels** card is on the **Overview** tab. 3. In the **Labels** field, type a label and press Enter, or select one of the suggested labels. Labels may…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Labels"
     ]
   },
@@ -1148,8 +1149,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register fictional phone numbers and OTPs to test phone authentication flows without sending real SMS messages.",
     "excerpt": "Mock phones let you register fictional phone numbers and a fixed verification code at the project level. When a tester signs in with a registered number, the registered code works in place of a real SMS, so phone authentication flows can be exercised in CI, demo accounts, and app store review submissions without sending SMS or paying provider fees. Each project stores its mock phones on the project document. Numbers must be in E.164 format, and verification codes are exactly…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Mock phones"
     ]
   },
@@ -1159,8 +1160,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure OAuth2 sign-in providers for your project from the Console or programmatically with a Server SDK.",
     "excerpt": "OAuth2 providers let your users sign in with accounts they already have, such as GitHub, Google, or Apple. Each provider stores a client ID and client secret at the project level, and can be enabled or disabled independently. You can configure providers from the Appwrite Console or programmatically with a Server SDK. Each provider has its own update method (, , and so on), the read methods and cover all of them. Configure from the Console To configure a provider…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "OAuth providers"
     ]
   },
@@ -1170,8 +1171,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Register Web, Apple, Android, Windows, and Linux apps to your Appwrite project programmatically using server SDKs.",
     "excerpt": "Each Appwrite project has a list of registered platforms. A platform identifies a client application that is allowed to talk to your project's API: a Web platform pins an allowed hostname for CORS, while Apple, Android, Windows, and Linux platforms pin a bundle, package, or application ID for native clients. Platforms can be added from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To add a platform manually: 1. Open your…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Platforms"
     ]
   },
@@ -1181,8 +1182,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure password rules, session limits, user limits, and membership privacy on your Appwrite project programmatically using server SDKs.",
     "excerpt": "Project policies control how users authenticate, how long their sessions live, how many users can sign up, and what team members can see about each other. Each policy is an independent toggle on the project. Policies can be configured from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To configure policies manually: 1. Open your project in the Appwrite Console. 2. Navigate to **Auth** in the sidebar. 3. Open the **Security**…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Policies"
     ]
   },
@@ -1192,8 +1193,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Enable or disable the REST, GraphQL, and WebSocket protocols on your Appwrite project programmatically using server SDKs.",
     "excerpt": "Each Appwrite project exposes its API through three protocols: REST, GraphQL, and WebSocket. You can disable any protocol your clients don't use to shrink the project's surface area, then re-enable it when needed. Protocols can be toggled from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To toggle a protocol manually: 1. Open your project in the Appwrite Console. 2. Open **Settings** from the bottom of the side nav. 3. Scroll…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Protocols"
     ]
   },
@@ -1203,9 +1204,9 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Apply a standard configuration to a customer's project programmatically with the Project API, including platforms, auth methods, services, protocols, and variables.",
     "excerpt": "A customer signs up to your platform and a project is created for them. Right now it is wide open: every authentication method is enabled, every service is exposed on the API, and nothing is constrained to the way you run things. Before that customer ever logs in, you want their project to match the baseline that every project on your platform shares. The Project API lets you encode that baseline once and apply it from your backend or a…",
     "breadcrumbs": [
-      "Partners",
       "Project",
-      "Provision a project's baseline"
+      "Guides",
+      "Provisioning"
     ]
   },
   {
@@ -1214,8 +1215,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Enable or disable individual Appwrite services on your project programmatically using server SDKs.",
     "excerpt": "Each Appwrite project ships with the full set of services enabled by default: Account, TablesDB, Storage, Functions, and so on. You can disable any service your clients don't use to remove it from the client-facing API. Disabled services remain accessible to server SDKs using an API key. Services can be toggled from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To toggle a service manually: 1. Open your project in the…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "Services"
     ]
   },
@@ -1225,8 +1226,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "description": "Configure a custom SMTP server to send Appwrite's account management emails from your own domain, improve deliverability, and unlock custom email templates.",
     "excerpt": "By default, Appwrite sends account management emails such as verification, password recovery, and magic URL links from a shared SMTP server. Configuring a custom SMTP server lets you send these emails through your own provider instead. This sends mail from your own domain, improves deliverability, and unlocks custom email templates. Configure in the Console To configure a custom SMTP server from the Appwrite Console: 1. Navigate to your project. 2. Open the **Settings** section and select the **SMTP** tab. 3.…",
     "breadcrumbs": [
-      "Partners",
       "Project",
+      "Concepts",
       "SMTP"
     ]
   },
@@ -1725,6 +1726,250 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/oauth-server",
+    "title": "OAuth2 server",
+    "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
+    "excerpt": "Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (OIDC provider). When you enable the OAuth2 server, third-party apps register as clients, send your users to a consent screen you host, and receive tokens your project issues. Your project becomes an identity provider that any standards-compliant OAuth or OIDC library can integrate with: the same way apps offer \"Sign in with Google\" or \"Sign in with GitHub\", integrators can offer **Sign in with your product**. How…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/authorization",
+    "title": "Authorization",
+    "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
+    "excerpt": "Authorization is the step where a user allows a client to act on their behalf. Appwrite's OAuth2 server uses the authorization code flow. Public clients protect the flow with PKCE. Confidential clients authenticate with a client secret and can also use PKCE when your project requires it. The authorization code flow 1. The client sends the user to the **authorization endpoint** with its client ID, a registered redirect URI, , and the scopes it wants. 2. Appwrite checks whether the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Authorization"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/clients",
+    "title": "Clients",
+    "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
+    "excerpt": "A **client** is a third-party app that authenticates users through your project's OAuth2 server. Each client registers the redirect URIs it is allowed to return to and the post-logout redirect URIs it can end sessions at, sets its type, and chooses whether the device flow is enabled. Its other attributes serve two surfaces: branding like the name, logo, and tagline can appear on your consent screen, while attributes like tags, images, and the privacy policy URL are for your project's…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Clients"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-1",
+    "title": "Protect your API with custom scopes",
+    "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
+    "excerpt": "The Sign in with your product guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need custom scopes: permissions you define, users approve, and your API enforces. This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard. What you will build…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Protect your API with custom scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-2",
+    "title": "Define the scopes",
+    "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
+    "excerpt": "Scopes have to be defined on the OAuth2 server before a client can request them. Requesting a scope you have not defined fails the authorization request with . Add the scopes In the Console, open **Auth**, select the **OAuth2 server** tab, and find the **Scopes** field on the **Integration** card. Add two scopes and click **Update**: - grants read access to the user's tasks. - grants permission to create and update tasks. The , , , and scopes stay locked…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Define the scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-3",
+    "title": "Request the scopes",
+    "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
+    "excerpt": "A client receives a scope by asking for it during authorization. Vantage requests both task scopes, and TaskFlow's consent screen lets the user decide which of them to grant. Add the scopes to the request In the consumer, extend the scope list in : already passes as the parameter, so nothing else changes on the consumer. The OAuth2 server carries the requested scopes into the grant and shows them to the user. Label the scopes on the consent screen TaskFlow's…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Request the scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-4",
+    "title": "Validate access tokens",
+    "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
+    "excerpt": "TaskFlow's API is about to accept access tokens from the outside world, so it first needs a way to tell a token it issued from one somebody made up. Access tokens from your OAuth2 server are RS256-signed JWTs, and the matching public keys are published at your project's JWKS endpoint. That means TaskFlow can verify tokens locally, with no call back to the OAuth2 server on each request. Install jose jose handles the JWT verification and the JWKS fetching. Install…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Validate access tokens"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-5",
+    "title": "Protect the API route",
+    "description": "Serve tasks only to tokens that carry tasks.read.",
+    "excerpt": "With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule. The task data Create with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side: The guarded route Create . TanStack Start serves the and handlers at : Each handler applies the same two checks, in order: 1. **Authentication**: is the token real?…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Protect the API route"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-6",
+    "title": "Call the API from Vantage",
+    "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
+    "excerpt": "Vantage already holds the access token in its session after the token exchange. Reading tasks is one authenticated fetch away, and a small composer will exercise the write path. Point Vantage at the API Add TaskFlow's API base to : The API client Create . Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest: does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Call the API from Vantage"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-7",
+    "title": "Run the flow",
+    "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
+    "excerpt": "Everything is wired up. Run the flow twice: once granting only read access, and once granting the write too. The same button on the dashboard behaves differently each time, and the only thing that changed is what the user agreed to. Start both apps In two terminals: Grant read, withhold write Open and click **Sign in with TaskFlow**. On the consent screen, switch **Create and update your tasks** off and authorize. The OAuth2 server narrows the grant to what was…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Run the flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/device-flow",
+    "title": "Device flow",
+    "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
+    "excerpt": "The device authorization grant (RFC 8628) lets a client request access even when it cannot open a browser or accept a callback. A TV app, command-line tool, or hardware device shows the user a code, and the user completes authorization on a phone or computer. This flow involves two applications: - The **device client** is the third-party application requesting access. It communicates with Appwrite over HTTP. - The **verification page** belongs to your project. You build this page with an…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Device flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/quick-start",
+    "title": "OAuth2 server quick start",
+    "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
+    "excerpt": "This guide turns your project into an OAuth2 provider and runs one sign-in through it. By the end you will have an enabled server, a registered client, and an access token issued by your project. The examples follow two apps, the same pair the tutorials build out in full: - **TaskFlow** (): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens. - **Vantage** (): the third-party **consumer**, called…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "OAuth2 server quick start"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/scopes",
+    "title": "Scopes",
+    "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
+    "excerpt": "Scopes are the permissions a client asks for during authorization. The user sees the requested scopes on the consent screen and approves or declines them. The access token the server issues carries the scopes that were granted. Built-in scopes Four OpenID Connect scopes are always available and cannot be removed: | Scope | Grants access to | | --- | --- | | | The user's subject identifier. Required for OpenID Connect and to receive an ID token. | |…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-1",
+    "title": "Sign in with your product",
+    "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
+    "excerpt": "Once your project's OAuth2 server is enabled, other apps can offer \"Sign in with your product\". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Sign in with your product"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-2",
+    "title": "Enable the OAuth2 server",
+    "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
+    "excerpt": "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , and are always included, which…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Enable the OAuth2 server"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-3",
+    "title": "Create the apps",
+    "description": "Scaffold the two TanStack Start apps and wire up their environment.",
+    "excerpt": "Both sides are TanStack Start apps. Scaffold them in a single folder. Scaffold the projects Create the consumer (Vantage) and the provider (TaskFlow): This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up. Give each a fixed port so the redirect URIs stay stable. In each app's , set the dev script: Configure the environment The apps read the OAuth values from environment variables. Add a to each. Vantage needs the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Create the apps"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-4",
+    "title": "Add Sign in with your product",
+    "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
+    "excerpt": "Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Import at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side. The start route Clicking the button navigates to . Its…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Add Sign in with your product"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-5",
+    "title": "Build the consent screen",
+    "description": "Host the consent screen where your users sign in and approve access.",
+    "excerpt": "The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session. Types for the consent card Create . It holds only client-safe values, so the browser can import it: The server helpers Create . Every function here calls the OAuth2 server on behalf…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Build the consent screen"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-6",
+    "title": "Exchange the code for tokens",
+    "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
+    "excerpt": "The OAuth2 server redirects back to Vantage's redirect URI with a and the . Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in. Add the token functions Extend with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server. Handle the callback Create . Its loader runs on the server: it checks the against the session, exchanges…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Exchange the code for tokens"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-7",
+    "title": "Run the flow",
+    "description": "Start both apps and sign in with your product end to end.",
+    "excerpt": "Everything is in place. Run both apps and sign in. Start both apps In two terminals: Vantage is at and TaskFlow's consent screen at . Sign in Open and click **Sign in with TaskFlow**. You will: 1. Land on TaskFlow's consent screen and sign in with a TaskFlow user. 2. See exactly what Vantage is requesting, and approve it. 3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard. That round trip is a complete…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Run the flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/tokens",
+    "title": "Tokens",
+    "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
+    "excerpt": "When a client redeems an authorization code, the OAuth2 server issues an access token and refresh token. It also issues an ID token when the scope was granted. This page covers what each token does and how clients and resource servers validate, refresh, introspect, revoke, and end sessions. The three tokens - **Access token.** A signed JWT that a client presents to a resource server when it calls an API on the user's behalf. It contains the authorization information the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Tokens"
+    ]
+  },
+  {
     "slug": "products/auth/oauth2",
     "title": "OAuth 2 login",
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
@@ -1786,6 +2031,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "The Appwrite React library is a thin layer over the Web SDK that exposes a provider and a small set of hooks for authentication operations and current user state. It works in both client-rendered React apps and server-rendered apps on Next.js and TanStack Start. Why use it - **SSR auth without boilerplate.** Drop in one handler route per framework and skip the days normally spent writing cookie logic, session sync, and server/client hydration. - **Consistent user state across server and…",
     "breadcrumbs": [
       "Auth",
+      "Guides",
       "React library"
     ]
   },
@@ -2505,6 +2751,127 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/firewall",
+    "title": "Firewall",
+    "description": "Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, rate limit, redirect, or bypass matching traffic from the Console.",
+    "excerpt": "Appwrite **Firewall** is project-level traffic control on Appwrite Cloud. You define rules that match requests by IP, path, HTTP method, country, or user agent, then apply an action before traffic reaches your API, Functions, or Sites. Rules live on each project under **Firewall**. You can scope them to the project API or to a specific function or site, preview how many recent requests would match, and monitor request volume alongside denied, rate-limited, redirected, and challenged outcomes. Firewall is available on…",
+    "breadcrumbs": [
+      "Firewall",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "products/firewall/actions",
+    "title": "Actions",
+    "description": "Learn Firewall actions in Appwrite: deny, bypass, rate limit, and redirect, including status codes and rate-limit behavior.",
+    "excerpt": "When a request matches a rule's conditions, Appwrite applies the rule **action**. Only one action runs per request: evaluation stops at the first matching enabled rule (see Priority). There is no separate **Allow** action. Use **Bypass** to allowlist traffic that should skip later deny or rate limit rules. Available actions | Action | Client outcome | Usage metric | |--------|----------------|--------------| | **Deny** | with an access-denied error | | | **Bypass** | Request continues; later Firewall rules are skipped |…",
+    "breadcrumbs": [
+      "Firewall",
+      "Concepts",
+      "Actions"
+    ]
+  },
+  {
+    "slug": "products/firewall/conditions",
+    "title": "Conditions",
+    "description": "Learn how Firewall conditions match requests by IP, path, method, country, and user agent in Appwrite.",
+    "excerpt": "**Conditions** define which requests a Firewall rule matches. A rule must include **at least one** condition. Every condition on the rule must match for the rule to apply (logical AND). Incomplete conditions (operators that need a value but have an empty value) are not saved. The Console requires complete conditions before create or update. Attributes | Attribute | Matches | Typical use | |-----------|---------|-------------| | **IP address** | Client IP as seen by Appwrite | Block or allowlist known addresses…",
+    "breadcrumbs": [
+      "Firewall",
+      "Concepts",
+      "Conditions"
+    ]
+  },
+  {
+    "slug": "products/firewall/create",
+    "title": "Create a rule",
+    "description": "Create an Appwrite Firewall rule with resource scope, conditions, action, and priority from the Console wizard.",
+    "excerpt": "You create Firewall rules from the project Console. The wizard collects scope, conditions, and action, and shows an impact preview before you save. This guide walks through the full create flow. Open the create wizard 1. Open your project. 2. Go to **Firewall**. 3. Optionally select the **API**, **Functions**, or **Sites** tab for the scope you want. 4. Click **Create rule**. The wizard opens fullscreen. Closing it returns you to the Firewall list for the same scope tab. Name and…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Create a rule"
+    ]
+  },
+  {
+    "slug": "products/firewall/delete",
+    "title": "Delete a rule",
+    "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
+    "excerpt": "Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone. Before you delete - Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny). - Prefer **disable** from Update a rule if you only need to pause the policy temporarily. Disabled rules still count toward plan limits. - Note the rule's priority and conditions if you might recreate…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Delete a rule"
+    ]
+  },
+  {
+    "slug": "products/firewall/monitor",
+    "title": "Monitor traffic",
+    "description": "Use Firewall traffic overview and rule impact preview to understand how Appwrite Firewall handles project requests.",
+    "excerpt": "Firewall includes a **traffic overview** on the project Firewall page and an **impact preview** while creating rules. Together they help you validate policies before and after you enable them. Traffic overview Open **Firewall** in your project. Above the rules list, the overview chart and metrics summarize recent traffic for the selected date range and interval. Series include: | Series | Source | Meaning | |--------|--------|---------| | **Passed** | Project request volume () | Overall requests in the window (not a…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Monitor traffic"
+    ]
+  },
+  {
+    "slug": "products/firewall/priority",
+    "title": "Priority",
+    "description": "Learn how Appwrite Firewall evaluates rules by priority and first-match behavior.",
+    "excerpt": "**Priority** controls the order in which enabled Firewall rules are evaluated. Lower numbers are evaluated first. Valid values range from to . The first matching enabled rule applies its action and evaluation stops for that request. How evaluation works 1. Appwrite loads **enabled** rules for the project, ordered by priority ascending (for example before ). 2. Rules that do not apply to the current resource scope are skipped. 3. For each remaining rule in order, Appwrite checks whether all conditions…",
+    "breadcrumbs": [
+      "Firewall",
+      "Concepts",
+      "Priority"
+    ]
+  },
+  {
+    "slug": "products/firewall/quick-start",
+    "title": "Start with Firewall",
+    "description": "Create your first Appwrite Firewall rule and see how it affects project API traffic.",
+    "excerpt": "You can protect a project API path or block a noisy IP in a few minutes. This quick start creates a deny rule scoped to the project **API**, then points you to traffic monitoring. Open Firewall 1. Sign in to Appwrite Cloud. 2. Open a project. 3. Open **Firewall** in the sidebar. If you do not see **Firewall**, confirm your Console profile includes the feature and that your role can view project navigation. Create a deny rule 1. Click **Create…",
+    "breadcrumbs": [
+      "Firewall",
+      "Getting started",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/firewall/rules",
+    "title": "Rules",
+    "description": "Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.",
+    "excerpt": "A **Firewall rule** is a named policy that matches inbound requests and applies an action. Rules belong to a **project**. They are managed under **Project** > **Firewall**. What a rule contains | Field | Purpose | |-------|---------| | Name | Label shown in the rules list | | Description | Optional notes for your team | | Resource type | API, Functions, or Sites | | Resource ID | Required for Functions and Sites scopes | | Conditions | One…",
+    "breadcrumbs": [
+      "Firewall",
+      "Concepts",
+      "Rules"
+    ]
+  },
+  {
+    "slug": "products/firewall/scopes",
+    "title": "Resource scopes",
+    "description": "Learn how Appwrite Firewall scopes rules to the project API, a Function, or a Site, and where each scope is enforced.",
+    "excerpt": "Every Firewall rule has a **resource type** that limits which traffic the rule can match. Scopes keep API-wide policies separate from policies for a single function or site. Scope types | Resource type | Applies to | Resource ID | |---------------|------------|-------------| | **API** | Project Appwrite API traffic () | Not required (stored empty) | | **Functions** | Public/edge traffic for one function | Function ID required | | **Sites** | Public/edge traffic for one site | Site ID required…",
+    "breadcrumbs": [
+      "Firewall",
+      "Concepts",
+      "Resource scopes"
+    ]
+  },
+  {
+    "slug": "products/firewall/update",
+    "title": "Update a rule",
+    "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
+    "excerpt": "You can update Firewall rules from the rules list without recreating them. Changes apply to new requests after save. Historical metrics are not rewritten. Open update 1. Open **Firewall** in your project. 2. Select the **API**, **Functions**, or **Sites** tab that contains the rule. 3. Open the rule's actions menu and choose **Update**, or use the update action from the rule context menu. What you can change | Field | Notes | |-------|-------| | Name and description | Labels only;…",
+    "breadcrumbs": [
+      "Firewall",
+      "Guides",
+      "Update a rule"
+    ]
+  },
+  {
     "slug": "products/functions",
     "title": "Functions",
     "description": "Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.",
@@ -2996,17 +3363,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Network",
       "Features",
       "TLS"
-    ]
-  },
-  {
-    "slug": "products/network/waf",
-    "title": "Web application firewall (WAF)",
-    "description": "Appwrite's Web Application Firewall (WAF) provides enterprise-grade protection against web vulnerabilities like SQL injection, XSS, and DDoS attacks.",
-    "excerpt": "The Web Application Firewall (WAF) is a critical feature of the Appwrite Network, designed to protect applications from common web vulnerabilities and attacks. Available exclusively to enterprise customers, WAF can be configured through your Appwrite success manager to meet the specific security needs of your application. The WAF feature is available exclusively to enterprise customers as part of the Appwrite enterprise offering. Setup and configuration are managed through your dedicated Appwrite success manager, who ensures that the WAF aligns with…",
-    "breadcrumbs": [
-      "Network",
-      "Features",
-      "WAF"
     ]
   },
   {

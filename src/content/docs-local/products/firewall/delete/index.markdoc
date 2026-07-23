@@ -1,0 +1,31 @@
+---
+layout: article
+title: Delete a rule
+description: Remove an Appwrite Firewall rule from a project and understand the impact on traffic.
+---
+
+Deleting a Firewall rule removes it from the project permanently. Matching traffic is no longer affected by that rule. This action cannot be undone.
+
+# Before you delete {% #before-you-delete %}
+
+- Confirm no other process depends on the rule (for example an allowlist bypass that protects a broad deny).
+- Prefer **disable** from [Update a rule](/docs/products/firewall/update) if you only need to pause the policy temporarily. Disabled rules still count toward [plan limits](/docs/products/firewall/rules#plan-limits).
+- Note the rule's priority and conditions if you might recreate a similar policy later.
+
+# Delete a single rule {% #delete-a-single-rule %}
+
+1. Open **Firewall** in your project.
+2. Select the tab that contains the rule (**API**, **Functions**, or **Sites**).
+3. Open the rule's actions menu and choose **Delete**.
+4. Confirm deletion in the dialog.
+
+The rule disappears from the list immediately and stops applying to new requests.
+
+# After deletion {% #after-deletion %}
+
+- The rule no longer counts toward your [plan limit](/docs/products/firewall/rules#plan-limits).
+- Later rules in the priority order may now match traffic that this rule previously handled (for example a broader deny after removing a bypass, or a deny after removing an under-quota rate limit that stopped evaluation).
+- If you deleted the last **enabled** rule, Firewall evaluation turns off for the project until another enabled rule exists.
+- Traffic overview continues to show historical series; past denied or rate-limited counts are not removed.
+
+To add a similar policy again, use [Create a rule](/docs/products/firewall/create).

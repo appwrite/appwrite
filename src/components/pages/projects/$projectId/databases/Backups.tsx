@@ -6,7 +6,13 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
-import { useBackupPolicies, useBackupArchives } from '@/lib/react-query/hooks'
+import {
+  useBackupPolicies,
+  useBackupArchives,
+  useDatabaseRestoreMigrations,
+  enrichRestorationTargetOptions,
+} from '@/lib/react-query/hooks'
+import { RestoreProgressBanner } from './_components/RestoreProgressBanner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -66,6 +72,13 @@ import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getBackupPoliciesPlanLimit,
+  isBackupPoliciesAtPlanLimit,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
+import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
 
@@ -121,15 +134,23 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const [selectedBackup, setSelectedBackup] =
     useState<Models.BackupArchive | null>(null)
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
+  const [sessionRestorations, setSessionRestorations] = useState<
+    Models.BackupRestoration[]
+  >([])
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
+  const region = project?.region
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
     useOrganizationPlan(project?.teamId)
   const backupsEnabled = organizationPlan?.backupsEnabled ?? false
-  const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
+  const backupPoliciesLimit = getBackupPoliciesPlanLimit(organizationPlan)
+  const planName = resolveOrganizationPlanDisplayLabel({
+    planName: organizationPlan?.name ?? null,
+    planId: organizationPlan?.$id,
+  })
 
   // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
@@ -144,10 +165,42 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     backupsPageSize,
     { enabled: backupsEnabled },
   )
+  const { data: restoreMigrations } = useDatabaseRestoreMigrations(
+    projectId,
+    databaseId,
+    { enabled: backupsEnabled },
+  )
+
+  const visibleRestorations = (() => {
+    const byMigrationId = new Map<string, Models.BackupRestoration>()
+    // Prefer session entries first so enriched target options win over the API copy.
+    for (const restoration of [
+      ...sessionRestorations,
+      ...(restoreMigrations || []),
+    ]) {
+      const id = restoration.migrationId
+      if (!id || byMigrationId.has(id)) continue
+      byMigrationId.set(id, restoration)
+    }
+    return Array.from(byMigrationId.values()).sort((a, b) => {
+      const aTime = Date.parse(a.$createdAt || a.$updatedAt || '') || 0
+      const bTime = Date.parse(b.$createdAt || b.$updatedAt || '') || 0
+      return bTime - aTime
+    })
+  })()
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const archives: Models.BackupArchive[] = archivesData?.archives || []
   const archivesTotal = archivesData?.total || 0
+  const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
+    policies.length,
+    backupPoliciesLimit,
+  )
+  const showPlanLimitWarning =
+    backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit * 0.5
+  const createPolicyDisabledTooltip = isAtBackupPoliciesLimit
+    ? t("You've reached the limit for this resource on your plan")
+    : undefined
 
   // Only show loading if we don't have data yet (account for prefetched data from route loader)
   const isPoliciesActuallyLoading =
@@ -321,14 +374,64 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     mutationFn: async (params: {
       archiveId: string
       services: BackupServices[]
+      restoreTo: 'new' | 'same'
       newResourceId?: string
       newResourceName?: string
     }) => {
       const projectSdk = sdk.forProject(projectId)
-      return projectSdk.backups.createRestoration(params)
+      if (params.restoreTo === 'new') {
+        return projectSdk.backups.createRestoration({
+          archiveId: params.archiveId,
+          services: params.services,
+          newResourceId: params.newResourceId,
+          newResourceName: params.newResourceName,
+        })
+      }
+      return projectSdk.backups.createRestoration({
+        archiveId: params.archiveId,
+        services: params.services,
+      })
     },
-    onSuccess: () => {
+    onSuccess: (restoration, variables) => {
       toast.success(t('Database restore initiated'))
+      if (restoration?.migrationId) {
+        const enrichedRestoration = enrichRestorationTargetOptions(
+          restoration,
+          {
+            oldId: databaseId,
+            newId:
+              variables.restoreTo === 'new' ? variables.newResourceId || '' : '',
+            newName:
+              variables.restoreTo === 'new'
+                ? variables.newResourceName || ''
+                : '',
+          },
+        )
+        setSessionRestorations((prev) =>
+          prev.some((item) => item.migrationId === restoration.migrationId)
+            ? prev
+            : [enrichedRestoration, ...prev],
+        )
+        queryClient.setQueryData<Models.BackupRestoration[]>(
+          [
+            'restorations',
+            'project',
+            projectId,
+            'database',
+            databaseId,
+            'recent-migrations',
+          ],
+          (previous) => {
+            const list = previous ?? []
+            if (
+              list.some((item) => item.migrationId === restoration.migrationId)
+            ) {
+              return list
+            }
+            return [enrichedRestoration, ...list]
+          },
+        )
+      }
       // Invalidate archives query to refresh backup status
       queryClient.invalidateQueries({
         queryKey: [
@@ -337,13 +440,24 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [
+          'restorations',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
+      })
       setRestoreDialogOpen(false)
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to restore backup'))
-    }})
+    },
+  })
 
   // Format backup size
   const formatSize = (bytes: number | undefined) => {
@@ -455,7 +569,44 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+    <div className="w-full">
+      {visibleRestorations.length > 0 ? (
+        <>
+          <div className="mx-auto w-full max-w-7xl mt-4 px-4 sm:mt-6 sm:px-6">
+            <div className="space-y-2">
+              {visibleRestorations.map((restoration) => (
+                <RestoreProgressBanner
+                  key={restoration.migrationId}
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  region={region}
+                  restoration={restoration}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="my-6 w-full border-t border-border" />
+        </>
+      ) : null}
+      {organizationPlan !== undefined ? (
+        <PlanLimitWarning
+          currentCount={policies.length}
+          limit={backupPoliciesLimit}
+          planName={planName}
+          resourceName="backup policies"
+          orgId={project?.teamId}
+          fullWidth
+        />
+      ) : null}
+      <div
+        className={cn(
+          'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
+          visibleRestorations.length === 0 &&
+            !showPlanLimitWarning &&
+            'mt-4 sm:mt-6',
+          showPlanLimitWarning && 'pt-4 sm:pt-6',
+        )}
+      >
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         {/* Policies Section */}
         <div className="lg:col-span-1 flex flex-col">
@@ -464,19 +615,16 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               <h3 className="text-[15px] font-semibold text-foreground">
                 {t('Policies')}
               </h3>
-              {policies.length > 0 &&
-                backupPoliciesLimit > 0 &&
-                backupPoliciesLimit < 10000 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[12px] font-normal"
-                  >
-                    {policies.length}/{backupPoliciesLimit}
-                  </Badge>
-                )}
+              {backupPoliciesLimit > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="text-[12px] font-normal"
+                >
+                  {policies.length}/{backupPoliciesLimit}
+                </Badge>
+              ) : null}
             </div>
-            {backupPoliciesLimit > 0 &&
-            policies.length >= backupPoliciesLimit ? (
+            {isAtBackupPoliciesLimit ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
@@ -493,18 +641,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">
-                    {t('Policy limit reached. Upgrade to create more.')}
-                  </p>
+                  <p className="text-xs">{createPolicyDisabledTooltip}</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
               <Button
                 onClick={() => setCreatePolicyDialogOpen(true)}
-                disabled={
-                  backupPoliciesLimit > 0 &&
-                  policies.length >= backupPoliciesLimit
-                }
                 variant="brandCta"
                 size="sm"
                 className="h-8 gap-1.5 text-[12px] font-medium"
@@ -848,6 +990,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Bulk Delete Action Bar */}
       {selectedBackups.size > 0 && (
@@ -1128,10 +1271,15 @@ function CreatePolicyDialog({
   const canCreateCustom =
     backupPoliciesLimit === 0 ||
     existingPoliciesCount + totalPolicies < backupPoliciesLimit
-  // Pro plan (limit = 1) only supports daily preset, no custom policies
-  // Plans with limit > 1 or limit === 0 (unlimited) support custom policies
+  // Pro (limit = 1) is daily-only; unlimited (0) or higher unlocks hourly/custom.
   const supportsCustomPolicies =
-    backupPoliciesLimit === 0 || backupPoliciesLimit > 1
+    supportsAdvancedBackupPolicies(backupPoliciesLimit)
+  const remainingSlots =
+    backupPoliciesLimit > 0
+      ? Math.max(0, backupPoliciesLimit - existingPoliciesCount - totalPolicies)
+      : null
+  const canSelectAnotherPreset =
+    remainingSlots == null || remainingSlots > 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1156,8 +1304,18 @@ function CreatePolicyDialog({
                   <Checkbox
                     id="hourly"
                     checked={selectedPresets.includes('hourly')}
+                    disabled={
+                      !selectedPresets.includes('hourly') &&
+                      !canSelectAnotherPreset
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
+                        if (
+                          selectedPresets.includes('hourly') ||
+                          !canSelectAnotherPreset
+                        ) {
+                          return
+                        }
                         setSelectedPresets([...selectedPresets, 'hourly'])
                       } else {
                         setSelectedPresets(
@@ -1178,8 +1336,17 @@ function CreatePolicyDialog({
                 <Checkbox
                   id="daily"
                   checked={selectedPresets.includes('daily')}
+                  disabled={
+                    !selectedPresets.includes('daily') && !canSelectAnotherPreset
+                  }
                   onCheckedChange={(checked) => {
                     if (checked) {
+                      if (
+                        selectedPresets.includes('daily') ||
+                        !canSelectAnotherPreset
+                      ) {
+                        return
+                      }
                       setSelectedPresets([...selectedPresets, 'daily'])
                     } else {
                       setSelectedPresets(
@@ -1492,6 +1659,7 @@ interface RestoreBackupDialogProps {
   onSubmit: (params: {
     archiveId: string
     services: BackupServices[]
+    restoreTo: 'new' | 'same'
     newResourceId?: string
     newResourceName?: string
   }) => void
@@ -1526,14 +1694,18 @@ function RestoreBackupDialog({
       onSubmit({
         archiveId: backup.$id,
         services: [BackupServices.Databases],
-        newResourceId: newDatabaseId || undefined,
-        newResourceName: newDatabaseName})
+        restoreTo: 'new',
+        // Always send a concrete ID so Open database can target the new DB
+        newResourceId: newDatabaseId.trim() || ID.unique(),
+        newResourceName: newDatabaseName.trim(),
+      })
     } else {
       if (!confirmSameDbRestore) return
       onSubmit({
         archiveId: backup.$id,
         services: [BackupServices.Databases],
-        newResourceId: databaseId})
+        restoreTo: 'same',
+      })
     }
   }
 

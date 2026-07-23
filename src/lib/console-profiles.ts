@@ -75,6 +75,8 @@ export type ConsoleProfileFeatures = {
   edgeNetwork: boolean
   /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
   userVerification: boolean
+  /** Project Firewall (rules, analytics, logs) under Protect */
+  firewall: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -111,6 +113,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
+  firewall: 'Firewall',
 }
 
 export type ConsoleProfile = {
@@ -155,6 +158,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
+      firewall: false,
     },
   },
   'self-hosted': {
@@ -191,6 +195,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
+      firewall: false,
     },
   },
 }

@@ -126,6 +126,11 @@ async function main() {
   console.log(`Imported ${pages.length} doc pages`)
   console.log(`Imported ${partialCount} partials`)
   console.log(`Imported ${promptCount} quick-start prompts`)
+
+  // Appwrite Firewall replaced the retired Network WAF product page.
+  const retiredNetworkWaf = join(DOCS_DEST, 'products', 'network', 'waf')
+  await rm(retiredNetworkWaf, { recursive: true, force: true })
+  console.log('Removed retired Network WAF docs (products/network/waf)')
 }
 
 main().catch((err) => {

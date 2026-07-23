@@ -8,12 +8,15 @@ import {
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
 import { DatabaseOperationsLockProvider } from '@/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext'
+import { DedicatedDatabaseStatusHeaderAlert } from '@/components/pages/projects/$projectId/databases/_components/DedicatedDatabaseStatusHeaderAlert'
 import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
 import {
   productRouteKindQueryOptions,
   projectQueryOptions,
   resolveProductRouteKindForDatabase,
   seedDatabaseProductRouteKind,
+  useProjectDatabase,
+  useProjectDedicatedDatabases,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -100,6 +103,21 @@ export const Route = createFileRoute(
 function DatabaseKindLayout() {
   const { projectId, dbKind, databaseId } = Route.useParams()
   const features = getActiveProfileFeatures()
+  const routeKind = isDatabaseRouteKind(dbKind)
+    ? (dbKind as DatabaseRouteKind)
+    : undefined
+
+  const { database } = useProjectDatabase(projectId, databaseId, routeKind)
+  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
+    projectId,
+  )
+  const dedicatedStatus = dedicatedDatabases.find(
+    (db) => db.$id === databaseId,
+  )?.status
+  const status =
+    (database as { status?: string | null } | null)?.status ??
+    dedicatedStatus ??
+    null
 
   if (
     isDatabaseRouteKind(dbKind) &&
@@ -112,8 +130,14 @@ function DatabaseKindLayout() {
     <DatabaseOperationsLockProvider
       projectId={projectId}
       databaseId={databaseId}
+      status={status}
     >
-      <Outlet />
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+        <DedicatedDatabaseStatusHeaderAlert status={status} />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Outlet />
+        </div>
+      </div>
     </DatabaseOperationsLockProvider>
   )
 }

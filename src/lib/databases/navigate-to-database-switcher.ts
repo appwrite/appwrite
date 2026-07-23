@@ -1,12 +1,19 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { DatabaseType } from '@appwrite.io/console'
+import {
+  DatabaseType,
+  isNativeDatabaseTypeValue,
+} from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
   dbNavLink,
   productDatabaseListLink,
   type TanStackNavLink,
 } from '@/lib/database-routes'
-import { isPostgresEngine } from '@/lib/databases/native-database-engines'
+import {
+  isMysqlEngine,
+  isMongoEngine,
+  isPostgresEngine,
+} from '@/lib/databases/native-database-engines'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { tablesQueryOptions } from '@/lib/react-query/hooks/databases'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
@@ -61,17 +68,21 @@ export function resolveDatabaseSwitcherHomeLink(
   const apiType = normalizeKey(selection.apiType)
   const hasAppwriteProduct =
     isAppwriteProductKey(apiType) || isAppwriteProductKey(product)
-  const isNativeProduct = product === 'nativedb'
+  const isNativeProduct =
+    isNativeDatabaseTypeValue(product) || isNativeDatabaseTypeValue(apiType)
+  const engineHint = selection.engine ?? selection.apiType ?? selection.product
   const isNativeEngineOnly =
     !hasAppwriteProduct &&
     !isNativeProduct &&
     apiType !== 'legacy' &&
     apiType !== 'databases' &&
-    isPostgresEngine(selection.engine ?? undefined)
+    (isPostgresEngine(engineHint ?? undefined) ||
+      isMysqlEngine(engineHint ?? undefined) ||
+      isMongoEngine(engineHint ?? undefined))
 
   if (
     (isNativeProduct || isNativeEngineOnly) &&
-    isPostgresEngine(selection.engine ?? undefined)
+    isPostgresEngine(engineHint ?? undefined)
   ) {
     const link = postgresDatabaseHome({
       projectId,
