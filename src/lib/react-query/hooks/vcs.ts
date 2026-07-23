@@ -23,6 +23,18 @@ import {
 
 export const REPOSITORY_BRANCHES_LIMIT = 100
 
+/**
+ * listRepositories returns either a framework or runtime list depending on
+ * `type`. Consumers often read both keys with optional chaining, so expose a
+ * combined shape rather than the SDK union.
+ */
+export type ProviderRepositoriesResult = {
+  total: number
+  type?: string
+  frameworkProviderRepositories?: Models.ProviderRepositoryFramework[]
+  runtimeProviderRepositories?: Models.ProviderRepositoryRuntime[]
+}
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -139,25 +151,28 @@ export async function fetchRepositories(
   limit: number = 5,
   search?: string,
   providerNamespace?: string,
-): Promise<Models.ProviderRepositoryFrameworkList> {
+): Promise<ProviderRepositoriesResult> {
   if (!projectId || !installationId) {
     return {
-      runtimeProviderRepositories: [],
       frameworkProviderRepositories: [],
+      runtimeProviderRepositories: [],
       total: 0,
     }
   }
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [Query.limit(limit), Query.offset(page * limit)]
+  if (providerNamespace) {
+    queries.push(Query.equal('namespace', providerNamespace))
+  }
 
-  return await projectSdk.vcs.listRepositories({
+  // Console SDK 15.4 mistypes `queries` as `string`; runtime still accepts string[].
+  return (await projectSdk.vcs.listRepositories({
     installationId,
     type,
     search: search?.trim() || undefined,
-    providerNamespace: providerNamespace || undefined,
-    queries,
-  })
+    queries: queries as unknown as string,
+  })) as ProviderRepositoriesResult
 }
 
 /**

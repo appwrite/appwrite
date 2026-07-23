@@ -1,17 +1,19 @@
 /**
- * Product / legacy database type values.
+ * Product / legacy database type values used for console routing.
  *
- * Previously exported as enums from `@appwrite.io/console`. As of console SDK
- * `3a045b5`, `Models.Database.type` is a plain string that can be a product API
- * (`tablesdb` / `documentsdb` / `vectorsdb` / `legacy`) or a native engine
- * (`mysql` / `postgresql` / `mongodb`). Keep these constants for product-API
- * routing in the console UI.
+ * Mirrors the product-facing members of `DatabaseType` from
+ * `@appwrite.io/console`. `Models.Database.type` is that SDK enum (product APIs
+ * plus native engines). Prefer these constants for product-API routing; use
+ * helpers below when you need to interpret engine values or coerce to a product.
  */
 export enum DatabaseType {
   Legacy = 'legacy',
   Tablesdb = 'tablesdb',
   Documentsdb = 'documentsdb',
   Vectorsdb = 'vectorsdb',
+  Mysql = 'mysql',
+  Postgresql = 'postgresql',
+  Mongodb = 'mongodb',
 }
 
 /**
@@ -96,4 +98,34 @@ export function coerceDatabaseType(
   if (key === 'documentsdb') return DatabaseType.Documentsdb
   if (key === 'vectorsdb') return DatabaseType.Vectorsdb
   return DatabaseType.Tablesdb
+}
+
+/**
+ * Cast a type string into the SDK `Models.Database.type` enum member.
+ * Preserves known product and engine values; unknown values coerce to TablesDB.
+ */
+export function toSdkDatabaseType(
+  value: string | null | undefined,
+): import('@appwrite.io/console').DatabaseType {
+  const key = normalizeDatabaseTypeKey(value)
+  switch (key) {
+    case 'legacy':
+      return DatabaseType.Legacy as unknown as import('@appwrite.io/console').DatabaseType
+    case 'tablesdb':
+      return DatabaseType.Tablesdb as unknown as import('@appwrite.io/console').DatabaseType
+    case 'documentsdb':
+      return DatabaseType.Documentsdb as unknown as import('@appwrite.io/console').DatabaseType
+    case 'vectorsdb':
+      return DatabaseType.Vectorsdb as unknown as import('@appwrite.io/console').DatabaseType
+    case 'mysql':
+      return DatabaseType.Mysql as unknown as import('@appwrite.io/console').DatabaseType
+    case 'postgresql':
+    case 'postgres':
+      return DatabaseType.Postgresql as unknown as import('@appwrite.io/console').DatabaseType
+    case 'mongodb':
+    case 'mongo':
+      return DatabaseType.Mongodb as unknown as import('@appwrite.io/console').DatabaseType
+    default:
+      return DatabaseType.Tablesdb as unknown as import('@appwrite.io/console').DatabaseType
+  }
 }

@@ -214,10 +214,7 @@ export function DatabaseSelector({
         databaseType: db.type,
         status: db.status,
         replicas: typeof db.replicas === 'number' ? db.replicas : null,
-        specification:
-          typeof (db as { specification?: unknown }).specification === 'string'
-            ? ((db as { specification?: string }).specification ?? null)
-            : null,
+        specification: db.specification?.trim() ? db.specification : null,
       }
       return {
         id: db.$id,
@@ -227,6 +224,7 @@ export function DatabaseSelector({
           db.$id === value && selectedName ? selectedName : db.name,
         apiType: db.type,
         engine:
+          db.engine ??
           engineFromDatabaseTypeValue(db.type) ??
           dedicated?.engine ??
           null,

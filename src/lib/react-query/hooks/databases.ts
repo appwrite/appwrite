@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
 import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
-import { DatabaseType, coerceDatabaseType } from '@/lib/databases/database-type'
+import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -282,7 +282,7 @@ function seedDatabaseModelCache(
 function readProductDatabaseSpecification(
   db: Models.Database,
 ): string | null {
-  const value = (db as Models.Database & { specification?: unknown }).specification
+  const value = db.specification
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
@@ -548,7 +548,7 @@ function normalizeProductDatabase(
   return {
     ...db,
     // The probing API is authoritative; `type` on the payload is unreliable.
-    type: String(sourceType),
+    type: toSdkDatabaseType(String(sourceType)),
   }
 }
 

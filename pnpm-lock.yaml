@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@f0f7fb1
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@f0f7fb1
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@9516949
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@9516949
       '@appwrite.io/specs':
         specifier: github:appwrite/specs
         version: https://codeload.github.com/appwrite/specs/tar.gz/2d7c26d35cccf43780c82b873f2892b478dbca94
@@ -423,9 +423,9 @@ packages:
   '@apm-js-collab/tracing-hooks@0.10.0':
     resolution: {integrity: sha512-2/Z3NTewJTruUkmsSnBC5bJlLNUd9keuD1OLlTEpim4FyLhm6m2Rnfv+wrFdUvFfhmH8CRdiDZBqBrn+wyaGuA==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@f0f7fb1':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@f0f7fb1}
-    version: 15.3.0
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9516949':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@9516949}
+    version: 15.4.0
     engines: {node: '>=18.0.0'}
 
   '@appwrite.io/specs@https://codeload.github.com/appwrite/specs/tar.gz/2d7c26d35cccf43780c82b873f2892b478dbca94':
@@ -5872,7 +5872,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@f0f7fb1':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@9516949':
     dependencies:
       json-bigint: 1.0.0
 
