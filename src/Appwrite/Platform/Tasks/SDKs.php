@@ -672,13 +672,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // Stage, commit, push
             $repo->addAllChanges();
 
-            try {
-                $repo->commit($commitMessage);
-            } catch (\Throwable $e) {
-                // Exit code 1 (256 in PHP) = nothing to commit.
-                // Still push below so a stale remote release branch is
-                // synced back to the base branch.
+            $statusOutput = $repo->execute('status', '--porcelain');
+            if (empty(\trim(\implode("\n", (array) $statusOutput)))) {
+                // Nothing to commit — still push below so a stale remote
+                // release branch is synced back to the base branch.
                 Console::log('  No changes to commit, SDK is up to date');
+            } else {
+                // Any commit failure here is a real error: let it propagate
+                // to the outer catch instead of force-pushing a base-derived
+                // HEAD without the generated changes.
+                $repo->commit($commitMessage);
             }
 
             // Force push: the branch is regenerated from the base branch each
@@ -1158,7 +1161,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
 
         // Preserve a manually curated PR description: only overwrite the body
-        // when the existing one is empty or still the generated default.
+        // when the existing one is empty or still entirely generated — the
+        // default one-liner, optionally followed by the generated
+        // "## Changes" changelog section. A prefix match is not enough:
+        // maintainers may append notes below the generated sentence.
         $existingBody = '';
         $bodyOutput = [];
         \exec('gh api ' . \escapeshellarg($apiPath) . ' --jq .body 2>/dev/null', $bodyOutput);
@@ -1166,7 +1172,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             $existingBody = trim(implode("\n", $bodyOutput));
         }
         $isDefaultBody = $existingBody === ''
-            || \str_starts_with($existingBody, 'This PR contains updates to the');
+            || (bool) \preg_match(
+                '/^This PR contains updates to the .+ SDK for version \S+\.(\s*## Changes\s[\s\S]*)?$/',
+                $existingBody
+            );
 
         $updateCommand = 'gh api'
             . ' --method PATCH'

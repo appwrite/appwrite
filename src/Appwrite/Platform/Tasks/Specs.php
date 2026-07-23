@@ -811,7 +811,10 @@ class Specs extends Action
             // Building on top of the previously pushed branch makes the PR
             // conflict with the base branch as soon as another specs update
             // lands there first — the branch is fully generated, so it is
-            // safe to rewrite.
+            // safe to rewrite. The whole chain must succeed: force-pushing
+            // from a partially initialized clone would truncate the branch.
+            $cloneOutput = [];
+            $cloneReturnCode = 0;
             \exec('rm -rf ' . $target . ' && \
                 mkdir -p ' . $target . ' && \
                 cd ' . $target . ' && \
@@ -820,10 +823,15 @@ class Specs extends Action
                 git config pull.rebase false && \
                 git remote add origin ' . $gitUrl . ' && \
                 git fetch origin && \
-                (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
-                git pull origin ' . $repoBranch . ' 2>/dev/null; \
-                git checkout -B ' . $gitBranch . '
-            ');
+                git checkout -f ' . $repoBranch . ' && \
+                git pull origin ' . $repoBranch . ' && \
+                git checkout -B ' . $gitBranch . ' 2>&1
+            ', $cloneOutput, $cloneReturnCode);
+
+            if ($cloneReturnCode !== 0) {
+                Console::error("Failed to prepare {$gitRepoName} clone from branch {$repoBranch}: " . \implode("\n", $cloneOutput));
+                return;
+            }
 
             // Copy generated spec files into specs/{version}/ subdirectory
             $prPlatforms = static::getPlatformsForPR();
