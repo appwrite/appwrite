@@ -830,7 +830,7 @@ class Specs extends Action
 
             if ($cloneReturnCode !== 0) {
                 Console::error("Failed to prepare {$gitRepoName} clone from branch {$repoBranch}: " . \implode("\n", $cloneOutput));
-                return;
+                Console::exit(1);
             }
 
             // Copy generated spec files into specs/{version}/ subdirectory
@@ -892,7 +892,7 @@ class Specs extends Action
 
             if ($statusReturnCode !== 0) {
                 Console::error("Failed to stage specs for {$gitRepoName}: " . \implode("\n", $statusOutput));
-                return;
+                Console::exit(1);
             }
 
             if (empty($statusOutput)) {
@@ -904,7 +904,7 @@ class Specs extends Action
 
                 if ($commitReturnCode !== 0) {
                     Console::error("Failed to commit specs for {$gitRepoName}: " . \implode("\n", $commitOutput));
-                    return;
+                    Console::exit(1);
                 }
             }
 
@@ -914,7 +914,7 @@ class Specs extends Action
 
             if ($pushReturnCode !== 0) {
                 Console::error("Failed to push specs to {$gitRepoName}: " . \implode("\n", $pushOutput));
-                return;
+                Console::exit(1);
             }
 
             Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");

@@ -117,10 +117,12 @@ class SDKs extends Action
             $git = ($git === 'yes');
 
             $prUrls = [];
+            $failedPushes = [];
 
         } elseif ($examplesOnly) {
             $git = false;
             $prUrls = [];
+            $failedPushes = [];
         }
 
         if (! $createRelease) {
@@ -572,8 +574,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
-                    $prUrls = [];
-
                     // Generate commit message: use provided message, AI changelog, or fallback
                     if (! empty($message)) {
                         $commitMessage = $message;
@@ -587,6 +587,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                     if ($pushSuccess) {
                         $this->createPullRequest($language, $platform['name'], $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
+                    } else {
+                        $failedPushes[] = "{$platform['name']}/{$language['name']}";
                     }
 
                     \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
@@ -608,6 +610,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
             }
             Console::log('');
+        }
+
+        // Fail the task when any SDK could not be published so release
+        // automation does not report success for an incomplete release.
+        if (! empty($failedPushes)) {
+            Console::error('Failed to publish: ' . \implode(', ', $failedPushes));
+            Console::exit(1);
         }
     }
 
