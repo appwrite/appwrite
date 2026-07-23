@@ -24,7 +24,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, Plus } from 'lucide-react'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsProvider, type VcsProviderId } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -62,8 +62,13 @@ function RepositoryRowSkeleton({ provider }: { provider?: string }) {
 
 export interface RepositoryPickerProps {
   projectId: string | null | undefined
-  /** URL for "Update GitHub permissions" and "Add account" (e.g. from useProject + region) */
+  /** URL for "Update permissions" and "Add account" (e.g. from useProject + region) */
   getGitHubAuthUrl: string
+  /** Build the OAuth authorize URL for a specific provider/mode. Falls back to getGitHubAuthUrl (create-mode GitHub) when omitted. */
+  getVcsAuthUrl?: (
+    provider?: VcsProviderId,
+    mode?: 'create' | 'update',
+  ) => string
   installations: Models.Installation[]
   selectedInstallationId: string
   onInstallationChange: (installationId: string) => void
@@ -87,6 +92,7 @@ export interface RepositoryPickerProps {
 export function RepositoryPicker({
   projectId,
   getGitHubAuthUrl,
+  getVcsAuthUrl,
   installations,
   selectedInstallationId,
   onInstallationChange,
@@ -99,6 +105,10 @@ export function RepositoryPicker({
   className,
 }: RepositoryPickerProps) {
   const t = useT()
+  const vcsAuthUrl = (
+    provider?: VcsProviderId,
+    mode: 'create' | 'update' = 'create',
+  ) => (getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl)
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
@@ -418,10 +428,15 @@ export function RepositoryPicker({
             <p className="text-[12px] text-muted-foreground">
               {t("Can't find a repository?")}{' '}
               <a
-                href={getGitHubAuthUrl}
+                href={vcsAuthUrl(
+                  getVcsProvider(selectedInstallation?.provider).id,
+                  'update',
+                )}
                 className="link-neutral"
               >
-                {t('Update GitHub permissions')}
+                {t(
+                  `Update ${getVcsProvider(selectedInstallation?.provider).label} permissions`,
+                )}
               </a>{' '}
               {t('to include more repos.')}
             </p>

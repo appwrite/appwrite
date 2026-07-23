@@ -26,7 +26,11 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { useT } from '@/lib/i18n/translate'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  buildVcsAuthUrl,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 interface GitSettingsCardProps {
   func: Models.Function
@@ -67,15 +71,22 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   const { project } = useProject(projectId ?? undefined)
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId || !func.$id) return '#'
-    const origin = window.location.origin
-    const redirectUrl = `${origin}/projects/${projectId}/functions/${func.$id}/settings`
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint = getApiEndpoint(project?.region)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  const getVcsAuthUrl = useMemo(() => {
+    return (provider: VcsProviderId = 'github') => {
+      if (typeof window === 'undefined' || !projectId || !func.$id) return '#'
+      const origin = window.location.origin
+      const redirectUrl = `${origin}/projects/${projectId}/functions/${func.$id}/settings`
+      const projectEndpoint = getApiEndpoint(project?.region)
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
+    }
   }, [projectId, func.$id, project?.region])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   // Initialize selected installation when installations load
   useEffect(() => {
@@ -282,7 +293,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                   <DialogTitle>{t('Connect repository')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     {t(
-                      'Select a GitHub installation and repository to connect to this function',
+                      'Select a Git installation and repository to connect to this function',
                     )}
                   </DialogDescription>
                 </DialogHeader>
@@ -291,6 +302,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                   <RepositoryPicker
                     projectId={projectId}
                     getGitHubAuthUrl={getGitHubAuthUrl}
+                    getVcsAuthUrl={getVcsAuthUrl}
                     installations={installationsData?.installations ?? []}
                     selectedInstallationId={selectedInstallationId}
                     onInstallationChange={setSelectedInstallationId}

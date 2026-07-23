@@ -29,7 +29,11 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  GitLabIcon,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -66,6 +70,11 @@ export interface ConnectRepositorySectionProps {
   projectId: string | null | undefined
   installations: Models.Installation[]
   getGitHubAuthUrl: string
+  /** Build the OAuth authorize URL for a specific provider/mode. Falls back to getGitHubAuthUrl (create-mode GitHub) when omitted. */
+  getVcsAuthUrl?: (
+    provider?: VcsProviderId,
+    mode?: 'create' | 'update',
+  ) => string
   /** Default repository name (e.g. derived from site/function name) */
   defaultRepositoryName: string
   /** Framework for sites, Runtime for functions */
@@ -98,6 +107,7 @@ export function ConnectRepositorySection({
   projectId,
   installations,
   getGitHubAuthUrl,
+  getVcsAuthUrl,
   defaultRepositoryName,
   detectionType,
   value,
@@ -117,6 +127,10 @@ export function ConnectRepositorySection({
   className,
 }: ConnectRepositorySectionProps) {
   const t = useT()
+  const vcsAuthUrl = (
+    provider?: VcsProviderId,
+    mode: 'create' | 'update' = 'create',
+  ) => (getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl)
   const suggestedRepoName = useMemo(
     () =>
       defaultRepositoryName
@@ -233,12 +247,20 @@ export function ConnectRepositorySection({
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
             <GitHubIcon className="h-6 w-6 text-muted-foreground" />
           </div>
-          <Button asChild>
-            <a href={getGitHubAuthUrl}>
-              <GitHubIcon className="me-1.5 h-4 w-4" />
-              {t('Connect to GitHub')}
-            </a>
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button variant="secondary" asChild>
+              <a href={getGitHubAuthUrl}>
+                <GitHubIcon className="me-1.5 h-4 w-4" />
+                {t('Connect to GitHub')}
+              </a>
+            </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('gitlab')}>
+                <GitLabIcon className="me-1.5 h-4 w-4" />
+                {t('Connect to GitLab')}
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -467,6 +489,7 @@ export function ConnectRepositorySection({
           <RepositoryPicker
             projectId={projectId}
             getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
             installations={installations}
             selectedInstallationId={selectedInstallationId}
             onInstallationChange={setSelectedInstallationId}

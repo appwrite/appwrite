@@ -20,6 +20,7 @@ import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
+import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { VCSReferenceType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -49,8 +50,7 @@ export interface CreateGitDeploymentModalProps {
 
 const FUNCTIONS_DEPLOY_DOCS =
   '/docs/products/functions/deployments#create-deployment'
-const SITES_DEPLOY_DOCS =
-  '/docs/products/sites/deployments#create-deployment'
+const SITES_DEPLOY_DOCS = '/docs/products/sites/deployments#create-deployment'
 
 export function CreateGitDeploymentModal({
   open,
@@ -90,19 +90,26 @@ export function CreateGitDeploymentModal({
   )
   const { project } = useProject(projectId ?? undefined)
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    const path =
-      resourceType === 'site'
-        ? `/projects/${projectId}/sites/${resourceId}`
-        : `/projects/${projectId}/functions/${resourceId}`
-    const redirectUrl = `${origin}${path}`
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint = getApiEndpoint(project?.region)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  const getVcsAuthUrl = useMemo(() => {
+    return (provider: VcsProviderId = 'github') => {
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      const path =
+        resourceType === 'site'
+          ? `/projects/${projectId}/sites/${resourceId}`
+          : `/projects/${projectId}/functions/${resourceId}`
+      const redirectUrl = `${origin}${path}`
+      const projectEndpoint = getApiEndpoint(project?.region)
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
+    }
   }, [projectId, resourceId, resourceType, project?.region])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   useEffect(() => {
     if (resource.providerBranch) setBranch(resource.providerBranch)
@@ -263,6 +270,7 @@ export function CreateGitDeploymentModal({
               <RepositoryPicker
                 projectId={projectId}
                 getGitHubAuthUrl={getGitHubAuthUrl}
+                getVcsAuthUrl={getVcsAuthUrl}
                 installations={installations}
                 selectedInstallationId={selectedInstallationId}
                 onInstallationChange={setSelectedInstallationId}

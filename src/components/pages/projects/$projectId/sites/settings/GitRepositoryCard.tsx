@@ -31,7 +31,11 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { useT } from '@/lib/i18n/translate'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  getVcsProvider,
+  buildVcsAuthUrl,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 
 interface GitRepositoryCardProps {
   projectId: string | null | undefined
@@ -76,15 +80,22 @@ export function GitRepositoryCard({
 
   const { project } = useProject(projectId ?? undefined)
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId || !siteId) return '#'
-    const origin = window.location.origin
-    const redirectUrl = `${origin}/projects/${projectId}/sites/${siteId}/settings`
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint = getApiEndpoint(project?.region)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  const getVcsAuthUrl = useMemo(() => {
+    return (provider: VcsProviderId = 'github') => {
+      if (typeof window === 'undefined' || !projectId || !siteId) return '#'
+      const origin = window.location.origin
+      const redirectUrl = `${origin}/projects/${projectId}/sites/${siteId}/settings`
+      const projectEndpoint = getApiEndpoint(project?.region)
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
+    }
   }, [projectId, siteId, project?.region])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   // Initialize selected installation when installations load
   useEffect(() => {
@@ -293,7 +304,7 @@ export function GitRepositoryCard({
                   <DialogTitle>{t('Connect repository')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     {t(
-                      'Select a GitHub installation and repository to connect to this site. You can connect an existing repository or create a new site from a template.',
+                      'Select a Git installation and repository to connect to this site. You can connect an existing repository or create a new site from a template.',
                     )}
                   </DialogDescription>
                 </DialogHeader>
@@ -302,6 +313,7 @@ export function GitRepositoryCard({
                   <RepositoryPicker
                     projectId={projectId}
                     getGitHubAuthUrl={getGitHubAuthUrl}
+                    getVcsAuthUrl={getVcsAuthUrl}
                     installations={installationsData?.installations ?? []}
                     selectedInstallationId={selectedInstallationId}
                     onInstallationChange={setSelectedInstallationId}
