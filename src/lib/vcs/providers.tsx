@@ -128,13 +128,20 @@ export interface VcsOrgOption {
  * selectable rows -- no separate account-then-group picker, matching how a
  * single GitHub org and a single GitLab group should look identical in the
  * UI. For providers where every installation maps to exactly one namespace
- * (GitHub today), this is just the installation itself.
+ * (GitHub today), this is just the installation itself. Ordered by the most
+ * recently updated installation first (an installation's groups inherit its
+ * position, so they stay grouped together rather than interleaving).
  */
 export function buildVcsOrgOptions(
   installations: Models.Installation[],
   namespacesByInstallation: Record<string, Models.VcsNamespace[]>,
 ): VcsOrgOption[] {
-  return installations.flatMap((installation) => {
+  const orderedInstallations = [...installations].sort(
+    (a, b) =>
+      new Date(b.$updatedAt).getTime() - new Date(a.$updatedAt).getTime(),
+  )
+
+  return orderedInstallations.flatMap((installation) => {
     const provider = getVcsProvider(installation.provider).id
     const namespaces = namespacesByInstallation[installation.$id] ?? []
 
