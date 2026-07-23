@@ -21,6 +21,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   GitLabIcon,
   getVcsProvider,
+  getKnownVcsProvider,
   getProviderOwnerUrl,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
@@ -349,14 +350,18 @@ export function GitConfigurationCard({
                           installation.provider,
                           installation.organization,
                         )
+                        const knownProvider = getKnownVcsProvider(
+                          installation.provider,
+                        )
                         return (
                           <GitInstallationContextMenu
                             key={installation.$id}
                             installation={installation}
-                            configureHref={vcsAuthUrl(
-                              getVcsProvider(installation.provider).id,
-                              'update',
-                            )}
+                            configureHref={
+                              knownProvider
+                                ? vcsAuthUrl(knownProvider.id, 'update')
+                                : null
+                            }
                             onDisconnect={handleOpenDisconnectModal}
                           >
                             <TableRow>
@@ -393,22 +398,23 @@ export function GitConfigurationCard({
                                     <RowActionsMenuTrigger compact />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                      <a
-                                        href={vcsAuthUrl(
-                                          getVcsProvider(installation.provider)
-                                            .id,
-                                          'update',
-                                        )}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className={menuItemRowClassName}
-                                      >
-                                        <MenuItemContent icon={Settings}>
-                                          {t('Configure')}
-                                        </MenuItemContent>
-                                      </a>
-                                    </DropdownMenuItem>
+                                    {knownProvider ? (
+                                      <DropdownMenuItem asChild>
+                                        <a
+                                          href={vcsAuthUrl(
+                                            knownProvider.id,
+                                            'update',
+                                          )}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className={menuItemRowClassName}
+                                        >
+                                          <MenuItemContent icon={Settings}>
+                                            {t('Configure')}
+                                          </MenuItemContent>
+                                        </a>
+                                      </DropdownMenuItem>
+                                    ) : null}
                                     <DropdownMenuItem
                                       onClick={() =>
                                         handleOpenDisconnectModal(installation)

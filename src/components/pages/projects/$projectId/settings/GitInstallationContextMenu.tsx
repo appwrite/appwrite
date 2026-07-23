@@ -17,7 +17,7 @@ import { getProviderOwnerUrl } from '@/lib/vcs/providers'
 
 interface GitInstallationContextMenuProps {
   installation: Models.Installation
-  configureHref: string
+  configureHref: string | null
   onDisconnect: (installation: Models.Installation) => void
   children: React.ReactNode
 }
@@ -38,12 +38,16 @@ export function GitInstallationContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem
-          onSelect={() => window.open(configureHref, '_blank', 'noreferrer')}
-        >
-          <ContextMenuIcon icon={Settings} />
-          {t('Configure')}
-        </ContextMenuItem>
+        {configureHref ? (
+          <ContextMenuItem
+            onSelect={() =>
+              window.open(configureHref, '_blank', 'noreferrer')
+            }
+          >
+            <ContextMenuIcon icon={Settings} />
+            {t('Configure')}
+          </ContextMenuItem>
+        ) : null}
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>

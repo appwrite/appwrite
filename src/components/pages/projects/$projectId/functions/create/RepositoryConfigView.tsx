@@ -134,7 +134,8 @@ export function RepositoryConfigView({
     installationId || null,
     providerRepositoryId || null,
   )
-  const { Icon: RepositoryProviderIcon } = getVcsProvider(repository?.provider)
+  const { Icon: RepositoryProviderIcon, label: repositoryProviderLabel } =
+    getVcsProvider(repository?.provider)
   const { data: runtimesData } = useProjectRuntimes(projectId)
   const { data: specificationsData } = useFunctionSpecifications(
     projectId,
@@ -445,7 +446,7 @@ export function RepositoryConfigView({
                 {repoOwner}/{repoName}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {t('Git repository')}
+                {t(`${repositoryProviderLabel} repository`)}
               </p>
             </div>
           </div>
