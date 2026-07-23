@@ -148,9 +148,6 @@ export function CreateSiteView() {
 
   // Personal namespace vs. group selected within a GitLab installation.
   const [selectedNamespace, setSelectedNamespace] = useState('')
-  useEffect(() => {
-    setSelectedNamespace('')
-  }, [selectedInstallationId])
 
   const { namespacesByInstallation } = useNamespacesForInstallations(
     projectId,
@@ -164,6 +161,25 @@ export function CreateSiteView() {
     ? `${selectedInstallationId}:${selectedNamespace}`
     : selectedInstallationId
   const selectedOption = orgOptions.find((o) => o.key === selectedOptionKey)
+
+  // Whenever the selected installation changes (including on initial load)
+  // or its namespaces finish loading, make sure the namespace is a valid
+  // row for that installation -- an installation with multiple namespaces
+  // has no bare-installationId row, so without this the picker would show
+  // blank until the user manually picks one.
+  useEffect(() => {
+    if (!selectedInstallationId) {
+      if (selectedNamespace) setSelectedNamespace('')
+      return
+    }
+    const isValid = orgOptions.some((o) => o.key === selectedOptionKey)
+    if (!isValid) {
+      const firstForInstallation = orgOptions.find(
+        (o) => o.installationId === selectedInstallationId,
+      )
+      setSelectedNamespace(firstForInstallation?.providerNamespace ?? '')
+    }
+  }, [selectedInstallationId, orgOptions, selectedOptionKey, selectedNamespace])
 
   const selectOption = (key: string) => {
     const option = orgOptions.find((o) => o.key === key)
