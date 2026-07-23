@@ -103,7 +103,7 @@ final class PoolTest extends TestCase
         );
     }
 
-    public function testSelectsPoolForRegion(): void
+    public function testSelectsPoolForAppwriteRegion(): void
     {
         Config::setParam('pools-documentsdb', ['default-documents']);
         \putenv('_APP_DATABASE_DOCUMENTSDB_KEYS=database_db_fra_documents,database_db_nyc_documents');
@@ -114,7 +114,7 @@ final class PoolTest extends TestCase
         );
     }
 
-    public function testSelectsPoolForArbitraryRegionId(): void
+    public function testSelectsPoolForCustomRegion(): void
     {
         Config::setParam('pools-documentsdb', ['default-documents']);
         \putenv('_APP_DATABASE_DOCUMENTSDB_KEYS=database_db_france_documents,database_db_japan_documents,database_db_franceville_documents');
@@ -122,6 +122,17 @@ final class PoolTest extends TestCase
         $this->assertSame(
             'mongodb://database_db_france_documents',
             Pool::dsn('documentsdb', 'france', null)
+        );
+    }
+
+    public function testSelectsPoolForRegionTokenBoundaries(): void
+    {
+        Config::setParam('pools-documentsdb', ['default-documents']);
+        \putenv('_APP_DATABASE_DOCUMENTSDB_KEYS=database_db_fra_documents,database_db_nyc_documents,database_db_frankfurt_documents');
+
+        $this->assertSame(
+            'mongodb://database_db_fra_documents',
+            Pool::dsn('documentsdb', 'fra', null)
         );
     }
 
