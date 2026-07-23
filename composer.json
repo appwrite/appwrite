@@ -69,7 +69,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "^6.0.0",
+        "utopia-php/database": "dev-cache-empty-get-document as 6.4.4",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "^2.2",
         "utopia-php/emails": "0.7.*",
