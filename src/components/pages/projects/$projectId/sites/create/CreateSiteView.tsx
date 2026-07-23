@@ -27,7 +27,13 @@ import { SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { SiteTemplateGallery } from '@/components/pages/projects/$projectId/sites/_components/SiteTemplateGallery'
-import { Search, Lock, ArrowLeft, ArrowLeftRight } from 'lucide-react'
+import {
+  Search,
+  Lock,
+  ArrowLeft,
+  ArrowLeftRight,
+  GitBranch,
+} from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories, useProject } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -39,28 +45,13 @@ import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   getVcsProvider,
   buildVcsAuthUrl,
-  GitLabIcon,
+  VcsIcon,
   VCS_PROVIDERS,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider?: string
-  className?: string
-}) {
-  const { Icon } = getVcsProvider(provider)
-  return <Icon className={className} />
-}
-
-// These flows are GitHub-specific ("Connect GitHub" / "Update GitHub
-// permissions"), so the provider is hardcoded rather than sourced from state.
-const { Icon: GitHubIcon } = getVcsProvider('github')
 
 // Helper to safely extract framework string
 function getFrameworkString(framework: unknown): string {
@@ -89,7 +80,7 @@ function RepositorySkeleton({
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-        <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
+        <VcsIcon type={provider} className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <Skeleton
@@ -306,7 +297,7 @@ export function CreateSiteView() {
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+                  <GitBranch className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
@@ -318,13 +309,13 @@ export function CreateSiteView() {
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button size="sm" variant="secondary" asChild>
                   <a href={getGitHubAuthUrl}>
-                    <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
+                    <VcsIcon type="github" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitHub')}
                   </a>
                 </Button>
                 <Button size="sm" variant="secondary" asChild>
                   <a href={getVcsAuthUrl('gitlab')}>
-                    <GitLabIcon className="me-1.5 h-3.5 w-3.5" />
+                    <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitLab')}
                   </a>
                 </Button>
@@ -348,8 +339,8 @@ export function CreateSiteView() {
                     <SelectValue placeholder={t('Select organization')}>
                       {selectedInstallation && (
                         <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={selectedInstallation.provider}
+                          <VcsIcon
+                            type={selectedInstallation.provider}
                             className="h-4 w-4 shrink-0"
                           />
                           <span className="truncate">
@@ -396,8 +387,8 @@ export function CreateSiteView() {
                             value={installation.$id}
                           >
                             <span className="flex items-center gap-2">
-                              <ProviderIcon
-                                provider={installation.provider}
+                              <VcsIcon
+                                type={installation.provider}
                                 className="h-4 w-4 shrink-0"
                               />
                               <span>{installation.organization}</span>
@@ -478,8 +469,8 @@ export function CreateSiteView() {
                               size="sm"
                             />
                           ) : (
-                            <ProviderIcon
-                              provider={selectedInstallation?.provider}
+                            <VcsIcon
+                              type={selectedInstallation?.provider}
                               className="h-3.5 w-3.5"
                             />
                           )}
@@ -544,8 +535,8 @@ export function CreateSiteView() {
                   )}
                   className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
                 >
-                  <ProviderIcon
-                    provider={selectedInstallation?.provider}
+                  <VcsIcon
+                    type={selectedInstallation?.provider}
                     className="h-3.5 w-3.5"
                   />
                   {t(

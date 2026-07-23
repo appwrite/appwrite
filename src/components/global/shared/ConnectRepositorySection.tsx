@@ -28,7 +28,7 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { ArrowLeft, ArrowLeftRight } from 'lucide-react'
+import { ArrowLeft, ArrowLeftRight, GitBranch } from 'lucide-react'
 import {
   getVcsProvider,
   VCS_PROVIDERS,
@@ -241,7 +241,7 @@ export function ConnectRepositorySection({
         <div className="border-t border-border" />
         <div className="px-6 py-6 flex flex-col items-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-4">
-            <VcsIcon type="github" className="h-6 w-6 text-muted-foreground" />
+            <GitBranch className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button variant="secondary" asChild>

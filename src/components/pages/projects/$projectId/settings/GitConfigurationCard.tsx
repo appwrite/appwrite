@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Settings,
   Unplug,
+  GitBranch,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
@@ -201,10 +202,7 @@ export function GitConfigurationCard({
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <VcsIcon
-                type="github"
-                className="h-6 w-6 text-muted-foreground"
-              />
+              <GitBranch className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="mb-1 text-[14px] font-medium text-foreground">
               {t('No installation was added to the project yet')}

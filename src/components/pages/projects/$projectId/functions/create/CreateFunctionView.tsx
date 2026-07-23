@@ -34,6 +34,7 @@ import {
   ArrowLeftRight,
   ChevronRight,
   LayoutTemplate,
+  GitBranch,
 } from 'lucide-react'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -61,25 +62,10 @@ import { useT } from '@/lib/i18n/translate'
 import {
   getVcsProvider,
   buildVcsAuthUrl,
-  GitLabIcon,
+  VcsIcon,
   VCS_PROVIDERS,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
-
-function ProviderIcon({
-  provider,
-  className,
-}: {
-  provider?: string
-  className?: string
-}) {
-  const { Icon } = getVcsProvider(provider)
-  return <Icon className={className} />
-}
-
-// These flows are GitHub-specific ("Connect GitHub"), so the provider is
-// hardcoded rather than sourced from state.
-const { Icon: GitHubIcon } = getVcsProvider('github')
 
 const REPO_PAGE_SIZE = 7
 
@@ -202,7 +188,7 @@ function RepositorySkeleton({
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-        <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
+        <VcsIcon type={provider} className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <Skeleton
@@ -438,7 +424,7 @@ export function CreateFunctionView() {
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+                  <GitBranch className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
@@ -452,13 +438,13 @@ export function CreateFunctionView() {
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button size="sm" variant="secondary" asChild>
                   <a href={getGitHubAuthUrl}>
-                    <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
+                    <VcsIcon type="github" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitHub')}
                   </a>
                 </Button>
                 <Button size="sm" variant="secondary" asChild>
                   <a href={getVcsAuthUrl('gitlab')}>
-                    <GitLabIcon className="me-1.5 h-3.5 w-3.5" />
+                    <VcsIcon type="gitlab" className="me-1.5 h-3.5 w-3.5" />
                     {t('Connect GitLab')}
                   </a>
                 </Button>
@@ -481,8 +467,8 @@ export function CreateFunctionView() {
                     <SelectValue placeholder={t('Select organization')}>
                       {selectedInstallation && (
                         <span className="flex items-center gap-2">
-                          <ProviderIcon
-                            provider={selectedInstallation.provider}
+                          <VcsIcon
+                            type={selectedInstallation.provider}
                             className="h-4 w-4 shrink-0"
                           />
                           <span className="truncate">
@@ -526,8 +512,8 @@ export function CreateFunctionView() {
                         {filteredInstallations.map((inst) => (
                           <SelectItem key={inst.$id} value={inst.$id}>
                             <span className="flex items-center gap-2">
-                              <ProviderIcon
-                                provider={inst.provider}
+                              <VcsIcon
+                                type={inst.provider}
                                 className="h-4 w-4 shrink-0"
                               />
                               <span>{inst.organization}</span>
@@ -613,8 +599,8 @@ export function CreateFunctionView() {
                             {repo.runtime ? (
                               <RuntimeIcon runtime={repo.runtime} size="sm" />
                             ) : (
-                              <ProviderIcon
-                                provider={selectedInstallation?.provider}
+                              <VcsIcon
+                                type={selectedInstallation?.provider}
                                 className="h-3.5 w-3.5"
                               />
                             )}
