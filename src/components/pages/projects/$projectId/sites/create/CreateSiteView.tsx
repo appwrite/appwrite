@@ -41,7 +41,6 @@ import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
-  getVcsProvider,
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,

@@ -59,7 +59,6 @@ import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import {
-  getVcsProvider,
   getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
