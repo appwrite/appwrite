@@ -489,6 +489,17 @@ jobs:
                 sleep 15
               done
 
+      - name: Provision Gitea
+        if: matrix.service.name == 'VCSGitea'
+        timeout-minutes: 5
+        run: |
+          docker compose up -d --wait gitea gitea-bootstrap
+          CREDS=$(docker compose exec -T gitea cat /data/gitea/oauth.json)
+          CLIENT_SECRET=$(echo "$CREDS" | jq -r .client_secret)
+          echo "::add-mask::$CLIENT_SECRET"
+          echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
+          echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+
       - name: Load and Start Appwrite
         timeout-minutes: 5
         env:

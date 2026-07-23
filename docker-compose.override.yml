@@ -382,6 +382,7 @@ services:
       - appwrite
     volumes:
       - appwrite-gitea:/data
+      - ./dev/gitea/setup.sh:/setup.sh:ro
     depends_on:
       gitea:
         condition: service_healthy
@@ -390,10 +391,7 @@ services:
       - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD:-password}
       - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL:-gitea@appwrite.io}
     entrypoint: /bin/sh
-    command: >
-      -c "
-        su git -c \"gitea admin user create --username $$GITEA_ADMIN_USERNAME --password $$GITEA_ADMIN_PASSWORD --email $$GITEA_ADMIN_EMAIL --admin --must-change-password=false\" || true
-      "
+    command: /setup.sh
   appwrite-mongo-express:
     profiles:
       - mongodb
