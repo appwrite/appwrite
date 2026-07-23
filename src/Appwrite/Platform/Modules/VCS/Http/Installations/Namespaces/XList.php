@@ -40,7 +40,7 @@ class XList extends Action
             ->label('sdk', new Method(
                 namespace: 'vcs',
                 group: 'namespaces',
-                name: 'list',
+                name: 'listNamespaces',
                 description: 'List provider namespaces available to a VCS installation. This can include the user personal namespace and any groups or organizations the installation can browse.',
                 auth: [AuthType::ADMIN],
                 responses: [
