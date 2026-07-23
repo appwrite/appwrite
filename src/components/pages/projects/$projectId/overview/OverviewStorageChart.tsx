@@ -75,6 +75,8 @@ type OverviewStorageChartProps = {
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
+  /** When set, error state shows Upgrade plan instead of retry. */
+  upgradeOrgId?: string | null
   errorTitle?: string
   errorMessage?: ReactNode
   isPanelVisible?: boolean
@@ -169,6 +171,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   isLoading = false,
   isError = false,
   onRetry,
+  upgradeOrgId,
   errorTitle = OVERVIEW_STORAGE_ERROR.title,
   errorMessage = OVERVIEW_STORAGE_ERROR.message,
   isPanelVisible = true,
@@ -237,6 +240,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                 typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
               }
               onRetry={onRetry}
+              upgradeOrgId={upgradeOrgId}
             />
           </div>
         ) : (

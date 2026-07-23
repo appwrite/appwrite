@@ -430,7 +430,7 @@ export function RequestsSection({
 
       {showBreakdown ? (
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
-          {standardEntries.map(({ section, items, isLoading, isError }) => (
+          {standardEntries.map(({ section, items, isLoading, isError, error }) => (
             <div
               key={section.dimension}
               className="flex h-full min-h-0 flex-col"
@@ -444,6 +444,7 @@ export function RequestsSection({
                 countryLookups={countryLookups}
                 isLoading={isLoading}
                 isError={isError}
+                error={error}
                 errorTitle={OVERVIEW_REQUESTS_ERROR.title}
                 errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                 formatValue={formatRequestsValue}
@@ -467,6 +468,7 @@ export function RequestsSection({
                 items={resourceEntry.items}
                 isLoading={resourceEntry.isLoading}
                 isError={resourceEntry.isError}
+                error={resourceEntry.error}
                 countryLookups={countryLookups}
                 computeLookup={computeLookup}
                 databaseLookup={databaseLookup}
@@ -499,6 +501,7 @@ export function RequestsSection({
                 countryLookups={countryLookups}
                 isLoading={resourceTypeEntry.isLoading}
                 isError={resourceTypeEntry.isError}
+                error={resourceTypeEntry.error}
                 errorTitle={OVERVIEW_REQUESTS_ERROR.title}
                 errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                 formatValue={formatRequestsValue}

@@ -28,7 +28,7 @@ const DIMENSION_LABEL_COLUMN: Record<UsageEventBreakdownDimension, string> = {
   status: 'Status',
   service: 'Service',
   country: 'Country',
-  region: 'Region',
+  city: 'Caller city',
   hostname: 'Hostname',
   ip: 'IP address',
   osName: 'OS',
@@ -39,6 +39,7 @@ const DIMENSION_LABEL_COLUMN: Record<UsageEventBreakdownDimension, string> = {
   resourceId: 'Resource ID',
   resourceType: 'Resource type',
   resource: 'Resource',
+  sdk: 'SDK',
 }
 
 function escapeCsvCell(value: string): string {

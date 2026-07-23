@@ -64,6 +64,8 @@ interface RequestsChartProps {
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
+  /** When set, chart error state shows Upgrade plan instead of retry. */
+  upgradeOrgId?: string | null
   errorTitle?: string
   errorMessage?: ReactNode
   formatValue?: (value: number) => string
@@ -255,6 +257,7 @@ export const RequestsChart = memo(function RequestsChart({
   isLoading = false,
   isError = false,
   onRetry,
+  upgradeOrgId,
   errorTitle = OVERVIEW_BANDWIDTH_ERROR.title,
   errorMessage = OVERVIEW_BANDWIDTH_ERROR.message,
   formatValue,
@@ -372,6 +375,7 @@ export const RequestsChart = memo(function RequestsChart({
                 typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
               }
               onRetry={onRetry}
+              upgradeOrgId={upgradeOrgId}
             />
           </div>
         ) : (

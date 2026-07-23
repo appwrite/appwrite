@@ -29,7 +29,7 @@ import {
 } from '@/lib/usage/usage-date-range'
 import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
-  USAGE_API_MAX_LIMIT,
+  resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
@@ -66,7 +66,7 @@ export type UsageEventBreakdownDimension =
   | 'status'
   | 'service'
   | 'country'
-  | 'region'
+  | 'city'
   | 'hostname'
   | 'ip'
   | 'osName'
@@ -78,11 +78,15 @@ export type UsageEventBreakdownDimension =
   | 'resourceType'
   /** Composite breakdown by resource type and ID (listEvents dimensions: resourceId + resourceType). */
   | 'resource'
+  /** Composite breakdown by SDK and version (listEvents dimensions: sdk + sdkVersion). */
+  | 'sdk'
 
 export const USAGE_RESOURCE_BREAKDOWN_DIMENSIONS = [
   'resourceId',
   'resourceType',
 ] as const
+
+export const USAGE_SDK_BREAKDOWN_DIMENSIONS = ['sdk', 'sdkVersion'] as const
 
 export interface UsageBreakdownItem {
   id: string
@@ -90,6 +94,8 @@ export interface UsageBreakdownItem {
   count: number
   resourceId?: string
   resourceType?: string
+  sdk?: string
+  sdkVersion?: string
 }
 
 function getUsageDataPointBreakdownLabel(
@@ -107,8 +113,8 @@ function getUsageDataPointBreakdownLabel(
       return point.service?.trim() || 'Unknown'
     case 'country':
       return point.country?.trim() || 'Unknown'
-    case 'region':
-      return point.region?.trim() || 'Unknown'
+    case 'city':
+      return point.city?.trim() || 'Unknown'
     case 'hostname':
       return point.hostname?.trim() || 'Unknown'
     case 'ip':
@@ -129,9 +135,23 @@ function getUsageDataPointBreakdownLabel(
       return point.resourceType?.trim() || 'Unknown'
     case 'resource':
       return point.resourceId?.trim() || 'Unknown'
+    case 'sdk':
+      return formatSdkBreakdownLabel(
+        point.sdk?.trim() || 'Unknown',
+        point.sdkVersion?.trim() || '',
+      )
     default:
       return 'Unknown'
   }
+}
+
+function formatSdkBreakdownLabel(sdk: string, sdkVersion: string): string {
+  const trimmedSdk = sdk.trim() || 'Unknown'
+  const trimmedVersion = sdkVersion.trim()
+  if (!trimmedVersion || trimmedVersion === 'Unknown') {
+    return trimmedSdk
+  }
+  return `${trimmedSdk}@${trimmedVersion}`
 }
 
 function getUsageBreakdownItemMergeKey(item: UsageBreakdownItem): string {
@@ -140,6 +160,9 @@ function getUsageBreakdownItemMergeKey(item: UsageBreakdownItem): string {
   }
   if (item.resourceId && item.resourceType) {
     return `${item.resourceType}\0${item.resourceId}`
+  }
+  if (item.sdk !== undefined) {
+    return `sdk\0${item.sdk}\0${item.sdkVersion ?? ''}`
   }
   return item.label
 }
@@ -172,6 +195,26 @@ function mapBreakdownGroupsForResourceDimensions(
   return mergeUsageBreakdownItems([items], limit)
 }
 
+function mapBreakdownGroupsForSdkDimensions(
+  groups: Models.UsageDataPoint[],
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageBreakdownItem[] {
+  const items = groups.map((group, index) => {
+    const sdk = group.sdk?.trim() || 'Unknown'
+    const sdkVersion = group.sdkVersion?.trim() || ''
+    const label = formatSdkBreakdownLabel(sdk, sdkVersion)
+    return {
+      id: `sdk-${sdk}-${sdkVersion || 'unknown'}-${index}`,
+      label,
+      count: group.value,
+      sdk,
+      sdkVersion: sdkVersion || undefined,
+    }
+  })
+
+  return mergeUsageBreakdownItems([items], limit)
+}
+
 function mapBreakdownGroupsForDimension(
   groups: Models.UsageDataPoint[],
   dimension: UsageEventBreakdownDimension,
@@ -179,6 +222,9 @@ function mapBreakdownGroupsForDimension(
 ): UsageBreakdownItem[] {
   if (dimension === 'resource') {
     return mapBreakdownGroupsForResourceDimensions(groups, limit)
+  }
+  if (dimension === 'sdk') {
+    return mapBreakdownGroupsForSdkDimensions(groups, limit)
   }
 
   const items = groups.map((group, index) => {
@@ -237,7 +283,9 @@ export async function fetchProjectUsageEventBreakdown(
   const dimensions =
     dimension === 'resource'
       ? [...USAGE_RESOURCE_BREAKDOWN_DIMENSIONS]
-      : [dimension]
+      : dimension === 'sdk'
+        ? [...USAGE_SDK_BREAKDOWN_DIMENSIONS]
+        : [dimension]
 
   const groups = await listUsageEventGroupsForMetric(projectId, metric, {
     dimensions,
@@ -246,6 +294,7 @@ export async function fetchProjectUsageEventBreakdown(
     queries,
     resourceId,
     resourceType,
+    limit: breakdownLimit,
   })
 
   return mapBreakdownGroupsForDimension(groups, dimension, breakdownLimit)
@@ -407,6 +456,12 @@ interface ListUsageEventGroupsParams {
   queries?: string[]
   resourceId?: string
   resourceType?: string
+  /**
+   * Max rows from listEvents. For flat (no-interval) top-N breakdowns, pass the
+   * UI limit so the API returns the highest-value groups (`orderBy=value` desc).
+   * Charts omit this and use USAGE_API_MAX_LIMIT with chronological asc order.
+   */
+  limit?: number
 }
 
 function mergeValuesByTime(groups: Models.UsageDataPoint[]): Map<string, number> {
@@ -728,6 +783,7 @@ export async function fetchUsageMetricsBreakdownByMetric(
     queries,
     resourceId,
     resourceType,
+    limit: breakdownLimit,
   })
 
   const result = new Map<string, UsageTopEndpoint[]>()
@@ -996,6 +1052,11 @@ async function listUsageEventGroupsByMetric(
     resourceId: params.resourceId,
     resourceType: params.resourceType,
   })
+  const { orderBy, orderDir, limit } = resolveUsageListOrder({
+    interval: params.interval,
+    hasDimensions: (params.dimensions?.length ?? 0) > 0,
+    limit: params.limit,
+  })
   const request: {
     metrics: string[]
     interval?: string
@@ -1003,16 +1064,16 @@ async function listUsageEventGroupsByMetric(
     endAt: string
     dimensions?: string[]
     queries?: string[]
+    orderBy?: string
     orderDir?: string
     limit?: number
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
-    orderDir: 'asc',
-    // Without an explicit limit, the API default truncates long 1h series
-    // (oldest buckets only when orderDir is asc), leaving the chart zero-filled.
-    limit: USAGE_API_MAX_LIMIT,
+    orderBy,
+    orderDir,
+    limit,
   }
 
   if (params.interval) {

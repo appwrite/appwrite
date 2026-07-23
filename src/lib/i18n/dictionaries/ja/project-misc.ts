@@ -1038,8 +1038,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite サービスセグメント別にグループ化されたリクエスト量。',
   'Request volume grouped by caller country.':
     '呼び出し元の国別にグループ化されたリクエスト量。',
-  'Request volume grouped by Appwrite region.':
-    'Appwrite リージョン別にグループ化されたリクエスト量。',
+  'Request volume grouped by caller city.':
+    '呼び出し元の都市別にグループ化されたリクエスト量。',
   'Request volume grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化されたリクエスト量。',
   'Request volume grouped by caller IP address.':
@@ -1052,6 +1052,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'クライアント名別にグループ化されたリクエスト量。',
   'Request volume grouped by device classification.':
     'デバイス分類別にグループ化されたリクエスト量。',
+  'Request volume grouped by SDK and version.':
+    'SDK とバージョン別にグループ化されたリクエスト量。',
   'Request volume grouped by resource ID.':
     'リソース ID 別にグループ化されたリクエスト量。',
   'Request volume grouped by resource type.':
@@ -1066,8 +1068,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite サービスセグメント別にグループ化された帯域幅。',
   'Bandwidth grouped by caller country.':
     '呼び出し元の国別にグループ化された帯域幅。',
-  'Bandwidth grouped by Appwrite region.':
-    'Appwrite リージョン別にグループ化された帯域幅。',
+  'Bandwidth grouped by caller city.':
+    '呼び出し元の都市別にグループ化された帯域幅。',
   'Bandwidth grouped by caller hostname.':
     '呼び出し元のホスト名別にグループ化された帯域幅。',
   'Bandwidth grouped by caller IP address.':
@@ -1080,10 +1082,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'クライアント名別にグループ化された帯域幅。',
   'Bandwidth grouped by device classification.':
     'デバイス分類別にグループ化された帯域幅。',
+  'Bandwidth grouped by SDK and version.':
+    'SDK とバージョン別にグループ化された帯域幅。',
   'Bandwidth grouped by resource ID.':
     'リソース ID 別にグループ化された帯域幅。',
   'Bandwidth grouped by resource type.':
     'リソースタイプ別にグループ化された帯域幅。',
+  SDK: 'SDK',
+  'SDK version': 'SDK バージョン',
+  'Caller city': '呼び出し元の都市',
   'API paths': 'API パス',
   'Operations grouped by database.': 'データベース別にグループ化された操作。',
   'Operations grouped by resource.': 'リソース別にグループ化された操作。',
@@ -2432,5 +2439,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '日分の利用履歴が含まれます。短い期間を選ぶか、アップグレードで延長できます。',
   'Use shorter range': '期間を短くする',
   'Date range exceeds log retention': '期間がログ保持期間を超えています',
+  'Upgrade to view usage': 'アップグレードして使用状況を表示',
+  'Usage insights are not included in your current plan. Upgrade to unlock detailed metrics and breakdowns.':
+    '現在のプランには使用状況インサイトが含まれていません。アップグレードして詳細なメトリクスと内訳を利用できます。',
   'Upgrade plan': 'プランのアップグレード',
 }

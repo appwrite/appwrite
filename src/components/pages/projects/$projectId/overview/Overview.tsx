@@ -116,7 +116,10 @@ import {
 } from '@/lib/usage/usage-chart-loading'
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 import { getUsageChartIntervalsForPlan } from '@/lib/usage/chart-interval'
-import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
+import {
+  resolveUsageChartErrorCopy,
+  shouldSuppressUsageChartRetry,
+} from '@/lib/usage/usage-history-errors'
 import { UsageChartErrorMessage } from '../shared/UsageChartErrorMessage'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
@@ -1065,10 +1068,11 @@ export function View({ projectId, initialData }: ViewProps) {
                     isLoading={showBandwidthChartLoading}
                     isError={isBandwidthError}
                     onRetry={
-                      bandwidthErrorCopy.isRetentionLimit
+                      shouldSuppressUsageChartRetry(bandwidthErrorCopy)
                         ? undefined
                         : () => void refetchBandwidth()
                     }
+                    upgradeOrgId={bandwidthErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                     formatValue={formatBandwidthValue}
                     errorTitle={bandwidthErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
@@ -1088,10 +1092,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       isLoading={showBandwidthChartLoading}
                       isError={isBandwidthError}
                       onRetry={
-                        bandwidthErrorCopy.isRetentionLimit
+                        shouldSuppressUsageChartRetry(bandwidthErrorCopy)
                           ? undefined
                           : () => void refetchBandwidth()
                       }
+                      upgradeOrgId={bandwidthErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                       errorTitle={bandwidthErrorCopy.title}
                       errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                     />
@@ -1122,10 +1127,11 @@ export function View({ projectId, initialData }: ViewProps) {
                     isLoading={showRequestsChartLoading}
                     isError={isRequestsError}
                     onRetry={
-                      requestsErrorCopy.isRetentionLimit
+                      shouldSuppressUsageChartRetry(requestsErrorCopy)
                         ? undefined
                         : () => void refetchRequests()
                     }
+                    upgradeOrgId={requestsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                     formatValue={formatRequestsValue}
                     errorTitle={requestsErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
@@ -1145,10 +1151,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       isLoading={showRequestsChartLoading}
                       isError={isRequestsError}
                       onRetry={
-                        requestsErrorCopy.isRetentionLimit
+                        shouldSuppressUsageChartRetry(requestsErrorCopy)
                           ? undefined
                           : () => void refetchRequests()
                       }
+                      upgradeOrgId={requestsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                       errorTitle={requestsErrorCopy.title}
                       errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                     />
@@ -1175,10 +1182,11 @@ export function View({ projectId, initialData }: ViewProps) {
                     isLoading={showStorageChartLoading}
                     isError={isStorageError}
                     onRetry={
-                      storageErrorCopy.isRetentionLimit
+                      shouldSuppressUsageChartRetry(storageErrorCopy)
                         ? undefined
                         : () => void refetchStorage()
                     }
+                    upgradeOrgId={storageErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                     errorTitle={storageErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                   />
@@ -1205,10 +1213,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       isLoading={showStorageChartLoading}
                       isError={isStorageError}
                       onRetry={
-                        storageErrorCopy.isRetentionLimit
+                        shouldSuppressUsageChartRetry(storageErrorCopy)
                           ? undefined
                           : () => void refetchStorage()
                       }
+                      upgradeOrgId={storageErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                       errorTitle={storageErrorCopy.title}
                       errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                     />
@@ -1239,10 +1248,11 @@ export function View({ projectId, initialData }: ViewProps) {
                     isLoading={showExecutionsChartLoading}
                     isError={isExecutionsError}
                     onRetry={
-                      executionsErrorCopy.isRetentionLimit
+                      shouldSuppressUsageChartRetry(executionsErrorCopy)
                         ? undefined
                         : () => void refetchExecutions()
                     }
+                    upgradeOrgId={executionsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                     formatValue={formatExecutionsValue}
                     errorTitle={executionsErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
@@ -1265,10 +1275,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       isLoading={showExecutionsChartLoading}
                       isError={isExecutionsError}
                       onRetry={
-                        executionsErrorCopy.isRetentionLimit
+                        shouldSuppressUsageChartRetry(executionsErrorCopy)
                           ? undefined
                           : () => void refetchExecutions()
                       }
+                      upgradeOrgId={executionsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                       errorTitle={executionsErrorCopy.title}
                       errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                     />
@@ -1299,10 +1310,11 @@ export function View({ projectId, initialData }: ViewProps) {
                     isLoading={showGbHoursChartLoading}
                     isError={isGbHoursError}
                     onRetry={
-                      gbHoursErrorCopy.isRetentionLimit
+                      shouldSuppressUsageChartRetry(gbHoursErrorCopy)
                         ? undefined
                         : () => void refetchGbHours()
                     }
+                    upgradeOrgId={gbHoursErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                     formatValue={formatGbHoursValue}
                     errorTitle={gbHoursErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
@@ -1326,10 +1338,11 @@ export function View({ projectId, initialData }: ViewProps) {
                       isLoading={showGbHoursChartLoading}
                       isError={isGbHoursError}
                       onRetry={
-                        gbHoursErrorCopy.isRetentionLimit
+                        shouldSuppressUsageChartRetry(gbHoursErrorCopy)
                           ? undefined
                           : () => void refetchGbHours()
                       }
+                      upgradeOrgId={gbHoursErrorCopy.isAddonNotFound ? project?.teamId : undefined}
                       errorTitle={gbHoursErrorCopy.title}
                       errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                     />

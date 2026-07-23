@@ -1747,6 +1747,7 @@ export type RequestsBreakdownQueryEntry = {
   section: RequestsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -1773,6 +1774,7 @@ export function useProjectRequestsBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -1925,6 +1927,7 @@ export type BandwidthBreakdownQueryEntry = {
   section: BandwidthBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -1951,6 +1954,7 @@ export function useProjectBandwidthBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -2457,6 +2461,7 @@ export type DatabaseReadsBreakdownQueryEntry = {
   section: DatabaseOperationsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -2487,6 +2492,7 @@ export function useProjectDatabaseReadsBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -2498,6 +2504,7 @@ export type DatabaseWritesBreakdownQueryEntry = {
   section: DatabaseOperationsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -2528,6 +2535,7 @@ export function useProjectDatabaseWritesBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),

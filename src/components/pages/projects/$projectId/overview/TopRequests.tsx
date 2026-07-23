@@ -66,6 +66,8 @@ interface TopRequestsProps {
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
+  /** When set, error state shows Upgrade plan instead of retry. */
+  upgradeOrgId?: string | null
   errorTitle?: string
   errorMessage?: ReactNode
 }
@@ -141,6 +143,7 @@ export function TopRequests({
   isLoading = false,
   isError = false,
   onRetry,
+  upgradeOrgId,
   errorTitle = OVERVIEW_BANDWIDTH_ERROR.title,
   errorMessage = OVERVIEW_BANDWIDTH_ERROR.message,
 }: TopRequestsProps) {
@@ -217,6 +220,7 @@ export function TopRequests({
                 typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
               }
               onRetry={onRetry}
+              upgradeOrgId={upgradeOrgId}
             />
           </div>
         ) : isLoading ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
@@ -11,13 +11,20 @@ import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-br
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  resolveUsageChartErrorCopy,
+  shouldSuppressUsageChartRetry,
+} from '@/lib/usage/usage-history-errors'
+import { DEFAULT_USAGE_LOG_RETENTION_DAYS } from '@/lib/usage/usage-log-retention'
 import { overviewTopBreakdownListClass } from '../../overview/chart-panel'
 import { OverviewChartPanelError } from '../../overview/OverviewChartPanelError'
+import { UsageChartErrorMessage } from '../../shared/UsageChartErrorMessage'
 import {
   UsageBreakdownListSkeleton,
   UsageBreakdownRowsList,
 } from './UsageBreakdownRows'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useOptionalUsageFilters } from '../usage-filters-context'
 
 export function UsageMetricCardShell({
   className,
@@ -78,20 +85,39 @@ export function UsageBreakdownListEmptyOverlay() {
 export function UsageBreakdownListError({
   title,
   message,
+  error,
   onRetry,
 }: {
   title: string
   message: string
+  error?: unknown
   onRetry?: () => void
 }) {
   const t = useT()
+  const usageFilters = useOptionalUsageFilters()
+  const resolvedErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        error,
+        usageFilters?.usageLogRetentionDays ?? DEFAULT_USAGE_LOG_RETENTION_DAYS,
+        { title, message },
+      ),
+    [error, usageFilters?.usageLogRetentionDays, title, message],
+  )
+  const showUpgradeCta = resolvedErrorCopy.isAddonNotFound
+  const showRetry =
+    !!onRetry && !shouldSuppressUsageChartRetry(resolvedErrorCopy)
+
   return (
     <div className={overviewTopBreakdownListClass}>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 py-6 text-center">
         <OverviewChartPanelError
-          title={t(title)}
-          message={t(message)}
-          onRetry={onRetry}
+          title={t(resolvedErrorCopy.title)}
+          message={<UsageChartErrorMessage copy={resolvedErrorCopy} />}
+          onRetry={showRetry ? onRetry : undefined}
+          upgradeOrgId={
+            showUpgradeCta ? usageFilters?.organizationId : undefined
+          }
         />
       </div>
     </div>
@@ -111,6 +137,7 @@ type UsageBreakdownCardProps = {
   tableLookup?: TableBreakdownResourceMap | null
   isLoading: boolean
   isError: boolean
+  error?: unknown
   errorTitle: string
   errorMessage: string
   formatValue: (value: number) => string
@@ -135,6 +162,7 @@ export function UsageBreakdownCard({
   tableLookup,
   isLoading,
   isError,
+  error,
   errorTitle,
   errorMessage,
   formatValue,
@@ -200,6 +228,7 @@ export function UsageBreakdownCard({
           <UsageBreakdownListError
             title={errorTitle}
             message={errorMessage}
+            error={error}
             onRetry={onRetry}
           />
         ) : isLoading && items.length === 0 ? (

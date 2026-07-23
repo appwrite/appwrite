@@ -4,9 +4,16 @@ import type { UsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
 export function UsageChartErrorMessage({
   copy,
 }: {
-  copy: Pick<UsageChartErrorCopy, 'message' | 'isRetentionLimit' | 'retentionDays'>
+  copy: Pick<
+    UsageChartErrorCopy,
+    'message' | 'isRetentionLimit' | 'isAddonNotFound' | 'retentionDays'
+  >
 }) {
   const t = useT()
+
+  if (copy.isAddonNotFound) {
+    return <>{t(copy.message)}</>
+  }
 
   if (copy.isRetentionLimit && copy.retentionDays != null) {
     return (

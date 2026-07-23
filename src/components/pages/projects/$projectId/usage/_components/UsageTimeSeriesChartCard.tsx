@@ -15,11 +15,14 @@ import {
   DEFAULT_USAGE_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
+import { Link } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelErrorClass,
@@ -32,7 +35,10 @@ import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/Cha
 import { useOptionalUsageFilters } from '../usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { UsageChartErrorMessage } from '../../shared/UsageChartErrorMessage'
-import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
+import {
+  resolveUsageChartErrorCopy,
+  shouldSuppressUsageChartRetry,
+} from '@/lib/usage/usage-history-errors'
 import { DEFAULT_USAGE_LOG_RETENTION_DAYS } from '@/lib/usage/usage-log-retention'
 import {
   createUsageChartAxisTickFormatter,
@@ -162,6 +168,12 @@ export function UsageTimeSeriesChartCard({
       errorMessage,
     ],
   )
+  const { features } = useConsoleProfile()
+  const organizationId = usageFilters?.organizationId
+  const showUpgradeCta =
+    resolvedErrorCopy.isAddonNotFound && features.billing && !!organizationId
+  const showRetry =
+    !!onRetry && !shouldSuppressUsageChartRetry(resolvedErrorCopy)
   const chartData = useMemo(
     () =>
       chartPoints.map((point) => ({
@@ -259,7 +271,17 @@ export function UsageTimeSeriesChartCard({
                   <UsageChartErrorMessage copy={resolvedErrorCopy} />
                 </p>
               </div>
-              {onRetry && !resolvedErrorCopy.isRetentionLimit ? (
+              {showUpgradeCta ? (
+                <Button asChild size="sm">
+                  <Link
+                    to="/upgrade"
+                    search={{ orgId: organizationId! }}
+                    {...analyticsAttrs('upgrade-clicked')}
+                  >
+                    {t('Upgrade plan')}
+                  </Link>
+                </Button>
+              ) : showRetry ? (
                 <Button variant="outline" size="sm" onClick={onRetry}>
                   {t('Try again')}
                 </Button>

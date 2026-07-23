@@ -1545,8 +1545,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Request volume grouped by caller country.':
     'נפח בקשות מקובץ לפי מדינת המקור.',
-  'Request volume grouped by Appwrite region.':
-    'נפח בקשות מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
+  'Request volume grouped by caller city.':
+    'נפח בקשות מקובץ לפי עיר המקור.',
   'Request volume grouped by caller hostname.':
     'נפח בקשות מקובץ לפי שם המארח של המקור.',
   'Request volume grouped by caller IP address.':
@@ -1557,6 +1557,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Request volume grouped by client name.': 'נפח בקשות מקובץ לפי שם הלקוח.',
   'Request volume grouped by device classification.':
     'נפח בקשות מקובץ לפי סיווג המכשיר.',
+  'Request volume grouped by SDK and version.':
+    'נפח בקשות מקובץ לפי SDK וגרסה.',
   'Request volume grouped by resource ID.': 'נפח בקשות מקובץ לפי מזהה משאב.',
   'Request volume grouped by resource type.': 'נפח בקשות מקובץ לפי סוג משאב.',
   'Endpoint paths with the highest bandwidth consumption.':
@@ -1567,7 +1569,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth grouped by Appwrite service segment.':
     'רוחב פס מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
-  'Bandwidth grouped by Appwrite region.': 'רוחב פס מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
+  'Bandwidth grouped by caller city.': 'רוחב פס מקובץ לפי עיר המקור.',
   'Bandwidth grouped by caller hostname.':
     'רוחב פס מקובץ לפי שם המארח של המקור.',
   'Bandwidth grouped by caller IP address.':
@@ -1578,8 +1580,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth grouped by client name.': 'רוחב פס מקובץ לפי שם הלקוח.',
   'Bandwidth grouped by device classification.':
     'רוחב פס מקובץ לפי סיווג המכשיר.',
+  'Bandwidth grouped by SDK and version.': 'רוחב פס מקובץ לפי SDK וגרסה.',
   'Bandwidth grouped by resource ID.': 'רוחב פס מקובץ לפי מזהה משאב.',
   'Bandwidth grouped by resource type.': 'רוחב פס מקובץ לפי סוג משאב.',
+  SDK: 'SDK',
+  'SDK version': 'גרסת SDK',
+  'Caller city': 'עיר מקור',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
   'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',
@@ -2456,5 +2462,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'ימים של היסטוריית שימוש. השתמשו בטווח קצר יותר או שדרגו לעוד.',
   'Use shorter range': 'טווח קצר יותר',
   'Date range exceeds log retention': 'טווח התאריכים חורג משמירת הלוגים',
+  'Upgrade to view usage': 'שדרגו כדי לצפות בשימוש',
+  'Usage insights are not included in your current plan. Upgrade to unlock detailed metrics and breakdowns.':
+    'תובנות שימוש אינן כלולות בתוכנית הנוכחית שלכם. שדרגו כדי לפתוח מדדים ופירוטים מפורטים.',
   'Upgrade plan': 'שדרוג תוכנית',
 }

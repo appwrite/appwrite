@@ -54,10 +54,10 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
     labelVariant: 'default',
   },
   {
-    dimension: 'region',
-    title: 'Regions',
-    description: 'Bandwidth grouped by Appwrite region.',
-    metricId: 'breakdown-region',
+    dimension: 'city',
+    title: 'Cities',
+    description: 'Bandwidth grouped by caller city.',
+    metricId: 'breakdown-city',
     labelVariant: 'default',
   },
   {
@@ -101,6 +101,13 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
     description: 'Bandwidth grouped by device classification.',
     metricId: 'breakdown-device',
     labelVariant: 'default',
+  },
+  {
+    dimension: 'sdk',
+    title: 'SDKs',
+    description: 'Bandwidth grouped by SDK and version.',
+    metricId: 'breakdown-sdk',
+    labelVariant: 'mono',
   },
   {
     dimension: 'resource',

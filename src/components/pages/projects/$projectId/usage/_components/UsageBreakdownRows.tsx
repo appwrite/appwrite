@@ -354,6 +354,22 @@ export function UsageBreakdownRow({
       return
     }
 
+    if (dimension === 'sdk') {
+      const filters: UsageBreakdownFilterEntry[] = []
+      const sdk = item.sdk?.trim()
+      const sdkVersion = item.sdkVersion?.trim()
+      if (sdk) {
+        filters.push({ dimension: 'sdk', value: sdk })
+      }
+      if (sdkVersion) {
+        filters.push({ dimension: 'sdkVersion', value: sdkVersion })
+      }
+      if (filters.length > 0) {
+        onAddFilter(filters)
+        return
+      }
+    }
+
     onAddFilter([{ dimension, value: item.label }])
   }
 

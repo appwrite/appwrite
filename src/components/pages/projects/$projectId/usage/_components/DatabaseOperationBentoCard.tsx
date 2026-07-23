@@ -160,7 +160,7 @@ export function DatabaseOperationBentoCard({
           </div>
 
           <div className="grid items-stretch gap-4 lg:grid-cols-2">
-            {standardEntries.map(({ section, items, isLoading, isError }) => (
+            {standardEntries.map(({ section, items, isLoading, isError, error }) => (
               <div
                 key={section.dimension}
                 className="flex h-full min-h-0 flex-col"
@@ -178,6 +178,7 @@ export function DatabaseOperationBentoCard({
                   tableLookup={tableLookup}
                   isLoading={isLoading}
                   isError={isError}
+                  error={error}
                   errorTitle={DATABASE_USAGE_ERROR.title}
                   errorMessage={DATABASE_USAGE_ERROR.message}
                   formatValue={formatDatabaseOperationsValue}
@@ -202,6 +203,7 @@ export function DatabaseOperationBentoCard({
                   items={resourceEntry.items}
                   isLoading={resourceEntry.isLoading}
                   isError={resourceEntry.isError}
+                  error={resourceEntry.error}
                   countryLookups={countryLookups}
                   computeLookup={computeLookup}
                   databaseLookup={databaseLookup}
