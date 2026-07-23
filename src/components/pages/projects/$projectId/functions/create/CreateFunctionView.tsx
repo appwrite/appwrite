@@ -61,6 +61,7 @@ import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import {
   getVcsProvider,
+  getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
   VCS_PROVIDERS,
@@ -648,21 +649,26 @@ export function CreateFunctionView() {
                 disabled={reposFetching}
               />
 
-              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
-                <p className="text-[12px] text-muted-foreground">
-                  {t('Missing a repository?')}{' '}
-                  <a
-                    href={getVcsAuthUrl(
-                      getVcsProvider(selectedInstallation?.provider).id,
-                      'update',
-                    )}
-                    className="link-neutral inline-flex items-center gap-1 font-medium"
-                  >
-                    {t('Check your permissions')}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </a>
-                </p>
-              </div>
+              {(() => {
+                const knownProvider = getKnownVcsProvider(
+                  selectedInstallation?.provider,
+                )
+                if (!knownProvider) return null
+                return (
+                  <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
+                    <p className="text-[12px] text-muted-foreground">
+                      {t('Missing a repository?')}{' '}
+                      <a
+                        href={getVcsAuthUrl(knownProvider.id, 'update')}
+                        className="link-neutral inline-flex items-center gap-1 font-medium"
+                      >
+                        {t('Check your permissions')}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </CreateWizardLeftColumn>

@@ -44,6 +44,7 @@ import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   getVcsProvider,
+  getKnownVcsProvider,
   buildVcsAuthUrl,
   VcsIcon,
   VCS_PROVIDERS,
@@ -519,31 +520,34 @@ export function CreateSiteView() {
               />
 
               {/* Help note for missing repos */}
-              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
-                <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
-                  {t("Can't find a repository?")}
-                </p>
-                <p className="text-[12px] text-muted-foreground leading-snug mb-3">
-                  {t(
-                    'If you selected specific repositories during setup, you may need to update your permissions to include additional ones.',
-                  )}
-                </p>
-                <a
-                  href={getVcsAuthUrl(
-                    getVcsProvider(selectedInstallation?.provider).id,
-                    'update',
-                  )}
-                  className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
-                >
-                  <VcsIcon
-                    type={selectedInstallation?.provider}
-                    className="h-3.5 w-3.5"
-                  />
-                  {t(
-                    `Update ${getVcsProvider(selectedInstallation?.provider).label} permissions`,
-                  )}
-                </a>
-              </div>
+              {(() => {
+                const knownProvider = getKnownVcsProvider(
+                  selectedInstallation?.provider,
+                )
+                if (!knownProvider) return null
+                return (
+                  <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
+                    <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
+                      {t("Can't find a repository?")}
+                    </p>
+                    <p className="text-[12px] text-muted-foreground leading-snug mb-3">
+                      {t(
+                        'If you selected specific repositories during setup, you may need to update your permissions to include additional ones.',
+                      )}
+                    </p>
+                    <a
+                      href={getVcsAuthUrl(knownProvider.id, 'update')}
+                      className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
+                    >
+                      <VcsIcon
+                        type={knownProvider.id}
+                        className="h-3.5 w-3.5"
+                      />
+                      {t(`Update ${knownProvider.label} permissions`)}
+                    </a>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </CreateWizardLeftColumn>
