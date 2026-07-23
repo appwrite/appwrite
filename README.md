@@ -198,7 +198,50 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Architecture
 
-![Appwrite Architecture showing how Appwrite is built and the services and tools it uses](docs/specs/overview.drawio.svg)
+```mermaid
+flowchart TD
+    classDef client   fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef gateway  fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef api      fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef service  fill:#f5f5f5,stroke:#bbb,color:#000
+    classDef hot      fill:#f8cecc,stroke:#b85450,color:#000
+    classDef store    fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef compute  fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef worker   fill:#b0e3e6,stroke:#007080,color:#000
+    classDef external fill:#ffe6cc,stroke:#d79b00,color:#000
+
+    subgraph Clients
+        direction LR
+        Web(Web):::client ~~~ Flutter(Flutter):::client ~~~ iOS(iOS):::client ~~~ Android(Android):::client ~~~ Servers(Servers):::client
+    end
+
+    subgraph APIServices["API Services"]
+        direction LR
+        Users(Users):::service ~~~ Account(Account):::service ~~~ Teams(Teams):::service ~~~ Databases(Databases):::service ~~~ Storage(Storage):::service ~~~ Locale(Locale):::service ~~~ Avatars(Avatars):::service ~~~ Health(Health):::service ~~~ Functions(Functions):::service ~~~ Sites(Sites):::service ~~~ Messaging(Messaging):::service ~~~ VCS(VCS):::service ~~~ Tokens(Tokens):::service ~~~ Proxy(Proxy):::service
+    end
+
+    subgraph Infra["Infrastructure"]
+        direction LR
+        Cache[("Cache (Redis)")]:::hot ~~~ Queue[("Queue (Redis)")]:::hot ~~~ AV["AntiVirus (ClamAV)"]:::external ~~~ DB[(Database)]:::store ~~~ Executor[["Executor (Open-Runtimes)"]]:::compute ~~~ Docker(Docker / K8S):::service
+    end
+
+    subgraph Workers["Background Workers"]
+        direction LR
+        Schedulers(Schedulers):::worker ~~~ StatsUsage(Usage):::worker ~~~ Maintenance(Maintenance):::worker ~~~ Audits(Audits):::worker ~~~ Mails(Mails):::worker ~~~ DBw(Databases):::worker ~~~ Webhooks(Webhooks):::worker ~~~ FnW(Functions):::worker ~~~ Certificates(Certificates):::worker ~~~ Deletes(Deletes):::worker ~~~ Builds(Builds):::worker ~~~ MessagingW(Messaging):::worker ~~~ Migrations(Migrations):::worker ~~~ Executions(Executions):::worker
+    end
+
+    Clients --> LB{{Loadbalancer}}:::gateway
+    LB --> Console(Console):::api & GQL(GraphQL API):::api & REST(REST API):::api & RT(Realtime API):::api & SSL{{SSL Gateway}}:::gateway
+    REST --> APIServices
+    REST & GQL & RT --> Cache & Queue
+    Storage --> AV
+    Cache --> DB
+    Queue --> Workers
+    Workers --> DB
+    FnW --> Executor
+    Mails & MessagingW --> SMTP(SMTP):::external
+    Certificates --> LE(Letsencrypt):::external --> LB
+```
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
