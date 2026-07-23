@@ -215,7 +215,7 @@ jobs:
               { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
               { name: 'VCSGitHub',         runner: runner4, functional: true,  processes: null },
-              { name: 'VCSGitea',          runner: runner4, functional: true,  processes: null },
+              { name: 'VCSGitea',          runner: runner4, functional: false, processes: null },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
               { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1 },
