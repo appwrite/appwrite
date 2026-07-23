@@ -883,27 +883,35 @@ class Specs extends Action
             }
 
             // Git add, commit, and push. Force push is required because the
-            // branch is rebuilt from the base branch on every run.
+            // branch is rebuilt from the base branch on every run — and it
+            // must happen even with nothing to commit, so a stale remote
+            // branch is synced back to the base branch.
             $statusOutput = [];
             \exec('cd ' . $target . ' && git add -A && git status --porcelain', $statusOutput);
 
             if (empty($statusOutput)) {
-                Console::log("No spec changes to push to {$gitRepoName}, already up to date");
+                Console::log("No spec changes to commit for {$gitRepoName}, syncing branch");
             } else {
-                $pushOutput = [];
-                $pushReturnCode = 0;
-                \exec('cd ' . $target . ' && \
-                    git commit -m "' . \addslashes($message) . '" && \
-                    git push -u origin ' . $gitBranch . ' --force 2>&1
-                ', $pushOutput, $pushReturnCode);
+                $commitOutput = [];
+                $commitReturnCode = 0;
+                \exec('cd ' . $target . ' && git commit -m "' . \addslashes($message) . '" 2>&1', $commitOutput, $commitReturnCode);
 
-                if ($pushReturnCode !== 0) {
-                    Console::error("Failed to push specs to {$gitRepoName}: " . \implode("\n", $pushOutput));
+                if ($commitReturnCode !== 0) {
+                    Console::error("Failed to commit specs for {$gitRepoName}: " . \implode("\n", $commitOutput));
                     return;
                 }
-
-                Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
             }
+
+            $pushOutput = [];
+            $pushReturnCode = 0;
+            \exec('cd ' . $target . ' && git push -u origin ' . $gitBranch . ' --force 2>&1', $pushOutput, $pushReturnCode);
+
+            if ($pushReturnCode !== 0) {
+                Console::error("Failed to push specs to {$gitRepoName}: " . \implode("\n", $pushOutput));
+                return;
+            }
+
+            Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
 
             // Create or update PR
             $prTitle = "feat: API specs update for version {$version}";

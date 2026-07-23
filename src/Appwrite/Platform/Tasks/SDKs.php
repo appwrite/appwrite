@@ -637,8 +637,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             try {
                 $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
                 $repo->execute('checkout', '-f', 'FETCH_HEAD');
-            } catch (\Throwable) {
-                // Empty repository — start the base branch from scratch
+            } catch (\Throwable $e) {
+                // Only start from scratch when the remote is genuinely empty.
+                // Any other failure (network, auth, missing branch) must abort:
+                // force-pushing a branch built without the real base would
+                // truncate files inherited from it.
+                $remoteRefs = $repo->execute('ls-remote', '--heads', 'origin');
+                if (! empty(\trim(\implode("\n", (array) $remoteRefs)))) {
+                    throw $e;
+                }
                 $repo->execute('checkout', '-b', $repoBranch);
             }
             $repo->execute('checkout', '-B', $gitBranch);
@@ -1161,10 +1168,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
 
         // Preserve a manually curated PR description: only overwrite the body
-        // when the existing one is empty or still entirely generated — the
-        // default one-liner, optionally followed by the generated
-        // "## Changes" changelog section. A prefix match is not enough:
-        // maintainers may append notes below the generated sentence.
+        // when the existing one is empty or is exactly the generated default
+        // one-liner. Anything beyond that single sentence — an AI changelog,
+        // appended notes, links, or extra sections — cannot be reliably told
+        // apart from curated content, so it is always preserved.
         $existingBody = '';
         $bodyOutput = [];
         \exec('gh api ' . \escapeshellarg($apiPath) . ' --jq .body 2>/dev/null', $bodyOutput);
@@ -1173,7 +1180,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
         $isDefaultBody = $existingBody === ''
             || (bool) \preg_match(
-                '/^This PR contains updates to the .+ SDK for version \S+\.(\s*## Changes\s[\s\S]*)?$/',
+                '/^This PR contains updates to the .+ SDK for version \S+\.$/',
                 $existingBody
             );
 
