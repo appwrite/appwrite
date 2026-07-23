@@ -162,6 +162,20 @@ export function RepositoryPicker({
     setRepoPage(1)
   }
 
+  // Filter the combined org list client-side -- it's already fully loaded
+  // (every installation's namespaces are fetched up front), so there's no
+  // need for a server round-trip just to narrow a list this size.
+  const [orgFilter, setOrgFilter] = useState('')
+  const filteredOrgOptions = useMemo(
+    () =>
+      orgFilter.trim()
+        ? orgOptions.filter((o) =>
+            o.label.toLowerCase().includes(orgFilter.trim().toLowerCase()),
+          )
+        : orgOptions,
+    [orgOptions, orgFilter],
+  )
+
   const vcsType =
     detectionType === 'runtime'
       ? VCSDetectionType.Runtime
@@ -217,6 +231,9 @@ export function RepositoryPicker({
             <Select
               value={selectedOptionKey}
               onValueChange={(key) => selectOption(key)}
+              onOpenChange={(open) => {
+                if (!open) setOrgFilter('')
+              }}
             >
               <SelectTrigger
                 id="repo-picker-installation"
@@ -238,17 +255,39 @@ export function RepositoryPicker({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {orgOptions.map((option) => (
-                  <SelectItem key={option.key} value={option.key}>
-                    <span className="flex items-center gap-2">
-                      <VcsIcon
-                        type={option.provider}
-                        className="h-4 w-4 shrink-0"
+                {orgOptions.length > 5 && (
+                  <div
+                    className="px-1 pb-1 mb-1 border-b border-border"
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="relative">
+                      <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <Input
+                        value={orgFilter}
+                        onChange={(e) => setOrgFilter(e.target.value)}
+                        placeholder={t('Filter organizations...')}
+                        className="h-8 ps-7 text-[12px]"
                       />
-                      <span>{option.label}</span>
-                    </span>
-                  </SelectItem>
-                ))}
+                    </div>
+                  </div>
+                )}
+                {filteredOrgOptions.length > 0 ? (
+                  filteredOrgOptions.map((option) => (
+                    <SelectItem key={option.key} value={option.key}>
+                      <span className="flex items-center gap-2">
+                        <VcsIcon
+                          type={option.provider}
+                          className="h-4 w-4 shrink-0"
+                        />
+                        <span>{option.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <p className="px-2 py-1.5 text-[12px] text-muted-foreground">
+                    {t('No matches')}
+                  </p>
+                )}
                 <div className="border-t border-border mt-1 pt-1">
                   {Object.values(VCS_PROVIDERS).map((p) => (
                     <a
