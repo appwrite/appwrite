@@ -900,7 +900,7 @@ class Specs extends Action
             } else {
                 $commitOutput = [];
                 $commitReturnCode = 0;
-                \exec('cd ' . $target . ' && git commit -m "' . \addslashes($message) . '" 2>&1', $commitOutput, $commitReturnCode);
+                \exec('cd ' . $target . ' && git commit -m ' . \escapeshellarg($message) . ' 2>&1', $commitOutput, $commitReturnCode);
 
                 if ($commitReturnCode !== 0) {
                     Console::error("Failed to commit specs for {$gitRepoName}: " . \implode("\n", $commitOutput));
