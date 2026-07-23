@@ -51,6 +51,9 @@ export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOption
   const [selection, setSelection] = useState<DiagramSelection>({ type: 'none' })
   const [connectDraft, setConnectDraft] = useState<DiagramConnectDraft | null>(null)
   const persistTimerRef = useRef<number | null>(null)
+  /** Skip the persist scheduled by initial mount / loadDocument. */
+  const suppressNextPersistRef = useRef(true)
+  const hasUserEditsRef = useRef(false)
   const clipboardRef = useRef<DiagramClipboardPayload | null>(null)
   const pasteGenerationRef = useRef(0)
 
@@ -70,6 +73,13 @@ export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOption
 
   useEffect(() => {
     if (!onDocumentPersistRef.current) return
+
+    if (suppressNextPersistRef.current) {
+      suppressNextPersistRef.current = false
+      return
+    }
+
+    hasUserEditsRef.current = true
 
     if (persistTimerRef.current) {
       window.clearTimeout(persistTimerRef.current)
@@ -458,6 +468,12 @@ export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOption
 
   const loadDocument = useCallback((next: DiagramDocument) => {
     cancelCoalescedCommit()
+    if (persistTimerRef.current) {
+      window.clearTimeout(persistTimerRef.current)
+      persistTimerRef.current = null
+    }
+    suppressNextPersistRef.current = true
+    hasUserEditsRef.current = false
     setDocumentState(normalizeDiagramDocument(next))
     setSelection({ type: 'none' })
     setConnectDraft(null)
@@ -468,12 +484,21 @@ export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOption
   }, [cancelCoalescedCommit, clearHistory, finishApplyingHistory])
 
   const flushPersist = useCallback(() => {
+    if (!hasUserEditsRef.current) {
+      if (persistTimerRef.current) {
+        window.clearTimeout(persistTimerRef.current)
+        persistTimerRef.current = null
+      }
+      return
+    }
     if (persistTimerRef.current) {
       window.clearTimeout(persistTimerRef.current)
       persistTimerRef.current = null
     }
     onDocumentPersistRef.current?.(document)
   }, [document])
+
+  const isDirty = useCallback(() => hasUserEditsRef.current, [])
 
   const resetDocument = useCallback(() => {
     recordUndoPoint()
@@ -507,6 +532,7 @@ export function useDiagramGeneratorState(options: UseDiagramGeneratorStateOption
     redo,
     loadDocument,
     flushPersist,
+    isDirty,
     setDocument: updateDocument,
     setSelection,
     cancelConnectDraft,

@@ -17,6 +17,10 @@ import {
   renderMilestoneCenteredTemplateSvg,
   renderMilestoneSplitTemplateSvg,
 } from '@/lib/cover-generator/milestone/render'
+import {
+  renderVersionNumberTemplateSvg,
+  renderVersionTitleTemplateSvg,
+} from '@/lib/cover-generator/version/render'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 
 async function renderCoverSvg(data: CoverRenderData): Promise<string> {
@@ -67,6 +71,18 @@ async function renderCoverSvg(data: CoverRenderData): Promise<string> {
       const milestone = renderMilestoneCenteredTemplateSvg(data, data.theme)
       content = milestone.content
       titleGradientBounds = milestone.titleGradientBounds
+      break
+    }
+    case 'version-number': {
+      const version = renderVersionNumberTemplateSvg(data, data.theme)
+      content = version.content
+      titleGradientBounds = version.titleGradientBounds
+      break
+    }
+    case 'version-title': {
+      const version = renderVersionTitleTemplateSvg(data, data.theme)
+      content = version.content
+      titleGradientBounds = version.titleGradientBounds
       break
     }
     default:

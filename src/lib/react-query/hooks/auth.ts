@@ -213,16 +213,23 @@ export function syncConsoleAccountAfterMutation(
   let next: Models.User | undefined
 
   if (options?.apiResult && isConsoleAccountUser(options.apiResult)) {
+    // Prefer the API prefs as source of truth. Merging cached prefs back in
+    // reintroduced nested/legacy keys and bloated the client prefs bag until
+    // the next write exceeded Appwrite's 64KB Assoc limit.
     next = cached
       ? ({
           ...cached,
           ...options.apiResult,
-          prefs: {
-            ...(cached.prefs ?? {}),
-            ...(options.apiResult.prefs ?? {}),
-          },
+          prefs: sanitizeAccountPrefsForWrite(
+            (options.apiResult.prefs ?? {}) as Record<string, unknown>,
+          ),
         } as Models.User)
-      : options.apiResult
+      : ({
+          ...options.apiResult,
+          prefs: sanitizeAccountPrefsForWrite(
+            (options.apiResult.prefs ?? {}) as Record<string, unknown>,
+          ),
+        } as Models.User)
   } else if (options?.updater && cached) {
     next = options.updater(cached)
   } else if (options?.patch && cached) {
@@ -1483,14 +1490,16 @@ function usePersistedPanelLayoutPref(
       )
     },
     onMutate: async (value) => {
-      const patch = mergeIntoPrefs((account?.prefs ?? {}) as UserPrefs, value)
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, ...patch },
+                prefs: mergeIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
               }
             : current,
       )
@@ -1605,17 +1614,16 @@ export function useGeneratorPanelVisibility(
       )
     },
     onMutate: async (value) => {
-      const patch = mergeGeneratorPanelVisibilityIntoPrefs(
-        (account?.prefs ?? {}) as UserPrefs,
-        value,
-      )
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, ...patch },
+                prefs: mergeGeneratorPanelVisibilityIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
               }
             : current,
       )

@@ -68,6 +68,17 @@ export function buildSavedDiagramGenerationsPrefs(
   }
 }
 
+/** Merge saved diagrams into account prefs before `updateAccountPrefs`. */
+export function mergeDiagramGenerationsIntoPrefs(
+  prefs: Record<string, unknown>,
+  list: SavedDiagramGeneration[],
+): Record<string, unknown> {
+  return {
+    ...prefs,
+    ...buildSavedDiagramGenerationsPrefs(list),
+  }
+}
+
 export function upsertSavedDiagramGeneration(
   list: SavedDiagramGeneration[],
   entry: SavedDiagramGeneration,

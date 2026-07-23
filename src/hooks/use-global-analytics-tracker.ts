@@ -85,51 +85,26 @@ function normalizeEventDescriptor(value: string | null | undefined) {
   return normalized
 }
 
-function getElementText(element: HTMLElement) {
-  if (element instanceof HTMLInputElement) {
-    return normalizeEventDescriptor(element.value)
-  }
-  return normalizeEventDescriptor(element.textContent)
-}
-
-function getReferencedText(element: HTMLElement, attribute: string) {
-  const ids = element.getAttribute(attribute)?.split(/\s+/).filter(Boolean)
-  if (!ids?.length) return undefined
-
-  for (const id of ids) {
-    const text = normalizeEventDescriptor(
-      document.getElementById(id)?.textContent,
-    )
-    if (text) return text
-  }
-
-  return undefined
-}
-
-function getTooltipText(element: HTMLElement) {
-  return (
-    normalizeEventDescriptor(element.getAttribute('title')) ??
-    getReferencedText(element, 'aria-describedby')
-  )
-}
-
+/**
+ * Only Lucide icon class names are safe for event names.
+ * Aria labels, tooltips, and visible text often include resource names
+ * (projects, orgs, buckets, etc.) and must not become Plausible event names.
+ */
 function getIconName(element: HTMLElement) {
   const icon = element.querySelector<SVGElement>('svg')
   if (!icon) return undefined
-
-  const accessibleIconName =
-    normalizeEventDescriptor(icon.getAttribute('aria-label')) ??
-    normalizeEventDescriptor(icon.querySelector('title')?.textContent)
-  if (accessibleIconName) return accessibleIconName
 
   const lucideClass = Array.from(icon.classList).find((className) =>
     className.startsWith('lucide-'),
   )
   if (!lucideClass) return undefined
 
+  // Skip the generic "lucide" base class if present as lucide-lucide
+  const iconSlug = lucideClass.replace(/^lucide-/, '')
+  if (!iconSlug || iconSlug === 'lucide') return undefined
+
   return normalizeEventDescriptor(
-    lucideClass
-      .replace(/^lucide-/, '')
+    iconSlug
       .split('-')
       .filter(Boolean)
       .join(' '),
@@ -147,21 +122,11 @@ function toEventTitle(value: string) {
     .join(' ')
 }
 
-function getElementDescriptor(element: HTMLElement) {
-  return (
-    normalizeEventDescriptor(element.getAttribute('aria-label')) ??
-    getReferencedText(element, 'aria-labelledby') ??
-    getElementText(element) ??
-    getTooltipText(element) ??
-    getIconName(element)
-  )
-}
-
 function getDynamicEventName(
   element: HTMLElement,
   fallback: AnalyticsEventName,
 ) {
-  const descriptor = getElementDescriptor(element)
+  const descriptor = getIconName(element)
   return descriptor ? `${toEventTitle(descriptor)} ${fallback}` : fallback
 }
 

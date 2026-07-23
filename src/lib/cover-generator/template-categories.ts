@@ -8,6 +8,7 @@ export const COVER_TEMPLATE_CATEGORY_IDS = [
   'text',
   'code',
   'milestones',
+  'releases',
   'logos',
   'product',
   'data',
@@ -40,6 +41,12 @@ export const COVER_TEMPLATE_CATEGORIES: CoverTemplateCategory[] = [
     label: 'Milestones',
     description: 'Share metrics, growth numbers, and launch milestones.',
     templateIds: ['milestone-split', 'milestone-centered'],
+  },
+  {
+    id: 'releases',
+    label: 'Releases',
+    description: 'Announce new version releases with a large version number.',
+    templateIds: ['version-number', 'version-title'],
   },
   {
     id: 'logos',

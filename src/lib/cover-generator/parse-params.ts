@@ -67,6 +67,7 @@ import {
   parseCoverCodeSnippetLanguage,
 } from '@/lib/cover-generator/code-snippet/constants'
 import { COVER_MILESTONE_DEFAULTS } from '@/lib/cover-generator/milestone/constants'
+import { COVER_VERSION_DEFAULTS } from '@/lib/cover-generator/version/constants'
 
 function parseCoverTitle(
   value: string | null | undefined,
@@ -118,6 +119,49 @@ function appendCoverMilestoneSearchParams(
   setOptional('subtitle', data.subtitle)
   setOptional('eyebrow', formatCoverEyebrow(data.eyebrow))
   setOptional('gradientStat', data.gradientStat)
+}
+
+function parseCoverVersionNumberFields(searchParams: URLSearchParams) {
+  return {
+    version: searchParams.get('version')?.trim() || COVER_VERSION_DEFAULTS.version,
+    eyebrow: formatCoverEyebrow(
+      searchParams.get('eyebrow') ?? COVER_VERSION_DEFAULTS.eyebrow,
+    ),
+  }
+}
+
+function parseCoverVersionTitleFields(searchParams: URLSearchParams) {
+  return {
+    ...parseCoverVersionNumberFields(searchParams),
+    title: parseCoverTitle(searchParams.get('title'), COVER_VERSION_DEFAULTS.title),
+  }
+}
+
+function appendCoverVersionNumberSearchParams(
+  params: URLSearchParams,
+  data: {
+    version: string
+    eyebrow?: string
+  },
+) {
+  params.set('version', data.version)
+  const setOptional = (key: string, value: string | number | boolean | undefined) => {
+    if (value == null || value === '') return
+    params.set(key, String(value))
+  }
+  setOptional('eyebrow', formatCoverEyebrow(data.eyebrow))
+}
+
+function appendCoverVersionTitleSearchParams(
+  params: URLSearchParams,
+  data: {
+    version: string
+    title: string
+    eyebrow?: string
+  },
+) {
+  appendCoverVersionNumberSearchParams(params, data)
+  params.set('title', stripCoverTitleSuffix(data.title))
 }
 
 export const DEFAULT_COVER_VALUES = {
@@ -660,6 +704,18 @@ export function parseCoverRenderData(
         template,
         ...parseCoverMilestoneFields(searchParams),
       }
+    case 'version-number':
+      return {
+        ...shared,
+        template,
+        ...parseCoverVersionNumberFields(searchParams),
+      }
+    case 'version-title':
+      return {
+        ...shared,
+        template,
+        ...parseCoverVersionTitleFields(searchParams),
+      }
     case 'simple-title':
     default:
       return {
@@ -825,6 +881,12 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
     case 'milestone-centered':
       appendCoverMilestoneSearchParams(params, data)
       break
+    case 'version-number':
+      appendCoverVersionNumberSearchParams(params, data)
+      break
+    case 'version-title':
+      appendCoverVersionTitleSearchParams(params, data)
+      break
   }
 
   return params
@@ -952,6 +1014,20 @@ export function createDefaultCoverData(
         }
       : {}
 
+  const versionParams =
+    template === 'version-number'
+      ? {
+          version: COVER_VERSION_DEFAULTS.version,
+          eyebrow: COVER_VERSION_DEFAULTS.eyebrow,
+        }
+      : template === 'version-title'
+        ? {
+            version: COVER_VERSION_DEFAULTS.version,
+            eyebrow: COVER_VERSION_DEFAULTS.eyebrow,
+            title: COVER_VERSION_DEFAULTS.title,
+          }
+        : {}
+
   const titleIconParams =
     template === 'title-icon'
       ? {
@@ -996,6 +1072,7 @@ export function createDefaultCoverData(
       ...cliCodeParams,
       ...codeSnippetParams,
       ...milestoneParams,
+      ...versionParams,
       ...(angled3dDefaults
         ? {
             rotateX: String(angled3dDefaults.rotateX),

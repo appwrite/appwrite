@@ -4,6 +4,10 @@ import {
   COVER_MILESTONE_FIELD_DEFINITIONS,
 } from '@/lib/cover-generator/milestone/constants'
 import {
+  COVER_VERSION_NUMBER_FIELD_DEFINITIONS,
+  COVER_VERSION_TITLE_FIELD_DEFINITIONS,
+} from '@/lib/cover-generator/version/constants'
+import {
   COVER_SCREENSHOT_FRAME_HEIGHT,
   COVER_SCREENSHOT_FRAME_WIDTH,
 } from '@/lib/cover-generator/cover-frame-width'
@@ -510,6 +514,18 @@ export const COVER_TEMPLATE_DEFINITIONS: CoverTemplateDefinition[] = [
     label: 'Milestone centered',
     description: 'Centered stat with title and subtitle below.',
     fields: COVER_MILESTONE_FIELD_DEFINITIONS,
+  },
+  {
+    id: 'version-number',
+    label: 'Version number',
+    description: 'Centered version number with a release eyebrow and brand gradient.',
+    fields: COVER_VERSION_NUMBER_FIELD_DEFINITIONS,
+  },
+  {
+    id: 'version-title',
+    label: 'Version title',
+    description: 'Large centered version number with eyebrow and title below.',
+    fields: COVER_VERSION_TITLE_FIELD_DEFINITIONS,
   },
   {
     id: 'integration-icon',

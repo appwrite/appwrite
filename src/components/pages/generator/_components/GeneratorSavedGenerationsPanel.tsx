@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RenameSavedGenerationDialog } from '@/components/pages/generator/_components/RenameSavedGenerationDialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -59,15 +60,16 @@ export function GeneratorSavedGenerationsPanel({
         <p className="mb-4 text-[12px] text-muted-foreground">{signInHint}</p>
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card/50">
         {generations.length === 0 ? (
-          <div className="bg-card/50 px-4 py-10 text-center">
-            <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-lg bg-muted">
-              <Icon className="size-5 text-muted-foreground" />
-            </div>
-            <p className="text-[13px] font-medium text-foreground">{emptyTitle}</p>
-            <p className="mt-1 text-[12px] text-muted-foreground">{emptyDescription}</p>
-          </div>
+          <EmptyState
+            icon={Icon}
+            title={emptyTitle}
+            description={emptyDescription}
+            isEmpty
+            variant="centered"
+            className="min-h-0 flex-1 py-8"
+          />
         ) : (
           <ul
             className={cn(

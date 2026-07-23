@@ -186,6 +186,19 @@ export type CoverMilestoneCenteredData = CoverMilestoneBaseData & {
   template: 'milestone-centered'
 }
 
+export type CoverVersionNumberData = {
+  template: 'version-number'
+  version: string
+  eyebrow?: string
+}
+
+export type CoverVersionTitleData = {
+  template: 'version-title'
+  version: string
+  title: string
+  eyebrow?: string
+}
+
 export type CoverTemplateData =
   | CoverSimpleTitleData
   | CoverIntegrationData
@@ -203,6 +216,8 @@ export type CoverTemplateData =
   | CoverCodeSnippetData
   | CoverMilestoneSplitData
   | CoverMilestoneCenteredData
+  | CoverVersionNumberData
+  | CoverVersionTitleData
 
 export type CoverRenderData = {
   theme: CoverThemeId

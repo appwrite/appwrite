@@ -55,13 +55,16 @@ export const USER_PREFS_KEY_ORGANIZATION = 'organization'
 export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
 
 /**
- * Appwrite `account.updatePrefs` only accepts a flat object of string, number,
- * or boolean values. Nested objects/arrays (legacy keys like `console` and
- * `notificationPrefs` from the old Svelte console) cause a 400:
+ * Appwrite `Assoc` prefs validator (`new Assoc()`): max JSON body size in bytes.
+ * Oversized payloads fail with the same message as a non-object prefs value:
  * "Invalid `prefs` param: Value must be a valid object."
- *
- * Call this before every write. Dropping invalid keys permanently clears them
- * from prefs (safe: this console stores structured data as JSON strings).
+ */
+export const APPWRITE_ACCOUNT_PREFS_MAX_BYTES = 65535
+
+/**
+ * Drop nested/legacy values before `account.updatePrefs`.
+ * Nested objects/arrays bloat the JSON and are not used by this console
+ * (structured data is stored as JSON strings on flat keys).
  */
 export function sanitizeAccountPrefsForWrite(
   prefs: Record<string, unknown>,
@@ -79,6 +82,22 @@ export function sanitizeAccountPrefsForWrite(
     }
   }
   return out
+}
+
+/** UTF-8 byte size of the sanitized prefs payload Appwrite will validate. */
+export function getAccountPrefsPayloadByteSize(
+  prefs: Record<string, unknown>,
+): number {
+  return new TextEncoder().encode(
+    JSON.stringify(sanitizeAccountPrefsForWrite(prefs)),
+  ).length
+}
+
+export function isAccountPrefsPayloadWithinLimit(
+  prefs: Record<string, unknown>,
+  maxBytes: number = APPWRITE_ACCOUNT_PREFS_MAX_BYTES,
+): boolean {
+  return getAccountPrefsPayloadByteSize(prefs) <= maxBytes
 }
 
 /** Max number of saved filter presets per view scope */

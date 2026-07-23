@@ -68,6 +68,9 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
   const dataRef = useRef(state.data)
   const previousTemplateRef = useRef(state.data.template)
   const persistTimerRef = useRef<number | null>(null)
+  /** Skip the persist scheduled by loadCover / initial hydrate. */
+  const suppressNextPersistRef = useRef(false)
+  const hasUserEditsRef = useRef(false)
 
   useEffect(() => {
     imageFieldsRef.current = state.imageFields
@@ -85,6 +88,12 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
   const loadCover = (data: CoverRenderData) => {
     revokeCoverImageObjectUrls(imageFieldsRef.current)
     const nextData = applyThemeToCoverData(data, data.theme)
+    suppressNextPersistRef.current = true
+    hasUserEditsRef.current = false
+    if (persistTimerRef.current != null) {
+      window.clearTimeout(persistTimerRef.current)
+      persistTimerRef.current = null
+    }
     setState(createEmptyEditorState(nextData))
     setImagesHydrated(false)
     previousTemplateRef.current = nextData.template
@@ -94,6 +103,7 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
         nextData.template,
         generationIdRef.current,
       )
+      suppressNextPersistRef.current = true
       setState(() => ({
         ...createEmptyEditorState(nextData),
         imageFields,
@@ -136,6 +146,12 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
   useEffect(() => {
     if (!imagesHydrated) return
 
+    if (suppressNextPersistRef.current) {
+      suppressNextPersistRef.current = false
+      return
+    }
+
+    hasUserEditsRef.current = true
     const timeoutId = window.setTimeout(() => {
       onDocumentPersistRef.current?.(state.data)
     }, PERSIST_DEBOUNCE_MS)
@@ -156,9 +172,15 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
   }, [])
 
   const flushPersist = useCallback(() => {
+    if (!hasUserEditsRef.current) {
+      cancelPersistDebounce()
+      return
+    }
     cancelPersistDebounce()
     onDocumentPersistRef.current?.(dataRef.current)
   }, [cancelPersistDebounce])
+
+  const isDirty = useCallback(() => hasUserEditsRef.current, [])
 
   const setData = (
     next: CoverRenderData | ((current: CoverRenderData) => CoverRenderData),
@@ -300,5 +322,6 @@ export function useCoverGeneratorState(options: UseCoverGeneratorStateOptions = 
     loadCover,
     flushPersist,
     cancelPersistDebounce,
+    isDirty,
   }
 }
