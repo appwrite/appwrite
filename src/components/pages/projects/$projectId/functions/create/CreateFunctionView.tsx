@@ -515,7 +515,7 @@ export function CreateFunctionView() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {orgOptions.length > 5 && (
+                    {orgOptions.length > 1 && (
                       <div
                         className="px-1 pb-1 mb-1 border-b border-border"
                         onKeyDown={(e) => e.stopPropagation()}
