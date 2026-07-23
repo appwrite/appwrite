@@ -25,7 +25,14 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Search, Lock, ArrowLeft, ArrowLeftRight } from 'lucide-react'
+import {
+  Search,
+  Lock,
+  ArrowLeft,
+  ArrowLeftRight,
+  User,
+  Users,
+} from 'lucide-react'
 import {
   getVcsProvider,
   getKnownVcsProvider,
@@ -34,7 +41,7 @@ import {
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
-import { useRepositories } from '@/lib/react-query/hooks'
+import { useRepositories, useNamespaces } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
@@ -140,7 +147,22 @@ export function RepositoryPicker({
     )
     onInstallationChange(firstOfProvider?.$id ?? '')
     setRepoPage(1)
+    setSelectedNamespace('')
   }
+
+  // Personal namespace + groups for the selected installation. Only GitLab
+  // returns more than one -- other providers already scope an installation
+  // to a single org/user via their OAuth flow, so this list is a no-op there.
+  const [selectedNamespace, setSelectedNamespace] = useState('')
+  const { data: namespacesData } = useNamespaces(
+    projectId,
+    selectedInstallationId || null,
+  )
+  const namespaces = namespacesData?.namespaces ?? []
+
+  useEffect(() => {
+    setSelectedNamespace('')
+  }, [selectedInstallationId])
 
   const vcsType =
     detectionType === 'runtime'
@@ -167,6 +189,7 @@ export function RepositoryPicker({
     repoPage - 1,
     REPO_PAGE_SIZE,
     debouncedRepoSearch || undefined,
+    selectedNamespace || undefined,
   )
 
   const repositories = useMemo(() => {
@@ -316,6 +339,37 @@ export function RepositoryPicker({
               </>
             )}
           </div>
+        )}
+
+        {selectedInstallationId && namespaces.length > 1 && (
+          <Select
+            value={selectedNamespace || namespaces[0]?.path || ''}
+            onValueChange={(value) => {
+              setSelectedNamespace(value)
+              setRepoPage(1)
+            }}
+          >
+            <SelectTrigger
+              id="repo-picker-namespace"
+              className="w-full h-9 text-[13px]"
+            >
+              <SelectValue placeholder={t('Select namespace')} />
+            </SelectTrigger>
+            <SelectContent>
+              {namespaces.map((namespace) => (
+                <SelectItem key={namespace.id} value={namespace.path}>
+                  <span className="flex items-center gap-2">
+                    {namespace.kind === 'user' ? (
+                      <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    )}
+                    <span>{namespace.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
 
         {selectedInstallationId && (
