@@ -7,6 +7,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\ProviderRepositories;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
@@ -17,9 +18,6 @@ use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
@@ -97,8 +95,7 @@ class XList extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-            ->param('providerNamespace', '', new Text(256), 'Namespace (personal account or group) to list repositories from, as returned by the namespaces endpoint\'s `path` field. Defaults to the installation\'s own namespace.', true)
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+            ->param('queries', [], new ProviderRepositories(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, and equal on owner.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')
@@ -110,7 +107,6 @@ class XList extends Action
         string $installationId,
         string $type,
         string $search,
-        string $providerNamespace,
         array $queries,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
@@ -134,16 +130,19 @@ class XList extends Action
         $queries = Query::parseQueries($queries);
         $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
         $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
+        $ownerQueries = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'owner');
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
+        $ownerQuery = current($ownerQueries);
+        $providerOwner = !empty($ownerQuery) ? $ownerQuery->getValue('') : '';
 
         if ($offset % $limit !== 0) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'offset must be a multiple of the limit');
         }
 
         $page = ($offset / $limit) + 1;
-        $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
+        $owner = !empty($providerOwner) ? $providerOwner : $vcs->getOwnerName($providerInstallationId);
         ['items' => $repos, 'total' => $total] = $vcs->searchRepositories($owner, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {

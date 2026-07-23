@@ -41,7 +41,7 @@ class XList extends Action
                 namespace: 'vcs',
                 group: 'namespaces',
                 name: 'list',
-                description: '/docs/references/vcs/list-namespaces.md',
+                description: 'List provider namespaces available to a VCS installation. This can include the user personal namespace and any groups or organizations the installation can browse.',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
