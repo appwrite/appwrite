@@ -112,17 +112,14 @@ class SDKs extends Action
             throw new \Exception('Cannot use --release=yes with --mode=examples');
         }
 
+        $prUrls = [];
+        $failedPushes = [];
+
         if (! $createRelease && ! $examplesOnly) {
             $git ??= Console::confirm('Should we use git push? (yes/no)');
             $git = ($git === 'yes');
-
-            $prUrls = [];
-            $failedPushes = [];
-
         } elseif ($examplesOnly) {
             $git = false;
-            $prUrls = [];
-            $failedPushes = [];
         }
 
         if (! $createRelease) {
