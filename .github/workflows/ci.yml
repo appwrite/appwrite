@@ -214,7 +214,8 @@ jobs:
               { name: 'Users',             runner: runner4, functional: true,  processes: null },
               { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
-              { name: 'VCS',               runner: runner4, functional: true,  processes: null },
+              { name: 'VCSGitHub',         runner: runner4, functional: true,  processes: null },
+              { name: 'VCSGitea',          runner: runner4, functional: true,  processes: null },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
               { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1 },
@@ -452,7 +453,7 @@ jobs:
           fi
 
           # Gitea runs alongside Appwrite only where VCS tests need it.
-          if [ "${{ matrix.service.name }}" = "VCS" ]; then
+          if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 

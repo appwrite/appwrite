@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\VCS;
+namespace Tests\E2E\Services\VCSGitHub;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -16,9 +16,9 @@ use Utopia\Database\Query;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-final class VCSConsoleClientTest extends Scope
+final class VCSGitHubConsoleClientTest extends Scope
 {
-    use VCSBase;
+    use VCSGitHubBase;
     use ProjectCustom;
     use SideConsole;
 
