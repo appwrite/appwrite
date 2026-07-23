@@ -649,6 +649,7 @@ export function View() {
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel={t('Create site')}
+        createAnalyticsAction="create-site"
         onCreate={() => {
           navigate({
             to: '/projects/$projectId/sites/create',

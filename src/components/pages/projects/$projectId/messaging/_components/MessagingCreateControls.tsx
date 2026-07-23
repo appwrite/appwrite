@@ -29,6 +29,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -184,7 +185,14 @@ export function MessagingCreateControls({
                 serviceHeaderIconOnlyButton,
                 'inline-flex cursor-not-allowed items-center justify-center text-[13px] font-medium opacity-50 pointer-events-none',
               )}
->
+              {...analyticsAttrs(
+                activeTab === 'messages'
+                  ? 'create-message'
+                  : activeTab === 'topics'
+                    ? 'create-topic'
+                    : 'create-provider',
+              )}
+            >
               <Plus className="h-4 w-4 shrink-0" />
               <span className={serviceHeaderShowLabel}>{label}</span>
               <span className="sr-only @[640px]:hidden">{label}</span>
@@ -206,7 +214,8 @@ export function MessagingCreateControls({
           className={cn(serviceHeaderIconOnlyButton, 'text-[13px] font-medium')}
           onClick={() => setTopicDialogOpen(true)}
           aria-label={t('Create topic')}
->
+          {...analyticsAttrs('create-topic')}
+        >
           <Plus className="h-4 w-4 shrink-0" />
           <span className={serviceHeaderShowLabel}>{t('Create topic')}</span>
           <span className="sr-only @[640px]:hidden">{t('Create topic')}</span>
@@ -274,7 +283,8 @@ export function MessagingCreateControls({
           })
         }
         aria-label={t('Create provider')}
->
+        {...analyticsAttrs('create-provider')}
+      >
         <Plus className="h-4 w-4 shrink-0" />
         <span className={serviceHeaderShowLabel}>{t('Create provider')}</span>
         <span className="sr-only @[640px]:hidden">{t('Create provider')}</span>
@@ -293,7 +303,8 @@ export function MessagingCreateControls({
           )}
           disabled={busy}
           aria-label={t('Create message')}
->
+          {...analyticsAttrs('create-message')}
+        >
           <Plus className="h-4 w-4 shrink-0" />
           <span className={serviceHeaderShowLabel}>{t('Create message')}</span>
           <span className="sr-only @[640px]:hidden">{t('Create message')}</span>

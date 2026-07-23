@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
 import { buildInitTicketShareUrl } from '@/lib/init/init-ticket-share'
@@ -133,7 +134,11 @@ function ShareActions({
         className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}
       >
         <Button className={primaryButtonClass} asChild>
-          <Link to="/sign-up" search={{ redirect: '/init' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/init' }}
+            {...analyticsAttrs('init-claim-ticket')}
+          >
             <Ticket className={iconSizeClass} />
             Claim your ticket
           </Link>
@@ -151,7 +156,11 @@ function ShareActions({
     <div className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}>
       {!isAuthenticated ? (
         <Button className={primaryButtonClass} asChild>
-          <Link to="/sign-up" search={{ redirect: '/init' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/init' }}
+            {...analyticsAttrs('init-claim-ticket')}
+          >
             <Ticket className={iconSizeClass} />
             Claim your ticket
           </Link>

@@ -489,6 +489,7 @@ export function View() {
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel={t('Create database')}
+        createAnalyticsAction="create-database"
         onCreate={() =>
           useCreateDatabaseWizard
             ? navigate({

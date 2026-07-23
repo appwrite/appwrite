@@ -24,6 +24,7 @@ import {
   useUpdateConsoleNotificationRead,
 } from '@/lib/react-query/hooks/notifications'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 function notificationTypeBadgeVariant(
   type: string,
@@ -180,6 +181,7 @@ export function NotificationCenterPopover() {
               size="icon"
               className="relative h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label={t('Notifications')}
+              {...analyticsAttrs('notifications-open')}
             >
               <Bell className="h-4 w-4" />
               {unreadBadgeLabel ? (

@@ -674,6 +674,7 @@ export function View() {
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
           createLabel={t('Create function')}
+          createAnalyticsAction="create-function"
           onCreate={handleCreateFunction}
           createDisabled={isCreateDisabled}
           createDisabledTooltip={
@@ -745,6 +746,7 @@ export function View() {
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel={t('Create function')}
+        createAnalyticsAction="create-function"
         onCreate={handleCreateFunction}
         createDisabled={isCreateDisabled}
         createDisabledTooltip={

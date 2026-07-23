@@ -11,6 +11,7 @@ import { ProductToolsSection } from '@/components/pages/products/ProductToolsSec
 import { ProductHeroLogoStrip } from '@/components/pages/products/_components/ProductHeroLogoStrip'
 import { ProductHeroIcon } from '@/components/pages/products/_components/ProductHeroIcon'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PRODUCT_HERO_LOGO_STRIPS } from '@/lib/products/hero-logo-strip'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductPageContent } from '@/lib/products/types'
@@ -48,12 +49,18 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         }
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('product-start-building')}
+          >
             {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={product.docsPath}>{pageLayoutCopy.viewDocs}</a>
+          <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
+            {pageLayoutCopy.viewDocs}
+          </a>
         </Button>
       </MarketingHeroSection>
 
@@ -68,12 +75,18 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         description={content.cta.description}
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('product-start-building')}
+          >
             {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">{pageLayoutCopy.viewPricing}</Link>
+          <Link to="/pricing" {...analyticsAttrs('product-view-pricing')}>
+            {pageLayoutCopy.viewPricing}
+          </Link>
         </Button>
       </MarketingCtaSection>
 

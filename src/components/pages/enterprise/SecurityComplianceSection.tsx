@@ -9,6 +9,7 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 type SecurityComplianceSectionProps = {
   onContactSales?: () => void
@@ -30,6 +31,7 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
           size="sm"
           className="h-9 text-[13px] text-muted-foreground"
           onClick={onContactSales}
+          {...analyticsAttrs('enterprise-contact-sales')}
         >
           {t('Contact sales')}
         </Button>

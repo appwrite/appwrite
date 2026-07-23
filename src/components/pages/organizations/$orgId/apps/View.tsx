@@ -15,6 +15,7 @@ import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export function View() {
   const t = useT()
@@ -80,7 +81,11 @@ export function View() {
             {t('OAuth2 apps published by your organization to the marketplace.')}
           </p>
         </div>
-        <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+        <Button
+          size="sm"
+          onClick={() => setCreateDialogOpen(true)}
+          {...analyticsAttrs('create-marketplace-app')}
+        >
           <Plus className="me-1.5 h-3.5 w-3.5" />
           {t('Add app')}
         </Button>
@@ -92,7 +97,11 @@ export function View() {
           title={t('No apps yet')}
           description={t('Create an app to share it with other organizations on the marketplace.')}
           action={
-            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+            <Button
+              size="sm"
+              onClick={() => setCreateDialogOpen(true)}
+              {...analyticsAttrs('create-marketplace-app')}
+            >
               {t('Add app')}
             </Button>
           }

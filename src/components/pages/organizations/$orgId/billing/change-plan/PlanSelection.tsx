@@ -21,6 +21,10 @@ import {
 import { cn } from '@/lib/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import {
+  analyticsAttrs,
+  getUpgradePlanSelectAnalyticsAction,
+} from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 const CONTACT_SALES_URL =
@@ -164,12 +168,13 @@ export function PlanSelection({
       size="sm"
       className="h-8 shrink-0 text-[13px]"
       asChild
->
+    >
       <a
         href={CONTACT_SALES_URL}
         target="_blank"
         rel="noopener noreferrer"
->
+        {...analyticsAttrs('upgrade-contact-sales')}
+      >
         {t('Contact sales')}
       </a>
     </Button>
@@ -208,7 +213,8 @@ export function PlanSelection({
         <button
           type="button"
           className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
->
+          {...analyticsAttrs('upgrade-enterprise-learn-more')}
+        >
           <span>
             {enterpriseOpen ? t('Show less') : t('Learn more')}
           </span>
@@ -296,6 +302,10 @@ export function PlanSelection({
               onPlanSelect(planTier as BillingPlanTier)
             }
 
+            const planSelectAnalytics =
+              getUpgradePlanSelectAnalyticsAction(planTier) ??
+              getUpgradePlanSelectAnalyticsAction(planName)
+
             return (
               <div
                 key={planTier}
@@ -320,7 +330,10 @@ export function PlanSelection({
                     ? 'cursor-not-allowed opacity-50'
                     : 'cursor-pointer',
                 )}
->
+                {...(planSelectAnalytics
+                  ? analyticsAttrs(planSelectAnalytics)
+                  : {})}
+              >
                 <RadioGroupItem
                   value={planTier}
                   id={planTier}
@@ -388,7 +401,10 @@ export function PlanSelection({
             className="text-[13px] text-muted-foreground"
             asChild
 >
-            <MarketingSiteLink href="/pricing">
+            <MarketingSiteLink
+              href="/pricing"
+              {...analyticsAttrs('upgrade-view-pricing')}
+            >
               {t('View detailed pricing')}
               <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
             </MarketingSiteLink>

@@ -7,6 +7,7 @@ import {
   type OrgSummary,
 } from '@/lib/billing/free-plan-conflict'
 import { cn } from '@/lib/utils'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 interface FreePlanConflictResolutionProps {
@@ -90,6 +91,7 @@ export function FreePlanConflictResolution({
                   ? 'border-primary bg-card'
                   : 'border-border bg-background/60',
               )}
+              {...analyticsAttrs('upgrade-free-conflict-choice')}
             >
               <RadioGroupItem value={id} id={`keep-org-${id}`} />
               <Label

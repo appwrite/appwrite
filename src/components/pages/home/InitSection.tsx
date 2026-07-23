@@ -7,6 +7,7 @@ import { InitDayCountdown } from '@/components/pages/init/_components/InitDayCou
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useT } from '@/lib/i18n/translate'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
@@ -153,7 +154,7 @@ export function InitSection() {
             className="h-8 shrink-0 px-3 text-[13px]"
             asChild
           >
-            <Link to="/init">
+            <Link to="/init" {...analyticsAttrs('home-join-init')}>
               {t('Join Init')}
               <ArrowRight className="size-3.5" />
             </Link>

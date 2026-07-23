@@ -45,6 +45,7 @@ import {
 import { resolveDatabaseComputeSpecId } from '@/lib/databases/database-compute'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import {
   DatabaseTypeIcon,
@@ -419,6 +420,7 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateDatabaseClick?.()}
+              {...analyticsAttrs('create-database')}
             >
               <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
               {t('Create database')}
@@ -430,6 +432,7 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateTableClick?.()}
+              {...analyticsAttrs('create-table')}
             >
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
               {t(createTableMenuLabel)}

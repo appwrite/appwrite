@@ -23,6 +23,10 @@ import {
 import type { ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import {
+  analyticsAttrs,
+  getMarketingProductAnalyticsAction,
+} from '@/lib/analytics-actions'
 
 const NAV_TRIGGER_CLASS =
   'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
@@ -196,12 +200,14 @@ function ProductNavLink({
   )
   const isDense = variant === 'dense'
   const isCompact = variant === 'compact'
+  const productAnalytics = getMarketingProductAnalyticsAction(navItemId)
 
   const link = (
     <Link
       to={item.href}
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
+      {...(productAnalytics ? analyticsAttrs(productAnalytics) : {})}
       className={cn(
         'group block cursor-pointer rounded-lg border border-transparent text-start transition-colors',
         isDense && 'flex items-center gap-2.5 px-2 py-2 hover:bg-accent/40',
@@ -457,6 +463,7 @@ export function MarketingProductsNavPopover() {
           className={NAV_TRIGGER_CLASS}
           aria-expanded={open}
           aria-haspopup="dialog"
+          {...analyticsAttrs('marketing-nav-products')}
         >
           {navigationCopy.triggerLabel}
           <ChevronDown
@@ -488,7 +495,10 @@ export function MarketingProductsMobileNav() {
   return (
     <Accordion type="single" collapsible className="px-1">
       <AccordionItem value="products" className="border-none">
-        <AccordionTrigger className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground">
+        <AccordionTrigger
+          className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground"
+          {...analyticsAttrs('marketing-nav-products')}
+        >
           {navigationCopy.triggerLabel}
         </AccordionTrigger>
         <AccordionContent className="pb-2 pt-1">

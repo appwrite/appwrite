@@ -6,6 +6,7 @@ import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 type MarketingHeroSectionProps = {
   eyebrow?: string
@@ -557,12 +558,18 @@ export function MarketingCtaSignupButtons() {
   return (
     <>
       <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-        <Link to="/sign-up" search={{ redirect: '/' }}>
+        <Link
+          to="/sign-up"
+          search={{ redirect: '/' }}
+          {...analyticsAttrs('marketing-get-started')}
+        >
           {t('Get started')}
         </Link>
       </Button>
       <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-        <Link to="/pricing">{t('View pricing')}</Link>
+        <Link to="/pricing" {...analyticsAttrs('marketing-view-pricing')}>
+          {t('View pricing')}
+        </Link>
       </Button>
     </>
   )

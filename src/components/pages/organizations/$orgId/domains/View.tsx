@@ -33,6 +33,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -658,6 +659,7 @@ export function View() {
                       })
                     }
                     className="h-9 gap-1.5 text-[13px] font-medium"
+                    {...analyticsAttrs('buy-domain')}
                   >
                     <ShoppingCart className="h-4 w-4" />
                     {t('Buy domain')}
@@ -678,6 +680,7 @@ export function View() {
                     onClick={() => setCreateDialogOpen(true)}
                     disabled={isDomainLimitReached}
                     className="h-9 gap-1.5 text-[13px] font-medium"
+                    {...analyticsAttrs('add-org-domain')}
                   >
                     <Plus className="h-4 w-4" />
                     {t('Add domain')}

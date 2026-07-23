@@ -39,6 +39,7 @@ import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bent
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
@@ -307,12 +308,19 @@ function HomePage() {
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-                <Link to="/sign-up" search={{ redirect: '/' }}>
+                <Link
+                  to="/sign-up"
+                  search={{ redirect: '/' }}
+                  {...analyticsAttrs('home-start-project')}
+                >
                   {homeCopy.startProject}
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <MarketingSiteLink href="/enterprise">
+                <MarketingSiteLink
+                  href="/enterprise"
+                  {...analyticsAttrs('home-request-demo')}
+                >
                   {homeCopy.requestDemo}
                 </MarketingSiteLink>
               </Button>

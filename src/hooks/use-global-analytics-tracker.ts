@@ -4,6 +4,7 @@ import {
   type AnalyticsProps,
   getSafeInternalPathParts,
 } from '@/lib/analytics'
+import { getAnalyticsActionEventName } from '@/lib/analytics-actions'
 import { useAnalytics } from './use-analytics'
 
 const CLICK_SELECTOR = [
@@ -19,8 +20,6 @@ const CLICK_SELECTOR = [
   '[role="switch"]',
   '[role="checkbox"]',
 ].join(',')
-
-const MAX_DYNAMIC_EVENT_LABEL_LENGTH = 80
 
 const CHANGE_SELECTOR = [
   'select',
@@ -76,58 +75,23 @@ function getBaseClickEventName(element: HTMLElement): AnalyticsEventName {
   return 'Button Clicked'
 }
 
-function normalizeEventDescriptor(value: string | null | undefined) {
-  if (!value) return undefined
-  const normalized = value.replace(/\s+/g, ' ').trim()
-  if (!normalized || normalized.length > MAX_DYNAMIC_EVENT_LABEL_LENGTH) {
-    return undefined
-  }
-  return normalized
-}
-
 /**
- * Only Lucide icon class names are safe for event names.
- * Aria labels, tooltips, and visible text often include resource names
- * (projects, orgs, buckets, etc.) and must not become Plausible event names.
+ * Prefer curated `data-analytics` actions (see `ANALYTICS_ACTIONS`).
+ * Never derive names from visible text, aria-labels, or tooltips: those often
+ * include resource names and create unbounded Plausible cardinality.
  */
-function getIconName(element: HTMLElement) {
-  const icon = element.querySelector<SVGElement>('svg')
-  if (!icon) return undefined
-
-  const lucideClass = Array.from(icon.classList).find((className) =>
-    className.startsWith('lucide-'),
-  )
-  if (!lucideClass) return undefined
-
-  // Skip the generic "lucide" base class if present as lucide-lucide
-  const iconSlug = lucideClass.replace(/^lucide-/, '')
-  if (!iconSlug || iconSlug === 'lucide') return undefined
-
-  return normalizeEventDescriptor(
-    iconSlug
-      .split('-')
-      .filter(Boolean)
-      .join(' '),
-  )
-}
-
-function toEventTitle(value: string) {
-  return value
-    .split(' ')
-    .map((word) => {
-      if (word.length <= 1) return word.toUpperCase()
-      if (word === word.toUpperCase() && /[A-Z]/.test(word)) return word
-      return `${word[0]?.toUpperCase() ?? ''}${word.slice(1).toLowerCase()}`
-    })
-    .join(' ')
-}
-
 function getDynamicEventName(
   element: HTMLElement,
   fallback: AnalyticsEventName,
 ) {
-  const descriptor = getIconName(element)
-  return descriptor ? `${toEventTitle(descriptor)} ${fallback}` : fallback
+  const actionHost = element.closest<HTMLElement>('[data-analytics]')
+  const actionId = actionHost?.getAttribute('data-analytics')
+  if (actionId) {
+    const catalogName = getAnalyticsActionEventName(actionId)
+    if (catalogName) return catalogName
+  }
+
+  return fallback
 }
 
 function getLinkProps(element: HTMLAnchorElement): AnalyticsProps {

@@ -566,6 +566,9 @@ function FunctionLayoutContent() {
                   ? t('Add domain')
                   : undefined
           }
+          createAnalyticsAction={
+            activeTab === 'executions' ? 'create-execution' : undefined
+          }
           onCreate={
             activeTab === 'deployments'
               ? undefined

@@ -17,6 +17,7 @@ import {
   marketingSplitLayoutClassName,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { allCustomerLogos } from '@/lib/home/customer-logos'
 import {
   ENTERPRISE_FORM_ID,
@@ -125,11 +126,19 @@ export function View() {
         wideFooter={enterpriseStats.length === 5}
         footer={<MarketingHeroStats items={[...enterpriseStats]} />}
       >
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
+        <Button
+          variant="brandCta"
+          size="lg"
+          className="h-10 text-[14px]"
+          onClick={scrollToForm}
+          {...analyticsAttrs('enterprise-contact-sales')}
+        >
           {t('Contact sales')}
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">{t('Compare plans')}</Link>
+          <Link to="/pricing" {...analyticsAttrs('enterprise-compare-plans')}>
+            {t('Compare plans')}
+          </Link>
         </Button>
       </MarketingHeroSection>
 
@@ -279,6 +288,7 @@ export function View() {
                 fields={ENTERPRISE_FORM_FIELDS}
                 defaultValues={formDefaultValues}
                 submitLabel={t('Submit')}
+                submitAnalyticsAction="enterprise-form-submit"
                 successTitle={t('Thank you for your submission')}
                 successDescription={t(
                   'Your details have been sent successfully. Our team will get back to you as soon as possible.',

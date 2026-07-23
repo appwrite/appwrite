@@ -1,6 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { Button } from '@/components/ui/button'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { pricingPlans } from '@/lib/pricing/plans'
 import type { PlanId, PricingPlan } from '@/lib/pricing/types'
@@ -10,6 +14,12 @@ import {
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { cn } from '@/lib/utils'
+
+const PRICING_PROMO_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
+  free: 'pricing-promo-start-free',
+  pro: 'pricing-promo-start-pro',
+  enterprise: 'pricing-promo-contact-enterprise',
+}
 
 function getPlanPromoCtaLabel(planId: PlanId): string {
   switch (planId) {
@@ -77,11 +87,17 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
             <Link
               to={plan.href}
               {...(plan.id === 'enterprise' ? {} : { search: { redirect: '/' } })}
+              {...analyticsAttrs(PRICING_PROMO_CTA_ACTIONS[plan.id])}
             >
               {t(getPlanPromoCtaLabel(plan.id))}
             </Link>
           ) : (
-            <a href={plan.href} target="_blank" rel="noopener noreferrer">
+            <a
+              href={plan.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...analyticsAttrs(PRICING_PROMO_CTA_ACTIONS[plan.id])}
+            >
               {t(getPlanPromoCtaLabel(plan.id))}
             </a>
           )}

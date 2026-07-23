@@ -224,6 +224,7 @@ export function View({ initialData }: ViewProps = {}) {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         createLabel={t('Create API key')}
+        createAnalyticsAction="create-api-key"
         onCreate={() => setCreateDrawerOpen(true)}
         createDisabled={noCreatePermission}
         createDisabledTooltip={

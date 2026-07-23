@@ -32,11 +32,17 @@ import {
 } from '@/components/global/layout/footer-container'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
+import {
+  analyticsAttrs,
+  getMarketingProductAnalyticsAction,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 
 type FooterLink = {
   label: string
   href: string
   external?: boolean
+  analyticsAction?: AnalyticsActionId
 }
 
 type ExpandedFooterGroup = {
@@ -76,11 +82,15 @@ function productFooterLink(
   label: string,
   path: string,
   marketing: boolean,
+  productId?: string,
 ): FooterLink {
   return {
     label,
     href: getProductPageUrl(path, marketing),
     external: isProductPageExternal(marketing),
+    analyticsAction: productId
+      ? getMarketingProductAnalyticsAction(productId)
+      : undefined,
   }
 }
 
@@ -112,13 +122,16 @@ function getExpandedFooterGroups(
   {
     title: footerCopy.groups.products,
     links: [
-      productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing),
-      productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing),
-      productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing),
-      productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing),
-      productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing),
-      docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
-      productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing),
+      productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
+      productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
+      productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
+      productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
+      productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
+      {
+        ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
+        analyticsAction: getMarketingProductAnalyticsAction('realtime'),
+      },
+      productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
     ],
   },
@@ -224,6 +237,9 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
             href={link.href}
             {...(link.external
               ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
+            {...(link.analyticsAction
+              ? analyticsAttrs(link.analyticsAction)
               : {})}
             className="link-unstyled text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >

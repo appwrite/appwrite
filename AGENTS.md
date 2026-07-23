@@ -1267,8 +1267,8 @@ Product analytics uses Plausible and must stay privacy-friendly. Most interactio
 
 - **Use the shared helper**: Import `useAnalytics` from `@/hooks/use-analytics` in components, or use `trackEvent` / `trackPageView` from `@/lib/analytics` outside React.
 - **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
-- **Prefer dynamic event names**: Do not add explicit analytics metadata attributes to buttons. The root tracker builds click and control event names from the element label, tooltip, or icon when available, with a generic fallback such as `Button Clicked`.
-- **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs.
+- **Name important controls via the action catalog**: Do not derive event names from visible text, aria-labels, or tooltips (those often include project/org/resource names). For specific, low-cardinality names, add a key to `ANALYTICS_ACTIONS` in `src/lib/analytics-actions.ts` and spread `analyticsAttrs('your-action')` on the control. Unknown `data-analytics` values are ignored.
+- **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs. Never put those values in event names either.
 - **Use route templates**: Page views and events should use sanitized routes such as `/projects/$projectId/databases/$databaseId`, not concrete paths.
 - **Keep manual tracking low-cardinality**: Manual event props should be booleans, counts, fixed enums, route templates, resource types, steps, results, or error names. Avoid labels or arbitrary strings from the UI.
 - **Track important outcomes manually**: For create/update/delete flows, track success and API failure when automatic form/click tracking is not enough.
@@ -1276,14 +1276,22 @@ Product analytics uses Plausible and must stay privacy-friendly. Most interactio
 
 ### Automatic event names
 
-Click and control events are named from the best safe descriptor available:
+1. If the clicked element (or a close ancestor) has `data-analytics` matching a key in `ANALYTICS_ACTIONS`, use that catalog event name (e.g. `Project Switcher Clicked`).
+2. Otherwise use a fixed base name from the control role: `Button Clicked`, `Menu Item Clicked`, `Control Changed`, `Tab Changed`, `Navigation Clicked`, or `External Link Opened`.
 
-- `aria-label` / `aria-labelledby`
-- visible text
-- tooltip text (`title` / `aria-describedby`)
-- icon name, including Lucide icon classes
+Example:
 
-Examples: `Create Project Button Clicked`, `Trash Menu Item Clicked`, `Docs External Link Opened`. If no safe descriptor exists, the tracker falls back to generic names such as `Button Clicked`, `Menu Item Clicked`, `Control Changed`, `Navigation Clicked`, or `External Link Opened`.
+```tsx
+import { analyticsAttrs } from '@/lib/analytics-actions'
+
+<button {...analyticsAttrs('project-switcher')} type="button">
+  {/* trigger content may include the project name; event name stays fixed */}
+</button>
+```
+
+Put `data-analytics` on the interactive control itself, not a broad layout wrapper, so nested actions do not inherit the wrong name.
+
+For list/service create buttons, pass `createAnalyticsAction` to `ServiceHeader` (e.g. `createAnalyticsAction="create-database"`).
 
 ### Manual tracking
 
@@ -1296,7 +1304,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Wizard Opened`
 - `Wizard Option Selected`
 
-If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section.
+If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 
 ### Tracking opt-outs
 

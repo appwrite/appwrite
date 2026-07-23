@@ -80,6 +80,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   SERVICE_HEADER_CONTAINER,
   serviceHeaderIconOnlyButton,
@@ -262,6 +263,7 @@ export function RulesList({
               disabled
               className={createButtonClassName}
               aria-label={t('Create rule')}
+              {...analyticsAttrs('create-firewall-rule')}
             >
               <Plus className="h-4 w-4 shrink-0" />
               {createButtonLabel}
@@ -280,6 +282,7 @@ export function RulesList({
       onClick={onCreate}
       className={createButtonClassName}
       aria-label={t('Create rule')}
+      {...analyticsAttrs('create-firewall-rule')}
     >
       <Plus className="h-4 w-4 shrink-0" />
       {createButtonLabel}

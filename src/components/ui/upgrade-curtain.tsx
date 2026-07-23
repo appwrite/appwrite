@@ -7,6 +7,7 @@ import {
   navigateToUpgradeWizard,
 } from '@/lib/open-upgrade-wizard'
 import { cn } from '@/lib/utils'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 interface UpgradeCurtainProps {
   /**
@@ -102,6 +103,7 @@ export function UpgradeCurtain({
                 size="sm"
                 className="h-6 @[200px]:h-7 @[250px]:h-8 @[300px]:h-9 text-[10px] @[200px]:text-[11px] @[250px]:text-[12px] @[300px]:text-[13px] w-full @[400px]:w-auto px-2 @[200px]:px-3 @[250px]:px-4"
                 onClick={handleUpgrade}
+                {...analyticsAttrs('upgrade-clicked')}
               >
                 Upgrade plan
               </Button>

@@ -89,6 +89,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
@@ -1326,6 +1327,7 @@ export function View({ initialData }: ViewProps = {}) {
                     variant="brandCta"
                     onClick={() => setCreateRecordDialogOpen(true)}
                     className="h-9 gap-1.5 text-[13px] font-medium cursor-pointer"
+                    {...analyticsAttrs('create-dns-record')}
                   >
                     <Plus className="h-4 w-4" />
                     {t('Create Record')}

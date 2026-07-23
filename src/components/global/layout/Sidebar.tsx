@@ -31,6 +31,10 @@ import {
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  analyticsAttrs,
+  getSidebarNavAnalyticsAction,
+} from '@/lib/analytics-actions'
+import {
   LayoutDashboard,
   Database,
   Users,
@@ -56,7 +60,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
-import { useAnalytics } from '@/hooks/use-analytics'
 import {
   Tooltip,
   TooltipContent,
@@ -309,7 +312,6 @@ export function ConsoleSidebar({
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
-  const { track } = useAnalytics()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
@@ -387,20 +389,16 @@ export function ConsoleSidebar({
   }, [])
 
   const handleNavClick = useCallback(
-    (item: NavItem, isMobile: boolean) => {
-      track('Navigation Clicked', {
-        surface: 'sidebar',
-        destination: item.id,
-        mobile: isMobile,
-      })
+    (_item: NavItem, isMobile: boolean) => {
       if (isMobile) onMobileClose?.()
     },
-    [onMobileClose, track],
+    [onMobileClose],
   )
 
   const renderNavItem = (item: NavItem, isMobile = false) => {
     const isActive = activeSection === item.id
     const isImagineIcon = item.icon === 'imagine'
+    const navAnalytics = getSidebarNavAnalyticsAction(item.id)
 
     // Render the appropriate icon
     const renderIcon = () => {
@@ -476,7 +474,7 @@ export function ConsoleSidebar({
         key={item.id}
         to={item.path}
         data-nav-item
-        data-analytics-track="manual"
+        {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         onClick={() => handleNavClick(item, isMobile)}
         className={cn(
           secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
@@ -577,14 +575,9 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - sibling of <aside>, positioned against the
             wrapper so it isn't clipped by the aside's GPU layer on iOS. */}
         <button
-          data-analytics-track="manual"
+          {...analyticsAttrs('sidebar-collapse')}
           onClick={() => {
-            const nextCollapsed = !collapsed
-            setCollapsed(nextCollapsed)
-            track('View Mode Changed', {
-              surface: 'sidebar',
-              mode: nextCollapsed ? 'collapsed' : 'expanded',
-            })
+            setCollapsed(!collapsed)
           }}
           className={cn(
             'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',

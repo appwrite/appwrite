@@ -54,6 +54,7 @@ import {
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
 import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 /**
@@ -812,6 +813,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 size="sm"
                 className="h-9 text-[13px] gap-1.5"
                 onClick={onChangePlan}
+                {...analyticsAttrs('upgrade-clicked')}
               >
                 <ArrowUpCircle className="h-4 w-4" />
                 {t('Upgrade')}
@@ -822,6 +824,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 size="sm"
                 className="h-9 text-[13px] gap-1.5"
                 onClick={onChangePlan}
+                {...analyticsAttrs('billing-change-plan')}
               >
                 <ArrowLeftRight className="h-4 w-4" />
                 {t('Change plan')}

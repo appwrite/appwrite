@@ -12,6 +12,7 @@ import {
 import { Headphones } from 'lucide-react'
 import { SupportPanel } from '@/components/global/shared/SupportPanel'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 interface SupportPopoverProps {
   orgId?: string | null
@@ -29,6 +30,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label={t('Support')}
+              {...analyticsAttrs('support-open')}
             >
               <Headphones className="h-4 w-4" />
             </Button>

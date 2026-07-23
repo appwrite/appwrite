@@ -174,6 +174,15 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         createLabel={createLabel}
         createTo={createTo}
         createParams={createParams}
+        createAnalyticsAction={
+          activeTab === 'webhooks'
+            ? 'create-webhook'
+            : activeTab === 'domains'
+              ? 'add-project-domain'
+              : activeTab === 'migrations'
+                ? 'import-data'
+                : undefined
+        }
         onCreate={handleCreate}
         createDisabled={createDisabled}
         createDisabledTooltip={createDisabledTooltip}
