@@ -41,6 +41,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/vcs"
         }
     ],
     "require": {
@@ -96,7 +100,7 @@
         "utopia-php/telemetry": "^0.4",
         "utopia-php/user-agent": "0.1.*",
         "mustangostang/spyc": "0.6.*",
-        "utopia-php/vcs": "^4.4.2",
+        "utopia-php/vcs": "dev-feat/gitlab-list-namespaces",
         "utopia-php/websocket": "1.0.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",

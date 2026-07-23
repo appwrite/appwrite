@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a2821539fc6e6063587e38e3eca19c4",
+    "content-hash": "54c4b8e9607f4b8b1ce387ad27d2726c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5165,16 +5165,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "4.4.4",
+            "version": "dev-feat/gitlab-list-namespaces",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "37580b1a459c6b51f567b1720c118a8a0213f314"
+                "reference": "8bd586e9eae0f622b1a728c5b0269369b3efdde2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/37580b1a459c6b51f567b1720c118a8a0213f314",
-                "reference": "37580b1a459c6b51f567b1720c118a8a0213f314",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/8bd586e9eae0f622b1a728c5b0269369b3efdde2",
+                "reference": "8bd586e9eae0f622b1a728c5b0269369b3efdde2",
                 "shasum": ""
             },
             "require": {
@@ -5195,7 +5195,25 @@
                     "Utopia\\VCS\\": "src/VCS"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/VCS"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test --config pint.json"
+                ],
+                "format": [
+                    "./vendor/bin/pint --config pint.json"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 8 --memory-limit 512M -c phpstan.neon src tests"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -5207,10 +5225,10 @@
                 "vcs"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/4.4.4"
+                "source": "https://github.com/utopia-php/vcs/tree/feat/gitlab-list-namespaces",
+                "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-07-22T10:18:04+00:00"
+            "time": "2026-07-23T07:17:43+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8398,7 +8416,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/platform": 5
+        "utopia-php/platform": 5,
+        "utopia-php/vcs": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
