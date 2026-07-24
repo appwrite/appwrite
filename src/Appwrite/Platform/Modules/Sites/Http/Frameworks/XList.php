@@ -69,12 +69,6 @@ class XList extends Base
                 // Drop frameworks that have no enabled build runtimes left.
                 if (empty($frameworks[$key]['runtimes'])) {
                     unset($frameworks[$key]);
-                    continue;
-                }
-
-                // Keep the default buildRuntime aligned with the filtered allowlist.
-                if (!\in_array($frameworks[$key]['buildRuntime'] ?? '', $frameworks[$key]['runtimes'], true)) {
-                    $frameworks[$key]['buildRuntime'] = $frameworks[$key]['runtimes'][0];
                 }
             }
         }
