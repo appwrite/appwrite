@@ -228,62 +228,6 @@ export function useNamespaces(
   })
 }
 
-const NAMESPACES_PAGE_SIZE = 100
-/** Hard stop so a runaway `total` can't spin this into an infinite loop. */
-const NAMESPACES_MAX_PAGES = 20
-const NAMESPACES_PAGE_RETRIES = 2
-
-async function fetchNamespacesPageWithRetry(
-  projectId: string,
-  installationId: string,
-  page: number,
-): Promise<Models.VcsNamespaceList> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await fetchNamespaces(
-        projectId,
-        installationId,
-        page,
-        NAMESPACES_PAGE_SIZE,
-      )
-    } catch (error) {
-      if (attempt >= NAMESPACES_PAGE_RETRIES) throw error
-      await new Promise((resolve) => setTimeout(resolve, 300 * 2 ** attempt))
-    }
-  }
-}
-
-/**
- * Fetch every namespace for an installation, paging through in
- * NAMESPACES_PAGE_SIZE chunks until `total` is exhausted -- a GitLab user
- * can belong to more groups than fit on one page, and silently truncating
- * would make later groups unselectable for browsing or repo creation.
- * Each page gets a couple of retries with backoff first; if a later page
- * still fails, returns what's been fetched so far rather than rejecting,
- * so a transient error doesn't hide already-fetched groups too.
- */
-async function fetchAllNamespaces(
-  projectId: string,
-  installationId: string,
-): Promise<Models.VcsNamespace[]> {
-  const all: Models.VcsNamespace[] = []
-  for (let page = 0; page < NAMESPACES_MAX_PAGES; page++) {
-    let result: Models.VcsNamespaceList
-    try {
-      result = await fetchNamespacesPageWithRetry(
-        projectId,
-        installationId,
-        page,
-      )
-    } catch {
-      break
-    }
-    all.push(...result.namespaces)
-    if (all.length >= result.total || result.namespaces.length === 0) break
-  }
-  return all
-}
-
 /**
  * Fetch namespaces for every installation at once, so a combined
  * GitHub+GitLab org picker can flatten "installation -> its namespaces"
@@ -298,8 +242,8 @@ export function useNamespacesForInstallations(
 ) {
   const queries = useQueries({
     queries: installations.map((installation) => ({
-      queryKey: ['vcs', 'namespaces', 'all', projectId, installation.$id],
-      queryFn: () => fetchAllNamespaces(projectId!, installation.$id),
+      queryKey: ['vcs', 'namespaces', projectId, installation.$id],
+      queryFn: () => fetchNamespaces(projectId!, installation.$id, 0, 100),
       enabled: !!projectId,
       staleTime: DEFAULT_STALE_TIME,
     })),
@@ -307,7 +251,8 @@ export function useNamespacesForInstallations(
 
   const namespacesByInstallation: Record<string, Models.VcsNamespace[]> = {}
   installations.forEach((installation, index) => {
-    namespacesByInstallation[installation.$id] = queries[index]?.data ?? []
+    namespacesByInstallation[installation.$id] =
+      queries[index]?.data?.namespaces ?? []
   })
 
   return {
