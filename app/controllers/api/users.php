@@ -1284,7 +1284,10 @@ Http::put('/v1/users/:userId/labels')
 
         $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['labels' => $user->getAttribute('labels')]));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'labels' => $user->getAttribute('labels'),
+            'search' => '', // rebuilt by the `userSearch` filter.
+        ]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1408,9 +1411,10 @@ Http::patch('/v1/users/:userId/name')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user->setAttribute('name', $name);
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['name' => $user->getAttribute('name')]));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'name' => $name,
+            'search' => '', // rebuilt by the `userSearch` filter.
+        ]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -1640,6 +1644,7 @@ Http::patch('/v1/users/:userId/email')
                 'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
                 'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                 'emailIsFree' => $user->getAttribute('emailIsFree'),
+                'search' => '', // rebuilt by the `userSearch` filter.
             ]));
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
@@ -1733,6 +1738,7 @@ Http::patch('/v1/users/:userId/phone')
             $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
                 'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
+                'search' => '', // rebuilt by the `userSearch` filter.
             ]));
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
