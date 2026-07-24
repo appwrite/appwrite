@@ -57,7 +57,7 @@ class Create extends Action
                 group: 'deployments',
                 name: 'createDeployment',
                 description: <<<EOT
-                Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.
+                Create a new site code deployment. Use this endpoint to upload a new version of your site code. Deployments activate automatically by default, and you can disable that by setting activate to false.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -75,7 +75,7 @@ class Create extends Action
             ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', true)
+            ->param('activate', true, new Boolean(true), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')

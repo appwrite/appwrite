@@ -1335,8 +1335,29 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals($deploymentIdActive, $site['body']['deploymentId']);
         $this->assertNotEquals($deploymentIdInactive, $site['body']['deploymentId']);
 
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentIdDefaultActive = $deployment['body']['$id'] ?? '';
+        $this->assertNotEmpty($deploymentIdDefaultActive);
+
+        $this->assertEventually(function () use ($siteId, $deploymentIdDefaultActive) {
+            $deployment = $this->getDeployment($siteId, $deploymentIdDefaultActive);
+
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $this->assertEventually(function () use ($siteId, $deploymentIdDefaultActive) {
+            $site = $this->getSite($siteId);
+
+            $this->assertEquals($deploymentIdDefaultActive, $site['body']['deploymentId'], 'Deployment is not activated by default, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        }, 120000, 500);
+
         $this->cleanupDeployment($siteId, $deploymentIdActive);
         $this->cleanupDeployment($siteId, $deploymentIdInactive);
+        $this->cleanupDeployment($siteId, $deploymentIdDefaultActive);
         $this->cleanupSite($siteId);
     }
 
