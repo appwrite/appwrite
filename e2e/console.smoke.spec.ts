@@ -32,12 +32,17 @@ test.describe('console smoke (read-only)', () => {
   })
 
   test('session stays signed in', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    // Do not use `/` here: the root loader can treat the request as a guest during
+    // SSR (no localStorage cookieFallback yet) and send users to `/home`, even when
+    // the Playwright storage state is valid for client-side console routes.
+    await page.goto('/account', { waitUntil: 'domcontentloaded' })
     await expect(page).not.toHaveURL(/\/sign-in/)
-    await expect(page).toHaveURL(
-      /\/(organizations\/|account)/,
-      { timeout: 45_000 },
-    )
+    await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
+    await expect(
+      page
+        .locator('[data-testid="settings-navigation"]:visible')
+        .or(page.getByRole('heading').first()),
+    ).toBeVisible({ timeout: 45_000 })
   })
 
   test('account overview renders', async ({ page }) => {

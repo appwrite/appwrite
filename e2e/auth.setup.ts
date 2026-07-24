@@ -26,7 +26,14 @@ test('authenticate once and persist storage state', async ({
 }) => {
   fs.mkdirSync(authDir, { recursive: true })
 
-  if (env.E2E_TEST_SESSION_SECRET) {
+  // Prefer email/password when available so storage state is captured against
+  // this run's origin (localhost:4173). Session secret is a CI fast-path only
+  // when credentials are not provided.
+  const email = env.E2E_TEST_EMAIL
+  const password = env.E2E_TEST_PASSWORD
+  const canPasswordLogin = Boolean(email && password)
+
+  if (env.E2E_TEST_SESSION_SECRET && !canPasswordLogin) {
     try {
       const storageState = parseSessionSecret(env.E2E_TEST_SESSION_SECRET)
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
@@ -38,8 +45,6 @@ test('authenticate once and persist storage state', async ({
     }
   }
 
-  const email = env.E2E_TEST_EMAIL
-  const password = env.E2E_TEST_PASSWORD
   if (!email || !password) {
     throw new Error('E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
   }
