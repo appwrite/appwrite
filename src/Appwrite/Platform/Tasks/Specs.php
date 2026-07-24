@@ -6,7 +6,6 @@ use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
-use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
@@ -62,7 +61,6 @@ class Specs extends Action
     protected function getFormatInstance(string $format, array $arguments)
     {
         return match ($format) {
-            'swagger2' => new Swagger2(...$arguments),
             'open-api3' => new OpenAPI3(...$arguments),
             default => throw new Exception('Format not found: ' . $format)
         };
@@ -139,17 +137,27 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -178,20 +186,29 @@ class Specs extends Action
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
-                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by ID',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
-                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by email',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
-                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by phone',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
             ],
             APP_SDK_PLATFORM_SERVER => [
@@ -201,11 +218,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -218,6 +239,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -252,20 +279,29 @@ class Specs extends Action
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
-                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by ID',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
-                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by email',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
-                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by phone',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -275,11 +311,15 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
-                'ProjectQuery' => [
+                'ProjectPath' => [
                     'type' => 'apiKey',
                     'name' => 'project',
                     'description' => 'Your project ID',
                     'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -292,6 +332,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -326,20 +372,29 @@ class Specs extends Action
                 'ImpersonateUserId' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Id',
-                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by ID',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserEmail' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Email',
-                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by email',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
                 'ImpersonateUserPhone' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Impersonate-User-Phone',
-                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'description' => 'Impersonate a user by phone',
                     'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
             ],
         ];
@@ -560,6 +615,7 @@ class Specs extends Action
             $routes = [];
             $models = [];
             $services = [];
+            $routeNamespaces = [];
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
@@ -605,11 +661,27 @@ class Specs extends Action
                         }
 
                         $routes[] = $route;
+                        $routeNamespaces[$sdk->getNamespace()] = true;
                     }
                 }
             }
 
+            /**
+             * Tag names must match Method namespaces (path tags), e.g. tablesDB.
+             * Service config keys stay lowercase (tablesdb); descriptions resolve
+             * case-insensitively from services.php.
+             */
+            $serviceDescriptions = [];
+            $configuredServices = [];
+
             foreach (Config::getParam('services', []) as $service) {
+                $serviceKey = $service['key'] ?? '';
+                if ($serviceKey === '') {
+                    continue;
+                }
+
+                $serviceDescriptions[\strtolower($serviceKey)] = $service['subtitle'] ?? '';
+
                 if (
                     !isset($service['docs']) // Skip service if not part of the public API
                     || !isset($service['sdk'])
@@ -624,9 +696,27 @@ class Specs extends Action
                     continue;
                 }
 
+                $configuredServices[$serviceKey] = $service['subtitle'] ?? '';
+            }
+
+            $seenServices = [];
+
+            foreach (\array_keys($routeNamespaces) as $namespace) {
                 $services[] = [
-                    'name' => $service['key'] ?? '',
-                    'description' => $service['subtitle'] ?? '',
+                    'name' => $namespace,
+                    'description' => $serviceDescriptions[\strtolower($namespace)] ?? '',
+                ];
+                $seenServices[\strtolower($namespace)] = true;
+            }
+
+            foreach ($configuredServices as $serviceKey => $description) {
+                if (isset($seenServices[\strtolower($serviceKey)])) {
+                    continue;
+                }
+
+                $services[] = [
+                    'name' => $serviceKey,
+                    'description' => $description,
                 ];
             }
 
@@ -648,7 +738,7 @@ class Specs extends Action
                 $platform
             ];
 
-            foreach (['swagger2', 'open-api3'] as $format) {
+            foreach (['open-api3'] as $format) {
                 $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
 

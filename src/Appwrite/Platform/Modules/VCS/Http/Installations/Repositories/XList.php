@@ -7,7 +7,10 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\VcsRepositories;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -15,9 +18,6 @@ use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
@@ -52,10 +52,8 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\FileNotFound;
 
 use function Swoole\Coroutine\batch;
@@ -97,8 +95,9 @@ class XList extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-            ->inject('gitHub')
+            ->param('queries', [], new VcsRepositories(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, and equal on namespace.', true)
+            ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -109,7 +108,8 @@ class XList extends Action
         string $type,
         string $search,
         array $queries,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -123,25 +123,27 @@ class XList extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = $vcsFactory->fromInstallation($installation);
 
         $queries = Query::parseQueries($queries);
         $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
         $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
+        $namespaceQueries = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'namespace');
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
+        $namespaceQuery = current($namespaceQueries);
+        $providerNamespace = !empty($namespaceQuery) ? $namespaceQuery->getValue('') : '';
 
         if ($offset % $limit !== 0) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'offset must be a multiple of the limit');
         }
 
         $page = ($offset / $limit) + 1;
-        $owner = $github->getOwnerName($providerInstallationId);
-        ['items' => $repos, 'total' => $total] = $github->searchRepositories($owner, $page, $limit, $search);
+        $namespace = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
+        ['items' => $repos, 'total' => $total] = $vcs->searchRepositories($namespace, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
@@ -153,9 +155,9 @@ class XList extends Action
             return $repo;
         }, $repos);
 
-        $repos = batch(\array_map(function ($repo) use ($type, $github) {
-            return function () use ($repo, $type, $github) {
-                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+        $repos = batch(\array_map(function ($repo) use ($type, $vcs) {
+            return function () use ($repo, $type, $vcs) {
+                $files = $vcs->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
 
                 $detector = new Packager();
@@ -173,7 +175,7 @@ class XList extends Action
                 if ($type === 'framework') {
                     $packages = '';
                     try {
-                        $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
+                        $contentResponse = $vcs->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
                         $packages = $contentResponse['content'] ?? '';
                     } catch (FileNotFound $e) {
                         // Continue detection without package.json
@@ -215,7 +217,7 @@ class XList extends Action
                     }
                     $repo['framework'] = $framework;
                 } else {
-                    $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
+                    $languages = $vcs->listRepositoryLanguages($repo['organization'], $repo['name']);
 
                     $strategies = [
                         new Strategy(Strategy::FILEMATCH),
@@ -276,9 +278,9 @@ class XList extends Action
                     }
 
                     $wg->add();
-                    go(function () use ($github, $repo, $file, $wg, &$envs) {
+                    go(function () use ($vcs, $repo, $file, $wg, &$envs) {
                         try {
-                            $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
+                            $contentResponse = $vcs->getRepositoryContent($repo['organization'], $repo['name'], $file);
                             $envFile = $contentResponse['content'] ?? '';
 
                             $configAdapter = new ConfigDotenv();

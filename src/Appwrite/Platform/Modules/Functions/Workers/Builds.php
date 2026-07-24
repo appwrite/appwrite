@@ -3,37 +3,38 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Detection;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
+use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
-use Utopia\Detector\Detection\Rendering\XStatic;
-use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -41,13 +42,33 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Builds extends Action
 {
     public static function getName(): string
     {
         return 'builds';
+    }
+
+    /**
+     * Truncate build logs to the length allowed by the deployments "buildLogs"
+     * attribute. Large site builds (heavy prerender/bundle output) can exceed
+     * it, which makes persisting the deployment throw a Structure exception and
+     * report the build as failed even though it actually succeeded. Keep the
+     * tail — it holds the build result and any error — mirroring how execution
+     * logs are trimmed elsewhere in this codebase.
+     */
+    private function truncateBuildLogs(string $logs): string
+    {
+        $limit = APP_LOG_LENGTH_LIMIT;
+        if (\strlen($logs) <= $limit) {
+            return $logs;
+        }
+
+        $warning = "[WARNING] Logs truncated. The output exceeded {$limit} characters.\n";
+
+        return $warning . \substr($logs, -($limit - \strlen($warning)));
     }
 
     /**
@@ -68,14 +89,15 @@ class Builds extends Action
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
-            ->inject('cache')
+            ->inject('vcsFactory')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
+            ->inject('deployments')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -94,14 +116,15 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
-        Cache $cache,
+        VcsFactory $vcsFactory,
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
+        Backend $deployments,
         array $plan
     ): void {
         $payload = $message->getPayload();
@@ -124,7 +147,7 @@ class Builds extends Action
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                $github = new GitHub($cache);
+                $templateVcs = $vcsFactory->fromProvider('github');
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,
@@ -138,14 +161,16 @@ class Builds extends Action
                     $publisherForUsage,
                     $dbForPlatform,
                     $dbForProject,
-                    $github,
+                    $templateVcs,
+                    $vcsFactory,
                     $project,
                     $resource,
                     $deployment,
                     $template,
-                    $isResourceBlocked,
+                    $getIsResourceBlocked,
                     $log,
                     $executor,
+                    $deployments,
                     $plan,
                     $platform,
                     (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
@@ -174,14 +199,16 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         Database $dbForPlatform,
         Database $dbForProject,
-        GitHub $github,
+        Git $templateVcs,
+        VcsFactory $vcsFactory,
         Document $project,
         Document $resource,
         Document $deployment,
         Document $template,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Log $log,
         Executor $executor,
+        Backend $deployments,
         array $plan,
         array $platform,
         int $timeout
@@ -194,6 +221,7 @@ class Builds extends Action
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
+        $phaseStart = $durationStart;
 
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
@@ -213,8 +241,8 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
-            throw new \Exception('Resource is blocked');
+        if ($getIsResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
+            throw new BuildException('Resource is blocked');
         }
 
         $log->addTag('deploymentId', $deployment->getId());
@@ -225,7 +253,7 @@ class Builds extends Action
         }
 
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
+            throw new BuildException('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $this->getVersion($resource);
@@ -247,23 +275,31 @@ class Builds extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         if ($deployment->getAttribute('status') === 'canceled') {
-            $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+            $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
             return;
         }
 
         $deploymentId = $deployment->getId();
 
-        $deployment->setAttribute('buildStartedAt', $startTime);
-        $deployment->setAttribute('status', 'processing');
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $updated = $dbForProject->updateDocuments('deployments', new Document([
             'buildStartedAt' => $startTime,
             'status' => 'processing',
-        ]));
+        ]), [
+            Query::equal('$id', [$deploymentId]),
+            Query::notEqual('status', 'canceled'),
+        ]);
 
-        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-            $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
+        if ($updated === 0) {
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+            $this->finalizeCanceledDeployment($deploymentId, $dbForProject, $queueForRealtime);
+            return;
         }
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
         Span::add('deployment.status', 'processing');
 
@@ -278,15 +314,25 @@ class Builds extends Action
         $isVcsEnabled = ! empty($providerRepositoryId);
         $owner = '';
         $repositoryName = '';
+        $providerAdapter = null;
 
         if ($isVcsEnabled) {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+            } catch (\Exception $e) {
+                if ($e->getCode() === 404
+                    && $resource->getAttribute('installationId', '') === $installationId) {
+                    $this->disconnectVcs($resource, $dbForProject, $dbForPlatform);
+                }
+                throw $e;
+            }
         }
+
+        Span::add('timings.setup', \round(\microtime(true) - $phaseStart, 3));
+        $phaseStart = \microtime(true);
 
         try {
             if (! $isVcsEnabled) {
@@ -308,7 +354,7 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
 
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $templateVcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
 
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
@@ -339,9 +385,9 @@ class Builds extends Action
                         throw new \Exception('Unable to move file');
                     }
 
-                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
+                    $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                    $directorySize = $device->getFileSize($source);
+                    Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
                     $deployment
                         ->setAttribute('sourcePath', $source)
                         ->setAttribute('sourceSize', $directorySize)
@@ -366,8 +412,8 @@ class Builds extends Action
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
 
-                $owner = $github->getOwnerName($providerInstallationId);
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                $owner = $providerAdapter->getOwnerName($providerInstallationId);
+                $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
 
                 $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
                 $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
@@ -376,20 +422,20 @@ class Builds extends Action
                 $commitHash = $deployment->getAttribute('providerCommitHash', '');
 
                 $cloneVersion = $branchName;
-                $cloneType = GitHub::CLONE_TYPE_BRANCH;
+                $cloneType = Git::CLONE_TYPE_BRANCH;
                 if (! empty($commitHash)) {
                     $cloneVersion = $commitHash;
-                    $cloneType = GitHub::CLONE_TYPE_COMMIT;
+                    $cloneType = Git::CLONE_TYPE_COMMIT;
                 }
 
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
+                $gitCloneCommand = $providerAdapter->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
 
                 Console::execute('mkdir -p ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 
                 if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                    $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                    $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                     return;
                 }
@@ -397,7 +443,7 @@ class Builds extends Action
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
-                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    throw new BuildException('Unable to clone code repository: ' . $stderr);
                 }
 
                 // Local refactoring for function folder with spaces
@@ -428,7 +474,7 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '/template';
 
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $templateVcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -462,7 +508,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
-                    $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
+                    $deployment->setAttribute('providerCommitUrl', $providerAdapter->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                         'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
                         'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),
@@ -474,6 +520,25 @@ class Builds extends Action
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
+                }
+
+                // On the jobs backend the only build reaching this worker is the
+                // template-into-repo push above (a git *write* the jobs-service
+                // artifact system has no primitive for). With the commit pushed,
+                // hand the build to the jobs-service like any other VCS commit,
+                // via the same Deployments service the HTTP endpoints use.
+                if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                    $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
+                    $deployments->createFromUrl(
+                        $resource,
+                        $deployment,
+                        $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
+                        $resource->getAttribute('providerRootDirectory', ''),
+                    );
+
+                    Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+
+                    return;
                 }
 
                 $tmpPath = '/tmp/builds/' . $deploymentId;
@@ -492,7 +557,7 @@ class Builds extends Action
                 }
 
                 if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
+                    throw new BuildException('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -507,9 +572,9 @@ class Builds extends Action
                     throw new \Exception('Unable to move file');
                 }
 
-                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
+                $directorySize = $localDevice->getFileSize($tmpPathFile);
 
-                $directorySize = $device->getFileSize($source);
+                Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
 
                 $deployment
                     ->setAttribute('sourcePath', $source)
@@ -527,26 +592,36 @@ class Builds extends Action
 
                 Span::add('build.source_size', $deployment->getAttribute('sourceSize'));
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('processing', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
+
+            Span::add('timings.source', \round(\microtime(true) - $phaseStart, 3));
+            $phaseStart = \microtime(true);
 
             /** Request the executor to build the code... */
-            $deployment->setAttribute('status', 'building');
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            $updated = $dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'building',
-            ]));
+            ]), [
+                Query::equal('$id', [$deploymentId]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            if ($updated === 0) {
+                $this->finalizeCanceledDeployment($deploymentId, $dbForProject, $queueForRealtime);
+                return;
+            }
+
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             Span::add('deployment.status', 'building');
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('building', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             $deploymentModel = new Deployment();
@@ -646,6 +721,7 @@ class Builds extends Action
                         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
                         'APPWRITE_FUNCTION_CPUS' => $cpus,
                         'APPWRITE_FUNCTION_MEMORY' => $memory,
+                        'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
                     ];
                     break;
                 case 'sites':
@@ -661,20 +737,23 @@ class Builds extends Action
                         'APPWRITE_SITE_RUNTIME_VERSION' => $runtime['version'] ?? '',
                         'APPWRITE_SITE_CPUS' => $cpus,
                         'APPWRITE_SITE_MEMORY' => $memory,
+                        'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
                     ];
                     break;
             }
 
-            $command = $this->getCommand(
-                resource: $resource,
-                deployment: $deployment
-            );
+            $command = Backend::command($resource, $deployment);
+
+            $cacheKey = $this->getNodeModulesCacheKey($project, $resource, $runtime, $version, $command);
+
+            Span::add('build.node_modules_cache.enabled', $cacheKey !== '');
+            Span::add('build.node_modules_cache.key', $cacheKey);
 
             $response = null;
             $err = null;
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -683,14 +762,14 @@ class Builds extends Action
             $span = Span::current();
 
             Co::join([
-                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cpus, $memory, $timeout, &$err, $version, $span) {
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $resource, $runtime, $vars, $command, $cacheKey, $cpus, $memory, $timeout, &$err, $version, $span) {
                     try {
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '', $resource->getAttribute('framework', ''));
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -710,14 +789,23 @@ class Builds extends Action
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
-                            outputDirectory: $outputDirectory ?? ''
+                            outputDirectory: $outputDirectory ?? '',
+                            cacheKey: $cacheKey
                         );
 
                     } catch (ExecutorTimeout $error) {
                         $span?->set('build.runtime.timed_out', true);
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
-                        $err = new AppwriteException(AppwriteException::BUILD_TIMEOUT, previous: $error);
+                        $err = new BuildException(type: AppwriteException::BUILD_TIMEOUT, previous: $error);
+                    } catch (ExecutorException $error) {
+                        $span?->set('build.runtime.error_type', $error::class);
+                        $span?->set('build.runtime.error_message', $error->getMessage());
+                        $span?->set('build.runtime.executor_error_type', $error->getType());
+
+                        $err = $error->getType() === ExecutorException::BUILD_FAILED
+                            ? new BuildException($error->getMessage(), previous: $error)
+                            : $error;
                     } catch (\Throwable $error) {
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
@@ -804,9 +892,9 @@ class Builds extends Action
                                     }
 
                                     if ($affected) {
-                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($currentLogs));
                                         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                                            'buildLogs' => $currentLogs,
+                                            'buildLogs' => $this->truncateBuildLogs($currentLogs),
                                         ]));
 
                                         $queueForRealtime
@@ -827,9 +915,12 @@ class Builds extends Action
                 }),
             ]);
 
+            Span::add('timings.build', \round(\microtime(true) - $phaseStart, 3));
+            $phaseStart = \microtime(true);
+
             $latestDeployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($latestDeployment->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -843,7 +934,7 @@ class Builds extends Action
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
             if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
+                throw new BuildException('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             $deployment->setAttribute('buildPath', $response['path']);
@@ -859,11 +950,11 @@ class Builds extends Action
 
             ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
+                $detection = Detection::rendering($resource->getAttribute('framework', ''), \explode("\n", $detectionLogs));
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
@@ -874,7 +965,7 @@ class Builds extends Action
                     Span::add('build.adapter', $deployment->getAttribute('adapter'));
                     Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                    throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
             }
 
@@ -895,22 +986,27 @@ class Builds extends Action
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
             $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             /** Update the status */
+            $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
+            $deployment->setAttribute('buildEndedAt', $endTime);
+            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
             $deployment->setAttribute('status', 'ready');
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
                 'status' => 'ready',
             ]));
             Span::add('deployment.status', 'ready');
+            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('ready', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             /** Set auto deploy */
@@ -994,6 +1090,8 @@ class Builds extends Action
                 Span::add('build.activated', true);
             }
 
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
+
             $this->afterDeploymentSuccess(
                 $project,
                 $deployment,
@@ -1004,78 +1102,17 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            if ($resource->getCollection() === 'sites') {
-                // VCS branch
-                $branchName = $deployment->getAttribute('providerBranch');
-                if (! empty($branchName)) {
-                    $domain = (new BranchDomainFilter())->apply([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
-                    $ruleId = md5($domain);
-
-                    try {
-                        $dbForPlatform->createDocument('rules', new Document([
-                            '$id' => $ruleId,
-                            'projectId' => $project->getId(),
-                            'projectInternalId' => $project->getSequence(),
-                            'domain' => $domain,
-                            'type' => 'deployment',
-                            'trigger' => 'deployment',
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                            'deploymentResourceType' => 'site',
-                            'deploymentResourceId' => $resource->getId(),
-                            'deploymentResourceInternalId' => $resource->getSequence(),
-                            'deploymentVcsProviderBranch' => $branchName,
-                            'status' => 'verified',
-                            'certificateId' => '',
-                            'search' => implode(' ', [$ruleId, $domain]),
-                            'owner' => 'Appwrite',
-                            'region' => $project->getAttribute('region'),
-                        ]));
-                    } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }
-
-                    $queries = [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('type', ['deployment']),
-                        Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                        Query::equal('deploymentResourceType', ['site']),
-                        Query::equal('deploymentVcsProviderBranch', [$branchName]),
-                        Query::equal('trigger', ['manual']),
-                    ];
-
-                    $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }, $queries);
-
-                    Span::add('build.preview_rule_created', true);
-                }
+            if ($resource->getCollection() === 'sites' && ! empty($deployment->getAttribute('providerBranch'))) {
+                Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $platform['sitesDomain']);
+                Span::add('build.preview_rule_created', true);
             }
 
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => $endTime,
-                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
-            ]));
-            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
@@ -1105,21 +1142,28 @@ class Builds extends Action
 
                 Span::add('build.screenshot_queued', true);
             }
+
+            Span::add('timings.finalize', \round(\microtime(true) - $phaseStart, 3));
         } catch (\Throwable $th) {
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->cancelDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
+                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
 
-            Span::add('build.error.stage', 'deployment');
-            Span::add('build.error.type', $th::class);
-            Span::add('build.error.message', $th->getMessage());
-            Span::add('build.error.file', $th->getFile());
-            Span::add('build.error.line', $th->getLine());
+            $isUserFacing = $th instanceof BuildException;
+            $message = $isUserFacing
+                ? $th->getMessage()
+                : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
+
+            // Record user-facing failures on the span here, since they're not
+            // re-raised to the harness (which records internal errors via setError).
+            if ($isUserFacing) {
+                Span::add('build.exception.type', $th->getType());
+                Span::add('build.exception.message', $th->getMessage());
+            }
 
             // Color message red
-            $message = $th->getMessage();
             if (! \str_contains($message, '')) {
                 $message = '[31m' . $message;
             }
@@ -1142,24 +1186,27 @@ class Builds extends Action
             Span::add('deployment.status', 'failed');
             Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            $deployment->setAttribute('buildLogs', $message);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($message));
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                 'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
                 'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'status' => 'failed',
-                'buildLogs' => $message,
+                'buildLogs' => $this->truncateBuildLogs($message),
             ]));
 
-            if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
-                $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
-            }
+            $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
+                $this->runGitAction('failed', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
+            }
+
+            // Let the worker harness record internal errors via the span and logger.
+            if (! $isUserFacing) {
+                throw $th;
             }
         } finally {
             $queueForRealtime
@@ -1178,55 +1225,7 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
     {
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        $cpus = (int) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
-        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
-
-        switch ($deployment->getAttribute('status')) {
-            case 'ready':
-                $usage
-                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
-                break;
-            case 'failed':
-                $usage
-                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
-                break;
-        }
-
-        $usage
-            ->addMetric(METRIC_BUILDS, 1) // per project
-            ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus))
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus));
-
-        // Publish usage metrics
-        if (! $usage->isEmpty()) {
-            $message = new UsageMessage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-                reduce: $usage->getReduce()
-            );
-            $publisherForUsage->enqueue($message);
-            $usage->reset();
-        }
+        BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
     }
 
     /**
@@ -1257,7 +1256,7 @@ class Builds extends Action
             default => null
         };
         if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+            throw new BuildException('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         return $runtime;
@@ -1272,36 +1271,24 @@ class Builds extends Action
         };
     }
 
-    protected function getCommand(Document $resource, Document $deployment): string
+    protected function getNodeModulesCacheKey(Document $project, Document $resource, array $runtime, string $version, string $command): string
     {
-        if ($resource->getCollection() === 'functions') {
-            return $deployment->getAttribute('buildCommands', '');
-        } elseif ($resource->getCollection() === 'sites') {
-            $commands = [];
-
-            $frameworks = Config::getParam('frameworks', []);
-            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-            $envCommand = '';
-            $bundleCommand = '';
-            if (! is_null($framework)) {
-                $envCommand = $framework['envCommand'] ?? '';
-                $bundleCommand = $framework['bundleCommand'] ?? '';
-            }
-
-            $commands[] = $envCommand;
-            $commands[] = $deployment->getAttribute('buildCommands', '');
-            $commands[] = $bundleCommand;
-
-            $commands = array_filter($commands, fn ($command) => ! empty($command));
-
-            return implode(' && ', $commands);
+        if ($version !== 'v5' || $command === '' || $command === '0') {
+            return '';
         }
 
-        return '';
+        $hashContext = [
+            'version' => 'v1',
+            'projectId' => $project->getId(),
+            'resourceType' => $resource->getCollection(),
+            'resourceId' => $resource->getId(),
+            'runtime' => $runtime['image'] ?? '',
+        ];
+
+        return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
-    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory, string $framework): string
     {
         $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
@@ -1309,7 +1296,14 @@ class Builds extends Action
             $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
         }
 
-        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        foreach (SSR::FRAMEWORK_FILES[$framework] ?? [] as $file) {
+            $listFilesCommand .= ' && ( [ -e ' . \escapeshellarg($file) . ' ] && echo ' . \escapeshellarg($file) . ' || true )';
+        }
+
+        // Static fallback detection only needs to distinguish 0, 1, or 2+ HTML files, so cap the output
+        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -name \'*.html\' -print | head -n 2';
+
+        $listFilesCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
 
         if (empty($command)) {
             return $listFilesCommand;
@@ -1339,24 +1333,6 @@ class Builds extends Action
         ];
     }
 
-    protected function detectSiteRendering(string $framework, string $detectionLogs): object
-    {
-        $files = \explode("\n", $detectionLogs);
-        $files = \array_filter($files);
-        $files = \array_map(\trim(...), $files);
-        $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
-
-        $detector = new Rendering($framework);
-        foreach ($files as $file) {
-            $detector->addInput($file);
-        }
-
-        return $detector
-            ->addOption(new SSR())
-            ->addOption(new XStatic())
-            ->detect();
-    }
-
     /**
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -1365,7 +1341,7 @@ class Builds extends Action
      */
     protected function runGitAction(
         string $status,
-        GitHub $github,
+        Git $vcs,
         string $providerCommitHash,
         string $owner,
         string $repositoryName,
@@ -1381,96 +1357,9 @@ class Builds extends Action
         $deployment = new Document();
 
         try {
-            if ($resource->getAttribute('providerSilentMode', false) === true) {
-                return;
-            }
-
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $commentId = $deployment->getAttribute('providerCommentId', '');
 
-            if (! empty($providerCommitHash)) {
-                $message = match ($status) {
-                    'ready' => 'Build succeeded.',
-                    'failed' => 'Build failed.',
-                    'processing' => 'Building...',
-                    default => $status
-                };
-
-                $state = match ($status) {
-                    'ready' => 'success',
-                    'failed' => 'failure',
-                    'processing' => 'pending',
-                    default => $status
-                };
-
-                $resourceName = $resource->getAttribute('name');
-                $projectName = $project->getAttribute('name');
-
-                $name = "{$resourceName} ({$projectName})";
-
-                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
-
-                $projectId = $project->getId();
-                $region = $project->getAttribute('region', 'default');
-                $resourceId = $resource->getId();
-                $providerTargetUrl = match ($resource->getCollection()) {
-                    'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
-                    'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
-                    default => throw new \Exception('Invalid resource type')
-                };
-
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
-            }
-
-            if (! empty($commentId)) {
-                $retries = 0;
-
-                while (true) {
-                    $retries++;
-
-                    try {
-                        $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                            '$id' => $commentId,
-                        ]));
-                        break;
-                    } catch (\Throwable $err) {
-                        if ($retries >= 9) {
-                            throw $err;
-                        }
-
-                        \sleep(1);
-                    }
-                }
-
-                // Wrap in try/finally to ensure lock file gets deleted
-                try {
-                    $resourceType = match ($resource->getCollection()) {
-                        'functions' => 'function',
-                        'sites' => 'site',
-                        default => throw new \Exception('Invalid resource type')
-                    };
-
-                    $rule = $dbForPlatform->findOne('rules', [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('type', ['deployment']),
-                        Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-                    ]);
-
-                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                    $previewUrl = '';
-                    if ($resource->getCollection() === 'sites' && !$rule->isEmpty()) {
-                        $previewUrl = "{$protocol}://" . $rule->getAttribute('domain', '');
-                    }
-
-                    $comment = new Comment($platform);
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                    $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-                } finally {
-                    $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
-                }
-            }
+            GitAction::run($status, $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         } catch (\Throwable $th) {
             $span = Span::current();
             $errorPrefix = $secondaryError ? 'build.error.secondary' : 'build.git_action.error';
@@ -1485,7 +1374,7 @@ class Builds extends Action
             $date = \date('H:i:s');
             $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
             ]));
@@ -1496,20 +1385,79 @@ class Builds extends Action
         }
     }
 
-    private function cancelDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
+    protected function disconnectVcs(Document $resource, Database $dbForProject, Database $dbForPlatform): void
+    {
+        $repositoryId = $resource->getAttribute('repositoryId', '');
+        if (!empty($repositoryId)) {
+            $dbForPlatform->deleteDocument('repositories', $repositoryId);
+        }
+        $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+            'installationId' => '',
+            'installationInternalId' => '',
+            'providerRepositoryId' => '',
+            'providerBranch' => '',
+            'providerSilentMode' => false,
+            'providerRootDirectory' => '',
+            'repositoryId' => '',
+            'repositoryInternalId' => '',
+        ]));
+    }
+
+    private function updateLatestDeployment(Database $dbForProject, Document $resource): Document
+    {
+        $latestDeployment = $dbForProject->findOne('deployments', [
+            Query::equal('resourceType', [$resource->getCollection()]),
+            Query::equal('resourceInternalId', [$resource->getSequence()]),
+            Query::orderDesc('$createdAt'),
+        ]);
+
+        $updates = $latestDeployment->isEmpty()
+            ? [
+                'latestDeploymentCreatedAt' => '',
+                'latestDeploymentInternalId' => '',
+                'latestDeploymentId' => '',
+                'latestDeploymentStatus' => '',
+            ]
+            : [
+                'latestDeploymentCreatedAt' => $latestDeployment->getCreatedAt(),
+                'latestDeploymentInternalId' => $latestDeployment->getSequence(),
+                'latestDeploymentId' => $latestDeployment->getId(),
+                'latestDeploymentStatus' => $latestDeployment->getAttribute('status', ''),
+            ];
+
+        return $dbForProject->updateDocument(
+            $resource->getCollection(),
+            $resource->getId(),
+            new Document($updates)
+        );
+    }
+
+    private function finalizeCanceledDeployment(string $deploymentId, Database $dbForProject, Realtime $queueForRealtime)
     {
         Span::add('deployment.status', 'canceled');
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $attempts = 0;
 
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $date = \date('H:i:s');
-        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        while (true) {
+            try {
+                $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-            'buildLogs' => $deployment->getAttribute('buildLogs'),
-        ]));
+                $logs = $deployment->getAttribute('buildLogs', '');
+                $date = \date('H:i:s');
+                $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+                $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'buildLogs' => $deployment->getAttribute('buildLogs'),
+                ]));
+
+                break;
+            } catch (TransactionException $exception) {
+                if (++$attempts >= 5) {
+                    throw $exception;
+                }
+            }
+        }
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

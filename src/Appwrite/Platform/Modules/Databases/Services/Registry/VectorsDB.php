@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Queries\Create as CreateDocumentsQuery;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
@@ -19,7 +20,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Delet
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\XList as ListIndexes;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as UpdateCollection;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Delete as DeleteVectorDatabase;
@@ -32,8 +32,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Operations\C
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Update as UpdateVectorDatabase;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Usage\Get as GetVectorDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Usage\XList as ListVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\XList as ListVectorDatabases;
 use Utopia\Platform\Service;
 
@@ -56,8 +54,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateVectorDatabase::getName(), new UpdateVectorDatabase());
         $service->addAction(DeleteVectorDatabase::getName(), new DeleteVectorDatabase());
         $service->addAction(ListVectorDatabases::getName(), new ListVectorDatabases());
-        $service->addAction(GetVectorDatabaseUsage::getName(), new GetVectorDatabaseUsage());
-        $service->addAction(ListVectorDatabaseUsage::getName(), new ListVectorDatabaseUsage());
     }
 
     private function registerCollectionActions(Service $service): void
@@ -67,7 +63,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateCollection::getName(), new UpdateCollection());
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
     }
 
     private function registerIndexActions(Service $service): void
@@ -85,6 +80,7 @@ class VectorsDB extends Base
         $service->addAction(UpsertDocument::getName(), new UpsertDocument());
         $service->addAction(GetDocument::getName(), new GetDocument());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
+        $service->addAction(CreateDocumentsQuery::getName(), new CreateDocumentsQuery());
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());

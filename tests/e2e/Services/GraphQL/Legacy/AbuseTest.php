@@ -91,7 +91,7 @@ final class AbuseTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders(false)), $graphQLPayload);
+        ], $this->getHeaders()), $graphQLPayload);
 
         $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', '250');
 

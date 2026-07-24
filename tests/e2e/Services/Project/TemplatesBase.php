@@ -221,27 +221,33 @@ trait TemplatesBase
     {
         $this->ensureSMTPEnabled();
 
+        $runId = \uniqid();
+        $firstSubject = "First subject {$runId}";
+        $firstBody = "First body {$runId}";
+        $secondSubject = "Second subject {$runId}";
+        $secondBody = "Second body {$runId}";
+
         $first = $this->updateEmailTemplate(
             templateId: 'otpSession',
             locale: 'en',
-            subject: 'First subject',
-            message: 'First body',
+            subject: $firstSubject,
+            message: $firstBody,
         );
         $this->assertSame(200, $first['headers']['status-code']);
 
         $second = $this->updateEmailTemplate(
             templateId: 'otpSession',
             locale: 'en',
-            subject: 'Second subject',
-            message: 'Second body',
+            subject: $secondSubject,
+            message: $secondBody,
         );
         $this->assertSame(200, $second['headers']['status-code']);
-        $this->assertSame('Second subject', $second['body']['subject']);
-        $this->assertSame('Second body', $second['body']['message']);
+        $this->assertSame($secondSubject, $second['body']['subject']);
+        $this->assertSame($secondBody, $second['body']['message']);
 
         $get = $this->getEmailTemplate('otpSession', 'en');
-        $this->assertSame('Second subject', $get['body']['subject']);
-        $this->assertSame('Second body', $get['body']['message']);
+        $this->assertSame($secondSubject, $get['body']['subject']);
+        $this->assertSame($secondBody, $get['body']['message']);
     }
 
     public function testUpdateEmailTemplatePartialAfterSeed(): void
@@ -281,32 +287,36 @@ trait TemplatesBase
     {
         $this->ensureSMTPEnabled();
 
+        $runId = \uniqid();
+        $enSubject = "English subject {$runId}";
+        $frSubject = "Sujet francais {$runId}";
+
         $enUpdate = $this->updateEmailTemplate(
             templateId: 'invitation',
             locale: 'en',
-            subject: 'English subject',
+            subject: $enSubject,
             message: 'English body',
         );
         $this->assertSame(200, $enUpdate['headers']['status-code']);
         $this->assertSame('en', $enUpdate['body']['locale']);
-        $this->assertSame('English subject', $enUpdate['body']['subject']);
+        $this->assertSame($enSubject, $enUpdate['body']['subject']);
 
         $frUpdate = $this->updateEmailTemplate(
             templateId: 'invitation',
             locale: 'fr',
-            subject: 'Sujet francais',
+            subject: $frSubject,
             message: 'Corps francais',
         );
         $this->assertSame(200, $frUpdate['headers']['status-code']);
         $this->assertSame('fr', $frUpdate['body']['locale']);
-        $this->assertSame('Sujet francais', $frUpdate['body']['subject']);
+        $this->assertSame($frSubject, $frUpdate['body']['subject']);
 
         // Locales remain independent.
         $enGet = $this->getEmailTemplate('invitation', 'en');
-        $this->assertSame('English subject', $enGet['body']['subject']);
+        $this->assertSame($enSubject, $enGet['body']['subject']);
 
         $frGet = $this->getEmailTemplate('invitation', 'fr');
-        $this->assertSame('Sujet francais', $frGet['body']['subject']);
+        $this->assertSame($frSubject, $frGet['body']['subject']);
     }
 
     public function testUpdateEmailTemplateResponseModel(): void
@@ -729,19 +739,21 @@ trait TemplatesBase
         $response = $this->listEmailTemplates();
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $foundEn = false;
-        $foundFr = false;
-        foreach ($response['body']['templates'] as $template) {
-            if ($template['templateId'] === 'recovery' && $template['locale'] === 'en' && $template['subject'] === $enSubject) {
-                $foundEn = true;
-            }
-            if ($template['templateId'] === 'recovery' && $template['locale'] === 'fr' && $template['subject'] === $frSubject) {
-                $foundFr = true;
-            }
-        }
+        $foundEn = \array_filter(
+            $response['body']['templates'],
+            fn ($template) => $template['templateId'] === 'recovery'
+                && $template['locale'] === 'en'
+                && $template['subject'] === $enSubject
+        );
+        $foundFr = \array_filter(
+            $response['body']['templates'],
+            fn ($template) => $template['templateId'] === 'recovery'
+                && $template['locale'] === 'fr'
+                && $template['subject'] === $frSubject
+        );
 
-        $this->assertTrue($foundEn, 'recovery/en must appear in the list');
-        $this->assertTrue($foundFr, 'recovery/fr must appear in the list');
+        $this->assertNotEmpty($foundEn, 'recovery/en must appear in the list');
+        $this->assertNotEmpty($foundFr, 'recovery/fr must appear in the list');
     }
 
     public function testListEmailTemplatesUpdateDoesNotDuplicate(): void
@@ -1076,7 +1088,6 @@ trait TemplatesBase
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
             ], [
                 'userId' => ID::unique(),
                 'email' => $email,

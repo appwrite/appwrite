@@ -621,6 +621,82 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
+    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        $github = new GitHub(new Cache(new None()));
+        $github->initializeVariables(
+            $this->providerInstallationId,
+            System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'),
+            System::getEnv('_APP_VCS_GITHUB_APP_ID'),
+        );
+        $commit = $github->getLatestCommit('appwrite-test', 'ruby-starter', 'main');
+        $payload = [
+            'created' => false,
+            'deleted' => false,
+            'ref' => 'refs/heads/main',
+            'before' => $commit['commitHash'],
+            'after' => $commit['commitHash'],
+            'repository' => [
+                'id' => (int) $this->providerRepositoryId,
+                'name' => 'ruby-starter',
+                'full_name' => 'appwrite-test/ruby-starter',
+                'private' => false,
+                'html_url' => 'https://github.com/appwrite-test/ruby-starter',
+                'owner' => ['name' => 'appwrite-test'],
+            ],
+            'installation' => ['id' => (int) $this->providerInstallationId],
+            'head_commit' => [
+                'author' => [
+                    'name' => $commit['commitAuthor'],
+                    'email' => 'vcs-e2e@appwrite.io',
+                ],
+                'message' => $commit['commitMessage'],
+                'url' => $commit['commitUrl'],
+            ],
+            'commits' => [[
+                'id' => $commit['commitHash'],
+                'added' => [],
+                'removed' => [],
+                'modified' => ['main.rb'],
+            ]],
+            'sender' => [
+                'html_url' => $commit['commitAuthorUrl'],
+                'avatar_url' => $commit['commitAuthorAvatar'],
+            ],
+        ];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-github-event' => 'push',
+        ];
+        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        if (!empty($secret)) {
+            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+                'sha256',
+                \json_encode($payload, JSON_THROW_ON_ERROR),
+                $secret,
+            );
+        }
+
+        // GitHub webhooks are public and intentionally have no x-appwrite-project header.
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('providerCommitHash', [$commit['commitHash']])->toString(),
+                Query::equal('type', ['vcs'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
+        $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
+    }
+
     public function testUpdateFunctionUsingVCS(): void
     {
         $data = $this->setupFunctionUsingVCS();
@@ -651,6 +727,174 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('index.php', $function['body']['entrypoint']);
         $this->assertEquals('708688544', $function['body']['providerRepositoryId']);
         $this->assertEquals('main', $function['body']['providerBranch']);
+    }
+
+    public function testUpdateFunctionOmitProviderRepositoryIdPreservesVcs(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+
+        // Omit providerRepositoryId entirely — should preserve VCS connection, not clear it
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => 10,
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['providerRepositoryId']);
+        $this->assertNotEmpty($function['body']['installationId']);
+        $this->assertNotEmpty($function['body']['providerBranch']);
+    }
+
+    public function testUpdateSiteOmitProviderRepositoryIdPreservesVcs(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'siteId' => ID::unique(),
+            'name' => 'Test Site VCS',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId3,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $siteId = $site['body']['$id'];
+
+        // Omit providerRepositoryId — should preserve VCS connection, not clear it
+        $updated = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test Site VCS',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertNotEmpty($updated['body']['providerRepositoryId']);
+        $this->assertNotEmpty($updated['body']['installationId']);
+        $this->assertNotEmpty($updated['body']['providerBranch']);
+
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+    }
+
+    public function testCrossProjectInstallationRejected(): void
+    {
+        $installationId = $this->setupInstallation();
+        $consoleHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $consoleHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Cross Project Team',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
+            'projectId' => ID::unique(),
+            'name' => 'Cross Project Test',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertEquals(201, $project2['headers']['status-code']);
+        $project2Id = $project2['body']['$id'];
+
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Test Key',
+            'scopes' => ['functions.write', 'sites.write'],
+        ]);
+        $this->assertEquals(201, $key['headers']['status-code']);
+
+        $headers2 = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project2Id,
+            'x-appwrite-key' => $key['body']['secret'],
+        ];
+
+        try {
+            // createFunction with installation from project 1 → should fail
+            $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
+                'functionId' => ID::unique(),
+                'name' => 'Test Cross',
+                'runtime' => 'php-8.0',
+                'entrypoint' => 'index.php',
+                'installationId' => $installationId,
+                'providerRepositoryId' => $this->providerRepositoryId,
+                'providerBranch' => 'main',
+            ]);
+            $this->assertEquals(404, $function['headers']['status-code']);
+
+            // createSite with installation from project 1 → should fail
+            $site = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
+                'siteId' => ID::unique(),
+                'name' => 'Test Cross Site',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'installationId' => $installationId,
+                'providerRepositoryId' => $this->providerRepositoryId3,
+                'providerBranch' => 'main',
+            ]);
+            $this->assertEquals(404, $site['headers']['status-code']);
+
+            // updateFunction with cross-project installation → should fail
+            $fn = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
+                'functionId' => ID::unique(),
+                'name' => 'Test No VCS',
+                'runtime' => 'php-8.0',
+                'entrypoint' => 'index.php',
+            ]);
+            $this->assertEquals(201, $fn['headers']['status-code']);
+
+            $updated = $this->client->call(Client::METHOD_PUT, '/functions/' . $fn['body']['$id'], $headers2, [
+                'name' => 'Test No VCS',
+                'runtime' => 'php-8.0',
+                'entrypoint' => 'index.php',
+                'installationId' => $installationId,
+                'providerRepositoryId' => $this->providerRepositoryId,
+                'providerBranch' => 'main',
+            ]);
+            $this->assertEquals(404, $updated['headers']['status-code']);
+
+            // updateSite with cross-project installation → should fail
+            $siteNoVcs = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
+                'siteId' => ID::unique(),
+                'name' => 'Test No VCS Site',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+            ]);
+            $this->assertEquals(201, $siteNoVcs['headers']['status-code']);
+
+            $updatedSite = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteNoVcs['body']['$id'], $headers2, [
+                'name' => 'Test No VCS Site',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'installationId' => $installationId,
+                'providerRepositoryId' => $this->providerRepositoryId3,
+                'providerBranch' => 'main',
+            ]);
+            $this->assertEquals(404, $updatedSite['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/projects/' . $project2Id, $consoleHeaders);
+            $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], $consoleHeaders);
+        }
     }
 
     public function testCreateRepository(): void

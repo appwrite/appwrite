@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification;
 
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
@@ -102,6 +103,60 @@ abstract class Format
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    protected function getArrayItemsSchema(mixed $example): array
+    {
+        if (\is_string($example)) {
+            $decoded = \json_decode($example, true);
+            if (\is_array($decoded)) {
+                $example = $decoded;
+            }
+        }
+
+        if (!\is_array($example) || empty($example)) {
+            return ['type' => 'object'];
+        }
+
+        foreach ($example as $item) {
+            if ($item === null) {
+                continue;
+            }
+
+            if (\is_array($item)) {
+                if (!\array_is_list($item)) {
+                    return [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ];
+                }
+
+                return [
+                    'type' => 'array',
+                    'items' => $this->getArrayItemsSchema($item),
+                ];
+            }
+
+            if (\is_int($item) || \is_float($item)) {
+                return [
+                    'type' => 'number',
+                    'format' => 'double',
+                ];
+            }
+
+            return [
+                'type' => match (\gettype($item)) {
+                    'boolean' => 'boolean',
+                    'string' => 'string',
+                    default => 'object',
+                },
+            ];
+        }
+
+        return ['type' => 'object'];
+    }
+
+    /**
      * Set Services.
      *
      * Set services value
@@ -140,6 +195,49 @@ abstract class Format
         }
 
         return $resources;
+    }
+
+    /**
+     * Parameters emitted for a method: the route params merged with SDK-only
+     * additions. A method may declare an explicit `parameters` list to
+     * override route params by name — set fields replace the route's, and
+     * `hide: true` drops the param from the spec while the route keeps
+     * accepting it at runtime.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getMethodParameters(Route $route, Method $method): array
+    {
+        $parameters = \array_merge($route->getParams(), $method->getAdditionalParameters());
+
+        foreach ($method->getParameters() as $parameter) {
+            $name = $parameter->getName();
+
+            if ($parameter->getHide()) {
+                unset($parameters[$name]);
+                continue;
+            }
+
+            $overrides = \array_filter([
+                'description' => $parameter->getDescription() ?: null,
+                'validator' => $parameter->getValidator(),
+            ], fn (mixed $value) => $value !== null);
+
+            if ($parameter->hasDefault()) {
+                $overrides['default'] = $parameter->getDefault();
+            }
+
+            if ($parameter->hasOptional()) {
+                $overrides['optional'] = $parameter->getOptional();
+            }
+
+            $parameters[$name] = \array_merge(
+                $parameters[$name] ?? ['optional' => $parameter->getOptional(), 'injections' => []],
+                $overrides,
+            );
+        }
+
+        return $parameters;
     }
 
     protected function getValidator(array $param): mixed

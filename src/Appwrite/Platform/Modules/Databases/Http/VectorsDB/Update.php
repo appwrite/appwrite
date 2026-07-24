@@ -32,6 +32,7 @@ class Update extends DatabaseUpdate
             ->label('event', 'databases.[databaseId].update')
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
+            ->label('usage.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'vectorsdb',

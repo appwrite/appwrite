@@ -238,7 +238,7 @@ abstract class Base extends Action
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
-            ->label('scope', 'oauth2.write')
+            ->label('scope', 'project.oauth2.write')
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
@@ -309,6 +309,7 @@ abstract class Base extends Action
             'paypal' => Paypal\Update::class,
             'paypalSandbox' => PaypalSandbox\Update::class,
             'gitlab' => Gitlab\Update::class,
+            'appwrite' => Appwrite\Update::class,
             'authentik' => Authentik\Update::class,
             'auth0' => Auth0\Update::class,
             'fusionauth' => FusionAuth\Update::class,
@@ -425,7 +426,10 @@ abstract class Base extends Action
             'oAuthProviders' => $oAuthProviders
         ]);
 
-        return $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $updates));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        return $project;
     }
 
     public function action(

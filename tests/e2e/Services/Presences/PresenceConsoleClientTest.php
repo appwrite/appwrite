@@ -8,6 +8,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -31,40 +33,12 @@ final class PresenceConsoleClientTest extends Scope
 
     // `x-appwrite-mode: admin` is forbidden for the console project, so authenticate
     // as a console session user instead — `getUser()` signs them up against project=console.
-    public function getHeaders(bool $devKey = true): array
+    public function getHeaders(): array
     {
         return [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getUser()['session'],
         ];
-    }
-
-    public function testGetPresenceUsage(): void
-    {
-        // Usage requires admin scope, which the console project rejects — run against a regular project.
-        $projectId = $this->getCustomProject()['$id'];
-
-        $response = $this->client->call(Client::METHOD_GET, '/presences/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getAdminHeaders()), [
-            'range' => '32h',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/presences/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getAdminHeaders()), [
-            'range' => '24h',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('24h', $response['body']['range']);
-        $this->assertCount(3, $response['body']);
-        $this->assertIsNumeric($response['body']['usersOnlineTotal']);
-        $this->assertIsArray($response['body']['presences']);
     }
 
     public function testConsolePresenceUpsertAndUpdateBroadcastRealtime(): void
@@ -140,6 +114,71 @@ final class PresenceConsoleClientTest extends Scope
                 );
             }
         }
+    }
+
+    public function testExpiredConsolePresenceDeletedByMaintenance(): void
+    {
+        $presenceId = ID::unique();
+        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
+
+        $upsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $presenceId,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'status' => 'online',
+                'metadata' => ['case' => 'console-expiry'],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        );
+        $this->assertSame(200, $upsert['headers']['status-code']);
+
+        $expire = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceId,
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders()),
+            [
+                'expiresAt' => $expiresAt,
+            ]
+        );
+        $this->assertSame(200, $expire['headers']['status-code']);
+        $this->assertSame(
+            (new \DateTime($expiresAt))->getTimestamp(),
+            (new \DateTime($expire['body']['expiresAt']))->getTimestamp()
+        );
+
+        // The API hides expired presences (404) before maintenance runs, so poll for the
+        // expiry to elapse instead of sleeping on a fixed timer.
+        $this->assertEventually(function () use ($presenceId) {
+            $get = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                \array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => 'console',
+                ], $this->getHeaders())
+            );
+
+            $this->assertSame(404, $get['headers']['status-code']);
+        }, 30000, 1000);
+
+        // Once expired, a single maintenance run must delete the stored console presence row
+        // (previously skipped for the console project).
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
     }
 
     private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient

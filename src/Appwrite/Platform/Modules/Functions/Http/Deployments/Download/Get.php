@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Download;
 
+use Appwrite\Deployment\Token;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -9,13 +10,16 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action
@@ -35,7 +39,11 @@ class Get extends Action
             ->httpAlias('/v1/functions/:functionId/deployments/:deploymentId/build/download')
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
-            ->label('scope', 'functions.read')
+            // Reachable by privileged callers (console/CLI via functions.read)
+            // and by guests holding a valid presigned token (public); the
+            // action enforces which one actually applies.
+            ->label('scope', ['public', 'functions.read'])
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -52,16 +60,20 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::ANY,
-                type: MethodType::LOCATION
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
+            ->param('token', '', new Text(2048), 'Presigned source-download token for accessing this deployment without a session (jobs-service).', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForBuilds')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -69,18 +81,32 @@ class Get extends Action
         string $functionId,
         string $deploymentId,
         string $type,
+        string $token,
         Response $response,
         Request $request,
         Database $dbForProject,
         Device $deviceForFunctions,
-        Device $deviceForBuilds
+        Device $deviceForBuilds,
+        User $user,
+        Authorization $authorization,
     ) {
-        $function = $dbForProject->getDocument('functions', $functionId);
+        // Access is granted either to a privileged caller (console/CLI via
+        // session or API key) or to a valid presigned token bound to this
+        // deployment + artifact type (used by the jobs-service).
+        $isPrivileged = $user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles());
+        if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        // Access has been authorized at the endpoint level (privileged caller or
+        // presigned token), so read the artifact documents without re-applying
+        // document-level permissions (a token holder is not an authed user).
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
@@ -99,14 +125,19 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $contentType = $type === 'source' ? 'application/gzip' : 'application/octet-stream';
+        $filename = $type === 'source'
+            ? $deploymentId . '-source.tar.gz'
+            : $deploymentId . '-output-' . \basename($path);
+
         $response
-            ->setContentType('application/gzip')
+            ->setContentType($contentType)
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();

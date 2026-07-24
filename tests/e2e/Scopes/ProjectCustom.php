@@ -3,7 +3,6 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -34,7 +33,7 @@ trait ProjectCustom
     }
 
     /**
-     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     * Create a new project with team, API key, webhook, and SMTP config.
      */
     protected function createNewProject(): array
     {
@@ -169,12 +168,12 @@ trait ProjectCustom
                     'keys.write',
                     'platforms.read',
                     'platforms.write',
-                    'oauth2.read',
-                    'oauth2.write',
                     'mocks.read',
                     'mocks.write',
                     'project.policies.read',
                     'project.policies.write',
+                    'project.oauth2.read',
+                    'project.oauth2.write',
                     'templates.read',
                     'templates.write',
                     'insights.read',
@@ -197,19 +196,6 @@ trait ProjectCustom
         $this->assertEquals(201, $key['headers']['status-code'], 'Key creation failed with status: ' . $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
-
-        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/dev-keys', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Key Test',
-            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
-        $this->assertEquals(201, $devKey['headers']['status-code']);
-        $this->assertNotEmpty($devKey['body']);
-        $this->assertNotEmpty($devKey['body']['secret']);
 
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
             'origin' => 'http://localhost',
@@ -253,7 +239,6 @@ trait ProjectCustom
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
-            'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['secret'],
         ];

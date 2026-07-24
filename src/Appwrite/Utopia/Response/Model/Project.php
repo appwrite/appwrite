@@ -111,9 +111,10 @@ class Project extends Model
             ])
             ->addRule('smtpPassword', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'SMTP server password. This property is write-only and always returned empty.',
                 'default' => '',
-                'example' => '',
+                'example' => 'smtp-password',
             ])
             ->addRule('smtpSecure', [
                 'type' => self::TYPE_STRING,
@@ -151,6 +152,12 @@ class Project extends Model
                 'description' => 'Project status.',
                 'default' => 'active',
                 'example' => 'active',
+            ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
+                'default' => [],
+                'example' => [],
             ])
 
             // Resource: Auth methods

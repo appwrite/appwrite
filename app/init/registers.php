@@ -5,8 +5,6 @@ use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
-use MaxMind\Db\Reader;
-use Swoole\Database\PDOProxy;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -153,9 +151,9 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
-        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
-        'port' => System::getEnv('_APP_DB_PORT', '27017'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT', '5432'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -291,15 +289,14 @@ $register->set('pools', function () {
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ]);
-                    });
+                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_TIMEOUT => 3, // Seconds
+                        \PDO::ATTR_PERSISTENT => false,
+                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                        \PDO::ATTR_EMULATE_PREPARES => true,
+                        \PDO::ATTR_STRINGIFY_FETCHES => true
+                    ]);
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
@@ -312,15 +309,14 @@ $register->set('pools', function () {
                     }
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ));
-                    });
+                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_TIMEOUT => 3, // Seconds
+                        \PDO::ATTR_PERSISTENT => false,
+                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                        \PDO::ATTR_EMULATE_PREPARES => true,
+                        \PDO::ATTR_STRINGIFY_FETCHES => true
+                    ));
                 },
                 default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
@@ -412,7 +408,7 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
 
     switch ($dbAdapter) {
@@ -451,9 +447,6 @@ $register->set('smtp', function () {
         keepAlive: true,
         timelimit: 30,
     );
-});
-$register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2026-06.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');

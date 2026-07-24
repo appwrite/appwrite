@@ -17,11 +17,13 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
@@ -29,8 +31,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
-use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Bcrypt;
@@ -43,7 +43,6 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -54,11 +53,8 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -146,6 +142,10 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         $hashedPassword = null;
@@ -283,7 +283,7 @@ Http::post('/v1/users')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
     ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -989,95 +989,6 @@ Http::get('/v1/users/:userId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-Http::get('/v1/users/:userId/logs')
-    ->desc('List user logs')
-    ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'logs',
-        name: 'listLogs',
-        description: '/docs/references/users/list-user-logs.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_LOG_LIST,
-            )
-        ]
-    ))
-    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('audit')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-
-        $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
-        $output = [];
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-            $detector = new Detector($log['userAgent']);
-            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            $os = $detector->getOS();
-            $client = $detector->getClient();
-            $device = $detector->getDevice();
-            $output[$i] = new Document([
-                'event' => $log['event'],
-                'userId' => ID::custom($log['data']['userId']),
-                'userEmail' => $log['data']['userEmail'] ?? null,
-                'userName' => $log['data']['userName'] ?? null,
-                'mode' => $log['data']['mode'] ?? null,
-                'userType' => $log['data']['userType'] ?? null,
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-                'osCode' => $os['osCode'],
-                'osName' => $os['osName'],
-                'osVersion' => $os['osVersion'],
-                'clientType' => $client['clientType'],
-                'clientCode' => $client['clientCode'],
-                'clientName' => $client['clientName'],
-                'clientVersion' => $client['clientVersion'],
-                'clientEngine' => $client['clientEngine'],
-                'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
-            ]);
-            $record = $geodb->get($log['ip']);
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
-        }
-
-        $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
-    });
-
 Http::get('/v1/users/:userId/targets')
     ->desc('List user targets')
     ->groups(['api', 'users'])
@@ -1434,7 +1345,7 @@ Http::patch('/v1/users/:userId/password')
         ]
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('password', '', fn ($project, $passwordsDictionary) => new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? [], allowEmpty: true), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true)], Validator::TYPE_STRING), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? [], allowEmpty: true), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true)], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1610,6 +1521,10 @@ Http::patch('/v1/users/:userId/email')
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !($emailMetadata['emailIsCorporate'] ?? true)) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         $user
@@ -2374,11 +2289,11 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2386,8 +2301,6 @@ Http::post('/v1/users/:userId/sessions')
 
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
@@ -2401,7 +2314,7 @@ Http::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => $expire,
             ],
             $detector->getOS(),
@@ -2816,89 +2729,4 @@ Http::post('/v1/users/:userId/jwts')
                 'userId' => $user->getId(),
                 'sessionId' => $session->isEmpty() ? '' : $session->getId()
             ])]), Response::MODEL_JWT);
-    });
-
-Http::get('/v1/users/usage')
-    ->desc('Get users usage stats')
-    ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: null,
-        name: 'getUsage',
-        description: '/docs/references/users/get-usage.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USAGE_USERS,
-            )
-        ]
-    ))
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(name: 'UsageRange'))
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            METRIC_USERS,
-            METRIC_SESSIONS,
-        ];
-
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $count => $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
-                $stats[$metric]['total'] = $result['value'] ?? 0;
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', [$period]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric]['data'] = [];
-                foreach ($results as $result) {
-                    $stats[$metric]['data'][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-            default => throw new \LogicException('Unsupported period: ' . $days['period']),
-        };
-
-        foreach ($metrics as $metric) {
-            $usage[$metric]['total'] =  $stats[$metric]['total'];
-            $usage[$metric]['data'] = [];
-            $leap = time() - ($days['limit'] * $days['factor']);
-            while ($leap < time()) {
-                $leap += $days['factor'];
-                $formatDate = date($format, $leap);
-                $usage[$metric]['data'][] = [
-                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                    'date' => $formatDate,
-                ];
-            }
-        }
-
-        $response->dynamic(new Document([
-            'range' => $range,
-            'usersTotal'   => $usage[$metrics[0]]['total'],
-            'sessionsTotal' => $usage[$metrics[1]]['total'],
-            'users'   => $usage[$metrics[0]]['data'],
-            'sessions' => $usage[$metrics[1]]['data'],
-        ]), Response::MODEL_USAGE_USERS);
     });

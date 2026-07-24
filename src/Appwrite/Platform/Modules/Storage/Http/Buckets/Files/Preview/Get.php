@@ -53,6 +53,7 @@ class Get extends Action
             ->desc('Get file preview')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
@@ -71,6 +72,7 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::IMAGE
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
@@ -237,6 +239,24 @@ class Get extends Action
         }
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
+
+        $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
+        $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
+        $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
+        $dimensions = \getimagesizefromstring($source);
+        if ($dimensions !== false) {
+            [$sourceWidth, $sourceHeight] = $dimensions;
+            if (
+                ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
+                ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
+                ($maxArea > 0 && $sourceWidth * $sourceHeight > $maxArea)
+            ) {
+                throw new Exception(
+                    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                    \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $sourceWidth, $sourceHeight, $maxWidth, $maxHeight, $maxArea)
+                );
+            }
+        }
 
         try {
             $image = new Image($source);

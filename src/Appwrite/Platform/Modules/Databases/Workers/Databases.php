@@ -93,7 +93,7 @@ class Databases extends Action
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
-            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $queueForRealtime),
+            DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
@@ -108,6 +108,7 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param Realtime $queueForRealtime
      * @return void
      * @throws Authorization
@@ -122,6 +123,7 @@ class Databases extends Action
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
+        Database $dbForDatabases,
         Realtime $queueForRealtime
     ): void {
         if ($collection->isEmpty()) {
@@ -183,7 +185,7 @@ class Databases extends Action
                     }
 
                     if (
-                        !$dbForProject->createRelationship(
+                        !$dbForDatabases->createRelationship(
                             collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                             relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             type: $options['relationType'],
@@ -202,7 +204,7 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                    if (!$dbForDatabases->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                         throw new Exception('Failed to create attribute/column');
                     }
             }

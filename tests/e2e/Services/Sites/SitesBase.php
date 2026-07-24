@@ -72,11 +72,11 @@ trait SitesBase
                 throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
-            if (\trim($this->stdout) !== '0') {
+            $code = Console::execute("docker inspect exc1 --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            if ($code === 0 && \trim($this->stdout) !== '' && \trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
@@ -329,16 +329,6 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function getUsage(string $siteId, mixed $params): mixed
-    {
-        $usage = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $usage;
-    }
-
     protected function getTemplate(string $templateId)
     {
         $template = $this->client->call(Client::METHOD_GET, '/sites/templates/' . $templateId, [
@@ -489,12 +479,21 @@ trait SitesBase
         return $deployment;
     }
 
-    protected function listSpecifications(): mixed
+    protected function listSpecifications(array $params = []): mixed
     {
         $specifications = $this->client->call(Client::METHOD_GET, '/sites/specifications', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), $params);
 
         return $specifications;
+    }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
     }
 }

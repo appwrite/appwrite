@@ -16,6 +16,40 @@ final class AccountConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
+    public function testCreateRecoveryEmailBranding(): void
+    {
+        $email = ID::unique() . '@appwrite.io';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Recovery User',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+    }
+
     /**
      * Test that account deletion succeeds even with active team memberships.
      * When the user is the sole owner and only member of a team, the team
@@ -132,7 +166,6 @@ final class AccountConsoleClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => $email,
@@ -227,56 +260,5 @@ final class AccountConsoleClientTest extends Scope
         $lastEmailId = $lastEmail['id'];
         $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
-    }
-
-    public function testGetAccountLogs(): void
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for SUCCESS - Create account and session for console project
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
-        /**
-         * Test for SUCCESS - Get account logs
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']['logs']);
-        $this->assertNotEmpty($response['body']['logs']);
-        $this->assertIsNumeric($response['body']['total']);
     }
 }

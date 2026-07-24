@@ -1,32 +1,19 @@
-# WARNING!
-# This is a development version of THE Appwrite docker-compose.yml file.
-# Avoid using this file in your production environment.
-# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
-
-x-logging: &x-logging
+x-logging:
   logging:
-    driver: "json-file"
+    driver: json-file
     options:
       max-file: "5"
-      max-size: "10m"
-
-x-build: &x-build
-  build:
-    context: .
-    target: development
-    args:
-      DEBUG: false
-      TESTING: true
-      VERSION: dev
-
+      max-size: 10m
 services:
   traefik:
     image: traefik:3.6
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-traefik
     command:
-      - --log.level=DEBUG
-      - --api.insecure=true
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
@@ -34,12 +21,9 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
-      - --accesslog=true
     ports:
-      - 80:80
-      - 8080:80
-      - 443:443
-      - 9500:8080
+      - ${_APP_HTTP_PORT:-80}:80
+      - ${_APP_HTTPS_PORT:-443}:443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -47,50 +31,39 @@ services:
     depends_on:
       - appwrite
     networks:
-      appwrite:
-        aliases:
-          - appwrite.test
-      gateway:
-        aliases:
-          - appwrite.test
-      runtimes:
-        aliases:
-          - appwrite.test
-
+      - gateway
+      - appwrite
   appwrite:
     container_name: appwrite
-    <<: [*x-logging, *x-build]
-    image: appwrite-dev
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     healthcheck:
-      test: ["CMD", "doctor"]
+      test:
+        - CMD-SHELL
+        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
-    ports:
-      - 9501:80
+      start_period: 120s
     networks:
       - appwrite
-    dns:
-      - 127.0.0.11
-      - 172.16.238.100
     labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_api.loadbalancer.server.port=80"
-      #http
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_api.loadbalancer.server.port=80
       - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_http.service=appwrite_api
-      # https
       - traefik.http.routers.appwrite_api_https.entrypoints=appwrite_websecure
       - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
-      - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
-      - ./.env:/usr/src/code/.env # Only needed for tests
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -99,25 +72,11 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
-      - ./phpunit.xml:/usr/src/code/phpunit.xml
-      - ./tests:/usr/src/code/tests
-      - ./app:/usr/src/code/app
-      - ./docs:/usr/src/code/docs
-      - ./public:/usr/src/code/public
-      - ./src:/usr/src/code/src
-      - ./dev:/usr/src/code/dev
-
     depends_on:
-      redis:
-        condition: service_healthy
-      coredns:
-        condition: service_started
-      appwrite-embedding:
-        condition: service_started
-    entrypoint:
-      - php
-      - -e
-      - app/http.php
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+      - appwrite-embedding
+      - appwrite-geo
     environment:
       - _APP_ENV
       - _APP_EDITION
@@ -142,8 +101,10 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -172,7 +133,6 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      - _APP_USAGE_STATS
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_STORAGE_ANTIVIRUS
@@ -211,7 +171,13 @@ services:
       - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_BUILDS_BACKEND
+      - _APP_BUILDS_VOLUME
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
       - _APP_LOGGING_CONFIG
+      - _APP_LOCKING_ENABLED
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -232,12 +198,18 @@ services:
       - _APP_VCS_GITHUB_WEBHOOK_SECRET
       - _APP_VCS_GITHUB_CLIENT_SECRET
       - _APP_VCS_GITHUB_CLIENT_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
-      - _APP_MESSAGE_SMS_TEST_DSN
-      - _APP_MESSAGE_EMAIL_TEST_DSN
-      - _APP_MESSAGE_PUSH_TEST_DSN
       - _APP_CONSOLE_COUNTRIES_DENYLIST
       - _APP_EXPERIMENT_LOGGING_PROVIDER
       - _APP_EXPERIMENT_LOGGING_CONFIG
@@ -247,62 +219,61 @@ services:
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
       - _APP_MIGRATION_HOST
-      - _TESTS_OAUTH2_GITHUB_CLIENT_ID
-      - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
+      - _APP_GEO_SECRET
+      - _APP_GEO_ENDPOINT
   appwrite-console:
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-console
-    image: appwrite/console:8
+    image: appwrite/new:0.3.32
     restart: unless-stopped
     networks:
       - appwrite
+    environment:
+      - VITE_CONSOLE_PROFILE=self-hosted
+      - APPWRITE_ENDPOINT_SAME_ORIGIN=true
+      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_console.loadbalancer.server.port=80"
-      #ws
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_console.loadbalancer.server.port=3000
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_console_http.service=appwrite_console
-      # wss
       - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
-
   appwrite-realtime:
     entrypoint: realtime
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-realtime
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     restart: unless-stopped
-    ports:
-      - 9505:80
     labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
-      #ws
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_realtime.loadbalancer.server.port=80
       - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
-      # wss
       - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -310,6 +281,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -327,66 +299,30 @@ services:
       - _APP_DB_SCHEMA_VECTORSDB
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
-      - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
 
-  appwrite-worker-audits:
-    entrypoint: worker-audits
-    <<: [*x-logging, *x-build]
-    container_name: appwrite-worker-audits
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - appwrite-embedding
-    environment:
-      - _APP_ENV
-      - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-webhooks
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - request-catcher-sms
-      - request-catcher-webhook
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -404,17 +340,21 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-
+      - _APP_CONSOLE_URL_SCHEME=root
   appwrite-worker-deletes:
     entrypoint: worker-deletes
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-deletes
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -423,9 +363,6 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -472,21 +409,20 @@ services:
       - _APP_EMAIL_CERTIFICATES
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
-
   appwrite-worker-databases:
     entrypoint: worker-databases
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-databases
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -514,23 +450,24 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-builds:
     entrypoint: worker-builds
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-builds
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -555,16 +492,27 @@ services:
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
+      - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -590,36 +538,80 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DOMAIN_SITES
+      - _APP_BUILDS_BACKEND
+      - _APP_BUILDS_VOLUME
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_JOBS_ENDPOINT
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - host.docker.internal:host-gateway
+
+  appwrite-worker-jobs:
+    entrypoint: worker-jobs
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-jobs
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-builds:/storage/builds:rw
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_JOBS_HOST
+      - _APP_JOBS_SECRET
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_LOGGING_CONFIG
+      - _APP_DATABASE_SHARED_TABLES
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   appwrite-worker-screenshots:
     entrypoint: worker-screenshots
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-screenshots
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
-      # Specific
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_OPTIONS_FORCE_HTTPS
-      # Basic
       - _APP_ENV
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
-      # Database
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -632,7 +624,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      # Storage
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -656,24 +647,25 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
     extra_hosts:
-      - "host.docker.internal:host-gateway"
-
+      - host.docker.internal:host-gateway
   appwrite-worker-certificates:
     entrypoint: worker-certificates
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-certificates
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -703,51 +695,19 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
-  appwrite-worker-executions:
-    entrypoint: worker-executions
-    <<: [*x-logging, *x-build]
-    container_name: appwrite-worker-executions
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-    environment:
-      - _APP_ENV
-      - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=8
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-functions:
     entrypoint: worker-functions
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-functions
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -775,28 +735,25 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_USAGE_STATS
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-mails:
     entrypoint: worker-mails
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-mails
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - maildev
       - ${_APP_DB_HOST:-mariadb}
-      # - smtp
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -804,6 +761,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -826,18 +784,62 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
 
+  appwrite-worker-notifications:
+    entrypoint: worker-notifications
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-notifications
+    restart: unless-stopped
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-mariadb}
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
+      - _APP_OPENSSL_KEY_V1
+      - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-messaging:
     entrypoint: worker-messaging
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-messaging
     restart: unless-stopped
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -884,24 +886,23 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-worker-migrations:
     entrypoint: worker-migrations
-    <<: [*x-logging, *x-build]
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-worker-migrations
     restart: unless-stopped
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./tests:/usr/src/code/tests
-      
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -932,19 +933,20 @@ services:
       - _APP_DATABASE_SHARED_TABLES
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_MIGRATION_HOST
-
   appwrite-task-maintenance:
     entrypoint: maintenance
-    <<: [*x-logging, *x-build]
+    restart: on-failure:3
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-task-maintenance
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -978,19 +980,20 @@ services:
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-task-interval:
     entrypoint: interval
-    <<: [*x-logging, *x-build]
+    restart: on-failure:3
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-task-interval
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -1019,122 +1022,20 @@ services:
       - _APP_INTERVAL_DOMAIN_VERIFICATION
       - _APP_INTERVAL_CLEANUP_STALE_EXECUTIONS
 
-  appwrite-task-stats-resources:
-    container_name: appwrite-task-stats-resources
-    entrypoint: stats-resources
-    <<: [*x-logging, *x-build]
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_USAGE_STATS
-      - _APP_LOGGING_CONFIG
-      - _APP_DATABASE_SHARED_TABLES
-      - _APP_STATS_RESOURCES_INTERVAL
-
-  appwrite-worker-stats-resources:
-    entrypoint: worker-stats-resources
-    <<: [*x-logging, *x-build]
-    container_name: appwrite-worker-stats-resources
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-    environment:
-      - _APP_ENV
-      - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_USAGE_STATS
-      - _APP_LOGGING_CONFIG
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
-
-  appwrite-worker-stats-usage:
-    entrypoint: worker-stats-usage
-    <<: [*x-logging, *x-build]
-    container_name: appwrite-worker-stats-usage
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - appwrite-embedding
-    environment:
-      - _APP_ENV
-      - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=1
-      - _APP_WORKER_PER_CORE
-      - _APP_POOL_ADAPTER
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_ADAPTER
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_USAGE_STATS
-      - _APP_LOGGING_CONFIG
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_DATABASE_SHARED_TABLES
-
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
-    <<: [*x-logging, *x-build]
+    restart: on-failure:3
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-task-scheduler-functions
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1160,19 +1061,20 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
-    <<: [*x-logging, *x-build]
+    restart: on-failure:3
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-task-scheduler-executions
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1198,19 +1100,20 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
-    <<: [*x-logging, *x-build]
+    restart: on-failure:3
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-task-scheduler-messages
-    image: appwrite-dev
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1229,7 +1132,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-
   appwrite-assistant:
     container_name: appwrite-assistant
     image: appwrite/assistant:0.8.4
@@ -1237,34 +1139,56 @@ services:
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.2
+    image: appwrite/browser:0.3.3
     networks:
       - appwrite
 
-  openruntimes-executor:
-    container_name: openruntimes-executor
-    hostname: exc1
-    <<: *x-logging
-    stop_signal: SIGINT
-    image: openruntimes/executor:0.11.4
+  appwrite-geo:
+    container_name: appwrite-geo
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    image: appwrite/geo:0.3.0
     restart: unless-stopped
     networks:
       - appwrite
-      - runtimes
+    environment:
+      - GEO_SECRET=$_APP_GEO_SECRET
+    healthcheck:
+      test: 'php -r "exit(json_decode(file_get_contents(''http://localhost/v1/health''))->status === ''ok'' ? 0 : 1);"'
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  openruntimes-executor:
+    container_name: exc1
+    hostname: exc1
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    stop_signal: SIGINT
+    image: openruntimes/executor:0.25.4
+    restart: unless-stopped
+    networks:
+      - appwrite
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
-      # Host mount nessessary to share files between executor and runtimes.
-      # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_IMAGE_PULL=enabled
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+      - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
+      - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_COMPUTE_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
@@ -1273,6 +1197,7 @@ services:
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES,$_APP_SITES_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
+      - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
       - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
@@ -1297,39 +1222,74 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $$OPR_EXECUTOR_SECRET\" http://localhost/v1/health >/dev/null"]
+      test:
+        - CMD-SHELL
+        - 'curl -fsS -H "Authorization: Bearer $$OPR_EXECUTOR_SECRET" http://localhost/v1/health
+          >/dev/null'
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 5s
 
+  orchestrator-jobs:
+    container_name: orchestrator-jobs
+    hostname: orchestrator-jobs
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.8.0
+    restart: unless-stopped
+    user: root
+    networks:
+      - appwrite
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ORCHESTRATOR_BACKEND=docker
+      - ORCHESTRATOR_NETWORK=appwrite
+      - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.8.0
+
   mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11
     container_name: appwrite-mariadb
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
+    command:
+      - mysqld
+      - --innodb-flush-method=fsync
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
       interval: 5s
       timeout: 5s
       retries: 12
-
   mongodb:
     image: mongo:8.2.5
     container_name: appwrite-mongodb
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     restart: on-failure:3
     networks:
       - appwrite
@@ -1338,190 +1298,130 @@ services:
       - appwrite-mongodb-keyfile:/data/keyfile
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
       - MONGO_INITDB_USERNAME=${_APP_DB_USER}
       - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    entrypoint:
+      - /bin/bash
+      - /mongo-entrypoint.sh
     healthcheck:
       test: |
         bash -c "
-          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-            exit 0
-          else
-            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
-            \" 2>/dev/null || exit 1
-          fi
+          mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+            try {
+              const hello = db.adminCommand({hello: 1});
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
+                quit(0);
+              }
+            } catch (e) {}
+
+            try {
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]});
+            } catch (e) {}
+
+            quit(1);
+          \" 2>/dev/null
         "
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 30s
-
+      start_period: 60s
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     networks:
       - appwrite
     volumes:
       - appwrite-postgresql:/var/lib/postgresql/18/data:rw
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 10s
-    command: >
-      postgres
-      -c fsync=off
-      -c synchronous_commit=off
-      -c full_page_writes=off
-
+    command:
+      - postgres
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
   appwrite-embedding:
     image: appwrite/embedding:0.1.0
     environment:
       EMBEDDING_MODELS: ${_APP_EMBEDDING_MODELS:-nomic-embed-text}
     container_name: appwrite-embedding
-    ports:
-      - "3000:3000"
     restart: unless-stopped
-    # persistent for caching models across restarts and preloading
     volumes:
       - appwrite-models:/home/embedder/models
     networks:
       - appwrite
-
   redis:
     image: redis:7.4.7-alpine
-    <<: *x-logging
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
     container_name: appwrite-redis
-    command: >
-      redis-server
-      --maxmemory            512mb
-      --maxmemory-policy     allkeys-lru
-      --maxmemory-samples    5
-    ports:
-      - "6379:6379"
+    command:
+      - redis-server
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --maxmemory-samples
+      - "5"
     networks:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        - CMD
+        - redis-cli
+        - ping
       interval: 5s
       timeout: 5s
       retries: 12
-
-  coredns: # DNS server for testing purposes (Proxy APIs)
-    image: coredns/coredns:1.12.4
-    container_name: appwrite-coredns
-    restart: unless-stopped
-    <<: *x-logging
-    command: ["-conf", "/mnt/resources/Corefile"]
-    # If you need to debug CoreDNS, do it from "appwrite container", or port forward:
-    # ports:
-    #  - "53:53"
-    networks:
-      appwrite:
-        ipv4_address: 172.16.238.100
-    volumes:
-      - ./tests/resources/coredns:/mnt/resources:ro
-
-  # Dev Tools Start ------------------------------------------------------------------------------------------
-  #
-  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
-  #
-  # Here is a description of the different tools and why are we using them:
-  #
-  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
-  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
-  # Redis Insight - A nice UI for exploring Redis data
-  # Adminer - A nice UI for exploring MariaDB data
-  # GraphQl Explorer - A nice UI for exploring GraphQL API
-
-  maildev: # used mainly for dev tests
-    image: appwrite/mailcatcher:1.1.1
-    container_name: appwrite-mailcatcher
-    <<: *x-logging
-    ports:
-      - "9503:1080"
-    networks:
-      - appwrite
-      - gateway
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=gateway"
-      - "traefik.http.services.appwrite_maildev.loadbalancer.server.port=1080"
-      - "traefik.http.routers.appwrite_maildev_http.entrypoints=appwrite_web"
-      - "traefik.http.routers.appwrite_maildev_http.rule=Host(`mail.localhost`)"
-      - "traefik.http.routers.appwrite_maildev_http.service=appwrite_maildev"
-      - "traefik.http.routers.appwrite_maildev_https.entrypoints=appwrite_websecure"
-      - "traefik.http.routers.appwrite_maildev_https.rule=Host(`mail.localhost`)"
-      - "traefik.http.routers.appwrite_maildev_https.service=appwrite_maildev"
-      - "traefik.http.routers.appwrite_maildev_https.tls=true"
-    environment:
-      - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
-      - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
-
-  request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
-    image: appwrite/requestcatcher:1.1.0
-    container_name: appwrite-requestcatcher-webhook
-    <<: *x-logging
-    ports:
-      - "9504:5000"
-    networks:
-      - appwrite
-
-  request-catcher-sms: # used mainly for dev tests (mock SMS auth secret)
-    image: appwrite/requestcatcher:1.1.0
-    container_name: appwrite-requestcatcher-sms
-    <<: *x-logging
-    ports:
-      - "9507:5000"
-    networks:
-      - appwrite
-
-  # Dev tools (adminer, redis-insight, mongo-express, graphql-explorer)
-  # are defined in docker-compose.override.yml
-
 networks:
   gateway:
     name: gateway
   appwrite:
     name: appwrite
-    ipam:
-      config:
-        - subnet: 172.16.238.0/24
   runtimes:
     name: runtimes
-
-
-
 volumes:
-  appwrite-mariadb:
-  appwrite-mongodb:
-  appwrite-mongodb-keyfile:
-  appwrite-postgresql:
-  appwrite-redis:
-  appwrite-cache:
-  appwrite-uploads:
-  appwrite-imports:
-  appwrite-certificates:
-  appwrite-functions:
-  appwrite-sites:
+  appwrite-mariadb: null
+  appwrite-mongodb: null
+  appwrite-mongodb-keyfile: null
+  appwrite-postgresql: null
+  appwrite-redis: null
+  appwrite-cache: null
+  appwrite-uploads: null
+  appwrite-imports: null
+  appwrite-certificates: null
+  appwrite-functions: null
+  appwrite-sites: null
+  # Pinned name (unprefixed) so the jobs-service can attach it to build workers
+  # by a stable name across environments (see _APP_BUILDS_VOLUME).
   appwrite-builds:
-  appwrite-config:
-  appwrite-models:
+    name: appwrite-builds
+  appwrite-config: null
+  appwrite-models: null
+  openruntimes-node-modules-cache: null

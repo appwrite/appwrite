@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Usage as UsageMessage;
 use Utopia\Console;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
+use Utopia\System\System;
 
 readonly class Usage extends Base
 {
@@ -21,6 +22,10 @@ readonly class Usage extends Base
      */
     public function enqueue(UsageMessage $message): string|bool
     {
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            return false;
+        }
+
         try {
             return $this->publish($this->queue, $message);
         } catch (\Throwable $th) {
