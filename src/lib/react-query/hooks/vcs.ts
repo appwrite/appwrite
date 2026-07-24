@@ -228,6 +228,34 @@ export function useNamespaces(
   })
 }
 
+const NAMESPACES_PAGE_SIZE = 100
+/** Hard stop so a runaway `total` can't spin this into an infinite loop. */
+const NAMESPACES_MAX_PAGES = 20
+
+/**
+ * Fetch every namespace for an installation, paging through in
+ * NAMESPACES_PAGE_SIZE chunks until `total` is exhausted -- a GitLab user
+ * can belong to more groups than fit on one page, and silently truncating
+ * would make later groups unselectable for browsing or repo creation.
+ */
+async function fetchAllNamespaces(
+  projectId: string,
+  installationId: string,
+): Promise<Models.VcsNamespace[]> {
+  const all: Models.VcsNamespace[] = []
+  for (let page = 0; page < NAMESPACES_MAX_PAGES; page++) {
+    const result = await fetchNamespaces(
+      projectId,
+      installationId,
+      page,
+      NAMESPACES_PAGE_SIZE,
+    )
+    all.push(...result.namespaces)
+    if (all.length >= result.total || result.namespaces.length === 0) break
+  }
+  return all
+}
+
 /**
  * Fetch namespaces for every installation at once, so a combined
  * GitHub+GitLab org picker can flatten "installation -> its namespaces"
@@ -242,8 +270,8 @@ export function useNamespacesForInstallations(
 ) {
   const queries = useQueries({
     queries: installations.map((installation) => ({
-      queryKey: ['vcs', 'namespaces', projectId, installation.$id],
-      queryFn: () => fetchNamespaces(projectId!, installation.$id),
+      queryKey: ['vcs', 'namespaces', 'all', projectId, installation.$id],
+      queryFn: () => fetchAllNamespaces(projectId!, installation.$id),
       enabled: !!projectId,
       staleTime: DEFAULT_STALE_TIME,
     })),
@@ -251,8 +279,7 @@ export function useNamespacesForInstallations(
 
   const namespacesByInstallation: Record<string, Models.VcsNamespace[]> = {}
   installations.forEach((installation, index) => {
-    namespacesByInstallation[installation.$id] =
-      queries[index]?.data?.namespaces ?? []
+    namespacesByInstallation[installation.$id] = queries[index]?.data ?? []
   })
 
   return {
