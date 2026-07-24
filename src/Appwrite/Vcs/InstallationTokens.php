@@ -17,13 +17,9 @@ class InstallationTokens
     {
         $provider = $installation->getAttribute('provider', 'github');
 
-        // GitHub Apps authenticate via a JWT-derived installation access token
-        // (see GitHub::initializeVariables()), which is generated independently
-        // of personalAccessToken/personalRefreshToken. Refreshing those here is
-        // both unnecessary and unsafe: GitHub rotates OAuth refresh tokens on
-        // every use, so a concurrent refresh call fails the other with
-        // "Failed to refresh OAuth2 access token" even though the installation
-        // itself is perfectly functional.
+        // GitHub uses a JWT-derived installation token (GitHub::initializeVariables()),
+        // not personalAccessToken/personalRefreshToken -- refreshing those here only
+        // risks a token-rotation race against concurrent requests, for no benefit.
         if ($provider === 'github') {
             return $installation;
         }
