@@ -1105,7 +1105,7 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
-**Debug mode:** When debug menu is open (press `.`), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
+**Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
 
@@ -1373,7 +1373,7 @@ All user-facing copy in the app and website is translatable. **English is the on
    - `translate(text)` is the non-React variant for utilities (e.g. toast/error formatting in `src/lib/utils/error-formatting.ts`).
    - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/<lang>/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
 
-Language selection: debug menu (press `.`) → Settings → Language. RTL languages (e.g. Hebrew) auto-enable the matching page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
+Language selection: debug menu (type `pink`, case-insensitive) → Settings → Language. RTL languages (e.g. Hebrew) auto-enable the matching page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
 
 ### Debug menu (English + LTR only)
 
