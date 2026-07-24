@@ -62,6 +62,9 @@ class Response extends SwooleResponse
     public const MODEL_PRESENCE_LIST = 'presenceList';
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
+    public const MODEL_QUERY_PLAN = 'queryPlan';
+    public const MODEL_QUERY_PLAN_ENTRY = 'queryPlanEntry';
+    public const MODEL_QUERY_PLAN_DETAIL = 'queryPlanDetail';
 
     // Notifications
     public const MODEL_NOTIFICATION = 'notification';
