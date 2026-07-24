@@ -37,14 +37,10 @@ import {
   persistConsoleImpersonationSession,
   readConsoleImpersonationOperatorSnapshot,
 } from '@/lib/console-impersonation'
-import {
-  flushRecentImpersonationUsersToAccountPrefs,
-  updateAccountPrefs,
-} from '@/lib/react-query/hooks/auth'
+import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
 import { consoleUsersImpersonationSearchQueryOptions } from '@/lib/react-query/hooks/console-user-search'
 import {
   appendRecentImpersonationUser,
-  mergeRecentImpersonationIntoAccountPrefs,
   mergeRecentImpersonationLists,
   parseRecentImpersonationUsers,
   readRecentImpersonationSessionList,
@@ -109,6 +105,7 @@ export function ImpersonateConsoleUserPopover() {
     }
     const fromPrefs = parseRecentImpersonationUsers(
       (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+      operatorId,
     )
     const fromSession = readRecentImpersonationSessionList(operatorId)
     return mergeRecentImpersonationLists(fromPrefs, fromSession)
@@ -117,34 +114,27 @@ export function ImpersonateConsoleUserPopover() {
   const showRecentSection =
     !debouncedSearch.trim() && recentImpersonationUsers.length > 0
 
-  const persistRecentImpersonation = async (user: Models.User) => {
+  /**
+   * Recent targets are session-only while impersonating (and on start).
+   * Operator account prefs get ID references on exit via
+   * `flushRecentImpersonationUsersToAccountPrefs`; name/email stay in localStorage.
+   */
+  const persistRecentImpersonation = (user: Models.User) => {
     if (!operatorId?.trim()) return
     const currentList = isImpersonating
       ? readRecentImpersonationSessionList(operatorId)
       : mergeRecentImpersonationLists(
           parseRecentImpersonationUsers(
             (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+            operatorId,
           ),
           readRecentImpersonationSessionList(operatorId),
         )
     const next = appendRecentImpersonationUser(currentList, user)
-    try {
-      if (!isImpersonating) {
-        const prefs = (
-          account as { prefs?: Record<string, unknown> } | undefined
-        )?.prefs
-        await updateAccountPrefs(
-          mergeRecentImpersonationIntoAccountPrefs(prefs, next),
-        )
-      }
-      writeRecentImpersonationSessionList(operatorId, next)
-    } catch (e) {
-      console.error(e)
-      writeRecentImpersonationSessionList(operatorId, next)
-    }
+    writeRecentImpersonationSessionList(operatorId, next)
   }
 
-  const handleSelectUser = async (user: Models.User) => {
+  const handleSelectUser = (user: Models.User) => {
     const targetId = user?.$id
     if (!targetId?.trim()) {
       toast.error(t('This user has no valid ID; pick another user.'))
@@ -181,7 +171,7 @@ export function ImpersonateConsoleUserPopover() {
     if (!operator) return
 
     try {
-      await persistRecentImpersonation(user)
+      persistRecentImpersonation(user)
       applyConsoleImpersonateUserId(targetId)
       persistConsoleImpersonationSession(targetId, operator, {
         skipNotify: true,
@@ -309,7 +299,7 @@ export function ImpersonateConsoleUserPopover() {
                       value={cmdkValue}
                       disabled={disabled}
                       onSelect={() =>
-                        void handleSelectUser(
+                        handleSelectUser(
                           recentImpersonationUserToModel(recent),
                         )
                       }

@@ -65,6 +65,7 @@ import {
   parseRecentImpersonationUsers,
   parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
+  writeRecentImpersonationDetails,
   clearLegacyAIChatLocalStorage,
   clearLegacyBuildNotificationsOptedOutLocalStorage,
   clearLegacyCliShellHeightLocalStorage,
@@ -1175,16 +1176,20 @@ export function useAccountSessions() {
  * Mutation function to update account preferences.
  * Sanitizes nested/legacy values so Appwrite does not 400 on write.
  * Silently skips while console impersonation is active so the target user's prefs are not mutated.
+ *
+ * When skipping, returns `undefined` (not a partial User). Callers that sync the
+ * account cache must treat a missing result as a no-op so they do not poison
+ * React Query with `{ prefs }` only — that crashed account UI after impersonation.
  */
-export async function updateAccountPrefs(prefs: Record<string, unknown>) {
+export async function updateAccountPrefs(
+  prefs: Record<string, unknown>,
+): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
-    const current = getConsoleAccountFromSingleton()
-    if (current) return current
-    return { prefs: sanitizeAccountPrefsForWrite(prefs) } as Models.User
+    return undefined
   }
-  return await sdk.forConsole.account.updatePrefs({
+  return (await sdk.forConsole.account.updatePrefs({
     prefs: sanitizeAccountPrefsForWrite(prefs),
-  })
+  })) as Models.User
 }
 
 /**
@@ -1198,16 +1203,24 @@ export async function flushRecentImpersonationUsersToAccountPrefs(
   const list = readRecentImpersonationSessionList(operatorId)
   if (list.length === 0) return
   clearRecentImpersonationSessionList(operatorId)
+  // Labels stay in localStorage; account prefs only get ID references.
+  writeRecentImpersonationDetails(operatorId, list)
   const account = await fetchConsoleAccount({ force: true })
-  const fromPrefs = parseRecentImpersonationUsers(account.prefs as UserPrefs)
+  const fromPrefs = parseRecentImpersonationUsers(
+    account.prefs as UserPrefs,
+    operatorId,
+  )
   const merged = mergeRecentImpersonationLists(fromPrefs, list)
+  writeRecentImpersonationDetails(operatorId, merged)
   const updatedPrefs = mergeRecentImpersonationIntoAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
   const updatedAccount = await updateAccountPrefs(updatedPrefs)
   setConsoleAccountCache(
-    (updatedAccount ?? { ...account, prefs: updatedPrefs }) as Models.User,
+    updatedAccount && isConsoleAccountUser(updatedAccount)
+      ? updatedAccount
+      : ({ ...account, prefs: updatedPrefs } as Models.User),
     getConsoleAccountQueryRevision(),
   )
 }

@@ -450,7 +450,8 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'impersonationRecentUsers',
     scope: 'account',
     key: USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT,
-    description: 'Recent impersonation targets for quick access (JSON).',
+    description:
+      'Recent impersonation target user IDs only (JSON string[]). Display labels live in localStorage.',
     category: 'Impersonation',
   },
 
