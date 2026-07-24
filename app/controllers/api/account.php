@@ -3082,27 +3082,42 @@ Http::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $created = true;
             try {
-                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
-                    '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userId' => $user->getId(),
-                    'userInternalId' => $user->getSequence(),
-                    'providerType' => MESSAGE_TYPE_SMS,
-                    'identifier' => $phone,
-                ])));
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                $existingTarget = $dbForProject->findOne('targets', [
-                    Query::equal('identifier', [$phone]),
+                $created = false;
+                $user = $dbForProject->findOne('users', [
+                    Query::equal('phone', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
+
+                if ($user->isEmpty()) {
+                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                }
             }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+
+            if ($created) {
+                try {
+                    $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'providerType' => MESSAGE_TYPE_SMS,
+                        'identifier' => $phone,
+                    ])));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                } catch (Duplicate) {
+                    $existingTarget = $dbForProject->findOne('targets', [
+                        Query::equal('identifier', [$phone]),
+                    ]);
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
+                }
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+            }
         }
 
         $secret = null;
@@ -4739,11 +4754,15 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-            'identifier' => $target->getAttribute('identifier'),
-            'expired' => $target->getAttribute('expired'),
-            'name' => $target->getAttribute('name'),
-        ]));
+        try {
+            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                'identifier' => $target->getAttribute('identifier'),
+                'expired' => $target->getAttribute('expired'),
+                'name' => $target->getAttribute('name'),
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 

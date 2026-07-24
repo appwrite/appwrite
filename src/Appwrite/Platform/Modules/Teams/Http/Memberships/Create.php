@@ -262,12 +262,30 @@ class Create extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
-        $membership = $dbForProject->findOne('memberships', [
+        $queries = [
             Query::equal('userInternalId', [$invitee->getSequence()]),
             Query::equal('teamInternalId', [$team->getSequence()]),
-        ]);
+        ];
+
+        $membership = $dbForProject->findOne('memberships', $queries);
 
         $secret = $proofForToken->generate();
+        $refresh = function (Document $membership) use ($authorization, $dbForProject, $isAppUser, $isPrivilegedUser, $proofForToken, $secret): Document {
+            $attributes = [
+                'secret' => $proofForToken->hash($secret),
+                'invited' => DateTime::now(),
+            ];
+
+            if ($isPrivilegedUser || $isAppUser) {
+                $attributes['joined'] = DateTime::now();
+                $attributes['confirm'] = true;
+            }
+
+            return ($isPrivilegedUser || $isAppUser) ?
+                $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document($attributes))) :
+                $dbForProject->updateDocument('memberships', $membership->getId(), new Document($attributes));
+        };
+
         if ($membership->isEmpty()) {
             $membershipId = ID::unique();
             $membership = new Document([
@@ -291,30 +309,31 @@ class Create extends Action
                 'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                $dbForProject->createDocument('memberships', $membership);
+            $created = false;
+            try {
+                $membership = ($isPrivilegedUser || $isAppUser) ?
+                    $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
+                    $dbForProject->createDocument('memberships', $membership);
+                $created = true;
+            } catch (Duplicate) {
+                $membership = $dbForProject->findOne('memberships', $queries);
 
-            if ($isPrivilegedUser || $isAppUser) {
+                if ($membership->isEmpty()) {
+                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+                }
+
+                if ($membership->getAttribute('confirm') === false) {
+                    $membership = $refresh($membership);
+                } else {
+                    throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
+                }
+            }
+
+            if (($isPrivilegedUser || $isAppUser) && $created) {
                 $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
         } elseif ($membership->getAttribute('confirm') === false) {
-            $secretHash = $proofForToken->hash($secret);
-            $invitedTime = DateTime::now();
-
-            if ($isPrivilegedUser || $isAppUser) {
-                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                    'secret' => $secretHash,
-                    'invited' => $invitedTime,
-                    'joined' => DateTime::now(),
-                    'confirm' => true
-                ])));
-            } else {
-                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
-                    'secret' => $secretHash,
-                    'invited' => $invitedTime
-                ]));
-            }
+            $membership = $refresh($membership);
         } else {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
