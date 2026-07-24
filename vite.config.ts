@@ -270,16 +270,5 @@ export default defineConfig(async () => {
         },
       },
     },
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./vitest.setup.ts'],
-      css: false,
-      include: [
-        'src/**/*.{test,spec}.{ts,tsx}',
-        'tests/**/*.{test,spec}.{ts,tsx}',
-      ],
-      exclude: ['e2e/**', 'node_modules/**'],
-    },
   }
 })

@@ -41,7 +41,12 @@ jobs:
           PUBLIC_CONSOLE_MODE: ${{ vars.PUBLIC_CONSOLE_MODE }}
           PUBLIC_APPWRITE_MULTI_REGION: ${{ vars.PUBLIC_APPWRITE_MULTI_REGION }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_CONSOLE_FINGERPRINT_KEY: ${{ secrets.VITE_CONSOLE_FINGERPRINT_KEY }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           E2E_TEST_SESSION_SECRET: ${{ secrets.E2E_TEST_SESSION_SECRET }}
+          E2E_ORG_ID: ${{ secrets.E2E_ORG_ID }}
+          E2E_PROJECT_ID: ${{ secrets.E2E_PROJECT_ID }}
         run: bun run e2e
 
       - uses: actions/upload-artifact@v4

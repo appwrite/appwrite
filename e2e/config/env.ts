@@ -9,6 +9,10 @@ const envSchema = z
     E2E_TEST_SESSION_SECRET: z.string().min(1).optional(),
     E2E_TEST_EMAIL: z.string().email().optional(),
     E2E_TEST_PASSWORD: z.string().min(1).optional(),
+    /** Optional override when the account has multiple orgs. */
+    E2E_ORG_ID: z.string().min(1).optional(),
+    /** Optional override when the account has multiple projects. */
+    E2E_PROJECT_ID: z.string().min(1).optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.E2E_TEST_SESSION_SECRET) {
