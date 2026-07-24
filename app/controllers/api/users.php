@@ -1150,7 +1150,8 @@ Http::patch('/v1/users/:userId/status')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1193,7 +1194,8 @@ Http::put('/v1/users/:userId/labels')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['labels' => $user->getAttribute('labels')]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1234,7 +1236,8 @@ Http::patch('/v1/users/:userId/impersonator')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['impersonator' => $impersonator]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1275,7 +1278,8 @@ Http::patch('/v1/users/:userId/verification/phone')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['phoneVerification' => $phoneVerification]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1318,7 +1322,9 @@ Http::patch('/v1/users/:userId/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['name' => $user->getAttribute('name')]));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1375,7 +1381,9 @@ Http::patch('/v1/users/:userId/password')
                 'password' => $user->getAttribute('password'),
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
-            $queueForEvents->setParam('userId', $user->getId());
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setPayload($response->output($user, Response::MODEL_USER));
             $response->dynamic($user, Response::MODEL_USER);
         }
 
@@ -1426,7 +1434,9 @@ Http::patch('/v1/users/:userId/password')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1577,7 +1587,9 @@ Http::patch('/v1/users/:userId/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1670,7 +1682,9 @@ Http::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1711,7 +1725,9 @@ Http::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['emailVerification' => $emailVerification]));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1750,7 +1766,8 @@ Http::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['prefs' => $prefs]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -1923,7 +1940,9 @@ Http::patch('/v1/users/:userId/mfa')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $user->getAttribute('mfa')]));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic($user, Response::MODEL_USER);
     });
