@@ -211,14 +211,27 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
     'データベースの継続的バックアップを設定しています。',
+  'Configuring continuous recovery for your database.':
+    'データベースの継続的リカバリを設定しています。',
   'Configuring high availability': '高可用性を設定中',
+  'Creating backup policies for your database.':
+    'データベースのバックアップポリシーを作成しています。',
   'Enabling point-in-time recovery': 'ポイントインタイムリカバリを有効化中',
+  'Opening your database.': 'データベースを開いています。',
+  'Preparing workspace': 'ワークスペースを準備中',
   'Preparing your database workspace.': 'データベースワークスペースを準備中です。',
   'Provisioning compute': 'コンピュートをプロビジョニング中',
+  'Setting up backups': 'バックアップを設定中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
   'Setting up your database': 'データベースをセットアップ中',
   'Setting up your database resource.': 'データベースリソースをセットアップしています。',
+  'High availability setup failed or timed out. Try again in a moment.':
+    '高可用性のセットアップに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
+  'Point-in-time recovery setup failed or timed out. Try again in a moment.':
+    'ポイントインタイムリカバリのセットアップに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
+  'Database workspace is not ready yet. Try again in a moment.':
+    'データベースワークスペースの準備がまだ完了していません。しばらくしてから再試行してください。',
   'Create database or table': 'データベースまたはテーブルの作成',
   'Create Index': 'インデックスの作成',
   'Create index': 'インデックスの作成',
@@ -477,6 +490,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to create backup': 'バックアップの作成に失敗しました',
   'Failed to create backup policy': 'バックアップポリシーの作成に失敗しました',
   'Failed to create database': 'データベースの作成に失敗しました',
+  'Database provisioning failed or timed out. Try again in a moment.':
+    'データベースのプロビジョニングに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
   'Failed to create schema': 'スキーマの作成に失敗しました',
   'Failed to create table': 'テーブルの作成に失敗しました',
   'Failed to delete backup': 'バックアップの削除に失敗しました',

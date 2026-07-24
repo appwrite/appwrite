@@ -151,22 +151,43 @@ export async function refetchProjectDatabaseLists(
   ])
 }
 
+const DATABASE_LIFECYCLE_FAILED_STATUSES = new Set([
+  'failed',
+  'error',
+  'deleted',
+])
+
+function isDatabaseLifecycleFailed(status: string | null | undefined): boolean {
+  const normalized = status?.trim().toLowerCase()
+  return !!normalized && DATABASE_LIFECYCLE_FAILED_STATUSES.has(normalized)
+}
+
+function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
+  const normalized = status?.trim().toLowerCase()
+  return !!normalized && DEDICATED_DATABASE_READY_STATUSES.has(normalized)
+}
+
 /** Poll dedicated database status until ready or timeout. */
 export async function waitForDedicatedDatabaseReady(
   projectId: string,
   databaseId: string,
-  maxAttempts = 30,
+  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+  maxAttempts = 60,
 ): Promise<boolean> {
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const { databases } = await fetchProjectDedicatedDatabases(projectId)
-      const status = databases.find((db) => db.$id === databaseId)?.status
-      if (status && DEDICATED_DATABASE_READY_STATUSES.has(status)) {
-        return true
-      }
-      if (status === 'failed' || status === 'error') {
+      const database = await fetchDedicatedDatabaseById(
+        projectId,
+        databaseId,
+        engineHints,
+      )
+      const status = database?.status
+      if (isDatabaseLifecycleFailed(status)) {
         return false
+      }
+      if (isDatabaseLifecycleReady(status)) {
+        return true
       }
     } catch {
       /* retry */
@@ -182,6 +203,62 @@ export async function waitForDedicatedDatabaseReady(
 export type CreatedDatabaseWorkspaceKind =
   | { type: 'product'; backend: DatabaseType }
   | { type: 'native'; engine: NativeDatabaseEngine }
+
+/**
+ * Poll until the created database leaves transitional lifecycle statuses
+ * (e.g. `provisioning`). Used by the create wizard before leaving the
+ * provisioning step. Requires an explicit ready/paused status so a brief
+ * null status right after create does not advance the wizard early.
+ */
+export async function waitForCreatedDatabaseLifecycleReady(
+  projectId: string,
+  databaseId: string,
+  kind: CreatedDatabaseWorkspaceKind,
+  maxAttempts = 60,
+): Promise<boolean> {
+  if (!projectId || !databaseId) return false
+
+  if (kind.type === 'native') {
+    const engineHints =
+      kind.engine === 'postgres'
+        ? ['postgresql', 'postgres']
+        : ['mysql', 'mariadb']
+    return waitForDedicatedDatabaseReady(
+      projectId,
+      databaseId,
+      engineHints,
+      maxAttempts,
+    )
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  let intervalMs = 500
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const database = await getProductDatabase(
+        projectSdk,
+        kind.backend,
+        databaseId,
+      )
+      const status = database
+        ? readProductDatabaseLifecycleStatus(database)
+        : null
+      if (isDatabaseLifecycleFailed(status)) {
+        return false
+      }
+      if (isDatabaseLifecycleReady(status)) {
+        return true
+      }
+    } catch {
+      /* retry */
+    }
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    }
+  }
+  return false
+}
 
 async function probeProductDatabaseTablesList(
   projectId: string,
@@ -883,14 +960,14 @@ export async function fetchProjectDatabase(
 
 /**
  * Options for creating Appwrite product databases (TablesDB, DocumentsDB, VectorsDB).
- * Dedicated tiers use the product API (`*.create` with `specification` and optional
- * `replicas`). Engine provisioning is only used when PITR is requested on create.
+ * Always a single product-API create (`tablesDB` / `documentsDB` / `vectorsDB`) with
+ * optional `specification` and `replicas`. PITR and backup policies are follow-ups
+ * after the database is ready, not separate create paths.
  */
 export type CreateProjectDatabaseOptions = {
   specification?: string
   region?: string | null
   haReplicaCount?: number
-  pitrEnabled?: boolean
 }
 
 function computeApiForDatabaseType(backend: DatabaseType): string {
@@ -1051,24 +1128,6 @@ function resolveProductDatabaseId(customId?: string | null): string {
   return trimmed && trimmed !== '' ? trimmed : ID.unique()
 }
 
-async function waitForProductDatabaseAfterExistsConflict(
-  projectSdk: ReturnType<typeof sdk.forProject>,
-  backend: DatabaseType,
-  databaseId: string,
-  maxAttempts = 8,
-): Promise<Models.Database | null> {
-  let intervalMs = 400
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const existing = await getProductDatabase(projectSdk, backend, databaseId)
-    if (existing) return existing
-    if (attempt < maxAttempts - 1) {
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.5), 2000)
-    }
-  }
-  return null
-}
-
 function isDatabaseAlreadyExistsError(error: unknown): boolean {
   const message =
     error instanceof Error
@@ -1134,49 +1193,9 @@ async function createProductDatabaseWithExistsRecovery(
 }
 
 /**
- * Provision dedicated compute owned by a product API (tablesdb / documentsdb /
- * vectorsdb). Engine is selected via the per-engine SDK service; `api` marks
- * which product API exposes the database under the same ID.
- */
-async function provisionDedicatedCompute(
-  projectSdk: ReturnType<typeof sdk.forProject>,
-  params: {
-    databaseId: string
-    name: string
-    specification: string
-    backend: DatabaseType
-    haReplicaCount: number
-    pitrEnabled: boolean
-  },
-): Promise<Models.DedicatedDatabase> {
-  const { databaseId, name, specification, backend, haReplicaCount, pitrEnabled } =
-    params
-
-  const engine = dedicatedComputeEngineForProductBackend(backend)
-  const engineService = dedicatedEngineService(projectSdk, engine ?? undefined)
-
-  try {
-    return await engineService.create({
-      databaseId,
-      name,
-      specification,
-      replicas: haReplicaCount,
-      pitr: pitrEnabled,
-      api: computeApiForDatabaseType(backend),
-    })
-  } catch (error) {
-    if (!isDatabaseAlreadyExistsError(error)) {
-      throw error
-    }
-    return await engineService.get({ databaseId })
-  }
-}
-
-/**
  * Create a new database in a project.
- * Product databases are created in one call via the product SDK (`tablesDB`,
- * `documentsDB`, or `vectorsDB`) with an optional `specification` and `replicas`.
- * Engine provisioning is only used when PITR is requested on create.
+ * Always a single product-API call (`tablesDB` / `documentsDB` / `vectorsDB`)
+ * with optional `specification` and `replicas`. No engine create path.
  *
  * @param projectId - The project ID
  * @param data - { databaseId?: string; name: string }
@@ -1216,8 +1235,6 @@ export async function createProjectDatabase(
 
   const name = data.name.trim()
   const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
-  const pitrEnabled = options?.pitrEnabled === true
-  const needsEngineProvisioning = pitrEnabled
 
   if (useDedicated) {
     const specification = await resolveDedicatedSpecification(
@@ -1227,40 +1244,16 @@ export async function createProjectDatabase(
       dedicatedComputeEngineForProductBackend(backend),
     )
 
-    let created: Models.Database
-
-    if (needsEngineProvisioning) {
-      await provisionDedicatedCompute(projectSdk, {
+    const created = await createProductDatabaseWithExistsRecovery(
+      projectSdk,
+      backend,
+      {
         databaseId: productDatabaseId,
         name,
         specification,
-        backend,
-        haReplicaCount,
-        pitrEnabled,
-      })
-
-      const polled = await waitForProductDatabaseAfterExistsConflict(
-        projectSdk,
-        backend,
-        productDatabaseId,
-        20,
-      )
-      if (!polled) {
-        throw new Error('Failed to create database')
-      }
-      created = polled
-    } else {
-      created = await createProductDatabaseWithExistsRecovery(
-        projectSdk,
-        backend,
-        {
-          databaseId: productDatabaseId,
-          name,
-          specification,
-          ...(haReplicaCount > 0 ? { replicas: haReplicaCount } : {}),
-        },
-      )
-    }
+        ...(haReplicaCount > 0 ? { replicas: haReplicaCount } : {}),
+      },
+    )
 
     seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
     return normalizeProductDatabase(created, backend)
@@ -1276,6 +1269,144 @@ export async function createProjectDatabase(
   )
   seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
   return normalizeProductDatabase(created, backend)
+}
+
+/**
+ * Enable PITR on a product-owned dedicated database after create.
+ * Product create APIs do not accept `pitr`; the engine update applies it once
+ * the database is ready.
+ */
+export async function enableProductDatabasePitr(
+  projectId: string,
+  databaseId: string,
+  backend: DatabaseType,
+  region?: string | null,
+): Promise<void> {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+
+  const resolvedRegion =
+    region && region.trim() !== '' && region !== 'unknown'
+      ? region.trim()
+      : undefined
+  const projectSdk = sdk.forProject(projectId, resolvedRegion)
+  const engine = dedicatedComputeEngineForProductBackend(backend)
+  const engineService = dedicatedEngineService(projectSdk, engine ?? undefined)
+  await engineService.update({ databaseId, pitr: true })
+}
+
+/**
+ * Poll until a created dedicated database reports the expected replica count.
+ * Product payloads may omit `replicas` after ready; in that case a ready get
+ * is enough because replicas were requested on the single create call.
+ */
+export async function waitForCreatedDatabaseHaReady(
+  projectId: string,
+  databaseId: string,
+  kind: CreatedDatabaseWorkspaceKind,
+  expectedReplicas: number,
+  maxAttempts = 40,
+): Promise<boolean> {
+  if (!projectId || !databaseId || expectedReplicas <= 0) return true
+
+  let intervalMs = 500
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      if (kind.type === 'native') {
+        const database = await fetchDedicatedDatabaseById(
+          projectId,
+          databaseId,
+          kind.engine === 'postgres'
+            ? ['postgresql', 'postgres']
+            : ['mysql', 'mariadb'],
+        )
+        if (
+          database &&
+          typeof database.replicas === 'number' &&
+          database.replicas >= expectedReplicas
+        ) {
+          return true
+        }
+      } else {
+        const projectSdk = sdk.forProject(projectId)
+        const database = await getProductDatabase(
+          projectSdk,
+          kind.backend,
+          databaseId,
+        )
+        if (database) {
+          if (
+            typeof database.replicas === 'number' &&
+            database.replicas >= expectedReplicas
+          ) {
+            return true
+          }
+          const status = readProductDatabaseLifecycleStatus(database)
+          if (
+            typeof database.replicas !== 'number' &&
+            isDatabaseLifecycleReady(status)
+          ) {
+            return true
+          }
+        }
+      }
+    } catch {
+      /* retry */
+    }
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    }
+  }
+  return false
+}
+
+/**
+ * Poll until PITR is reported enabled on the created database.
+ */
+export async function waitForCreatedDatabasePitrReady(
+  projectId: string,
+  databaseId: string,
+  kind: CreatedDatabaseWorkspaceKind,
+  maxAttempts = 40,
+): Promise<boolean> {
+  if (!projectId || !databaseId) return false
+
+  let intervalMs = 500
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      if (kind.type === 'native') {
+        const database = await fetchDedicatedDatabaseById(
+          projectId,
+          databaseId,
+          kind.engine === 'postgres'
+            ? ['postgresql', 'postgres']
+            : ['mysql', 'mariadb'],
+        )
+        if (database?.pitr === true) return true
+      } else {
+        const engine = dedicatedComputeEngineForProductBackend(kind.backend)
+        const database = await fetchDedicatedDatabaseById(
+          projectId,
+          databaseId,
+          engine === 'mongodb'
+            ? ['mongodb', 'mongo']
+            : engine === 'postgres'
+              ? ['postgresql', 'postgres']
+              : ['postgresql', 'postgres', 'mysql', 'mariadb'],
+        )
+        if (database?.pitr === true) return true
+      }
+    } catch {
+      /* retry */
+    }
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    }
+  }
+  return false
 }
 
 /**

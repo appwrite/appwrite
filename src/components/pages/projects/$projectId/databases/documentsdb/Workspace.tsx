@@ -59,6 +59,10 @@ import {
   isSpreadsheetLikeTableTab,
 } from '../_components/database-sidebar-chrome'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
+import {
+  DatabaseSectionSelector,
+  type DatabaseSectionId,
+} from '../_components/DatabaseSectionSelector'
 import { navigateToDatabaseFromSwitcher } from '@/lib/databases/navigate-to-database-switcher'
 import { TableSelector } from '../_components/TableSelector'
 import {
@@ -72,6 +76,7 @@ import { ExportCsv } from '../_components/ExportCsv'
 
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
+  canCreateDatabase,
   canShowTableSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -98,7 +103,6 @@ function routeKindForDatabase(
 }
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
 import {
-  useDatabaseAdminOperationsAccess,
   useDatabaseRowOperationsAccess,
   useDatabaseTableOperationsAccess,
 } from '../_components/DatabaseOperationsLockContext'
@@ -342,11 +346,12 @@ export function Workspace({
     access,
     features,
   )
-  const adminWriteAccess = useDatabaseAdminOperationsAccess()
   const tableWriteAccess = useDatabaseTableOperationsAccess()
   const rowWriteAccess = useDatabaseRowOperationsAccess()
   const noCreateTablePermission = !tableWriteAccess.canWrite
-  const noCreateDbPermission = !adminWriteAccess.canWrite
+  // Settings / create-db visibility is RBAC only. Ops lock (e.g. failed status)
+  // disables writes inside settings but must not hide the Settings link.
+  const noCreateDbPermission = !canCreateDatabase(access, features)
   const noCreateRowPermission = !rowWriteAccess.canWrite
   const createPermissionTooltip =
     "You don't have permission to perform this action."
@@ -419,6 +424,46 @@ export function Workspace({
           resourceId: '-',
         }),
       })
+    }
+  }
+
+  const mobileSectionValue: DatabaseSectionId =
+    databaseTab === 'visualizer' ||
+    databaseTab === 'monitor' ||
+    databaseTab === 'backups' ||
+    databaseTab === 'export-import' ||
+    databaseTab === 'settings'
+      ? databaseTab
+      : databaseTab === 'db-security'
+        ? 'settings'
+        : 'tables'
+
+  const handleMobileSectionSelect = (sectionId: DatabaseSectionId) => {
+    if (sectionId === 'tables') {
+      navigate({
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/',
+        params: { projectId, dbKind: DB_KIND, databaseId },
+      })
+      return
+    }
+    if (sectionId === 'visualizer') {
+      navigate({ ...dbNav.visualizer(tableNavParams) })
+      return
+    }
+    if (sectionId === 'monitor') {
+      navigate({ ...dbNav.monitor(tableNavParams) })
+      return
+    }
+    if (sectionId === 'backups') {
+      navigate({ ...dbNav.backups(tableNavParams) })
+      return
+    }
+    if (sectionId === 'export-import') {
+      navigate({ ...dbNav.exportImport(tableNavParams) })
+      return
+    }
+    if (sectionId === 'settings') {
+      navigate({ ...dbNav.dbSettings(tableNavParams) })
     }
   }
 
@@ -1520,6 +1565,17 @@ export function Workspace({
                     : setCreateDatabaseDialogOpen(true)
                 }
                 onCreateTableClick={() => setCreateTableDialogOpen(true)}
+              />
+              <DatabaseSectionSelector
+                projectId={projectId}
+                databaseId={databaseId}
+                value={mobileSectionValue}
+                tablesLabel={dbLabels.databaseOverviewTabLabel}
+                tablesIcon={ContainerListIcon}
+                showMonitor={features.usageStats}
+                showBackups={features.databaseBackups}
+                showSettings={!noCreateDbPermission}
+                onSelect={handleMobileSectionSelect}
               />
               <TableSelector
                 projectId={projectId}

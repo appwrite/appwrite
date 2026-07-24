@@ -6,6 +6,8 @@ export type DatabaseSetupPhase =
   | 'creating'
   | 'provisioning'
   | 'configuring-ha'
+  | 'enabling-pitr'
+  | 'preparing-workspace'
   | 'enabling-backups'
   | 'complete'
 
@@ -15,6 +17,8 @@ export type DatabaseSetupProgressState = {
   showProvisioningStep: boolean
   showHaStep: boolean
   showPitrStep: boolean
+  showWorkspaceStep: boolean
+  showBackupsStep: boolean
 }
 
 type SetupStep = {
@@ -29,14 +33,17 @@ function buildSteps(state: DatabaseSetupProgressState): SetupStep[] {
     showProvisioningStep,
     showHaStep,
     showPitrStep,
+    showWorkspaceStep,
+    showBackupsStep,
   } = state
 
+  const name = databaseName.trim()
   const steps: SetupStep[] = [
     {
       phase: 'creating',
       label: 'Creating database',
-      description: databaseName.trim()
-        ? `Setting up ${databaseName.trim()} for your project.`
+      description: name
+        ? `Setting up ${name} for your project.`
         : 'Setting up your database resource.',
     },
   ]
@@ -59,16 +66,32 @@ function buildSteps(state: DatabaseSetupProgressState): SetupStep[] {
 
   if (showPitrStep) {
     steps.push({
-      phase: 'enabling-backups',
+      phase: 'enabling-pitr',
       label: 'Enabling point-in-time recovery',
-      description: 'Configuring continuous backups for your database.',
+      description: 'Configuring continuous recovery for your database.',
+    })
+  }
+
+  if (showWorkspaceStep) {
+    steps.push({
+      phase: 'preparing-workspace',
+      label: 'Preparing workspace',
+      description: 'Preparing your database workspace.',
+    })
+  }
+
+  if (showBackupsStep) {
+    steps.push({
+      phase: 'enabling-backups',
+      label: 'Setting up backups',
+      description: 'Creating backup policies for your database.',
     })
   }
 
   steps.push({
     phase: 'complete',
     label: 'Finishing up',
-    description: 'Preparing your database workspace.',
+    description: 'Opening your database.',
   })
 
   return steps

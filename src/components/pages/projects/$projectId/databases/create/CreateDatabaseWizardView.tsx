@@ -3,14 +3,7 @@
  * DB type → name → specifications → dedicated options → backup policies → create.
  */
 
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useRef,
-  type Dispatch,
-  type SetStateAction,
-} from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Table as TableIcon, Braces, Layers } from 'lucide-react'
 import {
@@ -61,10 +54,14 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
+  enableProductDatabasePitr,
   fetchBackupPolicies,
   fetchDedicatedBackupPolicies,
   refetchProjectDatabaseLists,
   seedCreatedDatabaseCaches,
+  waitForCreatedDatabaseHaReady,
+  waitForCreatedDatabaseLifecycleReady,
+  waitForCreatedDatabasePitrReady,
   waitForCreatedDatabaseWorkspaceReady,
   useOrganizationPlan,
   useProject,
@@ -201,23 +198,6 @@ function isNativeDatabaseType(t: DatabaseTypeOption | null): t is 'Postgres' | '
 
 function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
   return t === 'Postgres' ? 'postgres' : 'mysql'
-}
-
-const SETUP_STEP_MIN_MS = 700
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-async function advanceSetupPhase(
-  setSetupProgress: Dispatch<SetStateAction<DatabaseSetupProgressState | null>>,
-  phase: DatabaseSetupPhase,
-  minDurationMs = SETUP_STEP_MIN_MS,
-): Promise<void> {
-  setSetupProgress((prev) => (prev ? { ...prev, phase } : prev))
-  await sleep(minDurationMs)
 }
 
 export function CreateDatabaseWizardView() {
@@ -661,10 +641,13 @@ export function CreateDatabaseWizardView() {
         specification: specId ?? undefined,
         region: project?.region,
         haReplicaCount,
-        pitrEnabled,
       })
     },
   })
+
+  const setSetupPhase = (phase: DatabaseSetupPhase) => {
+    setSetupProgress((prev) => (prev ? { ...prev, phase } : prev))
+  }
 
   const finishDatabaseCreation = async (
     database: Models.Database | Models.DedicatedDatabase,
@@ -769,6 +752,8 @@ export function CreateDatabaseWizardView() {
       showProvisioningStep,
       showHaStep,
       showPitrStep,
+      showWorkspaceStep: true,
+      showBackupsStep: shouldCreateBackupPolicies,
     })
     setIsCreating(true)
 
@@ -785,31 +770,71 @@ export function CreateDatabaseWizardView() {
             backend: wizardBackend(dbType!),
           }
 
-      const workspaceReadyPromise = waitForCreatedDatabaseWorkspaceReady(
+      if (showProvisioningStep) {
+        setSetupPhase('provisioning')
+        const lifecycleReady = await waitForCreatedDatabaseLifecycleReady(
+          pid,
+          database.$id,
+          workspaceKind,
+        )
+        if (!lifecycleReady) {
+          throw new Error(
+            'Database provisioning failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      if (showHaStep) {
+        setSetupPhase('configuring-ha')
+        const haReady = await waitForCreatedDatabaseHaReady(
+          pid,
+          database.$id,
+          workspaceKind,
+          haReplicaCount,
+        )
+        if (!haReady) {
+          throw new Error(
+            'High availability setup failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      if (showPitrStep) {
+        setSetupPhase('enabling-pitr')
+        if (!isNativeDatabaseType(dbType) && dbType) {
+          await enableProductDatabasePitr(
+            pid,
+            database.$id,
+            wizardBackend(dbType),
+            project?.region,
+          )
+        }
+        const pitrReady = await waitForCreatedDatabasePitrReady(
+          pid,
+          database.$id,
+          workspaceKind,
+        )
+        if (!pitrReady) {
+          throw new Error(
+            'Point-in-time recovery setup failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      setSetupPhase('preparing-workspace')
+      const workspaceReady = await waitForCreatedDatabaseWorkspaceReady(
         pid,
         database.$id,
         workspaceKind,
       )
-
-      if (showProvisioningStep) {
-        setSetupProgress((prev) =>
-          prev ? { ...prev, phase: 'provisioning' } : prev,
+      if (!workspaceReady) {
+        throw new Error(
+          'Database workspace is not ready yet. Try again in a moment.',
         )
-        await Promise.all([
-          workspaceReadyPromise,
-          sleep(SETUP_STEP_MIN_MS),
-        ])
-      } else {
-        await workspaceReadyPromise
       }
 
-      if (showHaStep) {
-        await advanceSetupPhase(setSetupProgress, 'configuring-ha')
-      }
-      if (showPitrStep) {
-        await advanceSetupPhase(setSetupProgress, 'enabling-backups')
-      }
       if (shouldCreateBackupPolicies) {
+        setSetupPhase('enabling-backups')
         try {
           await createBackupPoliciesForDatabase(database)
         } catch (policyError) {
@@ -820,7 +845,7 @@ export function CreateDatabaseWizardView() {
         }
       }
 
-      await advanceSetupPhase(setSetupProgress, 'complete')
+      setSetupPhase('complete')
       await finishDatabaseCreation(database)
     } catch (error) {
       setSetupProgress(null)

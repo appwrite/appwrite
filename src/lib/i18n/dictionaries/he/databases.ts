@@ -211,14 +211,27 @@ export const heDatabasesDictionary: Record<string, string> = {
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
     'מגדיר גיבויים רציפים למסד הנתונים שלכם.',
+  'Configuring continuous recovery for your database.':
+    'מגדיר שחזור רציף למסד הנתונים שלכם.',
   'Configuring high availability': 'מגדיר high availability',
+  'Creating backup policies for your database.':
+    'יוצר מדיניות גיבוי למסד הנתונים שלכם.',
   'Enabling point-in-time recovery': 'מפעיל point-in-time recovery',
+  'Opening your database.': 'פותח את מסד הנתונים שלכם.',
+  'Preparing workspace': 'מכין את סביבת העבודה',
   'Preparing your database workspace.': 'מכין את סביבת העבודה של מסד הנתונים.',
   'Provisioning compute': 'מספק compute',
+  'Setting up backups': 'מגדיר גיבויים',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
   'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
   'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
+  'High availability setup failed or timed out. Try again in a moment.':
+    'הגדרת high availability נכשלה או חרגה מהזמן. נסו שוב בעוד רגע.',
+  'Point-in-time recovery setup failed or timed out. Try again in a moment.':
+    'הגדרת point-in-time recovery נכשלה או חרגה מהזמן. נסו שוב בעוד רגע.',
+  'Database workspace is not ready yet. Try again in a moment.':
+    'סביבת העבודה של מסד הנתונים עדיין לא מוכנה. נסו שוב בעוד רגע.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
   'Create Index': 'יצירת אינדקס',
   'Create index': 'יצירת אינדקס',
@@ -478,6 +491,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to create backup': 'יצירת הגיבוי נכשלה',
   'Failed to create backup policy': 'יצירת מדיניות הגיבוי נכשלה',
   'Failed to create database': 'יצירת מסד הנתונים נכשלה',
+  'Database provisioning failed or timed out. Try again in a moment.':
+    'הקצאת מסד הנתונים נכשלה או שחלף הזמן. נסו שוב בעוד רגע.',
   'Failed to create schema': 'יצירת הסכימה נכשלה',
   'Failed to create table': 'יצירת הטבלה נכשלה',
   'Failed to delete backup': 'מחיקת הגיבוי נכשלה',
