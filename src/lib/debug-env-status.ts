@@ -73,7 +73,8 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
   {
     key: 'VITE_PLAUSIBLE_SCRIPT_SRC',
     group: 'Runtime',
-    description: 'Plausible analytics script URL',
+    description:
+      'Upstream Plausible script URL (proxied via /r/v.js and /r/e)',
   },
   {
     key: 'VITE_CONSOLE_USER_VERIFICATION',

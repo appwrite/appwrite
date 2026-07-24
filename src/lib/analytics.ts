@@ -1,21 +1,32 @@
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
+import {
+  PLAUSIBLE_PROXY_EVENT_PATH,
+  PLAUSIBLE_PROXY_SCRIPT_PATH,
+} from '@/lib/plausible-proxy'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import {
   getPlanNameFromTier,
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
 
-export const PLAUSIBLE_SCRIPT_SRC = getRuntimeConfig().plausibleScriptSrc
+/** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
+export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
+  getRuntimeConfig().plausibleScriptSrc
 
-export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_SCRIPT_SRC)
+export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
+
+/** First-party script path loaded in the browser (proxied; see plausible-proxy). */
+export const PLAUSIBLE_SCRIPT_SRC = ANALYTICS_ENABLED
+  ? PLAUSIBLE_PROXY_SCRIPT_PATH
+  : ''
 
 function isAnalyticsAllowed() {
   return ANALYTICS_ENABLED && canTrackAnalytics()
 }
 
 export const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init({ autoCapturePageviews: false })`
+plausible.init({ autoCapturePageviews: false, endpoint: ${JSON.stringify(PLAUSIBLE_PROXY_EVENT_PATH)} })`
 
 export type AnalyticsEventName =
   | 'Button Clicked'
