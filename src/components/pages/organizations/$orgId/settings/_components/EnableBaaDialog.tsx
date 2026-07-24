@@ -27,9 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { useT } from '@/lib/i18n/translate'
-
-const BAA_AGREEMENT_URL = 'https://appwrite.io/legal/baa'
 
 type EnableBaaDialogProps = {
   open: boolean
@@ -152,14 +151,14 @@ export function EnableBaaDialog({
             {t(
               "Your action confirms acceptance of Appwrite's Business Associate Agreement and related terms.",
             )}{' '}
-            <a
+            <MarketingSiteLink
               className="font-medium text-foreground underline underline-offset-2"
-              href={BAA_AGREEMENT_URL}
+              href="/baa"
               target="_blank"
               rel="noopener noreferrer"
             >
               {t('View BAA')}
-            </a>
+            </MarketingSiteLink>
           </p>
           {addonPrice ? (
             <div className="rounded-lg border border-border p-4 space-y-3">

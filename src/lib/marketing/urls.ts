@@ -9,6 +9,7 @@ export type MarketingPagePath =
   | '/terms'
   | '/privacy'
   | '/cookies'
+  | '/baa'
   | '/company'
   | '/assets'
   | '/pricing'
