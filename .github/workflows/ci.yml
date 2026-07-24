@@ -214,7 +214,8 @@ jobs:
               { name: 'Users',             runner: runner4, functional: true,  processes: null },
               { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
-              { name: 'VCS',               runner: runner4, functional: true,  processes: null },
+              { name: 'VCSGitHub',         runner: runner4, functional: true,  processes: null },
+              { name: 'VCSGitea',          runner: runner4, functional: false, processes: null },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
               { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1 },
@@ -435,21 +436,28 @@ jobs:
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            COMPOSE_PROFILES=mariadb
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            COMPOSE_PROFILES=mongodb
             echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            COMPOSE_PROFILES=postgresql
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
+
+          # Gitea runs alongside Appwrite only where VCS tests need it.
+          if [ "${{ matrix.service.name }}" = "VCSGitea" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
+          fi
+
+          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
@@ -480,6 +488,18 @@ jobs:
                 echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
                 sleep 15
               done
+
+      - name: Provision Gitea
+        if: matrix.service.name == 'VCSGitea'
+        timeout-minutes: 5
+        run: |
+          docker compose up -d --wait gitea
+          docker compose exec -T gitea /setup.sh
+          CREDS=$(docker compose exec -T gitea cat /data/gitea/oauth.json)
+          CLIENT_SECRET=$(echo "$CREDS" | jq -r .client_secret)
+          echo "::add-mask::$CLIENT_SECRET"
+          echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
+          echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
 
       - name: Load and Start Appwrite
         timeout-minutes: 5

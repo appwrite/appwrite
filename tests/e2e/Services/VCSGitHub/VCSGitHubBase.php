@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\E2E\Services\VCS;
+namespace Tests\E2E\Services\VCSGitHub;
 
 use Utopia\System\System;
 
-trait VCSBase
+trait VCSGitHubBase
 {
     protected function setUp(): void
     {
