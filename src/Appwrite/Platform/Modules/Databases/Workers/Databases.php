@@ -160,7 +160,7 @@ class Databases extends Action
             $default = match ($type) {
                 Database::VAR_FLOAT => \floatval($default),
                 Database::VAR_INTEGER => \intval($default),
-                Database::VAR_BOOLEAN => \boolval($default),
+                Database::VAR_BOOLEAN => \filter_var($default, FILTER_VALIDATE_BOOLEAN),
                 default => $default,
             };
         }
