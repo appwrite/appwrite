@@ -383,7 +383,7 @@ final class MessagingFanoutTest extends TestCase
      * Build a topic-backed dataset: $count subscribers, each pointing at one email target. A single identifier
      * is duplicated so per-page dedup is exercised when the dataset fits in one page.
      *
-     * @return array{subscribers: array<Document>, targets: array<int|string, Document>}
+     * @return array{subscribers: array<Document>, targets: array<int, Document>}
      */
     private function topicDataset(int $count): array
     {
