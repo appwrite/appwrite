@@ -284,7 +284,8 @@ class Create extends Action
 
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::orderDesc('$createdAt')
+                Query::limit(100),
+                Query::orderDesc('$createdAt'),
             ]));
 
             $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
