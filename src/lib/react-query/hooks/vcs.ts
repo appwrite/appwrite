@@ -399,6 +399,7 @@ export function useCreateVcsRepository(projectId: string | null | undefined) {
       installationId: string
       name: string
       xprivate: boolean
+      providerNamespace?: string
     }): Promise<Models.ProviderRepository> => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -409,6 +410,7 @@ export function useCreateVcsRepository(projectId: string | null | undefined) {
         installationId: params.installationId,
         name: params.name,
         xprivate: params.xprivate,
+        providerNamespace: params.providerNamespace || undefined,
       })
     },
     onSuccess: (_, variables) => {

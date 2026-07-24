@@ -117,8 +117,10 @@ export interface VcsOrgOption {
   /** Unique Select value: installationId, or `installationId:namespacePath` for a namespace row. */
   key: string
   installationId: string
-  /** Set only for a specific-namespace row; omit to use the installation's default owner. */
+  /** Set only for a specific-namespace row; omit to use the installation's default owner. Path form, for browsing/listing repositories. */
   providerNamespace?: string
+  /** Same namespace, numeric id form -- required by GitLab's create-project API (namespace_id). */
+  providerNamespaceId?: string
   label: string
   provider: VcsProviderId
 }
@@ -160,6 +162,7 @@ export function buildVcsOrgOptions(
       key: `${installation.$id}:${namespace.path}`,
       installationId: installation.$id,
       providerNamespace: namespace.path,
+      providerNamespaceId: namespace.id,
       label: namespace.name,
       provider,
     }))
