@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { discoverConsoleTargets } from './helpers/discovery'
+import { ensureProjectActive } from './helpers/ensure-project-active'
 import { expectPageRenders } from './helpers/smoke'
 
 /**
  * Authenticated console pages. Read-only: navigate and assert render only.
  * Uses E2E_TEST_EMAIL / E2E_TEST_PASSWORD (or session secret) via auth.setup.
+ * If the target project is paused (common on free orgs), restores it once in beforeAll.
  */
 
 test.describe('console smoke (read-only)', () => {
@@ -20,6 +22,10 @@ test.describe('console smoke (read-only)', () => {
       const targets = await discoverConsoleTargets(page)
       orgId = targets.orgId
       projectId = targets.projectId
+
+      if (projectId) {
+        await ensureProjectActive(page, projectId)
+      }
     } finally {
       await context.close()
     }
