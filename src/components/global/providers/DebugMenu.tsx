@@ -31,6 +31,7 @@ import {
   Languages,
   HeartHandshake,
   MessageSquareQuote,
+  Variable,
 } from 'lucide-react'
 import {
   Popover,
@@ -99,6 +100,7 @@ import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/Debug
 import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuTerminalPanel'
 import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/DebugMenuRecentResourcesPanel'
 import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/providers/DebugMenuCommunityShareExamplesPanel'
+import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -175,6 +177,7 @@ interface MenuItem {
     | 'seedResources'
     | 'terminalSettings'
     | 'recentResources'
+    | 'envStatus'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -441,7 +444,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
     item.submenuVariant === 'terminalSettings' ||
-    item.submenuVariant === 'recentResources'
+    item.submenuVariant === 'recentResources' ||
+    item.submenuVariant === 'envStatus'
   )
 }
 
@@ -1371,6 +1375,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'prefsDebug',
           },
           {
+            label: 'Env',
+            description: 'Check if env vars are set (values never shown).',
+            icon: <Variable className="h-3 w-3" />,
+            submenuVariant: 'envStatus',
+          },
+          {
             label: 'Terminal',
             description: 'View and clear the browser CLI cache.',
             icon: <Terminal className="h-3 w-3" />,
@@ -1918,7 +1928,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
-              currentSubmenu?.submenuVariant === 'recentResources'
+              currentSubmenu?.submenuVariant === 'recentResources' ||
+              currentSubmenu?.submenuVariant === 'envStatus'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1995,6 +2006,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuTerminalPanel />
               ) : currentSubmenu.submenuVariant === 'recentResources' ? (
                 <DebugMenuRecentResourcesPanel />
+              ) : currentSubmenu.submenuVariant === 'envStatus' ? (
+                <DebugMenuEnvPanel />
               ) : (
                 <nav
                   className="space-y-0.5"
