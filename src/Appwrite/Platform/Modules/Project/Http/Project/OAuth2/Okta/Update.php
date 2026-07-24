@@ -165,11 +165,7 @@ class Update extends Base
         // to match the shape Okta's OAuth2 adapter expects.
         // Merge new values with existing storage so that submitting only some of
         // the parameters leaves the others untouched.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $existing = $this->decodeStoredSecret($project);
 
         $encodedSecret = null;
         if (!\is_null($clientSecret) || !\is_null($domain) || !\is_null($authorizationServerId)) {

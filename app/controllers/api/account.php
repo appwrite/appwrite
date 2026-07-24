@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Auth\OAuth2\Secret as OAuth2Secret;
 use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -23,7 +24,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Redirect;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -901,7 +901,7 @@ Http::patch('/v1/account/sessions/:sessionId')
 
         if ($className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+            $appSecret = OAuth2Secret::fromProject($project, $provider);
 
             $oauth2 = new $className($appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
@@ -1349,12 +1349,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
         }
 
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
-        }
+        $appSecret = OAuth2Secret::fromProject($project, $provider);
 
         if (empty($appId) || empty($appSecret)) {
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
@@ -1512,7 +1507,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appSecret = OAuth2Secret::fromProject($project, $provider);
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
@@ -1602,11 +1597,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if (empty($code)) {
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
-        }
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         $accessToken = '';
@@ -2162,12 +2152,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
         }
 
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
-        }
+        $appSecret = OAuth2Secret::fromProject($project, $provider);
 
         if (empty($appId) || empty($appSecret)) {
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');

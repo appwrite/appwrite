@@ -166,11 +166,7 @@ class Update extends Base
         // one of `secret`/`endpoint` leaves the other untouched.
         $encodedSecret = null;
         if (!\is_null($secret) || !\is_null($endpoint)) {
-            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-            $existing = [];
-            if (!empty($storedRaw)) {
-                $existing = \json_decode($storedRaw, true) ?: [];
-            }
+            $existing = $this->decodeStoredSecret($project);
             $encodedSecret = \json_encode([
                 'clientSecret' => $secret ?? ($existing['clientSecret'] ?? ''),
                 'endpoint' => $endpoint ?? ($existing['endpoint'] ?? ''),
