@@ -945,7 +945,10 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'enabled' => true
+            'userId' => true,
+            'userEmail' => true,
+            'userName' => true,
+            'userPhone' => true,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
@@ -1264,7 +1267,10 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
-            'enabled' => false
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
@@ -3406,7 +3412,10 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
-            'enabled' => true,
+            'userId' => true,
+            'userEmail' => true,
+            'userName' => true,
+            'userPhone' => true,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3519,7 +3528,10 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
-            'enabled' => false,
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

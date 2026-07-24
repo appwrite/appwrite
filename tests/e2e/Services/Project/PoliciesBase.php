@@ -16,7 +16,7 @@ trait PoliciesBase
             'password-dictionary' => ['enabled'],
             'password-history' => ['total'],
             'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
-            'password-personal-data' => ['enabled'],
+            'password-personal-data' => ['userId', 'userEmail', 'userName', 'userPhone'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
@@ -74,6 +74,12 @@ trait PoliciesBase
             'number' => true,
             'symbols' => true,
         ]);
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => true,
+            'userEmail' => false,
+            'userName' => true,
+            'userPhone' => false,
+        ]);
         $this->updateSessionDurationPolicy(3600);
         $this->updateMembershipPrivacyPolicy([
             'userId' => true,
@@ -86,6 +92,7 @@ trait PoliciesBase
         $passwordDictionary = $this->getPolicy('password-dictionary');
         $passwordHistory = $this->getPolicy('password-history');
         $passwordStrength = $this->getPolicy('password-strength');
+        $passwordPersonalData = $this->getPolicy('password-personal-data');
         $sessionDuration = $this->getPolicy('session-duration');
         $membershipPrivacy = $this->getPolicy('membership-privacy');
 
@@ -102,6 +109,12 @@ trait PoliciesBase
         $this->assertSame(true, $passwordStrength['body']['number']);
         $this->assertSame(true, $passwordStrength['body']['symbols']);
 
+        $this->assertSame(200, $passwordPersonalData['headers']['status-code']);
+        $this->assertSame(true, $passwordPersonalData['body']['userId']);
+        $this->assertSame(false, $passwordPersonalData['body']['userEmail']);
+        $this->assertSame(true, $passwordPersonalData['body']['userName']);
+        $this->assertSame(false, $passwordPersonalData['body']['userPhone']);
+
         $this->assertSame(200, $sessionDuration['headers']['status-code']);
         $this->assertSame(3600, $sessionDuration['body']['duration']);
 
@@ -116,6 +129,12 @@ trait PoliciesBase
         $this->updatePasswordDictionaryPolicy(false);
         $this->updatePasswordHistoryPolicy(null);
         $this->resetPasswordStrengthPolicy();
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
+        ]);
         $this->updateSessionDurationPolicy(31536000);
         $this->updateMembershipPrivacyPolicy([
             'userId' => false,
@@ -575,29 +594,63 @@ trait PoliciesBase
     // Password Personal Data Policy
     // =========================================================================
 
-    public function testUpdatePasswordPersonalDataPolicyEnable(): void
+    public function testUpdatePasswordPersonalDataPolicyAllEnabled(): void
     {
-        $response = $this->updatePasswordPersonalDataPolicy(true);
+        $response = $this->updatePasswordPersonalDataPolicy([
+            'userId' => true,
+            'userEmail' => true,
+            'userName' => true,
+            'userPhone' => true,
+        ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserId']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserEmail']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserName']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserPhone']);
+        // Legacy aggregate must be true when any toggle is enabled
         $this->assertSame(true, $response['body']['authPersonalDataCheck']);
 
         $project = $this->getProjectDocument();
         $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame(true, $project['body']['authPersonalDataCheckUserId']);
+        $this->assertSame(true, $project['body']['authPersonalDataCheckUserEmail']);
+        $this->assertSame(true, $project['body']['authPersonalDataCheckUserName']);
+        $this->assertSame(true, $project['body']['authPersonalDataCheckUserPhone']);
         $this->assertSame(true, $project['body']['authPersonalDataCheck']);
 
         // Cleanup
-        $this->updatePasswordPersonalDataPolicy(false);
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
+        ]);
     }
 
-    public function testUpdatePasswordPersonalDataPolicyDisable(): void
+    public function testUpdatePasswordPersonalDataPolicyAllDisabled(): void
     {
-        $this->updatePasswordPersonalDataPolicy(true);
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => true,
+            'userEmail' => true,
+            'userName' => true,
+            'userPhone' => true,
+        ]);
 
-        $response = $this->updatePasswordPersonalDataPolicy(false);
+        $response = $this->updatePasswordPersonalDataPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
+        ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserId']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserEmail']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserName']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserPhone']);
+        // Legacy aggregate must be false when all toggles are disabled
         $this->assertSame(false, $response['body']['authPersonalDataCheck']);
 
         $project = $this->getProjectDocument();
@@ -605,25 +658,70 @@ trait PoliciesBase
         $this->assertSame(false, $project['body']['authPersonalDataCheck']);
     }
 
+    public function testUpdatePasswordPersonalDataPolicyMixed(): void
+    {
+        $response = $this->updatePasswordPersonalDataPolicy([
+            'userId' => true,
+            'userEmail' => false,
+            'userName' => true,
+            'userPhone' => false,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserId']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserEmail']);
+        $this->assertSame(true, $response['body']['authPersonalDataCheckUserName']);
+        $this->assertSame(false, $response['body']['authPersonalDataCheckUserPhone']);
+        // Legacy aggregate true because at least one toggle is on
+        $this->assertSame(true, $response['body']['authPersonalDataCheck']);
+
+        // Cleanup
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => false,
+            'userName' => false,
+        ]);
+    }
+
+    public function testUpdatePasswordPersonalDataPolicyIndividualFields(): void
+    {
+        // Reset to all-false first
+        $this->updatePasswordPersonalDataPolicy([
+            'userId' => false,
+            'userEmail' => false,
+            'userName' => false,
+            'userPhone' => false,
+        ]);
+
+        foreach (['userId', 'userEmail', 'userName', 'userPhone'] as $field) {
+            $response = $this->updatePasswordPersonalDataPolicy([$field => true]);
+            $this->assertSame(200, $response['headers']['status-code'], "Enabling {$field} should succeed");
+            $this->assertSame(true, $response['body']['authPersonalDataCheck' . \ucfirst($field)], "Field {$field} should be true");
+            $this->assertSame(true, $response['body']['authPersonalDataCheck'], "Legacy aggregate should be true");
+
+            $this->updatePasswordPersonalDataPolicy([$field => false]);
+        }
+    }
+
+    public function testUpdatePasswordPersonalDataPolicyEmptyBody(): void
+    {
+        // An empty body is a no-op (all params optional) — should return 200
+        $response = $this->updatePasswordPersonalDataPolicy([]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+    }
+
     public function testUpdatePasswordPersonalDataPolicyInvalidType(): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders(), [
-            'enabled' => 'not-a-boolean',
+            'userId' => 'not-a-boolean',
         ]);
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-
-    public function testUpdatePasswordPersonalDataPolicyMissingParam(): void
-    {
-        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders(), []);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
     public function testUpdatePasswordPersonalDataPolicyWithoutAuth(): void
     {
-        $response = $this->updatePasswordPersonalDataPolicy(true, false);
+        $response = $this->updatePasswordPersonalDataPolicy(['userId' => true], false);
 
         $this->assertSame(401, $response['headers']['status-code']);
     }
@@ -1299,11 +1397,12 @@ trait PoliciesBase
         ]);
     }
 
-    protected function updatePasswordPersonalDataPolicy(bool $enabled, bool $authenticated = true): mixed
+    /**
+     * @param  array<string, bool>  $params
+     */
+    protected function updatePasswordPersonalDataPolicy(array $params, bool $authenticated = true): mixed
     {
-        return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders($authenticated), [
-            'enabled' => $enabled,
-        ]);
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $this->buildHeaders($authenticated), $params);
     }
 
     protected function updateSessionAlertPolicy(bool $enabled, bool $authenticated = true): mixed

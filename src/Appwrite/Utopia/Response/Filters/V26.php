@@ -47,7 +47,14 @@ class V26 extends Filter
         $content['authSessionsLimit'] = $auths->getAttribute('maxSessions', 0);
         $content['authPasswordHistory'] = $auths->getAttribute('passwordHistory', 0);
         $content['authPasswordDictionary'] = $auths->getAttribute('passwordDictionary', false);
-        $content['authPersonalDataCheck'] = $auths->getAttribute('personalDataCheck', false);
+        $content['authPersonalDataCheckUserId'] = $auths->getAttribute('personalDataCheckUserId', false);
+        $content['authPersonalDataCheckUserEmail'] = $auths->getAttribute('personalDataCheckUserEmail', false);
+        $content['authPersonalDataCheckUserName'] = $auths->getAttribute('personalDataCheckUserName', false);
+        $content['authPersonalDataCheckUserPhone'] = $auths->getAttribute('personalDataCheckUserPhone', false);
+        $content['authPersonalDataCheck'] = $content['authPersonalDataCheckUserId']
+            || $content['authPersonalDataCheckUserEmail']
+            || $content['authPersonalDataCheckUserName']
+            || $content['authPersonalDataCheckUserPhone'];
         $content['authDisposableEmails'] = $auths->getAttribute('disposableEmails', false);
         $content['authCanonicalEmails'] = $auths->getAttribute('canonicalEmails', false);
         $content['authFreeEmails'] = $auths->getAttribute('freeEmails', false);

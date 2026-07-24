@@ -114,7 +114,10 @@ class XList extends Action
             ])),
             new Document([
                 '$id' => 'password-personal-data',
-                'enabled' => $auths['personalDataCheck'] ?? false,
+                'userId' => $auths['personalDataCheckUserId'] ?? false,
+                'userEmail' => $auths['personalDataCheckUserEmail'] ?? false,
+                'userName' => $auths['personalDataCheckUserName'] ?? false,
+                'userPhone' => $auths['personalDataCheckUserPhone'] ?? false,
             ]),
             new Document([
                 '$id' => 'session-alert',
