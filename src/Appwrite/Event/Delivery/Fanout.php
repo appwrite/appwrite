@@ -11,12 +11,13 @@ final readonly class Fanout
 
     public function getIdentity(
         string $projectId,
+        string $projectInternalId,
         string $envelopeId,
         Sink $sink,
         string $targetId,
     ): string {
         return \substr(
-            \hash('sha256', $projectId . "\0" . $envelopeId . "\0" . $sink->value . "\0" . $targetId),
+            \hash('sha256', $projectId . "\0" . $projectInternalId . "\0" . $envelopeId . "\0" . $sink->value . "\0" . $targetId),
             0,
             36,
         );
@@ -24,6 +25,7 @@ final readonly class Fanout
 
     public function deliver(
         string $projectId,
+        string $projectInternalId,
         string $envelopeId,
         Sink $sink,
         string $targetId,
@@ -35,13 +37,13 @@ final readonly class Fanout
             return true;
         }
 
-        $identity = $this->getIdentity($projectId, $envelopeId, $sink, $targetId);
+        $identity = $this->getIdentity($projectId, $projectInternalId, $envelopeId, $sink, $targetId);
         if ($this->receipts->isComplete($identity)) {
             return false;
         }
 
         $delivery();
-        $this->receipts->complete($identity, $projectId, $envelopeId, $sink, $targetId);
+        $this->receipts->complete($identity, $projectId, $projectInternalId, $envelopeId, $sink, $targetId);
 
         return true;
     }

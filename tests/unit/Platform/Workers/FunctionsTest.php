@@ -16,10 +16,13 @@ use Executor\Executor;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\CapturingAdapter;
 use Tests\Unit\Event\MockPublisher;
+use Tests\Unit\Platform\Workers\Fixture\CapturingExecutor;
+use Tests\Unit\Platform\Workers\Fixture\TestingExecutionFunctions;
 use Tests\Unit\Platform\Workers\Fixture\TestingFunctions;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -52,6 +55,90 @@ final class FunctionsTest extends TestCase
             ),
             $worker->childEnvelope('envelope-1', 'function-1', 'execution-1', 'completed'),
         );
+    }
+
+    public function testEnvelopeMetadataOverridesProjectAndFunctionVariablesAtExecutorBoundary(): void
+    {
+        $projectDatabase = $this->createProjectDatabase();
+        $projectDatabase->createDocument('deployments', new Document([
+            '$id' => 'deployment-1',
+            '$sequence' => 'deployment-internal-1',
+            'resourceId' => 'function-1',
+            'status' => 'ready',
+            'buildPath' => '',
+            'entrypoint' => 'index.js',
+            'type' => 'manual',
+        ]));
+
+        $runtime = \array_key_first(Config::getParam('runtimes-v2', []));
+        $this->assertIsString($runtime);
+
+        $function = new Document([
+            '$id' => 'function-1',
+            '$sequence' => 'function-internal-1',
+            'name' => 'Event handler',
+            'deploymentId' => 'deployment-1',
+            'runtime' => $runtime,
+            'runtimeSpecification' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+            'version' => 'v2',
+            'timeout' => 15,
+            'logging' => true,
+            'scopes' => [],
+            'varsProject' => [
+                new Document([
+                    'key' => 'APPWRITE_FUNCTION_EVENT_ID',
+                    'value' => 'project-variable',
+                ]),
+            ],
+            'vars' => [
+                new Document([
+                    'key' => 'APPWRITE_FUNCTION_EVENT_ID',
+                    'value' => 'function-variable',
+                ]),
+            ],
+        ]);
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+            'region' => 'fra',
+        ]);
+        $platformDatabase = $this->createReceiptDatabase();
+        $delivery = new Fanout(new Receipt($platformDatabase));
+        $publisher = new MockPublisher();
+        $executor = new CapturingExecutor();
+        $worker = new TestingExecutionFunctions();
+        $bus = (new Bus())->setResolver(static fn (string $dependency): null => null);
+        $originalKey = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=event-receipt-test-key');
+
+        try {
+            $worker->execute(
+                log: new Log(),
+                dbForProject: $projectDatabase,
+                queueForWebhooks: new Webhook($publisher),
+                publisherForFunctions: new FunctionPublisher($publisher, new Queue('v1-functions')),
+                queueForRealtime: new Realtime(new CapturingAdapter(), $delivery),
+                queueForEvents: new Event($publisher),
+                bus: $bus,
+                project: $project,
+                function: $function,
+                executor: $executor,
+                trigger: 'event',
+                path: '/',
+                method: 'POST',
+                headers: ['x-appwrite-event-id' => 'request-header'],
+                platform: ['apiHostname' => 'cloud.appwrite.test'],
+                event: 'databases.database-1.update',
+                eventData: '{}',
+                executionId: 'execution-1',
+                envelopeId: 'envelope-1',
+            );
+        } finally {
+            \putenv($originalKey === false ? '_APP_OPENSSL_KEY_V1' : "_APP_OPENSSL_KEY_V1={$originalKey}");
+        }
+
+        $this->assertSame('envelope-1', $executor->variables['APPWRITE_FUNCTION_EVENT_ID']);
+        $this->assertSame('envelope-1', $executor->headers['x-appwrite-event-id']);
     }
 
     public function testRetrySkipsCompletedFunctionAndReusesDeterministicExecutionIdentity(): void
@@ -158,6 +245,95 @@ final class FunctionsTest extends TestCase
         $this->assertSame(['envelope-1', 'envelope-1'], $worker->envelopes['function-2']);
     }
 
+    public function testBlockedFunctionDoesNotCompleteReceiptBeforeUnblockedRetry(): void
+    {
+        $projectDatabase = $this->createProjectDatabase();
+        $projectDatabase->createDocument('functions', new Document([
+            '$id' => 'function-1',
+            'name' => 'function-1',
+            'events' => ['databases.database-1.update'],
+        ]));
+
+        $platformDatabase = $this->createReceiptDatabase();
+        $delivery = new Fanout(new Receipt($platformDatabase));
+        $publisher = new MockPublisher();
+        $worker = new TestingFunctions();
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+        ]);
+        $message = new Message([
+            'pid' => 'message-1',
+            'queue' => 'v1-functions',
+            'timestamp' => \time(),
+            'payload' => FunctionMessage::fromEvent(
+                event: 'databases.[databaseId].update',
+                params: ['databaseId' => 'database-1'],
+                project: $project,
+                payload: ['$id' => 'database-1'],
+                envelopeId: 'envelope-1',
+            )->toArray(),
+        ]);
+        $queueForWebhooks = new Webhook($publisher);
+        $publisherForFunctions = new FunctionPublisher($publisher, new Queue('v1-functions'));
+        $queueForRealtime = new Realtime(new CapturingAdapter(), $delivery);
+        $queueForEvents = new Event($publisher);
+        $bus = $this->createStub(Bus::class);
+        $executor = $this->createStub(Executor::class);
+        $blocked = true;
+        $getIsResourceBlocked = static function () use (&$blocked): bool {
+            return $blocked;
+        };
+
+        $worker->action(
+            $project,
+            $message,
+            $projectDatabase,
+            $queueForWebhooks,
+            $publisherForFunctions,
+            $queueForRealtime,
+            $queueForEvents,
+            $bus,
+            new Log(),
+            $executor,
+            $getIsResourceBlocked,
+            $delivery,
+        );
+        $this->assertArrayNotHasKey('function-1', $worker->deliveries);
+
+        $blocked = false;
+        $worker->action(
+            $project,
+            $message,
+            $projectDatabase,
+            $queueForWebhooks,
+            $publisherForFunctions,
+            $queueForRealtime,
+            $queueForEvents,
+            $bus,
+            new Log(),
+            $executor,
+            $getIsResourceBlocked,
+            $delivery,
+        );
+        $worker->action(
+            $project,
+            $message,
+            $projectDatabase,
+            $queueForWebhooks,
+            $publisherForFunctions,
+            $queueForRealtime,
+            $queueForEvents,
+            $bus,
+            new Log(),
+            $executor,
+            $getIsResourceBlocked,
+            $delivery,
+        );
+
+        $this->assertSame(1, $worker->deliveries['function-1']);
+    }
+
     private function createProjectDatabase(): Database
     {
         $authorization = new Authorization();
@@ -185,6 +361,7 @@ final class FunctionsTest extends TestCase
         $database->createCollection('variables');
         $database->createAttribute('variables', 'resourceInternalId', Database::VAR_STRING, 255, true);
         $database->createAttribute('variables', 'resourceType', Database::VAR_STRING, 64, true);
+        $database->createCollection('deployments');
         $database->disableValidation();
 
         return $database;

@@ -1092,6 +1092,17 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('projectInternalId'),
+                'type' => Database::VAR_ID,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('envelopeId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1138,11 +1149,11 @@ $platformCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_project_id'),
+                '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'attributes' => ['projectId', 'projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY, 0],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
     ],

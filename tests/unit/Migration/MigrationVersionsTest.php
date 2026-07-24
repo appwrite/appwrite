@@ -272,14 +272,21 @@ final class MigrationVersionsTest extends TestCase
         }
 
         $this->assertSame(
-            ['projectId', 'envelopeId', 'sink', 'targetId', 'completedAt'],
+            ['projectId', 'projectInternalId', 'envelopeId', 'sink', 'targetId', 'completedAt'],
             $attributes,
         );
 
         $indexes = [];
+        $projectIndex = null;
         foreach ($collection->getAttribute('indexes', []) as $index) {
-            $indexes[] = $index instanceof Document ? $index->getAttribute('$id') : ($index['$id'] ?? '');
+            $index = $index instanceof Document ? $index : new Document($index);
+            $indexes[] = $index->getAttribute('$id');
+            if ($index->getAttribute('$id') === '_key_project') {
+                $projectIndex = $index;
+            }
         }
-        $this->assertSame(['_key_project_id'], $indexes);
+        $this->assertSame(['_key_project'], $indexes);
+        $this->assertInstanceOf(Document::class, $projectIndex);
+        $this->assertSame(['projectId', 'projectInternalId'], $projectIndex->getAttribute('attributes'));
     }
 }

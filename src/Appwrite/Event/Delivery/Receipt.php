@@ -26,6 +26,7 @@ final readonly class Receipt
     public function complete(
         string $identity,
         string $projectId,
+        string $projectInternalId,
         string $envelopeId,
         Sink $sink,
         string $targetId,
@@ -35,6 +36,7 @@ final readonly class Receipt
                 fn () => $this->database->createDocument(self::COLLECTION, new Document([
                     '$id' => $identity,
                     'projectId' => $projectId,
+                    'projectInternalId' => $projectInternalId,
                     'envelopeId' => $envelopeId,
                     'sink' => $sink->value,
                     'targetId' => $targetId,

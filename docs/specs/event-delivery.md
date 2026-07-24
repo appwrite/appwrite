@@ -33,6 +33,7 @@ older schema is unsupported because the receipt collection does not exist.
 A completed delivery is keyed by:
 
 - source project
+- source project generation
 - envelope ID
 - sink (`webhook`, `function`, or `realtime`)
 - target ID
@@ -42,10 +43,11 @@ delivery returns successfully. A retry skips completed targets and attempts only
 targets without a receipt. This allows a fanout interrupted after one target to
 resume at the next target.
 
-Receipts are retained for the lifetime of their project so a delayed replay
-cannot repeat a completed effect. Project deletion removes its receipts. There is
-no time-based eviction because the event retry horizon is not bounded by this
-component.
+Receipts are retained for the lifetime of their project generation so a delayed
+replay cannot repeat a completed effect. Project deletion removes only receipts
+for the deleted generation; recreating the same public project ID cannot inherit
+or lose receipts from another generation. There is no time-based eviction because
+the event retry horizon is not bounded by this component.
 
 Webhook requests expose the envelope as `X-Appwrite-Event-Id`. Event-triggered
 Functions reuse a deterministic execution ID for the same envelope and Function,

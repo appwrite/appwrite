@@ -294,6 +294,46 @@ final class WebhooksTest extends TestCase
         $this->assertSame(['envelope-1', 'envelope-1', 'envelope-1'], $worker->envelopes);
     }
 
+    public function testDisabledWebhookDoesNotCompleteReceiptBeforeEnabledRetry(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $publisher = new MockPublisher();
+        $worker = new TestingWebhooks();
+        $message = new Message([
+            'pid' => 'message-1',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'project' => ['$id' => 'project-1'],
+                'events' => ['databases.database-1.update'],
+                'payload' => ['$id' => 'database-1'],
+                'envelopeId' => 'envelope-1',
+            ],
+        ]);
+        $webhook = new Document([
+            '$id' => 'webhook-1',
+            'enabled' => false,
+            'events' => ['databases.database-1.update'],
+        ]);
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+            'webhooks' => [$webhook],
+        ]);
+        $delivery = new Fanout(new Receipt($database));
+        $notifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $usage = new UsagePublisher($publisher, new Queue('v1-stats-usage'));
+
+        $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+        $this->assertArrayNotHasKey('webhook-1', $worker->deliveries);
+
+        $webhook->setAttribute('enabled', true);
+        $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+        $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+
+        $this->assertSame(1, $worker->deliveries['webhook-1']);
+    }
+
     public function testWebhookHeadersExposeStableEnvelopeId(): void
     {
         $headers = new TestingWebhooks()->headers(

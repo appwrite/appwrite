@@ -159,10 +159,16 @@ class Functions extends Action
                     }
 
                     $functionId = $function->getId();
+                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
+                        Console::log('Function ' . $functionId . ' is blocked, skipping execution.');
+                        continue;
+                    }
+
                     $executionId = $envelopeId === ''
                         ? null
                         : $deliveryForEvents->getIdentity(
                             $project->getId(),
+                            $project->getSequence() ?? '',
                             $envelopeId,
                             Sink::Function,
                             $functionId,
@@ -170,15 +176,11 @@ class Functions extends Action
 
                     $deliveryForEvents->deliver(
                         projectId: $project->getId(),
+                        projectInternalId: $project->getSequence() ?? '',
                         envelopeId: $envelopeId,
                         sink: Sink::Function,
                         targetId: $functionId,
-                        delivery: function () use ($getIsResourceBlocked, $project, $functionId, $dbForProject, $log, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $queueForEvents, $bus, $executor, $platform, $user, $events, $eventData, $executionId, $envelopeId): void {
-                            if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
-                                Console::log('Function ' . $functionId . ' is blocked, skipping execution.');
-                                return;
-                            }
-
+                        delivery: function () use ($functionId, $dbForProject, $log, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $queueForEvents, $bus, $project, $executor, $platform, $user, $events, $eventData, $executionId, $envelopeId): void {
                             /**
                              * get variables subqueries cached
                              */
@@ -527,7 +529,6 @@ class Functions extends Action
                 'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'],
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
                 'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'],
-                ...$envelope['variables'],
             ]);
         }
 
@@ -571,6 +572,10 @@ class Functions extends Action
             'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
             'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
         ]);
+
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, $envelope['variables']);
+        }
 
         /** Execute function */
         $error = null;

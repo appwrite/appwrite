@@ -76,10 +76,15 @@ class Webhooks extends Action
 
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            if ($webhook->getAttribute('enabled') !== true) {
+                continue;
+            }
+
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
                 try {
                     $deliveryForEvents->deliver(
                         projectId: $project->getId(),
+                        projectInternalId: $project->getSequence() ?? '',
                         envelopeId: $envelopeId,
                         sink: Sink::Webhook,
                         targetId: $webhook->getId(),

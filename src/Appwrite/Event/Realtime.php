@@ -145,6 +145,7 @@ class Realtime extends Event
 
                 $this->delivery->deliver(
                     projectId: $this->project?->getId() ?? $projectId,
+                    projectInternalId: $this->project?->getSequence() ?? '',
                     envelopeId: $this->envelopeId,
                     sink: Sink::Realtime,
                     targetId: $projectId,

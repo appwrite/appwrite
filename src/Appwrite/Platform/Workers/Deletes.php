@@ -781,6 +781,7 @@ class Deletes extends Action
         try {
             $this->deleteByGroup('eventReceipts', [
                 Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
                 Query::orderAsc(),
             ], $dbForPlatform);
         } catch (Throwable $th) {
