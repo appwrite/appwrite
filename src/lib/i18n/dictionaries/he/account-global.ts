@@ -25,6 +25,52 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Applications: 'אפליקציות',
   "Applications you've authorized to access your Appwrite account.":
     'אפליקציות שאישרתם לגשת לחשבון Appwrite שלכם.',
+  Affiliates: 'אפיליאייטס',
+  'Affiliates program': 'תוכנית אפיליאייטס',
+  'Apply credits': 'החלת קרדיטים',
+  Applied: 'הוחל',
+  'Attribution window': 'חלון ייחוס',
+  Attributed: 'יוחס',
+  'Choose an organization you own to receive these affiliate credits.':
+    'בחרו ארגון שבבעלותכם לקבלת קרדיטי האפיליאייטס האלה.',
+  Converted: 'הומר',
+  'Credits applied to organization': 'הקרדיטים הוחלו על הארגון',
+  'Credits earned from converted referrals. Apply pending rewards to an organization you own.':
+    'קרדיטים שנצברו מהפניות שהומרו. החילו תגמולים ממתינים על ארגון שבבעלותכם.',
+  'Earn $10 in credits for every referral that upgrades to a Pro plan. Attribution lasts 180 days.':
+    'הרוויחו $10 בקרדיטים על כל הפניה שמשדרגת לתוכנית Pro. הייחוס תקף ל-180 ימים.',
+  'Expires at': 'תפוגה',
+  'Failed to apply credits': 'החלת הקרדיטים נכשלה',
+  'Failed to copy referral link': 'העתקת קישור ההפניה נכשלה',
+  'Failed to join the affiliates program': 'ההצטרפות לתוכנית האפיליאייטס נכשלה',
+  'Join program': 'הצטרפות לתוכנית',
+  'Loading referrals...': 'טוען הפניות...',
+  'Loading rewards...': 'טוען תגמולים...',
+  'No referrals yet': 'אין עדיין הפניות',
+  'No rewards yet': 'אין עדיין תגמולים',
+  'Not applied': 'לא הוחל',
+  'Pending balance': 'יתרה ממתינה',
+  'People who signed up with your referral code. Converted referrals earn you credits.':
+    'אנשים שנרשמו עם קוד ההפניה שלכם. הפניות שהומרו מזכות אתכם בקרדיטים.',
+  'Qualifying plan': 'תוכנית מתאימה',
+  'Referral code': 'קוד הפניה',
+  'Referral link': 'קישור הפניה',
+  'Referral link copied': 'קישור ההפניה הועתק',
+  Referrals: 'הפניות',
+  referrals: 'הפניות',
+  Reward: 'תגמול',
+  Rewards: 'תגמולים',
+  rewards: 'תגמולים',
+  'Rewards appear here after a referral upgrades to Pro.':
+    'תגמולים יופיעו כאן אחרי שהפניה תשדרג ל-Pro.',
+  'Share this link so new users are attributed to you. You earn $10 in credits when a referral upgrades to Pro.':
+    'שתפו את הקישור הזה כדי שייחסו אליכם משתמשים חדשים. תרוויחו $10 בקרדיטים כשהפניה תשדרג ל-Pro.',
+  'Share your referral link to start earning credits.':
+    'שתפו את קישור ההפניה שלכם כדי להתחיל לצבור קרדיטים.',
+  'Share your unique link. When someone signs up and upgrades to Pro within the attribution window, you earn credits you can apply to any organization you own.':
+    'שתפו את הקישור הייחודי שלכם. כשמישהו נרשם ומשדרג ל-Pro בתוך חלון הייחוס, תרוויחו קרדיטים שתוכלו להחיל על כל ארגון שבבעלותכם.',
+  'You joined the affiliates program': 'הצטרפתם לתוכנית האפיליאייטס',
+  'Your referral link': 'קישור ההפניה שלכם',
   'Are you sure you want to delete this billing address? This action cannot be undone.':
     'האם למחוק את כתובת החיוב הזו? פעולה זו אינה ניתנת לביטול.',
   'Are you sure you want to delete this identity?':

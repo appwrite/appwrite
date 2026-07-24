@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Affiliates,
   Apps,
   Assistant,
   Avatars,
@@ -216,6 +217,7 @@ function createConsoleSdkRaw(client: Client) {
   return {
     client,
     account: new Account(client),
+    affiliates: new Affiliates(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),

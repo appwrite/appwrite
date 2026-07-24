@@ -19,6 +19,53 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Applications: 'アプリケーション',
   "Applications you've authorized to access your Appwrite account.":
     'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
+  Affiliates: 'アフィリエイト',
+  'Affiliates program': 'アフィリエイトプログラム',
+  'Apply credits': 'クレジットを適用',
+  Applied: '適用済み',
+  'Attribution window': 'アトリビューション期間',
+  Attributed: 'アトリビューション日',
+  'Choose an organization you own to receive these affiliate credits.':
+    'これらのアフィリエイトクレジットを受け取る、所有している Organization を選択してください。',
+  Converted: 'コンバート済み',
+  'Credits applied to organization': 'Organization にクレジットを適用しました',
+  'Credits earned from converted referrals. Apply pending rewards to an organization you own.':
+    'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization に適用できます。',
+  'Earn $10 in credits for every referral that upgrades to a Pro plan. Attribution lasts 180 days.':
+    'Pro プランにアップグレードした紹介ごとに $10 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  'Expires at': '有効期限',
+  'Failed to apply credits': 'クレジットの適用に失敗しました',
+  'Failed to copy referral link': '紹介リンクのコピーに失敗しました',
+  'Failed to join the affiliates program':
+    'アフィリエイトプログラムへの参加に失敗しました',
+  'Join program': 'プログラムに参加',
+  'Loading referrals...': '紹介を読み込み中...',
+  'Loading rewards...': '報酬を読み込み中...',
+  'No referrals yet': 'まだ紹介はありません',
+  'No rewards yet': 'まだ報酬はありません',
+  'Not applied': '未適用',
+  'Pending balance': '保留中の残高',
+  'People who signed up with your referral code. Converted referrals earn you credits.':
+    'あなたの紹介コードで登録したユーザーです。コンバートされた紹介でクレジットを獲得できます。',
+  'Qualifying plan': '対象プラン',
+  'Referral code': '紹介コード',
+  'Referral link': '紹介リンク',
+  'Referral link copied': '紹介リンクをコピーしました',
+  Referrals: '紹介',
+  referrals: '件の紹介',
+  Reward: '報酬',
+  Rewards: '報酬',
+  rewards: '件の報酬',
+  'Rewards appear here after a referral upgrades to Pro.':
+    '紹介が Pro にアップグレードすると、ここに報酬が表示されます。',
+  'Share this link so new users are attributed to you. You earn $10 in credits when a referral upgrades to Pro.':
+    'このリンクを共有すると、新規ユーザーがあなたに紐付けられます。紹介が Pro にアップグレードすると $10 のクレジットを獲得できます。',
+  'Share your referral link to start earning credits.':
+    '紹介リンクを共有してクレジットの獲得を始めましょう。',
+  'Share your unique link. When someone signs up and upgrades to Pro within the attribution window, you earn credits you can apply to any organization you own.':
+    '固有のリンクを共有してください。アトリビューション期間内に登録して Pro にアップグレードすると、所有する Organization に適用できるクレジットを獲得できます。',
+  'You joined the affiliates program': 'アフィリエイトプログラムに参加しました',
+  'Your referral link': 'あなたの紹介リンク',
   'Application access has been revoked for all authorizations':
     'すべての承認についてアプリケーションのアクセスを取り消しました',
   'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
