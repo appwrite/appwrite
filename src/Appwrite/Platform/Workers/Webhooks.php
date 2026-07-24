@@ -162,10 +162,6 @@ class Webhooks extends Action
         $error = null;
 
         if (!empty($curlError) || $statusCode >= 400) {
-            $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
-            $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
-            $attempts = $webhook->getAttribute('attempts');
-
             $logs = '';
             $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
@@ -178,17 +174,33 @@ class Webhooks extends Action
                 $logs .= 'Body: ' . "\n" . \mb_strcut($responseBody, 0, 10000) . "\n"; // Limit to 10kb
             }
 
-            $webhook->setAttribute('logs', $logs);
+            $shouldAlert = false;
+            $dbForPlatform->withTransaction(function () use ($dbForPlatform, &$webhook, $logs, &$shouldAlert): void {
+                $shouldAlert = false;
+                $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId(), forUpdate: true);
+                $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
+                $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
+                $attempts = $webhook->getAttribute('attempts');
 
-            $updatePayload = ['logs' => $logs];
+                $webhook->setAttribute('logs', $logs);
+                $updatePayload = ['logs' => $logs];
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
-                $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+                if (
+                    $webhook->getAttribute('enabled', true)
+                    && $attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))
+                ) {
+                    $webhook->setAttribute('enabled', false);
+                    $updatePayload['enabled'] = false;
+                    $shouldAlert = true;
+                }
+
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
+            });
+
+            if ($shouldAlert) {
+                $this->sendAlert($webhook->getAttribute('attempts'), $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
