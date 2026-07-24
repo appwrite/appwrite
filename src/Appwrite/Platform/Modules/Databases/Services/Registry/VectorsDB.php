@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Queries\Create as CreateDocumentsQuery;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
@@ -79,6 +80,7 @@ class VectorsDB extends Base
         $service->addAction(UpsertDocument::getName(), new UpsertDocument());
         $service->addAction(GetDocument::getName(), new GetDocument());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
+        $service->addAction(CreateDocumentsQuery::getName(), new CreateDocumentsQuery());
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());

@@ -197,6 +197,8 @@ class Response extends SwooleResponse
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
+    public const MODEL_VCS_NAMESPACE = 'vcsNamespace';
+    public const MODEL_VCS_NAMESPACE_LIST = 'vcsNamespaceList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
