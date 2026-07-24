@@ -454,6 +454,51 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
+            [
+                'name' => '_APP_CONNECTIONS_DATABASE',
+                'description' => 'Comma-separated project database DSNs for the Utopia database pool. Console/platform still uses _APP_DB_*. Format: db_<regionId>_main=mariadb://user:pass@host:3306/appwrite. Leave empty to reuse _APP_DB_*.',
+                'introduction' => '1.9.6',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DATABASE_KEYS',
+                'description' => 'Comma-separated Utopia pool names for non-default region project create. Example: database_db_fra_main,database_db_nyc_main.',
+                'introduction' => '1.9.6',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REGION',
+                'description' => 'Region id of this Appwrite process. Default value is: \'default\'.',
+                'introduction' => '1.9.6',
+                'default' => 'default',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REGIONS',
+                'description' => 'Optional JSON region catalog overriding app/config/regions.php. Each entry: $id, name, disabled, default. Exactly one entry must set default to true. Leave empty for the stock default region.',
+                'introduction' => '1.9.6',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_PROJECT_REGIONS',
+                'description' => 'Optional comma-separated allowlist of region ids allowed when creating projects. Default value is: \'default\'.',
+                'introduction' => '1.9.6',
+                'default' => 'default',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
