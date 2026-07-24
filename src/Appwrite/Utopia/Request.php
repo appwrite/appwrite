@@ -39,6 +39,10 @@ class Request extends UtopiaRequest
 
         $parameters = parent::getParams();
 
+        if ((!\array_key_exists('default', $parameters) || $parameters['default'] === null) && \array_key_exists('xdefault', $parameters) && $parameters['xdefault'] !== null) {
+            $parameters['default'] = $parameters['xdefault'];
+        }
+
         if (!$this->hasFilters() || !$this->hasRoute()) {
             return $parameters;
         }

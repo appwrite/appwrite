@@ -351,4 +351,20 @@ final class RequestTest extends TestCase
         $this->request->addFilter(new Second());
         $this->request->setRoute($route);
     }
+
+    public function testXDefaultParamFallback(): void
+    {
+        $this->request->setQueryString([
+            'key' => 'hasTrained',
+            'required' => false,
+            'xdefault' => false,
+        ]);
+
+        $params = $this->request->getParams();
+
+        $this->assertArrayHasKey('default', $params);
+        $this->assertFalse($params['default']);
+        $this->assertArrayHasKey('xdefault', $params);
+        $this->assertFalse($params['xdefault']);
+    }
 }
