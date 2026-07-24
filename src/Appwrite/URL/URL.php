@@ -66,11 +66,14 @@ class URL
 
         $parts['port'] = isset($url['port']) ? ':' . $url['port'] : '';
 
-        $parts['user'] = isset($url['user']) ? $url['user'] : '';
+        $hasUser = isset($url['user']) && $url['user'] !== '';
+        $hasPass = isset($url['pass']) && $url['pass'] !== '';
 
-        $parts['pass'] = !empty($url['pass']) ? ':' . $url['pass'] : '';
+        $parts['user'] = $hasUser ? $url['user'] : '';
 
-        $parts['pass'] = ($parts['user'] || !empty($parts['pass'])) ? $parts['pass'] . '@' : '';
+        $parts['pass'] = $hasPass ? ':' . $url['pass'] : '';
+
+        $parts['pass'] = ($hasUser || $hasPass) ? $parts['pass'] . '@' : '';
 
         $parts['path'] = isset($url['path']) ? $url['path'] : '';
 

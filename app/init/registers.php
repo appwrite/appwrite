@@ -4,6 +4,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
+use Appwrite\Queue\Connection\Redis as QueueRedis;
+use Appwrite\Redis\Auth as RedisAuth;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
@@ -318,12 +320,10 @@ $register->set('pools', function () {
                         \PDO::ATTR_STRINGIFY_FETCHES => true
                     ));
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
-                    }
+                    RedisAuth::authenticate($redis, $dsnUser, $dsnPass);
                     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
@@ -362,7 +362,7 @@ $register->set('pools', function () {
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
                             'redis' => (function () use ($dsn) {
-                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                $connection = new QueueRedis($dsn->getHost(), (int) $dsn->getPort(), $dsn->getUser(), $dsn->getPassword());
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null
