@@ -320,6 +320,8 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
     'SDK と Console からフィルター、並び替え、ページネーションができます。リレーションで関連データをモデル化し、トランザクションで複数ステップの書き込みを実行し、多数の行やドキュメントを一度に更新するときは一括操作を使います。',
   'Five engines, two categories': '5 つのエンジン、2 つのカテゴリ',
+  'Five engines for tables, documents, vectors, and native SQL':
+    'テーブル、ドキュメント、ベクトル、ネイティブ SQL 向けの 5 つのエンジン',
   'Flexible JSON documents with filters and full-text search for evolving schemas.':
     '変化するスキーマ向けに、フィルターと全文検索付きの柔軟な JSON ドキュメント。',
   'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':

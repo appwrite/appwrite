@@ -11,7 +11,6 @@ export const databasesProductFeatures: ProductFeatureContent[] = [
     layout: 'stacked',
     centered: true,
     hideVisual: true,
-    wideCompanion: true,
   },
   {
     id: 'serverless-dedicated',

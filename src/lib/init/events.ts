@@ -156,7 +156,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Init July 20 - 24 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
-        'From Appwrite 2.0 to Appwrite Firewall. Explore the full launch timeline, blog posts, and session replays.',
+        'From Appwrite 2.0 to Appwrite Firewall & Domains. Explore the full launch timeline, blog posts, and session replays.',
       getInvolvedSectionTitle: 'Keep exploring',
       getInvolved: [
         {

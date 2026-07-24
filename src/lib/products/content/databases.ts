@@ -8,13 +8,6 @@ export const databasesProductContent: ProductPageContent = {
     title: 'Databases for every data model',
     description:
       'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.',
-    stats: [
-      { value: '5', label: 'Database engines' },
-      { value: '2', label: 'Compute models' },
-      { value: 'HA', label: 'Read replicas' },
-      { value: 'PITR', label: 'Point-in-time recovery' },
-      { value: 'Auth', label: 'Row-level permissions' },
-    ],
   },
   faq: [
     {

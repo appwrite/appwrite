@@ -133,12 +133,7 @@ type DatabasesEnginesCatalogProps = {
 
 export function DatabasesEnginesCatalog({ className }: DatabasesEnginesCatalogProps) {
   return (
-    <div
-      className={cn(
-        'space-y-8 rounded-xl border border-border bg-card/45 p-4 sm:p-6',
-        className,
-      )}
-    >
+    <div className={cn('space-y-8', className)}>
       {ENGINE_GROUPS.map((group) => (
         <EngineGroup key={group.id} group={group} />
       ))}

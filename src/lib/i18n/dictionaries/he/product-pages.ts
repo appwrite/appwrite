@@ -414,6 +414,8 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
     'סננו, מיינו ופגנו מה-SDKs ומהקונסולה. מדלו נתונים קשורים עם relationships, הריצו כתיבות מרובות שלבים ב-transactions, והשתמשו בפעולות bulk כשצריך לעדכן הרבה שורות או מסמכים בבת אחת.',
   'Five engines, two categories': 'חמישה מנועים, שתי קטגוריות',
+  'Five engines for tables, documents, vectors, and native SQL':
+    'חמישה מנועים לטבלאות, מסמכים, וקטורים ו-SQL מקורי',
   'Flexible JSON documents with filters and full-text search for evolving schemas.':
     'מסמכי JSON גמישים עם מסננים וחיפוש טקסט מלא לסכמות שמשתנות.',
   'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':
