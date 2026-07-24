@@ -237,6 +237,8 @@ const NAMESPACES_MAX_PAGES = 20
  * NAMESPACES_PAGE_SIZE chunks until `total` is exhausted -- a GitLab user
  * can belong to more groups than fit on one page, and silently truncating
  * would make later groups unselectable for browsing or repo creation.
+ * A failure on a later page returns what's been fetched so far rather than
+ * rejecting, so a transient error doesn't hide already-fetched groups.
  */
 async function fetchAllNamespaces(
   projectId: string,
@@ -244,12 +246,17 @@ async function fetchAllNamespaces(
 ): Promise<Models.VcsNamespace[]> {
   const all: Models.VcsNamespace[] = []
   for (let page = 0; page < NAMESPACES_MAX_PAGES; page++) {
-    const result = await fetchNamespaces(
-      projectId,
-      installationId,
-      page,
-      NAMESPACES_PAGE_SIZE,
-    )
+    let result: Models.VcsNamespaceList
+    try {
+      result = await fetchNamespaces(
+        projectId,
+        installationId,
+        page,
+        NAMESPACES_PAGE_SIZE,
+      )
+    } catch {
+      break
+    }
     all.push(...result.namespaces)
     if (all.length >= result.total || result.namespaces.length === 0) break
   }
