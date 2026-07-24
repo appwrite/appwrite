@@ -1787,6 +1787,31 @@ trait MessagingBase
         $this->assertEquals(200, $image['headers']['status-code']);
     }
 
+    public function testCreateDraftPushWithDataOnly(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => null,
+            'body' => null,
+            'data' => [
+                'event' => 'cache.invalidate',
+                'resource' => 'articles',
+            ],
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        $this->assertArrayNotHasKey('title', $response['body']['data']);
+        $this->assertArrayNotHasKey('body', $response['body']['data']);
+        $this->assertEquals('cache.invalidate', $response['body']['data']['data']['event']);
+        $this->assertEquals('articles', $response['body']['data']['data']['resource']);
+    }
+
     public function testScheduledMessage(): void
     {
         // Create user
@@ -2487,6 +2512,118 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+    }
+
+    public function testUpdateDataOnlyDraftPushNotification(): void
+    {
+        if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
+        $dsn = new DSN(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $dsn->getParam('to');
+        $serviceAccountJSON = $dsn->getParam('serviceAccountJSON');
+
+        if (empty($to) || empty($serviceAccountJSON)) {
+            $this->markTestSkipped('Push provider not configured');
+        }
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'FCM-data-only-update',
+            'serviceAccountJSON' => $serviceAccountJSON,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Messaging User Data Only Draft',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerType' => 'push',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $to,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $draftPush = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => null,
+            'body' => null,
+            'data' => [
+                'event' => 'cache.invalidate',
+                'resource' => 'articles',
+            ],
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $draftPush['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $draftPush['body']['status']);
+        $this->assertArrayNotHasKey('title', $draftPush['body']['data']);
+        $this->assertArrayNotHasKey('body', $draftPush['body']['data']);
+        $this->assertEquals('cache.invalidate', $draftPush['body']['data']['data']['event']);
+        $this->assertEquals('articles', $draftPush['body']['data']['data']['resource']);
+
+        $updatedPush = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $draftPush['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targets' => [$target['body']['$id']],
+            'draft' => false,
+        ]);
+
+        $this->assertEquals(200, $updatedPush['headers']['status-code']);
+        $this->assertEquals(MessageStatus::PROCESSING, $updatedPush['body']['status']);
+        $this->assertEquals([$target['body']['$id']], $updatedPush['body']['targets']);
+
+        $updatedPushId = $updatedPush['body']['$id'];
+        $this->assertEventually(function () use ($updatedPushId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertArrayNotHasKey('title', $message['body']['data']);
+        $this->assertArrayNotHasKey('body', $message['body']['data']);
+        $this->assertEquals('cache.invalidate', $message['body']['data']['data']['event']);
+        $this->assertEquals('articles', $message['body']['data']['data']['resource']);
     }
 
     public function testCreatePushNotificationWithUsersRecipients(): void

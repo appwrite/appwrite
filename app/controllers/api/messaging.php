@@ -3395,8 +3395,8 @@ Http::post('/v1/messaging/messages/push')
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
-    ->param('title', '', new Text(256), 'Title for push notification.', true)
-    ->param('body', '', new Text(64230), 'Body for push notification.', true)
+    ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
+    ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
@@ -3420,7 +3420,7 @@ Http::post('/v1/messaging/messages/push')
     ->inject('publisherForMessaging')
     ->inject('response')
     ->inject('platform')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
+    ->action(function (string $messageId, ?string $title, ?string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
