@@ -151,12 +151,6 @@ class Create extends Base
             }
         }
 
-        $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
-
-        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
-        }
-
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
