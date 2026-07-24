@@ -6,8 +6,10 @@ namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
+use Appwrite\Vcs\Factory;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -211,6 +213,52 @@ final class InstallationTokensTest extends TestCase
         $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
 
         $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
+    }
+
+    public function testGithubProviderSkipsPersonalTokenRefresh(): void
+    {
+        $installation = new Document([
+            '$id' => 'installation1',
+            'provider' => 'github',
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        // Empty registry: oauth2FromProvider('github') would throw if it were
+        // ever called, proving GitHub never reaches the OAuth2 refresh path.
+        $vcsFactory = new Factory($this->createStub(Cache::class), []);
+
+        $result = (new InstallationTokens())->refreshForInstallation($installation, $this->db(), $vcsFactory);
+
+        $this->assertSame('stale-token', $result->getAttribute('personalAccessToken'));
+    }
+
+    public function testNonGithubProviderStillRefreshesPersonalToken(): void
+    {
+        $oauth2 = $this->fakeOAuth2();
+        $vcsFactory = new Factory($this->createStub(Cache::class), [
+            'gitlab' => [
+                'oauth2' => fn () => $oauth2,
+                'variables' => [],
+            ],
+        ]);
+
+        $db = $this->createMock(Database::class);
+        $db->expects($this->once())->method('updateDocument');
+
+        $installation = new Document([
+            '$id' => 'installation1',
+            'provider' => 'gitlab',
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        $result = (new InstallationTokens())->refreshForInstallation($installation, $db, $vcsFactory);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
     }
 
     protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false)
