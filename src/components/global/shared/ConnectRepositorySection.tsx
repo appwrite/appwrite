@@ -6,7 +6,7 @@
  * and after-selection summary with optional branch/root directory.
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,10 @@ import {
 } from '@/components/ui/select'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { useCreateVcsRepository } from '@/lib/react-query/hooks'
+import {
+  useCreateVcsRepository,
+  useNamespacesForInstallations,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
@@ -30,6 +33,7 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { GitBranch } from 'lucide-react'
 import {
+  buildVcsOrgOptions,
   getVcsProvider,
   VCS_PROVIDERS,
   VcsIcon,
@@ -125,10 +129,51 @@ export function ConnectRepositorySection({
   const [selectedInstallationId, setSelectedInstallationId] = useState(
     value.installationId || '',
   )
+  const [selectedNamespace, setSelectedNamespace] = useState<{
+    providerNamespace?: string
+    providerNamespaceId?: string
+  }>({})
   const [repositoryName, setRepositoryName] = useState(
     value.repositoryName || suggestedRepoName,
   )
   const [repositoryPrivate, setRepositoryPrivate] = useState(true)
+
+  const { namespacesByInstallation } = useNamespacesForInstallations(
+    projectId,
+    installations,
+  )
+  const orgOptions = useMemo(
+    () => buildVcsOrgOptions(installations, namespacesByInstallation),
+    [installations, namespacesByInstallation],
+  )
+  const selectedOrgKey = selectedNamespace.providerNamespace
+    ? `${selectedInstallationId}:${selectedNamespace.providerNamespace}`
+    : selectedInstallationId
+  const selectOrgOption = (key: string) => {
+    const option = orgOptions.find((o) => o.key === key)
+    if (!option) return
+    setSelectedInstallationId(option.installationId)
+    setSelectedNamespace({
+      providerNamespace: option.providerNamespace,
+      providerNamespaceId: option.providerNamespaceId,
+    })
+  }
+
+  // Keep the selection valid: defaults to the first option whenever the
+  // current installation/namespace pair no longer matches one (initial
+  // load, or the installations/namespaces list changing underneath it).
+  useEffect(() => {
+    if (!orgOptions.length) return
+    const stillValid = orgOptions.some((o) => o.key === selectedOrgKey)
+    if (!stillValid) {
+      const first = orgOptions[0]
+      setSelectedInstallationId(first.installationId)
+      setSelectedNamespace({
+        providerNamespace: first.providerNamespace,
+        providerNamespaceId: first.providerNamespaceId,
+      })
+    }
+  }, [orgOptions, selectedOrgKey])
 
   const connectedInstallation = installations.find(
     (installation) => installation.$id === value.installationId,
@@ -150,22 +195,6 @@ export function ConnectRepositorySection({
     }
   }, [defaultRepositoryName, hasRepository])
 
-  // Initialize selected installation when installations load. Runs only
-  // once, so a later intentional clear (e.g. after deleting an installation)
-  // isn't silently re-defaulted back to the first installation.
-  const hasAutoSelectedInstallation = useRef(false)
-  useEffect(() => {
-    if (
-      hasInstallations &&
-      !selectedInstallationId &&
-      installations[0]?.$id &&
-      !hasAutoSelectedInstallation.current
-    ) {
-      hasAutoSelectedInstallation.current = true
-      setSelectedInstallationId(installations[0].$id)
-    }
-  }, [hasInstallations, installations, selectedInstallationId])
-
   const handleCreateRepository = async () => {
     if (
       !projectId ||
@@ -179,6 +208,7 @@ export function ConnectRepositorySection({
         installationId: selectedInstallationId,
         name: repositoryName.trim(),
         xprivate: repositoryPrivate,
+        providerNamespace: selectedNamespace.providerNamespaceId,
       })
       onValueChange({
         installationId: selectedInstallationId,
@@ -401,22 +431,19 @@ export function ConnectRepositorySection({
               <Label htmlFor="git-org" className="text-[13px]">
                 {t('Git organization')}
               </Label>
-              <Select
-                value={selectedInstallationId}
-                onValueChange={setSelectedInstallationId}
-              >
+              <Select value={selectedOrgKey} onValueChange={selectOrgOption}>
                 <SelectTrigger id="git-org" className="h-9 text-[13px]">
                   <SelectValue placeholder={t('Select organization')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {installations.map((inst) => (
-                    <SelectItem key={inst.$id} value={inst.$id}>
+                  {orgOptions.map((org) => (
+                    <SelectItem key={org.key} value={org.key}>
                       <span className="flex items-center gap-2">
                         <VcsIcon
-                          type={inst.provider}
+                          type={org.provider}
                           className="h-4 w-4 shrink-0"
                         />
-                        <span>{inst.organization}</span>
+                        <span>{org.label}</span>
                       </span>
                     </SelectItem>
                   ))}
