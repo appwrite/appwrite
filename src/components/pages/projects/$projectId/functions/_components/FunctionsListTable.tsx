@@ -34,6 +34,24 @@ function formatRuntimeLabel(runtime: string) {
   return runtime.split('-').join(' ')
 }
 
+export function FunctionCronBadge({ schedule }: { schedule: string }) {
+  const t = useT()
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+          <Clock className="h-3 w-3 shrink-0" />
+          {t('Cron')}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{t(formatCronExpression(schedule))}</p>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function FunctionListTriggers({
   schedule,
   eventCount,
@@ -49,19 +67,7 @@ function FunctionListTriggers({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex items-center gap-1.5">
-        {schedule ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                <Clock className="h-3 w-3 shrink-0" />
-                Cron
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t(formatCronExpression(schedule))}</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : null}
+        {schedule ? <FunctionCronBadge schedule={schedule} /> : null}
         {eventCount > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>

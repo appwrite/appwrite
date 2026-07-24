@@ -146,6 +146,7 @@ export const heFunctionsDictionary: Record<string, string> = {
     'צרו את הפונקציה הראשונה שלכם כדי לפרוס ולנהל פונקציות Serverless',
   Created: 'נוצר',
   'Created:': 'נוצר:',
+  Cron: 'Cron',
   'Cron expression': 'ביטוי Cron',
   'Cron expression must have 5 parts (minute hour day month weekday)':
     'ביטוי Cron חייב לכלול 5 חלקים (דקה שעה יום חודש יום-בשבוע)',

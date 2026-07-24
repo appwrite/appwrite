@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
-import { Play, FileCode } from 'lucide-react'
+import { Play, FileCode, Clock } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import {
@@ -80,6 +80,7 @@ import {
   getActiveDeploymentCreatedAt,
   functionHasInProgressDeployment,
 } from './_components/FunctionsListTable'
+import { formatCronExpression } from './CronScheduleEditor'
 import { DeploymentResourceStatusBadges, resourceHasVisibleStatus } from '../shared/DeploymentResourceStatusBadges'
 import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -949,6 +950,17 @@ export function View() {
                                       )}
                                     </span>
                                   </div>
+                                  {func.schedule?.trim() ? (
+                                    <div className="ms-auto flex min-w-0 shrink items-center gap-1">
+                                      <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                      <span
+                                        className="truncate text-[12px] font-medium text-muted-foreground"
+                                        title={func.schedule}
+                                      >
+                                        {t(formatCronExpression(func.schedule))}
+                                      </span>
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>

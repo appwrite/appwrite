@@ -100,8 +100,13 @@ export function variantFromPathname(pathname: string): FaviconVariant | null {
 }
 
 /**
- * Replace all favicon `<link>` elements with a fresh one. Browsers (especially
- * Chrome) cache favicons aggressively and often ignore in-place `href` updates.
+ * Update favicon `<link>` href/type in place.
+ *
+ * Important: do NOT remove React-managed head links (from route `head()` /
+ * `<HeadContent />`). Yanking those nodes out of the DOM leaves React fibers
+ * pointing at detached elements; the next navigation commit then crashes with
+ * `Cannot read properties of null (reading 'removeChild')` (often a blank
+ * screen right after sign-in). Cache-bust via query string instead of recreate.
  */
 export function applyFaviconHref(
   href: string,
@@ -117,7 +122,15 @@ export function applyFaviconHref(
   const existing = document.querySelectorAll(
     "link[rel='icon'], link[rel='shortcut icon']",
   )
-  existing.forEach((node) => node.parentNode?.removeChild(node))
+
+  if (existing.length > 0) {
+    existing.forEach((node) => {
+      if (!(node instanceof HTMLLinkElement)) return
+      node.type = type
+      node.href = resolvedHref
+    })
+    return
+  }
 
   const link = document.createElement('link')
   link.rel = 'icon'

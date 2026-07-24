@@ -27,7 +27,7 @@ import {
   SIDEBAR_EDGE_TOGGLE_OVERFLOW,
 } from '@/lib/layout/offcanvas-classes'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, LogIn, X } from 'lucide-react'
+import { ChevronLeft, HelpCircle, LogIn, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { useInitGiveawayRaffleContext } from './init-giveaway-raffle-context'
@@ -406,6 +406,7 @@ function UserCategory({
   selfUserId,
   reactionPulse,
   raffleWinnerId = null,
+  infoTooltip,
 }: {
   label: string
   users: LaunchEventOnlineUser[]
@@ -415,7 +416,9 @@ function UserCategory({
   selfUserId?: string
   reactionPulse?: number
   raffleWinnerId?: string | null
+  infoTooltip?: string
 }) {
+  const t = useT()
   const reduceMotion = useReducedMotion()
   const sortedUsers = useMemo(
     () => sortUsersWithRaffleWinner(users, raffleWinnerId),
@@ -440,9 +443,27 @@ function UserCategory({
                 isMobile && 'px-3',
               )}
             >
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-                {label}
-              </p>
+              <div className="flex min-w-0 items-center gap-1">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                  {t(label)}
+                </p>
+                {infoTooltip ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex shrink-0 items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={t(infoTooltip)}
+                      >
+                        <HelpCircle className="size-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={4} className="max-w-[220px] text-[12px]">
+                      {t(infoTooltip)}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
               <UserCategoryCount count={users.length} />
             </div>
           )}
@@ -679,6 +700,7 @@ function OnlineUsersNavContent({
             selfUserId={selfUserId}
             reactionPulse={reactionPulse}
             raffleWinnerId={raffleWinnerId}
+            infoTooltip="This feature is powered by Appwrite Realtime and Appwrite Presences."
           />
           <UserCategory
             label="Recently online"

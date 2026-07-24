@@ -731,6 +731,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Official plugins': 'תוספים רשמיים',
   'on GitHub': 'ב-GitHub',
   'On this page': 'בעמוד זה',
+  'Online now': 'אונליין עכשיו',
   'on X': 'ב-X',
   'On-set monitor during the first Init filming in Prague': 'מוניטור בסט במהלך צילומי ה-Init הראשונים בפראג',
   'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'לאחר יצירת חשבון ה-Appwrite, עברו לדוקומנטציה שלנו והתחילו לעבוד עם Appwrite Cloud.', // pragma: allowlist secret
@@ -863,6 +864,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Realtime': 'Realtime',
   'Rebrand announcement': 'הכרזת המיתוג מחדש',
   'Receive card payments and store paid orders.': 'קבלו תשלומי כרטיסי אשראי ושמרו הזמנות ששולמו.',
+  'Recently online': 'אונליין לאחרונה',
   'Recovery codes': 'קודי שחזור',
   'Redirect': 'הפניה',
   'Redo': 'ביצוע מחדש',
@@ -1143,6 +1145,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'The very first Appwrite Console': 'קונסולת Appwrite הראשונה', // pragma: allowlist secret
   'This credit is available only for users who are verified through the GitHub program as students. The plan is valid until you graduate from GitHub Education.':
     'הקרדיט זמין רק למשתמשים שאומתו כסטודנטים דרך תוכנית GitHub. התוכנית בתוקף עד לסיום הלימודים ב-GitHub Education.',
+  'This feature is powered by Appwrite Realtime and Appwrite Presences.':
+    'התכונה הזו מופעלת באמצעות Appwrite Realtime ו-Appwrite Presences.',
   'This form is protected by reCAPTCHA, and the Google': 'הטופס מוגן באמצעות reCAPTCHA, וחלים עליו',
   'This program is open to all Appwrite users who are verified members of the GitHub Student Developer Pack.': // pragma: allowlist secret
     'התוכנית פתוחה לכל משתמשי Appwrite שהם חברים מאומתים ב-GitHub Student Developer Pack.', // pragma: allowlist secret

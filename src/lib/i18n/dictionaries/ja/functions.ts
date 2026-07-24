@@ -64,6 +64,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Create execution': '実行を作成',
   'Create function': '関数を作成',
   'Created:': '作成:',
+  Cron: 'Cron',
   'Cron expression': 'Cron 式',
   'Daily at midnight': '毎日 0 時',
   'Daily at noon': '毎日 12 時',
