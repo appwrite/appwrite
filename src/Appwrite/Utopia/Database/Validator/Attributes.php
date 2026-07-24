@@ -22,6 +22,10 @@ class Attributes extends Validator
      */
     protected array $supportedTypes = [
         Database::VAR_STRING,
+        Database::VAR_VARCHAR,
+        Database::VAR_TEXT,
+        Database::VAR_MEDIUMTEXT,
+        Database::VAR_LONGTEXT,
         Database::VAR_INTEGER,
         Database::VAR_BIGINT,
         Database::VAR_FLOAT,
@@ -44,6 +48,46 @@ class Attributes extends Validator
     ];
 
     /**
+     * Format aliases accepted as `type` for createTable/createCollection inline columns.
+     * These map to string + format (matching dedicated createEmailColumn etc.).
+     *
+     * @var array<string, array{type: string, format: string, size: int}>
+     */
+    protected const FORMAT_ALIASES = [
+        APP_DATABASE_ATTRIBUTE_EMAIL => [
+            'type' => Database::VAR_STRING,
+            'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
+            'size' => 254,
+        ],
+        APP_DATABASE_ATTRIBUTE_URL => [
+            'type' => Database::VAR_STRING,
+            'format' => APP_DATABASE_ATTRIBUTE_URL,
+            'size' => 2000,
+        ],
+        APP_DATABASE_ATTRIBUTE_IP => [
+            'type' => Database::VAR_STRING,
+            'format' => APP_DATABASE_ATTRIBUTE_IP,
+            'size' => 39,
+        ],
+        APP_DATABASE_ATTRIBUTE_ENUM => [
+            'type' => Database::VAR_STRING,
+            'format' => APP_DATABASE_ATTRIBUTE_ENUM,
+            'size' => Database::LENGTH_KEY,
+        ],
+    ];
+
+    /**
+     * Default sizes for utopia string subtypes when omitted from inline column defs.
+     *
+     * @var array<string, int>
+     */
+    protected const STRING_SUBTYPE_DEFAULT_SIZES = [
+        Database::VAR_TEXT => 65535,
+        Database::VAR_MEDIUMTEXT => 16777215,
+        Database::VAR_LONGTEXT => 2147483647,
+    ];
+
+    /**
      * @param int $maxAttributes Maximum number of attributes allowed
      * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
      * @param bool $supportForAttributes Whether DB supports attributes or not
@@ -54,6 +98,54 @@ class Attributes extends Validator
         protected bool $supportForAttributes = true
     ) {
         $this->maxAttributes = $maxAttributes;
+    }
+
+    /**
+     * Normalize inline attribute/column definitions so docs-friendly aliases
+     * (email, url, ip, enum, text, …) match the storage model used by dedicated
+     * create*Column endpoints.
+     *
+     * @param array<int, mixed> $attributes
+     * @return array<int, mixed>
+     */
+    public static function normalize(array $attributes): array
+    {
+        foreach ($attributes as $index => $attribute) {
+            if (!\is_array($attribute)) {
+                continue;
+            }
+            $attributes[$index] = self::normalizeAttribute($attribute);
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param array<string, mixed> $attribute
+     * @return array<string, mixed>
+     */
+    public static function normalizeAttribute(array $attribute): array
+    {
+        $type = $attribute['type'] ?? null;
+        if (!\is_string($type) || $type === '') {
+            return $attribute;
+        }
+
+        if (isset(self::FORMAT_ALIASES[$type])) {
+            $alias = self::FORMAT_ALIASES[$type];
+            $attribute['type'] = $alias['type'];
+            $attribute['format'] = $attribute['format'] ?? $alias['format'];
+            if (!isset($attribute['size'])) {
+                $attribute['size'] = $alias['size'];
+            }
+            return $attribute;
+        }
+
+        if (isset(self::STRING_SUBTYPE_DEFAULT_SIZES[$type]) && !isset($attribute['size'])) {
+            $attribute['size'] = self::STRING_SUBTYPE_DEFAULT_SIZES[$type];
+        }
+
+        return $attribute;
     }
 
     /**
@@ -100,6 +192,8 @@ class Attributes extends Validator
                 return false;
             }
 
+            $attribute = self::normalizeAttribute($attribute);
+
             // Validate required fields
             if (!isset($attribute['key'])) {
                 $this->message = "Attribute at index $index is missing required field 'key'";
@@ -143,8 +237,8 @@ class Attributes extends Validator
                 return false;
             }
 
-            // Validate size for string types
-            if ($attribute['type'] === Database::VAR_STRING) {
+            // Validate size for string types (string/varchar require size; text subtypes get defaults via normalize)
+            if (\in_array($attribute['type'], Database::STRING_TYPES, true)) {
                 if (!isset($attribute['size']) || !is_int($attribute['size']) || $attribute['size'] < 1 || $attribute['size'] > APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH) {
                     $this->message = "Invalid or missing size for string attribute '" . $attribute['key'] . "'. Size must be between 1 and " . APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH;
                     return false;
@@ -218,6 +312,10 @@ class Attributes extends Validator
             if (isset($attribute['default'])) {
                 switch ($attribute['type']) {
                     case Database::VAR_STRING:
+                    case Database::VAR_VARCHAR:
+                    case Database::VAR_TEXT:
+                    case Database::VAR_MEDIUMTEXT:
+                    case Database::VAR_LONGTEXT:
                         if (!is_string($attribute['default'])) {
                             $this->message = "Default value for string attribute '" . $attribute['key'] . "' must be a string";
                             return false;
