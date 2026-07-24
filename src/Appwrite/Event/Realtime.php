@@ -2,7 +2,10 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Sink;
 use Appwrite\Messaging\Adapter;
+use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\Messaging\Adapter\Realtime as RealtimeAdapter;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -14,13 +17,15 @@ class Realtime extends Event
 
     protected array $subscribers = [];
 
-    private Adapter $realtime;
+    private MessagingAdapter $realtime;
 
     protected bool $critical = false;
 
-    public function __construct()
-    {
-        $this->realtime = new Adapter\Realtime();
+    public function __construct(
+        ?MessagingAdapter $realtime = null,
+        private readonly ?Fanout $delivery = null,
+    ) {
+        $this->realtime = $realtime ?? new Adapter\Realtime();
     }
 
     /**
@@ -120,7 +125,7 @@ class Realtime extends Event
 
         foreach ($projectIds as $projectId) {
             try {
-                $this->realtime->send(
+                $send = fn () => $this->realtime->send(
                     projectId: $projectId,
                     payload: $this->getRealtimePayload(),
                     events: $allEvents,
@@ -128,11 +133,29 @@ class Realtime extends Event
                     roles: $target['roles'],
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $this->getParam('userId')
-                    ]
+                        'userId' => $this->getParam('userId'),
+                        'envelopeId' => $this->envelopeId,
+                    ],
+                );
+
+                if ($this->delivery === null) {
+                    $send();
+                    continue;
+                }
+
+                $this->delivery->deliver(
+                    projectId: $this->project?->getId() ?? $projectId,
+                    envelopeId: $this->envelopeId,
+                    sink: Sink::Realtime,
+                    targetId: $projectId,
+                    delivery: $send,
                 );
             } catch (\Exception $e) {
                 Console::error('Realtime send failed: '.$e->getMessage());
+
+                if ($this->delivery !== null && $this->envelopeId !== '') {
+                    throw $e;
+                }
             }
         }
 

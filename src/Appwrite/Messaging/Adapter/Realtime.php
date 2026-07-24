@@ -433,21 +433,46 @@ class Realtime extends MessagingAdapter
             return;
         }
 
+        $this->getPubSubPool()->publish('realtime', \json_encode($this->getMessage(
+            projectId: $projectId,
+            payload: $payload,
+            events: $events,
+            channels: $channels,
+            roles: $roles,
+            options: $options,
+        )));
+    }
+
+    protected function getMessage(
+        string $projectId,
+        array $payload,
+        array $events,
+        array $channels,
+        array $roles,
+        array $options = [],
+    ): array {
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $this->getPubSubPool()->publish('realtime', json_encode([
+        $data = [
+            'events' => $events,
+            'channels' => $channels,
+            'timestamp' => DateTime::formatTz(DateTime::now()),
+            'payload' => $payload,
+        ];
+
+        $envelopeId = $options['envelopeId'] ?? '';
+        if (\is_string($envelopeId) && $envelopeId !== '') {
+            $data['envelopeId'] = $envelopeId;
+        }
+
+        return [
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
-            'data' => [
-                'events' => $events,
-                'channels' => $channels,
-                'timestamp' => DateTime::formatTz(DateTime::now()),
-                'payload' => $payload,
-            ],
-        ]));
+            'data' => $data,
+        ];
     }
 
     /**

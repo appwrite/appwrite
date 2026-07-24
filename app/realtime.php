@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Receipt;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
@@ -316,7 +318,9 @@ if (!function_exists('getQueueForRealtime')) {
         $ctx = Coroutine::getContext();
 
         if (!isset($ctx['queueForRealtime'])) {
-            $ctx['queueForRealtime'] = new QueueRealtime();
+            $ctx['queueForRealtime'] = new QueueRealtime(
+                delivery: new Fanout(new Receipt(getConsoleDB()))
+            );
         }
 
         return $ctx['queueForRealtime'];

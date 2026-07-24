@@ -453,6 +453,7 @@ class Create extends Base
                     userId: $ruleCreate->getUserId(),
                     payload: $ruleCreate->getPayload(),
                     platform: $ruleCreate->getPlatform(),
+                    envelopeId: $ruleCreate->getEnvelopeId(),
                 ));
 
                 /** Trigger Realtime Events */

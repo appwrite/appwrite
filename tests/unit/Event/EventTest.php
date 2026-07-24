@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Event;
 
+use Appwrite\Event\Envelope;
 use Appwrite\Event\Event;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
@@ -71,6 +72,43 @@ final class EventTest extends TestCase
         $this->assertEquals(null, $this->object->getParam('eventKey1'));
         $this->assertEquals(null, $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
+    }
+
+    public function testEnvelopeIdSurvivesCopyResetAndQueuePreparation(): void
+    {
+        $envelopeId = Envelope::forOutcome('operation-1', 'completed');
+
+        $this->object
+            ->setEnvelopeId($envelopeId)
+            ->setEvent('users.[userId].create')
+            ->setParam('userId', 'user-1')
+            ->setPayload(['$id' => 'user-1']);
+
+        $copy = new Event($this->publisher);
+        $copy->from($this->object);
+
+        $this->assertSame($envelopeId, $copy->getEnvelopeId());
+
+        $copy->reset();
+
+        $this->assertSame($envelopeId, $copy->getEnvelopeId());
+
+        $this->object->trigger();
+        $events = $this->publisher->getEvents($this->queue);
+
+        $this->assertSame($envelopeId, $events[0]['envelopeId']);
+    }
+
+    public function testOutcomeEnvelopeIsDeterministicAndOutcomeSpecific(): void
+    {
+        $this->assertSame(
+            Envelope::forOutcome('operation-1', 'completed'),
+            Envelope::forOutcome('operation-1', 'completed')
+        );
+        $this->assertNotSame(
+            Envelope::forOutcome('operation-1', 'completed'),
+            Envelope::forOutcome('operation-1', 'failed')
+        );
     }
 
     public function testGenerateEvents(): void

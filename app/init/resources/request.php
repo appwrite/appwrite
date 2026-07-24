@@ -9,6 +9,8 @@ use Appwrite\Deployment\Backend;
 use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
 use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Context\Audit as AuditContext;
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Receipt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -130,7 +132,12 @@ return function (Container $context): void {
     // Per-request queue resources (stateful, accumulate event data during request)
     $context->set('queueForEvents', fn (Publisher $publisher) => new Event($publisher), ['publisher']);
     $context->set('queueForWebhooks', fn (Publisher $publisher) => new Webhook($publisher), ['publisher']);
-    $context->set('queueForRealtime', fn () => new Realtime(), []);
+    $context->set(
+        'deliveryForEvents',
+        fn (Database $dbForPlatform) => new Fanout(new Receipt($dbForPlatform)),
+        ['dbForPlatform'],
+    );
+    $context->set('queueForRealtime', fn (Fanout $deliveryForEvents) => new Realtime(delivery: $deliveryForEvents), ['deliveryForEvents']);
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
@@ -645,7 +652,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, Fanout $deliveryForEvents, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -688,6 +695,7 @@ return function (Container $context): void {
                 userId: $queueForEvents->getUserId(),
                 payload: $queueForEvents->getPayload(),
                 platform: $queueForEvents->getPlatform(),
+                envelopeId: $queueForEvents->getEnvelopeId(),
             ));
 
             /** Trigger webhooks events only if a project has them enabled */
@@ -770,7 +778,7 @@ return function (Container $context): void {
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
         $queueForWebhooks = new Webhook($publisherWebhooks);
-        $queueForRealtime = new Realtime();
+        $queueForRealtime = new Realtime(delivery: $deliveryForEvents);
 
         $database
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
@@ -792,7 +800,7 @@ return function (Container $context): void {
             ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
 
         return $database;
-    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
+    }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'deliveryForEvents', 'usage', 'request']);
 
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 

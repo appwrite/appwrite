@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Receipt;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Workers\Webhooks;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
+use Tests\Unit\Platform\Workers\Fixture\TestingWebhooks;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -17,6 +21,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
 
 require_once __DIR__ . '/../../../../app/init.php';
@@ -235,6 +241,95 @@ final class WebhooksTest extends TestCase
         $this->assertSame('webhook:webhook-1:paused:2026-01-02T00:00:00.000+00:00', $events[1]['deduplicationKey']);
     }
 
+    public function testEnvelopeReceiptsResumeOnlyMissingWebhook(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $publisher = new MockPublisher();
+        $worker = new TestingWebhooks();
+        $worker->failures['webhook-2'] = 'target unavailable';
+        $message = new Message([
+            'pid' => 'message-1',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'project' => ['$id' => 'project-1'],
+                'events' => ['databases.database-1.update'],
+                'payload' => ['$id' => 'database-1'],
+                'envelopeId' => 'envelope-1',
+            ],
+        ]);
+        $project = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-1',
+            'webhooks' => [
+                new Document([
+                    '$id' => 'webhook-1',
+                    'enabled' => true,
+                    'events' => ['databases.database-1.update'],
+                ]),
+                new Document([
+                    '$id' => 'webhook-2',
+                    'enabled' => true,
+                    'events' => ['databases.database-1.update'],
+                ]),
+            ],
+        ]);
+        $delivery = new Fanout(new Receipt($database));
+        $notifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $usage = new UsagePublisher($publisher, new Queue('v1-stats-usage'));
+
+        try {
+            $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+            $this->fail('Expected the missing webhook delivery to fail.');
+        } catch (\Exception $error) {
+            $this->assertStringContainsString('target unavailable', $error->getMessage());
+        }
+
+        unset($worker->failures['webhook-2']);
+        $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+        $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
+
+        $this->assertSame(1, $worker->deliveries['webhook-1']);
+        $this->assertSame(2, $worker->deliveries['webhook-2']);
+        $this->assertSame(['envelope-1', 'envelope-1', 'envelope-1'], $worker->envelopes);
+    }
+
+    public function testWebhookHeadersExposeStableEnvelopeId(): void
+    {
+        $headers = new TestingWebhooks()->headers(
+            events: ['databases.database-1.update'],
+            payload: '{}',
+            webhook: new Document([
+                '$id' => 'webhook-1',
+                'name' => 'Database lifecycle',
+            ]),
+            user: new Document(['$id' => 'user-1']),
+            project: new Document(['$id' => 'project-1']),
+            envelopeId: 'envelope-1',
+        );
+
+        $this->assertContains('X-' . APP_NAME . '-Event-Id: envelope-1', $headers);
+    }
+
+    public function testLegacyWebhookHeadersOmitEnvelopeId(): void
+    {
+        $headers = new TestingWebhooks()->headers(
+            events: ['databases.database-1.update'],
+            payload: '{}',
+            webhook: new Document([
+                '$id' => 'webhook-1',
+                'name' => 'Database lifecycle',
+            ]),
+            user: new Document(['$id' => 'user-1']),
+            project: new Document(['$id' => 'project-1']),
+            envelopeId: '',
+        );
+
+        foreach ($headers as $header) {
+            $this->assertStringNotContainsString('-Event-Id:', $header);
+        }
+    }
+
     #[DataProvider('ownerRoleProvider')]
     public function testOwnerRoleDetectionAcceptsArrayAndCommaStringRoles(mixed $roles, bool $expected): void
     {
@@ -298,6 +393,20 @@ final class WebhooksTest extends TestCase
         $database->createCollection('users', [], [], $permissions, false);
         $database->createAttribute('users', 'email', Database::VAR_STRING, 320, false);
         $database->createAttribute('users', 'name', Database::VAR_STRING, 256, false);
+        $collection = (require __DIR__ . '/../../../../app/config/collections.php')['console']['eventReceipts'];
+        $database->createCollection(
+            'eventReceipts',
+            \array_map(
+                static fn (array $attribute): Document => new Document($attribute),
+                $collection['attributes']
+            ),
+            \array_map(
+                static fn (array $index): Document => new Document($index),
+                $collection['indexes']
+            ),
+            $permissions,
+            false,
+        );
 
         return $database;
     }

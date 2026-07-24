@@ -4,6 +4,9 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Sink;
+use Appwrite\Event\Envelope;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -54,6 +57,7 @@ class Functions extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('getIsResourceBlocked')
+            ->inject('deliveryForEvents')
             ->callback($this->action(...));
     }
 
@@ -68,7 +72,8 @@ class Functions extends Action
         Bus $bus,
         Log $log,
         Executor $executor,
-        callable $getIsResourceBlocked
+        callable $getIsResourceBlocked,
+        Fanout $deliveryForEvents,
     ): void {
         $payload = $message->getPayload();
 
@@ -81,6 +86,7 @@ class Functions extends Action
 
         $functionMessage = FunctionMessage::fromArray($payload);
         $type = $functionMessage->type;
+        $envelopeId = $functionMessage->envelopeId;
 
         Span::add('project.id', $project->getId());
         Span::add('payload.type', $type);
@@ -152,45 +158,64 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
-                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
-                        continue;
-                    }
+                    $functionId = $function->getId();
+                    $executionId = $envelopeId === ''
+                        ? null
+                        : $deliveryForEvents->getIdentity(
+                            $project->getId(),
+                            $envelopeId,
+                            Sink::Function,
+                            $functionId,
+                        );
 
-                    /**
-                     * get variables subqueries cached
-                     */
-                    $function = $dbForProject->getDocument('functions', $function->getId());
+                    $deliveryForEvents->deliver(
+                        projectId: $project->getId(),
+                        envelopeId: $envelopeId,
+                        sink: Sink::Function,
+                        targetId: $functionId,
+                        delivery: function () use ($getIsResourceBlocked, $project, $functionId, $dbForProject, $log, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $queueForEvents, $bus, $executor, $platform, $user, $events, $eventData, $executionId, $envelopeId): void {
+                            if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $functionId)) {
+                                Console::log('Function ' . $functionId . ' is blocked, skipping execution.');
+                                return;
+                            }
 
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+                            /**
+                             * get variables subqueries cached
+                             */
+                            $function = $dbForProject->getDocument('functions', $functionId);
 
-                    $this->execute(
-                        log: $log,
-                        dbForProject: $dbForProject,
-                        queueForWebhooks: $queueForWebhooks,
-                        publisherForFunctions: $publisherForFunctions,
-                        queueForRealtime: $queueForRealtime,
-                        queueForEvents: $queueForEvents,
-                        bus: $bus,
-                        project: $project,
-                        function: $function,
-                        executor:  $executor,
-                        trigger: 'event',
-                        path: '/',
-                        method: 'POST',
-                        headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
-                            'content-type' => 'application/json'
-                        ],
-                        platform: $platform,
-                        data: null,
-                        user: $user,
-                        jwt: null,
-                        event: $events[0],
-                        eventData: \json_encode($eventData) ?: null,
-                        executionId: null,
+                            Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                            $this->execute(
+                                log: $log,
+                                dbForProject: $dbForProject,
+                                queueForWebhooks: $queueForWebhooks,
+                                publisherForFunctions: $publisherForFunctions,
+                                queueForRealtime: $queueForRealtime,
+                                queueForEvents: $queueForEvents,
+                                bus: $bus,
+                                project: $project,
+                                function: $function,
+                                executor: $executor,
+                                trigger: 'event',
+                                path: '/',
+                                method: 'POST',
+                                headers: [
+                                    'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                                    'content-type' => 'application/json'
+                                ],
+                                platform: $platform,
+                                data: null,
+                                user: $user,
+                                jwt: null,
+                                event: $events[0],
+                                eventData: \json_encode($eventData) ?: null,
+                                executionId: $executionId,
+                                envelopeId: $envelopeId,
+                            );
+                            Console::success('Triggered function: ' . $events[0]);
+                        },
                     );
-                    Console::success('Triggered function: ' . $events[0]);
                 }
             }
             return;
@@ -229,7 +254,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    envelopeId: $envelopeId,
                 );
                 break;
             case 'schedule':
@@ -255,7 +281,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    envelopeId: $envelopeId,
                 );
                 break;
         }
@@ -283,13 +310,16 @@ class Functions extends Action
         Document $user,
         ?string $jwt = null,
         ?string $event = null,
+        ?string $executionId = null,
+        ?string $envelopeId = null,
     ): void {
-        $executionId = ID::unique();
+        $executionId ??= ID::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId();
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers = \array_merge($headers, $this->getEnvelopeContext($envelopeId)['headers']);
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
@@ -353,9 +383,10 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
+     * @param string|null $envelopeId
      * @return void
      */
-    private function execute(
+    protected function execute(
         Log $log,
         Database $dbForProject,
         Webhook $queueForWebhooks,
@@ -377,6 +408,7 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
+        ?string $envelopeId = null,
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
@@ -394,19 +426,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionId, $envelopeId);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionId, $envelopeId);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event, $executionId, $envelopeId);
             return;
         }
 
@@ -439,6 +471,8 @@ class Functions extends Action
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $envelope = $this->getEnvelopeContext($envelopeId);
+        $headers = \array_merge($headers, $envelope['headers']);
 
         /** Create or update execution to processing status */
         if (empty($executionId)) {
@@ -492,7 +526,8 @@ class Functions extends Action
                 'APPWRITE_FUNCTION_EVENT_DATA' => $body,
                 'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'],
                 'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'],
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt']
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'],
+                ...$envelope['variables'],
             ]);
         }
 
@@ -649,6 +684,16 @@ class Functions extends Action
             ->setParam('executionId', $execution->getId())
             ->setPayload($realtimeExecution);
 
+        $childEnvelopeId = $this->getChildEnvelope(
+            envelopeId: $envelopeId ?? '',
+            functionId: $function->getId(),
+            executionId: $execution->getId(),
+            status: $execution->getAttribute('status', ''),
+        );
+        if ($childEnvelopeId !== '') {
+            $queueForEvents->setEnvelopeId($childEnvelopeId);
+        }
+
         /** Trigger Webhook */
         $queueForWebhooks
             ->from($queueForEvents)
@@ -663,6 +708,7 @@ class Functions extends Action
             userId: $queueForEvents->getUserId(),
             payload: $queueForEvents->getPayload(),
             platform: $queueForEvents->getPlatform(),
+            envelopeId: $queueForEvents->getEnvelopeId(),
         ));
 
         /** Trigger Realtime Events */
@@ -678,5 +724,47 @@ class Functions extends Action
                 $errorCode
             );
         }
+    }
+
+    /**
+     * @return array{
+     *     headers: array<string, string>,
+     *     variables: array<string, string>
+     * }
+     */
+    protected function getEnvelopeContext(?string $envelopeId): array
+    {
+        if ($envelopeId === null || $envelopeId === '') {
+            return [
+                'headers' => [],
+                'variables' => [],
+            ];
+        }
+
+        return [
+            'headers' => ['x-appwrite-event-id' => $envelopeId],
+            'variables' => ['APPWRITE_FUNCTION_EVENT_ID' => $envelopeId],
+        ];
+    }
+
+    protected function getChildEnvelope(
+        string $envelopeId,
+        string $functionId,
+        string $executionId,
+        string $status,
+    ): string {
+        if ($envelopeId === '') {
+            return '';
+        }
+
+        return Envelope::forOutcome(
+            operationId: $envelopeId,
+            outcome: \sprintf(
+                'function:%s:execution:%s:%s',
+                $functionId,
+                $executionId,
+                $status,
+            ),
+        );
     }
 }

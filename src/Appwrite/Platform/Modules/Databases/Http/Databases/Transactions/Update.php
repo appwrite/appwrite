@@ -479,6 +479,7 @@ class Update extends Action
                                     userId: $queueForEvents->getUserId(),
                                     payload: $queueForEvents->getPayload(),
                                     platform: $queueForEvents->getPlatform(),
+                                    envelopeId: $queueForEvents->getEnvelopeId(),
                                 ));
                                 break;
                             }

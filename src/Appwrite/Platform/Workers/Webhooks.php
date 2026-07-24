@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Delivery\Failure as DeliveryFailure;
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Sink;
 use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -41,6 +44,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
+            ->inject('deliveryForEvents')
             ->callback($this->action(...));
     }
 
@@ -55,7 +59,7 @@ class Webhooks extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan, Fanout $deliveryForEvents): void
     {
         $payload = $message->getPayload();
 
@@ -66,15 +70,40 @@ class Webhooks extends Action
         $events = $payload['events'];
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
+        $envelopeId = \is_string($payload['envelopeId'] ?? null) ? $payload['envelopeId'] : '';
 
         $log->addTag('projectId', $project->getId());
 
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
-                if ($error !== null) {
-                    $errors[] = $error;
+                try {
+                    $deliveryForEvents->deliver(
+                        projectId: $project->getId(),
+                        envelopeId: $envelopeId,
+                        sink: Sink::Webhook,
+                        targetId: $webhook->getId(),
+                        delivery: function () use ($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan, $envelopeId): void {
+                            $error = $this->execute(
+                                $events,
+                                $webhookPayload,
+                                $webhook,
+                                $user,
+                                $project,
+                                $dbForPlatform,
+                                $publisherForNotifications,
+                                $publisherForUsage,
+                                $plan,
+                                $envelopeId,
+                            );
+
+                            if ($error !== null) {
+                                throw new DeliveryFailure($error);
+                            }
+                        },
+                    );
+                } catch (DeliveryFailure $error) {
+                    $errors[] = $error->getMessage();
                 }
             }
         }
@@ -96,7 +125,7 @@ class Webhooks extends Action
      * @param array $plan
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): ?string
+    protected function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan, string $envelopeId): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
@@ -132,16 +161,7 @@ class Webhooks extends Action
         \curl_setopt(
             $ch,
             CURLOPT_HTTPHEADER,
-            [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
-            ]
+            $this->buildHeaders($events, $payload, $webhook, $user, $project, $envelopeId, $signature)
         );
         \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 
@@ -217,6 +237,36 @@ class Webhooks extends Action
         ));
 
         return $error;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function buildHeaders(
+        array $events,
+        string $payload,
+        Document $webhook,
+        Document $user,
+        Document $project,
+        string $envelopeId,
+        string $signature = '',
+    ): array {
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($payload),
+            'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+            'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+            'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+            'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+            'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+            'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+        ];
+
+        if ($envelopeId !== '') {
+            $headers[] = 'X-' . APP_NAME . '-Event-Id: ' . $envelopeId;
+        }
+
+        return $headers;
     }
 
     /**

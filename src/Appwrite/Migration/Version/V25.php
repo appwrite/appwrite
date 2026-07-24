@@ -83,6 +83,12 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'eventReceipts':
+                    if ($collectionType === 'console') {
+                        $this->createCollection($id);
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {

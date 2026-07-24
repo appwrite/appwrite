@@ -630,6 +630,7 @@ class Jobs extends Action
             userId: $update->getUserId(),
             payload: $update->getPayload(),
             platform: $update->getPlatform(),
+            envelopeId: $update->getEnvelopeId(),
         ));
     }
 

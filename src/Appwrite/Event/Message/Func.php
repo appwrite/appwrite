@@ -24,6 +24,7 @@ final class Func extends Base
         public readonly array $headers = [],
         public readonly string $method = '',
         public readonly array $platform = [],
+        public readonly string $envelopeId = '',
     ) {
     }
 
@@ -35,6 +36,7 @@ final class Func extends Base
         ?string $userId = null,
         array $payload = [],
         array $platform = [],
+        string $envelopeId = '',
     ): static {
         return new self(
             project: $project,
@@ -43,6 +45,7 @@ final class Func extends Base
             payload: $payload,
             events: $event !== '' ? Event::generateEvents($event, $params) : [],
             platform: $platform,
+            envelopeId: $envelopeId,
         );
     }
 
@@ -66,6 +69,7 @@ final class Func extends Base
             'headers' => $this->headers,
             'method' => $this->method,
             'platform' => $platform,
+            'envelopeId' => $this->envelopeId,
         ];
     }
 
@@ -87,6 +91,7 @@ final class Func extends Base
             headers: $data['headers'] ?? [],
             method: $data['method'] ?? '',
             platform: $data['platform'] ?? [],
+            envelopeId: $data['envelopeId'] ?? '',
         );
     }
 }

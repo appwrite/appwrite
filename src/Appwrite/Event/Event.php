@@ -61,6 +61,7 @@ class Event
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
+    protected string $envelopeId = '';
     protected array $params = [];
     protected array $sensitive = [];
     protected array $payload = [];
@@ -169,6 +170,18 @@ class Event
     public function getEvent(): string
     {
         return $this->event;
+    }
+
+    public function setEnvelopeId(string $envelopeId): static
+    {
+        $this->envelopeId = $envelopeId;
+
+        return $this;
+    }
+
+    public function getEnvelopeId(): string
+    {
+        return $this->envelopeId;
     }
 
     /**
@@ -407,7 +420,11 @@ class Event
         $queue = new Queue($this->getQueue(), 'utopia-queue', $this->getTTL());
 
         // Merge the base payload with any trimmed values
-        $payload = array_merge($this->preparePayload(), $this->trimPayload());
+        $payload = array_merge(
+            $this->preparePayload(),
+            $this->trimPayload(),
+            ['envelopeId' => $this->envelopeId],
+        );
 
         try {
             return $this->publisher->enqueue($queue, $payload);
@@ -664,6 +681,7 @@ class Event
         $this->payload = $event->getPayload();
         $this->sensitive = $event->sensitive;
         $this->event = $event->getEvent();
+        $this->envelopeId = $event->getEnvelopeId();
         $this->params = $event->getParams();
         $this->context = $event->context;
         return $this;

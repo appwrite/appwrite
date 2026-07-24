@@ -647,6 +647,7 @@ class Builds extends Action
                 userId: $deploymentUpdate->getUserId(),
                 payload: $deploymentUpdate->getPayload(),
                 platform: $deploymentUpdate->getPlatform(),
+                envelopeId: $deploymentUpdate->getEnvelopeId(),
             ));
 
             /** Trigger Realtime Event */

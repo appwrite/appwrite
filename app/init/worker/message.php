@@ -2,6 +2,8 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Event\Delivery\Fanout;
+use Appwrite\Event\Delivery\Receipt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -52,6 +54,12 @@ return function (Container $container): void {
     ), ['pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
+
+    $container->set(
+        'deliveryForEvents',
+        fn (Database $dbForPlatform) => new Fanout(new Receipt($dbForPlatform)),
+        ['dbForPlatform'],
+    );
 
     $container->set('project', function ($message, Database $dbForPlatform) {
         $payload = $message->getPayload() ?? [];
@@ -160,9 +168,9 @@ return function (Container $container): void {
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
 
-    $container->set('queueForRealtime', function () {
-        return new Realtime();
-    }, []);
+    $container->set('queueForRealtime', function (Fanout $deliveryForEvents) {
+        return new Realtime(delivery: $deliveryForEvents);
+    }, ['deliveryForEvents']);
 
     $container->set('deviceForSites', function (Document $project, Telemetry $telemetry) {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));

@@ -777,6 +777,16 @@ class Deletes extends Action
             Console::error('Failed to delete schedules: ' . $th->getMessage());
         }
 
+        // Delete Event Receipts
+        try {
+            $this->deleteByGroup('eventReceipts', [
+                Query::equal('projectId', [$projectId]),
+                Query::orderAsc(),
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete event receipts: ' . $th->getMessage());
+        }
+
         // Delete Notifications
         try {
             $this->deleteByGroup('notifications', [

@@ -77,6 +77,13 @@ final class DeletesTest extends TestCase
             $this->assertSame('stop', $exception->getMessage());
         }
 
+        $this->assertArrayHasKey('eventReceipts', $worker->groups);
+        $receiptQueries = $worker->groups['eventReceipts'];
+        $this->assertSame(Query::TYPE_EQUAL, $receiptQueries[0]->getMethod());
+        $this->assertSame('projectId', $receiptQueries[0]->getAttribute());
+        $this->assertSame(['project-1'], $receiptQueries[0]->getValues());
+        $this->assertSame(Query::TYPE_ORDER_ASC, $receiptQueries[1]->getMethod());
+
         $this->assertArrayHasKey('notifications', $worker->groups);
 
         $queries = $worker->groups['notifications'];

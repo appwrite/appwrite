@@ -229,4 +229,57 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('providerPaths', $attributes);
         }
     }
+
+    public function testV25CreatesEventReceiptsForConsoleProject(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25EventReceipts')
+            ->setNamespace('migration_event_receipts_' . \uniqid());
+        $database->create();
+
+        $migration = new class () extends V25 {
+            #[\Override]
+            public function forEachDocument(callable $callback): void
+            {
+            }
+        };
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $collection = $database->getCollection('eventReceipts');
+        $this->assertFalse($collection->isEmpty());
+
+        $attributes = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        $this->assertSame(
+            ['projectId', 'envelopeId', 'sink', 'targetId', 'completedAt'],
+            $attributes,
+        );
+
+        $indexes = [];
+        foreach ($collection->getAttribute('indexes', []) as $index) {
+            $indexes[] = $index instanceof Document ? $index->getAttribute('$id') : ($index['$id'] ?? '');
+        }
+        $this->assertSame(['_key_project_id'], $indexes);
+    }
 }
