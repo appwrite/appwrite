@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_TELEMETRY',
+                'description' => 'Controls the one-time anonymous install/upgrade ping the self-hosted setup sends to Appwrite. By default, set to \'enabled\'. To opt out, set to \'disabled\' (the cross-vendor \'DO_NOT_TRACK\' standard is honored as well). The ping is anonymous and never includes the administrator\'s name or email.',
+                'introduction' => '1.9.6',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOCKING_ENABLED',
                 'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
                 'introduction' => '1.9.3',

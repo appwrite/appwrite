@@ -15,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -697,11 +698,11 @@ class Install extends Action
                 // Run tracking in a coroutine when inside a Swoole
                 // request so it doesn't block the worker.
                 if (Coroutine::getCid() !== -1) {
-                    go(function () use ($input, $isUpgrade, $version, $account) {
-                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                    go(function () use ($input, $isUpgrade, $version) {
+                        $this->trackSelfHostedInstall($input, $isUpgrade, $version);
                     });
                 } else {
-                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+                    $this->trackSelfHostedInstall($input, $isUpgrade, $version);
                 }
 
                 if ($isCLI) {
@@ -851,54 +852,17 @@ class Install extends Action
         );
     }
 
-    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
+    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version): void
     {
         if ($this->isLocalInstall()) {
             return;
         }
 
-        $appEnv = $input['_APP_ENV'] ?? 'development';
-        $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+        $payload = $this->buildSelfHostedInstallPayload($input, $isUpgrade, $version);
 
-        /* local or test instance */
-        if ($appEnv !== 'production') {
+        if ($payload === null) {
             return;
         }
-
-        /* prod but local or test instance */
-        if ($domain === 'localhost'
-            || str_starts_with($domain, '127.')
-            || str_starts_with($domain, '0.0.0.0')
-        ) {
-            return;
-        }
-
-        $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
-        $name = $account['name'] ?? 'Admin';
-        $email = $account['email'] ?? 'admin@selfhosted.local';
-
-        $hostIp = @gethostbyname($domain);
-
-        $payload = [
-            'action' => $type,
-            'account' => 'self-hosted',
-            'url' => 'https://' . $domain,
-            'category' => 'self_hosted',
-            'label' => 'self_hosted_' . $type,
-            'version' => $version,
-            'data' => json_encode([
-                'name' => $name,
-                'email' => $email,
-                'domain' => $domain,
-                'database' => $database,
-                'ip' => ($hostIp !== $domain) ? $hostIp : null,
-                'os' => php_uname('s') . ' ' . php_uname('r'),
-                'arch' => php_uname('m'),
-                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
-                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
-            ]),
-        ];
 
         try {
             $client = new Client();
@@ -910,6 +874,79 @@ class Install extends Action
         } catch (\Throwable) {
             // tracking shouldn't block installation
         }
+    }
+
+    /**
+     * Build the anonymous self-hosted install/upgrade analytics payload.
+     *
+     * Returns null when tracking must not happen: the operator has opted out,
+     * or the instance is a local/non-production one. The payload is intentionally
+     * anonymous — it never includes the administrator's name or email (see #12863).
+     *
+     * @param array<string, mixed> $input Resolved environment variables
+     * @return array<string, mixed>|null The payload to send, or null to skip tracking
+     */
+    public function buildSelfHostedInstallPayload(array $input, bool $isUpgrade, string $version): ?array
+    {
+        /* operator opted out of telemetry */
+        if ($this->isTelemetryDisabled()) {
+            return null;
+        }
+
+        $appEnv = $input['_APP_ENV'] ?? 'development';
+        $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+
+        /* local or test instance */
+        if ($appEnv !== 'production') {
+            return null;
+        }
+
+        /* prod but local or test instance */
+        if ($domain === 'localhost'
+            || str_starts_with($domain, '127.')
+            || str_starts_with($domain, '0.0.0.0')
+        ) {
+            return null;
+        }
+
+        $type = $isUpgrade ? 'upgrade' : 'install';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
+
+        $hostIp = @gethostbyname($domain);
+
+        return [
+            'action' => $type,
+            'account' => 'self-hosted',
+            'url' => 'https://' . $domain,
+            'category' => 'self_hosted',
+            'label' => 'self_hosted_' . $type,
+            'version' => $version,
+            'data' => json_encode([
+                'domain' => $domain,
+                'database' => $database,
+                'ip' => ($hostIp !== $domain) ? $hostIp : null,
+                'os' => php_uname('s') . ' ' . php_uname('r'),
+                'arch' => php_uname('m'),
+                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
+                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
+            ]),
+        ];
+    }
+
+    /**
+     * Whether the operator has opted out of anonymous install/upgrade telemetry.
+     *
+     * Honors the cross-vendor `DO_NOT_TRACK` standard (https://consoledonottrack.com)
+     * as well as Appwrite's own `_APP_TELEMETRY=disabled` switch.
+     */
+    public function isTelemetryDisabled(): bool
+    {
+        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
+        if ($doNotTrack === '1' || $doNotTrack === 'true') {
+            return true;
+        }
+
+        return \strtolower((string) System::getEnv('_APP_TELEMETRY', '')) === 'disabled';
     }
 
     /**
