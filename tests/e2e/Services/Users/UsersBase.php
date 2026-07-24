@@ -482,6 +482,22 @@ trait UsersBase
         self::$cachedUser[$projectId] = ['userId' => $body['$id']];
     }
 
+    public function testCreateUserAllowsNullName(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => ID::unique() . '@example.com',
+            'password' => 'password',
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['name']);
+    }
+
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
      */
@@ -590,6 +606,24 @@ trait UsersBase
         $this->assertEquals(400, $token['headers']['status-code']);
         $this->assertArrayNotHasKey('userId', $token['body']);
         $this->assertArrayNotHasKey('secret', $token['body']);
+    }
+
+    public function testCreateTokenAllowsNullOptionalValues(): void
+    {
+        $data = $this->setupUser();
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'length' => null,
+            'expire' => null,
+        ]);
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertEquals($data['userId'], $token['body']['userId']);
+        $this->assertEquals(6, strlen($token['body']['secret']));
+        $this->assertNotEmpty($token['body']['expire']);
     }
 
     public function testCreateSession(): void
@@ -1878,6 +1912,26 @@ trait UsersBase
         self::$cachedUserTarget[$projectId] = $response['body'];
     }
 
+    public function testCreateUserTargetAllowsNullOptionalValues(): void
+    {
+        $data = $this->setupUser();
+
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'identifier' => ID::unique() . '@example.com',
+            'providerId' => null,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNull($response['body']['providerId']);
+        $this->assertSame('', $response['body']['name']);
+    }
+
     public function testUpdateUserTarget(): void
     {
         $data = $this->setupUserTarget();
@@ -1895,6 +1949,25 @@ trait UsersBase
         // Update cache with new data
         $projectId = $this->getProject()['$id'];
         self::$cachedUserTarget[$projectId] = $response['body'];
+    }
+
+    public function testUpdateUserTargetAllowsNullOptionalValues(): void
+    {
+        $data = $this->setupUserTarget();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => null,
+            'providerId' => null,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame($data['identifier'] ?? null, $response['body']['identifier']);
+        $this->assertSame($data['providerId'] ?? null, $response['body']['providerId']);
+        $this->assertSame($data['name'] ?? null, $response['body']['name']);
     }
 
     public function testListUserTarget(): void
