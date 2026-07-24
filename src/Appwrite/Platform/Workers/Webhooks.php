@@ -13,6 +13,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -71,6 +72,37 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
         $envelopeId = \is_string($payload['envelopeId'] ?? null) ? $payload['envelopeId'] : '';
+        $sourceProject = new Document($payload['project'] ?? []);
+        $sourceProjectInternalId = $sourceProject->getSequence();
+        $projectInternalId = $project->getSequence();
+
+        if (
+            !$sourceProject->isEmpty()
+            && (
+                $sourceProject->getId() !== $project->getId()
+                || (
+                    $sourceProjectInternalId !== null
+                    && $sourceProjectInternalId !== ''
+                    && $sourceProjectInternalId !== $projectInternalId
+                )
+            )
+        ) {
+            Console::warning('Webhooks worker: queued project generation is stale, skipping delivery.');
+            return;
+        }
+
+        if (
+            $envelopeId !== ''
+            && (
+                $sourceProject->isEmpty()
+                || $sourceProjectInternalId === null
+                || $sourceProjectInternalId === ''
+                || $projectInternalId === null
+                || $projectInternalId === ''
+            )
+        ) {
+            throw new Exception('Webhooks worker: envelope project generation is missing.');
+        }
 
         $log->addTag('projectId', $project->getId());
 
@@ -84,7 +116,7 @@ class Webhooks extends Action
                 try {
                     $deliveryForEvents->deliver(
                         projectId: $project->getId(),
-                        projectInternalId: $project->getSequence() ?? '',
+                        projectInternalId: $projectInternalId ?? '',
                         envelopeId: $envelopeId,
                         sink: Sink::Webhook,
                         targetId: $webhook->getId(),

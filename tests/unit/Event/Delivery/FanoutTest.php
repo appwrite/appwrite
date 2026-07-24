@@ -219,6 +219,30 @@ final class FanoutTest extends TestCase
         $this->assertSame(2, $calls);
     }
 
+    public function testEnvelopeRequiresProjectGenerationBeforeTargetDelivery(): void
+    {
+        $fanout = $this->createFanout();
+        $calls = 0;
+
+        try {
+            $fanout->deliver(
+                projectId: 'project-1',
+                projectInternalId: '',
+                envelopeId: 'envelope-1',
+                sink: Sink::Webhook,
+                targetId: 'webhook-1',
+                delivery: function () use (&$calls): void {
+                    $calls++;
+                },
+            );
+            $this->fail('Expected missing project generation to be rejected.');
+        } catch (\InvalidArgumentException $error) {
+            $this->assertSame('Project ID and internal ID are required for receipt-backed delivery.', $error->getMessage());
+        }
+
+        $this->assertSame(0, $calls);
+    }
+
     private function createFanout(): Fanout
     {
         return new Fanout(new Receipt($this->createDatabase()));

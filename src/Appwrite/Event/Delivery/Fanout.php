@@ -16,6 +16,10 @@ final readonly class Fanout
         Sink $sink,
         string $targetId,
     ): string {
+        if ($projectId === '' || $projectInternalId === '') {
+            throw new \InvalidArgumentException('Project ID and internal ID are required for receipt-backed delivery.');
+        }
+
         return \substr(
             \hash('sha256', $projectId . "\0" . $projectInternalId . "\0" . $envelopeId . "\0" . $sink->value . "\0" . $targetId),
             0,

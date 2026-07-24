@@ -43,6 +43,12 @@ delivery returns successfully. A retry skips completed targets and attempts only
 targets without a receipt. This allows a fanout interrupted after one target to
 resume at the next target.
 
+Envelope-bearing workers validate the queued source project generation before
+discovering targets. Work from a deleted generation is discarded when the same
+public project ID now identifies a different generation, so it cannot execute
+the recreated project's targets or write its receipts. A missing source
+generation is rejected before target delivery.
+
 Receipts are retained for the lifetime of their project generation so a delayed
 replay cannot repeat a completed effect. Project deletion removes only receipts
 for the deleted generation; recreating the same public project ID cannot inherit

@@ -6,6 +6,7 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Delivery\Fanout;
 use Appwrite\Event\Delivery\Receipt;
+use Appwrite\Event\Delivery\Sink;
 use Appwrite\Event\Envelope;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -332,6 +333,104 @@ final class FunctionsTest extends TestCase
         );
 
         $this->assertSame(1, $worker->deliveries['function-1']);
+    }
+
+    public function testDelayedFunctionEventDoesNotCrossRecreatedProjectGeneration(): void
+    {
+        $projectDatabase = $this->createProjectDatabase();
+        $projectDatabase->createDocument('functions', new Document([
+            '$id' => 'function-1',
+            'name' => 'function-1',
+            'events' => ['databases.database-1.update'],
+        ]));
+
+        $platformDatabase = $this->createReceiptDatabase();
+        $delivery = new Fanout(new Receipt($platformDatabase));
+        $publisher = new MockPublisher();
+        $worker = new TestingFunctions();
+        $sourceProject = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-a',
+        ]);
+        $recreatedProject = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-b',
+        ]);
+        $message = new Message([
+            'pid' => 'message-1',
+            'queue' => 'v1-functions',
+            'timestamp' => \time(),
+            'payload' => FunctionMessage::fromEvent(
+                event: 'databases.[databaseId].update',
+                params: ['databaseId' => 'database-1'],
+                project: $sourceProject,
+                payload: ['$id' => 'database-1'],
+                envelopeId: 'envelope-1',
+            )->toArray(),
+        ]);
+
+        $worker->action(
+            $recreatedProject,
+            $message,
+            $projectDatabase,
+            new Webhook($publisher),
+            new FunctionPublisher($publisher, new Queue('v1-functions')),
+            new Realtime(new CapturingAdapter(), $delivery),
+            new Event($publisher),
+            $this->createStub(Bus::class),
+            new Log(),
+            $this->createStub(Executor::class),
+            static fn (): bool => false,
+            $delivery,
+        );
+
+        $this->assertArrayNotHasKey('function-1', $worker->deliveries);
+        $sourceIdentity = $delivery->getIdentity(
+            'project-1',
+            'project-internal-a',
+            'envelope-1',
+            Sink::Function,
+            'function-1',
+        );
+        $recreatedIdentity = $delivery->getIdentity(
+            'project-1',
+            'project-internal-b',
+            'envelope-1',
+            Sink::Function,
+            'function-1',
+        );
+        $this->assertTrue($platformDatabase->getDocument('eventReceipts', $sourceIdentity)->isEmpty());
+        $this->assertTrue($platformDatabase->getDocument('eventReceipts', $recreatedIdentity)->isEmpty());
+
+        $recreatedMessage = new Message([
+            'pid' => 'message-2',
+            'queue' => 'v1-functions',
+            'timestamp' => \time(),
+            'payload' => FunctionMessage::fromEvent(
+                event: 'databases.[databaseId].update',
+                params: ['databaseId' => 'database-1'],
+                project: $recreatedProject,
+                payload: ['$id' => 'database-1'],
+                envelopeId: 'envelope-1',
+            )->toArray(),
+        ]);
+        $worker->action(
+            $recreatedProject,
+            $recreatedMessage,
+            $projectDatabase,
+            new Webhook($publisher),
+            new FunctionPublisher($publisher, new Queue('v1-functions')),
+            new Realtime(new CapturingAdapter(), $delivery),
+            new Event($publisher),
+            $this->createStub(Bus::class),
+            new Log(),
+            $this->createStub(Executor::class),
+            static fn (): bool => false,
+            $delivery,
+        );
+
+        $this->assertSame(1, $worker->deliveries['function-1']);
+        $this->assertFalse($platformDatabase->getDocument('eventReceipts', $recreatedIdentity)->isEmpty());
     }
 
     private function createProjectDatabase(): Database

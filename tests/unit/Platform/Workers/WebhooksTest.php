@@ -6,6 +6,7 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Delivery\Fanout;
 use Appwrite\Event\Delivery\Receipt;
+use Appwrite\Event\Delivery\Sink;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Workers\Webhooks;
@@ -252,7 +253,10 @@ final class WebhooksTest extends TestCase
             'queue' => 'v1-webhooks',
             'timestamp' => \time(),
             'payload' => [
-                'project' => ['$id' => 'project-1'],
+                'project' => [
+                    '$id' => 'project-1',
+                    '$sequence' => 'project-internal-1',
+                ],
                 'events' => ['databases.database-1.update'],
                 'payload' => ['$id' => 'database-1'],
                 'envelopeId' => 'envelope-1',
@@ -304,7 +308,10 @@ final class WebhooksTest extends TestCase
             'queue' => 'v1-webhooks',
             'timestamp' => \time(),
             'payload' => [
-                'project' => ['$id' => 'project-1'],
+                'project' => [
+                    '$id' => 'project-1',
+                    '$sequence' => 'project-internal-1',
+                ],
                 'events' => ['databases.database-1.update'],
                 'payload' => ['$id' => 'database-1'],
                 'envelopeId' => 'envelope-1',
@@ -332,6 +339,86 @@ final class WebhooksTest extends TestCase
         $worker->action($message, $project, $database, $notifications, $usage, new Log(), [], $delivery);
 
         $this->assertSame(1, $worker->deliveries['webhook-1']);
+    }
+
+    public function testDelayedWebhookEventDoesNotCrossRecreatedProjectGeneration(): void
+    {
+        $database = $this->createPlatformDatabase();
+        $publisher = new MockPublisher();
+        $worker = new TestingWebhooks();
+        $message = new Message([
+            'pid' => 'message-1',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'project' => [
+                    '$id' => 'project-1',
+                    '$sequence' => 'project-internal-a',
+                ],
+                'events' => ['databases.database-1.update'],
+                'payload' => ['$id' => 'database-1'],
+                'envelopeId' => 'envelope-1',
+            ],
+        ]);
+        $recreatedProject = new Document([
+            '$id' => 'project-1',
+            '$sequence' => 'project-internal-b',
+            'webhooks' => [
+                new Document([
+                    '$id' => 'webhook-1',
+                    'enabled' => true,
+                    'events' => ['databases.database-1.update'],
+                ]),
+            ],
+        ]);
+        $delivery = new Fanout(new Receipt($database));
+        $notifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
+        $usage = new UsagePublisher($publisher, new Queue('v1-stats-usage'));
+
+        $worker->action($message, $recreatedProject, $database, $notifications, $usage, new Log(), [], $delivery);
+
+        $this->assertArrayNotHasKey('webhook-1', $worker->deliveries);
+        $sourceIdentity = $delivery->getIdentity(
+            'project-1',
+            'project-internal-a',
+            'envelope-1',
+            Sink::Webhook,
+            'webhook-1',
+        );
+        $recreatedIdentity = $delivery->getIdentity(
+            'project-1',
+            'project-internal-b',
+            'envelope-1',
+            Sink::Webhook,
+            'webhook-1',
+        );
+        $this->assertTrue($database->getAuthorization()->skip(
+            fn (): bool => $database->getDocument('eventReceipts', $sourceIdentity)->isEmpty()
+        ));
+        $this->assertTrue($database->getAuthorization()->skip(
+            fn (): bool => $database->getDocument('eventReceipts', $recreatedIdentity)->isEmpty()
+        ));
+
+        $recreatedMessage = new Message([
+            'pid' => 'message-2',
+            'queue' => 'v1-webhooks',
+            'timestamp' => \time(),
+            'payload' => [
+                'project' => [
+                    '$id' => 'project-1',
+                    '$sequence' => 'project-internal-b',
+                ],
+                'events' => ['databases.database-1.update'],
+                'payload' => ['$id' => 'database-1'],
+                'envelopeId' => 'envelope-1',
+            ],
+        ]);
+        $worker->action($recreatedMessage, $recreatedProject, $database, $notifications, $usage, new Log(), [], $delivery);
+
+        $this->assertSame(1, $worker->deliveries['webhook-1']);
+        $this->assertFalse($database->getAuthorization()->skip(
+            fn (): bool => $database->getDocument('eventReceipts', $recreatedIdentity)->isEmpty()
+        ));
     }
 
     public function testWebhookHeadersExposeStableEnvelopeId(): void

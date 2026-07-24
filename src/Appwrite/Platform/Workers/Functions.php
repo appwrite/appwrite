@@ -87,6 +87,42 @@ class Functions extends Action
         $functionMessage = FunctionMessage::fromArray($payload);
         $type = $functionMessage->type;
         $envelopeId = $functionMessage->envelopeId;
+        $sourceProject = $functionMessage->project;
+        $sourceProjectInternalId = $sourceProject?->getSequence();
+        $projectInternalId = $project->getSequence();
+
+        if (
+            $sourceProject !== null
+            && !$sourceProject->isEmpty()
+            && (
+                $sourceProject->getId() !== $project->getId()
+                || (
+                    $sourceProjectInternalId !== null
+                    && $sourceProjectInternalId !== ''
+                    && $sourceProjectInternalId !== $projectInternalId
+                )
+            )
+        ) {
+            Console::warning('Functions worker: queued project generation is stale, skipping execution.');
+            return;
+        }
+
+        if (
+            $envelopeId !== ''
+            && (
+                $sourceProject === null
+                || $sourceProject->isEmpty()
+                || $sourceProjectInternalId === null
+                || $sourceProjectInternalId === ''
+                || $projectInternalId === null
+                || $projectInternalId === ''
+            )
+        ) {
+            throw new AppwriteException(
+                AppwriteException::GENERAL_ARGUMENT_INVALID,
+                'Functions worker: envelope project generation is missing.'
+            );
+        }
 
         Span::add('project.id', $project->getId());
         Span::add('payload.type', $type);
@@ -168,7 +204,7 @@ class Functions extends Action
                         ? null
                         : $deliveryForEvents->getIdentity(
                             $project->getId(),
-                            $project->getSequence() ?? '',
+                            $projectInternalId,
                             $envelopeId,
                             Sink::Function,
                             $functionId,
@@ -176,7 +212,7 @@ class Functions extends Action
 
                     $deliveryForEvents->deliver(
                         projectId: $project->getId(),
-                        projectInternalId: $project->getSequence() ?? '',
+                        projectInternalId: $projectInternalId ?? '',
                         envelopeId: $envelopeId,
                         sink: Sink::Function,
                         targetId: $functionId,
