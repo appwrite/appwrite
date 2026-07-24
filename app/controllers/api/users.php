@@ -265,6 +265,7 @@ Http::post('/v1/users')
     ->desc('Create user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
+    ->label('limit', 'usage:users')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk', new Method(

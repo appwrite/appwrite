@@ -66,6 +66,7 @@ class Create extends Base
             ->desc('Create execution')
             ->groups(['api', 'functions'])
             ->label('scope', ['executions.write', 'execution.write'])
+            ->label('limit', ['usage:executions', 'usage:GBHours'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
             ->label('usage.resource', 'function/{request.functionId}')

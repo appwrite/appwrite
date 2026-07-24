@@ -58,6 +58,7 @@ class Create extends Action
             ->groups(['api', 'teams', 'auth'])
             ->label('event', 'teams.[teamId].memberships.[membershipId].create')
             ->label('scope', 'teams.write')
+            ->label('limit', 'count:seats')
             ->label('auth.type', 'invites')
             ->label('audits.event', 'membership.create')
             ->label('audits.resource', 'team/{request.teamId}')
