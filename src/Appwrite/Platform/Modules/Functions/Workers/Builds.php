@@ -13,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Functions\Workers\BuildException;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -108,7 +109,7 @@ class Builds extends Action
         $payload = $message->getPayload();
 
         if (empty($payload)) {
-            throw new \Exception('Missing payload');
+            throw new BuildException('Missing payload');
         }
 
         $type = $payload['type'] ?? '';
@@ -154,7 +155,7 @@ class Builds extends Action
                 break;
 
             default:
-                throw new \Exception('Invalid build type');
+                throw new BuildException('Invalid build type');
         }
     }
 
@@ -199,7 +200,7 @@ class Builds extends Action
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
-            default => throw new \Exception('Invalid resource type')
+            default => throw new BuildException('Invalid resource type')
         };
 
         $device = match ($resource->getCollection()) {
@@ -211,22 +212,22 @@ class Builds extends Action
 
         $resource = $dbForProject->getDocument($resource->getCollection(), $resource->getId());
         if ($resource->isEmpty()) {
-            throw new \Exception('Resource not found');
+            throw new BuildException('Resource not found');
         }
 
         if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
-            throw new \Exception('Resource is blocked');
+            throw new BuildException('Resource is blocked');
         }
 
         $log->addTag('deploymentId', $deployment->getId());
 
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found');
+            throw new BuildException('Deployment not found');
         }
 
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
+            throw new BuildException('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
         }
 
         $version = $this->getVersion($resource);
@@ -322,7 +323,7 @@ class Builds extends Action
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                        throw new BuildException('Unable to clone code repository: ' . $stderr);
                     }
 
                     Console::execute('find ' . \escapeshellarg($tmpTemplateDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -345,7 +346,7 @@ class Builds extends Action
                     $result = $localDevice->transfer($tmpPathFile, $source, $device);
 
                     if (! $result) {
-                        throw new \Exception('Unable to move file');
+                        throw new BuildException('Unable to move file');
                     }
 
                     Console::execute('rm -rf ' . \escapeshellarg($tmpTemplateDirectory), '', $stdout, $stderr);
@@ -406,7 +407,7 @@ class Builds extends Action
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
-                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    throw new BuildException('Unable to clone code repository: ' . $stderr);
                 }
 
                 // Local refactoring for function folder with spaces
@@ -417,7 +418,7 @@ class Builds extends Action
                     $exit = Console::execute('mv ' . \escapeshellarg($from) . ' ' . \escapeshellarg($to), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to move function with spaces' . $stderr);
+                        throw new BuildException('Unable to move function with spaces' . $stderr);
                     }
                     $rootDirectory = $rootDirectoryWithoutSpaces;
                 }
@@ -441,7 +442,7 @@ class Builds extends Action
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                        throw new BuildException('Unable to clone code repository: ' . $stderr);
                     }
 
                     // Ensure directories
@@ -456,13 +457,13 @@ class Builds extends Action
                     $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m ' . $commitMessage . ' && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to push code repository: ' . $stderr);
+                        throw new BuildException('Unable to push code repository: ' . $stderr);
                     }
 
                     $exit = Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
                     if ($exit !== 0) {
-                        throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
+                        throw new BuildException('Unable to get vcs commit SHA: ' . $stderr);
                     }
 
                     $providerCommitHash = \trim($stdout);
@@ -501,7 +502,7 @@ class Builds extends Action
                 }
 
                 if ($directorySize > $sizeLimit && $sizeLimit !== 0) {
-                    throw new \Exception('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
+                    throw new BuildException('Repository directory size should be less than ' . number_format($sizeLimit / (1000 * 1000), 2) . ' MBs.');
                 }
 
                 Console::execute('find ' . \escapeshellarg($tmpDirectory) . ' -type d -name ".git" -exec rm -rf {} +', '', $stdout, $stderr);
@@ -513,7 +514,7 @@ class Builds extends Action
                 $result = $localDevice->transfer($tmpPathFile, $source, $device);
 
                 if (! $result) {
-                    throw new \Exception('Unable to move file');
+                    throw new BuildException('Unable to move file');
                 }
 
                 Console::execute('rm -rf ' . \escapeshellarg($tmpPath), '', $stdout, $stderr);
@@ -741,7 +742,7 @@ class Builds extends Action
                         $span?->set('build.runtime.timed_out', true);
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
-                        $err = new AppwriteException(AppwriteException::BUILD_TIMEOUT, previous: $error);
+                        $err = new BuildException(type: AppwriteException::BUILD_TIMEOUT, previous: $error);
                     } catch (\Throwable $error) {
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
@@ -867,7 +868,7 @@ class Builds extends Action
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
             if ($response['size'] > $buildSizeLimit && $buildSizeLimit !== 0) {
-                throw new \Exception('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
+                throw new BuildException('Build size should be less than ' . number_format($buildSizeLimit / (1000 * 1000), 2) . ' MBs.');
             }
 
             $deployment->setAttribute('buildPath', $response['path']);
@@ -898,7 +899,7 @@ class Builds extends Action
                     Span::add('build.adapter', $deployment->getAttribute('adapter'));
                     Span::add('build.fallback_file', $deployment->getAttribute('fallbackFile'));
                 } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
-                    throw new \Exception('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
+                    throw new BuildException('Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter);
                 }
             }
 
@@ -1142,8 +1143,11 @@ class Builds extends Action
             Span::add('build.error.file', $th->getFile());
             Span::add('build.error.line', $th->getLine());
 
-            // Color message red
-            $message = $th->getMessage();
+            // Only surface messages we raise intentionally; mask internal errors
+            $isUserFacing = $th instanceof BuildException;
+            $message = $isUserFacing
+                ? $th->getMessage()
+                : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
             if (! \str_contains($message, '')) {
                 $message = '[31m' . $message;
             }
@@ -1279,7 +1283,7 @@ class Builds extends Action
             default => null
         };
         if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+            throw new BuildException('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
         }
 
         return $runtime;
@@ -1290,7 +1294,7 @@ class Builds extends Action
         return match ($resource->getCollection()) {
             'functions' => $resource->getAttribute('version', 'v2'),
             'sites' => 'v5',
-            default => throw new \Exception('Unsupported resource type "' . $resource->getCollection() . '".'),
+            default => throw new BuildException('Unsupported resource type "' . $resource->getCollection() . '".'),
         };
     }
 
@@ -1456,7 +1460,7 @@ class Builds extends Action
                 $providerTargetUrl = match ($resource->getCollection()) {
                     'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
                     'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
-                    default => throw new \Exception('Invalid resource type')
+                    default => throw new BuildException('Invalid resource type')
                 };
 
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
@@ -1487,7 +1491,7 @@ class Builds extends Action
                     $resourceType = match ($resource->getCollection()) {
                         'functions' => 'function',
                         'sites' => 'site',
-                        default => throw new \Exception('Invalid resource type')
+                        default => throw new BuildException('Invalid resource type')
                     };
 
                     $rule = $dbForPlatform->findOne('rules', [
