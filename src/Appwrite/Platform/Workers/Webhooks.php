@@ -181,14 +181,25 @@ class Webhooks extends Action
             $webhook->setAttribute('logs', $logs);
 
             $updatePayload = ['logs' => $logs];
+            $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
+            // Only the handler that crosses the threshold claims the pause alert.
+            // Concurrent failures can both see attempts >= max; alerting only when
+            // attempts === max (and the webhook was still enabled) makes this a
+            // single logical event. Persist enabled=false before enqueueing.
+            $shouldAlert = false;
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
+            if ($attempts >= $maxAttempts) {
+                $wasEnabled = $webhook->getAttribute('enabled', true);
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+                $shouldAlert = $wasEnabled && $attempts === $maxAttempts;
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
+
+            if ($shouldAlert) {
+                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+            }
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
@@ -318,7 +329,7 @@ class Webhooks extends Action
             $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
-                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
+                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused',
                 subject: $subject,
                 bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
                 body: $template->render(),
