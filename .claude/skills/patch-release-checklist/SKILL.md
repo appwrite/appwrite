@@ -14,7 +14,7 @@ Update the console Docker image tag:
 - [ ] **`app/init/constants.php`** -- update `APP_VERSION_STABLE` to the new version (e.g., `'1.9.1'`). In same file, increment `APP_CACHE_BUSTER` by 1.
 - [ ] **`README.md`** -- update the Docker image tag `appwrite/appwrite:X.Y.Z` in all 3 install code blocks (Unix, Windows CMD, PowerShell).
 - [ ] **`README-CN.md`** -- same Docker image tag update in all 3 install code blocks.
-- [ ] **`src/Appwrite/Migration/Migration.php`** -- add the new version to the `$versions` array, mapping it to a migration class. If new class exists, use that, otherwise use sle same class as previous version
+- [ ] **`src/Appwrite/Migration/Migration.php`** -- add the new version to the `$versions` array, mapping it to a migration class. If new class exists, use that, otherwise use the same class as previous version
 
 ### Update CHANGES.md
 
@@ -22,7 +22,7 @@ Update the console Docker image tag:
 
 ## Final review
 
-- [ ] Ask user to review changes before commiting
+- [ ] Ask user to review changes before committing
 - [ ] Ask user to update `CHANGES.md` with PRs
 - [ ] Ask user to generate specs, if needed
 - [ ] Ask user to add request and response filters, if needed

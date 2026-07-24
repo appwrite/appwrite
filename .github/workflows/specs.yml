@@ -29,6 +29,9 @@ jobs:
   generate:
     name: Generate Specs
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -42,12 +45,12 @@ jobs:
 
       - name: Generate specs
         run: |
-          docker compose exec appwrite specs --version=${{ inputs.version }} --mode=normal --git=no
+          docker compose exec -T appwrite specs --version=${{ inputs.version }} --mode=normal --git=no
 
       - name: Generate SDK examples
         if: inputs.push
         run: |
-          docker compose exec appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
+          docker compose exec -T appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
           sudo chown -R $USER:$USER ./docs/examples/
 
       - name: Push to appwrite/specs and create PR
