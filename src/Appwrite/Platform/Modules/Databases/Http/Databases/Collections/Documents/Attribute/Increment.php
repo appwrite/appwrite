@@ -211,6 +211,8 @@ class Increment extends Action
 
         $response->dynamic($document, $this->getResponseModel());
 
+        $response->dynamic($document, $this->getResponseModel());
+
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)

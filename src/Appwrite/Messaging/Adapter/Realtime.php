@@ -604,9 +604,23 @@ class Realtime extends MessagingAdapter
      */
     public static function convertChannels(array $channels, string $userId): array
     {
-        $channels = array_flip($channels);
+        $results = [];
 
-        foreach ($channels as $key => $value) {
+        foreach ($channels as $channel) {
+            $parts = explode(';', $channel);
+            $name = $parts[0];
+            $filters = [];
+
+            foreach ($parts as $part) {
+                if (str_starts_with($part, 'filter=')) {
+                    $filterString = substr($part, 7);
+                    try {
+                        $filters = Query::parseQueries([$filterString]);
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+
             switch (true) {
                 case $key === 'account':
                     if (!empty($userId)) {
@@ -632,9 +646,13 @@ class Realtime extends MessagingAdapter
                     unset($channels[$key]);
                     break;
             }
+
+            $results[$name] = [
+                'filters' => $filters
+            ];
         }
 
-        return $channels;
+        return $results;
     }
 
     /**
