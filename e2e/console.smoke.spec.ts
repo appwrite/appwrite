@@ -6,7 +6,7 @@ import { expectPageRenders } from './helpers/smoke'
 /**
  * Authenticated console pages. Read-only: navigate and assert render only.
  * Uses E2E_TEST_EMAIL / E2E_TEST_PASSWORD (or session secret) via auth.setup.
- * If the target project is paused (common on free orgs), restores it once in beforeAll.
+ * Paused free-plan projects are restored only before project-scoped checks.
  */
 
 test.describe('console smoke (read-only)', () => {
@@ -22,10 +22,6 @@ test.describe('console smoke (read-only)', () => {
       const targets = await discoverConsoleTargets(page)
       orgId = targets.orgId
       projectId = targets.projectId
-
-      if (projectId) {
-        await ensureProjectActive(page, projectId)
-      }
     } finally {
       await context.close()
     }
@@ -86,11 +82,21 @@ test.describe('console smoke (read-only)', () => {
   })
 
   test.describe('project services', () => {
-    test.beforeEach(() => {
+    test.beforeAll(async ({ browser }) => {
       test.skip(
         !projectId,
         'No project found for this account. Set E2E_PROJECT_ID or create a project.',
       )
+
+      const context = await browser.newContext({
+        storageState: 'e2e/.auth/auth.json',
+      })
+      const page = await context.newPage()
+      try {
+        await ensureProjectActive(page, projectId!)
+      } finally {
+        await context.close()
+      }
     })
 
     const servicePaths = [
