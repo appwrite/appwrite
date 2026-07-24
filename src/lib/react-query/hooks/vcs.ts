@@ -231,14 +231,36 @@ export function useNamespaces(
 const NAMESPACES_PAGE_SIZE = 100
 /** Hard stop so a runaway `total` can't spin this into an infinite loop. */
 const NAMESPACES_MAX_PAGES = 20
+const NAMESPACES_PAGE_RETRIES = 2
+
+async function fetchNamespacesPageWithRetry(
+  projectId: string,
+  installationId: string,
+  page: number,
+): Promise<Models.VcsNamespaceList> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchNamespaces(
+        projectId,
+        installationId,
+        page,
+        NAMESPACES_PAGE_SIZE,
+      )
+    } catch (error) {
+      if (attempt >= NAMESPACES_PAGE_RETRIES) throw error
+      await new Promise((resolve) => setTimeout(resolve, 300 * 2 ** attempt))
+    }
+  }
+}
 
 /**
  * Fetch every namespace for an installation, paging through in
  * NAMESPACES_PAGE_SIZE chunks until `total` is exhausted -- a GitLab user
  * can belong to more groups than fit on one page, and silently truncating
  * would make later groups unselectable for browsing or repo creation.
- * A failure on a later page returns what's been fetched so far rather than
- * rejecting, so a transient error doesn't hide already-fetched groups.
+ * Each page gets a couple of retries with backoff first; if a later page
+ * still fails, returns what's been fetched so far rather than rejecting,
+ * so a transient error doesn't hide already-fetched groups too.
  */
 async function fetchAllNamespaces(
   projectId: string,
@@ -248,11 +270,10 @@ async function fetchAllNamespaces(
   for (let page = 0; page < NAMESPACES_MAX_PAGES; page++) {
     let result: Models.VcsNamespaceList
     try {
-      result = await fetchNamespaces(
+      result = await fetchNamespacesPageWithRetry(
         projectId,
         installationId,
         page,
-        NAMESPACES_PAGE_SIZE,
       )
     } catch {
       break
