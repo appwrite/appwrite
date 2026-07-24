@@ -400,6 +400,96 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Trigger create events for documents that were created through relationship cascading.
+     *
+     * @param array $nestedCreates
+     * @param Document $database
+     * @param Database $dbForProject
+     * @param Event $queueForEvents
+     * @param Event $queueForRealtime
+     * @param FunctionPublisher $publisherForFunctions
+     * @param Event $queueForWebhooks
+     * @param EventProcessor $eventProcessor
+     * @return void
+     */
+    protected function triggerRelationshipCreates(
+        array $nestedCreates,
+        Document $database,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Event $queueForRealtime,
+        FunctionPublisher $publisherForFunctions,
+        Event $queueForWebhooks,
+        EventProcessor $eventProcessor
+    ): void {
+        if (empty($nestedCreates)) {
+            return;
+        }
+
+        $project = $queueForEvents->getProject();
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
+        foreach ($nestedCreates as $nested) {
+            $collection = $nested['collection'];
+            $documentId = $nested['documentId'];
+
+            $event = 'databases.[databaseId].collections.[collectionId].documents.[documentId].create';
+
+            $queueForEvents
+                ->setEvent($event)
+                ->setParam('databaseId', $database->getId())
+                ->setContext('database', $database)
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('tableId', $collection->getId())
+                ->setContext($this->getCollectionsEventsContext(), $collection)
+                ->setParam('documentId', $documentId)
+                ->setParam('rowId', $documentId);
+
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->trigger();
+
+            $generatedEvents = Event::generateEvents(
+                $queueForEvents->getEvent(),
+                $queueForEvents->getParams()
+            );
+
+            if (!empty($functionsEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($functionsEvents[$event])) {
+                        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                            event: $queueForEvents->getEvent(),
+                            params: $queueForEvents->getParams(),
+                            project: $queueForEvents->getProject(),
+                            user: $queueForEvents->getUser(),
+                            userId: $queueForEvents->getUserId(),
+                            payload: $queueForEvents->getPayload(),
+                            platform: $queueForEvents->getPlatform(),
+                        ));
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($webhooksEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($webhooksEvents[$event])) {
+                        $queueForWebhooks
+                            ->from($queueForEvents)
+                            ->trigger();
+                        break;
+                    }
+                }
+            }
+        }
+
+        $queueForEvents->reset();
+        $queueForRealtime->reset();
+        $queueForWebhooks->reset();
+    }
+
+    /**
      * For triggering different queues for each document for a bulk documents
      * @param string $event
      * @param Document $database
