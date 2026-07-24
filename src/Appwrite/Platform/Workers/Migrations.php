@@ -496,14 +496,14 @@ class Migrations extends Action
         $transfer = $source = $destination = null;
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
-
         try {
+            $host = System::getEnv('_APP_MIGRATION_HOST');
+            if (empty($host)) {
+                throw new \Exception('_APP_MIGRATION_HOST is not set');
+            }
+
+            $endpoint = 'http://' . $host . '/v1';
+
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
