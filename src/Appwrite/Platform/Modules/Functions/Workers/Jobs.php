@@ -544,7 +544,6 @@ class Jobs extends Action
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
-            Query::equal('deploymentVcsProviderBranch', ['']),
         ]);
     }
 
