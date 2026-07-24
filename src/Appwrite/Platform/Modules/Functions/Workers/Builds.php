@@ -99,6 +99,7 @@ class Builds extends Action
             ->inject('executor')
             ->inject('deployments')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
