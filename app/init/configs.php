@@ -2,6 +2,7 @@
 
 use Utopia\Config\Adapters\PHP;
 use Utopia\Config\Config;
+use Utopia\System\System;
 
 require_once __DIR__ . '/../config/storage/resource_limits.php';
 
@@ -30,6 +31,14 @@ Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  
 Config::load('onboarding', __DIR__ . '/../config/onboarding.php', $configAdapter);  // Project onboarding stages → routes
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
 Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions
+
+$regionsJson = System::getEnv('_APP_REGIONS', '');
+if (!empty($regionsJson)) {
+    $parsed = json_decode($regionsJson, true);
+    if (is_array($parsed) && !empty($parsed)) {
+        Config::setParam('regions', $parsed);
+    }
+}
 Config::load('avatar-browsers', __DIR__ . '/../config/avatars/browsers.php', $configAdapter);
 Config::load('avatar-credit-cards', __DIR__ . '/../config/avatars/credit-cards.php', $configAdapter);
 Config::load('avatar-flags', __DIR__ . '/../config/avatars/flags.php', $configAdapter);
