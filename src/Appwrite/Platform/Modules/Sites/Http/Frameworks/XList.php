@@ -65,11 +65,6 @@ class XList extends Base
                     $framework['runtimes'],
                     fn ($runtime) => \in_array($runtime, $allowList, true)
                 ));
-
-                // Drop frameworks that have no enabled build runtimes left.
-                if (empty($frameworks[$key]['runtimes'])) {
-                    unset($frameworks[$key]);
-                }
             }
         }
 
