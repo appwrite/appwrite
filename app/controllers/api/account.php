@@ -76,8 +76,10 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/console/auth/oauth2/success';
-$oauthDefaultFailure = '/console/auth/oauth2/failure';
+$legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
+
+$oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
+$oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -2250,7 +2252,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2396,7 +2398,9 @@ Http::post('/v1/account/tokens/magic-url')
             } elseif ($protocol === 'http' && $port !== '80') {
                 $callbackBase .= ':' . $port;
             }
-            $url = $callbackBase . '/console/auth/magic-url';
+            $url = $legacyConsolePaths
+                ? "{$callbackBase}/console/auth/magic-url"
+                : "{$callbackBase}/auth/magic-url";
         }
 
         $url = Template::parseURL($url);

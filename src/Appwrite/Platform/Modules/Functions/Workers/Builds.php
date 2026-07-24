@@ -414,7 +414,7 @@ class Builds extends Action
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
 
-                $owner = $providerAdapter->getOwnerName($providerInstallationId);
+                $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                 $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
 
                 $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);

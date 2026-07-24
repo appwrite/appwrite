@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aaa69508ad474daafe2261e01a65f27c",
+    "content-hash": "a06cafa9fd4e4c5b2d448b36773db57b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1147,16 +1147,16 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "0.4.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "02c01ec6c807f43602d93534252e96c9451ecd80"
+                "reference": "cbec243a3207c80dbb005401a8ef64536d54d4f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/02c01ec6c807f43602d93534252e96c9451ecd80",
-                "reference": "02c01ec6c807f43602d93534252e96c9451ecd80",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/cbec243a3207c80dbb005401a8ef64536d54d4f3",
+                "reference": "cbec243a3207c80dbb005401a8ef64536d54d4f3",
                 "shasum": ""
             },
             "require": {
@@ -1184,9 +1184,9 @@
             "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.4.0"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.5.0"
             },
-            "time": "2026-07-13T21:55:56+00:00"
+            "time": "2026-07-16T10:21:16+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -3234,16 +3234,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.8.1",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61"
+                "reference": "322fd475836be6aa20f8e7ec017299ac55b3c8f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61",
-                "reference": "6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/322fd475836be6aa20f8e7ec017299ac55b3c8f4",
+                "reference": "322fd475836be6aa20f8e7ec017299ac55b3c8f4",
                 "shasum": ""
             },
             "require": {
@@ -3252,11 +3252,6 @@
                 "utopia-php/fetch": "^1.1",
                 "utopia-php/query": "0.1.*",
                 "utopia-php/validators": "0.3.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
             },
             "type": "library",
             "autoload": {
@@ -3278,22 +3273,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.8.1"
+                "source": "https://github.com/utopia-php/audit/tree/2.9.0"
             },
-            "time": "2026-07-13T13:36:02+00:00"
+            "time": "2026-07-15T10:27:51+00:00"
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.9.2",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "8506dc7ea27331df88128a4c48d1ff1b78bd8f67"
+                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/8506dc7ea27331df88128a4c48d1ff1b78bd8f67",
-                "reference": "8506dc7ea27331df88128a4c48d1ff1b78bd8f67",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/fc6e7861a0428415a7454ba808a511cc01bf8db4",
+                "reference": "fc6e7861a0428415a7454ba808a511cc01bf8db4",
                 "shasum": ""
             },
             "require": {
@@ -3336,10 +3331,10 @@
                 "security"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/auth/tree/0.9.2",
+                "source": "https://github.com/utopia-php/auth/tree/0.10.0",
                 "issues": "https://github.com/utopia-php/auth/issues"
             },
-            "time": "2026-07-10T06:10:44+00:00"
+            "time": "2026-07-15T15:52:58+00:00"
         },
         {
             "name": "utopia-php/cache",
