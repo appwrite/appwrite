@@ -7,3 +7,7 @@ public/scripts/** linguist-detectable=false
 public/dist/scripts/** linguist-detectable=false
 
 .github/workflows/*.lock.yml linguist-generated=true merge=ours
+
+# Force LF so Docker images built from Windows (autocrlf) checkouts don't break
+bin/*  text eol=lf
+*.sh   text eol=lf
