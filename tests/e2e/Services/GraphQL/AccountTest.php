@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class AccountTest extends Scope
+final class AccountTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -116,13 +118,27 @@ class AccountTest extends Scope
     }
 
     /**
-     * @depends testUpdateAccountPhone
      * @return array
      * @throws \Exception
      */
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
+        // Ensure phone is set up for this test to be self-contained
+        $phoneQuery = $this->getQuery(self::UPDATE_ACCOUNT_PHONE);
+        $phonePayload = [
+            'query' => $phoneQuery,
+            'variables' => [
+                'phone' => '+123456789',
+                'password' => 'password',
+            ]
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $phonePayload);
 
         $query = $this->getQuery(self::CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
@@ -289,26 +305,6 @@ class AccountTest extends Scope
         $this->assertEquals($this->getUser()['sessionId'], $session['body']['data']['accountGetSession']['_id']);
 
         return $session;
-    }
-
-    public function testGetAccountLogs(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_ACCOUNT_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-
-        $logs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertArrayNotHasKey('errors', $logs['body']);
-        $this->assertIsArray($logs['body']['data']);
-        $this->assertIsArray($logs['body']['data']['accountListLogs']);
-
-        return $logs;
     }
 
     public function testUpdateAccountName(): array

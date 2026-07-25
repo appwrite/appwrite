@@ -5,7 +5,8 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -132,6 +133,36 @@ class V23 extends Migration
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+                case 'migrations':
+                    try {
+                        $this->updateMigrateErrorSize();
+                    } catch (\Throwable $th) {
+                        Console::warning("Failed to  migration error attribute size in collection {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'buckets':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'transformations');
+                    } catch (Throwable $th) {
+                        Console::warning("'transformations' from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+                case 'users':
+                    $attributes = [
+                        'emailCanonical',
+                        'emailIsFree',
+                        'emailIsDisposable',
+                        'emailIsCorporate',
+                        'emailIsCanonical',
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
                 default:
                     break;
             }
@@ -200,5 +231,47 @@ class V23 extends Migration
                 break;
         }
         return $document;
+    }
+
+    /**
+     * Update migration attribute size
+     * @return void
+     */
+    private function updateMigrateErrorSize(): void
+    {
+
+        if ($this->project->getId() === 'console') {
+            return;
+        }
+
+        // Read-modify-write from the live schema to avoid overwriting unrelated changes.
+        $migration = $this->dbForProject->getCollection('migrations');
+        $attributes = $migration->getAttribute('attributes', []);
+        $attrsArray = \array_map(fn (Document $doc) => $doc->getArrayCopy(), $attributes);
+        $errorsIdx = \array_search('errors', \array_column($attrsArray, '$id'));
+
+        if ($errorsIdx === false) {
+            Console::warning("Skipping: 'errors' attribute not found in migrations collection for project {$this->project->getId()}");
+            return;
+        }
+
+        $desiredSize = 1_000_000;
+        $migrationAttributes = Config::getParam('collections', [])['projects']['migrations']['attributes'] ?? [];
+        $migrationIndex = \array_search('errors', \array_column($migrationAttributes, '$id'));
+
+        if ($migrationIndex !== false && isset($migrationAttributes[$migrationIndex]['size'])) {
+            $desiredSize = (int) $migrationAttributes[$migrationIndex]['size'];
+        }
+
+        $currentSize = (int) ($attributes[$errorsIdx]['size'] ?? 0);
+
+        if ($currentSize === $desiredSize) {
+            Console::warning("Skipping: 'errors' attribute already of desired size {$desiredSize} in migrations collection for project {$this->project->getId()}");
+            return;
+        }
+        $attributes[$errorsIdx]['size'] = $desiredSize;
+        $migration->setAttribute('attributes', $attributes);
+        $this->dbForProject->updateDocument($migration->getCollection(), $migration->getId(), $migration);
+        $this->dbForProject->purgeCachedCollection('migrations');
     }
 }

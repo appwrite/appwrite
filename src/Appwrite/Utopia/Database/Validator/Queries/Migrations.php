@@ -10,9 +10,18 @@ class Migrations extends Base
         'source',
         'destination',
         'resources',
+        'resourceId',
+        'resourceInternalId',
+        'resourceType',
+        'parentResourceId',
+        'parentResourceInternalId',
+        'parentResourceType',
+        'destinationResourceId',
+        'destinationResourceInternalId',
+        'destinationResourceType',
         'statusCounters',
         'resourceData',
-        'errors'
+        'errors',
     ];
 
     /**

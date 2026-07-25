@@ -2,9 +2,9 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
-use Utopia\CLI\Console;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -262,7 +262,7 @@ class V17 extends Migration
                  * Set default maxSessions
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                    'maxSessions' => 10
                 ]));
                 break;
             case 'users':
@@ -270,7 +270,7 @@ class V17 extends Migration
                 * Set hashOptions type
                 */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
-                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                    'type' => $document->getAttribute('hash', (new Password())->getHash()->getName())
                 ]));
                 break;
         }

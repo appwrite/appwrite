@@ -2,147 +2,66 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\DNS\Client;
-use Utopia\Domains\Domain;
-use Utopia\System\System;
-use Utopia\Validator;
+use Swoole\Coroutine\WaitGroup;
+use Utopia\DNS\Message\Record;
+use Utopia\DNS\Validator\DNS as BaseDNS;
 
-class DNS extends Validator
+class DNS extends BaseDNS
 {
-    public const RECORD_A = 'A';
-    public const RECORD_AAAA = 'AAAA';
-    public const RECORD_CNAME = 'CNAME';
-    public const RECORD_CAA = 'CAA'; // You can provide domain only (as $target) for CAA validation
+    protected array $dnsServers = [];
 
     /**
-     * @var mixed
+     * @param string $target Expected value for the DNS record
+     * @param int $type Type of DNS record to validate
+     *  For value, use const from Record, such as Record::TYPE_A
+     *  When using CAA type, you can provide exact match, or just issuer domain as $target
+     * @param array<string> $dnsServers DNS server IP(s) or domain(s) to use for validation
      */
-    protected mixed $logs;
-
-    /**
-     * @var string
-     */
-    protected string $dnsServer;
-
-    /**
-     * @param string $target
-     */
-    public function __construct(protected string $target, protected string $type = self::RECORD_CNAME, string $dnsServer = '')
+    public function __construct(string $target, int $type = Record::TYPE_CNAME, array $dnsServers = [])
     {
-        if (empty($dnsServer)) {
-            $dnsServer = System::getEnv('_APP_DNS', '8.8.8.8');
-        }
+        parent::__construct($target, $type, $dnsServers[0] ?? self::DEFAULT_DNS_SERVER);
 
-        $this->dnsServer = $dnsServer;
+        $this->dnsServers = $dnsServers;
     }
 
     /**
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return 'Invalid DNS record';
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLogs(): mixed
-    {
-        return $this->logs;
-    }
-
-    /**
-     * Check if DNS record value matches specific value
+     * Validate DNS record value against multiple DNS servers
      *
-     * @param mixed $domain
+     * @param mixed $value
      * @return bool
      */
-    public function isValid($value): bool
+    public function isValid(mixed $value): bool
     {
-        if (!is_string($value)) {
-            return false;
-        }
+        $wg = new WaitGroup();
+        $failedValidator = null;
 
-        $dns = new Client($this->dnsServer);
+        foreach ($this->dnsServers as $dnsServer) {
+            $wg->add();
 
-        try {
-            $rawQuery = $dns->query($value, $this->type);
+            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+                try {
+                    $validator = new BaseDNS($this->target, $this->type, $dnsServer);
+                    $isValid = $validator->isValid($value);
 
-            // Some DNS servers return all records, not only type that's asked for
-            // Likely occurs when no records of specific type are found
-            $query = array_filter($rawQuery, function ($record) {
-                return $record->getTypeName() === $this->type;
+                    if (!$isValid) {
+                        $failedValidator = $validator;
+                    }
+                } finally {
+                    $wg->done();
+                }
             });
+        }
 
-            $this->logs = $query;
-        } catch (\Exception $e) {
-            $this->logs = ['error' => $e->getMessage()];
+        $wg->wait();
+
+        if (!\is_null($failedValidator)) {
+            $this->count = $failedValidator->count;
+            $this->value = $failedValidator->value;
+            $this->reason = $failedValidator->reason;
+            $this->records = $failedValidator->records;
             return false;
         }
 
-        if (empty($query)) {
-            // CAA records inherit from parent (custom CAA behaviour)
-            if ($this->type === self::RECORD_CAA) {
-                $domain = new Domain($value);
-                if ($domain->get() === $domain->getApex()) {
-                    return true; // No CAA on apex domain means anyone can issue certificate
-                }
-
-                // Recursive validation by parent domain
-                $parts = \explode('.', $value);
-                \array_shift($parts);
-                $parentDomain = \implode('.', $parts);
-                $validator = new DNS($this->target, DNS::RECORD_CAA, $this->dnsServer);
-                return $validator->isValid($parentDomain);
-            }
-
-            return false;
-        }
-
-        foreach ($query as $record) {
-            // CAA validation only needs to ensure domain
-            if ($this->type === self::RECORD_CAA) {
-                // Extract domain; comments showcase extraction steps in most complex scenario
-                $rdata = $record->getRdata(); // 255 issuewild "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
-                $rdata = \explode(' ', $rdata, 3)[2] ?? ''; // "certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600"
-                $rdata = \trim($rdata, '"'); // certainly.com;validationmethods=tls-alpn-01;retrytimeout=3600
-                $rdata = \explode(';', $rdata, 2)[0] ?? ''; // certainly.com
-
-                if ($rdata === $this->target) {
-                    return true;
-                }
-            }
-
-            if ($record->getRdata() === $this->target) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
+        return true;
     }
 }

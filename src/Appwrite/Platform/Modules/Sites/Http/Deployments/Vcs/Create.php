@@ -2,24 +2,27 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs;
 
-use Appwrite\Event\Build;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -42,6 +45,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -51,7 +55,7 @@ class Create extends Base
 
                 This endpoint lets you create deployment from a branch, commit, or a tag.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -59,9 +63,9 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             // TODO: Support tag in future
-            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit')
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit', enum: new Enum(name: 'VCSReferenceType'))
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
@@ -70,8 +74,11 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
-            ->inject('gitHub')
+            ->inject('publisherForBuilds')
+            ->inject('vcsFactory')
+            ->inject('authorization')
+            ->inject('deployments')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -86,8 +93,11 @@ class Create extends Base
         Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
-        Build $queueForBuilds,
-        GitHub $github
+        BuildPublisher $publisherForBuilds,
+        VcsFactory $vcsFactory,
+        Authorization $authorization,
+        Backend $deployments,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -99,6 +109,10 @@ class Create extends Base
 
         $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
 
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $deployment = $this->redeployVcsSite(
             request: $request,
             site: $site,
@@ -106,12 +120,15 @@ class Create extends Base
             installation: $installation,
             dbForProject: $dbForProject,
             dbForPlatform: $dbForPlatform,
-            queueForBuilds: $queueForBuilds,
+            publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $github,
+            vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
+            authorization: $authorization,
+            deployments: $deployments,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            platform: $platform
         );
 
         $queueForEvents

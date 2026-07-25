@@ -10,7 +10,7 @@ class BodyMultipart
     private array $parts = [];
     private string $boundary = "";
 
-    public function __construct(string $boundary = null)
+    public function __construct(?string $boundary = null)
     {
         if (is_null($boundary)) {
             $this->boundary = self::generateBoundary();
@@ -64,7 +64,7 @@ class BodyMultipart
 
                 $partHeaderArray = \explode(':', $partHeader, 2);
 
-                $partHeaderName = \strtolower($partHeaderArray[0] ?? '');
+                $partHeaderName = \strtolower($partHeaderArray[0]);
                 $partHeaderValue = $partHeaderArray[1] ?? '';
                 if ($partHeaderName == "content-disposition") {
                     $dispositionChunks = \explode("; ", $partHeaderValue);
@@ -92,7 +92,7 @@ class BodyMultipart
      */
     public function getParts(): array
     {
-        return $this->parts ?? [];
+        return $this->parts;
     }
 
     public function getPart(string $key, mixed $default = ''): mixed

@@ -3,27 +3,29 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
-use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Platform\Scope\HTTP;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'table' or 'collection').
      */
-    private ?string $context = COLLECTIONS;
+    private string $context = COLLECTIONS;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+        return $this;
     }
 
     /**
@@ -104,5 +106,76 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::COLLECTION_LIMIT_EXCEEDED
             : Exception::TABLE_LIMIT_EXCEEDED;
+    }
+
+    /**
+     * Get the appropriate format unsupported exception.
+     */
+    protected function getFormatUnsupportedException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_FORMAT_UNSUPPORTED
+            : Exception::COLUMN_FORMAT_UNSUPPORTED;
+    }
+
+    /**
+     * Get the correct default unsupported message.
+     */
+    protected function getDefaultUnsupportedException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED
+            : Exception::COLUMN_DEFAULT_UNSUPPORTED;
+    }
+
+    /**
+     * Get the appropriate parent level not found exception.
+     */
+    protected function getParentNotFoundException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::COLLECTION_NOT_FOUND
+            : Exception::TABLE_NOT_FOUND;
+    }
+
+    /**
+     * Get the correct invalid structure message.
+     */
+    protected function getStructureException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_INVALID_STRUCTURE
+            : Exception::ROW_INVALID_STRUCTURE;
+    }
+
+    /**
+     * Get the exception for unknown attribute/column in index.
+     */
+    protected function getParentUnknownException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_UNKNOWN
+            : Exception::COLUMN_UNKNOWN;
+    }
+
+    /**
+     * Get the exception for invalid attribute/column type in index.
+     */
+    protected function getParentInvalidTypeException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_TYPE_INVALID
+            : Exception::COLUMN_TYPE_INVALID;
+    }
+
+    /**
+     * Add row bytes information to a collection/table document.
+     */
+    protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
+    {
+        $adapter = $dbForProject->getAdapter();
+        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
+        return $document;
     }
 }

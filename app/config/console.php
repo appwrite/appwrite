@@ -4,7 +4,6 @@
  * Initializes console project document.
  */
 
-use Appwrite\Auth\Auth;
 use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
@@ -27,7 +26,7 @@ $console = [
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],
-    'region' => 'fra',
+    'region' => System::getEnv('_APP_REGION', 'default'),
     'legalName' => '',
     'legalCountry' => '',
     'legalState' => '',
@@ -35,11 +34,22 @@ $console = [
     'legalAddress' => '',
     'legalTaxId' => '',
     'auths' => [
+        'membershipsUserName' => true,
+        'membershipsUserEmail' => true,
+        'membershipsMfa' => true,
+        'membershipsUserId' => true,
+        'membershipsUserPhone' => true,
+        'membershipsUserAccessedAt' => true,
         'mockNumbers' => [],
         'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
         'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
-        'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+        'duration' => TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled',
+        // For email configuration, false means feature is disabled; false means these emails are allowed during sign-ups
+        'disposableEmails' => false,
+        'canonicalEmails' => false,
+        'freeEmails' => false,
+        'corporateEmails' => false,
         'invalidateSessions' => true
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],

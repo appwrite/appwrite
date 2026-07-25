@@ -3,12 +3,17 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class DetectionRuntime extends Model
+class DetectionRuntime extends Detection
 {
     public function __construct()
     {
+        $this->conditions = [
+            'type' => 'runtime',
+        ];
+
+        parent::__construct('runtime');
+
         $this
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,

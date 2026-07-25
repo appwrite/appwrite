@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
+use Appwrite\Bus\Events\ExecutionCancelled;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -10,8 +11,10 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -34,11 +37,12 @@ class Delete extends Base
             ->setHttpPath('/v1/functions/:functionId/executions/:executionId')
             ->desc('Delete execution')
             ->groups(['api', 'functions'])
-            ->label('scope', 'execution.write')
+            ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].delete')
             ->label('audits.event', 'executions.delete')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -46,7 +50,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete a function execution by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -55,12 +59,15 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('executionId', '', new UID(), 'Execution ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('authorization')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -68,9 +75,12 @@ class Delete extends Base
         string $functionId,
         string $executionId,
         Response $response,
+        Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $authorization,
+        Bus $bus,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -78,43 +88,58 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
-        if ($execution->isEmpty()) {
+        // Executions are not persisted by Server CE; only a pending scheduled
+        // execution can be cancelled, through its schedule.
+        $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
+            Query::equal('resourceId', [$executionId]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('active', [true]),
+        ]));
+
+        if ($schedule->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
-        if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
+        if (($schedule->getAttribute('data')['functionId'] ?? null) !== $function->getId()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
-        $status = $execution->getAttribute('status');
 
-        if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
-            throw new Exception(Exception::EXECUTION_IN_PROGRESS);
-        }
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+            'resourceUpdatedAt' => DateTime::now(),
+            'active' => false,
+        ])));
 
-        if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove execution from DB');
-        }
+        $execution = new Document([
+            '$id' => $executionId,
+            '$createdAt' => DateTime::now(),
+            '$updatedAt' => DateTime::now(),
+            '$permissions' => [],
+            'functionId' => $function->getId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
+            'deploymentId' => '',
+            'trigger' => 'schedule',
+            'status' => 'scheduled',
+            'requestMethod' => '',
+            'requestPath' => '',
+            'requestHeaders' => [],
+            'responseStatusCode' => 0,
+            'responseBody' => '',
+            'responseHeaders' => [],
+            'logs' => '',
+            'errors' => '',
+            'duration' => 0.0,
+        ]);
 
-        if ($status === 'scheduled') {
-            $schedule = $dbForPlatform->findOne('schedules', [
-                Query::equal('resourceId', [$execution->getId()]),
-                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
-                Query::equal('active', [true]),
-            ]);
-
-            if (!$schedule->isEmpty()) {
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('active', false);
-
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
-            }
-        }
+        $bus->dispatch(new ExecutionCancelled(
+            execution: $execution->getArrayCopy(),
+            project: $project->getArrayCopy(),
+        ));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
+            ->setParam('executionId', $executionId)
             ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
 
         $response->noContent();

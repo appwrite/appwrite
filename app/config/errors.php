@@ -27,7 +27,7 @@ return [
     Exception::GENERAL_RESOURCE_BLOCKED => [
         'name' => Exception::GENERAL_RESOURCE_BLOCKED,
         'description' => 'Access to this resource is blocked.',
-        'code' => 401,
+        'code' => 403,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -53,6 +53,11 @@ return [
         'name' => Exception::GENERAL_RATE_LIMIT_EXCEEDED,
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
+    ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
@@ -139,6 +144,11 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_FEATURE_UNSUPPORTED => [
+        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
+        'description' => 'This feature is not supported with your current configuration.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -163,8 +173,8 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
-        'code' => 401,
+        'description' => 'The current user has been blocked.',
+        'code' => 403,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
@@ -220,6 +230,26 @@ return [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
         'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
+    ],
+    Exception::USER_EMAIL_DISPOSABLE => [
+        'name' => Exception::USER_EMAIL_DISPOSABLE,
+        'description' => 'Disposable email addresses are not allowed. Please use a permanent email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_FREE => [
+        'name' => Exception::USER_EMAIL_FREE,
+        'description' => 'Free email addresses are not allowed. Please use a business or custom-domain email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CANONICAL => [
+        'name' => Exception::USER_EMAIL_NOT_CANONICAL,
+        'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CORPORATE => [
+        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
+        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
+        'code' => 400,
     ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
@@ -317,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',
@@ -357,9 +392,14 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::USER_JWT_AND_COOKIE_SET => [
+        'name' => Exception::USER_JWT_AND_COOKIE_SET,
+        'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
-        'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
+        'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
         'code' => 401,
     ],
 
@@ -482,6 +522,11 @@ return [
         'description' => 'The given file extension is not supported.',
         'code' => 400,
     ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
+        'code' => 400,
+    ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
         'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
@@ -520,6 +565,11 @@ return [
     Exception::STORAGE_FILE_NOT_PUBLIC => [
         'name' => Exception::STORAGE_FILE_NOT_PUBLIC,
         'description' => 'The requested file is not publicly readable.',
+        'code' => 403,
+    ],
+    Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED => [
+        'name' => Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED,
+        'description' => 'Image transformations are disabled for the requested bucket.',
         'code' => 403,
     ],
 
@@ -593,6 +643,11 @@ return [
         'description' => 'Synchronous function execution timed out. Use asynchronous execution instead, or ensure the execution duration doesn\'t exceed 30 seconds.',
         'code' => 408,
     ],
+    Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT => [
+        'name' => Exception::FUNCTION_ASYNCHRONOUS_TIMEOUT,
+        'description' => 'Asynchronous function execution timed out. Ensure the execution duration doesn\'t exceed the configured function timeout.',
+        'code' => 408,
+    ],
     Exception::FUNCTION_TEMPLATE_NOT_FOUND => [
         'name' => Exception::FUNCTION_TEMPLATE_NOT_FOUND,
         'description' => 'Function Template with the requested ID could not be found.',
@@ -614,6 +669,11 @@ return [
         'name' => Exception::SITE_NOT_FOUND,
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::SITE_ALREADY_EXISTS => [
+        'name' => Exception::SITE_ALREADY_EXISTS,
+        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
@@ -652,6 +712,11 @@ return [
         'description' => 'Build with the requested ID failed. Please check the logs for more information.',
         'code' => 400,
     ],
+    Exception::BUILD_TIMEOUT => [
+        'name' => Exception::BUILD_TIMEOUT,
+        'description' => 'Build timed out. Increase the build timeout via the `_APP_COMPUTE_BUILD_TIMEOUT` environment variable, or simplify the build to complete within the limit.',
+        'code' => 408,
+    ],
 
     /** Deployments */
     Exception::DEPLOYMENT_NOT_FOUND => [
@@ -680,15 +745,27 @@ return [
         'code' => 404,
     ],
 
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PRESENCE_ALREADY_EXISTS => [
+        'name' => Exception::PRESENCE_ALREADY_EXISTS,
+        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
     /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,
-        'description' => 'Database not found',
+        'description' => 'Database with the requested ID \'%s\' could not be found.',
         'code' => 404
     ],
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
-        'description' => 'Database already exists',
+        'description' => 'Database with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409
     ],
     Exception::DATABASE_TIMEOUT => [
@@ -705,41 +782,41 @@ return [
     /** Collections */
     Exception::COLLECTION_NOT_FOUND => [
         'name' => Exception::COLLECTION_NOT_FOUND,
-        'description' => 'Collection with the requested ID could not be found.',
+        'description' => 'Collection with the requested ID \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'A collection with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
         'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of collections has been reached.',
+        'description' => 'The maximum number of collections for database \'%s\' has been reached.',
         'code' => 400,
     ],
 
     /** Tables */
     Exception::TABLE_NOT_FOUND => [
         'name' => Exception::TABLE_NOT_FOUND,
-        'description' => 'Table with the requested ID could not be found.',
+        'description' => 'Table with the requested ID \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::TABLE_ALREADY_EXISTS => [
         'name' => Exception::TABLE_ALREADY_EXISTS,
-        'description' => 'A table with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'A table with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::TABLE_LIMIT_EXCEEDED => [
         'name' => Exception::TABLE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of tables has been reached.',
+        'description' => 'The maximum number of tables for database \'%s\' has been reached.',
         'code' => 400,
     ],
 
     /** Documents */
     Exception::DOCUMENT_NOT_FOUND => [
         'name' => Exception::DOCUMENT_NOT_FOUND,
-        'description' => 'Document with the requested ID could not be found.',
+        'description' => 'Document with the requested ID \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::DOCUMENT_INVALID_STRUCTURE => [
@@ -759,7 +836,7 @@ return [
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'Document with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
@@ -776,7 +853,7 @@ return [
     /** Rows */
     Exception::ROW_NOT_FOUND => [
         'name' => Exception::ROW_NOT_FOUND,
-        'description' => 'Row with the requested ID could not be found.',
+        'description' => 'Row with the requested ID \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::ROW_INVALID_STRUCTURE => [
@@ -786,7 +863,7 @@ return [
     ],
     Exception::ROW_MISSING_DATA => [
         'name' => Exception::ROW_MISSING_DATA,
-        'description' => 'The row data is missing. Try again with row data populated',
+        'description' => 'The row data is missing. Try again with row data populated.',
         'code' => 400,
     ],
     Exception::ROW_MISSING_PAYLOAD => [
@@ -796,7 +873,7 @@ return [
     ],
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
-        'description' => 'Row with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'Row with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [
@@ -813,17 +890,17 @@ return [
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [
         'name' => Exception::ATTRIBUTE_NOT_FOUND,
-        'description' => 'Attribute with the requested ID could not be found.',
+        'description' => 'Attribute with the requested key \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
+        'description' => 'The attribute \'%s\' required for the index could not be found. Please confirm all your attributes are in the available state.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet available. Please try again later.',
+        'description' => 'The requested attribute \'%s\' is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
@@ -838,12 +915,12 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
+        'description' => 'Attribute with the requested key \'%s\' already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
         'name' => Exception::ATTRIBUTE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number or size of attributes for this collection has been reached.',
+        'description' => 'The maximum number or size of attributes for collection \'%s\' has been reached.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
@@ -853,7 +930,7 @@ return [
     ],
     Exception::ATTRIBUTE_TYPE_INVALID => [
         'name' => Exception::ATTRIBUTE_TYPE_INVALID,
-        'description' => 'The attribute type is invalid.',
+        'description' => 'The attribute \'%s\' type is invalid.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_INVALID_RESIZE => [
@@ -864,7 +941,7 @@ return [
 
     Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED => [
         'name' => Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED,
-        'description' => 'Attribute type is not supported.',
+        'description' => 'Attribute type \'%s\' is not supported.',
         'code' => 400,
     ],
 
@@ -878,17 +955,17 @@ return [
     /** Columns */
     Exception::COLUMN_NOT_FOUND => [
         'name' => Exception::COLUMN_NOT_FOUND,
-        'description' => 'Column with the requested ID could not be found.',
+        'description' => 'Column with the requested key \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::COLUMN_UNKNOWN => [
         'name' => Exception::COLUMN_UNKNOWN,
-        'description' => 'The column required for the index could not be found. Please confirm all your columns are in the available state.',
+        'description' => 'The column \'%s\' required for the index could not be found. Please confirm all your columns are in the available state.',
         'code' => 400,
     ],
     Exception::COLUMN_NOT_AVAILABLE => [
         'name' => Exception::COLUMN_NOT_AVAILABLE,
-        'description' => 'The requested column is not yet available. Please try again later.',
+        'description' => 'The requested column \'%s\' is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::COLUMN_FORMAT_UNSUPPORTED => [
@@ -903,12 +980,12 @@ return [
     ],
     Exception::COLUMN_ALREADY_EXISTS => [
         'name' => Exception::COLUMN_ALREADY_EXISTS,
-        'description' => 'Column with the requested key already exists. Column keys must be unique, try again with a different key.',
+        'description' => 'Column with the requested key \'%s\' already exists. Column keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::COLUMN_LIMIT_EXCEEDED => [
         'name' => Exception::COLUMN_LIMIT_EXCEEDED,
-        'description' => 'The maximum number or size of columns for this table has been reached.',
+        'description' => 'The maximum number or size of columns for table \'%s\' has been reached.',
         'code' => 400,
     ],
     Exception::COLUMN_VALUE_INVALID => [
@@ -918,7 +995,7 @@ return [
     ],
     Exception::COLUMN_TYPE_INVALID => [
         'name' => Exception::COLUMN_TYPE_INVALID,
-        'description' => 'The column type is invalid.',
+        'description' => 'The column \'%s\' type is invalid.',
         'code' => 400,
     ],
     Exception::COLUMN_INVALID_RESIZE => [
@@ -928,24 +1005,24 @@ return [
     ],
     Exception::COLUMN_TYPE_NOT_SUPPORTED => [
         'name' => Exception::COLUMN_TYPE_NOT_SUPPORTED,
-        'description' => 'Column type is not supported.',
+        'description' => 'Column type \'%s\' is not supported.',
         'code' => 400,
     ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [
         'name' => Exception::INDEX_NOT_FOUND,
-        'description' => 'Index with the requested ID could not be found.',
+        'description' => 'Index with the requested key \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::INDEX_LIMIT_EXCEEDED => [
         'name' => Exception::INDEX_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of indexes has been reached.',
+        'description' => 'The maximum number of indexes for collection \'%s\' has been reached.',
         'code' => 400,
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested key already exists. Try again with a different key.',
+        'description' => 'Index with the requested key \'%s\' already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
@@ -955,24 +1032,24 @@ return [
     ],
     Exception::INDEX_DEPENDENCY => [
         'name' => Exception::INDEX_DEPENDENCY,
-        'description' => 'Attribute cannot be renamed or deleted. Please remove the associated index first.',
+        'description' => 'Attribute \'%s\' cannot be renamed or deleted. Please remove the associated index first.',
         'code' => 409,
     ],
 
     /** Column Indexes, same as Indexes but with different type */
     Exception::COLUMN_INDEX_NOT_FOUND => [
         'name' => Exception::COLUMN_INDEX_NOT_FOUND,
-        'description' => 'Index with the requested ID could not be found.',
+        'description' => 'Index with the requested key \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::COLUMN_INDEX_LIMIT_EXCEEDED => [
         'name' => Exception::COLUMN_INDEX_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of indexes has been reached.',
+        'description' => 'The maximum number of indexes for table \'%s\' has been reached.',
         'code' => 400,
     ],
     Exception::COLUMN_INDEX_ALREADY_EXISTS => [
         'name' => Exception::COLUMN_INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested key already exists. Try again with a different key.',
+        'description' => 'Index with the requested key \'%s\' already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::COLUMN_INDEX_INVALID => [
@@ -982,19 +1059,19 @@ return [
     ],
     Exception::COLUMN_INDEX_DEPENDENCY => [
         'name' => Exception::COLUMN_INDEX_DEPENDENCY,
-        'description' => 'Column cannot be renamed or deleted. Please remove the associated index first.',
+        'description' => 'Column \'%s\' cannot be renamed or deleted. Please remove the associated index first.',
         'code' => 409,
     ],
 
     /** Transactions */
     Exception::TRANSACTION_NOT_FOUND => [
         'name' => Exception::TRANSACTION_NOT_FOUND,
-        'description' => 'Transaction with the requested ID could not be found.',
+        'description' => 'Transaction with the requested ID \'%s\' could not be found.',
         'code' => 404,
     ],
     Exception::TRANSACTION_ALREADY_EXISTS => [
         'name' => Exception::TRANSACTION_ALREADY_EXISTS,
-        'description' => 'Transaction with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'Transaction with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::TRANSACTION_INVALID => [
@@ -1069,6 +1146,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ACCOUNT_KEY_EXPIRED => [
+        'name' => Exception::ACCOUNT_KEY_EXPIRED,
+        'description' => 'The account API key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
+    ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
@@ -1098,7 +1180,6 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 400,
-        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -1120,15 +1201,40 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::WEBHOOK_ALREADY_EXISTS => [
+        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
+        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::KEY_ALREADY_EXISTS => [
+        'name' => Exception::KEY_ALREADY_EXISTS,
+        'description' => 'Key with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
+    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::PLATFORM_METHOD_UNSUPPORTED => [
+        'name' => Exception::PLATFORM_METHOD_UNSUPPORTED,
+        'description' => 'The requested platform has invalid type. Please use corresponding update method for the platform type.',
+        'code' => 400,
+    ],
+    Exception::PLATFORM_ALREADY_EXISTS => [
+        'name' => Exception::PLATFORM_ALREADY_EXISTS,
+        'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',
+        'code' => 409,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
@@ -1171,6 +1277,31 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
+        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
+        'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED,
+        'description' => 'A source projectId is required for Appwrite migrations. Provide it in the migration credentials.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND => [
+        'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
+        'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
+        'description' => 'The migration source type is invalid. Use one of the supported source types.',
+        'code' => 400,
+    ],
+    Exception::MIGRATION_DESTINATION_TYPE_INVALID => [
+        'name' => Exception::MIGRATION_DESTINATION_TYPE_INVALID,
+        'description' => 'The migration destination type is invalid. Use one of the supported destination types.',
+        'code' => 400,
     ],
 
     /** Realtime */
@@ -1267,6 +1398,11 @@ return [
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::MESSAGE_ALREADY_EXISTS => [
+        'name' => Exception::MESSAGE_ALREADY_EXISTS,
+        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
         'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
@@ -1323,5 +1459,59 @@ return [
         'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
+    ],
+    Exception::USER_ID_MISSING => [
+        'name' => Exception::USER_ID_MISSING,
+        'description' => 'When using account API key, make sure to pass x-appwrite-user header with your user ID.',
+        'code' => 403,
+    ],
+    Exception::ORGANIZATION_ID_MISSING => [
+        'name' => Exception::ORGANIZATION_ID_MISSING,
+        'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
+        'code' => 403,
+    ],
+    Exception::PROJECT_ID_MISSING => [
+        'name' => Exception::PROJECT_ID_MISSING,
+        'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
+        'code' => 403,
+    ],
+    Exception::MOCK_NUMBER_ALREADY_EXISTS => [
+        'name' => Exception::MOCK_NUMBER_ALREADY_EXISTS,
+        'description' => 'Mock number with the requested number already exists. Try again with a different number. or update OTP of existing mock number.',
+        'code' => 409,
+    ],
+    Exception::MOCK_NUMBER_NOT_FOUND => [
+        'name' => Exception::MOCK_NUMBER_NOT_FOUND,
+        'description' => 'Mock number with the requested number could not be found.',
+        'code' => 404,
+    ],
+    Exception::MOCK_NUMBER_LIMIT_EXCEEDED => [
+        'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of mock phones for this project has been reached.',
+        'code' => 400,
+    ],
+
+    /** Advisor */
+    Exception::INSIGHT_NOT_FOUND => [
+        'name' => Exception::INSIGHT_NOT_FOUND,
+        'description' => 'Insight with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSIGHT_ALREADY_EXISTS => [
+        'name' => Exception::INSIGHT_ALREADY_EXISTS,
+        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reports */
+    Exception::REPORT_NOT_FOUND => [
+        'name' => Exception::REPORT_NOT_FOUND,
+        'description' => 'Report with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPORT_ALREADY_EXISTS => [
+        'name' => Exception::REPORT_ALREADY_EXISTS,
+        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 ];

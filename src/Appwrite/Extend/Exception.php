@@ -45,6 +45,7 @@ class Exception extends \Exception
     public const string GENERAL_SERVICE_DISABLED = 'general_service_disabled';
     public const string GENERAL_UNAUTHORIZED_SCOPE = 'general_unauthorized_scope';
     public const string GENERAL_RATE_LIMIT_EXCEEDED = 'general_rate_limit_exceeded';
+    public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
@@ -55,6 +56,7 @@ class Exception extends \Exception
     public const string GENERAL_CURSOR_NOT_FOUND = 'general_cursor_not_found';
     public const string GENERAL_SERVER_ERROR = 'general_server_error';
     public const string GENERAL_PROTOCOL_UNSUPPORTED = 'general_protocol_unsupported';
+    public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
@@ -81,6 +83,10 @@ class Exception extends \Exception
     public const string USER_PASSWORD_RECENTLY_USED = 'password_recently_used';
     public const string USER_PASSWORD_PERSONAL_DATA = 'password_personal_data';
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
+    public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
+    public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
+    public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
     public const string USER_IDENTITY_NOT_FOUND = 'user_identity_not_found';
@@ -102,12 +108,15 @@ class Exception extends \Exception
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
     public const string USER_DELETION_PROHIBITED = 'user_deletion_prohibited';
     public const string USER_TARGET_NOT_FOUND = 'user_target_not_found';
     public const string USER_TARGET_ALREADY_EXISTS = 'user_target_already_exists';
-    public const string USER_API_KEY_AND_SESSION_SET = 'user_key_and_session_set';
+    public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
+    public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
+    public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
 
@@ -118,6 +127,8 @@ class Exception extends \Exception
     public const string TEAM_MEMBERSHIP_MISMATCH = 'team_membership_mismatch';
     public const string TEAM_INVITE_MISMATCH = 'team_invite_mismatch';
     public const string TEAM_ALREADY_EXISTS = 'team_already_exists';
+
+    public const string ORGANIZATION_ID_MISSING = 'organization_id_missing';
 
     /** Console */
     public const string RESOURCE_ALREADY_EXISTS = 'resource_already_exists';
@@ -142,6 +153,7 @@ class Exception extends \Exception
     public const string STORAGE_DEVICE_NOT_FOUND = 'storage_device_not_found';
     public const string STORAGE_FILE_EMPTY = 'storage_file_empty';
     public const string STORAGE_FILE_TYPE_UNSUPPORTED = 'storage_file_type_unsupported';
+    public const string STORAGE_IMAGE_RESOLUTION_EXCEEDED = 'storage_image_resolution_exceeded';
     public const string STORAGE_INVALID_FILE_SIZE = 'storage_invalid_file_size';
     public const string STORAGE_INVALID_FILE = 'storage_invalid_file';
     public const string STORAGE_BUCKET_ALREADY_EXISTS = 'storage_bucket_already_exists';
@@ -150,6 +162,7 @@ class Exception extends \Exception
     public const string STORAGE_INVALID_RANGE = 'storage_invalid_range';
     public const string STORAGE_INVALID_APPWRITE_ID = 'storage_invalid_appwrite_id';
     public const string STORAGE_FILE_NOT_PUBLIC = 'storage_file_not_public';
+    public const string STORAGE_BUCKET_TRANSFORMATIONS_DISABLED = 'storage_bucket_transformations_disabled';
 
     /** VCS */
     public const string INSTALLATION_NOT_FOUND = 'installation_not_found';
@@ -160,6 +173,7 @@ class Exception extends \Exception
 
     /** Sites */
     public const string SITE_NOT_FOUND = 'site_not_found';
+    public const string SITE_ALREADY_EXISTS = 'site_already_exists';
     public const string SITE_TEMPLATE_NOT_FOUND = 'site_template_not_found';
 
     /** Functions */
@@ -168,6 +182,7 @@ class Exception extends \Exception
     public const string FUNCTION_RUNTIME_UNSUPPORTED = 'function_runtime_unsupported';
     public const string FUNCTION_ENTRYPOINT_MISSING = 'function_entrypoint_missing';
     public const string FUNCTION_SYNCHRONOUS_TIMEOUT = 'function_synchronous_timeout';
+    public const string FUNCTION_ASYNCHRONOUS_TIMEOUT = 'function_asynchronous_timeout';
     public const string FUNCTION_TEMPLATE_NOT_FOUND = 'function_template_not_found';
     public const string FUNCTION_RUNTIME_NOT_DETECTED = 'function_runtime_not_detected';
     public const string FUNCTION_EXECUTE_PERMISSION_MISSING = 'function_execute_permission_missing';
@@ -182,6 +197,7 @@ class Exception extends \Exception
     public const string BUILD_ALREADY_COMPLETED = 'build_already_completed';
     public const string BUILD_CANCELED = 'build_canceled';
     public const string BUILD_FAILED = 'build_failed';
+    public const string BUILD_TIMEOUT = 'build_timeout';
 
     /** Execution */
     public const string EXECUTION_NOT_FOUND = 'execution_not_found';
@@ -189,6 +205,10 @@ class Exception extends \Exception
 
     /** Log */
     public const string LOG_NOT_FOUND = 'log_not_found';
+
+    /** Presence */
+    public const string PRESENCE_NOT_FOUND = 'presence_not_found';
+    public const string PRESENCE_ALREADY_EXISTS = 'presence_already_exists';
 
     /** Databases */
     public const string DATABASE_NOT_FOUND = 'database_not_found';
@@ -282,6 +302,7 @@ class Exception extends \Exception
 
     /** Projects */
     public const string PROJECT_NOT_FOUND = 'project_not_found';
+    public const string PROJECT_ID_MISSING = 'project_id_missing';
     public const string PROJECT_PROVIDER_DISABLED = 'project_provider_disabled';
     public const string PROJECT_PROVIDER_UNSUPPORTED = 'project_provider_unsupported';
     public const string PROJECT_ALREADY_EXISTS = 'project_already_exists';
@@ -289,6 +310,7 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
 
@@ -298,6 +320,7 @@ class Exception extends \Exception
 
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
+    public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -311,6 +334,10 @@ class Exception extends \Exception
 
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
+    public const string KEY_ALREADY_EXISTS = 'key_already_exists';
+
+    /** Dev Keys */
+    public const string DEV_KEY_GONE = 'dev_key_gone';
 
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
@@ -319,6 +346,8 @@ class Exception extends \Exception
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
+    public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
+    public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
@@ -329,6 +358,11 @@ class Exception extends \Exception
     public const string MIGRATION_ALREADY_EXISTS = 'migration_already_exists';
     public const string MIGRATION_IN_PROGRESS = 'migration_in_progress';
     public const string MIGRATION_PROVIDER_ERROR = 'migration_provider_error';
+    public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
+    public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
+    public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
+    public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 
     /** Realtime */
     public const string REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
@@ -356,6 +390,7 @@ class Exception extends \Exception
 
     /** Message */
     public const string MESSAGE_NOT_FOUND = 'message_not_found';
+    public const string MESSAGE_ALREADY_EXISTS = 'message_already_exists';
     public const string MESSAGE_MISSING_TARGET = 'message_missing_target';
     public const string MESSAGE_ALREADY_SENT = 'message_already_sent';
     public const string MESSAGE_ALREADY_PROCESSING = 'message_already_processing';
@@ -365,6 +400,11 @@ class Exception extends \Exception
     public const string MESSAGE_TARGET_NOT_SMS = 'message_target_not_sms';
     public const string MESSAGE_TARGET_NOT_PUSH = 'message_target_not_push';
     public const string MESSAGE_MISSING_SCHEDULE = 'message_missing_schedule';
+
+    /** Mocks */
+    public const string MOCK_NUMBER_ALREADY_EXISTS = 'mock_number_already_exists';
+    public const string MOCK_NUMBER_NOT_FOUND = 'mock_number_not_found';
+    public const string MOCK_NUMBER_LIMIT_EXCEEDED = 'mock_number_limit_exceeded';
 
     /** Targets */
     public const string TARGET_PROVIDER_INVALID_TYPE = 'target_provider_invalid_type';
@@ -377,6 +417,14 @@ class Exception extends \Exception
     public const string TOKEN_EXPIRED = 'token_expired';
     public const string TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
 
+    /** Advisor */
+    public const string INSIGHT_NOT_FOUND = 'insight_not_found';
+    public const string INSIGHT_ALREADY_EXISTS = 'insight_already_exists';
+
+    /** Reports */
+    public const string REPORT_NOT_FOUND = 'report_not_found';
+    public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
+
     protected string $type = '';
     protected array $errors = [];
     protected bool $publish;
@@ -385,10 +433,11 @@ class Exception extends \Exception
 
     public function __construct(
         string $type = Exception::GENERAL_UNKNOWN,
-        string $message = null,
-        int|string $code = null,
-        \Throwable $previous = null,
-        ?string $view = null
+        ?string $message = null,
+        int|string|null $code = null,
+        ?\Throwable $previous = null,
+        ?string $view = null,
+        array $params = []
     ) {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -404,7 +453,13 @@ class Exception extends \Exception
             }
         }
 
-        $this->message = $message ?? $this->errors[$type]['description'];
+        // Format message with params if provided
+        if (!empty($params) && $message === null) {
+            $description = $this->errors[$type]['description'] ?? '';
+            $this->message = !empty($description) ? sprintf($description, ...$params) : '';
+        } else {
+            $this->message = $message ?? $this->errors[$type]['description'];
+        }
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 

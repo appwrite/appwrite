@@ -130,7 +130,9 @@ class Mock extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return true;
+        $user = $this->getUser($accessToken);
+
+        return $user['verified'] ?? true;
     }
 
     /**

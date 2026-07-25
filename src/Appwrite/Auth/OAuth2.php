@@ -155,7 +155,7 @@ abstract class OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return int
      */
     public function getAccessTokenExpiry(string $code): int
     {
@@ -205,8 +205,6 @@ abstract class OAuth2
         $response = \curl_exec($ch);
 
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        \curl_close($ch);
 
         if ($code >= 400) {
             throw new Exception($response, $code);

@@ -5,6 +5,7 @@ namespace Appwrite\Auth;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -14,6 +15,8 @@ class Key
 {
     public function __construct(
         protected string $projectId,
+        protected string $teamId,
+        protected string $userId,
         protected string $type,
         protected string $role,
         protected array $scopes,
@@ -31,6 +34,16 @@ class Key
     public function getProjectId(): string
     {
         return $this->projectId;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getTeamId(): string
+    {
+        return $this->teamId;
     }
 
     public function getType(): string
@@ -92,15 +105,14 @@ class Key
 
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
-     * Can be a stored API key or a dynamic key (JWT).
+     * Can be a stored API key or an ephemeral key (JWT).
      *
-     * @param Document $project
-     * @param string $key
-     * @return Key
      * @throws Exception
      */
     public static function decode(
         Document $project,
+        Document $team,
+        Document $user,
         string $key
     ): Key {
         if (\str_contains($key, '_')) {
@@ -110,21 +122,25 @@ class Key
             $secret = $key;
         }
 
-        $role = Auth::USER_ROLE_APPS;
+        $role = User::ROLE_KEYS;
         $roles = Config::getParam('roles', []);
-        $scopes = $roles[Auth::USER_ROLE_APPS]['scopes'] ?? [];
+        $scopes = $roles[User::ROLE_KEYS]['scopes'] ?? [];
         $expired = false;
 
         $guestKey = new Key(
             $project->getId(),
+            '',
+            '',
             $type,
-            Auth::USER_ROLE_GUESTS,
-            $roles[Auth::USER_ROLE_GUESTS]['scopes'] ?? [],
+            User::ROLE_GUESTS,
+            $roles[User::ROLE_GUESTS]['scopes'] ?? [],
             'UNKNOWN'
         );
 
         switch ($type) {
-            case API_KEY_DYNAMIC:
+            // Dynamic supported for backwards compatibility
+            case API_KEY_EPHEMERAL:
+            case 'dynamic':
                 $jwtObj = new JWT(
                     key: System::getEnv('_APP_OPENSSL_KEY_V1'),
                     algo: 'HS256',
@@ -132,13 +148,14 @@ class Key
                     leeway: 0
                 );
 
+                $payload = [];
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
                     $expired = true;
                 }
 
-                $name = $payload['name'] ?? 'Dynamic Key';
+                $name = $payload['name'] ?? 'Ephemeral Key';
                 $projectId = $payload['projectId'] ?? '';
                 $disabledMetrics = $payload['disabledMetrics'] ?? [];
                 $hostnameOverride = $payload['hostnameOverride'] ?? false;
@@ -154,6 +171,8 @@ class Key
 
                 return new Key(
                     $projectId,
+                    '',
+                    '',
                     $type,
                     $role,
                     $scopes,
@@ -187,12 +206,86 @@ class Key
 
                 return new Key(
                     $project->getId(),
+                    '',
+                    '',
                     $type,
                     $role,
                     $scopes,
                     $name,
                     $expired
                 );
+            case API_KEY_ACCOUNT:
+                $key = $user->find(
+                    key: 'secret',
+                    find: $key,
+                    subject: 'keys'
+                );
+
+                // Invalid key
+                if (!$key) {
+                    return $guestKey;
+                }
+
+                $expire = $key->getAttribute('expire');
+                $expired = false;
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    $expired = true;
+                }
+
+                $name = $key->getAttribute('name', 'UNKNOWN');
+
+                $role = User::ROLE_USERS;
+
+                $scopes = $key->getAttribute('scopes', []);
+
+                $key = new Key(
+                    '',
+                    '',
+                    $user->getId(),
+                    $type,
+                    $role,
+                    $scopes,
+                    $name,
+                    $expired
+                );
+
+                return $key;
+            case API_KEY_ORGANIZATION:
+                $key = $team->find(
+                    key: 'secret',
+                    find: $key,
+                    subject: 'keys'
+                );
+
+                // Invalid key
+                if (!$key) {
+                    return $guestKey;
+                }
+
+                $expire = $key->getAttribute('expire');
+                $expired = false;
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    $expired = true;
+                }
+
+                $name = $key->getAttribute('name', 'UNKNOWN');
+
+                $role = User::ROLE_KEYS;
+
+                $scopes = $key->getAttribute('scopes', []);
+
+                $key = new Key(
+                    '',
+                    $team->getId(),
+                    '',
+                    $type,
+                    $role,
+                    $scopes,
+                    $name,
+                    $expired
+                );
+
+                return $key;
             default:
                 return $guestKey;
         }

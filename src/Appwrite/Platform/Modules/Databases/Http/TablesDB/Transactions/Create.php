@@ -8,7 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 class Create extends TransactionsCreate
@@ -37,7 +37,7 @@ class Create extends TransactionsCreate
                 group: 'transactions',
                 name: 'createTransaction',
                 description: '/docs/references/tablesdb/create-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
@@ -50,6 +50,7 @@ class Create extends TransactionsCreate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

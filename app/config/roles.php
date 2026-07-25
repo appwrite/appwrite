@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User;
 
 $member = [
     'global',
@@ -12,6 +12,8 @@ $member = [
     'account',
     'teams.read',
     'teams.write',
+    'presences.read',
+    'presences.write',
     'documents.read',
     'documents.write',
     'rows.read',
@@ -21,8 +23,8 @@ $member = [
     'projects.read',
     'locale.read',
     'avatars.read',
-    'execution.read',
-    'execution.write',
+    'executions.read',
+    'executions.write',
     'targets.read',
     'targets.write',
     'subscribers.write',
@@ -47,6 +49,8 @@ $admins = [
     'buckets.write',
     'users.read',
     'users.write',
+    'presences.read',
+    'presences.write',
     'databases.read',
     'databases.write',
     'collections.read',
@@ -55,11 +59,23 @@ $admins = [
     'tables.write',
     'platforms.read',
     'platforms.write',
+    'mocks.read',
+    'mocks.write',
+    'project.policies.read',
+    'project.policies.write',
+    'project.oauth2.read',
+    'project.oauth2.write',
+    'templates.read',
+    'templates.write',
     'projects.write',
     'keys.read',
     'keys.write',
+    'devKeys.read',
+    'devKeys.write',
     'webhooks.read',
     'webhooks.write',
+    'project.read',
+    'project.write',
     'locale.read',
     'avatars.read',
     'health.read',
@@ -69,8 +85,8 @@ $admins = [
     'sites.write',
     'log.read',
     'log.write',
-    'execution.read',
-    'execution.write',
+    'executions.read',
+    'executions.write',
     'rules.read',
     'rules.write',
     'migrations.read',
@@ -89,10 +105,18 @@ $admins = [
     'subscribers.read',
     'tokens.read',
     'tokens.write',
+    'schedules.read',
+    'schedules.write',
+    'stages.read',
+    'stages.write',
+    'insights.read',
+    'insights.write',
+    'reports.read',
+    'reports.write',
 ];
 
 return [
-    Auth::USER_ROLE_GUESTS => [
+    User::ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -109,26 +133,26 @@ return [
             'files.write',
             'locale.read',
             'avatars.read',
-            'execution.write',
+            'executions.write',
         ],
     ],
-    Auth::USER_ROLE_USERS => [
+    User::ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    Auth::USER_ROLE_ADMIN => [
+    User::ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_DEVELOPER => [
+    User::ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_OWNER => [
+    User::ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    Auth::USER_ROLE_APPS => [
+    User::ROLE_KEYS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

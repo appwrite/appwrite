@@ -3,14 +3,13 @@
 namespace Appwrite\Utopia\Request;
 
 use Utopia\Database\Database;
-use Utopia\Route;
 
 abstract class Filter
 {
     private array $params;
     private ?Database $dbForProject;
 
-    public function __construct(Database $dbForProject = null, array $params = [])
+    public function __construct(?Database $dbForProject = null, array $params = [])
     {
         $this->params = $params;
         $this->dbForProject = $dbForProject;
@@ -46,12 +45,6 @@ abstract class Filter
      */
     public function getParamValue(string $key, mixed $default = ''): mixed
     {
-        try {
-            $value = $this->params[$key] ?? $default;
-        } catch (\Exception $e) {
-            $value = $default;
-        }
-
-        return $value;
+        return $this->params[$key] ?? $default;
     }
 }

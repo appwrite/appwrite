@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\OpenSSL;
 
 use Appwrite\OpenSSL\OpenSSL;
 use PHPUnit\Framework\TestCase;
 
-class OpenSSLTest extends TestCase
+final class OpenSSLTest extends TestCase
 {
     public function setUp(): void
     {

@@ -2,17 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
+use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Executor\Executor;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -37,6 +40,7 @@ class Update extends Action
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -44,7 +48,7 @@ class Update extends Action
                 description: <<<EOT
                 Cancel an ongoing function deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -52,13 +56,13 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('queueForEvents')
-            ->inject('executor')
+            ->inject('deployments')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -67,9 +71,9 @@ class Update extends Action
         string $deploymentId,
         Response $response,
         Database $dbForProject,
-        Document $project,
         Event $queueForEvents,
-        Executor $executor
+        Backend $deployments,
+        callable $locks,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -91,24 +95,41 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
-            'buildEndedAt' => DateTime::now(),
-            'buildDuration' => $duration,
-            'status' => 'canceled'
-        ]));
+        // Write under the Jobs worker's per-deployment lock: its handlers
+        // read-modify-write buildLogs, and an unserialized cancel write here
+        // loses the closing log line to an in-flight append.
+        $cancel = function () use ($dbForProject, $deployment, $duration, $deployments) {
+            try {
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+            } catch (TransactionException) {
+                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
-        if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
-            $function = $function->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument('functions', $function->getId(), $function);
-        }
+                if ($deployment->isEmpty()) {
+                    throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                }
+
+                if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                    throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+                }
+
+                if ($deployment->getAttribute('status') !== 'canceled') {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+                }
+
+                return $deployment;
+            }
+        };
 
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-        } catch (\Throwable $th) {
-            // Don't throw if the deployment doesn't exist
-            if ($th->getCode() !== 404) {
-                throw $th;
-            }
+            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
+        } catch (Contention) {
+            $deployment = $cancel();
+        }
+
+        // Best-effort cleanup — the deployment is already marked 'canceled'.
+        try {
+            $deployments->cancel($deploymentId);
+        } catch (\Throwable) {
         }
 
         $queueForEvents
@@ -116,5 +137,28 @@ class Update extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+    }
+
+    /**
+     * The sparse update marking a build canceled. Jobs-backed builds have no
+     * cancel worker to write the closing log line the executor's Builds worker
+     * adds, so it is appended here; executor deployments get it from their worker.
+     *
+     * @return array<string, mixed>
+     */
+    private function cancel(Document $deployment, int $duration, bool $appendLog): array
+    {
+        $update = [
+            'buildEndedAt' => DateTime::now(),
+            'buildDuration' => $duration,
+            'status' => 'canceled',
+        ];
+
+        if ($appendLog) {
+            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+            $update['buildLogs'] = \substr($logs, -APP_LOG_LENGTH_LIMIT);
+        }
+
+        return $update;
     }
 }

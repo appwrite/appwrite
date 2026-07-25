@@ -3,8 +3,8 @@
 namespace Appwrite\Migration;
 
 use Exception;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\PDO;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
@@ -90,6 +91,14 @@ abstract class Migration
         '1.7.3' => 'V22',
         '1.7.4' => 'V22',
         '1.8.0' => 'V23',
+        '1.8.1' => 'V23',
+        '1.9.0' => 'V24',
+        '1.9.1' => 'V24',
+        '1.9.2' => 'V24',
+        '1.9.3' => 'V24',
+        '1.9.4' => 'V24',
+        '1.9.5' => 'V24',
+        '2.0.0' => 'V25',
     ];
 
     /**
@@ -99,8 +108,6 @@ abstract class Migration
 
     public function __construct()
     {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 
@@ -128,12 +135,16 @@ abstract class Migration
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
+        Authorization $authorization,
         ?callable $getProjectDB = null
     ): self {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->getProjectDB = $getProjectDB;
+
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
 
         return $this;
     }
@@ -201,6 +212,30 @@ abstract class Migration
     }
 
     /**
+     * @param array<Query> $queries
+     * @return \Generator<int, Document>
+     * @throws Exception
+     */
+    protected function documentsIterator(string $collection, array $queries = []): \Generator
+    {
+        $offset = 0;
+
+        do {
+            $documents = $this->dbForProject->find($collection, [
+                ...$queries,
+                Query::limit($this->limit),
+                Query::offset($offset),
+            ]);
+
+            foreach ($documents as $document) {
+                yield $document;
+            }
+
+            $offset += \count($documents);
+        } while (\count($documents) === $this->limit);
+    }
+
+    /**
      * Creates collection from the config collection.
      *
      * @param string $id
@@ -208,7 +243,7 @@ abstract class Migration
      * @return void
      * @throws \Throwable
      */
-    protected function createCollection(string $id, string $name = null): void
+    protected function createCollection(string $id, ?string $name = null): void
     {
         $name ??= $id;
 
@@ -259,7 +294,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         array $attributeIds,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -282,7 +317,19 @@ abstract class Migration
         $attributes = $collection['attributes'];
         $attributeKeys = \array_column($collection['attributes'], '$id');
 
+        $database->purgeCachedCollection($collectionId);
+
+        $existingIds = \array_map(
+            fn ($attribute) => $attribute->getId(),
+            $database->getCollection($collectionId)->getAttribute('attributes', [])
+        );
+
         foreach ($attributeIds as $attributeId) {
+            if (\in_array($attributeId, $existingIds, true)) {
+                Console::warning("Skipping attribute \"{$attributeId}\" in collection {$collectionId}: Attribute already exists");
+                continue;
+            }
+
             $attributeKey = \array_search($attributeId, $attributeKeys);
 
             if ($attributeKey === false) {
@@ -299,10 +346,36 @@ abstract class Migration
             $attributesToCreate[] = $attribute;
         }
 
-        $database->createAttributes(
-            collection: $collectionId,
-            attributes: $attributesToCreate,
-        );
+        if (empty($attributesToCreate)) {
+            return;
+        }
+
+        try {
+            $database->createAttributes(
+                collection: $collectionId,
+                attributes: $attributesToCreate,
+            );
+        } catch (Duplicate) {
+            foreach ($attributesToCreate as $attribute) {
+                try {
+                    $database->createAttribute(
+                        collection: $collectionId,
+                        id: $attribute['$id'],
+                        type: $attribute['type'],
+                        size: $attribute['size'],
+                        required: $attribute['required'],
+                        default: $attribute['default'],
+                        signed: $attribute['signed'] ?? true,
+                        array: $attribute['array'] ?? false,
+                        format: $attribute['format'] ?? '',
+                        formatOptions: $attribute['formatOptions'] ?? [],
+                        filters: $attribute['filters'],
+                    );
+                } catch (Duplicate) {
+                    Console::warning("Skipping attribute \"{$attribute['$id']}\" in collection {$collectionId}: Attribute already exists");
+                }
+            }
+        }
     }
 
     /**
@@ -324,7 +397,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         string $attributeId,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -382,7 +455,7 @@ abstract class Migration
      * @throws Duplicate
      * @throws Limit
      */
-    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
+    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, ?string $from = null): void
     {
         $from ??= $collectionId;
 

@@ -62,9 +62,65 @@ class Migration extends Model
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Id of the resource to migrate.',
+                'description' => 'ID of the resource being migrated.',
                 'default' => '',
-                'example' => 'databaseId:collectionId',
+                'example' => 'collectionId',
+                'array' => false
+            ])
+            ->addRule('resourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the resource being migrated.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the resource being migrated.',
+                'default' => '',
+                'example' => 'collection',
+                'array' => false
+            ])
+            ->addRule('parentResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => 'databaseId',
+                'array' => false
+            ])
+            ->addRule('parentResourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
+            ->addRule('parentResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => 'database',
+                'array' => false
+            ])
+            ->addRule('destinationResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => 'databaseId',
+                'array' => false
+            ])
+            ->addRule('destinationResourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
+            ->addRule('destinationResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => 'database',
                 'array' => false
             ])
             ->addRule('statusCounters', [
@@ -85,6 +141,12 @@ class Migration extends Model
                 'array' => true,
                 'default' => [],
                 'example' => [],
+            ])
+            ->addRule('options', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Migration options used during the migration process.',
+                'default' => [],
+                'example' => '{"bucketId": "exports", "notify": false}',
             ])
         ;
     }
@@ -117,18 +179,16 @@ class Migration extends Model
         }
 
         foreach ($errors as $index => $error) {
-            $decoded = json_decode($error, true);
+            $decoded = \json_decode($error, true);
 
-            // frontend doesn't need too many details.
-            if (is_array($decoded)) {
-                $errors[$index] = json_encode([
-                    'code' => $decoded['code'] ?? 0,
-                    'message' => $decoded['message'] ?? null,
-                ]);
+            if (\is_array($decoded)) {
+                if (isset($decoded['trace'])) {
+                    unset($decoded['trace']);
+                }
+                $errors[$index] = \json_encode($decoded);
             }
         }
 
-        // errors now only have code and message.
         $document->setAttribute('errors', $errors);
 
         return $document;

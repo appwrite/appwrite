@@ -1,17 +1,17 @@
 <?php
 
+use Appwrite\Locale\GeoRecord;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 
-App::get('/v1/locale')
+Http::get('/v1/locale')
     ->desc('Get user locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -20,7 +20,7 @@ App::get('/v1/locale')
         group: null,
         name: 'get',
         description: '/docs/references/locale/get-locale.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -31,51 +31,20 @@ App::get('/v1/locale')
     ->inject('request')
     ->inject('response')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
-        $eu = Config::getParam('locale-eu');
-        $currencies = Config::getParam('locale-currencies');
-        $output = [];
-        $ip = $request->getIP();
-        $time = (60 * 60 * 24 * 45); // 45 days cache
-
-        $output['ip'] = $ip;
-
-        $currency = null;
-
-        $record = $geodb->get($ip);
-
-        if ($record) {
-            $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-            $output['continentCode'] = $record['continent']['code'];
-            $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
-
-            foreach ($currencies as $code => $element) {
-                if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
-                    $currency = $element['code'];
-                }
-            }
-
-            $output['currency'] = $currency;
-        } else {
-            $output['countryCode'] = '--';
-            $output['country'] = $locale->getText('locale.country.unknown');
-            $output['continent'] = $locale->getText('locale.country.unknown');
-            $output['continentCode'] = '--';
-            $output['eu'] = false;
-            $output['currency'] = $currency;
-        }
-
-        $response
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-        ;
-        $response->dynamic(new Document($output), Response::MODEL_LOCALE);
+    ->inject('geoRecord')
+    ->action(function (Request $request, Response $response, Locale $locale, GeoRecord $geoRecord) {
+        $response->dynamic(new Document([
+            'ip' => $geoRecord->getIp(),
+            'countryCode' => $geoRecord->getCountryCode(),
+            'country' => $geoRecord->getCountryName(),
+            'continentCode' => $geoRecord->getContinentCode(),
+            'continent' => $geoRecord->getContinent(),
+            'eu' => $geoRecord->isEu(),
+            'currency' => $geoRecord->getCurrency() ?? '',
+        ]), Response::MODEL_LOCALE);
     });
 
-App::get('/v1/locale/codes')
+Http::get('/v1/locale/codes')
     ->desc('List locale codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -84,7 +53,7 @@ App::get('/v1/locale/codes')
         group: null,
         name: 'listCodes',
         description: '/docs/references/locale/list-locale-codes.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -101,7 +70,7 @@ App::get('/v1/locale/codes')
         ]), Response::MODEL_LOCALE_CODE_LIST);
     });
 
-App::get('/v1/locale/countries')
+Http::get('/v1/locale/countries')
     ->desc('List countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -110,7 +79,7 @@ App::get('/v1/locale/countries')
         group: null,
         name: 'listCountries',
         description: '/docs/references/locale/list-countries.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -138,7 +107,7 @@ App::get('/v1/locale/countries')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/eu')
+Http::get('/v1/locale/countries/eu')
     ->desc('List EU countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -147,7 +116,7 @@ App::get('/v1/locale/countries/eu')
         group: null,
         name: 'listCountriesEU',
         description: '/docs/references/locale/list-countries-eu.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -177,7 +146,7 @@ App::get('/v1/locale/countries/eu')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/phones')
+Http::get('/v1/locale/countries/phones')
     ->desc('List countries phone codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -186,7 +155,7 @@ App::get('/v1/locale/countries/phones')
         group: null,
         name: 'listCountriesPhones',
         description: '/docs/references/locale/list-countries-phones.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -215,7 +184,7 @@ App::get('/v1/locale/countries/phones')
         $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
-App::get('/v1/locale/continents')
+Http::get('/v1/locale/continents')
     ->desc('List continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -224,7 +193,7 @@ App::get('/v1/locale/continents')
         group: null,
         name: 'listContinents',
         description: '/docs/references/locale/list-continents.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -236,6 +205,7 @@ App::get('/v1/locale/continents')
     ->inject('locale')
     ->action(function (Response $response, Locale $locale) {
         $list = array_keys(Config::getParam('locale-continents'));
+        $output = [];
 
         foreach ($list as $value) {
             $output[] = new Document([
@@ -251,7 +221,7 @@ App::get('/v1/locale/continents')
         $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
-App::get('/v1/locale/currencies')
+Http::get('/v1/locale/currencies')
     ->desc('List currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -260,7 +230,7 @@ App::get('/v1/locale/currencies')
         group: null,
         name: 'listCurrencies',
         description: '/docs/references/locale/list-currencies.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -278,7 +248,7 @@ App::get('/v1/locale/currencies')
     });
 
 
-App::get('/v1/locale/languages')
+Http::get('/v1/locale/languages')
     ->desc('List languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -287,7 +257,7 @@ App::get('/v1/locale/languages')
         group: null,
         name: 'listLanguages',
         description: '/docs/references/locale/list-languages.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

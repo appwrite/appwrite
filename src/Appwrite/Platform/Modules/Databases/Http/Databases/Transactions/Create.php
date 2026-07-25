@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -13,7 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -42,23 +43,28 @@ class Create extends Action
                 group: 'transactions',
                 name: 'createTransaction',
                 description: '/docs/references/databases/create-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
                         model: UtopiaResponse::MODEL_TRANSACTION,
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tablesDB.createTransaction',
+                )
             ))
             ->param('ttl', APP_DATABASE_TXN_TTL_DEFAULT, new Range(min: APP_DATABASE_TXN_TTL_MIN, max: APP_DATABASE_TXN_TTL_MAX), 'Seconds before the transaction expires.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user): void
+    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, Authorization $authorization): void
     {
         $permissions = [];
         if (!empty($user->getId())) {
@@ -73,7 +79,7 @@ class Create extends Action
             }
         }
 
-        $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
+        $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',

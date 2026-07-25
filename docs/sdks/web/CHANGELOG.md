@@ -1,5 +1,50 @@
 # Change Log
 
+## 22.4.0
+
+* Added Query.containsAny(attribute, value[]) to filter resources where the attribute contains any of the given values.
+* Added Query.containsAll(attribute, value[]) to filter resources where the attribute contains all of the given values.
+* Updated Query.contains documentation to clarify behavior: string attributes are matched by substring, and for array attributes use containsAny/containsAll.
+
+## 22.3.1
+
+* Add `upsert` method to Realtime `Channels` helper class
+* Fix `bignumber.js` bundler conflict with Next.js Turbopack by removing direct dependency in favor of transitive dependency from `json-bigint`
+
+## 22.1.0
+
+* Add `queries` parameter to `Realtime.subscribe()` and `client.subscribe()` for server-side query filtering
+* Add slot-based subscription management with subscription ID mappings from backend
+* Add `subscriptions` field to `RealtimeResponseEvent` type
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `string[]`
+* Fix parameter detection in overloaded methods to check for optional params (Account, Avatars, Graphql)
+* Fix WebSocket connection handling with stale connection guards and improved close/reconnect logic
+* Fix doc examples wrapped in markdown code fences
+
+## 22.0.0
+
+* Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 21.5.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 21.4.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 21.3.0
+
+* Add new `Realtime` service with methods for subscribing to channels and receiving messages
+* Fix `client.setSession` not working when using realtime
+* Deprecate `client.subscribe` method in favor of `Realtime` service
+
+> Note: Deprecated methods are still available for backwards compatibility, but might be removed in future versions.
+
 ## 21.2.1
 
 * Add transaction support for Databases and TablesDB

@@ -17,7 +17,7 @@ tasks:
       --prefer-dist
 
 ports:
-  - port: 8080
+  - port: 9520
     visibility: public
 
 vscode:
