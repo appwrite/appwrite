@@ -1,0 +1,1 @@
+Get a list of the child folders directly inside a virtual folder in a bucket. Folders are derived from the folder paths of existing files: a folder exists while at least one file lives under it, and empty pages mean the listing is complete.

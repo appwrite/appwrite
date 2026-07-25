@@ -1,0 +1,124 @@
+<?php
+
+namespace Appwrite\Usage;
+
+use Utopia\Database\Document;
+
+class Context
+{
+    protected array $metrics = [];
+
+    protected array $reduce = [];
+
+    /**
+     * Add a metric
+     */
+    public function addMetric(string $key, int $value): self
+    {
+        $this->metrics[] = [
+            'key' => $key,
+            'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a document to reduce
+     */
+    public function addReduce(Document $document): self
+    {
+        $this->reduce[] = $document;
+
+        return $this;
+    }
+
+    /**
+     * Get all metrics
+     *
+     * @return array<array{key: string, value: int}>
+     */
+    public function getMetrics(): array
+    {
+        return $this->metrics;
+    }
+
+    /**
+     * Get all reduce documents
+     *
+     * @return array<Document>
+     */
+    public function getReduce(): array
+    {
+        return $this->reduce;
+    }
+
+    /**
+     * Check if context is empty
+     */
+    public function isEmpty(): bool
+    {
+        return empty($this->metrics) && empty($this->reduce);
+    }
+
+    public function setResourcePath(string $path): self
+    {
+        return $this;
+    }
+
+    public function getResourcePath(): string
+    {
+        return '';
+    }
+
+    public function setService(string $service): self
+    {
+        return $this;
+    }
+
+    public function getService(): string
+    {
+        return '';
+    }
+
+    public function setResource(string $resource): self
+    {
+        return $this;
+    }
+
+    public function getResource(): string
+    {
+        return '';
+    }
+
+    public function setResourceId(string $resourceId): self
+    {
+        return $this;
+    }
+
+    public function getResourceId(): string
+    {
+        return '';
+    }
+
+    public function setResourceInternalId(string $resourceInternalId): self
+    {
+        return $this;
+    }
+
+    public function getResourceInternalId(): string
+    {
+        return '';
+    }
+
+    /**
+     * Reset the context
+     */
+    public function reset(): self
+    {
+        $this->metrics = [];
+        $this->reduce = [];
+
+        return $this;
+    }
+}

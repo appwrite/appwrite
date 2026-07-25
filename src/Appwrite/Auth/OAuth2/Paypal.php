@@ -12,7 +12,7 @@ class Paypal extends OAuth2
     /**
      * @var array
      */
-    private $endpoint = [
+    private array $endpoint = [
         'sandbox' => 'https://www.sandbox.paypal.com/',
         'live' => 'https://www.paypal.com/',
     ];
@@ -20,7 +20,7 @@ class Paypal extends OAuth2
     /**
      * @var array
      */
-    private $resourceEndpoint = [
+    private array $resourceEndpoint = [
         'sandbox' => 'https://api.sandbox.paypal.com/v1/',
         'live' => 'https://api.paypal.com/v1/',
     ];
@@ -28,17 +28,22 @@ class Paypal extends OAuth2
     /**
      * @var string
      */
-    protected $environment = 'live';
+    protected string $environment = 'live';
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'openid',
         'profile',
         'email'
@@ -57,7 +62,7 @@ class Paypal extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint[$this->environment] . 'connect/?'.
+        $url = $this->endpoint[$this->environment] . 'connect/?' .
             \http_build_query([
                 'flowEntry' => 'static',
                 'response_type' => 'code',
@@ -74,29 +79,47 @@ class Paypal extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        $accessToken = $this->request(
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->resourceEndpoint[$this->environment] . 'oauth2/token',
+                ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+                \http_build_query([
+                    'code' => $code,
+                    'grant_type' => 'authorization_code',
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
             $this->resourceEndpoint[$this->environment] . 'oauth2/token',
             ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
             \http_build_query([
-                'code' => $code,
-                'grant_type' => 'authorization_code',
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
             ])
-        );
+        ), true);
 
-
-        $accessToken = \json_decode($accessToken, true);
-
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
@@ -108,11 +131,7 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['payer_id'])) {
-            return $user['payer_id'];
-        }
-
-        return '';
+        return $user['payer_id'] ?? '';
     }
 
     /**
@@ -125,10 +144,36 @@ class Paypal extends OAuth2
         $user = $this->getUser($accessToken);
 
         if (isset($user['emails'])) {
-            return $user['emails'][0]['value'];
+            $email = array_filter($user['emails'], function ($email) {
+                return $email['primary'] === true;
+            });
+
+            if (!empty($email)) {
+                return $email[0]['value'];
+            }
         }
 
         return '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://developer.paypal.com/docs/api/identity/v1/#userinfo_get
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified_account'] ?? false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -140,11 +185,7 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -156,7 +197,7 @@ class Paypal extends OAuth2
     {
         $header = [
             'Content-Type: application/json',
-            'Authorization: Bearer '.\urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(

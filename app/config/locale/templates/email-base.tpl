@@ -1,238 +1,158 @@
 <!doctype html>
 <html>
+    <head>
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
+        <style type="text/css">
+            :root {
+                color-scheme: light dark;
+                supported-color-schemes: light dark;
+            }
 
-<head>
-  <meta name="viewport" content="width=device-width" />
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>{{title}}</title>
-  <style>
-    body {
-      background-color: {{bg-body}};
-      color: {{text-content}};
-      font-family: sans-serif;
-      -webkit-font-smoothing: antialiased;
-      font-size: 14px;
-      line-height: 1.4;
-      margin: 0;
-      padding: 0;
-      -ms-text-size-adjust: 100%;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    table {
-      border-collapse: separate;
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-      width: 100%;
-    }
-
-    table td {
-      font-family: sans-serif;
-      font-size: 14px;
-      vertical-align: top;
-    }
-
-    .body {
-      background-color: {{bg-body}};
-      width: 100%;
-    }
-
-    .container {
-      display: block;
-      margin: 0 auto !important;
-      max-width: 580px;
-      padding: 10px;
-      width: 580px;
-    }
-
-    .content {
-      box-sizing: border-box;
-      display: block;
-      margin: 0 auto;
-      max-width: 580px;
-      padding: 10px;
-      color: {{text-content}};
-    }
-
-    .main {
-      background: {{bg-content}};
-      border-radius: 3px;
-      width: 100%;
-    }
-
-    .wrapper {
-      box-sizing: border-box;
-      padding: 20px;
-    }
-
-    .content-block {
-      padding-bottom: 10px;
-      padding-top: 10px;
-    }
-
-    p {
-      font-family: sans-serif;
-      font-size: 14px;
-      font-weight: normal;
-      margin: 0;
-      margin-bottom: 15px;
-    }
-
-    a {
-      word-break: break-all;
-    }
-
-    .btn {
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .btn>tbody>tr>td {
-      padding-bottom: 15px;
-    }
-
-    .btn table {
-      width: auto;
-    }
-
-    .btn table td {
-      background-color: {{bg-content}};
-      border-radius: 5px;
-      text-align: center;
-    }
-
-    .btn a {
-      background-color: {{bg-content}};
-      border: solid 1px {{bg-cta}};
-      border-radius: 5px;
-      box-sizing: border-box;
-      color: #3498db;
-      cursor: pointer;
-      display: inline-block;
-      font-size: 14px;
-      font-weight: bold;
-      margin: 0;
-      padding: 12px 25px;
-      text-decoration: none;
-      text-transform: capitalize;
-    }
-
-    .btn-primary table td {
-      background-color: {{bg-cta}};
-    }
-
-    .btn-primary a {
-      background-color: {{bg-cta}};
-      border-color: {{bg-cta}};
-      color: {{text-cta}};
-    }
-
-    @media only screen and (max-width: 620px) {
-      table[class=body] h1 {
-        font-size: 28px !important;
-        margin-bottom: 10px !important;
-      }
-
-      table[class=body] p {
-        font-size: 16px !important;
-      }
-
-      table[class=body] .wrapper {
-        padding: 10px !important;
-      }
-
-      table[class=body] .content {
-        padding: 0 !important;
-      }
-
-      table[class=body] .container {
-        padding: 0 !important;
-        width: 100% !important;
-      }
-
-      table[class=body] .main {
-        border-left-width: 0 !important;
-        border-radius: 0 !important;
-        border-right-width: 0 !important;
-      }
-
-      table[class=body] .btn table {
-        width: 100% !important;
-      }
-
-      table[class=body] .btn a {
-        width: 100% !important;
-      }
-    }
-
-    @media all {
-      .ExternalClass {
-        width: 100%;
-      }
-
-      .ExternalClass,
-      .ExternalClass p,
-      .ExternalClass span,
-      .ExternalClass font,
-      .ExternalClass td,
-      .ExternalClass div {
-        line-height: 100%;
-      }
-
-      .apple-link a {
-        color: inherit !important;
-        font-family: inherit !important;
-        font-size: inherit !important;
-        font-weight: inherit !important;
-        line-height: inherit !important;
-        text-decoration: none !important;
-      }
-
-      #MessageViewBody a {
-        color: inherit;
-        text-decoration: none;
-        font-size: inherit;
-        font-family: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-      }
-
-      .btn-primary table td:hover {
-        background-color: {{bg-cta-hover}} !important;
-      }
-
-      .btn-primary a:hover {
-        background-color: {{bg-cta-hover}} !important;
-        border-color: {{bg-cta-hover}} !important;
-      }
-    }
-  </style>
-</head>
+            @media (prefers-color-scheme: dark ) {
+                body {
+                    color: #616b7c !important;
+                    background-color: #ffffff !important;
+                }
+                a {
+                    color: currentColor !important;
+                }
+                a.button {
+                    color: #ffffff !important;
+                    background-color: #2D2D31 !important;
+                    border-color: #414146 !important;
+                }
+                h1, h2, h3 {
+                    color: #373b4d !important;
+                }
+                h4 {
+                    color: #4f5769 !important;
+                }
+                p.security-phrase:not(:empty), hr {
+                    border-color: #e8e9f0 !important;
+                }
+            }
+        </style>
+        <style>
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            
+            @font-face {
+                font-family: 'DM Sans';
+                src: url('https://assets.appwrite.io/fonts/dm-sans/dm-sans-v16-latin-600.woff2') format('woff2');
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
+        <style>
+            .main {
+                max-width: 650px;
+                margin: 0 auto;
+                margin-top: 32px;
+                padding: 32px;
+                line-height: 1.5;
+                color: #616b7c;
+                font-size: 15px;
+                font-weight: 400;
+                font-family: "Inter", sans-serif;
+                background-color: #ffffff;
+            }
+            .main a {
+                color: currentColor;
+                word-break: break-all;
+            }
+            .main a.button {
+                box-sizing: border-box;
+                display: inline-block;
+                text-align: center;
+                text-decoration: none;
+                padding: 9px 14px;
+                color: #ffffff;
+                background-color: #2D2D31;
+                border: 1px solid #414146;
+                border-radius: 8px;
+            }
+            .main a.button:hover,
+            .main a.button:focus {
+                opacity: 0.8;
+            }
+            table {
+                width: 100%;
+                border-spacing: 0 !important;
+            }
+            table, tr, th, td {
+                margin: 0;
+                padding: 0;
+            }
+            td {
+                vertical-align: top;
+            }
+            h1 {
+                font-size: 22px;
+                margin-bottom: 0px;
+                margin-top: 0px;
+                color: #373b4d;
+            }
+            h2 {
+                font-size: 20px;
+                font-weight: 600;
+                color: #373b4d;
+            }
+            h3 {
+                font-size: 14px;
+                font-weight: 500;
+                color: #373b4d;
+                line-height: 21px;
+                margin: 0;
+                padding: 0;
+            }
+            h4 {
+                font-family: "DM Sans", sans-serif;
+                font-weight: 600;
+                font-size: 12px;
+                color: #4f5769;
+                margin: 0;
+                padding: 0;
+            }
+            hr {
+                border: none;
+                border-top: 1px solid #e8e9f0;
+            }
+            p {
+                margin-bottom: 10px;
+            }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
+        </style>
+    </head>
 
 <body style="direction: {{direction}}">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
-    <tr>
-      <td>&nbsp;</td>
-      <td class="container">
-        <div class="content">
-          <table role="presentation" class="main">
-            <tr>
-              <td class="wrapper">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td>
-                      {{content}}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </td>
-      <td>&nbsp;</td>
-    </tr>
-  </table>
-</body>
 
+    <div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+        {{preview}}
+        <div>{{previewWhitespace}}</div>
+    </div>
+
+    <div class="main" style="max-width:650px; word-wrap: break-word; overflow-wrap: break-word; word-break: normal; margin:0 auto;">
+        <table style="margin-top: 32px">
+            <tr>
+                <td>
+                    {{body}}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
 </html>

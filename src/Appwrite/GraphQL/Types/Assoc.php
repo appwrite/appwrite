@@ -1,0 +1,40 @@
+<?php
+
+namespace Appwrite\GraphQL\Types;
+
+use GraphQL\Language\AST\Node;
+use GraphQL\Language\AST\StringValueNode;
+
+// https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
+class Assoc extends Json
+{
+    public string $name = 'Assoc';
+    public ?string $description = 'The `Assoc` scalar type represents associative array values.';
+
+    public function serialize($value)
+    {
+        if (\is_string($value)) {
+            return $value;
+        }
+
+        return \json_encode($value);
+    }
+
+    public function parseValue($value)
+    {
+        if (\is_array($value)) {
+            return $value;
+        }
+
+        return \json_decode($value, true);
+    }
+
+    public function parseLiteral(Node $valueNode, ?array $variables = null)
+    {
+        if ($valueNode instanceof StringValueNode) {
+            return \json_decode($valueNode->value, true);
+        }
+
+        return parent::parseLiteral($valueNode, $variables);
+    }
+}

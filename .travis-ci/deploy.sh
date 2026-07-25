@@ -1,1 +1,0 @@
-echo 'Nothing to deploy right now.'

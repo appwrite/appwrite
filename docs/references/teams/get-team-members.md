@@ -1,1 +1,0 @@
-Get a team members by the team unique ID. All team members have read access for this list of resources.

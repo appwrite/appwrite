@@ -4,24 +4,32 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Project extends Model
 {
-    /**
-     * @var bool
-     */
-    protected $public = false;
-    
     public function __construct()
     {
         $this
+            // Basic project information
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Project creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Project update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -29,167 +37,278 @@ class Project extends Model
                 'default' => '',
                 'example' => 'New Project',
             ])
-            ->addRule('description', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project description.',
-                'default' => '',
-                'example' => 'This is a new project.',
-            ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project team ID.',
                 'default' => '',
                 'example' => '1592981250',
             ])
-            ->addRule('logo', [
+            ->addRule('region', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Project logo file ID.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
             ])
-            ->addRule('url', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project website URL.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+
+            // Resource: Dev Keys
+            ->addRule('devKeys', [
+                'type' => Response::MODEL_DEV_KEY,
+                'description' => 'Deprecated since 1.9.5: List of dev keys.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
             ])
-            ->addRule('legalName', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company legal name.',
-                'default' => '',
-                'example' => 'Company LTD.',
-            ])
-            ->addRule('legalCountry', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Country code in [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) two-character format.',
-                'default' => '',
-                'example' => 'US',
-            ])
-            ->addRule('legalState', [
-                'type' => self::TYPE_STRING,
-                'description' => 'State name.',
-                'default' => '',
-                'example' => 'New York',
-            ])
-            ->addRule('legalCity', [
-                'type' => self::TYPE_STRING,
-                'description' => 'City name.',
-                'default' => '',
-                'example' => 'New York City.',
-            ])
-            ->addRule('legalAddress', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company Address.',
-                'default' => '',
-                'example' => '620 Eighth Avenue, New York, NY 10018',
-            ])
-            ->addRule('legalTaxId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company Tax ID.',
-                'default' => '',
-                'example' => '131102020',
-            ])
-            ->addRule('usersAuthLimit', [
+
+            // Resource: SMTP
+            ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Max users allowed. 0 is unlimited.',
+                'description' => 'Status for custom SMTP',
+                'default' => false,
+                'example' => false,
+                'array' => false
+            ])
+            ->addRule('smtpSenderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender name',
+                'default' => '',
+                'example' => 'John Appwrite',
+            ])
+            ->addRule('smtpSenderEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender email',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('smtpReplyToName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to name',
+                'default' => '',
+                'example' => 'Support Team',
+            ])
+            ->addRule('smtpReplyToEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to email',
+                'default' => '',
+                'example' => 'support@appwrite.io',
+            ])
+            ->addRule('smtpHost', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server host name',
+                'default' => '',
+                'example' => 'mail.appwrite.io',
+            ])
+            ->addRule('smtpPort', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'SMTP server port',
                 'default' => 0,
-                'example' => 100,
+                'example' => 25,
             ])
-            ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
-                'description' => 'List of Platforms.',
+            ->addRule('smtpUsername', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server username',
+                'default' => '',
+                'example' => 'emailuser',
+            ])
+            ->addRule('smtpPassword', [
+                'type' => self::TYPE_STRING,
+                'format' => 'password',
+                'description' => 'SMTP server password. This property is write-only and always returned empty.',
+                'default' => '',
+                'example' => 'smtp-password',
+            ])
+            ->addRule('smtpSecure', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server secure protocol',
+                'default' => '',
+                'example' => 'tls',
+            ])
+
+            // Resource: Ping
+            ->addRule('pingCount', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times the ping was received for this project.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('pingedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last ping datetime in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+
+            // Resource: Labels
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the project.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => ['vip'],
                 'array' => true,
             ])
-            ->addRule('webhooks', [
-                'type' => Response::MODEL_WEBHOOK,
-                'description' => 'List of Webhooks.',
+
+            // Resource: Billing
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project status.',
+                'default' => 'active',
+                'example' => 'active',
+            ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => [],
+            ])
+
+            // Resource: Auth methods
+            ->addRule('authMethods', [
+                'type' => Response::MODEL_PROJECT_AUTH_METHOD,
+                'description' => 'List of auth methods.',
+                'default' => [],
+                'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('keys', [
-                'type' => Response::MODEL_KEY,
-                'description' => 'List of API Keys.',
+
+            // Resource: Services
+            ->addRule('services', [
+                'type' => Response::MODEL_PROJECT_SERVICE,
+                'description' => 'List of services.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
+
+            // Resource: Protocols
+            ->addRule('protocols', [
+                'type' => Response::MODEL_PROJECT_PROTOCOL,
+                'description' => 'List of protocols.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('tasks', [
-                'type' => Response::MODEL_TASK,
-                'description' => 'List of Tasks.',
+            ->addRule('blocks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project blocks information.',
                 'default' => [],
-                'example' => new stdClass,
+                'example' => [],
                 'array' => true,
+            ])
+            ->addRule('consoleAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last time the project was accessed via console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
-
-        $providers = Config::getParam('providers', []);
-        $auth = Config::getParam('auth', []);
-
-        foreach ($providers as $index => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
-
-            $this
-                ->addRule('usersOauth2'.\ucfirst($index).'Appid', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name.' OAuth app ID.',
-                    'example' => '123247283472834787438',
-                    'default' => '',
-                ])
-                ->addRule('usersOauth2'.\ucfirst($index).'Secret', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name.' OAuth secret ID.',
-                    'example' => 'djsgudsdsewe43434343dd34...',
-                    'default' => '',
-                ])
-            ;
-        }
-
-        foreach ($auth as $index => $method) {
-            $name = $method['name'] ?? '';
-            $key = $method['key'] ?? '';
-
-            $this
-                ->addRule($key, [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name.' auth method status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
-        }
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Project';
     }
 
     /**
-     * Get Collection
-     * 
+     * Get Type
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_PROJECT;
+    }
+
+    /**
+     * Filter document structure
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $this->expandSmtpFields($document);
+        $this->expandServices($document);
+        $this->expandProtocols($document);
+        $this->expandAuthMethods($document);
+        $this->expandConsoleAccessedAt($document);
+
+        return $document;
+    }
+
+    private function expandConsoleAccessedAt(Document $document): void
+    {
+        $document->setAttribute('consoleAccessedAt', $document->getAttribute('accessedAt', ''));
+    }
+
+    private function expandSmtpFields(Document $document): void
+    {
+        if (!$document->isSet('smtp')) {
+            return;
+        }
+
+        $smtp = $document->getAttribute('smtp', []);
+
+        $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
+        $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
+        $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
+        $document->setAttribute('smtpReplyToEmail', $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? ''); // Includes backwards compatibility
+        $document->setAttribute('smtpReplyToName', $smtp['replyToName'] ?? '');
+        $document->setAttribute('smtpHost', $smtp['host'] ?? '');
+        $document->setAttribute('smtpPort', (int) ($smtp['port'] ?? 0));
+        $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
+        $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
+        $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
+
+    private function expandServices(Document $document): void
+    {
+        $values = $document->getAttribute('services', []);
+        $services = [];
+
+        foreach (Config::getParam('services', []) as $id => $service) {
+            if (!$service['optional']) {
+                continue;
+            }
+
+            $services[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$service['key']] ?? true,
+            ]);
+        }
+
+        $document->setAttribute('services', $services);
+    }
+
+    private function expandProtocols(Document $document): void
+    {
+        $values = $document->getAttribute('apis', []);
+        $protocols = [];
+
+        foreach (Config::getParam('protocols', []) as $id => $api) {
+            $protocols[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$api['key']] ?? true,
+            ]);
+        }
+
+        $document->setAttribute('protocols', $protocols);
+    }
+
+    private function expandAuthMethods(Document $document): void
+    {
+        $values = $document->getAttribute('auths', []);
+        $authMethods = [];
+
+        foreach (Config::getParam('auth', []) as $id => $method) {
+            $authMethods[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$method['key']] ?? true
+            ]);
+        }
+
+        $document->setAttribute('authMethods', $authMethods);
     }
 }

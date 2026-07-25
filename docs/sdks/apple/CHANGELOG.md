@@ -1,0 +1,86 @@
+# Change Log
+
+## 14.3.0
+
+* Added upsert() support for RealtimeChannel on both Document and Row variants to perform upsert operations over real-time channels.
+* Introduced new Query filter methods: contains(_:, value:), containsAny(_:, value: [Any]), containsAll(_:, value: [Any]) for enhanced querying capabilities (substring and multi-value containment).
+* Documentation and packaging updates to align with the new release: README dependency example updated from 14.2.0 to 14.1.0, and server compatibility note updated to indicate Appwrite server version 1.8.x compatibility.
+
+## 14.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `[String]`
+* Fix doc examples with proper formatting and complete client configuration
+
+## 14.0.0
+
+* Add array-based enum parameters (e.g., `permissions: [BrowserPermission]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 13.5.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 13.4.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 13.3.1
+
+* Fix `onOpen` callback not being called when the websocket connection is established
+* Fix add missing `scheduled` value to `ExecutionStatus` enum
+
+## 13.3.0
+
+* Add `onOpen`, `onClose` and `onError` callbacks to `Realtime` service
+
+## 13.2.2
+
+* Fix issue: Missing AppwriteEnums dependency causing build failure
+
+## 13.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 13.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 10.2.0
+
+* Update sdk to use swift-native doc comments instead of jsdoc styled comments as per [Swift Documentation Comments](https://github.com/swiftlang/swift/blob/main/docs/DocumentationComments.md)
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Remove `Content-Type`, `Content-Length` headers and body from websocket requests
+
+## 10.1.1
+
+* Adds warnings to bulk operation methods
+* Fix select Queries by updating internal attributes like id, createdAt, updatedAt etc. to be optional in Document model.
+* Fix querying datetime values by properly encoding URLs
+
+## 10.1.0
+
+* Add `devKeys` support to `Client` service
+* Add `upsertDocument` support to `Databases` service
+
+## 10.0.0
+
+* Add `<REGION>` to doc examples due to the new multi region endpoints
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Remove `search` param from `listExecutions` method
+* Remove `Gif` from ImageFormat enum
+
+## 9.0.1
+
+* Fix requests failing by removing `Content-Type` header from `GET` and `HEAD` requests
+
+## 9.0.0
+
+* Remove redundant titles from method descriptions.
+* Add `codable` models
+* Ensure response attribute in `AppwriteException` is always string

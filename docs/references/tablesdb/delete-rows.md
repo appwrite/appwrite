@@ -1,0 +1,1 @@
+Bulk delete rows using queries, if no queries are passed then all rows are deleted.

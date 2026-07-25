@@ -7,7 +7,7 @@ use Tests\E2E\Client;
 
 trait LocaleBase
 {
-    public function testGetLocale():array
+    public function testGetLocale(): array
     {
         /**
          * Test for SUCCESS
@@ -29,11 +29,11 @@ trait LocaleBase
         /**
          * Test for FAILURE
          */
-        
+
         return [];
     }
 
-    public function testGetCountries():array
+    public function testGetCountries(): array
     {
         /**
          * Test for SUCCESS
@@ -45,7 +45,7 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertEquals(197, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afghanistan');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
@@ -59,10 +59,10 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertEquals(197, $response['body']['total']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Afganistán');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
-        
+
         /**
          * Test for FAILURE
          */
@@ -70,7 +70,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testGetCountriesEU():array
+    public function testGetCountriesEU(): array
     {
         /**
          * Test for SUCCESS
@@ -81,7 +81,7 @@ trait LocaleBase
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(27, $response['body']['sum']);
+        $this->assertEquals(27, $response['body']['total']);
         $this->assertIsArray($response['body']['countries']);
         $this->assertEquals($response['body']['countries'][0]['name'], 'Austria');
         $this->assertEquals($response['body']['countries'][0]['code'], 'AT');
@@ -95,12 +95,12 @@ trait LocaleBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(27, $response['body']['sum']);
+        $this->assertEquals(27, $response['body']['total']);
         $this->assertIsArray($response['body']['countries']);
-        $this->assertEquals($response['body']['countries'][0]['name'], 'Austria');
-        $this->assertEquals($response['body']['countries'][0]['code'], 'AT');
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Alemania');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'DE');
 
-        
+
         /**
          * Test for FAILURE
          */
@@ -108,7 +108,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testGetCountriesPhones():array
+    public function testGetCountriesPhones(): array
     {
         /**
          * Test for SUCCESS
@@ -117,15 +117,15 @@ trait LocaleBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertEquals(196, $response['body']['total']);
         $this->assertIsArray($response['body']['phones']);
         $this->assertEquals($response['body']['phones'][0]['code'], '+1');
         $this->assertEquals($response['body']['phones'][0]['countryName'], 'Canada');
         $this->assertEquals($response['body']['phones'][0]['countryCode'], 'CA');
-        
+
         /**
          * Test for FAILURE
          */
@@ -133,7 +133,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testGetContinents():array
+    public function testGetContinents(): array
     {
         /**
          * Test for SUCCESS
@@ -144,7 +144,7 @@ trait LocaleBase
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(7, $response['body']['sum']);
+        $this->assertEquals(7, $response['body']['total']);
         $this->assertIsArray($response['body']['continents']);
         $this->assertEquals($response['body']['continents'][0]['code'], 'AF');
         $this->assertEquals($response['body']['continents'][0]['name'], 'Africa');
@@ -157,12 +157,12 @@ trait LocaleBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(7, $response['body']['sum']);
+        $this->assertEquals(7, $response['body']['total']);
         $this->assertIsArray($response['body']['continents']);
         $this->assertEquals($response['body']['continents'][0]['code'], 'NA');
         $this->assertEquals($response['body']['continents'][0]['name'], 'América del Norte');
 
-        
+
         /**
          * Test for FAILURE
          */
@@ -170,7 +170,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testGetCurrencies():array
+    public function testGetCurrencies(): array
     {
         /**
          * Test for SUCCESS
@@ -182,10 +182,10 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(117, $response['body']['sum']);
+        $this->assertEquals(117, $response['body']['total']);
         $this->assertEquals($response['body']['currencies'][0]['symbol'], '$');
         $this->assertEquals($response['body']['currencies'][0]['name'], 'US Dollar');
-        
+
         /**
          * Test for FAILURE
          */
@@ -193,7 +193,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testGetLanguages():array
+    public function testGetLanguages(): array
     {
         /**
          * Test for SUCCESS
@@ -205,16 +205,16 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(185, $response['body']['sum']);
+        $this->assertEquals(186, $response['body']['total']);
 
         $this->assertEquals($response['body']['languages'][0]['code'], 'aa');
         $this->assertEquals($response['body']['languages'][0]['name'], 'Afar');
         $this->assertEquals($response['body']['languages'][0]['nativeName'], 'Afar');
 
-        $this->assertEquals($response['body']['languages'][184]['code'], 'zu');
-        $this->assertEquals($response['body']['languages'][184]['name'], 'Zulu');
-        $this->assertEquals($response['body']['languages'][184]['nativeName'], 'isiZulu');
-        
+        $this->assertEquals($response['body']['languages'][185]['code'], 'zu');
+        $this->assertEquals($response['body']['languages'][185]['name'], 'Zulu');
+        $this->assertEquals($response['body']['languages'][185]['nativeName'], 'isiZulu');
+
         /**
          * Test for FAILURE
          */
@@ -227,54 +227,99 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $languages           = require('app/config/locale/codes.php');
-        $defaultCountries    = require('app/config/locale/translations/en.countries.php');
-        $defaultContinents   = require('app/config/locale/translations/en.continents.php');
+        $languages           = require(__DIR__ . '/../../../../app/config/locale/codes.php');
+        $defaultCountries    = array_keys(require(__DIR__ . '/../../../../app/config/locale/countries.php'));
+        $defaultContinents   = array_keys(require(__DIR__ . '/../../../../app/config/locale/continents.php'));
 
         foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-locale' => $lang,
+                'x-appwrite-locale' => $lang['code'],
             ]);
 
-            if(!\is_array($response['body']['countries'])) {
-                throw new Exception('Failed to itterate locale: '.$lang);
+            if (!\is_array($response['body']['countries'])) {
+                throw new Exception('Failed to iterate locale: ' . $lang);
             }
 
             foreach ($response['body']['countries'] as $i => $code) {
-                $this->assertArrayHasKey($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang['code']);
             }
 
-            // foreach (array_keys($defaultCountries) as $i => $code) {
-            //     $this->assertArrayHasKey($code, $response['body']['countries'], $code . ' country is missing from ' . $lang . ' (total: ' . count($response['body']['countries']) . ')');
-            // }
-
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertEquals(194, $response['body']['sum']);
+            $this->assertEquals(197, $response['body']['total']);
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-locale' => $lang,
+                'x-appwrite-locale' => $lang['code'],
             ]);
-            
+
             foreach ($response['body']['continents'] as $i => $code) {
-                $this->assertArrayHasKey($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang['code']);
             }
 
-            // foreach (array_keys($defaultContinents) as $i => $code) {
-            //     $this->assertArrayHasKey($code, $response['body']['continents'], $code . ' continent is missing from ' . $lang . ' (total: ' . count($response['body']['continents']) . ')');
-            // }
-
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertEquals(7, $response['body']['sum']);
+            $this->assertEquals(7, $response['body']['total']);
         }
-                
+
         /**
          * Test for FAILURE
          */
 
         return [];
+    }
+
+    public function testFallbackLocale()
+    {
+        $en = 'A mock translation for testing purposes.';
+        $de = 'Eine Beispielübersetzung für Testzwecke.';
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'en'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'de'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($de, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'cs'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'non-existing'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => ''
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
     }
 }

@@ -1,1 +1,0 @@
-Get a function execution log by its unique ID.

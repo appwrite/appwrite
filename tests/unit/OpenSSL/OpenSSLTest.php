@@ -1,11 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+declare(strict_types=1);
+
+namespace Tests\Unit\OpenSSL;
 
 use Appwrite\OpenSSL\OpenSSL;
 use PHPUnit\Framework\TestCase;
 
-class OpenSSLTest extends TestCase
+final class OpenSSLTest extends TestCase
 {
     public function setUp(): void
     {
@@ -15,7 +17,7 @@ class OpenSSLTest extends TestCase
     {
     }
 
-    public function testEncryptionAndDecryption()
+    public function testEncryptionAndDecryption(): void
     {
         $key = 'my-secret-key';
         $iv = '';
