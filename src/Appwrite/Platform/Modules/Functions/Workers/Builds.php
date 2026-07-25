@@ -695,6 +695,8 @@ class Builds extends Action
 
             $response = null;
             $err = null;
+            $detectionLogs = '';
+            $pendingDetectionLogs = '';
 
             if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
@@ -748,7 +750,7 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled, $span) {
+                Co\go(function () use ($executor, $project, &$deployment, &$response, $dbForProject, $timeout, &$err, $queueForRealtime, &$isCanceled, &$detectionLogs, &$pendingDetectionLogs, $span) {
                     try {
                         $insideSeparation = false;
 
@@ -756,7 +758,7 @@ class Builds extends Action
                             deploymentId: $deployment->getId(),
                             projectId: $project->getId(),
                             timeout: $timeout,
-                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime, &$insideSeparation, $span) {
+                            callback: function ($logs) use (&$response, &$err, $dbForProject, &$isCanceled, &$deployment, $queueForRealtime, &$insideSeparation, &$detectionLogs, &$pendingDetectionLogs, $span) {
                                 if ($isCanceled) {
                                     return;
                                 }
@@ -775,37 +777,8 @@ class Builds extends Action
                                     // Get only valid UTF8 part - removes leftover half-multibytes causing SQL errors
                                     $logs = \mb_substr($logs, 0, null, 'UTF-8');
 
-                                    // Do not stream logs added for SSR detection
-                                    if (! $insideSeparation) {
-                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
-                                        if ($separator !== false) {
-                                            $logs = \substr($logs, 0, $separator);
-                                            $insideSeparation = true;
-
-                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
-                                            $separator = \strpos($leftover, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                                            if ($separator !== false) {
-                                                $logs .= \substr($leftover, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                                                $insideSeparation = false;
-                                            }
-                                        }
-                                    } else {
-                                        $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
-                                        if ($separator !== false) {
-                                            $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
-                                            $insideSeparation = false;
-                                        } else {
-                                            $logs = '';
-                                        }
-                                    }
-
-                                    if (empty($logs)) {
-                                        return;
-                                    }
-
                                     $currentLogs = $deployment->getAttribute('buildLogs', '');
-                                    $affected = false;
-
+                                    $logsContent = '';
                                     $streamLogs = \str_replace('\\n', '{APPWRITE_LINEBREAK_PLACEHOLDER}', $logs);
                                     foreach (\explode("\n", $streamLogs) as $streamLog) {
                                         if (empty($streamLog)) {
@@ -820,14 +793,17 @@ class Builds extends Action
                                         }
 
                                         // TODO: use part[0] as timestamp when switching to dbForLogs for build logs
-                                        $currentLogs .= $streamParts[1];
-
-                                        if (! empty($streamParts[1])) {
-                                            $affected = true;
-                                        }
+                                        $logsContent .= $streamParts[1];
                                     }
 
-                                    if ($affected) {
+                                    $logsContent = $this->extractSiteDetectionLogs($logsContent, $insideSeparation, $pendingDetectionLogs, $detectionLogs);
+
+                                    if (empty($logsContent)) {
+                                        return;
+                                    }
+
+                                    $currentLogs .= $logsContent;
+                                    if (! empty($logsContent)) {
                                         $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
                                         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                                             'buildLogs' => $currentLogs,
@@ -881,7 +857,10 @@ class Builds extends Action
                 $logs .= $log['content'];
             }
 
-            ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
+            ['logs' => $logs, 'detectionLogs' => $responseDetectionLogs] = $this->splitSiteDetectionLogs($logs);
+            if (empty($detectionLogs)) {
+                $detectionLogs = $responseDetectionLogs;
+            }
 
             $deployment->setAttribute('buildLogs', $logs);
 
@@ -1358,6 +1337,44 @@ class Builds extends Action
     }
 
     /**
+     * Removes site detection logs from user-facing logs while collecting only
+     * complete detection blocks for rendering detection.
+     */
+    protected function extractSiteDetectionLogs(string $logs, bool &$insideSeparation, string &$pendingDetectionLogs, string &$detectionLogs): string
+    {
+        $visibleLogs = '';
+
+        while ($logs !== '') {
+            if ($insideSeparation) {
+                $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_END}');
+                if ($separator === false) {
+                    $pendingDetectionLogs .= $logs;
+                    return $visibleLogs;
+                }
+
+                $detectionLogs .= $pendingDetectionLogs . \substr($logs, 0, $separator);
+                $pendingDetectionLogs = '';
+                $insideSeparation = false;
+                $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
+
+                continue;
+            }
+
+            $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
+            if ($separator === false) {
+                $visibleLogs .= $logs;
+                return $visibleLogs;
+            }
+
+            $visibleLogs .= \substr($logs, 0, $separator);
+            $logs = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
+            $insideSeparation = true;
+        }
+
+        return $visibleLogs;
+    }
+
+    /**
      * @return array{logs: string, detectionLogs: string}
      */
     protected function splitSiteDetectionLogs(string $logs): array
@@ -1370,6 +1387,13 @@ class Builds extends Action
         }
 
         [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+        if (! \str_contains($detectionLogsStart, '{APPWRITE_DETECTION_SEPARATOR_END}')) {
+            return [
+                'logs' => $logsBefore,
+                'detectionLogs' => '',
+            ];
+        }
+
         [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
 
         return [
