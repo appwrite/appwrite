@@ -1,0 +1,1 @@
+Create a video resource from an existing file in a storage bucket. The source file must be a video or audio file. Creating a video queues a background job that probes the source for metadata and builds a sprite timeline for scrubbing.

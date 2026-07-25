@@ -1,0 +1,1 @@
+Request a new rendition of a video, encoded against a video profile and packaged for either HLS or DASH. The rendition is created immediately with a `waiting` status and transcoded in the background; poll it or subscribe to realtime events to follow its progress.
