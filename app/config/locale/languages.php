@@ -291,7 +291,7 @@ return [
     [
         "code" => "hi",
         "name" => "Hindi",
-        "nativeName" => "हिन्दी"
+        "nativeName" => "हिन्दी / हिंदी "
     ],
     [
         "code" => "ho",
@@ -415,7 +415,7 @@ return [
     ],
     [
         "code" => "km",
-        "name" => "Cambodian",
+        "name" => "Khmer",
         "nativeName" => "ភាសាខ្មែរ"
     ],
     [
@@ -594,11 +594,6 @@ return [
         "nativeName" => "Norsk nynorsk"
     ],
     [
-        "code" => "no",
-        "name" => "Norwegian",
-        "nativeName" => "Norsk"
-    ],
-    [
         "code" => "nr",
         "name" => "South Ndebele",
         "nativeName" => "isiNdebele"
@@ -659,8 +654,13 @@ return [
         "nativeName" => "پښتو"
     ],
     [
-        "code" => "pt",
+        "code" => "pt-pt",
         "name" => "Portuguese",
+        "nativeName" => "Português"
+    ],
+    [
+        "code" => "pt-br",
+        "name" => "Portuguese (Brazilian)",
         "nativeName" => "Português"
     ],
     [
@@ -706,7 +706,7 @@ return [
     [
         "code" => "sd",
         "name" => "Sindhi",
-        "nativeName" => "सिनधि"
+        "nativeName" => "सिन्धी / सिंधी "
     ],
     [
         "code" => "se",
@@ -924,8 +924,13 @@ return [
         "nativeName" => "Cuengh / Tôô / 壮语"
     ],
     [
-        "code" => "zh",
-        "name" => "Chinese",
+        "code" => "zh-cn",
+        "name" => "Chinese (Simplified)",
+        "nativeName" => "中文"
+    ],
+    [
+        "code" => "zh-tw",
+        "name" => "Chinese (Traditional)",
         "nativeName" => "中文"
     ],
     [

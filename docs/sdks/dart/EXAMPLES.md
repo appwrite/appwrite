@@ -1,16 +1,14 @@
+@@ -1,62 +0,0 @@
 # Examples
 
 Init your Appwrite client:
 
 ```dart
-  Client client = Client();
+Client client = Client();
 
-  client
-      .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-      .setProject('5e8cf4f46b5e8') // Your project ID
-      .setSelfSigned() // Remove in production
-  ;
-
+client
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
 ```
 
 Create a new user:
@@ -18,20 +16,22 @@ Create a new user:
 ```dart
 Users users = Users(client);
 
-Response result = await users.create(
-    email: 'email@example.com',
-    password: 'password',
+User result = await users.create(
+  userId: ID.unique(),
+  email: "email@example.com",
+  phone: "+123456789",
+  password: "password",
+  name: "Walter O'Brien"
 );
- 
 ```
 
-Fetch user profile:
+Get user:
 
 ```dart
 Users users = Users(client);
 
-Response profile = await users.get(
-    userId: '[USER_ID]',
+User user = await users.get(
+  userId: '[USER_ID]',
 );
 ```
 
@@ -40,19 +40,19 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename: 'image.jpg');
+InputFile input = InputFile(
+  path: './path-to-file/image.jpg',
+  filename: 'image.jpg',
+);
 
-storage.createFile(
-    file: file,
-    read: ['*'],
-    write: []
-)
-.then((response) {
-    print(response); // File uploaded!
-})
-.catchError((error) {
-    print(error.response);
-});
+File file = await storage.createFile(
+  bucketId: '<YOUR_BUCKET_ID>',
+  fileId: ID.unique(),
+  file: input,
+  permissions: [
+    Permission.read(Role.any()),
+  ],
+);
 ```
 
 All examples and API features are available at the [official Appwrite docs](https://appwrite.io/docs)

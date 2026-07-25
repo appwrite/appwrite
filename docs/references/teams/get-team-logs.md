@@ -1,0 +1,1 @@
+Get the team activity logs list by its unique ID.

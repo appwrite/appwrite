@@ -1,0 +1,60 @@
+# Change Log
+
+## 12.2.0
+
+* Added Channel<_Document>.upsert() and Channel<_Row>.upsert() API methods to upsert documents and rows in channels.
+* Added new query filters: containsAny(attribute, List<Any>) and containsAll(attribute, List<Any>) for advanced matching on array/relationship attributes.
+* Realtime improvements: improved WebSocket lifecycle and connection handling. Introduced generation-based checks to avoid processing messages from stale sockets and ensure sequential socket recreation on reconnects.
+
+## 12.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Add `subscriptions` field to `RealtimeCallback` and `RealtimeResponseEvent` types
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `List<String>`
+
+## 12.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 11.4.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 11.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 11.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 11.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 8.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Add `sequence` support to `Document` model
+
+## 8.1.0
+
+* Add `devKeys` support to `Client` service
+* Add `upsertDocument` support to `Databases` service
+
+## 8.0.0
+
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Update default `quality` for `getFilePreview` from 0 to -1
+* Remove `Gif` from ImageFormat enum
+* Remove `search` param from `listExecutions` method
+
+## 7.0.1
+
+* Fix requests failing by removing `Content-Type` header from `GET` and `HEAD` requests

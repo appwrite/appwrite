@@ -1,0 +1,162 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
+
+use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
+use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
+
+class Update extends Action
+{
+    use HTTP;
+
+    public static function getName()
+    {
+        return 'updateDeploymentStatus';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpPath('/v1/sites/:siteId/deployments/:deploymentId/status')
+            ->desc('Update deployment status')
+            ->groups(['api', 'sites'])
+            ->label('scope', 'sites.write')
+            ->label('audits.event', 'deployment.update')
+            ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
+            ->label('sdk', new Method(
+                namespace: 'sites',
+                group: 'deployments',
+                name: 'updateDeploymentStatus',
+                description: <<<EOT
+                Cancel an ongoing site deployment build. If the build is already in progress, it will be stopped and marked as canceled. If the build hasn't started yet, it will be marked as canceled without executing. You cannot cancel builds that have already completed (status 'ready') or failed. The response includes the final build status and details.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_DEPLOYMENT,
+                    )
+                ]
+            ))
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('deployments')
+            ->inject('locks')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $siteId,
+        string $deploymentId,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Backend $deployments,
+        callable $locks
+    ) {
+        $site = $dbForProject->getDocument('sites', $siteId);
+
+        if ($site->isEmpty()) {
+            throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+            throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+        }
+
+        $startTime = new \DateTime($deployment->getAttribute('buildStartedAt', 'now'));
+        $endTime = new \DateTime('now');
+        $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
+
+        // Write under the Jobs worker's per-deployment lock: its handlers
+        // read-modify-write buildLogs, and an unserialized cancel write here
+        // loses the closing log line to an in-flight append.
+        $cancel = function () use ($dbForProject, $deployment, $duration, $deployments) {
+            try {
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+            } catch (TransactionException) {
+                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+                if ($deployment->isEmpty()) {
+                    throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                }
+
+                if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                    throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+                }
+
+                if ($deployment->getAttribute('status') !== 'canceled') {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+                }
+
+                return $deployment;
+            }
+        };
+
+        try {
+            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
+        } catch (Contention) {
+            $deployment = $cancel();
+        }
+
+        // Best-effort cleanup — the deployment is already marked 'canceled'.
+        try {
+            $deployments->cancel($deploymentId);
+        } catch (\Throwable) {
+        }
+
+        $queueForEvents
+            ->setParam('siteId', $site->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+    }
+
+    /**
+     * The sparse update marking a build canceled. Jobs-backed builds have no
+     * cancel worker to write the closing log line the executor's Builds worker
+     * adds, so it is appended here; executor deployments get it from their worker.
+     *
+     * @return array<string, mixed>
+     */
+    private function cancel(Document $deployment, int $duration, bool $appendLog): array
+    {
+        $update = [
+            'buildEndedAt' => DateTime::now(),
+            'buildDuration' => $duration,
+            'status' => 'canceled',
+        ];
+
+        if ($appendLog) {
+            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+            $update['buildLogs'] = \substr($logs, -APP_LOG_LENGTH_LIMIT);
+        }
+
+        return $update;
+    }
+}

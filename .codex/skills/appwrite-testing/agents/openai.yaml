@@ -1,0 +1,4 @@
+interface:
+  display_name: "Appwrite Testing"
+  short_description: "Choose and write Appwrite tests using a pragmatic test pyramid."
+  default_prompt: "Use the Appwrite testing skill to choose the right test level and add focused PHPUnit coverage for this change."

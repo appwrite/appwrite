@@ -2,118 +2,81 @@
 
 namespace Appwrite\Network\Validator;
 
+use Appwrite\Network\Platform;
 use Utopia\Validator;
+use Utopia\Validator\Hostname;
 
 class Origin extends Validator
 {
-    const CLIENT_TYPE_UNKNOWN = 'unknown';
-    const CLIENT_TYPE_WEB = 'web';
-    const CLIENT_TYPE_FLUTTER_IOS = 'flutter-ios';
-    const CLIENT_TYPE_FLUTTER_ANDROID = 'flutter-android';
-    const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
-    const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
-    const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
-    
-    const SCHEME_TYPE_HTTP = 'http';
-    const SCHEME_TYPE_HTTPS = 'https';
-    const SCHEME_TYPE_IOS = 'appwrite-ios';
-    const SCHEME_TYPE_ANDROID = 'appwrite-android';
-    const SCHEME_TYPE_MACOS = 'appwrite-macos';
-    const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
-    const SCHEME_TYPE_LINUX = 'appwrite-linux';
+    protected ?string $scheme = null;
+    protected ?string $host = null;
+    protected string $origin = '';
 
     /**
-     * @var array
+     * Constructor
+     *
+     * @param array<string> $allowedHostnames
+     * @param array<string> $allowedSchemes
      */
-    protected $platforms = [
-        self::SCHEME_TYPE_HTTP => 'Web',
-        self::SCHEME_TYPE_HTTPS => 'Web',
-        self::SCHEME_TYPE_IOS => 'iOS',
-        self::SCHEME_TYPE_ANDROID => 'Android',
-        self::SCHEME_TYPE_MACOS => 'macOS',
-        self::SCHEME_TYPE_WINDOWS => 'Windows',
-        self::SCHEME_TYPE_LINUX => 'Linux',
-    ];
-
-    /**
-     * @var array
-     */
-    protected $clients = [
-    ];
-
-    /**
-     * @var string
-     */
-    protected $client = self::CLIENT_TYPE_UNKNOWN;
-
-    /**
-     * @var string
-     */
-    protected $host = '';
-
-    /**
-     * @param string $target
-     */
-    public function __construct($platforms)
+    public function __construct(protected array $allowedHostnames, protected array $allowedSchemes)
     {
-        foreach ($platforms as $platform) {
-            $type = (isset($platform['type'])) ? $platform['type'] : '';
-            
-            switch ($type) {
-                case self::CLIENT_TYPE_WEB:
-                    $this->clients[] = (isset($platform['hostname'])) ? $platform['hostname'] : '';
-                    break;
-                
-                case self::CLIENT_TYPE_FLUTTER_IOS:
-                case self::CLIENT_TYPE_FLUTTER_ANDROID:
-                case self::CLIENT_TYPE_FLUTTER_MACOS:
-                case self::CLIENT_TYPE_FLUTTER_WINDOWS:
-                case self::CLIENT_TYPE_FLUTTER_LINUX:
-                    $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
-                    break;
-                
-                default:
-                    # code...
-                    break;
-            }
-        }
     }
 
-    public function getDescription()
+    public function setAllowedHostnames(array $allowedHostnames): self
     {
-        if (!\array_key_exists($this->client, $this->platforms)) {
-            return 'Unsupported platform';
-        }
+        $this->allowedHostnames = $allowedHostnames;
+        return $this;
+    }
 
-        return 'Invalid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your project console dashboard';
+    public function setAllowedSchemes(array $allowedSchemes): self
+    {
+        $this->allowedSchemes = $allowedSchemes;
+        return $this;
+    }
+
+    public function getAllowedHostnames(): array
+    {
+        return $this->allowedHostnames;
+    }
+
+    public function getAllowedSchemes(): array
+    {
+        return $this->allowedSchemes;
     }
 
     /**
-     * Check if Origin has been whiltlisted
-     *  for access to the API
-     *
-     * @param mixed $origin
-     *
+     * Check if Origin is valid.
+     * @param mixed $origin The Origin URI.
      * @return bool
      */
-    public function isValid($origin)
+    public function isValid($origin): bool
     {
-        if (!is_string($origin)) {
+        if (!is_string($origin) || empty($origin)) {
             return false;
         }
 
-        $scheme = \parse_url($origin, PHP_URL_SCHEME);
-        $host = \parse_url($origin, PHP_URL_HOST);
+        $this->origin = $origin;
+        $this->scheme = null;
+        $this->host = null;
 
-        $this->host = $host;
-        $this->client = $scheme;
+        $this->scheme = $this->parseScheme($origin);
+        $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
 
-        if (empty($host)) {
-            return true;
+        $webPlatforms = [
+            Platform::SCHEME_HTTP,
+            Platform::SCHEME_HTTPS,
+            Platform::SCHEME_CHROME_EXTENSION,
+            Platform::SCHEME_FIREFOX_EXTENSION,
+            Platform::SCHEME_SAFARI_EXTENSION,
+            Platform::SCHEME_EDGE_EXTENSION,
+            Platform::SCHEME_TAURI,
+        ];
+        if (in_array($this->scheme, $webPlatforms, true)) {
+            $validator = new Hostname($this->allowedHostnames);
+            return $validator->isValid($this->host);
         }
 
-        if (\in_array($host, $this->clients)) {
+        if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {
             return true;
         }
 
@@ -121,10 +84,28 @@ class Origin extends Validator
     }
 
     /**
+     * Get Description
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        $platform = $this->scheme ? Platform::getNameByScheme($this->scheme) : '';
+        $host = $this->host ? '(' . $this->host . ')' : '';
+
+        if (empty($this->host) && empty($this->scheme)) {
+            return 'Invalid Origin.';
+        }
+
+        if (empty($platform)) {
+            return 'Invalid Scheme. The scheme used (' . $this->scheme . ') in the Origin (' . $this->origin . ') is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`';
+        }
+
+        return 'Invalid Origin. Register your new client ' . $host . ' as a new '
+            . $platform . ' platform on your project console dashboard';
+    }
+
+    /**
      * Is array
-     *
-     * Function will return true if object is array.
-     *
      * @return bool
      */
     public function isArray(): bool
@@ -134,13 +115,35 @@ class Origin extends Validator
 
     /**
      * Get Type
-     *
-     * Returns validator type.
-     *
      * @return string
      */
     public function getType(): string
     {
         return self::TYPE_STRING;
+    }
+
+    /**
+     * Parses the scheme from a URI string.
+     *
+     * @param string $uri The URI string to parse.
+     * @return string|null The extracted scheme string (e.g., "http", "exp", "mailto")
+     */
+    public function parseScheme(string $uri): ?string
+    {
+        $uri = trim($uri);
+        if ($uri === '') {
+            return null; // No scheme in empty string
+        }
+
+        $scheme = parse_url($uri, PHP_URL_SCHEME);
+        if ($scheme === false) {
+            if (preg_match('/^([a-z][a-z0-9+.-]*):/i', $uri, $matches)) {
+                return $matches[1];
+            } else {
+                return null;
+            }
+        } else {
+            return $scheme;
+        }
     }
 }

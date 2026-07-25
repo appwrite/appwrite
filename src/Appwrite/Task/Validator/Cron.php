@@ -10,11 +10,11 @@ class Cron extends Validator
     /**
      * Get Description.
      *
-     * Returns validator description
+     * Returns validator description.
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'String must be a valid cron expression';
     }
@@ -28,7 +28,7 @@ class Cron extends Validator
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (empty($value)) {
             return true;
@@ -38,11 +38,25 @@ class Cron extends Validator
             return false;
         }
 
-        return true;
+        try {
+            \set_error_handler(static function (int $severity, string $message): bool {
+                if (($severity & E_WARNING) === E_WARNING) {
+                    throw new \RuntimeException($message);
+                }
+
+                return false;
+            });
+            (new CronExpression($value))->getNextRunDate();
+            return true;
+        } catch (\RuntimeException) {
+            return false;
+        } finally {
+            \restore_error_handler();
+        }
     }
 
     /**
-     * Is array
+     * Is array.
      *
      * Function will return true if object is array.
      *
@@ -54,7 +68,7 @@ class Cron extends Validator
     }
 
     /**
-     * Get Type
+     * Get Type.
      *
      * Returns validator type.
      *
