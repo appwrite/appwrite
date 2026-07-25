@@ -78,7 +78,12 @@ function ProductExploreCard({
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="text-[14px] font-semibold text-foreground">{productName}</h3>
-        <p className="mt-1 text-[13px] leading-5 text-muted-foreground">{productTagline}</p>
+        <p
+          className="mt-1 truncate text-[13px] leading-5 text-muted-foreground"
+          title={productTagline}
+        >
+          {productTagline}
+        </p>
       </div>
       {!isCurrent ? (
         <ArrowRight

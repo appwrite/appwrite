@@ -19,7 +19,11 @@ import {
   isBlogPageExternal,
   isMarketingPageExternal,
   isProductPageExternal,
+  type MarketingPagePath,
 } from '@/lib/marketing/urls'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
+import { isProductNavItemNew } from '@/lib/products/new-badge'
+import type { ProductNavItemId } from '@/lib/products/types'
 import {
   FOOTER_CONTAINER,
   footerCompactPaddingX,
@@ -43,6 +47,7 @@ type FooterLink = {
   href: string
   external?: boolean
   analyticsAction?: AnalyticsActionId
+  isNew?: boolean
 }
 
 type ExpandedFooterGroup = {
@@ -82,7 +87,7 @@ function productFooterLink(
   label: string,
   path: string,
   marketing: boolean,
-  productId?: string,
+  productId?: ProductNavItemId,
 ): FooterLink {
   return {
     label,
@@ -91,6 +96,22 @@ function productFooterLink(
     analyticsAction: productId
       ? getMarketingProductAnalyticsAction(productId)
       : undefined,
+    isNew: productId ? isProductNavItemNew(productId) : false,
+  }
+}
+
+function marketingProductFooterLink(
+  label: string,
+  path: MarketingPagePath,
+  marketing: boolean,
+  productId: ProductNavItemId,
+): FooterLink {
+  return {
+    label,
+    href: getMarketingPageUrl(path, marketing),
+    external: isMarketingPageExternal(marketing),
+    analyticsAction: getMarketingProductAnalyticsAction(productId),
+    isNew: isProductNavItemNew(productId),
   }
 }
 
@@ -104,6 +125,11 @@ function getExpandedFooterGroups(
     links: [
       docsFooterLink(footerCopy.expanded.quickStarts.web, '/docs/quick-starts/web', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.nextjs, '/docs/quick-starts/nextjs', marketing),
+      docsFooterLink(
+        footerCopy.expanded.quickStarts.tanstackStart,
+        '/docs/quick-starts/tanstack-start',
+        marketing,
+      ),
       docsFooterLink(footerCopy.expanded.quickStarts.react, '/docs/quick-starts/react', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.vue, '/docs/quick-starts/vue', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.nuxt, '/docs/quick-starts/nuxt', marketing),
@@ -132,7 +158,14 @@ function getExpandedFooterGroups(
         analyticsAction: getMarketingProductAnalyticsAction('realtime'),
       },
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
+      marketingProductFooterLink(
+        footerCopy.expanded.products.domains,
+        '/domains',
+        marketing,
+        'domains',
+      ),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
+      productFooterLink(footerCopy.expanded.products.firewall, '/products/firewall', marketing, 'firewall'),
     ],
   },
   {
@@ -222,13 +255,22 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsAuth0, 'appwrite-vs-auth0', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
+      blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.baas, 'backend-as-a-service', marketing),
     ],
   },
 ] as const
 }
 
-function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
+function FooterGroupLinks({
+  links,
+  newLabel,
+}: {
+  links: readonly FooterLink[]
+  newLabel: string
+}) {
   return (
     <ul className="space-y-2.5">
       {links.map((link) => (
@@ -241,9 +283,10 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
             {...(link.analyticsAction
               ? analyticsAttrs(link.analyticsAction)
               : {})}
-            className="link-unstyled text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
+            className="link-unstyled inline-flex items-center gap-1.5 text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             {link.label}
+            {link.isNew ? <ProductNewBadge label={newLabel} /> : null}
           </a>
         </li>
       ))}
@@ -272,6 +315,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const { isCloud, features } = useConsoleProfile()
   const { catalog } = useI18n()
   const footerCopy = catalog.app.footer
+  const newLabel = catalog.website.products.navigation.newLabel
   const cookieConsent = useOptionalCookieConsent()
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
@@ -507,7 +551,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               </AccordionTrigger>
               <AccordionContent className="pb-1">
                 <nav aria-label={group.title}>
-                  <FooterGroupLinks links={group.links} />
+                  <FooterGroupLinks links={group.links} newLabel={newLabel} />
                 </nav>
               </AccordionContent>
             </AccordionItem>
@@ -520,7 +564,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.title}
               </h2>
-              <FooterGroupLinks links={group.links} />
+              <FooterGroupLinks links={group.links} newLabel={newLabel} />
             </nav>
           ))}
         </div>

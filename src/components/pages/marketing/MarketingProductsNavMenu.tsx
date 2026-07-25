@@ -20,7 +20,9 @@ import {
   isProductId,
   type ProductNavCategory,
 } from '@/lib/products/registry'
+import { isProductNavItemNew } from '@/lib/products/new-badge'
 import type { ProductNavItemId } from '@/lib/products/types'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -75,6 +77,7 @@ type ProductNavigationCopy = {
   desktopTitle: string
   desktopSubtitle: string
   viewOverview: string
+  newLabel: string
   categories: ProductNavigationCategoriesCopy
   items: ProductNavigationItemsCopy
 }
@@ -174,6 +177,7 @@ function ProductNavLink({
   onNavigate,
   productNamesCopy,
   navigationItemsCopy,
+  newLabel,
   variant = 'default',
   closeSheet = false,
 }: {
@@ -182,6 +186,7 @@ function ProductNavLink({
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
   navigationItemsCopy: ProductNavigationItemsCopy
+  newLabel: string
   variant?: 'default' | 'compact' | 'dense'
   closeSheet?: boolean
 }) {
@@ -201,6 +206,7 @@ function ProductNavLink({
   const isDense = variant === 'dense'
   const isCompact = variant === 'compact'
   const productAnalytics = getMarketingProductAnalyticsAction(navItemId)
+  const isNew = isProductNavItemNew(navItemId)
 
   const link = (
     <Link
@@ -236,11 +242,12 @@ function ProductNavLink({
       <span className={cn('min-w-0', isDense ? 'flex-1' : 'flex-1')}>
         <span
           className={cn(
-            'block font-semibold text-foreground',
+            'flex items-center gap-1.5 font-semibold text-foreground',
             isDense ? 'text-[12px]' : 'text-[13px]',
           )}
         >
-          {localizedName}
+          <span className="min-w-0 truncate">{localizedName}</span>
+          {isNew ? <ProductNewBadge label={newLabel} /> : null}
         </span>
         <span
           className={cn(
@@ -279,6 +286,7 @@ function ProductsNavCategorySection({
   onNavigate,
   productNamesCopy,
   navigationItemsCopy,
+  newLabel,
   variant = 'dense',
   closeSheet = false,
 }: {
@@ -288,6 +296,7 @@ function ProductsNavCategorySection({
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
   navigationItemsCopy: ProductNavigationItemsCopy
+  newLabel: string
   variant?: 'dense' | 'compact'
   closeSheet?: boolean
 }) {
@@ -311,6 +320,7 @@ function ProductsNavCategorySection({
             onNavigate={onNavigate}
             productNamesCopy={productNamesCopy}
             navigationItemsCopy={navigationItemsCopy}
+            newLabel={newLabel}
             variant={variant}
             closeSheet={closeSheet}
           />
@@ -351,6 +361,7 @@ function DesktopProductsNavPanel({
             onNavigate={onNavigate}
             productNamesCopy={productNamesCopy}
             navigationItemsCopy={navigationCopy.items}
+            newLabel={navigationCopy.newLabel}
           />
         ))}
       </div>
@@ -392,6 +403,7 @@ function MobileProductsNavPanel({
           activeNavItemId={activeNavItemId}
           productNamesCopy={productNamesCopy}
           navigationItemsCopy={navigationCopy.items}
+          newLabel={navigationCopy.newLabel}
           variant="compact"
           closeSheet={closeSheet}
         />
