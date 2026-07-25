@@ -3068,6 +3068,148 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    /**
+     * Default OAuth failure relay pages need `project` so native apps can deep-link via
+     * appwrite-callback-{project}://. Without it the UI shows "Missing redirect URL"
+     * instead of the real OAuth error.
+     */
+    public function testOAuthDefaultFailureRedirectIncludesProject(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Omit failure so Appwrite uses the default relay URL (/auth/oauth2/failure or legacy /console/...)
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
+
+        $mockQuery = [];
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
+        $this->assertNotEmpty($mockQuery['state'] ?? null);
+
+        // Simulate provider returning an error (same path as a real OAuth denial)
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'error' => 'access_denied',
+            'error_description' => 'The user denied the request',
+            'state' => $mockQuery['state'],
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/account/sessions/oauth2/' . $provider . '/redirect?', $response['headers']['location']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $location = $response['headers']['location'];
+        $path = \parse_url($location, PHP_URL_PATH);
+        $query = [];
+        \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
+
+        $this->assertContains($path, ['/auth/oauth2/failure', '/console/auth/oauth2/failure']);
+        $this->assertEquals($projectId, $query['project'] ?? null);
+        $this->assertNotEmpty($query['error'] ?? null);
+
+        $error = \json_decode($query['error'], true);
+        $this->assertIsArray($error);
+        $this->assertArrayHasKey('message', $error);
+        $this->assertArrayHasKey('type', $error);
+        $this->assertStringContainsString('access_denied', $error['message']);
+    }
+
+    /**
+     * Custom failure URLs must not have `project` forced onto them — only the default
+     * Appwrite failure relay path gets that query param (mirrors success-path gating).
+     */
+    public function testOAuthCustomFailureRedirectOmitsProject(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $mockQuery = [];
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $mockQuery);
+        $this->assertNotEmpty($mockQuery['state'] ?? null);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/callback/' . $provider . '/' . $projectId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'error' => 'access_denied',
+            'error_description' => 'The user denied the request',
+            'state' => $mockQuery['state'],
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $location);
+
+        $query = [];
+        \parse_str((string) \parse_url($location, PHP_URL_QUERY), $query);
+
+        $this->assertArrayNotHasKey('project', $query);
+        $this->assertNotEmpty($query['error'] ?? null);
+    }
+
     public function testOAuthVerifiedEmailCanLinkToExistingAccount(): void
     {
         $provider = 'mock';
