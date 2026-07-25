@@ -36,10 +36,56 @@ final class EnvTest extends TestCase
 
     public function testExport(): void
     {
-        $this->assertSame("_APP_X=value1
-_APP_Y=value2
-_APP_Z=value3
-_APP_W=value5=
-", $this->object->export());
+        $this->assertSame(
+            "_APP_X=\"value1\"\n_APP_Y=\"value2\"\n_APP_Z=\"value3\"\n_APP_W=\"value5=\"\n",
+            $this->object->export()
+        );
+    }
+
+    public function testMultilineDoubleQuotedPrivateKey(): void
+    {
+        $pem = "-----BEGIN RSA PRIVATE KEY-----\nABCDEF\n-----END RSA PRIVATE KEY-----";
+        $data = "_APP_VCS_GITHUB_PRIVATE_KEY=\"-----BEGIN RSA PRIVATE KEY-----\nABCDEF\n-----END RSA PRIVATE KEY-----\"\n_APP_OTHER=ok\n";
+
+        $env = new Env($data);
+
+        $this->assertSame($pem, $env->getVar('_APP_VCS_GITHUB_PRIVATE_KEY'));
+        $this->assertSame('ok', $env->getVar('_APP_OTHER'));
+    }
+
+    public function testEscapedNewlineInDoubleQuotedValue(): void
+    {
+        $data = "_APP_VCS_GITHUB_PRIVATE_KEY=\"-----BEGIN RSA PRIVATE KEY-----\\nABCDEF\\n-----END RSA PRIVATE KEY-----\"\n";
+
+        $env = new Env($data);
+
+        $this->assertSame(
+            "-----BEGIN RSA PRIVATE KEY-----\nABCDEF\n-----END RSA PRIVATE KEY-----",
+            $env->getVar('_APP_VCS_GITHUB_PRIVATE_KEY')
+        );
+    }
+
+    public function testRoundTripPreservesMultilineSecret(): void
+    {
+        $pem = "-----BEGIN RSA PRIVATE KEY-----\nLINE1\nLINE2\n-----END RSA PRIVATE KEY-----";
+        $env = new Env('');
+        $env->setVar('_APP_VCS_GITHUB_PRIVATE_KEY', $pem);
+        $env->setVar('_APP_DOMAIN', 'example.com');
+
+        $exported = $env->export();
+        $reloaded = new Env($exported);
+
+        $this->assertSame($pem, $reloaded->getVar('_APP_VCS_GITHUB_PRIVATE_KEY'));
+        $this->assertSame('example.com', $reloaded->getVar('_APP_DOMAIN'));
+        $this->assertStringNotContainsString("\nLINE1\n", $exported);
+        $this->assertStringContainsString('\\nLINE1\\n', $exported);
+    }
+
+    public function testEncodeValueEscapesSpecialCharacters(): void
+    {
+        $this->assertSame(
+            'say\\"hi\\nnext\\$path',
+            Env::encodeValue("say\"hi\nnext\$path")
+        );
     }
 }
