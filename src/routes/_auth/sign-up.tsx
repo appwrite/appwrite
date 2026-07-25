@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   createFileRoute,
   redirect,
@@ -31,9 +31,6 @@ import {
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
-import {
-  captureAffiliateReferralCode,
-} from '@/lib/affiliate-referral'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
@@ -53,7 +50,6 @@ const searchSchema = z.object({
     .refine((val) => !val || isValidRelativeRedirect(val), {
       message: 'Redirect must be a relative URL',
     }),
-  ref: z.string().optional(),
 })
 
 export const Route = createFileRoute('/_auth/sign-up')({
@@ -77,10 +73,6 @@ function SignUpPage() {
   const queryClient = useQueryClient()
   const [isGitHubLoading, setIsGitHubLoading] = useState(false)
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
-
-  useEffect(() => {
-    captureAffiliateReferralCode(search.ref)
-  }, [search.ref])
 
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true)

@@ -5,25 +5,50 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { Query, type Models } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
-import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import { ID, Query, type Models } from '@appwrite.io/console'
+import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 
 export const AFFILIATE_REWARD_AMOUNT_USD = 10
 export const AFFILIATE_ATTRIBUTION_DAYS = 180
 
-export async function fetchAffiliate(): Promise<Models.Affiliate | null> {
-  try {
-    return await sdk.forConsole.affiliates.get()
-  } catch (error) {
-    if (isHttpNotFoundError(error)) return null
-    throw error
-  }
+export const AFFILIATE_METRICS = {
+  clicks: 'affiliates.clicks',
+  signups: 'affiliates.signups',
+  conversions: 'affiliates.conversions',
+} as const
+
+/** Public invite URL that records a click, sets the attribution cookie, and redirects to signup. */
+export function buildAffiliateInviteUrl(linkId: string): string {
+  const endpoint = getApiEndpoint().replace(/\/$/, '')
+  return `${endpoint}/affiliates/invite/${encodeURIComponent(linkId)}`
 }
 
-export async function createAffiliate(): Promise<Models.Affiliate> {
-  return await sdk.forConsole.affiliates.create()
+export async function fetchAffiliateLinks(
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+): Promise<Models.AffiliateLinkList> {
+  return await sdk.forConsole.affiliates.listLinks({
+    queries: [
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
+  })
+}
+
+export async function createAffiliateLink(params: {
+  linkId?: string
+  name?: string
+}): Promise<Models.AffiliateLink> {
+  return await sdk.forConsole.affiliates.createLink({
+    linkId: params.linkId?.trim() || ID.unique(),
+    name: params.name?.trim() || undefined,
+  })
+}
+
+export async function deleteAffiliateLink(linkId: string): Promise<void> {
+  await sdk.forConsole.affiliates.deleteLink({ linkId })
 }
 
 export async function fetchAffiliateReferrals(
@@ -52,37 +77,66 @@ export async function fetchAffiliateRewards(
   })
 }
 
-export async function createAffiliateRewardCredit(
+export async function claimAffiliateReward(
   rewardId: string,
   organizationId: string,
 ): Promise<Models.AffiliateReward> {
-  return await sdk.forConsole.affiliates.createRewardCredit({
+  return await sdk.forConsole.affiliates.updateReward({
     rewardId,
+    status: 'claimed',
     organizationId,
   })
 }
 
-export function affiliateQueryOptions() {
+export async function fetchAffiliateUsage(params?: {
+  linkId?: string
+  startAt?: string
+  endAt?: string
+}): Promise<Models.UsageEventList> {
+  return await sdk.forConsole.affiliates.getUsage({
+    metrics: [
+      AFFILIATE_METRICS.clicks,
+      AFFILIATE_METRICS.signups,
+      AFFILIATE_METRICS.conversions,
+    ],
+    startAt: params?.startAt,
+    endAt: params?.endAt,
+    linkId: params?.linkId,
+  })
+}
+
+export function sumUsageMetric(
+  usage: Models.UsageEventList | undefined,
+  metric: string,
+): number {
+  const series = usage?.metrics?.find((entry) => entry.metric === metric)
+  if (!series?.points?.length) return 0
+  return series.points.reduce((sum, point) => sum + (point.value || 0), 0)
+}
+
+export function affiliateLinksQueryOptions(
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
   return queryOptions({
-    queryKey: ['affiliates', 'account'],
-    queryFn: fetchAffiliate,
+    queryKey: ['affiliates', 'account', 'links', page, limit],
+    queryFn: () => fetchAffiliateLinks(page, limit),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
   })
 }
 
 export function affiliateReferralsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  enabled: boolean = true,
 ) {
   return queryOptions({
     queryKey: ['affiliates', 'account', 'referrals', page, limit],
     queryFn: () => fetchAffiliateReferrals(page, limit),
-    enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -95,12 +149,10 @@ export function affiliateReferralsQueryOptions(
 export function affiliateRewardsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  enabled: boolean = true,
 ) {
   return queryOptions({
     queryKey: ['affiliates', 'account', 'rewards', page, limit],
     queryFn: () => fetchAffiliateRewards(page, limit),
-    enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -110,13 +162,29 @@ export function affiliateRewardsQueryOptions(
   })
 }
 
-export function useAffiliate() {
+export function affiliateUsageQueryOptions(linkId?: string) {
+  return queryOptions({
+    queryKey: ['affiliates', 'account', 'usage', linkId ?? 'all'],
+    queryFn: () => fetchAffiliateUsage({ linkId }),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  })
+}
+
+export function useAffiliateLinks(
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    affiliateQueryOptions(),
+    affiliateLinksQueryOptions(page, limit),
   )
 
   return {
-    affiliate: data ?? null,
+    links: data?.links ?? [],
+    total: data?.total ?? 0,
     isLoading,
     isFetching,
     error,
@@ -127,10 +195,9 @@ export function useAffiliate() {
 export function useAffiliateReferrals(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  enabled: boolean = true,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    affiliateReferralsQueryOptions(page, limit, enabled),
+    affiliateReferralsQueryOptions(page, limit),
   )
 
   return {
@@ -146,10 +213,9 @@ export function useAffiliateReferrals(
 export function useAffiliateRewards(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  enabled: boolean = true,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    affiliateRewardsQueryOptions(page, limit, enabled),
+    affiliateRewardsQueryOptions(page, limit),
   )
 
   return {
@@ -162,19 +228,55 @@ export function useAffiliateRewards(
   }
 }
 
-export function useCreateAffiliate() {
+export function useAffiliateUsage(linkId?: string) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    affiliateUsageQueryOptions(linkId),
+  )
+
+  return {
+    usage: data,
+    clicks: sumUsageMetric(data, AFFILIATE_METRICS.clicks),
+    signups: sumUsageMetric(data, AFFILIATE_METRICS.signups),
+    conversions: sumUsageMetric(data, AFFILIATE_METRICS.conversions),
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useCreateAffiliateLink() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: createAffiliate,
-    onSuccess: async (affiliate) => {
-      queryClient.setQueryData(affiliateQueryOptions().queryKey, affiliate)
-      await queryClient.refetchQueries({ queryKey: ['affiliates', 'account'] })
+    mutationFn: createAffiliateLink,
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['affiliates', 'account', 'links'],
+      })
     },
   })
 }
 
-export function useCreateAffiliateRewardCredit() {
+export function useDeleteAffiliateLink() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteAffiliateLink,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['affiliates', 'account', 'links'],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['affiliates', 'account', 'usage'],
+        }),
+      ])
+    },
+  })
+}
+
+export function useClaimAffiliateReward() {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -184,14 +286,11 @@ export function useCreateAffiliateRewardCredit() {
     }: {
       rewardId: string
       organizationId: string
-    }) => createAffiliateRewardCredit(rewardId, organizationId),
+    }) => claimAffiliateReward(rewardId, organizationId),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['affiliates', 'account'] }),
-        queryClient.refetchQueries({
-          queryKey: ['affiliates', 'account', 'rewards'],
-        }),
-      ])
+      await queryClient.refetchQueries({
+        queryKey: ['affiliates', 'account', 'rewards'],
+      })
     },
   })
 }

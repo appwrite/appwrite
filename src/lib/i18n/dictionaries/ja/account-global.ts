@@ -21,36 +21,52 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
   Affiliates: 'アフィリエイト',
   'Affiliates program': 'アフィリエイトプログラム',
-  'Apply credits': 'クレジットを適用',
-  Applied: '適用済み',
+  'Affiliate link created': 'アフィリエイトリンクを作成しました',
+  'Affiliate link deleted': 'アフィリエイトリンクを削除しました',
   'Attribution window': 'アトリビューション期間',
   Attributed: 'アトリビューション日',
+  Claim: '受取',
+  Claimed: '受取済み',
+  'Claim credits': 'クレジットを受け取る',
+  Clicks: 'クリック',
   'Choose an organization you own to receive these affiliate credits.':
     'これらのアフィリエイトクレジットを受け取る、所有している Organization を選択してください。',
   Converted: 'コンバート済み',
-  'Credits applied to organization': 'Organization にクレジットを適用しました',
-  'Credits earned from converted referrals. Apply pending rewards to an organization you own.':
-    'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization に適用できます。',
-  'Earn $10 in credits for every referral that upgrades to a Pro plan. Attribution lasts 180 days.':
-    'Pro プランにアップグレードした紹介ごとに $10 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  Conversions: 'コンバージョン',
+  'Copy invite': '招待をコピー',
+  'Create link': 'リンクを作成',
+  'Create a shareable invite link. The link ID is your referral code.':
+    '共有可能な招待リンクを作成します。リンク ID が紹介コードになります。',
+  'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $10 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  'Create your first invite link to start referring users.':
+    '最初の招待リンクを作成してユーザーの紹介を始めましょう。',
+  'Credits claimed for organization': 'Organization 向けにクレジットを受け取りました',
+  'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
+    'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization で受け取れます。',
+  'Delete link': 'リンクを削除',
+  'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.':
+    '既存の紹介と報酬の履歴は残ります。この招待 URL への新規アクセスは機能しなくなります。',
   'Expires at': '有効期限',
-  'Failed to apply credits': 'クレジットの適用に失敗しました',
-  'Failed to copy referral link': '紹介リンクのコピーに失敗しました',
-  'Failed to join the affiliates program':
-    'アフィリエイトプログラムへの参加に失敗しました',
-  'Join program': 'プログラムに参加',
+  'Failed to claim credits': 'クレジットの受け取りに失敗しました',
+  'Failed to copy invite link': '招待リンクのコピーに失敗しました',
+  'Failed to create affiliate link': 'アフィリエイトリンクの作成に失敗しました',
+  'Failed to delete affiliate link': 'アフィリエイトリンクの削除に失敗しました',
+  'Invite link copied': '招待リンクをコピーしました',
+  'Leave blank to auto-generate': '空白のままにすると自動生成されます',
+  'Link ID': 'リンク ID',
+  Link: 'リンク',
+  Links: 'リンク',
+  links: '件のリンク',
+  'Loading links...': 'リンクを読み込み中...',
   'Loading referrals...': '紹介を読み込み中...',
   'Loading rewards...': '報酬を読み込み中...',
+  'No links yet': 'まだリンクはありません',
   'No referrals yet': 'まだ紹介はありません',
   'No rewards yet': 'まだ報酬はありません',
-  'Not applied': '未適用',
-  'Pending balance': '保留中の残高',
-  'People who signed up with your referral code. Converted referrals earn you credits.':
-    'あなたの紹介コードで登録したユーザーです。コンバートされた紹介でクレジットを獲得できます。',
+  'Not claimed': '未請求',
+  'Optional name': '任意の名前',
   'Qualifying plan': '対象プラン',
-  'Referral code': '紹介コード',
-  'Referral link': '紹介リンク',
-  'Referral link copied': '紹介リンクをコピーしました',
   Referrals: '紹介',
   referrals: '件の紹介',
   Reward: '報酬',
@@ -58,14 +74,14 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   rewards: '件の報酬',
   'Rewards appear here after a referral upgrades to Pro.':
     '紹介が Pro にアップグレードすると、ここに報酬が表示されます。',
-  'Share this link so new users are attributed to you. You earn $10 in credits when a referral upgrades to Pro.':
-    'このリンクを共有すると、新規ユーザーがあなたに紐付けられます。紹介が Pro にアップグレードすると $10 のクレジットを獲得できます。',
-  'Share your referral link to start earning credits.':
-    '紹介リンクを共有してクレジットの獲得を始めましょう。',
-  'Share your unique link. When someone signs up and upgrades to Pro within the attribution window, you earn credits you can apply to any organization you own.':
-    '固有のリンクを共有してください。アトリビューション期間内に登録して Pro にアップグレードすると、所有する Organization に適用できるクレジットを獲得できます。',
-  'You joined the affiliates program': 'アフィリエイトプログラムに参加しました',
-  'Your referral link': 'あなたの紹介リンク',
+  'Share an invite link to start attributing signups.':
+    '招待リンクを共有して登録のアトリビューションを始めましょう。',
+  'Share invite links to attribute signups. Clicks are tracked automatically.':
+    '招待リンクを共有して登録を紐付けます。クリックは自動で計測されます。',
+  'Signups attributed to your invite links. Converted referrals earn you credits.':
+    '招待リンクに紐付いた登録です。コンバートされた紹介でクレジットを獲得できます。',
+  Signups: '登録',
+  Untitled: '無題',
   'Application access has been revoked for all authorizations':
     'すべての承認についてアプリケーションのアクセスを取り消しました',
   'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':

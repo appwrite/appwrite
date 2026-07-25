@@ -2,9 +2,11 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
-  affiliateQueryOptions,
+  affiliateLinksQueryOptions,
   affiliateReferralsQueryOptions,
   affiliateRewardsQueryOptions,
+  affiliateUsageQueryOptions,
+  countriesQueryOptions,
   organizationsFullQueryOptions,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
@@ -21,25 +23,29 @@ export const Route = createFileRoute('/_public/account/affiliates')({
     if (typeof window === 'undefined') return
 
     const { queryClient } = context
-    const [affiliate, organizations] = await Promise.all([
-      queryClient.ensureQueryData(affiliateQueryOptions()),
-      queryClient.ensureQueryData(organizationsFullQueryOptions()),
-    ])
+    const [links, referrals, rewards, usage, organizations] = await Promise.all(
+      [
+        queryClient.ensureQueryData(
+          affiliateLinksQueryOptions(0, DEFAULT_PAGE_SIZE),
+        ),
+        queryClient.ensureQueryData(
+          affiliateReferralsQueryOptions(0, DEFAULT_PAGE_SIZE),
+        ),
+        queryClient.ensureQueryData(
+          affiliateRewardsQueryOptions(0, DEFAULT_PAGE_SIZE),
+        ),
+        queryClient.ensureQueryData(affiliateUsageQueryOptions()),
+        queryClient.ensureQueryData(organizationsFullQueryOptions()),
+      ],
+    )
 
-    if (!affiliate) {
-      return { affiliate, organizations }
-    }
+    queryClient
+      .prefetchQuery(countriesQueryOptions())
+      .catch(() => {
+        // Optional for referral country labels
+      })
 
-    const [referrals, rewards] = await Promise.all([
-      queryClient.ensureQueryData(
-        affiliateReferralsQueryOptions(0, DEFAULT_PAGE_SIZE, true),
-      ),
-      queryClient.ensureQueryData(
-        affiliateRewardsQueryOptions(0, DEFAULT_PAGE_SIZE, true),
-      ),
-    ])
-
-    return { affiliate, organizations, referrals, rewards }
+    return { links, referrals, rewards, usage, organizations }
   },
   component: AccountAffiliatesRoute,
 })

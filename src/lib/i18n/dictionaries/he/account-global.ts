@@ -27,35 +27,50 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'אפליקציות שאישרתם לגשת לחשבון Appwrite שלכם.',
   Affiliates: 'אפיליאייטס',
   'Affiliates program': 'תוכנית אפיליאייטס',
-  'Apply credits': 'החלת קרדיטים',
-  Applied: 'הוחל',
+  'Affiliate link created': 'קישור האפיליאייטס נוצר',
+  'Affiliate link deleted': 'קישור האפיליאייטס נמחק',
   'Attribution window': 'חלון ייחוס',
   Attributed: 'יוחס',
+  Claim: 'מימוש',
+  Claimed: 'מומש',
+  'Claim credits': 'מימוש קרדיטים',
+  Clicks: 'קליקים',
   'Choose an organization you own to receive these affiliate credits.':
     'בחרו ארגון שבבעלותכם לקבלת קרדיטי האפיליאייטס האלה.',
   Converted: 'הומר',
-  'Credits applied to organization': 'הקרדיטים הוחלו על הארגון',
-  'Credits earned from converted referrals. Apply pending rewards to an organization you own.':
-    'קרדיטים שנצברו מהפניות שהומרו. החילו תגמולים ממתינים על ארגון שבבעלותכם.',
-  'Earn $10 in credits for every referral that upgrades to a Pro plan. Attribution lasts 180 days.':
-    'הרוויחו $10 בקרדיטים על כל הפניה שמשדרגת לתוכנית Pro. הייחוס תקף ל-180 ימים.',
+  Conversions: 'המרות',
+  'Copy invite': 'העתקת הזמנה',
+  'Create link': 'יצירת קישור',
+  'Create a shareable invite link. The link ID is your referral code.':
+    'צרו קישור הזמנה לשיתוף. מזהה הקישור הוא קוד ההפניה שלכם.',
+  'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    'צרו קישורים לשיתוף והרוויחו $10 בקרדיטים כשמשתמש מופנה משדרג ל-Pro. הייחוס תקף ל-180 ימים.',
+  'Credits claimed for organization': 'הקרדיטים מומשו עבור הארגון',
+  'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
+    'קרדיטים שנצברו מהפניות שהומרו. מימשו תגמולים ממתינים לארגון שבבעלותכם.',
+  'Delete link': 'מחיקת קישור',
+  'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.':
+    'הפניות ותגמולים קיימים נשמרים בהיסטוריה. ביקורים חדשים בכתובת ההזמנה הזו יפסיקו לעבוד.',
   'Expires at': 'תפוגה',
-  'Failed to apply credits': 'החלת הקרדיטים נכשלה',
-  'Failed to copy referral link': 'העתקת קישור ההפניה נכשלה',
-  'Failed to join the affiliates program': 'ההצטרפות לתוכנית האפיליאייטס נכשלה',
-  'Join program': 'הצטרפות לתוכנית',
+  'Failed to claim credits': 'מימוש הקרדיטים נכשל',
+  'Failed to copy invite link': 'העתקת קישור ההזמנה נכשלה',
+  'Failed to create affiliate link': 'יצירת קישור האפיליאייטס נכשלה',
+  'Failed to delete affiliate link': 'מחיקת קישור האפיליאייטס נכשלה',
+  'Invite link copied': 'קישור ההזמנה הועתק',
+  'Leave blank to auto-generate': 'השאירו ריק ליצירה אוטומטית',
+  'Link ID': 'מזהה קישור',
+  Link: 'קישור',
+  Links: 'קישורים',
+  links: 'קישורים',
+  'Loading links...': 'טוען קישורים...',
   'Loading referrals...': 'טוען הפניות...',
   'Loading rewards...': 'טוען תגמולים...',
+  'No links yet': 'אין עדיין קישורים',
   'No referrals yet': 'אין עדיין הפניות',
   'No rewards yet': 'אין עדיין תגמולים',
-  'Not applied': 'לא הוחל',
-  'Pending balance': 'יתרה ממתינה',
-  'People who signed up with your referral code. Converted referrals earn you credits.':
-    'אנשים שנרשמו עם קוד ההפניה שלכם. הפניות שהומרו מזכות אתכם בקרדיטים.',
+  'Not claimed': 'לא מומש',
+  'Optional name': 'שם אופציונלי',
   'Qualifying plan': 'תוכנית מתאימה',
-  'Referral code': 'קוד הפניה',
-  'Referral link': 'קישור הפניה',
-  'Referral link copied': 'קישור ההפניה הועתק',
   Referrals: 'הפניות',
   referrals: 'הפניות',
   Reward: 'תגמול',
@@ -63,14 +78,16 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   rewards: 'תגמולים',
   'Rewards appear here after a referral upgrades to Pro.':
     'תגמולים יופיעו כאן אחרי שהפניה תשדרג ל-Pro.',
-  'Share this link so new users are attributed to you. You earn $10 in credits when a referral upgrades to Pro.':
-    'שתפו את הקישור הזה כדי שייחסו אליכם משתמשים חדשים. תרוויחו $10 בקרדיטים כשהפניה תשדרג ל-Pro.',
-  'Share your referral link to start earning credits.':
-    'שתפו את קישור ההפניה שלכם כדי להתחיל לצבור קרדיטים.',
-  'Share your unique link. When someone signs up and upgrades to Pro within the attribution window, you earn credits you can apply to any organization you own.':
-    'שתפו את הקישור הייחודי שלכם. כשמישהו נרשם ומשדרג ל-Pro בתוך חלון הייחוס, תרוויחו קרדיטים שתוכלו להחיל על כל ארגון שבבעלותכם.',
-  'You joined the affiliates program': 'הצטרפתם לתוכנית האפיליאייטס',
-  'Your referral link': 'קישור ההפניה שלכם',
+  'Share an invite link to start attributing signups.':
+    'שתפו קישור הזמנה כדי להתחיל לייחס הרשמות.',
+  'Share invite links to attribute signups. Clicks are tracked automatically.':
+    'שתפו קישורי הזמנה לייחוס הרשמות. קליקים נמדדים אוטומטית.',
+  'Create your first invite link to start referring users.':
+    'צרו את קישור ההזמנה הראשון כדי להתחיל להפנות משתמשים.',
+  'Signups attributed to your invite links. Converted referrals earn you credits.':
+    'הרשמות שיוחסו לקישורי ההזמנה שלכם. הפניות שהומרו מזכות אתכם בקרדיטים.',
+  Signups: 'הרשמות',
+  Untitled: 'ללא שם',
   'Are you sure you want to delete this billing address? This action cannot be undone.':
     'האם למחוק את כתובת החיוב הזו? פעולה זו אינה ניתנת לביטול.',
   'Are you sure you want to delete this identity?':

@@ -23,7 +23,6 @@ import {
   clearConsoleSessionLocally,
   sdk,
 } from '@/lib/appwrite/sdk'
-import { consumePendingAffiliateReferral } from '@/lib/affiliate-referral'
 import {
   clearConsoleAccountCache,
   getConsoleAccountUnauthenticatedError,
@@ -432,8 +431,6 @@ export async function refreshConsoleAccountAfterAuth(
   const revision = getConsoleAccountQueryRevision()
   const account = await fetchConsoleAccount({ revision, force: true })
   commitConsoleAccountToCaches(queryClient, account, revision)
-  // Best-effort affiliate attribution for OAuth / delayed auth flows.
-  await consumePendingAffiliateReferral()
   return account
 }
 

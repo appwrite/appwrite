@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, Copy, Gift, Loader2 } from 'lucide-react'
+import { Check, Copy, Gift, Link2, Loader2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -10,8 +10,12 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { IdInput } from '@/components/ui/id-input'
 import {
   Table,
   TableBody,
@@ -34,28 +38,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Pagination } from '@/components/global/shared/Pagination'
 import {
   AFFILIATE_ATTRIBUTION_DAYS,
   AFFILIATE_REWARD_AMOUNT_USD,
-  affiliateQueryOptions,
+  affiliateLinksQueryOptions,
+  buildAffiliateInviteUrl,
+  countriesQueryOptions,
   organizationsFullQueryOptions,
+  useAffiliateLinks,
   useAffiliateReferrals,
   useAffiliateRewards,
-  useCreateAffiliate,
-  useCreateAffiliateRewardCredit,
+  useAffiliateUsage,
+  useClaimAffiliateReward,
+  useCreateAffiliateLink,
+  useDeleteAffiliateLink,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
-import { buildAffiliateSignupUrl } from '@/lib/affiliate-referral'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export type AccountAffiliatesInitialData = {
-  affiliate?: Models.Affiliate | null
+  links?: Models.AffiliateLinkList
   referrals?: Models.AffiliateReferralList
   rewards?: Models.AffiliateRewardList
+  usage?: Models.UsageEventList
   organizations?: Models.Organization[]
 }
 
@@ -68,10 +77,8 @@ function referralStatusVariant(
   return 'info'
 }
 
-function rewardStatusVariant(
-  status: string,
-): 'pending' | 'success' | 'info' {
-  if (status === 'applied') return 'success'
+function rewardStatusVariant(status: string): 'pending' | 'success' | 'info' {
+  if (status === 'claimed') return 'success'
   if (status === 'pending') return 'pending'
   return 'info'
 }
@@ -84,187 +91,455 @@ function referralStatusLabel(status: string, t: (text: string) => string) {
 }
 
 function rewardStatusLabel(status: string, t: (text: string) => string) {
-  if (status === 'applied') return t('Applied')
+  if (status === 'claimed') return t('Claimed')
   if (status === 'pending') return t('Pending')
   return status
 }
 
 function OverviewCard({
-  affiliate,
-  onJoined,
+  initialUsage,
 }: {
-  affiliate: Models.Affiliate | null
-  onJoined: (affiliate: Models.Affiliate) => void
+  initialUsage?: Models.UsageEventList
 }) {
   const t = useT()
-  const createAffiliate = useCreateAffiliate()
-  const [copiedLink, setCopiedLink] = useState(false)
+  const { usage, clicks, signups, conversions, isLoading } = useAffiliateUsage()
 
-  const signupUrl = affiliate ? buildAffiliateSignupUrl(affiliate.code) : ''
-
-  const handleJoin = async () => {
-    try {
-      const created = await createAffiliate.mutateAsync()
-      toast.success(t('You joined the affiliates program'))
-      onJoined(created)
-    } catch (error) {
-      toast.error(
-        getErrorMessage(error, t('Failed to join the affiliates program')),
-      )
-    }
-  }
-
-  const handleCopyLink = async () => {
-    if (!signupUrl) return
-    try {
-      await navigator.clipboard.writeText(signupUrl)
-      setCopiedLink(true)
-      toast.success(t('Referral link copied'))
-      window.setTimeout(() => setCopiedLink(false), 2000)
-    } catch {
-      toast.error(t('Failed to copy referral link'))
-    }
-  }
-
-  if (!affiliate) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Affiliates program')}
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {t(
-              'Earn $10 in credits for every referral that upgrades to a Pro plan. Attribution lasts 180 days.',
-            )}
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-3">
-          <p className="text-[13px] text-muted-foreground">
-            {t(
-              'Share your unique link. When someone signs up and upgrades to Pro within the attribution window, you earn credits you can apply to any organization you own.',
-            )}
-          </p>
-          <ul className="list-disc pl-5 space-y-1 text-[13px] text-muted-foreground">
-            <li>
-              {t('Reward')}: {formatCurrency(AFFILIATE_REWARD_AMOUNT_USD)}
-            </li>
-            <li>
-              {t('Attribution window')}: {AFFILIATE_ATTRIBUTION_DAYS}{' '}
-              {t('days')}
-            </li>
-            <li>{t('Qualifying plan')}: Pro</li>
-          </ul>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={createAffiliate.isPending}
-            onClick={handleJoin}
-            {...analyticsAttrs('join-affiliates')}
-          >
-            {createAffiliate.isPending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
-            {t('Join program')}
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  const resolvedUsage = usage ?? initialUsage
+  const displayClicks = usage
+    ? clicks
+    : (resolvedUsage?.metrics
+        ?.find((m) => m.metric === 'affiliates.clicks')
+        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
+  const displaySignups = usage
+    ? signups
+    : (resolvedUsage?.metrics
+        ?.find((m) => m.metric === 'affiliates.signups')
+        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
+  const displayConversions = usage
+    ? conversions
+    : (resolvedUsage?.metrics
+        ?.find((m) => m.metric === 'affiliates.conversions')
+        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Your referral link')}
+          {t('Affiliates program')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'Share this link so new users are attributed to you. You earn $10 in credits when a referral upgrades to Pro.',
+            'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.',
           )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Pending balance')}
+              {t('Clicks')}
             </p>
             <p className="mt-1 text-[22px] font-semibold text-foreground">
-              {formatCurrency(affiliate.pendingBalance ?? 0)}
+              {isLoading && !resolvedUsage ? '…' : displayClicks}
             </p>
           </div>
-          <Badge
-            variant={affiliate.status === 'active' ? 'success' : 'inactive'}
-            className="text-[10px] shrink-0 w-fit"
-          >
-            {affiliate.status === 'active' ? t('Active') : t('Disabled')}
-          </Badge>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Referral code')}
-          </p>
-          <CopyableId id={affiliate.code} displayText={affiliate.code} />
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Referral link')}
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted/40 px-3 py-2 text-[12px] text-foreground">
-              {signupUrl}
-            </code>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 shrink-0 text-[13px]"
-              onClick={handleCopyLink}
-              {...analyticsAttrs('copy-affiliate-link')}
-            >
-              {copiedLink ? (
-                <Check className="mr-1.5 h-4 w-4" />
-              ) : (
-                <Copy className="mr-1.5 h-4 w-4" />
-              )}
-              {t('Copy link')}
-            </Button>
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('Signups')}
+            </p>
+            <p className="mt-1 text-[22px] font-semibold text-foreground">
+              {isLoading && !resolvedUsage ? '…' : displaySignups}
+            </p>
+          </div>
+          <div>
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('Conversions')}
+            </p>
+            <p className="mt-1 text-[22px] font-semibold text-foreground">
+              {isLoading && !resolvedUsage ? '…' : displayConversions}
+            </p>
           </div>
         </div>
+        <ul className="list-disc pl-5 space-y-1 text-[13px] text-muted-foreground">
+          <li>
+            {t('Reward')}: {formatCurrency(AFFILIATE_REWARD_AMOUNT_USD)}
+          </li>
+          <li>
+            {t('Attribution window')}: {AFFILIATE_ATTRIBUTION_DAYS} {t('days')}
+          </li>
+          <li>{t('Qualifying plan')}: Pro</li>
+        </ul>
       </div>
     </div>
   )
 }
 
-function ReferralsCard({
-  affiliate,
+function CreateLinkDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const t = useT()
+  const createLink = useCreateAffiliateLink()
+  const [linkId, setLinkId] = useState<string | undefined>(undefined)
+  const [name, setName] = useState('')
+
+  useEffect(() => {
+    if (!open) {
+      setLinkId(undefined)
+      setName('')
+    }
+  }, [open])
+
+  const handleCreate = async () => {
+    try {
+      await createLink.mutateAsync({
+        linkId,
+        name: name.trim() || undefined,
+      })
+      toast.success(t('Affiliate link created'))
+      onOpenChange(false)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to create affiliate link')))
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>{t('Create link')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {t(
+              'Create a shareable invite link. The link ID is your referral code.',
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+        <div className="px-6 pb-4 pt-4 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="affiliate-link-name">{t('Name')}</Label>
+            <Input
+              id="affiliate-link-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('Optional name')}
+              maxLength={128}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="affiliate-link-id">{t('Link ID')}</Label>
+            <IdInput
+              id="affiliate-link-id"
+              value={linkId}
+              onChange={setLinkId}
+              placeholder={t('Leave blank to auto-generate')}
+            />
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={createLink.isPending}
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            disabled={createLink.isPending}
+            onClick={handleCreate}
+            {...analyticsAttrs('create-affiliate-link')}
+          >
+            {createLink.isPending ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : null}
+            {t('Create')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DeleteLinkDialog({
+  link,
+  open,
+  onOpenChange,
+}: {
+  link: Models.AffiliateLink | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const t = useT()
+  const deleteLink = useDeleteAffiliateLink()
+
+  const handleDelete = async () => {
+    if (!link) return
+    try {
+      await deleteLink.mutateAsync(link.$id)
+      toast.success(t('Affiliate link deleted'))
+      onOpenChange(false)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to delete affiliate link')))
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>{t('Delete link')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {t(
+              'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.',
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={deleteLink.isPending}
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={deleteLink.isPending}
+            onClick={handleDelete}
+            {...analyticsAttrs('delete-affiliate-link')}
+          >
+            {deleteLink.isPending ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : null}
+            {t('Delete')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function LinksCard({
   initialData,
 }: {
-  affiliate: Models.Affiliate | null
-  initialData?: Models.AffiliateReferralList
+  initialData?: Models.AffiliateLinkList
 }) {
   const t = useT()
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const enabled = !!affiliate
+  const [createOpen, setCreateOpen] = useState(false)
+  const [linkToDelete, setLinkToDelete] = useState<Models.AffiliateLink | null>(
+    null,
+  )
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  const requested = useAffiliateReferrals(
-    requestedPage - 1,
-    DEFAULT_PAGE_SIZE,
-    enabled,
+  const requested = useAffiliateLinks(requestedPage - 1, DEFAULT_PAGE_SIZE)
+  const displayed = useAffiliateLinks(displayedPage - 1, DEFAULT_PAGE_SIZE)
+
+  useEffect(() => {
+    if (
+      requestedPage !== displayedPage &&
+      !requested.isFetching &&
+      requested.links
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [requestedPage, displayedPage, requested.isFetching, requested.links])
+
+  const isFirstPage = displayedPage === 1
+  const links =
+    isFirstPage && initialData && displayed.links.length === 0
+      ? initialData.links
+      : displayed.links
+  const total =
+    isFirstPage && initialData
+      ? displayed.total || initialData.total
+      : displayed.total
+
+  const handleCopyInvite = async (linkId: string) => {
+    try {
+      await navigator.clipboard.writeText(buildAffiliateInviteUrl(linkId))
+      setCopiedId(linkId)
+      toast.success(t('Invite link copied'))
+      window.setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      toast.error(t('Failed to copy invite link'))
+    }
+  }
+
+  return (
+    <>
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Links')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                'Share invite links to attribute signups. Clicks are tracked automatically.',
+              )}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="h-9 shrink-0 text-[13px]"
+            onClick={() => setCreateOpen(true)}
+            {...analyticsAttrs('create-affiliate-link')}
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            {t('Create link')}
+          </Button>
+        </div>
+        <div className="border-t border-border" />
+        {displayed.isLoading && links.length === 0 ? (
+          <div className="px-6 py-10 text-center text-[13px] text-muted-foreground">
+            {t('Loading links...')}
+          </div>
+        ) : links.length === 0 ? (
+          <div className="px-6 py-6">
+            <EmptyState
+              icon={Link2}
+              title={t('No links yet')}
+              description={t(
+                'Create your first invite link to start referring users.',
+              )}
+            />
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Name')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Link ID')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Status')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Created')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[160px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {links.map((link) => (
+                  <TableRow key={link.$id}>
+                    <TableCell className="px-4 py-3">
+                      <span className="text-[13px] font-medium">
+                        {link.name?.trim() || t('Untitled')}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <CopyableId
+                        id={link.$id}
+                        displayText={link.$id}
+                        variant="inline"
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge
+                        variant={
+                          link.status === 'active' ? 'success' : 'inactive'
+                        }
+                        className="text-[10px] shrink-0"
+                      >
+                        {link.status === 'active'
+                          ? t('Active')
+                          : t('Disabled')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <DateTooltip date={link.$createdAt} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-[12px]"
+                          onClick={() => handleCopyInvite(link.$id)}
+                          disabled={link.status !== 'active'}
+                          {...analyticsAttrs('copy-affiliate-link')}
+                        >
+                          {copiedId === link.$id ? (
+                            <Check className="mr-1.5 h-3.5 w-3.5" />
+                          ) : (
+                            <Copy className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          {t('Copy invite')}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setLinkToDelete(link)}
+                          aria-label={t('Delete')}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {total > DEFAULT_PAGE_SIZE ? (
+              <div className="border-t border-border px-4 py-3">
+                <Pagination
+                  currentPage={displayedPage}
+                  totalItems={total}
+                  pageSize={DEFAULT_PAGE_SIZE}
+                  onPageChange={setRequestedPage}
+                  onPageSizeChange={() => {}}
+                  showPageSizeSelector={false}
+                  itemLabel={t('links')}
+                />
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      <CreateLinkDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <DeleteLinkDialog
+        link={linkToDelete}
+        open={!!linkToDelete}
+        onOpenChange={(open) => {
+          if (!open) setLinkToDelete(null)
+        }}
+      />
+    </>
   )
-  const displayed = useAffiliateReferrals(
-    displayedPage - 1,
-    DEFAULT_PAGE_SIZE,
-    enabled,
-  )
+}
+
+function ReferralsCard({
+  initialData,
+  links,
+}: {
+  initialData?: Models.AffiliateReferralList
+  links: Models.AffiliateLink[]
+}) {
+  const t = useT()
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const { data: countriesData } = useQuery(countriesQueryOptions())
+
+  const requested = useAffiliateReferrals(requestedPage - 1, DEFAULT_PAGE_SIZE)
+  const displayed = useAffiliateReferrals(displayedPage - 1, DEFAULT_PAGE_SIZE)
 
   useEffect(() => {
     if (
@@ -288,10 +563,29 @@ function ReferralsCard({
       : displayed.referrals
   const total =
     isFirstPage && initialData
-      ? (displayed.total || initialData.total)
+      ? displayed.total || initialData.total
       : displayed.total
 
-  if (!affiliate) return null
+  const linkNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    links.forEach((link) => {
+      map.set(link.$id, link.name?.trim() || link.$id)
+    })
+    return map
+  }, [links])
+
+  const countryNameByCode = useMemo(() => {
+    const map = new Map<string, string>()
+    countriesData?.countries?.forEach((country) => {
+      map.set(country.code, country.name)
+    })
+    return map
+  }, [countriesData])
+
+  const getCountryFlagUrl = (countryCode?: string) => {
+    if (!countryCode || countryCode === '--') return null
+    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -301,7 +595,7 @@ function ReferralsCard({
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'People who signed up with your referral code. Converted referrals earn you credits.',
+            'Signups attributed to your invite links. Converted referrals earn you credits.',
           )}
         </p>
       </div>
@@ -316,7 +610,7 @@ function ReferralsCard({
             icon={Gift}
             title={t('No referrals yet')}
             description={t(
-              'Share your referral link to start earning credits.',
+              'Share an invite link to start attributing signups.',
             )}
           />
         </div>
@@ -326,7 +620,13 @@ function ReferralsCard({
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('User ID')}
+                  {t('User')}
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('Country')}
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('Link')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Status')}
@@ -340,31 +640,58 @@ function ReferralsCard({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {referrals.map((referral) => (
-                <TableRow key={referral.$id}>
-                  <TableCell className="px-4 py-3">
-                    <CopyableId
-                      id={referral.referredUserId}
-                      variant="inline"
-                      size="sm"
-                    />
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <Badge
-                      variant={referralStatusVariant(referral.status)}
-                      className="text-[10px] shrink-0"
-                    >
-                      {referralStatusLabel(referral.status, t)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <DateTooltip date={referral.attributedAt} />
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <DateTooltip date={referral.expiresAt} />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {referrals.map((referral) => {
+                const flagUrl = getCountryFlagUrl(referral.referredUserCountry)
+                const countryLabel =
+                  countryNameByCode.get(referral.referredUserCountry) ||
+                  referral.referredUserCountry ||
+                  t('Unknown')
+
+                return (
+                  <TableRow key={referral.$id}>
+                    <TableCell className="px-4 py-3">
+                      <span className="font-mono text-[13px] text-foreground">
+                        {referral.referredUserMaskedId}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {flagUrl ? (
+                          <img
+                            src={flagUrl}
+                            alt=""
+                            className="h-3.5 w-5 rounded-[2px] object-cover"
+                            width={20}
+                            height={14}
+                          />
+                        ) : null}
+                        <span className="text-[13px] text-muted-foreground">
+                          {countryLabel}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <span className="text-[13px] text-muted-foreground">
+                        {linkNameById.get(referral.linkId) ?? referral.linkId}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge
+                        variant={referralStatusVariant(referral.status)}
+                        className="text-[10px] shrink-0"
+                      >
+                        {referralStatusLabel(referral.status, t)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <DateTooltip date={referral.attributedAt} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <DateTooltip date={referral.expiresAt} />
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
           {total > DEFAULT_PAGE_SIZE ? (
@@ -386,7 +713,7 @@ function ReferralsCard({
   )
 }
 
-function ApplyRewardDialog({
+function ClaimRewardDialog({
   reward,
   open,
   onOpenChange,
@@ -398,7 +725,7 @@ function ApplyRewardDialog({
   organizations: Models.Organization[]
 }) {
   const t = useT()
-  const applyCredit = useCreateAffiliateRewardCredit()
+  const claimReward = useClaimAffiliateReward()
   const [organizationId, setOrganizationId] = useState('')
 
   useEffect(() => {
@@ -411,17 +738,17 @@ function ApplyRewardDialog({
     }
   }, [open, organizations])
 
-  const handleApply = async () => {
+  const handleClaim = async () => {
     if (!reward || !organizationId) return
     try {
-      await applyCredit.mutateAsync({
+      await claimReward.mutateAsync({
         rewardId: reward.$id,
         organizationId,
       })
-      toast.success(t('Credits applied to organization'))
+      toast.success(t('Credits claimed for organization'))
       onOpenChange(false)
     } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to apply credits')))
+      toast.error(getErrorMessage(error, t('Failed to claim credits')))
     }
   }
 
@@ -429,7 +756,7 @@ function ApplyRewardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>{t('Apply credits')}</DialogTitle>
+          <DialogTitle>{t('Claim credits')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
               'Choose an organization you own to receive these affiliate credits.',
@@ -466,18 +793,19 @@ function ApplyRewardDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={applyCredit.isPending}
+            disabled={claimReward.isPending}
           >
             {t('Cancel')}
           </Button>
           <Button
-            disabled={!organizationId || applyCredit.isPending}
-            onClick={handleApply}
+            disabled={!organizationId || claimReward.isPending}
+            onClick={handleClaim}
+            {...analyticsAttrs('claim-affiliate-reward')}
           >
-            {applyCredit.isPending ? (
+            {claimReward.isPending ? (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
             ) : null}
-            {t('Apply credits')}
+            {t('Claim credits')}
           </Button>
         </div>
       </DialogContent>
@@ -486,31 +814,22 @@ function ApplyRewardDialog({
 }
 
 function RewardsCard({
-  affiliate,
   initialData,
   organizations,
+  links,
 }: {
-  affiliate: Models.Affiliate | null
   initialData?: Models.AffiliateRewardList
   organizations: Models.Organization[]
+  links: Models.AffiliateLink[]
 }) {
   const t = useT()
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [selectedReward, setSelectedReward] =
     useState<Models.AffiliateReward | null>(null)
-  const enabled = !!affiliate
 
-  const requested = useAffiliateRewards(
-    requestedPage - 1,
-    DEFAULT_PAGE_SIZE,
-    enabled,
-  )
-  const displayed = useAffiliateRewards(
-    displayedPage - 1,
-    DEFAULT_PAGE_SIZE,
-    enabled,
-  )
+  const requested = useAffiliateRewards(requestedPage - 1, DEFAULT_PAGE_SIZE)
+  const displayed = useAffiliateRewards(displayedPage - 1, DEFAULT_PAGE_SIZE)
 
   useEffect(() => {
     if (
@@ -529,7 +848,7 @@ function RewardsCard({
       : displayed.rewards
   const total =
     isFirstPage && initialData
-      ? (displayed.total || initialData.total)
+      ? displayed.total || initialData.total
       : displayed.total
 
   const orgNameById = useMemo(() => {
@@ -538,7 +857,13 @@ function RewardsCard({
     return map
   }, [organizations])
 
-  if (!affiliate) return null
+  const linkNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    links.forEach((link) => {
+      map.set(link.$id, link.name?.trim() || link.$id)
+    })
+    return map
+  }, [links])
 
   return (
     <>
@@ -549,7 +874,7 @@ function RewardsCard({
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             {t(
-              'Credits earned from converted referrals. Apply pending rewards to an organization you own.',
+              'Credits earned from converted referrals. Claim pending rewards to an organization you own.',
             )}
           </p>
         </div>
@@ -577,6 +902,9 @@ function RewardsCard({
                     {t('Amount')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Link')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     {t('Status')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -597,6 +925,11 @@ function RewardsCard({
                       </span>
                     </TableCell>
                     <TableCell className="px-4 py-3">
+                      <span className="text-[13px] text-muted-foreground">
+                        {linkNameById.get(reward.linkId) ?? reward.linkId}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <Badge
                         variant={rewardStatusVariant(reward.status)}
                         className="text-[10px] shrink-0"
@@ -608,7 +941,7 @@ function RewardsCard({
                       <span className="text-[13px] text-muted-foreground">
                         {reward.teamId
                           ? (orgNameById.get(reward.teamId) ?? reward.teamId)
-                          : t('Not applied')}
+                          : t('Not claimed')}
                       </span>
                     </TableCell>
                     <TableCell className="px-4 py-3">
@@ -623,9 +956,9 @@ function RewardsCard({
                           className="h-8 text-[12px]"
                           onClick={() => setSelectedReward(reward)}
                           disabled={organizations.length === 0}
-                          {...analyticsAttrs('apply-affiliate-reward')}
+                          {...analyticsAttrs('claim-affiliate-reward')}
                         >
-                          {t('Apply')}
+                          {t('Claim')}
                         </Button>
                       ) : null}
                     </TableCell>
@@ -650,7 +983,7 @@ function RewardsCard({
         )}
       </div>
 
-      <ApplyRewardDialog
+      <ClaimRewardDialog
         reward={selectedReward}
         open={!!selectedReward}
         onOpenChange={(open) => {
@@ -667,20 +1000,15 @@ export function AccountAffiliatesPage({
 }: {
   initialData?: AccountAffiliatesInitialData
 } = {}) {
-  const { data: affiliateFromQuery } = useQuery(affiliateQueryOptions())
+  const { data: linksData } = useQuery(affiliateLinksQueryOptions(0, DEFAULT_PAGE_SIZE))
   const { data: organizationsFromQuery } = useQuery(
     organizationsFullQueryOptions(),
   )
 
-  const [joinedAffiliate, setJoinedAffiliate] =
-    useState<Models.Affiliate | null>(null)
-
-  const affiliate =
-    joinedAffiliate ??
-    affiliateFromQuery ??
-    initialData?.affiliate ??
-    null
-
+  const links =
+    linksData?.links ??
+    initialData?.links?.links ??
+    []
   const organizations =
     organizationsFromQuery ?? initialData?.organizations ?? []
 
@@ -697,48 +1025,57 @@ export function AccountAffiliatesPage({
             'earn',
             'reward',
             'pro',
+            'clicks',
+            'signups',
+            'conversions',
           ],
         },
+        node: <OverviewCard initialUsage={initialData?.usage} />,
+      },
+      {
+        id: 'affiliates-links',
+        search: {
+          title: 'Links',
+          keywords: ['link', 'invite', 'share', 'referral code'],
+        },
+        node: <LinksCard initialData={initialData?.links} />,
+      },
+      {
+        id: 'affiliates-referrals',
+        search: {
+          title: 'Referrals',
+          keywords: ['referral', 'signup', 'converted', 'pending', 'country'],
+        },
         node: (
-          <OverviewCard
-            affiliate={affiliate}
-            onJoined={(created) => setJoinedAffiliate(created)}
+          <ReferralsCard
+            initialData={initialData?.referrals}
+            links={links}
           />
         ),
       },
-      ...(affiliate
-        ? [
-            {
-              id: 'affiliates-referrals',
-              search: {
-                title: 'Referrals',
-                keywords: ['referral', 'referred', 'converted', 'pending'],
-              },
-              node: (
-                <ReferralsCard
-                  affiliate={affiliate}
-                  initialData={initialData?.referrals}
-                />
-              ),
-            },
-            {
-              id: 'affiliates-rewards',
-              search: {
-                title: 'Rewards',
-                keywords: ['reward', 'credits', 'apply', 'pending', 'balance'],
-              },
-              node: (
-                <RewardsCard
-                  affiliate={affiliate}
-                  initialData={initialData?.rewards}
-                  organizations={organizations}
-                />
-              ),
-            },
-          ]
-        : []),
+      {
+        id: 'affiliates-rewards',
+        search: {
+          title: 'Rewards',
+          keywords: ['reward', 'credits', 'claim', 'pending', 'balance'],
+        },
+        node: (
+          <RewardsCard
+            initialData={initialData?.rewards}
+            organizations={organizations}
+            links={links}
+          />
+        ),
+      },
     ],
-    [affiliate, initialData?.referrals, initialData?.rewards, organizations],
+    [
+      initialData?.links,
+      initialData?.referrals,
+      initialData?.rewards,
+      initialData?.usage,
+      links,
+      organizations,
+    ],
   )
 
   return <SettingsCardsList cards={cards} />

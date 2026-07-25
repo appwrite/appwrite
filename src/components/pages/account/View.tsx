@@ -111,6 +111,10 @@ export function View() {
                 'earn',
                 'reward',
                 'pro',
+                'link',
+                'invite',
+                'clicks',
+                'signups',
               ],
             },
           ]

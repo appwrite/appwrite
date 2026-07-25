@@ -27,9 +27,10 @@ export const ANALYTICS_ACTIONS = {
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
-  'join-affiliates': 'Join Affiliates Clicked',
+  'create-affiliate-link': 'Create Affiliate Link Clicked',
   'copy-affiliate-link': 'Copy Affiliate Link Clicked',
-  'apply-affiliate-reward': 'Apply Affiliate Reward Clicked',
+  'delete-affiliate-link': 'Delete Affiliate Link Clicked',
+  'claim-affiliate-reward': 'Claim Affiliate Reward Clicked',
 
   // Marketing page CTAs
   'marketing-get-started': 'Marketing Get Started Clicked',
