@@ -11,6 +11,7 @@ import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAcce
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -268,6 +269,29 @@ export function RequireAuth({
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isMfaRequired = isMfaRequiredError(error)
   const isAuthenticated = !!account && !error
+  const needsEmailVerification =
+    isAuthenticated && requiresConsoleEmailVerification(account)
+
+  // Unverified console accounts cannot use org/project APIs. Keep them on
+  // /verify-email (with a return path) instead of rendering a broken console.
+  useEffect(() => {
+    if (!needsEmailVerification) return
+    if (location.pathname === '/verify-email') return
+    if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
+      return
+    }
+    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
+      navigate({
+        to: '/verify-email',
+        search: { redirect: redirectUrl },
+        replace: true,
+      })
+    } else {
+      navigate({ to: '/verify-email', replace: true })
+    }
+  }, [needsEmailVerification, location.pathname, location.search, navigate])
+
   const authData: AuthData = {
     currentUser,
     account,
@@ -307,6 +331,21 @@ export function RequireAuth({
       )
     }
     return <>{fallback}</>
+  }
+
+  if (
+    needsEmailVerification &&
+    location.pathname !== '/verify-email' &&
+    !isAuthPage(location.pathname) &&
+    !isOptionalAuthPage(location.pathname)
+  ) {
+    return (
+      loadingComponent ?? (
+        <div className="flex min-h-svh items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )
+    )
   }
 
   // User is authenticated - render children
