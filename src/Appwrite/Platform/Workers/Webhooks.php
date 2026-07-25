@@ -21,6 +21,8 @@ use Utopia\System\System;
 class Webhooks extends Action
 {
     private const MAX_FILE_SIZE = 5242880; // 5 MB
+    private const LOCK_TTL = 30;
+    private const LOCK_TIMEOUT = 30.0;
 
     public static function getName(): string
     {
@@ -41,6 +43,7 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -52,10 +55,11 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
+     * @param callable $locks
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, Log $log, array $plan, callable $locks): void
     {
         $payload = $message->getPayload();
 
@@ -72,7 +76,7 @@ class Webhooks extends Action
         $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $plan, $locks);
                 if ($error !== null) {
                     $errors[] = $error;
                 }
@@ -94,9 +98,10 @@ class Webhooks extends Action
      * @param NotificationPublisher $publisherForNotifications
      * @param UsagePublisher $publisherForUsage
      * @param array $plan
+     * @param callable $locks
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $plan, callable $locks): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return null;
@@ -162,10 +167,6 @@ class Webhooks extends Action
         $error = null;
 
         if (!empty($curlError) || $statusCode >= 400) {
-            $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
-            $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
-            $attempts = $webhook->getAttribute('attempts');
-
             $logs = '';
             $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
@@ -178,29 +179,32 @@ class Webhooks extends Action
                 $logs .= 'Body: ' . "\n" . \mb_strcut($responseBody, 0, 10000) . "\n"; // Limit to 10kb
             }
 
-            $webhook->setAttribute('logs', $logs);
-
-            $updatePayload = ['logs' => $logs];
             $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
-            // Only the handler that crosses the threshold claims the pause alert.
-            // Concurrent failures can both see attempts >= max; alerting only when
-            // attempts === max (and the webhook was still enabled) makes this a
-            // single logical event. Persist enabled=false before enqueueing.
             $shouldAlert = false;
+            $attempts = 0;
 
-            if ($attempts >= $maxAttempts) {
-                $wasEnabled = $webhook->getAttribute('enabled', true);
-                $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
-                $shouldAlert = $wasEnabled && $attempts === $maxAttempts;
-            }
+            // Serialize attempt increment + pause transition so only one handler
+            // claims the enabled→disabled flip and sends the pause alert.
+            $webhookId = $webhook->getId();
+            $locks('webhook:' . $webhookId, self::LOCK_TTL, function () use ($dbForPlatform, $webhookId, $logs, $maxAttempts, $project, &$webhook, &$shouldAlert, &$attempts): void {
+                $dbForPlatform->increaseDocumentAttribute('webhooks', $webhookId, 'attempts', 1);
+                $webhook = $dbForPlatform->getDocument('webhooks', $webhookId);
+                $attempts = $webhook->getAttribute('attempts');
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
+                $updatePayload = ['logs' => $logs];
+
+                if ($attempts >= $maxAttempts && $webhook->getAttribute('enabled', true)) {
+                    $updatePayload['enabled'] = false;
+                    $shouldAlert = true;
+                }
+
+                $webhook = $dbForPlatform->updateDocument('webhooks', $webhookId, new Document($updatePayload));
+                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            }, self::LOCK_TIMEOUT);
 
             if ($shouldAlert) {
                 $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
             }
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
             $usage = (new UsageContext())
@@ -209,11 +213,17 @@ class Webhooks extends Action
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1);
         } else {
             if ($webhook->getAttribute('attempts', 0) > 0) {
-                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
-                    'attempts' => 0,
-                ]));
+                $webhookId = $webhook->getId();
+                $locks('webhook:' . $webhookId, self::LOCK_TTL, function () use ($dbForPlatform, $webhookId, $project): void {
+                    $webhook = $dbForPlatform->getDocument('webhooks', $webhookId);
 
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    if ($webhook->getAttribute('attempts', 0) > 0) {
+                        $dbForPlatform->updateDocument('webhooks', $webhookId, new Document([
+                            'attempts' => 0,
+                        ]));
+                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    }
+                }, self::LOCK_TIMEOUT);
             }
 
             $usage = (new UsageContext())
@@ -329,7 +339,7 @@ class Webhooks extends Action
             $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
-                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused',
+                deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
                 subject: $subject,
                 bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
                 body: $template->render(),
