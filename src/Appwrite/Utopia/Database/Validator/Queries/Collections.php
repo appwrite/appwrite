@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 class Collections extends Base
 {
-    public const ALLOWED_ATTRIBUTES = [
+    public const array ALLOWED_ATTRIBUTES = [
         'name',
         'enabled',
         'documentSecurity'

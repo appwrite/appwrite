@@ -1,0 +1,1 @@
+Update a SMTP provider by its unique ID.

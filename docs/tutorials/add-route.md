@@ -85,13 +85,19 @@ App::post('/v1/account/create')
 
 ```php
 App::post('/v1/account/jwt')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createJWT')
-    ->label('sdk.description', '/docs/references/account/create-jwt.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->label('sdk', new Method(
+        namespace: 'account',
+        name: 'createJWT',
+        description: '/docs/references/account/create-jwt.md',
+        auth: [],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_JWT,
+            )
+        ],
+        responseType: ResponseType::JSON,
+    ))
 ```
 
 #### Cache
@@ -131,17 +137,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
 ```
 
-#### Usage
-
-- usage.metric - The metric the route generates.
-- usage.params - Additional parameters the metrics can have.
-
-```php
-App::post('/v1/storage/buckets/:bucketId/files')
-    ->label('usage.metric', 'files.{scope}.requests.create')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
-```
-
 ### 5. Param
 
 As the name implies, `param()` is used to define a request parameter.
@@ -157,7 +152,7 @@ As the name implies, `param()` is used to define a request parameter.
 
 ```php
 App::get('/v1/account/logs')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
 ```
 
 ### 6. inject

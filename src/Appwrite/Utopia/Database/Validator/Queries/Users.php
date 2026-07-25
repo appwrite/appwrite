@@ -12,7 +12,10 @@ class Users extends Base
         'passwordUpdate',
         'registration',
         'emailVerification',
-        'phoneVerification'
+        'phoneVerification',
+        'labels',
+        'impersonator',
+        'accessedAt',
     ];
 
     /**

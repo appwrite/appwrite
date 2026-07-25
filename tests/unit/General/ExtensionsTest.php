@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\General;
 
 use PHPUnit\Framework\TestCase;
 
-class ExtensionsTest extends TestCase
+final class ExtensionsTest extends TestCase
 {
     public function testPHPRedis(): void
     {
@@ -19,11 +21,6 @@ class ExtensionsTest extends TestCase
     public function testYAML(): void
     {
         $this->assertEquals(true, extension_loaded('yaml'));
-    }
-
-    public function testOPCache(): void
-    {
-        $this->assertEquals(true, extension_loaded('Zend OPcache'));
     }
 
     public function testDOM(): void

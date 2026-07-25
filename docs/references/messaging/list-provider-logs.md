@@ -1,0 +1,1 @@
+Get the provider activity logs listed by its unique ID.

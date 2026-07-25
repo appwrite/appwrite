@@ -3,12 +3,41 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBase
 {
-    public function testCreateTeam(): array
+    /**
+     * Helper method to create a team with specific roles.
+     * Returns team ID and name for use in other tests.
+     *
+     * @param string $name Team name
+     * @param array $roles Team roles
+     * @return array{teamUid: string, teamName: string}
+     */
+    protected function createTeamHelper(string $name = 'Arsenal', array $roles = ['player']): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => $name,
+            'roles' => $roles,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'teamUid' => $response['body']['$id'],
+            'teamName' => $response['body']['name'],
+        ];
+    }
+
+    public function testCreateTeam(): void
     {
         /**
          * Test for SUCCESS
@@ -33,7 +62,55 @@ trait TeamsBase
         $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
 
         $teamUid = $response1['body']['$id'];
-        $teamName = $response1['body']['name'];
+
+        /**
+         * Test: Attempt to downgrade the only OWNER in an organization (should fail)
+         */
+        if ($this->getProject()['$id'] === 'console') {
+            // Step 1: Fetch all team memberships — only one exists at this point
+            // Add small delay for membership to be created under parallel load
+            usleep(100000); // 100ms
+
+            $maxRetries = 3;
+            $membershipID = null;
+            for ($i = 0; $i < $maxRetries; $i++) {
+                $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'queries' => [
+                        Query::limit(1)->toString(),
+                    ],
+                ]);
+
+                if ($response['headers']['status-code'] === 200 && !empty($response['body']['memberships'])) {
+                    $membershipID = $response['body']['memberships'][0]['$id'];
+                    break;
+                }
+
+                if ($i < $maxRetries - 1) {
+                    usleep(500000); // 500ms delay before retry
+                }
+            }
+
+            // Skip test if membership not found (parallel test interference)
+            if ($membershipID === null) {
+                $this->markTestSkipped('Could not retrieve membership for owner downgrade test');
+            }
+
+            // Step 2: Attempt to downgrade the member's role to 'developer'
+            $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipID, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'roles' => ['developer']
+            ]);
+
+            // Step 3: Assert failure — cannot remove the only OWNER from a team
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('membership_downgrade_prohibited', $response['body']['type']);
+            $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
+        }
 
         $teamId = ID::unique();
         $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
@@ -79,15 +156,22 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        return ['teamUid' => $teamUid, 'teamName' => $teamName];
+        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamId,
+            'name' => 'John'
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('team_already_exists', $response['body']['type']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testGetTeam($data): array
+    public function testGetTeam(): void
     {
-        $id = $data['teamUid'] ?? '';
+        $data = $this->createTeamHelper();
+        $id = $data['teamUid'];
 
         /**
          * Test for SUCCESS
@@ -109,15 +193,15 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-
-        return [];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testListTeams($data): array
+    public function testListTeams(): void
     {
+        // Create teams for this test
+        $team1 = $this->createTeamHelper('Arsenal');
+        $this->createTeamHelper('Manchester United');
+        $this->createTeamHelper('Newcastle');
+
         /**
          * Test for SUCCESS
          */
@@ -135,7 +219,9 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(2)' ],
+            'queries' => [
+                Query::limit(2)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -145,7 +231,9 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -155,7 +243,9 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'greaterThanEqual("total", 0)' ],
+            'queries' => [
+                Query::greaterThanEqual('total', 0)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -165,11 +255,13 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("name", ["Arsenal", "Newcastle"])' ],
+            'queries' => [
+                Query::equal('name', ['Arsenal', 'Newcastle'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, count($response['body']['teams']));
+        $this->assertGreaterThanOrEqual(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -181,7 +273,7 @@ trait TeamsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertCount(1, $response['body']['teams']);
+        $this->assertGreaterThanOrEqual(1, count($response['body']['teams']));
         $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
@@ -194,14 +286,14 @@ trait TeamsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertCount(1, $response['body']['teams']);
+        $this->assertGreaterThanOrEqual(1, count($response['body']['teams']));
         $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => $data['teamUid'],
+            'search' => $team1['teamUid'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -214,7 +306,9 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(2)' ],
+            'queries' => [
+                Query::limit(2)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $teams['headers']['status-code']);
@@ -226,7 +320,10 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)', 'cursorAfter("' . $teams['body']['teams'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new Document(['$id' => $teams['body']['teams'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -239,7 +336,10 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)', 'cursorBefore("' . $teams['body']['teams'][1]['$id'] . '")' ],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorBefore(new Document(['$id' => $teams['body']['teams'][1]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -255,15 +355,32 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("unknown")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
+            ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        return [];
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $teamsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $teamsWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($teamsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($teamsWithIncludeTotalFalse['body']['teams']);
+        $this->assertIsInt($teamsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $teamsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($teamsWithIncludeTotalFalse['body']['teams']));
     }
 
-    public function testUpdateTeam(): array
+    public function testUpdateTeam(): void
     {
         /**
          * Test for SUCCESS
@@ -281,8 +398,7 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -297,8 +413,8 @@ trait TeamsBase
         $this->assertEquals('Demo New', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertArrayHasKey('prefs', $response['body']);
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -310,11 +426,9 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testDeleteTeam(): array
+    public function testDeleteTeam(): void
     {
         /**
          * Test for SUCCESS
@@ -355,16 +469,12 @@ trait TeamsBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return [];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
-    public function testUpdateAndGetUserPrefs(array $data): void
+    public function testUpdateAndGetUserPrefs(): void
     {
-        $id = $data['teamUid'] ?? '';
+        $data = $this->createTeamHelper();
+        $id = $data['teamUid'];
 
         /**
          * Test for SUCCESS

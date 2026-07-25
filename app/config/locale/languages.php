@@ -639,8 +639,8 @@ return [
         "nativeName" => "Монгол"
     ],
     [
-        "code" => "ro",
-        "code2" => "ron",
+        "code" => "mo",
+        "code2" => "mol",
         "name" => "Moldovan",
         "nativeName" => "Moldovenească"
     ],
@@ -783,9 +783,15 @@ return [
         "nativeName" => "پښتو"
     ],
     [
-        "code" => "pt",
+        "code" => "pt-pt",
         "code2" => "por",
         "name" => "Portuguese",
+        "nativeName" => "Português"
+    ],
+    [
+        "code" => "pt-br",
+        "code2" => "por",
+        "name" => "Portuguese (Brazilian)",
         "nativeName" => "Português"
     ],
     [
@@ -856,7 +862,7 @@ return [
     ],
     [
         "code" => "sh",
-        "code2" => "",
+        "code2" => "hbs",
         "name" => "Serbo-Croatian",
         "nativeName" => "Srpskohrvatski / Српскохрватски"
     ],
@@ -1101,9 +1107,15 @@ return [
         "nativeName" => "Cuengh / Tôô / 壮语"
     ],
     [
-        "code" => "zh",
+        "code" => "zh-cn",
         "code2" => "zho",
-        "name" => "Chinese",
+        "name" => "Chinese (Simplified)",
+        "nativeName" => "中文"
+    ],
+    [
+        "code" => "zh-tw",
+        "code2" => "zho",
+        "name" => "Chinese (Traditional)",
         "nativeName" => "中文"
     ],
     [

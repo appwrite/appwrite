@@ -2,7 +2,8 @@
 
 namespace Appwrite\Event;
 
-use Resque;
+use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Audit extends Event
 {
@@ -10,10 +11,19 @@ class Audit extends Event
     protected string $mode = '';
     protected string $userAgent = '';
     protected string $ip = '';
+    protected string $hostname = '';
+    protected string $sdk = '';
+    protected string $sdkVersion = '';
 
-    public function __construct()
+    protected bool $critical = false;
+
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
+        parent::__construct($publisher);
+
+        $this
+            ->setQueue(System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_AUDITS_CLASS_NAME', Event::AUDITS_CLASS_NAME));
     }
 
     /**
@@ -109,14 +119,83 @@ class Audit extends Event
     }
 
     /**
-     * Executes the event and sends it to the audit worker.
+     * Set the hostname.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @param string $hostname
+     *
+     * @return self
      */
-    public function trigger(): string|bool
+    public function setHostname(string $hostname): self
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $this->hostname = $hostname;
+
+        return $this;
+    }
+
+    /**
+     * Get the hostname.
+     *
+     * @return string
+     */
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Set SDK name for this audit event.
+     *
+     * @param string $sdk
+     * @return self
+     */
+    public function setSdk(string $sdk): self
+    {
+        $this->sdk = $sdk;
+
+        return $this;
+    }
+
+    /**
+     * Returns the set audit SDK name.
+     *
+     * @return string
+     */
+    public function getSdk(): string
+    {
+        return $this->sdk;
+    }
+
+    /**
+     * Set SDK version for this audit event.
+     *
+     * @param string $sdkVersion
+     * @return self
+     */
+    public function setSdkVersion(string $sdkVersion): self
+    {
+        $this->sdkVersion = $sdkVersion;
+
+        return $this;
+    }
+
+    /**
+     * Returns the set audit SDK version.
+     *
+     * @return string
+     */
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
+    /**
+     * Prepare payload for queue.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -125,6 +204,9 @@ class Audit extends Event
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
             'event' => $this->event,
-        ]);
+            'hostname' => $this->hostname,
+            'sdk' => $this->sdk,
+            'sdkVersion' => $this->sdkVersion
+        ];
     }
 }

@@ -77,6 +77,13 @@ class User extends Model
                 'default' => true,
                 'example' => true,
             ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the user.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Password update time in ISO 8601 format.',
@@ -101,9 +108,50 @@ class User extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('emailCanonical', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Canonical form of the user email address.',
+                'required' => false,
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailIsFree', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a free email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsDisposable', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a disposable email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => false,
+            ])
+            ->addRule('emailIsCorporate', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a corporate domain.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsCanonical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is in its canonical form.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
             ->addRule('phoneVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Phone verification status.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('mfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Multi factor authentication status.',
                 'default' => false,
                 'example' => true,
             ])
@@ -113,13 +161,40 @@ class User extends Model
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
+            ->addRule('targets', [
+                'type' => Response::MODEL_TARGET,
+                'description' => 'A user-owned message receiver. A single user may have multiple e.g. emails, phones, and a browser. Each target is registered with a single provider.',
+                'default' => [],
+                'array' => true,
+                'example' => [],
+            ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCESS / 60 / 60 . ' hours.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('impersonator', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user can impersonate other users.',
+                'required' => false,
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('impersonatorUserId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
+                'required' => false,
+                'default' => null,
+                'example' => '5e5ea5c16897e',
+            ])
         ;
     }
 
     /**
-     * Get Collection
+     * Filter user document attributes for response output.
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {

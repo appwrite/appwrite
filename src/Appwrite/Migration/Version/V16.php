@@ -2,10 +2,9 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -45,7 +44,7 @@ class V16 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
             switch ($id) {
                 case 'sessions':
@@ -53,7 +52,7 @@ class V16 extends Migration
                         /**
                          * Create 'expire' attribute
                          */
-                        $this->projectDB->deleteAttribute($id, 'expire');
+                        $this->dbForProject->deleteAttribute($id, 'expire');
                     } catch (\Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
@@ -65,7 +64,7 @@ class V16 extends Migration
                         /**
                          * Create 'region' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'region');
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
@@ -74,7 +73,7 @@ class V16 extends Migration
                         /**
                          * Create '_key_team' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_team');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
                     }
@@ -85,7 +84,7 @@ class V16 extends Migration
                         /**
                          * Create 'region' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'region');
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
@@ -118,29 +117,29 @@ class V16 extends Migration
                  * Set default authDuration
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
+                    'duration' => TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
 
                 /**
                  * Enable OAuth providers with data
                  */
-                $authProviders = $document->getAttribute('authProviders', []);
+                $oAuthProviders = $document->getAttribute('oAuthProviders', []);
 
-                foreach (Config::getParam('providers') as $provider => $value) {
+                foreach (Config::getParam('oAuthProviders') as $provider => $value) {
                     if (!$value['enabled']) {
                         continue;
                     }
 
-                    if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
-                        if (array_key_exists($provider . 'Enabled', $authProviders)) {
+                    if (($oAuthProviders[$provider . 'Appid'] ?? false) && ($oAuthProviders[$provider . 'Secret'] ?? false)) {
+                        if (array_key_exists($provider . 'Enabled', $oAuthProviders)) {
                             continue;
                         }
 
-                        $authProviders[$provider . 'Enabled'] = true;
+                        $oAuthProviders[$provider . 'Enabled'] = true;
                     }
                 }
 
-                $document->setAttribute('authProviders', $authProviders);
+                $document->setAttribute('oAuthProviders', $oAuthProviders);
 
                 break;
         }

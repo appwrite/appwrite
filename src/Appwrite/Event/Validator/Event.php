@@ -8,6 +8,11 @@ use Utopia\Validator;
 class Event extends Validator
 {
     /**
+     * @var string
+     */
+    protected string $message = 'Event is not valid.';
+
+    /**
      * Get Description.
      *
      * Returns validator description
@@ -16,7 +21,7 @@ class Event extends Validator
      */
     public function getDescription(): string
     {
-        return 'Event is not valid.';
+        return $this->message;
     }
 
     /**
@@ -29,7 +34,7 @@ class Event extends Validator
     public function isValid($value): bool
     {
         $events = Config::getParam('events', []);
-        $parts = \explode('.', $value);
+        $parts = \explode('.', $value ?? '');
         $count = \count($parts);
 
         if ($count < 2 || $count > 7) {
@@ -39,7 +44,7 @@ class Event extends Validator
         /**
          * Identify all sections of the pattern.
          */
-        $type = $parts[0] ?? false;
+        $type = $parts[0];
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
         $hasSubSubResource = $count > 5 && $hasSubResource && ($events[$type][$parts[2]][$parts[4]]['$resource'] ?? false);
@@ -56,9 +61,6 @@ class Event extends Validator
         if ($hasSubSubResource) {
             $subSubType = $parts[4];
             $subSubResource = $parts[5];
-            if ($count === 8) {
-                $attribute = $parts[7];
-            }
         }
 
         if ($hasSubResource && !$hasSubSubResource) {

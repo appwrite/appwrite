@@ -7,8 +7,9 @@ tasks:
       docker pull composer
     command: |
       docker run --rm --interactive --tty \
+      --user "$(id -u):$(id -g)" \
       --volume $PWD:/app \
-      composer update \
+      composer install \
       --ignore-platform-reqs \
       --optimize-autoloader \
       --no-plugins \
@@ -16,19 +17,10 @@ tasks:
       --prefer-dist
 
 ports:
-  - port: 8080
-    onOpen: open-preview
+  - port: 9520
     visibility: public
 
 vscode:
   extensions:
     - ms-azuretools.vscode-docker
     - zobo.php-intellisense
-
-github:
-  # https://www.gitpod.io/docs/prebuilds#github-specific-configuration
-  prebuilds:
-    # enable for pull requests coming from forks (defaults to false)
-    pullRequestsFromForks: true
-    # add a check to pull requests (defaults to true)
-    addCheck: false

@@ -2,8 +2,9 @@
 
 return [
     'default' => [
-        'name' => 'Default',
-        'default' => true,
+        '$id' => 'default',
+        'name' => 'default',
         'disabled' => false,
-    ]
+        'default' => true,
+    ],
 ];

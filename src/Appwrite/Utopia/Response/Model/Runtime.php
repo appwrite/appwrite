@@ -16,6 +16,12 @@ class Runtime extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Parent runtime key.',
+                'default' => '',
+                'example' => 'python',
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Runtime Name.',

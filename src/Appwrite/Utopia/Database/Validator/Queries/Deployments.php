@@ -5,10 +5,13 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Deployments extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'entrypoint',
-        'size',
-        'buildId',
+        'buildSize',
+        'sourceSize',
+        'totalSize',
+        'buildDuration',
+        'status',
         'activate',
+        'type',
     ];
 
     /**
@@ -18,5 +21,10 @@ class Deployments extends Base
     public function __construct()
     {
         parent::__construct('deployments', self::ALLOWED_ATTRIBUTES);
+    }
+
+    public function isSelectQueryAllowed(): bool
+    {
+        return true;
     }
 }

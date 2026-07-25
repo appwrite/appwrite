@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "@appwrite.io/repo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appwrite/appwrite.git"
+  },
+  "scripts": {
+    "format:compose": "prettier --write docker-compose.yml docker-compose.override.yml",
+    "lint:compose": "prettier --check docker-compose.yml docker-compose.override.yml"
+  },
+  "files": [
+    "docs/examples",
+    "app/config/specs"
+  ],
+  "devDependencies": {
+    "prettier": "^3.9.0"
+  }
+}

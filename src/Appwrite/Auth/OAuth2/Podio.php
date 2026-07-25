@@ -121,7 +121,7 @@ class Podio extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return \strval($user['user_id']) ?? '';
+        return \strval($user['user_id']);
     }
 
     /**
@@ -148,7 +148,7 @@ class Podio extends OAuth2
         $user = $this->getUser($accessToken);
 
         $mails = $user['mails'];
-        $mainMailIndex = \array_search($user['mail'], \array_map(fn($m) => $m['mail'], $mails));
+        $mainMailIndex = \array_search($user['mail'], \array_map(fn ($m) => $m['mail'], $mails));
         $mainMain = $mails[$mainMailIndex];
 
         if ($mainMain['verified'] ?? false) {

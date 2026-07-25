@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Docker;
 
 use Appwrite\Docker\Env;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
-class EnvTest extends TestCase
+final class EnvTest extends TestCase
 {
     protected ?Env $object = null;
 
@@ -25,16 +27,16 @@ class EnvTest extends TestCase
     {
         $this->object->setVar('_APP_TEST', 'value4');
 
-        $this->assertEquals('value1', $this->object->getVar('_APP_X'));
-        $this->assertEquals('value2', $this->object->getVar('_APP_Y'));
-        $this->assertEquals('value3', $this->object->getVar('_APP_Z'));
-        $this->assertEquals('value5=', $this->object->getVar('_APP_W'));
-        $this->assertEquals('value4', $this->object->getVar('_APP_TEST'));
+        $this->assertSame('value1', $this->object->getVar('_APP_X'));
+        $this->assertSame('value2', $this->object->getVar('_APP_Y'));
+        $this->assertSame('value3', $this->object->getVar('_APP_Z'));
+        $this->assertSame('value5=', $this->object->getVar('_APP_W'));
+        $this->assertSame('value4', $this->object->getVar('_APP_TEST'));
     }
 
     public function testExport(): void
     {
-        $this->assertEquals("_APP_X=value1
+        $this->assertSame("_APP_X=value1
 _APP_Y=value2
 _APP_Z=value3
 _APP_W=value5=

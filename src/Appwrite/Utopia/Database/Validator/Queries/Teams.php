@@ -6,7 +6,8 @@ class Teams extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'total'
+        'total',
+        'billingPlan'
     ];
 
     /**

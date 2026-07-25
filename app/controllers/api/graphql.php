@@ -1,8 +1,14 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -12,22 +18,51 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
+use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
-App::get('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+Http::init()
+    ->groups(['graphql'])
+    ->inject('project')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('authorization')
+    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
+        $response->setUser($user);
+        $request->setUser($user);
+
+        if (
+            array_key_exists('graphql', $project->getAttribute('apis', []))
+            && !$project->getAttribute('apis', [])['graphql']
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+        ) {
+            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+    });
+
+Http::get('/v1/graphql')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.hide', true)
-    ->label('sdk.description', '/docs/references/graphql/get.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        group: 'graphql',
+        name: 'get',
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        hide: true,
+        description: '/docs/references/graphql/get.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->param('query', '', new Text(0, 0), 'The query to execute.')
@@ -57,21 +92,27 @@ App::get('/v1/graphql')
             ->json($output);
     });
 
-App::post('/v1/graphql/mutation')
-    ->desc('GraphQL Endpoint')
+Http::post('/v1/graphql/mutation')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'mutation')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        group: 'graphql',
+        name: 'mutation',
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
@@ -81,11 +122,11 @@ App::post('/v1/graphql/mutation')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -102,21 +143,27 @@ App::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-App::post('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+Http::post('/v1/graphql')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'query')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/post.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk', new Method(
+        namespace: 'graphql',
+        group: 'graphql',
+        name: 'query',
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        description: '/docs/references/graphql/post.md',
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ],
+        type: MethodType::GRAPHQL,
+        additionalParameters: [
+            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        ],
+    ))
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
@@ -126,11 +173,11 @@ App::post('/v1/graphql')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -161,9 +208,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = System::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -183,12 +230,15 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
-        $validations[] = new DisableIntrospection();
+    if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
+        $validations[] = new DisableIntrospection(DisableIntrospection::ENABLED);
+    }
+
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
+    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -289,7 +339,7 @@ function processResult($result, $debugFlags): array
     );
 }
 
-App::shutdown()
+Http::shutdown()
     ->groups(['schema'])
     ->inject('project')
     ->action(function (Document $project) {

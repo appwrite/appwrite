@@ -2,6 +2,7 @@
 
 namespace Tests\E2E;
 
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Exception;
 
 class Client
@@ -108,6 +109,20 @@ class Client
     }
 
     /**
+     * Set Response Format
+     *
+     * @param string $value
+     *
+     * @return self $this
+     */
+    public function setResponseFormat(string $value): self
+    {
+        $this->addHeader('X-Appwrite-Response-Format', $value);
+
+        return $this;
+    }
+
+    /**
      * @param bool $status true
      * @return self $this
      */
@@ -163,32 +178,48 @@ class Client
      * @return array
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true): array
+    public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true): array
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
+        $cookies = [];
+
+        if (isset($params['queries'])) {
+            foreach ($params['queries'] as $value) {
+                if (!is_string($value)) {
+                    throw new Exception('Queries must be converted to strings');
+                }
+            }
+        }
 
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
+            'text/plain' => $params,
             default => http_build_query($params),
         };
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
-            unset($headers[$i]);
+        $formattedHeaders = [];
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'accept-encoding') {
+                curl_setopt($ch, CURLOPT_ENCODING, $value);
+                continue;
+            } else {
+                $formattedHeaders[] = $key . ': ' . $value;
+            }
         }
 
         curl_setopt($ch, CURLOPT_PATH_AS_IS, 1);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $followRedirects);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $formattedHeaders);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', $header, 2);
@@ -202,7 +233,15 @@ class Client
             return $len;
         });
 
-        if ($method != self::METHOD_GET) {
+
+        if ($method === self::METHOD_HEAD) {
+            curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
+            curl_setopt($ch, CURLOPT_HEADER, false);
+        } else {
+            curl_setopt($ch, CURLOPT_NOBODY, false);
+        }
+
+        if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
@@ -211,53 +250,61 @@ class Client
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-
         $responseBody   = curl_exec($ch);
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode && substr($responseType, 0, strpos($responseType, ';')) == 'application/json') {
-            $json = json_decode($responseBody, true);
-
-            if ($json === null) {
-                throw new Exception('Failed to parse response: ' . $responseBody);
-            }
-
-            $responseBody = $json;
-            $json = null;
+        foreach (curl_getinfo($ch, CURLINFO_COOKIELIST) as $line) {
+            $parts = explode("\t", $line);
+            $cookies[$parts[5]] = $parts[6] ?? '';
         }
 
-        if ((curl_errno($ch))) {
+        if ($decode && $method !== self::METHOD_HEAD) {
+            $strpos = strpos($responseType, ';');
+            $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
+            switch (substr($responseType, 0, $strpos)) {
+                case 'multipart/form-data':
+                    $boundary = \explode('boundary=', $responseHeaders['content-type'])[1] ?? '';
+                    $multipartResponse = new BodyMultipart($boundary);
+                    $multipartResponse->load(\is_bool($responseBody) ? '' : $responseBody);
+
+                    $responseBody = $multipartResponse->getParts();
+                    break;
+                case 'application/json':
+                    if (\is_bool($responseBody)) {
+                        throw new Exception('Response is not a valid JSON.');
+                    }
+
+                    $json = json_decode($responseBody, true);
+
+                    if ($json === null) {
+                        throw new Exception('Failed to parse response: ' . $responseBody);
+                    }
+
+                    $responseBody = $json;
+                    $json = null;
+                    break;
+            }
+        } elseif ($method === self::METHOD_HEAD) {
+            // For HEAD requests, always set body to empty string regardless of decode flag
+            $responseBody = '';
+        }
+
+        if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
             throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
-
-        curl_close($ch);
 
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
         }
 
         return [
             'headers' => $responseHeaders,
+            'cookies' => $cookies,
             'body' => $responseBody
         ];
-    }
-
-    /**
-     * Parse Cookie String
-     *
-     * @param string $cookie
-     * @return array
-     */
-    public function parseCookie(string $cookie): array
-    {
-        $cookies = [];
-
-        parse_str(strtr($cookie, ['&' => '%26', '+' => '%2B', ';' => '&']), $cookies);
-
-        return $cookies;
     }
 
     /**

@@ -1,16 +1,45 @@
 # Contributing
 
-We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
+We would :heart: you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
+
+## Here for Hacktoberfest?
+If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
+
+You can [find issues using this query](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3Ahacktoberfest&type=issues).
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
+Welcome! We're excited that you're interested in contributing to Appwrite. To make sure your time is valued and your contributions are successful, please follow these steps before writing any code:
+
+### 🔍 Step 1: Find an Issue
+
+Browse open issues and look for ones labeled [good first issue](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3A%22good+first+issue%22&type=issues) or [help wanted](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3A%22help+wanted%22&type=issues).
+
+If you're not sure which issue to pick, ask in our ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) on Discord.
+
+### 📝 Step 2: Ask to Be Assigned
+
+Before working on an issue, comment on the GitHub issue asking to be assigned. This prevents multiple people working on the same task.
+
+Then, create a thread in the ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) on Discord with a link to the issue.
+
+Our team is small and may not see your GitHub comment right away - posting in the ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) ensures it gets seen.
+
+### 💬 Step 3: Don’t Submit Random PRs
+
+If you're not working on an assigned issue, create a GitHub issue first.
+
+PRs submitted without context or discussion may not align with our roadmap and may be closed without review.
+
+### ⚠️ Please Note
+
+We’re a very small team managing a large project. Many PRs are submitted, and while we appreciate every effort, we can only review contributions that follow the process above. This helps us keep things fair and organized.
 
 ## Code of Conduct
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md).
 
-## Submit a Pull Request 🚀
+## Submit a Pull Request :rocket:
 
 Branch naming convention is as following
 
@@ -60,13 +89,13 @@ Now, go a step further by running the linter using the following command to manu
 composer lint <your file path>
 ```
 
-This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [on PHP_Codesniffer usage Wiki](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
 ```
 
-5. Push changes to GitHub.
+5. Push changes to GitHub
 
 ```
 $ git push origin [name_of_your_new_branch]
@@ -82,9 +111,9 @@ $ git push origin [name_of_your_new_branch]
 
 ## Setup From Source
 
-To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and run the docker-compose stack.
 
-> If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/getting-started-for-web), or the main [README](README.md) file.
+> If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/quick-starts), or the main [README](README.md) file.
 
 ```bash
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
@@ -109,7 +138,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
+
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
@@ -141,12 +172,42 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [Microservices vs Monolithic](https://www.mulesoft.com/resources/api/microservices-vs-monolithic#:~:text=Microservices%20architecture%20vs%20monolithic%20architecture&text=A%20monolithic%20application%20is%20built%20as%20a%20single%20unit.&text=To%20make%20any%20alterations%20to,formally%20with%20business%2Doriented%20APIs.)
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
+##### Container Namespace Conventions
+To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on its intended use.
+
+`appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
+`appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
+
+Other containers should be named the same as their service, for example `redis` should just be called `redis`.
+
 ##### Security
 
 - [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
+
+## Modules
+
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesn't contain all product's features such as workers or tasks. While there might still be some occurrences of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+
+### HTTP Endpoints
+
+Every endpoint file follows below structure, making it consistent with HTTP REST endpoint path:
+
+```
+src/Appwrite/Platform/Modules/[service]/Http/[resource]/[action].php
+```
+
+Tips and tricks:
+
+1. If endpoint doesn't have resource, use service name as resource name too
+> Example: `Modules/Sites/Http/Sites/Get.php`
+
+2. If there are multiple resources, use them all in folder structure
+> Example: `Modules/Sites/Http/Deployments/Builds/Create.php`
+
+3. Action can only be `Get`, `Create`, `Update`, `Delete` or `XList`
 
 ## Architecture
 
@@ -199,12 +260,10 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Network
 │       ├── OpenSSL
 │       ├── Promises
-│       ├── Resque
 │       ├── Specification
 │       ├── Task
 │       ├── Template
 │       ├── URL
-│       ├── Usage
 │       └── Utopia
 └── tests # End to end & unit tests
     ├── e2e
@@ -222,11 +281,34 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. With the exception of the public-facing port 80 and 443, which by default are used to expose the Appwrite HTTP API, you should **avoid exposing any other services' ports**.
+Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should **avoid exposing services' ports** beyond what is needed for local development and debugging.
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
+Appwrite server dev publishes all host ports in the **9500–9522** range so the stack can run alongside other local services (including Appwrite Cloud on **9600–9699**). Access the API and console at `http://localhost:9520` (or `https://localhost:9521`).
+
+| Host port | Service |
+|-----------|---------|
+| 9520 | Traefik HTTP (API, console, dev hostnames) |
+| 9521 | Traefik HTTPS |
+| 9522 | Traefik HTTP (alt) |
+| 9500 | Traefik dashboard |
+| 9501 | Appwrite API only (direct; no console) |
+| 9502 | Realtime only (direct; no console) |
+| 9503 | Mail catcher |
+| 9504 | Request catcher (webhook) |
+| 9505 | Embedding |
+| 9506 | Adminer |
+| 9507 | Request catcher (SMS) |
+| 9508 | Mongo Express |
+| 9509 | GraphQL explorer |
+| 9510 | MariaDB |
+| 9511 | MongoDB |
+| 9512 | PostgreSQL |
+| 9513 | Redis |
+| 9514 | Redis Insight |
+
+Containers still talk to each other on the internal Docker network using standard service ports (for example, `mariadb:3306`). The table above is only for connections from your host machine. If you still have a conflict, change the host side in `docker-compose.yml` or `docker-compose.override.yml` and run `docker compose up -d`.
 
 ## Technology Stack
 
@@ -238,13 +320,12 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 
 - Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data).
 - MariaDB - for database storage and queries.
-- InfluxDB - for managing stats and time-series based data.
-- Statsd - for sending data over UDP protocol (using Telegraf).
+- InfluxDB - for managing stats and time-series based data
+- Statsd - for sending data over UDP protocol (using Telegraf)
 - ClamAV - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
 - SMTP - for sending email messages and alerts.
-- Resque - for managing data queues and scheduled tasks over a Redis server.
 
 ## Package Managers
 
@@ -289,13 +370,166 @@ Adding a new dependency should have vital value for the product with minimum pos
 
 ## Introducing New Features
 
-We would 💖 you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement 🙏.
+We would :sparkling_heart: you to contribute to Appwrite, but we also want to ensure Appwrite is loyal to its vision and mission statement :pray:.
 
 For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
 This will allow the Appwrite community to sufficiently discuss the new feature value and how it fits within the product roadmap and vision.
 
 This is also important for the Appwrite lead developers to be able to provide technical input and potentially a different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
+
+## Adding New Usage Metrics
+
+These are the current metrics we collect usage stats for:
+
+| Metric | Description                                       |
+|--------|-------------------------------------------------|
+| teams  | Total number of teams per project |
+| users | Total number of users per project|
+| executions | Total number of executions per project           | 
+| databases | Total number of databases per project             | 
+| databases.storage | Total amount of storage used by all databases per project (in bytes) |
+| collections | Total number of collections per project | 
+| {databaseInternalId}.collections | Total number of collections per database| 
+| {databaseInternalId}.storage | Sum of database storage (in bytes) |
+| documents | Total number of documents per project             | 
+| {databaseInternalId}.{collectionInternalId}.documents | Total number of documents per collection | 
+| {databaseInternalId}.{collectionInternalId}.storage | Sum of database storage used by the collection (in bytes) |
+| buckets | Total number of buckets per project               | 
+| files | Total number of files per project                 |
+| {bucketInternalId}.files.storage | Sum of files.storage per bucket (in bytes)                  |
+| functions | Total number of functions per project             |
+| deployments | Total number of deployments per project           |
+| builds | Total number of builds per project                |
+| {resourceType}.{resourceInternalId}.deployments | Total number of deployments per function           |
+| executions | Total number of executions per project |
+| {functionInternalId}.executions | Total number of executions per function  |
+| files.storage | Sum of files storage per project  (in bytes)      | 
+| deployments.storage | Sum of deployments storage per project (in bytes) |
+| {resourceType}.{resourceInternalId}.deployments.storage | Sum of deployments storage per function (in bytes)         |
+| builds.storage | Sum of builds storage per project (in bytes)      |
+| builds.compute | Sum of compute duration per project (in seconds)  |
+| {functionInternalId}.builds.storage | Sum of builds storage per function (in bytes)              |
+| {functionInternalId}.builds.compute | Sum of compute duration per function (in seconds) |
+| network.requests | Total number of network requests per project |
+| executions.compute | Sum of compute duration per project (in seconds) |
+| network.inbound | Sum of network inbound traffic per project (in bytes)|
+| network.outbound | Sum of network outbound traffic per project (in bytes)|
+
+> Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
+
+Metrics are collected within 3 scopes Daily, monthly, and infinity. Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
+statistics ,via API or via background worker. For both cases you will need to add a `const` variable in `app/init.php` under the usage metrics list using the naming convention `METRIC_<RESOURCE_NAME>` as shown below.
+
+```php
+// Usage metrics
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+```
+
+Next follow the appropriate steps below depending on whether you're adding the metric to the API or the worker. 
+
+**API**
+
+In file `app/controllers/shared/api.php` On the database listener, add to an existing or create a new switch case. Accumulate metrics in the usage context like so:
+
+```php
+      case $document->getCollection() === 'teams':
+            $usage->addMetric(METRIC_TEAMS, $value); // per project
+            break;
+```
+
+The metrics will be automatically published by the shutdown hook at the end of the request. There is no need to manually trigger or publish.
+
+There are cases when you need to handle metric that has a parent entity, like buckets.
+Files are linked to a parent bucket, you should verify you remove the files stats when you delete a bucket.
+
+In that case you need also to handle children removal using addReduce() method call.
+
+```php
+
+ case $document->getCollection() === 'buckets': //buckets
+            $usage->addMetric(METRIC_BUCKETS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $usage
+                    ->addReduce($document);
+            }
+            break;
+
+```
+
+In addition, you will also need to add some logic to the `reduce()` method of the Usage worker located in `/src/Appwrite/Platform/Workers/Usage.php`, like so:
+
+```php
+case $document->getCollection() === 'buckets':
+       $files = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getSequence(), METRIC_BUCKET_ID_FILES)));
+       $storage = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{bucketInternalId}', $document->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE)));
+
+       if (!empty($files['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES,
+              'value' => ($files['value'] * -1),
+           ];
+        }
+
+        if (!empty($storage['value'])) {
+           $metrics[] = [
+              'key' => METRIC_FILES_STORAGE,
+              'value' => ($storage['value'] * -1),
+             ];
+         }
+       break;
+```
+
+**Background worker**
+
+You need to inject the usage context and publisher in the desired worker on the constructor method
+```php
+use Appwrite\Usage\Context;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Message\Usage as UsageMessage;
+
+/**
+* @throws Exception
+*/
+public function __construct()
+{
+   $this
+      ->desc('Functions worker')
+      ->groups(['functions'])
+      ->inject('message')
+      ->inject('dbForProject')
+      ->inject('queueForFunctions')
+      ->inject('queueForEvents')
+      ->inject('usage')
+      ->inject('publisherForUsage')
+      ->inject('log')
+      ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Context $usage, UsagePublisher $publisherForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $usage, $publisherForUsage, $log));
+}
+```
+
+and then accumulate metrics, create a message, and publish like so:
+
+```php
+$usage
+  ->addMetric(METRIC_BUILDS, 1)
+  ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+  ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS), 1)
+  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+  ->addMetric(str_replace('{functionInternalId}', $function->getSequence(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000);
+
+// Publish the accumulated metrics (workers don't have shutdown hooks)
+$message = new UsageMessage(
+    project: $project,
+    metrics: $usage->getMetrics(),
+    reduce: $usage->getReduce()
+);
+$publisherForUsage->enqueue($message);
+$usage->reset();
+```
+
 
 ## Build
 
@@ -340,13 +574,25 @@ Things to remember when releasing SDKs:
 
 ## Debug
 
-Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
+Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 
-If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection: 
+If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
-1. Create an init file. 
-2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
-3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+2. If needed edit the **dev/xdebug.ini** file to your needs.
+3. Launch your Appwrite instance while your debugger is listening for connections.
+
+## Profiling
+Appwrite uses XDebug [Profiler](https://xdebug.org/docs/profiler) for generating **CacheGrind** files. The generated file would be located in each of the `appwrite` containers inside the `/tmp/xdebug` folder.
+
+To disable the profiler while debugging remove the `,profiler` mode from the `xdebug.ini` file
+```diff
+zend_extension=xdebug
+
+[xdebug]
+-xdebug.mode=develop,debug,profile
++xdebug.mode=develop,debug
+```
 
 ### VS Code Launch Configuration
 
@@ -390,6 +636,12 @@ To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+```
+
+To run one specific test:
+
+```bash
+docker compose exec appwrite vendor/bin/phpunit --filter [FunctionName]
 ```
 
 ## Benchmarking
@@ -443,13 +695,25 @@ If you need to clear the cache, you can do so by running the following command:
 docker compose exec redis redis-cli FLUSHALL
 ```
 
+## Using preview domains locally
+
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud workspaces such as Gitpod or GitHub Codespaces.
+
+To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
+
+```
+https://8080-appwrite-appwrite-mjeb3ebilwv.ws-eu116.gitpod.io/ping?preview=672b3c7eab1ac523ccf5.functions.localhost
+```
+
+The path was set to `/ping` intentionally. Visiting `/` for preview domains might trigger Console background worker, and trigger redirect to Console without our preview URL param. Visiting different path ensures this doesnt happen.
+
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
 - [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 - [Appwrite Environment Variables](./docs/tutorials/add-environment-variable.md)
-- [Running in Production](https://appwrite.io/docs/production)
+- [Running in Production](https://appwrite.io/docs/advanced/self-hosting/production)
 - [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
 
 ## Other Ways to Help
@@ -458,7 +722,7 @@ Pull requests are great, but there are many other ways you can help Appwrite.
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite on Twitter](https://twitter.com/appwrite) and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 

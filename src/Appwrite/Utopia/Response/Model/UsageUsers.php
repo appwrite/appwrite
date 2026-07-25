@@ -12,62 +12,34 @@ class UsageUsers extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('usersCount', [
+            ->addRule('usersTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of statistics of users.',
+                'default' => 0,
+                'example' => 0,
+            ])
+
+            ->addRule('sessionsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of active sessions.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('users', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of users.',
+                'description' => 'Aggregated number of users per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('usersCreate', [
+
+            ->addRule('sessions', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for users created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('usersRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for users read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('usersUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for users updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('usersDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for users deleted.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('sessionsCreate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for sessions created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('sessionsProviderCreate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for sessions created for a provider ( email, anonymous or oauth2 ).',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('sessionsDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for sessions deleted.',
+                'description' => 'Aggregated number of active sessions  per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

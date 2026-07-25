@@ -1,0 +1,1 @@
+Get the table activity logs list by its unique ID.

@@ -1,15 +1,16 @@
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         backupGlobals="false"
          bootstrap="app/init.php"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
+         stopOnError="false"
+         cacheDirectory=".phpunit.cache"
 >
     <extensions>
-        <extension class="Appwrite\Tests\TestHook" />
+        <bootstrap class="Appwrite\Tests\TestHook" />
     </extensions>
     <testsuites>
         <testsuite name="unit">
@@ -19,9 +20,11 @@
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
-            <directory>./tests/e2e/Services/Account</directory>
-            <directory>./tests/e2e/Services/Console</directory>
+            <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Realtime</directory>
+            <directory>./tests/e2e/Services/Account</directory>
+            <directory>./tests/e2e/Services/Users</directory>
+            <directory>./tests/e2e/Services/Console</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Databases</directory>
             <directory>./tests/e2e/Services/GraphQL</directory>
@@ -29,10 +32,15 @@
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Storage</directory>
-            <directory>./tests/e2e/Services/Teams</directory>
-            <directory>./tests/e2e/Services/Users</directory>
-            <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/Tokens</directory>
             <directory>./tests/e2e/Services/Videos</directory>
+            <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
+            <directory>./tests/e2e/Services/Messaging</directory>
+            <directory>./tests/e2e/Services/Migrations</directory>
+            <directory>./tests/e2e/Services/Notifications</directory>
+            <directory>./tests/e2e/Services/Project</directory>
+            <directory>./tests/e2e/Services/Advisor</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>

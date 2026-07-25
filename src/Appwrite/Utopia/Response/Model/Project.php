@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -10,14 +9,10 @@ use Utopia\Database\Document;
 
 class Project extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
+            // Basic project information
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project ID.',
@@ -42,167 +37,169 @@ class Project extends Model
                 'default' => '',
                 'example' => 'New Project',
             ])
-            ->addRule('description', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project description.',
-                'default' => '',
-                'example' => 'This is a new project.',
-            ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project team ID.',
                 'default' => '',
                 'example' => '1592981250',
             ])
-            ->addRule('logo', [
+            ->addRule('region', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Project logo file ID.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+                'description' => 'Project region.',
+                'default' => 'default',
+                'example' => 'fra',
             ])
-            ->addRule('url', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Project website URL.',
-                'default' => '',
-                'example' => '5f5c451b403cb',
+
+            // Resource: Dev Keys
+            ->addRule('devKeys', [
+                'type' => Response::MODEL_DEV_KEY,
+                'description' => 'Deprecated since 1.9.5: List of dev keys.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
             ])
-            ->addRule('legalName', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company legal name.',
-                'default' => '',
-                'example' => 'Company LTD.',
-            ])
-            ->addRule('legalCountry', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Country code in [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) two-character format.',
-                'default' => '',
-                'example' => 'US',
-            ])
-            ->addRule('legalState', [
-                'type' => self::TYPE_STRING,
-                'description' => 'State name.',
-                'default' => '',
-                'example' => 'New York',
-            ])
-            ->addRule('legalCity', [
-                'type' => self::TYPE_STRING,
-                'description' => 'City name.',
-                'default' => '',
-                'example' => 'New York City.',
-            ])
-            ->addRule('legalAddress', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company Address.',
-                'default' => '',
-                'example' => '620 Eighth Avenue, New York, NY 10018',
-            ])
-            ->addRule('legalTaxId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Company Tax ID.',
-                'default' => '',
-                'example' => '131102020',
-            ])
-            ->addRule('authDuration', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
-                'example' => 60,
-            ])
-            ->addRule('authLimit', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Max users allowed. 0 is unlimited.',
-                'default' => 0,
-                'example' => 100,
-            ])
-            ->addRule('authSessionsLimit', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Max sessions allowed per user. 100 maximum.',
-                'default' => 10,
-                'example' => 10,
-            ])
-            ->addRule('authPasswordHistory', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Max allowed passwords in the history list per user. Max passwords limit allowed in history is 20. Use 0 for disabling password history.',
-                'default' => 0,
-                'example' => 5,
-            ])
-            ->addRule('authPasswordDictionary', [
+
+            // Resource: SMTP
+            ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
+                'description' => 'Status for custom SMTP',
                 'default' => false,
-                'example' => true,
+                'example' => false,
+                'array' => false
             ])
-            ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+            ->addRule('smtpSenderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender name',
+                'default' => '',
+                'example' => 'John Appwrite',
+            ])
+            ->addRule('smtpSenderEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender email',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('smtpReplyToName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to name',
+                'default' => '',
+                'example' => 'Support Team',
+            ])
+            ->addRule('smtpReplyToEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to email',
+                'default' => '',
+                'example' => 'support@appwrite.io',
+            ])
+            ->addRule('smtpHost', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server host name',
+                'default' => '',
+                'example' => 'mail.appwrite.io',
+            ])
+            ->addRule('smtpPort', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'SMTP server port',
+                'default' => 0,
+                'example' => 25,
+            ])
+            ->addRule('smtpUsername', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server username',
+                'default' => '',
+                'example' => 'emailuser',
+            ])
+            ->addRule('smtpPassword', [
+                'type' => self::TYPE_STRING,
+                'format' => 'password',
+                'description' => 'SMTP server password. This property is write-only and always returned empty.',
+                'default' => '',
+                'example' => 'smtp-password',
+            ])
+            ->addRule('smtpSecure', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server secure protocol',
+                'default' => '',
+                'example' => 'tls',
+            ])
+
+            // Resource: Ping
+            ->addRule('pingCount', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of times the ping was received for this project.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('pingedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last ping datetime in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+
+            // Resource: Labels
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the project.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
+
+            // Resource: Billing
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project status.',
+                'default' => 'active',
+                'example' => 'active',
+            ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
+                'default' => [],
+                'example' => [],
+            ])
+
+            // Resource: Auth methods
+            ->addRule('authMethods', [
+                'type' => Response::MODEL_PROJECT_AUTH_METHOD,
+                'description' => 'List of auth methods.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
-                'description' => 'List of Platforms.',
+
+            // Resource: Services
+            ->addRule('services', [
+                'type' => Response::MODEL_PROJECT_SERVICE,
+                'description' => 'List of services.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('webhooks', [
-                'type' => Response::MODEL_WEBHOOK,
-                'description' => 'List of Webhooks.',
+
+            // Resource: Protocols
+            ->addRule('protocols', [
+                'type' => Response::MODEL_PROJECT_PROTOCOL,
+                'description' => 'List of protocols.',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('keys', [
-                'type' => Response::MODEL_KEY,
-                'description' => 'List of API Keys.',
+            ->addRule('blocks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project blocks information.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+            ->addRule('consoleAccessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last time the project was accessed via console.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
-
-        $services = Config::getParam('services', []);
-        $auth = Config::getParam('auth', []);
-
-        foreach ($auth as $index => $method) {
-            $name = $method['name'] ?? '';
-            $key = $method['key'] ?? '';
-
-            $this
-                ->addRule('auth' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' auth method status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
-        }
-
-        foreach ($services as $service) {
-            if (!$service['optional']) {
-                continue;
-            }
-
-            $name = $service['name'] ?? '';
-            $key = $service['key'] ?? '';
-
-            $this
-                ->addRule('serviceStatusFor' . ucfirst($key), [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' service status',
-                    'example' => true,
-                    'default' => true,
-                ])
-            ;
-        }
     }
 
     /**
@@ -226,62 +223,92 @@ class Project extends Model
     }
 
     /**
-     * Get Collection
+     * Filter document structure
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {
-        // Services
-        $values = $document->getAttribute('services', []);
-        $services = Config::getParam('services', []);
+        $this->expandSmtpFields($document);
+        $this->expandServices($document);
+        $this->expandProtocols($document);
+        $this->expandAuthMethods($document);
+        $this->expandConsoleAccessedAt($document);
 
-        foreach ($services as $service) {
+        return $document;
+    }
+
+    private function expandConsoleAccessedAt(Document $document): void
+    {
+        $document->setAttribute('consoleAccessedAt', $document->getAttribute('accessedAt', ''));
+    }
+
+    private function expandSmtpFields(Document $document): void
+    {
+        if (!$document->isSet('smtp')) {
+            return;
+        }
+
+        $smtp = $document->getAttribute('smtp', []);
+
+        $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
+        $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
+        $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
+        $document->setAttribute('smtpReplyToEmail', $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? ''); // Includes backwards compatibility
+        $document->setAttribute('smtpReplyToName', $smtp['replyToName'] ?? '');
+        $document->setAttribute('smtpHost', $smtp['host'] ?? '');
+        $document->setAttribute('smtpPort', (int) ($smtp['port'] ?? 0));
+        $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
+        $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
+        $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
+
+    private function expandServices(Document $document): void
+    {
+        $values = $document->getAttribute('services', []);
+        $services = [];
+
+        foreach (Config::getParam('services', []) as $id => $service) {
             if (!$service['optional']) {
                 continue;
             }
-            $key = $service['key'] ?? '';
-            $value = $values[$key] ?? true;
-            $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
-        }
 
-        // Auth
-        $authValues = $document->getAttribute('auths', []);
-        $auth = Config::getParam('auth', []);
-
-        $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
-        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
-        $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
-        $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
-        $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
-
-        foreach ($auth as $index => $method) {
-            $key = $method['key'];
-            $value = $authValues[$key] ?? true;
-            $document->setAttribute('auth' . ucfirst($key), $value);
-        }
-
-        // Providers
-        $providers = Config::getParam('providers', []);
-        $providerValues = $document->getAttribute('authProviders', []);
-        $projectProviders = [];
-
-        foreach ($providers as $key => $provider) {
-            if (!$provider['enabled']) {
-                // Disabled by Appwrite configuration, exclude from response
-                continue;
-            }
-
-            $projectProviders[] = new Document([
-                'name' => ucfirst($key),
-                'appId' => $providerValues[$key . 'Appid'] ?? '',
-                'secret' => $providerValues[$key . 'Secret'] ?? '',
-                'enabled' => $providerValues[$key . 'Enabled'] ?? false,
+            $services[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$service['key']] ?? true,
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('services', $services);
+    }
 
-        return $document;
+    private function expandProtocols(Document $document): void
+    {
+        $values = $document->getAttribute('apis', []);
+        $protocols = [];
+
+        foreach (Config::getParam('protocols', []) as $id => $api) {
+            $protocols[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$api['key']] ?? true,
+            ]);
+        }
+
+        $document->setAttribute('protocols', $protocols);
+    }
+
+    private function expandAuthMethods(Document $document): void
+    {
+        $values = $document->getAttribute('auths', []);
+        $authMethods = [];
+
+        foreach (Config::getParam('auth', []) as $id => $method) {
+            $authMethods[] = new Document([
+                '$id' => $id,
+                'enabled' => $values[$method['key']] ?? true
+            ]);
+        }
+
+        $document->setAttribute('authMethods', $authMethods);
     }
 }

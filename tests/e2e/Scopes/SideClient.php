@@ -9,6 +9,7 @@ trait SideClient
         return [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+
         ];
     }
 

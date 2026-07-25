@@ -12,11 +12,6 @@ class Etsy extends OAuth2
     private string $endpoint = 'https://api.etsy.com/v3/public';
 
     /**
-     * @var string
-     */
-    private string $version = '2022-07-14';
-
-    /**
      * @var array
      */
     protected array $user = [];

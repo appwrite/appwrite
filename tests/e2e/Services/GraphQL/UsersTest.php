@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -9,16 +11,24 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
-class UsersTest extends Scope
+final class UsersTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
 
-    public function testCreateUser(): array
+    private static array $cachedUser = [];
+    private static array $cachedUserTarget = [];
+
+    protected function setupUser(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedUser[$key])) {
+            return self::$cachedUser[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_USER);
+        $query = $this->getQuery(self::CREATE_USER);
         $email = 'users.service@example.com';
         $graphQLPayload = [
             'query' => $query,
@@ -42,19 +52,88 @@ class UsersTest extends Scope
         $this->assertEquals('Project User', $user['name']);
         $this->assertEquals($email, $user['email']);
 
+        self::$cachedUser[$key] = $user;
         return $user;
+    }
+
+    protected function setupUserTarget(): array
+    {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedUserTarget[$key])) {
+            return self::$cachedUserTarget[$key];
+        }
+
+        $user = $this->setupUser();
+
+        $projectId = $this->getProject()['$id'];
+
+        $query = $this->getQuery(self::CREATE_MAILGUN_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'providerId' => ID::unique(),
+                'name' => 'Mailgun1',
+                'apiKey' => 'api-key',
+                'domain' => 'domain',
+                'fromName' => 'sender name',
+                'fromEmail' => 'from@domain.com',
+                'isEuRegion' => false,
+            ],
+        ];
+        $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+        $providerId = $provider['body']['data']['messagingCreateMailgunProvider']['_id'];
+
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        $query = $this->getQuery(self::CREATE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'targetId' => ID::unique(),
+                'userId' => $user['_id'],
+                'providerType' => 'email',
+                'providerId' => $providerId,
+                'identifier' => 'random-email@mail.org',
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('random-email@mail.org', $target['body']['data']['usersCreateTarget']['identifier']);
+
+        self::$cachedUserTarget[$key] = $target['body']['data']['usersCreateTarget'];
+        return self::$cachedUserTarget[$key];
+    }
+
+    public function testCreateUser(): void
+    {
+        $user = $this->setupUser();
+        $this->assertEquals('Project User', $user['name']);
+    }
+
+    public function testCreateUserTarget(): void
+    {
+        $target = $this->setupUserTarget();
+        $this->assertEquals('random-email@mail.org', $target['identifier']);
     }
 
     public function testGetUsers()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USERS);
+        $query = $this->getQuery(self::GET_USERS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'queries' => [
-                    'limit(100)',
-                    'offset(0)',
+                    Query::limit(100)->toString(),
+                    Query::offset(0)->toString(),
                 ],
             ]
         ];
@@ -73,7 +152,7 @@ class UsersTest extends Scope
     public function testGetUser()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER);
+        $query = $this->getQuery(self::GET_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -95,7 +174,7 @@ class UsersTest extends Scope
     public function testGetUserPreferences()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_PREFERENCES);
+        $query = $this->getQuery(self::GET_USER_PREFERENCES);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -116,7 +195,7 @@ class UsersTest extends Scope
     public function testGetUserSessions()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_SESSIONS);
+        $query = $this->getQuery(self::GET_USER_SESSIONS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -137,7 +216,7 @@ class UsersTest extends Scope
     public function testGetUserMemberships()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_MEMBERSHIPS);
+        $query = $this->getQuery(self::GET_USER_MEMBERSHIPS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -155,31 +234,56 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']['usersListMemberships']);
     }
 
-    public function testGetUserLogs()
+    public function testListUserTargets()
     {
+        $target = $this->setupUserTarget();
+
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_LOGS);
+        $query = $this->getQuery(self::LIST_USER_TARGETS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => $this->getUser()['$id'],
+                'userId' => $target['userId'],
             ]
         ];
 
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $targets = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($user['body']['data']);
-        $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersListLogs']);
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        $this->assertIsArray($targets['body']['data']['usersListTargets']);
+        $this->assertCount(2, $targets['body']['data']['usersListTargets']['targets']);
+    }
+
+    public function testGetUserTarget()
+    {
+        $target = $this->setupUserTarget();
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::GET_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('random-email@mail.org', $target['body']['data']['usersGetTarget']['identifier']);
     }
 
     public function testUpdateUserStatus()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_STATUS);
+        $query = $this->getQuery(self::UPDATE_USER_STATUS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -202,7 +306,7 @@ class UsersTest extends Scope
     public function testUpdateUserEmailVerification()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_EMAIL_VERIFICATION);
+        $query = $this->getQuery(self::UPDATE_USER_EMAIL_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -224,7 +328,7 @@ class UsersTest extends Scope
     public function testUpdateUserPhoneVerification()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PHONE_VERIFICATION);
+        $query = $this->getQuery(self::UPDATE_USER_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -247,7 +351,7 @@ class UsersTest extends Scope
     public function testUpdateUserName()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_NAME);
+        $query = $this->getQuery(self::UPDATE_USER_NAME);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -270,7 +374,7 @@ class UsersTest extends Scope
     public function testUpdateUserEmail()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_EMAIL);
+        $query = $this->getQuery(self::UPDATE_USER_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -293,7 +397,7 @@ class UsersTest extends Scope
     public function testUpdateUserPassword()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PASSWORD);
+        $query = $this->getQuery(self::UPDATE_USER_PASSWORD);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -315,7 +419,7 @@ class UsersTest extends Scope
     public function testUpdateUserPhone()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PHONE);
+        $query = $this->getQuery(self::UPDATE_USER_PHONE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -338,7 +442,7 @@ class UsersTest extends Scope
     public function testUpdateUserPrefs()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_USER_PREFS);
+        $query = $this->getQuery(self::UPDATE_USER_PREFS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -360,10 +464,34 @@ class UsersTest extends Scope
         $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
     }
 
+    public function testUpdateUserTarget()
+    {
+        $target = $this->setupUserTarget();
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::UPDATE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+                'identifier' => 'random-email1@mail.org',
+            ],
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('random-email1@mail.org', $target['body']['data']['usersUpdateTarget']['identifier']);
+    }
+
     public function testDeleteUserSessions()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER_SESSIONS);
+        $query = $this->getQuery(self::DELETE_USER_SESSIONS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -386,31 +514,61 @@ class UsersTest extends Scope
     public function testDeleteUserSession()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER_SESSION);
+
+        // Create a fresh user with a session specifically for this test
+        $user = $this->getUser(true);
+
+        $query = $this->getQuery(self::DELETE_USER_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => $this->getUser()['$id'],
-                'sessionId' => $this->getUser()['sessionId'],
+                'userId' => $user['$id'],
+                'sessionId' => $user['sessionId'],
             ]
         ];
 
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $result = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsNotArray($user['body']);
-        $this->assertEquals(204, $user['headers']['status-code']);
+        $this->assertIsNotArray($result['body']);
+        $this->assertEquals(204, $result['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
+    public function testDeleteUserTarget()
+    {
+        $target = $this->setupUserTarget();
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::DELETE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(204, $target['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedUserTarget[$key] = [];
+    }
+
     public function testDeleteUser()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_USER);
+        $query = $this->getQuery(self::DELETE_USER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

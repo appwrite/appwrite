@@ -43,7 +43,7 @@ class Amazon extends OAuth2
      */
     public function parseState(string $state)
     {
-        return \json_decode(\html_entity_decode($state), true);
+        return \json_decode(\urldecode(\html_entity_decode($state)), true);
     }
 
 
@@ -56,7 +56,7 @@ class Amazon extends OAuth2
             'response_type' => 'code',
             'client_id' => $this->appID,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state),
+            'state' => \urlencode(\json_encode($this->state)),
             'redirect_uri' => $this->callback
         ]);
     }

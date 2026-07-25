@@ -36,11 +36,26 @@ class Database extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Database enabled.',
+                'description' => 'If database is enabled. Can be \'enabled\' or \'disabled\'. When disabled, the database is inaccessible to users, but remains accessible to Server SDKs using API keys.',
                 'default' => true,
                 'example' => false,
             ])
-        ;
+            ->addRule('type', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Database type.',
+                'default' => 'legacy',
+                'example' => 'legacy',
+                'enum' => ['legacy', 'tablesdb', 'documentsdb', 'vectorsdb'],
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Database status. Possible values: `provisioning`, `ready` or `failed`',
+                'default' => 'ready',
+                'example' => 'ready',
+                'enum' => ['provisioning', 'ready', 'failed'],
+                'enumSDKName' => 'DatabaseStatus',
+                'required' => false
+            ]);
     }
 
     /**

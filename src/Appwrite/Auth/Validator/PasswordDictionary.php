@@ -12,8 +12,9 @@ class PasswordDictionary extends Password
     protected array $dictionary;
     protected bool $enabled;
 
-    public function __construct(array $dictionary, bool $enabled = false)
+    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false)
     {
+        parent::__construct($allowEmpty);
         $this->dictionary = $dictionary;
         $this->enabled = $enabled;
     }
@@ -27,7 +28,7 @@ class PasswordDictionary extends Password
      */
     public function getDescription(): string
     {
-        return 'Password must be at least 8 characters and should not be one of the commonly used password.';
+        return 'Password must be between 8 and 265 characters long, and should not be one of the commonly used password.';
     }
 
     /**

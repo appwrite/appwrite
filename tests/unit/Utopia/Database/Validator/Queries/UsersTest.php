@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Validator\Queries;
 
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Query;
 
-class UsersTest extends TestCase
+final class UsersTest extends TestCase
 {
     public function setUp(): void
     {
@@ -23,17 +26,17 @@ class UsersTest extends TestCase
          * Test for Success
          */
         $this->assertEquals(true, $validator->isValid([]), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['equal("name", "value")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['equal("email", "value")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['equal("phone", "value")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['greaterThan("passwordUpdate", "2020-10-15 06:38")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['greaterThan("registration", "2020-10-15 06:38")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['equal("emailVerification", true)']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['equal("phoneVerification", true)']), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::equal('name', ['value'])]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::equal('email', ['value'])]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::equal('phone', ['value'])]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::greaterThan('passwordUpdate', '2020-10-15 06:38')]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::greaterThan('registration', '2020-10-15 06:38')]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::equal('emailVerification', [true])]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::equal('phoneVerification', [true])]), $validator->getDescription());
 
         /**
          * Test for Failure
          */
-        $this->assertEquals(false, $validator->isValid(['equal("password", "value")']), $validator->getDescription());
+        $this->assertEquals(false, $validator->isValid([Query::equal('password', ['value'])]), $validator->getDescription());
     }
 }

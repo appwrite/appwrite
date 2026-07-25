@@ -2,93 +2,16 @@
 
 namespace Appwrite\Utopia;
 
-use Exception;
-use Swoole\Http\Request as SwooleRequest;
-use Utopia\Swoole\Response as SwooleResponse;
-use Swoole\Http\Response as SwooleHTTPResponse;
-use Utopia\Database\Document;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
+use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
-use Appwrite\Utopia\Response\Model\Account;
-use Appwrite\Utopia\Response\Model\AlgoArgon2;
-use Appwrite\Utopia\Response\Model\AlgoBcrypt;
-use Appwrite\Utopia\Response\Model\AlgoMd5;
-use Appwrite\Utopia\Response\Model\AlgoPhpass;
-use Appwrite\Utopia\Response\Model\AlgoScrypt;
-use Appwrite\Utopia\Response\Model\AlgoScryptModified;
-use Appwrite\Utopia\Response\Model\AlgoSha;
-use Appwrite\Utopia\Response\Model\None;
-use Appwrite\Utopia\Response\Model\Any;
-use Appwrite\Utopia\Response\Model\Attribute;
-use Appwrite\Utopia\Response\Model\AttributeList;
-use Appwrite\Utopia\Response\Model\AttributeString;
-use Appwrite\Utopia\Response\Model\AttributeInteger;
-use Appwrite\Utopia\Response\Model\AttributeFloat;
-use Appwrite\Utopia\Response\Model\AttributeBoolean;
-use Appwrite\Utopia\Response\Model\AttributeEmail;
-use Appwrite\Utopia\Response\Model\AttributeEnum;
-use Appwrite\Utopia\Response\Model\AttributeIP;
-use Appwrite\Utopia\Response\Model\AttributeURL;
-use Appwrite\Utopia\Response\Model\AttributeDatetime;
-use Appwrite\Utopia\Response\Model\AttributeRelationship;
-use Appwrite\Utopia\Response\Model\BaseList;
-use Appwrite\Utopia\Response\Model\Collection;
-use Appwrite\Utopia\Response\Model\Database;
-use Appwrite\Utopia\Response\Model\Continent;
-use Appwrite\Utopia\Response\Model\Country;
-use Appwrite\Utopia\Response\Model\Currency;
-use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\Domain;
-use Appwrite\Utopia\Response\Model\Error;
-use Appwrite\Utopia\Response\Model\ErrorDev;
-use Appwrite\Utopia\Response\Model\Execution;
-use Appwrite\Utopia\Response\Model\Build;
-use Appwrite\Utopia\Response\Model\File;
-use Appwrite\Utopia\Response\Model\Bucket;
-use Appwrite\Utopia\Response\Model\ConsoleVariables;
-use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\JWT;
-use Appwrite\Utopia\Response\Model\Key;
-use Appwrite\Utopia\Response\Model\Language;
-use Appwrite\Utopia\Response\Model\User;
-use Appwrite\Utopia\Response\Model\Session;
-use Appwrite\Utopia\Response\Model\Team;
-use Appwrite\Utopia\Response\Model\Locale;
-use Appwrite\Utopia\Response\Model\Log;
-use Appwrite\Utopia\Response\Model\Membership;
-use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
-use Appwrite\Utopia\Response\Model\Phone;
-use Appwrite\Utopia\Response\Model\Platform;
-use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Token;
-use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\Preferences;
-use Appwrite\Utopia\Response\Model\HealthAntivirus;
-use Appwrite\Utopia\Response\Model\HealthQueue;
-use Appwrite\Utopia\Response\Model\HealthStatus;
-use Appwrite\Utopia\Response\Model\HealthTime;
-use Appwrite\Utopia\Response\Model\HealthVersion;
-use Appwrite\Utopia\Response\Model\Mock; // Keep last
-use Appwrite\Utopia\Response\Model\Provider;
-use Appwrite\Utopia\Response\Model\Runtime;
-use Appwrite\Utopia\Response\Model\UsageBuckets;
-use Appwrite\Utopia\Response\Model\UsageCollection;
-use Appwrite\Utopia\Response\Model\UsageDatabase;
-use Appwrite\Utopia\Response\Model\UsageDatabases;
-use Appwrite\Utopia\Response\Model\UsageFunction;
-use Appwrite\Utopia\Response\Model\UsageFunctions;
-use Appwrite\Utopia\Response\Model\UsageProject;
-use Appwrite\Utopia\Response\Model\UsageStorage;
-use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\Video;
-use Appwrite\Utopia\Response\Model\VideoProfile;
-use Appwrite\Utopia\Response\Model\VideoRendition;
-use Appwrite\Utopia\Response\Model\VideoSubtitle;
+use Exception;
+use JsonException;
+use Swoole\Http\Response as SwooleHTTPResponse;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -104,16 +27,18 @@ class Response extends SwooleResponse
     public const MODEL_ERROR = 'error';
     public const MODEL_METRIC = 'metric';
     public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
-    public const MODEL_USAGE_DATABASES = 'usageDatabases';
-    public const MODEL_USAGE_DATABASE = 'usageDatabase';
-    public const MODEL_USAGE_COLLECTION = 'usageCollection';
+    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
+    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
+    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
+    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_USERS = 'usageUsers';
-    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
-    public const MODEL_USAGE_STORAGE = 'usageStorage';
+    public const MODEL_USAGE_PRESENCE = 'usagePresence';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
+    public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
@@ -121,16 +46,33 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORSDB_COLLECTION = 'vectorsdbCollection';
+    public const MODEL_VECTORSDB_COLLECTION_LIST = 'vectorsdbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
+    public const MODEL_TABLE = 'table';
+    public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_COLUMN_INDEX = 'columnIndex';
+    public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
+    public const MODEL_ROW = 'row';
+    public const MODEL_ROW_LIST = 'rowList';
+
+    // Notifications
+    public const MODEL_NOTIFICATION = 'notification';
+    public const MODEL_NOTIFICATION_LIST = 'notificationList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_BIGINT = 'attributeBigint';
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
@@ -139,6 +81,41 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
     public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+    public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
+    public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
+    public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_VARCHAR = 'attributeVarchar';
+    public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
+    public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
+    public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
+
+    // Database Columns
+    public const MODEL_COLUMN = 'column';
+    public const MODEL_COLUMN_LIST = 'columnList';
+    public const MODEL_COLUMN_STRING = 'columnString';
+    public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_BIGINT = 'columnBigint';
+    public const MODEL_COLUMN_FLOAT = 'columnFloat';
+    public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
+    public const MODEL_COLUMN_EMAIL = 'columnEmail';
+    public const MODEL_COLUMN_ENUM = 'columnEnum';
+    public const MODEL_COLUMN_IP = 'columnIp';
+    public const MODEL_COLUMN_URL = 'columnUrl';
+    public const MODEL_COLUMN_DATETIME = 'columnDatetime';
+    public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
+    public const MODEL_COLUMN_POINT = 'columnPoint';
+    public const MODEL_COLUMN_LINE = 'columnLine';
+    public const MODEL_COLUMN_POLYGON = 'columnPolygon';
+    public const MODEL_COLUMN_VARCHAR = 'columnVarchar';
+    public const MODEL_COLUMN_TEXT = 'columnText';
+    public const MODEL_COLUMN_MEDIUMTEXT = 'columnMediumtext';
+    public const MODEL_COLUMN_LONGTEXT = 'columnLongtext';
+
+    // Transactions
+    public const MODEL_TRANSACTION = 'transaction';
+    public const MODEL_TRANSACTION_LIST = 'transactionList';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -146,9 +123,18 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_IDENTITY = 'identity';
+    public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+
+    // MFA
+    public const MODEL_MFA_TYPE = 'mfaType';
+    public const MODEL_MFA_FACTORS = 'mfaFactors';
+    public const MODEL_MFA_OTP = 'mfaTotp';
+    public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -164,19 +150,23 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
+    public const MODEL_RESOURCE_TOKEN = 'resourceToken';
+    public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
-    //video
+    // Videos
     public const MODEL_VIDEO = 'video';
     public const MODEL_VIDEO_LIST = 'videoList';
-    public const MODEL_PROFILE = 'profile';
-    public const MODEL_PROFILE_LIST = 'profileList';
-    public const MODEL_RENDITION = 'rendition';
-    public const MODEL_RENDITION_LIST = 'renditionList';
-    public const MODEL_SUBTITLE = 'subtitle';
-    public const MODEL_SUBTITLE_LIST = 'subtitleList';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
+    public const MODEL_VIDEO_RENDITION = 'videoRendition';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_SUBTITLE = 'videoSubtitle';
+    public const MODEL_VIDEO_SUBTITLE_LIST = 'videoSubtitleList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
+    public const MODEL_LOCALE_CODE = 'localeCode';
+    public const MODEL_LOCALE_CODE_LIST = 'localeCodeList';
     public const MODEL_COUNTRY = 'country';
     public const MODEL_COUNTRY_LIST = 'countryList';
     public const MODEL_CONTINENT = 'continent';
@@ -188,11 +178,52 @@ class Response extends SwooleResponse
     public const MODEL_PHONE = 'phone';
     public const MODEL_PHONE_LIST = 'phoneList';
 
+    // Messaging
+    public const MODEL_PROVIDER = 'provider';
+    public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_MESSAGE = 'message';
+    public const MODEL_MESSAGE_LIST = 'messageList';
+    public const MODEL_TOPIC = 'topic';
+    public const MODEL_TOPIC_LIST = 'topicList';
+    public const MODEL_SUBSCRIBER = 'subscriber';
+    public const MODEL_SUBSCRIBER_LIST = 'subscriberList';
+    public const MODEL_TARGET = 'target';
+    public const MODEL_TARGET_LIST = 'targetList';
+
     // Teams
     public const MODEL_TEAM = 'team';
     public const MODEL_TEAM_LIST = 'teamList';
     public const MODEL_MEMBERSHIP = 'membership';
     public const MODEL_MEMBERSHIP_LIST = 'membershipList';
+
+    // VCS
+    public const MODEL_INSTALLATION = 'installation';
+    public const MODEL_INSTALLATION_LIST = 'installationList';
+    public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
+    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK = 'providerRepositoryFramework';
+    public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
+    public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
+    public const MODEL_VCS_NAMESPACE = 'vcsNamespace';
+    public const MODEL_VCS_NAMESPACE_LIST = 'vcsNamespaceList';
+    public const MODEL_BRANCH = 'branch';
+    public const MODEL_BRANCH_LIST = 'branchList';
+    public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_VARIABLE = 'detectionVariable';
+    public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
+    public const MODEL_VCS_CONTENT = 'vcsContent';
+    public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
+
+    // Sites
+    public const MODEL_SITE = 'site';
+    public const MODEL_SITE_LIST = 'siteList';
+    public const MODEL_FRAMEWORK = 'framework';
+    public const MODEL_FRAMEWORK_LIST = 'frameworkList';
+    public const MODEL_FRAMEWORK_ADAPTER = 'frameworkAdapter';
+    public const MODEL_TEMPLATE_SITE = 'templateSite';
+    public const MODEL_TEMPLATE_SITE_LIST = 'templateSiteList';
+    public const MODEL_TEMPLATE_FRAMEWORK = 'templateFramework';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -203,25 +234,113 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
-    public const MODEL_BUILD = 'build';
-    public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+    public const MODEL_HEADERS = 'headers';
+    public const MODEL_SPECIFICATION = 'specification';
+    public const MODEL_SPECIFICATION_LIST = 'specificationList';
+    public const MODEL_TEMPLATE_FUNCTION = 'templateFunction';
+    public const MODEL_TEMPLATE_FUNCTION_LIST = 'templateFunctionList';
+    public const MODEL_TEMPLATE_RUNTIME = 'templateRuntime';
+    public const MODEL_TEMPLATE_VARIABLE = 'templateVariable';
+
+    // Proxy
+    public const MODEL_PROXY_RULE = 'proxyRule';
+    public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
+
+    // Schedules
+    public const MODEL_SCHEDULE = 'schedule';
+    public const MODEL_SCHEDULE_LIST = 'scheduleList';
+
+    // Migrations
+    public const MODEL_MIGRATION = 'migration';
+    public const MODEL_MIGRATION_LIST = 'migrationList';
+    public const MODEL_MIGRATION_REPORT = 'migrationReport';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT = 'firebaseProject';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
 
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_STAGE = 'stage';
+    public const MODEL_STAGE_LIST = 'stageList';
+    public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
+    public const MODEL_PROJECT_SERVICE = 'projectService';
+    public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
-    public const MODEL_PROVIDER = 'provider';
-    public const MODEL_PROVIDER_LIST = 'providerList';
-    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
+    public const MODEL_DEV_KEY = 'devKey';
+    public const MODEL_DEV_KEY_LIST = 'devKeyList';
+    public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
+    public const MODEL_POLICY_LIST = 'policyList';
+    public const MODEL_POLICY_PASSWORD_DICTIONARY = 'policyPasswordDictionary';
+    public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
+    public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
+    public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
+    public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
+    public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
+    public const MODEL_POLICY_SESSION_LIMIT = 'policySessionLimit';
+    public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
+    public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
+    public const MODEL_AUTH_PROVIDER = 'authProvider';
+    public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
+    public const MODEL_PLATFORM_APPLE = 'platformApple';
+    public const MODEL_PLATFORM_ANDROID = 'platformAndroid';
+    public const MODEL_PLATFORM_WINDOWS = 'platformWindows';
+    public const MODEL_PLATFORM_LINUX = 'platformLinux';
+    public const MODEL_PLATFORM_WEB = 'platformWeb';
     public const MODEL_PLATFORM_LIST = 'platformList';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
+    public const MODEL_VCS = 'vcs';
+    public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
+    public const MODEL_EMAIL_TEMPLATE_LIST = 'emailTemplateList';
+    public const MODEL_OAUTH2_GITHUB = 'oAuth2Github';
+    public const MODEL_OAUTH2_DISCORD = 'oAuth2Discord';
+    public const MODEL_OAUTH2_FIGMA = 'oAuth2Figma';
+    public const MODEL_OAUTH2_DROPBOX = 'oAuth2Dropbox';
+    public const MODEL_OAUTH2_DAILYMOTION = 'oAuth2Dailymotion';
+    public const MODEL_OAUTH2_BITBUCKET = 'oAuth2Bitbucket';
+    public const MODEL_OAUTH2_BITLY = 'oAuth2Bitly';
+    public const MODEL_OAUTH2_BOX = 'oAuth2Box';
+    public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
+    public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
+    public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
+    public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
+    public const MODEL_OAUTH2_X = 'oAuth2X';
+    public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
+    public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
+    public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
+    public const MODEL_OAUTH2_SLACK = 'oAuth2Slack';
+    public const MODEL_OAUTH2_PODIO = 'oAuth2Podio';
+    public const MODEL_OAUTH2_NOTION = 'oAuth2Notion';
+    public const MODEL_OAUTH2_SALESFORCE = 'oAuth2Salesforce';
+    public const MODEL_OAUTH2_YAHOO = 'oAuth2Yahoo';
+    public const MODEL_OAUTH2_LINKEDIN = 'oAuth2Linkedin';
+    public const MODEL_OAUTH2_DISQUS = 'oAuth2Disqus';
+    public const MODEL_OAUTH2_AMAZON = 'oAuth2Amazon';
+    public const MODEL_OAUTH2_ETSY = 'oAuth2Etsy';
+    public const MODEL_OAUTH2_FACEBOOK = 'oAuth2Facebook';
+    public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
+    public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
+    public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_APPWRITE = 'oAuth2Appwrite';
+    public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
+    public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
+    public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';
+    public const MODEL_OAUTH2_KEYCLOAK = 'oAuth2Keycloak';
+    public const MODEL_OAUTH2_OIDC = 'oAuth2Oidc';
+    public const MODEL_OAUTH2_APPLE = 'oAuth2Apple';
+    public const MODEL_OAUTH2_OKTA = 'oAuth2Okta';
+    public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
+    public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
+    public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -229,22 +348,38 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+    public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
+    public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
+
+    // Advisor
+    public const MODEL_INSIGHT = 'insight';
+    public const MODEL_INSIGHT_LIST = 'insightList';
+    public const MODEL_INSIGHT_CTA = 'insightCTA';
+    public const MODEL_REPORT = 'report';
+    public const MODEL_REPORT_LIST = 'reportList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_PARAMETER = 'consoleOAuth2ProviderParameter';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER = 'consoleOAuth2Provider';
+    public const MODEL_CONSOLE_OAUTH2_PROVIDER_LIST = 'consoleOAuth2ProviderList';
+    public const MODEL_CONSOLE_KEY_SCOPE = 'consoleKeyScope';
+    public const MODEL_CONSOLE_KEY_SCOPE_LIST = 'consoleKeyScopeList';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
     public const MODEL_RULE = 'rule';
     public const MODEL_TASK = 'task';
+    public const MODEL_DOMAIN = 'domain';
+    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
 
     /**
-     * @var Filter
+     * @var array<Filter>
      */
-    private static $filter = null;
+    protected array $filters = [];
 
     /**
      * @var array
@@ -252,131 +387,22 @@ class Response extends SwooleResponse
     protected array $payload = [];
 
     /**
+     * @var bool
+     */
+    protected bool $showSensitive = false;
+
+    /**
+     * @var array<string, Model>
+     */
+    protected static array $models = [];
+
+    /**
      * Response constructor.
      *
-     * @param float $time
+     * @param SwooleHTTPResponse $response Native response to be passed to parent constructor
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this
-            // General
-            ->setModel(new None())
-            ->setModel(new Any())
-            ->setModel(new Error())
-            ->setModel(new ErrorDev())
-            // Lists
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
-            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
-            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
-            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
-            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
-            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
-            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
-            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
-            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
-            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
-            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
-            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
-            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
-            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
-            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
-            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
-            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
-            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
-            ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
-            ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
-            ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
-            ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
-            ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
-            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
-            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
-            ->setModel(new BaseList('Profile List', self::MODEL_PROFILE_LIST, 'profiles', self::MODEL_PROFILE))
-            ->setModel(new BaseList('Rendition List', self::MODEL_RENDITION_LIST, 'renditions', self::MODEL_RENDITION))
-            ->setModel(new BaseList('Subtitle List', self::MODEL_SUBTITLE_LIST, 'subtitles', self::MODEL_SUBTITLE))
-            ->setModel(new BaseList('Video List', self::MODEL_VIDEO_LIST, 'videos', self::MODEL_VIDEO))
-            // Entities
-            ->setModel(new Database())
-            ->setModel(new Collection())
-            ->setModel(new Attribute())
-            ->setModel(new AttributeList())
-            ->setModel(new AttributeString())
-            ->setModel(new AttributeInteger())
-            ->setModel(new AttributeFloat())
-            ->setModel(new AttributeBoolean())
-            ->setModel(new AttributeEmail())
-            ->setModel(new AttributeEnum())
-            ->setModel(new AttributeIP())
-            ->setModel(new AttributeURL())
-            ->setModel(new AttributeDatetime())
-            ->setModel(new AttributeRelationship())
-            ->setModel(new Index())
-            ->setModel(new ModelDocument())
-            ->setModel(new Log())
-            ->setModel(new User())
-            ->setModel(new AlgoMd5())
-            ->setModel(new AlgoSha())
-            ->setModel(new AlgoPhpass())
-            ->setModel(new AlgoBcrypt())
-            ->setModel(new AlgoScrypt())
-            ->setModel(new AlgoScryptModified())
-            ->setModel(new AlgoArgon2())
-            ->setModel(new Account())
-            ->setModel(new Preferences())
-            ->setModel(new Session())
-            ->setModel(new Token())
-            ->setModel(new JWT())
-            ->setModel(new Locale())
-            ->setModel(new File())
-            ->setModel(new Bucket())
-            ->setModel(new Team())
-            ->setModel(new Membership())
-            ->setModel(new Func())
-            ->setModel(new Runtime())
-            ->setModel(new Deployment())
-            ->setModel(new Execution())
-            ->setModel(new Build())
-            ->setModel(new Project())
-            ->setModel(new Webhook())
-            ->setModel(new Key())
-            ->setModel(new Domain())
-            ->setModel(new Provider())
-            ->setModel(new Platform())
-            ->setModel(new Variable())
-            ->setModel(new Country())
-            ->setModel(new Continent())
-            ->setModel(new Language())
-            ->setModel(new Currency())
-            ->setModel(new Phone())
-            ->setModel(new HealthAntivirus())
-            ->setModel(new HealthQueue())
-            ->setModel(new HealthStatus())
-            ->setModel(new HealthTime())
-            ->setModel(new HealthVersion())
-            ->setModel(new Metric())
-            ->setModel(new UsageDatabases())
-            ->setModel(new UsageDatabase())
-            ->setModel(new UsageCollection())
-            ->setModel(new UsageUsers())
-            ->setModel(new UsageStorage())
-            ->setModel(new UsageBuckets())
-            ->setModel(new UsageFunctions())
-            ->setModel(new UsageFunction())
-            ->setModel(new UsageProject())
-            ->setModel(new ConsoleVariables())
-            ->setModel(new Video())
-            ->setModel(new VideoProfile())
-            ->setModel(new VideoRendition())
-            ->setModel(new VideoSubtitle())
-
-            // Verification
-            // Recovery
-            // Tests (keep last)
-            ->setModel(new Mock());
-
         parent::__construct($response);
     }
 
@@ -385,22 +411,17 @@ class Response extends SwooleResponse
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
     public const CONTENT_TYPE_NULL = 'null';
+    public const CONTENT_TYPE_MULTIPART = 'multipart/form-data';
 
     /**
-     * List of defined output objects
-     */
-    protected $models = [];
-
-    /**
-     * Set Model Object
+     * Register a model
      *
-     * @return self
+     * @param Model $model
+     * @return void
      */
-    public function setModel(Model $instance)
+    public static function setModel(Model $model): void
     {
-        $this->models[$instance->getType()] = $instance;
-
-        return $this;
+        self::$models[$model->getType()] = $model;
     }
 
     /**
@@ -412,11 +433,11 @@ class Response extends SwooleResponse
      */
     public function getModel(string $key): Model
     {
-        if (!isset($this->models[$key])) {
+        if (!isset(self::$models[$key])) {
             throw new Exception('Undefined model: ' . $key);
         }
 
-        return $this->models[$key];
+        return self::$models[$key];
     }
 
     /**
@@ -426,7 +447,28 @@ class Response extends SwooleResponse
      */
     public function getModels(): array
     {
-        return $this->models;
+        return self::$models;
+    }
+
+    /**
+     * Check if a model exists
+     *
+     * @param string $key
+     * @return bool
+     */
+    public static function hasModel(string $key): bool
+    {
+        return isset(self::$models[$key]);
+    }
+
+    public function applyFilters(array $data, string $model, Document $raw): array
+    {
+        foreach ($this->filters as $filter) {
+            $filter->setRawContent($raw);
+            $data = $filter->parse($data, $model);
+        }
+
+        return $data;
     }
 
     /**
@@ -441,16 +483,26 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $output = $this->output($document, $model);
-
-        // If filter is set, parse the output
-        if (self::hasFilter()) {
-            $output = self::getFilter()->parse($output, $model);
+        if (
+            $this->impersonatorUser !== null
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
+        ) {
+            $document = clone $document;
+            $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
+
+        $output = $this->output(clone $document, $model);
+        $output = $this->applyFilters($output, $model, raw: clone $document);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new \stdClass());
+                try {
+                    $this->json(!empty($output) ? $output : new \stdClass());
+                } catch (JsonException $e) {
+                    throw new Exception('Failed to parse response: ' . $e->getMessage(), 400);
+                }
                 break;
 
             case self::CONTENT_TYPE_YAML:
@@ -458,6 +510,10 @@ class Response extends SwooleResponse
                 break;
 
             case self::CONTENT_TYPE_NULL:
+                break;
+
+            case self::CONTENT_TYPE_MULTIPART:
+                $this->multipart(!empty($output) ? $output : new \stdClass());
                 break;
 
             default:
@@ -482,39 +538,52 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = $document;
+        $data       = clone $document;
         $model      = $this->getModel($model);
         $output     = [];
 
-        $document = $model->filter($document);
+        $data = $model->filter($data);
 
         if ($model->isAny()) {
-            $this->payload = $document->getArrayCopy();
+            $this->payload = $data->getArrayCopy();
 
             return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
+            if (!$data->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
-                    $document->setAttribute($key, $rule['default']);
+                    $data->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
+            if (!$data->isSet($key) && !$rule['required']) { // set output key null if data key is not set and required is false
+                $output[$key] = null;
+                continue;
+            }
+
             if ($rule['array']) {
-                if (!is_array($data[$key])) {
+                if (!\is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
+
+                                    if (\is_array($val)) {
+                                        $condition = \in_array($item->getAttribute($attribute), $val);
+                                    } else {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                    }
+
                                     if (!$condition) {
                                         break;
                                     }
@@ -528,8 +597,8 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);
@@ -538,6 +607,17 @@ class Response extends SwooleResponse
             } else {
                 if ($data[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
+                }
+            }
+
+            if ($rule['sensitive']) {
+                $roles = $this->authorization->getRoles();
+                $user = $this->user ?? new DBUser();
+                $isPrivilegedUser = $user->isPrivileged($roles);
+                $isAppUser = $user->isKey($roles);
+
+                if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
+                    $data->setAttribute($key, '');
                 }
             }
 
@@ -588,7 +668,53 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
+    }
+
+    /**
+     * Multipart
+     *
+     * This helper is for sending multipart/form-data HTTP response.
+     * It sets relevant content type header ('multipart/form-data') and convert a PHP array ($data) to valid Multipart using BodyMultipart
+     *
+     * @param array $data
+     *
+     * @return void
+     */
+    public function multipart(array $data): void
+    {
+        $multipart = new BodyMultipart();
+        foreach ($data as $key => $value) {
+            $multipart->setPart($key, $value);
+        }
+
+        $this
+            ->setContentType($multipart->exportHeader())
+            ->send($multipart->exportBody());
+    }
+
+    /**
+     * JSON
+     *
+     * This helper is for sending JSON HTTP response.
+     * It sets relevant content type header ('application/json') and convert a PHP array ($data) to valid JSON using native json_encode
+     *
+     * @see http://en.wikipedia.org/wiki/JSON
+     *
+     * @param  mixed  $data
+     * @return void
+     */
+    public function json($data): void
+    {
+        if (!is_array($data) && !$data instanceof \stdClass) {
+            throw new \Exception('Response body is not a valid JSON object.');
+        }
+
+        $this->payload = \is_array($data) ? $data : (array) $data;
+
+        $this
+            ->setContentType(Response::CONTENT_TYPE_JSON, self::CHARSET_UTF8)
+            ->send(\json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -600,25 +726,45 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Function to set a response filter
-     *
-     * @param $filter the response filter to set
-     *
-     * @return void
+     * Set the sent flag on the response. Pass false to allow reuse
+     * (e.g. batched GraphQL queries), true to prevent further writes.
      */
-    public static function setFilter(?Filter $filter)
+    public function setSent(bool $sent): static
     {
-        self::$filter = $filter;
+        $this->sent = $sent;
+        return $this;
     }
 
     /**
-     * Return the currently set filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @return Filter
+     * @param $filter - the response filter to set
+     *
+     * @return void
      */
-    public static function getFilter(): ?Filter
+    public function addFilter(Filter $filter): void
     {
-        return self::$filter;
+        $this->filters[] = $filter;
+    }
+
+    /**
+     * Return the currently set filters
+     *
+     * @return array<Filter>
+     */
+    public function getFilters(): array
+    {
+        return $this->filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->filters = [];
     }
 
     /**
@@ -626,8 +772,50 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty($this->filters);
+    }
+
+    /**
+     * Wrapper to show sensitive data in response
+     *
+     * @param callable(): array $callback The callback to show sensitive information for
+     * @return array
+     */
+    public function showSensitive(callable $callback): array
+    {
+        $previous = $this->showSensitive;
+
+        try {
+            $this->showSensitive = true;
+            return $callback();
+        } finally {
+            $this->showSensitive = $previous;
+        }
+    }
+
+    private ?Authorization $authorization = null;
+    private ?DBUser $user = null;
+    private ?Document $impersonatorUser = null;
+
+    public function setAuthorization(Authorization $authorization): void
+    {
+        $this->authorization = $authorization;
+    }
+
+    public function setUser(DBUser $user): void
+    {
+        $this->user = $user;
+    }
+
+    public function setImpersonatorUser(Document $impersonatorUser): void
+    {
+        $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    public function getImpersonatorUser(): ?Document
+    {
+        return $this->impersonatorUser;
     }
 }

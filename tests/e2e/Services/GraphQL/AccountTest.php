@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class AccountTest extends Scope
+final class AccountTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -17,7 +19,7 @@ class AccountTest extends Scope
     public function testCreateAccount(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ACCOUNT);
+        $query = $this->getQuery(self::CREATE_ACCOUNT);
         $email = 'test' . \rand() . '@test.com';
         $graphQLPayload = [
             'query' => $query,
@@ -45,7 +47,7 @@ class AccountTest extends Scope
     public function testCreateAccountSession()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ACCOUNT_SESSION);
+        $query = $this->getQuery(self::CREATE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -61,16 +63,16 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateEmailPasswordSession']);
 
-        $cookie = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $cookie = $session['cookies']['a_session_' . $this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
     }
 
     public function testCreateMagicURLSession(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_MAGIC_URL);
+        $query = $this->getQuery(self::CREATE_MAGIC_URL);
         $email = 'test' . \rand() . '@test.com';
         $graphQLPayload = [
             'query' => $query,
@@ -87,15 +89,15 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateMagicURLSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateMagicURLToken']);
 
-        return $session['body']['data']['accountCreateMagicURLSession'];
+        return $session['body']['data']['accountCreateMagicURLToken'];
     }
 
     public function testCreateEmailVerification(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EMAIL_VERIFICATION);
+        $query = $this->getQuery(self::CREATE_EMAIL_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -116,14 +118,29 @@ class AccountTest extends Scope
     }
 
     /**
-     * @depends testUpdateAccountPhone
      * @return array
      * @throws \Exception
      */
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
+
+        // Ensure phone is set up for this test to be self-contained
+        $phoneQuery = $this->getQuery(self::UPDATE_ACCOUNT_PHONE);
+        $phonePayload = [
+            'query' => $phoneQuery,
+            'variables' => [
+                'phone' => '+123456789',
+                'password' => 'password',
+            ]
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $phonePayload);
+
+        $query = $this->getQuery(self::CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -143,7 +160,7 @@ class AccountTest extends Scope
     public function testCreatePasswordRecovery(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_PASSWORD_RECOVERY);
+        $query = $this->getQuery(self::CREATE_PASSWORD_RECOVERY);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -167,7 +184,7 @@ class AccountTest extends Scope
     public function testCreateAnonymousSession(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ANONYMOUS_SESSION);
+        $query = $this->getQuery(self::CREATE_ANONYMOUS_SESSION);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -187,7 +204,7 @@ class AccountTest extends Scope
     public function testCreateAccountJWT(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ACCOUNT_JWT);
+        $query = $this->getQuery(self::CREATE_ACCOUNT_JWT);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -206,7 +223,7 @@ class AccountTest extends Scope
     public function testGetAccount(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ACCOUNT);
+        $query = $this->getQuery(self::GET_ACCOUNT);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -229,7 +246,7 @@ class AccountTest extends Scope
     public function testGetAccountPreferences(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ACCOUNT_PREFS);
+        $query = $this->getQuery(self::GET_ACCOUNT_PREFS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -249,7 +266,7 @@ class AccountTest extends Scope
     public function testGetAccountSessions(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ACCOUNT_SESSIONS);
+        $query = $this->getQuery(self::GET_ACCOUNT_SESSIONS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -269,7 +286,7 @@ class AccountTest extends Scope
     public function testGetAccountSession(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ACCOUNT_SESSION);
+        $query = $this->getQuery(self::GET_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -290,30 +307,10 @@ class AccountTest extends Scope
         return $session;
     }
 
-    public function testGetAccountLogs(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ACCOUNT_LOGS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-
-        $logs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertArrayNotHasKey('errors', $logs['body']);
-        $this->assertIsArray($logs['body']['data']);
-        $this->assertIsArray($logs['body']['data']['accountListLogs']);
-
-        return $logs;
-    }
-
     public function testUpdateAccountName(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_NAME);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_NAME);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -337,7 +334,7 @@ class AccountTest extends Scope
     public function testUpdateAccountEmail(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_EMAIL);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -362,7 +359,7 @@ class AccountTest extends Scope
     public function testUpdateAccountPassword(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PASSWORD);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_PASSWORD);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -386,7 +383,7 @@ class AccountTest extends Scope
     public function testUpdateAccountPhone(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PHONE);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_PHONE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -411,7 +408,7 @@ class AccountTest extends Scope
     public function testUpdateAccountStatus(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_STATUS);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_STATUS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -435,7 +432,7 @@ class AccountTest extends Scope
     public function testUpdateAccountPrefs(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PREFS);
+        $query = $this->getQuery(self::UPDATE_ACCOUNT_PREFS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -461,7 +458,7 @@ class AccountTest extends Scope
     public function testDeleteAccountSessions(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_ACCOUNT_SESSIONS);
+        $query = $this->getQuery(self::DELETE_ACCOUNT_SESSIONS);
         $graphQLPayload = [
             'query' => $query
         ];
@@ -483,7 +480,7 @@ class AccountTest extends Scope
     public function testDeleteAccountSession(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_ACCOUNT_SESSION);
+        $query = $this->getQuery(self::DELETE_ACCOUNT_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

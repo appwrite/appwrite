@@ -108,7 +108,7 @@ class Disqus extends OAuth2
     }
 
     /**
-     * @param string $token
+     * @param string $accessToken
      *
      * @return string
      */

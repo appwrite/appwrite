@@ -4,12 +4,13 @@ namespace Appwrite\GraphQL\Types;
 
 use Appwrite\GraphQL\Resolvers;
 use Appwrite\GraphQL\Types;
+use Appwrite\SDK\Method;
 use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\App;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
 
@@ -50,12 +51,16 @@ class Mapper
         $defaults = [
             'boolean' => Type::boolean(),
             'string' => Type::string(),
+            'payload' => Type::string(),
             'integer' => Type::int(),
             'double' => Type::float(),
             'datetime' => Type::string(),
             'json' => Types::json(),
             'none' => Types::json(),
             'any' => Types::json(),
+            'array' => Types::json(),
+            'enum' => Type::string(),
+            'id' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -75,8 +80,10 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $utopia,
         Route $route,
+        Method $method,
+        string $httpMethod,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -85,10 +92,31 @@ class Mapper
             }
         }
 
-        $names = $route->getLabel('sdk.response.model', 'none');
-        $models = \is_array($names)
-            ? \array_map(static fn($m) => static::$models[$m], $names)
-            : [static::$models[$names]];
+        $responses = $method->getResponses();
+
+        // Map each response to its model
+        $models = [];
+        foreach ($responses as $response) {
+            $modelName = $response->getModel();
+
+            if (\is_array($modelName)) {
+                foreach ($modelName as $name) {
+                    $models[] = self::$models[$name];
+                }
+            } else {
+                $models[] = self::$models[$modelName];
+            }
+        }
+
+        $hidden = [];
+        $overrides = [];
+        foreach ($method->getParameters() as $sdkParameter) {
+            if ($sdkParameter->getHide()) {
+                $hidden[$sdkParameter->getName()] = true;
+                continue;
+            }
+            $overrides[$sdkParameter->getName()] = $sdkParameter;
+        }
 
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));
@@ -97,18 +125,33 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
+                if (isset($hidden[$name])) {
+                    continue;
+                }
+
+                $override = $overrides[$name] ?? null;
+
+                if (!empty($overrides) && $override === null) {
+                    continue;
+                }
+
                 if ($name === 'queries') {
                     $list = true;
                 }
+
+                $optional = $override !== null && $override->hasOptional()
+                    ? $override->getOptional()
+                    : $parameter['optional'];
+
                 $parameterType = Mapper::param(
                     $utopia,
-                    $parameter['validator'],
-                    !$parameter['optional'],
+                    $override?->getValidator() ?? $parameter['validator'],
+                    !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [
                     'type' => $parameterType,
-                    'description' => $parameter['description'],
+                    'description' => $override?->getDescription() ?: $parameter['description'],
                 ];
             }
 
@@ -116,7 +159,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($utopia, $route, $httpMethod)
             ];
 
             if ($list) {
@@ -150,7 +193,7 @@ class Mapper
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
                         (array)$object,
-                        fn($key) => !\str_starts_with($key, '_'),
+                        fn ($key) => !\str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
 
@@ -165,7 +208,7 @@ class Mapper
             $fields['status'] = [
                 'type' => Type::string(),
                 'description' => 'Status',
-                'resolve' => static fn($object, $args, $context, $info) => 'OK',
+                'resolve' => static fn ($object, $args, $context, $info) => 'OK',
             ];
         }
 
@@ -188,7 +231,7 @@ class Mapper
             ];
 
             if (!$rule['required']) {
-                $fields[$escapedKey]['defaultValue'] = $rule['default'];
+                $fields[$escapedKey]['defaultValue'] = $rule['default'] ?? null;
             }
         }
 
@@ -205,7 +248,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -213,13 +256,13 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, \array_map($utopia->context()->get(...), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;
@@ -229,49 +272,57 @@ class Mapper
         }
 
         switch ((!empty($validator)) ? $validator::class : '') {
-            case 'Appwrite\Network\Validator\CNAME':
-            case 'Appwrite\Task\Validator\Cron':
-            case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Utopia\Validator\Domain':
-            case 'Appwrite\Network\Validator\Email':
-            case 'Appwrite\Event\Validator\Event':
-            case 'Utopia\Validator\HexColor':
-            case 'Utopia\Validator\Host':
-            case 'Utopia\Validator\IP':
-            case 'Utopia\Database\Validator\Key':
-            case 'Utopia\Validator\Origin':
-            case 'Appwrite\Auth\Validator\Password':
-            case 'Utopia\Validator\Text':
-            case 'Utopia\Database\Validator\UID':
-            case 'Utopia\Validator\URL':
-            case 'Utopia\Validator\WhiteList':
+            case \Appwrite\Auth\Validator\Password::class:
+            case \Appwrite\Event\Validator\Event::class:
+            case \Appwrite\Event\Validator\FunctionEvent::class:
+            case \Utopia\Emails\Validator\Email::class:
+            case \Appwrite\Network\Validator\Redirect::class:
+            case \Appwrite\Network\Validator\DNS::class:
+            case \Appwrite\Task\Validator\Cron::class:
+            case \Appwrite\Utopia\Database\Validator\CustomId::class:
+            case \Utopia\Database\Validator\Key::class:
+            case \Utopia\Database\Validator\UID::class:
+            case \Utopia\Validator\Domain::class:
+            case \Utopia\Validator\HexColor::class:
+            case \Utopia\Validator\Host::class:
+            case \Utopia\Validator\IP::class:
+            case \Appwrite\Network\Validator\Origin::class:
+            case \Utopia\Validator\Text::class:
+            case \Utopia\Validator\URL::class:
+            case \Utopia\Validator\WhiteList::class:
             default:
                 $type = Type::string();
                 break;
-            case 'Utopia\Database\Validator\Authorization':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Base':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Files':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
-            case 'Utopia\Database\Validator\Permissions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Appwrite\Utopia\Database\Validator\Queries':
-            case 'Utopia\Database\Validator\Roles':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Users':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
+            case \Appwrite\Utopia\Database\Validator\Queries\Attributes::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Buckets::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Projects::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Rules::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
+            case \Utopia\Database\Validator\Authorization::class:
+            case \Utopia\Database\Validator\Permissions::class:
+            case \Utopia\Database\Validator\Queries::class:
+            case \Utopia\Database\Validator\Queries\Documents::class:
+            case \Utopia\Database\Validator\Roles::class:
                 $type = Type::listOf(Type::string());
                 break;
-            case 'Utopia\Validator\Boolean':
+            case \Utopia\Validator\Boolean::class:
                 $type = Type::boolean();
                 break;
-            case 'Utopia\Validator\ArrayList':
+            case \Utopia\Validator\ArrayList::class:
                 $type = Type::listOf(self::param(
                     $utopia,
                     $validator->getValidator(),
@@ -279,21 +330,28 @@ class Mapper
                     $injections
                 ));
                 break;
-            case 'Utopia\Validator\Integer':
-            case 'Utopia\Validator\Numeric':
-            case 'Utopia\Validator\Range':
+            case \Utopia\Validator\Integer::class:
+            case \Utopia\Validator\Numeric::class:
                 $type = Type::int();
                 break;
-            case 'Utopia\Validator\FloatValidator':
+            case \Utopia\Validator\Range::class:
+                // Check if the Range validator is for float or integer
+                if ($validator instanceof \Utopia\Validator\Range && $validator->getType() === \Utopia\Validator\Range::TYPE_FLOAT) {
+                    $type = Type::float();
+                } else {
+                    $type = Type::int();
+                }
+                break;
+            case \Utopia\Validator\FloatValidator::class:
                 $type = Type::float();
                 break;
-            case 'Utopia\Validator\Assoc':
+            case \Utopia\Validator\Assoc::class:
                 $type = Types::assoc();
                 break;
-            case 'Utopia\Validator\JSON':
+            case \Utopia\Validator\JSON::class:
                 $type = Types::json();
                 break;
-            case 'Utopia\Storage\Validator\File':
+            case \Appwrite\Utopia\Request\Validator\File::class:
                 $type = Types::inputFile();
                 break;
         }
@@ -367,7 +425,7 @@ class Mapper
             'name' => $unionName,
             'types' => $types,
             'resolveType' => static function ($object) use ($unionName) {
-                return static::getUnionImplementation($unionName, $object);
+                return self::getUnionImplementation($unionName, $object);
             },
         ]);
 
@@ -382,37 +440,38 @@ class Mapper
 
         switch ($name) {
             case 'Attributes':
-                return static::getAttributeImplementation($object);
+                return self::getColumnImplementation($object);
+            case 'Columns':
+                return self::getColumnImplementation($object, true);
             case 'HashOptions':
-                return static::getHashOptionsImplementation($object);
+                return self::getHashOptionsImplementation($object);
         }
 
         throw new Exception('Unknown union type: ' . $name);
     }
 
-    private static function getAttributeImplementation(array $object): Type
+    private static function getColumnImplementation(array $object, bool $isColumns = false): Type
     {
-        switch ($object['type']) {
-            case 'string':
-                return match ($object['format'] ?? '') {
-                    'email' => static::model('AttributeEmail'),
-                    'url' => static::model('AttributeUrl'),
-                    'ip' => static::model('AttributeIp'),
-                    default => static::model('AttributeString'),
-                };
-            case 'integer':
-                return static::model('AttributeInteger');
-            case 'double':
-                return static::model('AttributeFloat');
-            case 'boolean':
-                return static::model('AttributeBoolean');
-            case 'datetime':
-                return static::model('AttributeDatetime');
-            case 'relationship':
-                return static::model('AttributeRelationship');
-        }
+        $prefix = $isColumns ? 'Column' : 'Attribute';
 
-        throw new Exception('Unknown attribute implementation');
+        return match ($object['type']) {
+            'string' => match ($object['format'] ?? '') {
+                'email' => static::model("{$prefix}Email"),
+                'url' => static::model("{$prefix}Url"),
+                'ip' => static::model("{$prefix}Ip"),
+                default => static::model("{$prefix}String"),
+            },
+            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
+            'integer' => static::model("{$prefix}Integer"),
+            'double' => static::model("{$prefix}Float"),
+            'boolean' => static::model("{$prefix}Boolean"),
+            'datetime' => static::model("{$prefix}Datetime"),
+            'relationship' => static::model("{$prefix}Relationship"),
+            'point' => static::model("{$prefix}Point"),
+            'linestring' => static::model("{$prefix}Line"),
+            'polygon' => static::model("{$prefix}Polygon"),
+            default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
+        };
     }
 
     private static function getHashOptionsImplementation(array $object): Type

@@ -2,209 +2,521 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
+use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
+use Utopia\System\System;
 
 trait FunctionsBase
 {
+    use Async;
+
     protected string $stdout = '';
     protected string $stderr = '';
 
-    protected function packageCode($folder)
+    /**
+     * Retry an API call on transient 401 auth errors.
+     * CI can intermittently fail API key lookups under load,
+     * especially on MongoDB when the database is recovering.
+     */
+    protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
     {
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $maxRetries = 10;
+        $response = null;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            // Refresh project credentials after several failed attempts
+            if ($attempt === 5) {
+                $project = $this->getProject(true);
+                $headers['x-appwrite-project'] = $project['$id'];
+                $headers['x-appwrite-key'] = $project['apiKey'];
+            }
+
+            $response = $this->client->call($method, $path, array_merge($headers), $params);
+
+            if ($response['headers']['status-code'] !== 401) {
+                return $response;
+            }
+
+            if ($attempt < $maxRetries) {
+                \sleep(\min($attempt, 3));
+            }
+        }
+
+        return $response;
     }
 
-    // /**
-    //  * @depends testCreateTeam
-    //  */
-    // public function testGetTeam($data):array
-    // {
-    //     $id = $data['teamUid'] ?? '';
+    protected function setupFunction(mixed $params): string
+    {
+        $function = $this->callWithAuthRetry(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $params);
 
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams/'.$id, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        $this->assertEquals(201, $function['headers']['status-code'], 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Arsenal', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+        $functionId = $function['body']['$id'];
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
+        return $functionId;
+    }
 
-    //      return [];
-    // }
+    protected function setupDeployment(string $functionId, mixed $params): string
+    {
+        $deployment = $this->callWithAuthRetry(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $params);
+        $this->assertEquals(202, $deployment['headers']['status-code'], 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        $deploymentId = $deployment['body']['$id'] ?? '';
 
-    // /**
-    //  * @depends testCreateTeam
-    //  */
-    // public function testListTeams($data):array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertNotEquals(401, $deployment['headers']['status-code'], 'Auth failed while polling deployment status');
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(3, $response['body']['teams']);
+            $status = $deployment['body']['status'] ?? '';
+            if ($status === 'failed') {
+                throw new Critical('Deployment build failed: ' . ($deployment['body']['buildLogs'] ?? 'no logs'));
+            }
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'limit' => 2,
-    //     ]);
+            $this->assertEquals('ready', $status, 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 120000, 500);
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(2, $response['body']['teams']);
+        // Not === so multipart/form-data works fine too
+        if (($params['activate'] ?? false) == true) {
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'offset' => 1,
-    //     ]);
+                if (
+                    ($function['body']['deploymentId'] ?? '') !== $deploymentId
+                    && ($function['body']['latestDeploymentId'] ?? '') === $deploymentId
+                    && ($function['body']['latestDeploymentStatus'] ?? '') === 'ready'
+                ) {
+                    $activation = $this->updateFunctionDeployment($functionId, $deploymentId);
+                    $this->assertContains(
+                        $activation['headers']['status-code'],
+                        [200, 409],
+                        'Deployment activation request failed: ' . json_encode($activation['body'], JSON_PRETTY_PRINT)
+                    );
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(2, $response['body']['teams']);
+                    if ($activation['headers']['status-code'] === 200) {
+                        $function = $activation;
+                    }
+                }
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'search' => 'Manchester',
-    //     ]);
+                $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(1, $response['body']['teams']);
-    //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
+                $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'queries' => [
+                        Query::equal('deploymentResourceId', [$functionId])->toString(),
+                        Query::equal('trigger', ['manual'])->toString(),
+                        Query::equal('type', ['deployment'])->toString(),
+                        Query::equal('deploymentVcsProviderBranch', [''])->toString(),
+                    ],
+                ]);
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'search' => 'United',
-    //     ]);
+                $this->assertSame(200, $rules['headers']['status-code'], 'Failed to list function domains: ' . json_encode($rules['body'], JSON_PRETTY_PRINT));
+                foreach ($rules['body']['rules'] as $rule) {
+                    $this->assertSame($deploymentId, $rule['deploymentId'] ?? '', 'Function domain is not activated, rule: ' . json_encode($rule, JSON_PRETTY_PRINT));
+                }
+            }, 120000, 500);
+        }
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertGreaterThan(0, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertCount(1, $response['body']['teams']);
-    //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
+        return $deploymentId;
+    }
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
+    protected function cleanupFunction(string $functionId): void
+    {
+        $maxRetries = 3;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
 
-    //      return [];
-    // }
+            if ($function['headers']['status-code'] === 204) {
+                return;
+            }
 
-    // public function testUpdateTeam():array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo'
-    //     ]);
+            if ($i < $maxRetries - 1) {
+                \usleep(500000);
+            }
+        }
 
-    //     $this->assertEquals(201, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertEquals(204, $function['headers']['status-code']);
+    }
 
-    //     $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo New'
-    //     ]);
+    protected function createFunction(mixed $params): mixed
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo New', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+        return $function;
+    }
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
-    //     $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //     ]);
+    protected function updateFunction(string $functionId, mixed $params): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $this->assertEquals(400, $response['headers']['status-code']);
+        return $function;
+    }
 
-    //     return [];
-    // }
+    protected function createVariable(string $functionId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    // public function testDeleteTeam():array
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'name' => 'Demo'
-    //     ]);
+        return $variable;
+    }
 
-    //     $teamUid = $response['body']['$id'];
+    protected function getVariable(string $functionId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $this->assertEquals(201, $response['headers']['status-code']);
-    //     $this->assertNotEmpty($response['body']['$id']);
-    //     $this->assertEquals('Demo', $response['body']['name']);
-    //     $this->assertGreaterThan(-1, $response['body']['total']);
-    //     $this->assertIsInt($response['body']['total']);
-    //     $this->assertIsInt($response['body']['dateCreated']);
+        return $variable;
+    }
 
-    //     $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+    protected function updateVariable(string $functionId, string $variableId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $this->assertEquals(204, $response['headers']['status-code']);
-    //     $this->assertEmpty($response['body']);
+        return $variable;
+    }
 
-    //     /**
-    //      * Test for FAILURE
-    //      */
-    //     $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
+    protected function listVariables(string $functionId, mixed $params = []): mixed
+    {
+        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
-    //     $this->assertEquals(404, $response['headers']['status-code']);
+        return $variables;
+    }
 
-    //     return [];
-    // }
+    protected function deleteVariable(string $functionId, string $variableId): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $variable;
+    }
+
+    protected function getFunction(string $functionId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $function;
+    }
+
+    protected function getDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
+
+    protected function getExecution(string $functionId, $executionId): mixed
+    {
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $execution;
+    }
+
+    protected function listFunctions(mixed $params = []): mixed
+    {
+        $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $functions;
+    }
+
+    protected function listDeployments(string $functionId, $params = []): mixed
+    {
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployments;
+    }
+
+    protected function listExecutions(string $functionId, mixed $params = []): mixed
+    {
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $executions;
+    }
+
+    protected function packageFunction(string $function): CURLFile
+    {
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $tarPath = "$folderPath/code.tar.gz";
+
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+
+        if (filesize($tarPath) > 1024 * 1024 * 5) {
+            throw new \Exception('Code package is too large. Use the chunked upload method instead.');
+        }
+
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+    }
+
+    protected function createDeployment(string $functionId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
+    protected function deleteDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        return $deployment;
+    }
+
+    protected function createTemplateDeployment(string $functionId, mixed $params = []): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/template', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $deployment;
+    }
+
+    protected function getTemplate(string $templateId)
+    {
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/' . $templateId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        return $template;
+    }
+
+    protected function helperGetLatestCommit(string $owner, string $repository): ?string
+    {
+        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: Appwrite',
+            'Accept: application/vnd.github.v3+json'
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($httpCode === 200) {
+            $commitData = json_decode($response, true);
+            if (isset($commitData['sha'])) {
+                return $commitData['sha'];
+            }
+        }
+
+        return null;
+    }
+
+    protected function createExecution(string $functionId, mixed $params = []): mixed
+    {
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $execution;
+    }
+
+    protected function deleteFunction(string $functionId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $function;
+    }
+
+    protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
+    {
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
+        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $subdomain . '.' . $functionsDomain,
+            'functionId' => $functionId,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $this->assertNotEmpty($rule['body']['domain']);
+
+        $domain = $rule['body']['domain'];
+
+        return $domain;
+    }
+
+    protected function getFunctionDomain(string $functionId): string
+    {
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('deploymentResourceId', [$functionId])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
+                Query::equal('type', ['deployment'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $rules['body']['total']);
+        $this->assertGreaterThanOrEqual(1, \count($rules['body']['rules']));
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        return $domain;
+    }
+
+    protected function getDeploymentDownload(string $functionId, string $deploymentId, string $type): mixed
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => $type
+        ]);
+
+        return $response;
+    }
+
+    protected function setupDuplicateDeployment(string $functionId, string $deploymentId): string
+    {
+        $deployment = $this->createDuplicateDeployment($functionId, $deploymentId);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $function = $this->getFunction($functionId);
+            $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        return $deploymentId;
+    }
+
+    protected function createDuplicateDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/duplicate', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId,
+        ]);
+
+        return $deployment;
+    }
+
+    protected function updateFunctionDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'deploymentId' => $deploymentId
+        ]);
+
+        return $function;
+    }
+
+    protected function cancelDeployment(string $functionId, string $deploymentId): mixed
+    {
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $deployment;
+    }
+
+    protected function listSpecifications(array $params = []): mixed
+    {
+        $specifications = $this->client->call(Client::METHOD_GET, '/functions/specifications', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $specifications;
+    }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
+    }
 }
