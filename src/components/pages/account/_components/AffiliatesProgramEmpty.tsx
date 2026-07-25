@@ -72,7 +72,7 @@ export function AffiliatesProgramEmpty() {
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-6 py-10 sm:px-10 sm:py-12">
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
             <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
