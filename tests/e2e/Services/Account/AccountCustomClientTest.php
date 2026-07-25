@@ -3120,7 +3120,7 @@ final class AccountCustomClientTest extends Scope
         ], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/account/sessions/oauth2/' . $provider . '/redirect?', $response['headers']['location']);
+        $this->assertStringContainsString('/account/sessions/oauth2/' . $provider . '/redirect?', (string) $response['headers']['location']);
 
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
@@ -3141,7 +3141,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertIsArray($error);
         $this->assertArrayHasKey('message', $error);
         $this->assertArrayHasKey('type', $error);
-        $this->assertStringContainsString('access_denied', $error['message']);
+        $this->assertStringContainsString('access_denied', (string) $error['message']);
     }
 
     /**
