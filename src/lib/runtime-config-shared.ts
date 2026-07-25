@@ -16,7 +16,6 @@ export interface RuntimeConfig {
   growthEndpoint: string
   stripePublishableKey: string
   sentryDsn: string
-  instrumentationScriptSrc: string
   plausibleScriptSrc: string
   /** Override for the profile's userVerification feature ('' = profile default). */
   userVerification: string
@@ -99,7 +98,6 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     growthEndpoint: read('VITE_GROWTH_ENDPOINT'),
     stripePublishableKey: read('VITE_STRIPE_PUBLISHABLE_KEY'),
     sentryDsn: read('VITE_SENTRY_DSN'),
-    instrumentationScriptSrc: read('VITE_INSTRUMENTATION_SCRIPT_SRC'),
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
   }

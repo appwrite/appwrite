@@ -66,11 +66,6 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Sentry error reporting',
   },
   {
-    key: 'VITE_INSTRUMENTATION_SCRIPT_SRC',
-    group: 'Runtime',
-    description: 'Instrumentation script URL',
-  },
-  {
     key: 'VITE_PLAUSIBLE_SCRIPT_SRC',
     group: 'Runtime',
     description:
@@ -198,9 +193,6 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_GROWTH_ENDPOINT: isNonEmpty(config.growthEndpoint),
     VITE_STRIPE_PUBLISHABLE_KEY: isNonEmpty(config.stripePublishableKey),
     VITE_SENTRY_DSN: isNonEmpty(config.sentryDsn),
-    VITE_INSTRUMENTATION_SCRIPT_SRC: isNonEmpty(
-      config.instrumentationScriptSrc,
-    ),
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
   }

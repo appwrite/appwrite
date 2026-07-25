@@ -15,8 +15,6 @@ module.exports = {
         APPWRITE_ENDPOINT: process.env.APPWRITE_ENDPOINT,
         APPWRITE_PROJECT_ID: process.env.APPWRITE_PROJECT_ID,
         APPWRITE_API_KEY: process.env.APPWRITE_API_KEY,
-        VITE_INSTRUMENTATION_SCRIPT_SRC:
-          process.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
         DISABLE_HMR: 'true',
       },
     },
@@ -34,8 +32,6 @@ module.exports = {
         APPWRITE_ENDPOINT: process.env.APPWRITE_ENDPOINT,
         APPWRITE_PROJECT_ID: process.env.APPWRITE_PROJECT_ID,
         APPWRITE_API_KEY: process.env.APPWRITE_API_KEY,
-        VITE_INSTRUMENTATION_SCRIPT_SRC:
-          process.env.VITE_INSTRUMENTATION_SCRIPT_SRC,
       },
     },
   ],
