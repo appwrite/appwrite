@@ -4,12 +4,19 @@ namespace Tests\E2E\Services\Videos;
 
 use Tests\E2E\Client;
 
+/**
+ * Helpers for building extra users and teams inside the test project, used by
+ * the Videos access-control suite.
+ */
 trait VideosPermissionsScope
 {
+    /** @var array<string, array> */
     public array $users = [];
+
+    /** @var array<string, array> */
     public array $teams = [];
 
-    public function createUser(string $id, string $email, string $password = 'test123!'): array
+    public function createUser(string $id, string $email, string $password = 'password123!'): array
     {
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
@@ -18,7 +25,7 @@ trait VideosPermissionsScope
         ], [
             'userId' => $id,
             'email' => $email,
-            'password' => $password
+            'password' => $password,
         ]);
 
         $this->assertEquals(201, $user['headers']['status-code']);
@@ -32,17 +39,19 @@ trait VideosPermissionsScope
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $this->assertEquals(201, $session['headers']['status-code']);
 
-
-        $user = [
+        // Client::call() parses Set-Cookie for us; this trait used to call a
+        // Client::parseCookie() helper that no longer exists.
+        $created = [
             '$id' => $user['body']['$id'],
             'email' => $user['body']['email'],
-            'session' => $session,
+            'session' => $session['cookies']['a_session_' . $this->getProject()['$id']] ?? '',
         ];
-        $this->users[$id] = $user;
 
-        return $user;
+        $this->users[$id] = $created;
+
+        return $created;
     }
 
     public function getCreatedUser(string $id): array
@@ -50,12 +59,26 @@ trait VideosPermissionsScope
         return $this->users[$id] ?? [];
     }
 
+    /**
+     * Headers authenticating as a user created by createUser().
+     */
+    public function getUserHeaders(string $id): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . ($this->getCreatedUser($id)['session'] ?? ''),
+        ];
+    }
+
     public function createTeam(string $id, string $name): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', $this->getServerHeader(), [
             'teamId' => $id,
-            'name' => $name
+            'name' => $name,
         ]);
+
         $this->teams[$id] = $team['body'];
 
         return $team['body'];
@@ -67,12 +90,12 @@ trait VideosPermissionsScope
             'teamId' => $team,
             'email' => $this->getCreatedUser($user)['email'],
             'roles' => $roles,
-            'url' => 'http://localhost:5000/join-us#title'
+            'url' => 'http://localhost:5000/join-us#title',
         ]);
 
         return [
             'user' => $membership['body']['userId'],
-            'membership' => $membership['body']['$id']
+            'membership' => $membership['body']['$id'],
         ];
     }
 
@@ -81,7 +104,7 @@ trait VideosPermissionsScope
         return [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
     }
 }

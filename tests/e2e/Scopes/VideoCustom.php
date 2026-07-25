@@ -3,127 +3,196 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
+/**
+ * Fixtures shared by the Videos e2e suites: a bucket, a source video file and a
+ * subtitle file.
+ *
+ * Each is uploaded once per test class and cached statically — the video is the
+ * 23 MB `large-file.mp4` fixture and has to be chunk-uploaded, so re-uploading
+ * per test would dominate the suite runtime.
+ */
 trait VideoCustom
 {
     use ProjectCustom;
 
-    /**
-     * @var array
-     */
-    protected static $bucket = [];
-    protected static $video = [];
-    protected static $subtitle = [];
+    protected static array $videoBucket = [];
+    protected static array $videoFile = [];
+    protected static array $subtitleFile = [];
 
     /**
-     * @return array
+     * Bucket holding the source media, readable by anyone so the client-side
+     * suite can exercise access with a plain session.
      */
-    public function getBucket(): array
+    public function getVideoBucket(): array
     {
-        if (!empty(self::$bucket)) {
-            return self::$bucket;
+        if (!empty(self::$videoBucket)) {
+            return self::$videoBucket;
         }
 
-        $_bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => 'unique()',
-            'name' => 'My Video bucket ',
-                'permissions' => [
-                    Permission::read(Role::user($this->getUser()['$id'])),
-                    Permission::create(Role::user($this->getUser()['$id'])),
-                    Permission::update(Role::user($this->getUser()['$id'])),
-                    Permission::delete(Role::user($this->getUser()['$id'])),
+            'name' => 'Videos source bucket',
+            'fileSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
-        self::$bucket = [
-            '$id' => $_bucket['body']['$id'],
-        ];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
 
-        return self::$bucket;
+        self::$videoBucket = ['$id' => $bucket['body']['$id']];
+
+        return self::$videoBucket;
     }
 
     /**
-     * @return array
+     * Chunk-uploads the source video. Mirrors the pattern in
+     * `tests/e2e/Services/Storage/StorageBase.php`.
      */
-    public function getVideo(): array
+    public function getVideoFile(): array
     {
-
-        if (!empty(self::$video)) {
-            return self::$video;
+        if (!empty(self::$videoFile)) {
+            return self::$videoFile;
         }
 
-        $source = __DIR__ . "/../../resources/disk-a/video-srt.mp4";
-        $totalSize = \filesize($source);
+        $file = $this->uploadVideoTo($this->getVideoBucket()['$id']);
+
+        self::$videoFile = [
+            '$id' => $file['$id'],
+            'sizeOriginal' => $file['sizeOriginal'],
+        ];
+
+        return self::$videoFile;
+    }
+
+    /**
+     * Chunk-uploads the source video into an arbitrary bucket, so tests can put
+     * one in a bucket with different permissions.
+     *
+     * @param array<string> $permissions file-level permissions, when the bucket
+     *                                   has fileSecurity enabled
+     * @param array<string, string>|null $auth overrides the suite's auth headers,
+     *                                         needed to upload into a bucket the
+     *                                         current side cannot write to
+     */
+    public function uploadVideoTo(string $bucketId, array $permissions = [], ?array $auth = null): array
+    {
+        $source = __DIR__ . '/../../resources/disk-a/large-file.mp4';
         $chunkSize = 5 * 1024 * 1024;
-        $handle = @fopen($source, "rb");
-        $fileId = 'unique()';
-        $mimeType = mime_content_type($source);
+        $size = \filesize($source);
+        $mimeType = \mime_content_type($source);
+        $handle = @\fopen($source, 'rb');
         $counter = 0;
-        $size = filesize($source);
+        $id = '';
+        $file = null;
+
         $headers = [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ];
-        $id = '';
 
-        while (!feof($handle)) {
-            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'video-srt.mp4');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        while (!\feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min((($counter * $chunkSize) + $chunkSize) - 1, $size - 1) . '/' . $size;
 
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
 
-            $_file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getBucket()['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
-                'fileId' => $fileId,
+            $params = [
+                'fileId' => $counter === 0 ? 'unique()' : $id,
                 'file' => $curlFile,
+            ];
 
-            ]);
+            if (!empty($permissions)) {
+                $params['permissions'] = $permissions;
+            }
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $auth ?? $this->getHeaders()), $params);
+
             $counter++;
-            $id = $_file['body']['$id'];
+            $id = $file['body']['$id'] ?? '';
         }
-        @fclose($handle);
 
-        self::$video = [
-            '$id' => $_file['body']['$id'],
+        @\fclose($handle);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('video/mp4', $file['body']['mimeType']);
+
+        return [
+            '$id' => $file['body']['$id'],
+            'sizeOriginal' => $file['body']['sizeOriginal'],
         ];
-
-        return self::$video;
     }
 
     /**
-     * @return array
+     * Uploads the SubRip fixture. Sent as `text/plain`, which is what the mime
+     * detector reports for `.srt`.
      */
-    public function getSubtitle(): array
+    public function getSubtitleFile(): array
     {
-
-        if (!empty(self::$subtitle)) {
-            return self::$subtitle;
+        if (!empty(self::$subtitleFile)) {
+            return self::$subtitleFile;
         }
 
-        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getBucket()['$id'] . '/files', array_merge([
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-srt.srt');
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
-            'file' => new \CURLFile(realpath(__DIR__ . '/../../resources/disk-a//../../resources/disk-a/video-srt.srt'), 'text/plain', 'video-srt.srt'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'file' => new \CURLFile($source, 'text/plain', 'video-srt.srt'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
         ]);
 
+        $this->assertEquals(201, $file['headers']['status-code']);
 
-        self::$subtitle = [
-            '$id' => $res['body']['$id'],
-        ];
+        self::$subtitleFile = ['$id' => $file['body']['$id']];
 
-        return self::$subtitle;
+        return self::$subtitleFile;
+    }
+
+    /**
+     * Polls a rendition until it leaves the queue-side states.
+     *
+     * The videos worker currently stubs transcoding and settles every rendition
+     * on `error`, so this asserts only that a terminal state is reached — it
+     * stays correct once real encoding lands and renditions settle on `ready`.
+     */
+    public function waitForRenditionTerminalState(string $videoId, string $renditionId, int $timeout = 30): array
+    {
+        $pending = ['waiting', 'started', 'ended', 'uploading'];
+        $deadline = \time() + $timeout;
+        $body = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $body = $response['body'];
+
+            if (!\in_array($body['status'] ?? '', $pending, true)) {
+                return $body;
+            }
+
+            \usleep(500000);
+        }
+
+        return $body;
     }
 }

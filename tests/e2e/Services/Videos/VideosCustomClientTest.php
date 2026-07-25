@@ -2,449 +2,199 @@
 
 namespace Tests\E2E\Services\Videos;
 
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectCustom;
-use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\VideoCustom;
-use Tests\E2E\Services\Videos\VideosPermissionsScope;
-use Utopia\Database\Helpers\ID;
 
+/**
+ * Client-side access control for the Videos API.
+ *
+ * Server-side behaviour lives in VideosCustomServerTest; this suite only covers
+ * what changes when the caller is a session (or nobody at all).
+ */
 class VideosCustomClientTest extends Scope
 {
     use ProjectCustom;
-    use VideoCustom;
     use SideClient;
+    use VideoCustom;
     use VideosPermissionsScope;
 
-    private array $outputs = ['hls', 'dash'];
-
-    public function testDeleteProfiles()
+    private function sessionHeaders(): array
     {
-
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
+        return \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals(3, $response['body']['total']);
-
-        $profiles = $response['body']['profiles'];
-        foreach ($profiles as $profile) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $profile['$id'], [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-            $this->assertEquals(204, $response['headers']['status-code']);
-        }
-
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profile['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Video profile not found.', $response['body']['message']);
+        ], $this->getHeaders());
     }
 
-    public function testTranscodeWithSubs()
+    private function serverHeaders(): array
     {
-        /**
-         * Create video
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/videos', [
+        return [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'bucketId' => $this->getBucket()['$id'],
-            'fileId' => $this->getVideo()['$id']
-        ]);
+        ];
+    }
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-        $videoId = $response['body']['$id'];
-
-        $email = ID::unique() . '@localhost.test';
-        $password = 'password';
-        $user2 = $this->createUser('user2', $email, $password);
-
-        $file = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
-        ]);
-
-        $this->assertEquals($file['headers']['status-code'], 401);
-
-
-        /**
-         * Create preview
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+    /**
+     * Regression test: `videos.read` used to be granted to the guests role,
+     * which let an unauthenticated caller past the scope guard and into
+     * listVideos — and that endpoint reads with authorization skipped, because
+     * video documents are project-internal and carry no permissions of their
+     * own. The result was anonymous enumeration of every video in a project.
+     *
+     * Guests must now be rejected before any handler runs.
+     */
+    public function testGuestsCannotReachVideos(): void
+    {
+        $anonymous = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'second' => 'one',
-        ]);
-        $this->assertEquals(400, $response['headers']['status-code']);
+        ];
 
-        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'second' => 99999999,
-        ]);
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $paths = [
+            '/videos',
+            '/videos/profiles',
+            '/videos/someVideoId',
+            '/videos/someVideoId/timeline',
+            '/videos/someVideoId/subtitles',
+            '/videos/someVideoId/renditions',
+            '/videos/someVideoId/outputs/hls/master.m3u8',
+        ];
 
-        sleep(5);
+        foreach ($paths as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $anonymous);
 
-        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'second' => 10,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(92810, $response['body']['duration']);
-        /**
-         * timeline vtt
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/timeline', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(25, count($match[0]));
-
-        /**
-         * timeline preview image
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
-        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
-
-        sleep(3);
-
-        /**
-         * timeline preview image (response from cache)
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-         ]);
-        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
-        $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-
-        $previewId = $response['body']['previewId'];
-
-        /**
-         * preview image
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
-        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
-
-
-        sleep(4);
-
-        /**
-         * response from cache
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
-        $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
-
-
-        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'second' => 15,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-        sleep(4);
-
-        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'width' => 300,
-            'height' => 100,
-            'output' => 'png',
-        ]);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
-
-        /**
-         * Create subtitles
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'bucketId' => $this->getBucket()['$id'],
-            'fileId' => $this->getSubtitle()['$id'],
-            'name' => 'English',
-            'code' => 'Eng',
-            'default' => true,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'bucketId' => $this->getBucket()['$id'],
-            'fileId' => $this->getSubtitle()['$id'],
-            'name' => 'Italian',
-            'code' => 'Ita',
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-        /**
-         * Create profiles
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'name' => 'Profile A',
-            'videoBitRate' => 770,
-            'audioBitRate' => 64,
-            'width' => 600,
-            'height' => 400,
-        ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'name' => 'Profile B',
-            'videoBitRate' => 570,
-            'audioBitRate' => 64,
-            'width' => 300,
-            'height' => 200,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-        $this->assertNotEmpty($response['body']['profiles']);
-        $profiles = $response['body']['profiles'];
-
-        foreach ($profiles as $index => $profile) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], [
-                'output' => $this->outputs[$index % 2],
-                'profileId' => $profile['$id'],
-            ]);
-
-            $this->assertEquals(204, $response['headers']['status-code']);
+            $this->assertEquals(401, $response['headers']['status-code'], $path . ' is reachable by guests');
+            $this->assertEquals('general_unauthorized_scope', $response['body']['type'], $path);
         }
-        sleep(30);
+    }
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', array_merge([
+    public function testGuestsCannotWriteVideos(): void
+    {
+        $anonymous = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos', $anonymous, [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $anonymous, [
+            'name' => 'guest',
+            'videoBitRate' => 1000,
+            'audioBitRate' => 64,
+            'width' => 640,
+            'height' => 360,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    /**
+     * A session holds videos.read, and the fixture bucket is readable by anyone,
+     * so the source-file check in Base::assertFileAccess() passes.
+     */
+    public function testSessionCanReadVideo(): string
+    {
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(4, count($match[0]));
-        $renditionUri = $match[0][0];
-        $subtitleUri  = $match[0][1];
+        $this->assertEquals($videoId, $response['body']['$id']);
 
-        $response = $this->client->call(Client::METHOD_GET, $renditionUri, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                ], $this->getHeaders()));
+        return $videoId;
+    }
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(10, count($match[0]));
+    /**
+     * Video access is derived from the source bucket/file, not from the video
+     * document — video rows are project-internal and carry no permissions of
+     * their own. A video whose bucket grants the caller nothing must therefore
+     * be unreadable, even though the row itself is perfectly readable.
+     */
+    public function testSessionCannotReadVideoInRestrictedBucket(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'Private videos bucket',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
 
-        $segmentUri = $match[0][0];
-        $response = $this->client->call(Client::METHOD_GET, $segmentUri, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        // An API key bypasses the bucket ACL, so the video is created fine.
+        // The session used by this suite cannot write there, hence the override.
+        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, strlen($response['body']));
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $bucket['body']['$id'],
+            'fileId' => $file['$id'],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_GET, $subtitleUri, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $segmentUri = $match[0][0];
-
-        $response = $this->client->call(Client::METHOD_GET, $segmentUri, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1508, strlen($response['body']));
-
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $xml = simplexml_load_string($response['body']);
-
-        $this->assertEquals("PT1M32.7S", $xml->attributes()->mediaPresentationDuration);
-        $this->assertEquals("PT10.0S", $xml->attributes()->maxSegmentDuration);
-        $this->assertEquals("PT20.0S", $xml->attributes()->minBufferTime);
-        $subsCount = 0;
-        $isVideo = false;
-        $isAudio = false;
-        $subs[] = ['id' => '2', 'lang' => 'English',];
-        $subs[] = ['id' => '3', 'lang' => 'Italian',];
-        foreach ($xml->Period->AdaptationSet as $adaptation) {
-            if ((string)$adaptation['contentType'] === 'video') {
-                $isVideo = true;
-                $this->assertEquals("50/1", $adaptation['frameRate']);
-                $this->assertEquals("300", $adaptation['maxWidth']);
-                $this->assertEquals("30:17", $adaptation['par']);
-                $this->assertEquals("und", $adaptation['lang']);
-                foreach ($adaptation->Representation as $representation) {
-                    $this->assertEquals("video/mp4", $representation['mimeType']);
-                    $this->assertEquals("avc1.640015", $representation['codecs']);
-                    $this->assertEquals("300", $representation['width']);
-                    $this->assertEquals("200", $representation['height']);
-                    $this->assertEquals("20:17", $representation['sar']);
-                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
-                    $videoSegmentBaseUrl = (string)$representation->BaseURL;
-                    $videoSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
-                    $videoSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
-
-                    $response = $this->client->call(Client::METHOD_GET, $videoSegmentBaseUrl . $videoSegmentInitialization, [
-                        'content-type' => 'application/json',
-                        'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders());
-
-                    $this->assertEquals(200, $response['headers']['status-code']);
-                    $this->assertGreaterThan(0, strlen($response['body']));
-
-                    $response = $this->client->call(Client::METHOD_GET, $videoSegmentBaseUrl . $videoSegmentId, [
-                        'content-type' => 'application/json',
-                        'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders());
-
-                    $this->assertEquals(200, $response['headers']['status-code']);
-                    $this->assertGreaterThan(0, strlen($response['body']));
-                }
-            } elseif ((string)$adaptation['contentType'] === 'audio') {
-                $isAudio = true;
-                foreach ($adaptation->Representation as $representation) {
-                    $this->assertEquals("audio/mp4", $representation['mimeType']);
-                    $this->assertEquals("mp4a.40.2", $representation['codecs']);
-                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
-                    $audioSegmentBaseUrl = (string)$representation->BaseURL;
-                    $audioSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
-                    $audioSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
-
-                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentInitialization, array_merge([
-                        'content-type' => 'application/json',
-                        'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders()));
-
-                    $this->assertEquals(200, $response['headers']['status-code']);
-                    $this->assertGreaterThan(0, strlen($response['body']));
-
-                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentId, array_merge([
-                        'content-type' => 'application/json',
-                        'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders()));
-
-                    $this->assertEquals(200, $response['headers']['status-code']);
-                    $this->assertGreaterThan(0, strlen($response['body']));
-                }
-            } elseif ((string)$adaptation['mimeType'] === 'text/vtt') {
-                $this->assertEquals($subs[$subsCount]['id'], $adaptation['id']);
-                $this->assertEquals($subs[$subsCount]['lang'], $adaptation['lang']);
-                $subsCount++;
-            }
+        // The session is not granted anything by that bucket.
+        foreach ([
+            '/videos/' . $videoId,
+            '/videos/' . $videoId . '/subtitles',
+            '/videos/' . $videoId . '/renditions',
+            '/videos/' . $videoId . '/timeline',
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->sessionHeaders());
+            $this->assertEquals(401, $response['headers']['status-code'], $path . ' leaked a video from a private bucket');
         }
+    }
 
-        $this->assertEquals($subsCount, 2);
-        $this->assertTrue($isVideo);
-        $this->assertTrue($isAudio);
+    /**
+     * Documents current behaviour: a session can manage project-wide encoding
+     * profiles, because `videos.write` is granted to the users role and the
+     * profile routes are gated on that single scope.
+     *
+     * Note the mismatch — the profile endpoints declare
+     * `auth: [AuthType::ADMIN, AuthType::KEY]`, so the generated client SDKs do
+     * not expose them, yet the HTTP endpoints accept a session. Profiles are
+     * project configuration rather than user content, so the storage analogy
+     * (`buckets.write` is admin-only while `files.write` is not) argues for
+     * splitting the scope. Left as-is deliberately: tightening it is a product
+     * decision, not a test fix.
+     */
+    public function testSessionCanManageProfiles(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', $this->sessionHeaders(), [
+            'name' => 'from-session',
+            'videoBitRate' => 1000,
+            'audioBitRate' => 64,
+            'width' => 640,
+            'height' => 360,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $response['body']['$id'], $this->sessionHeaders());
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    /**
+     * A session may read profiles, since a player needs to know the ladder.
+     */
+    public function testSessionCanReadProfiles(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->sessionHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
     }
 }
