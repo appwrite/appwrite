@@ -183,7 +183,7 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     id: 'contribute',
     title: 'Star us on GitHub',
     description: 'A star helps more developers discover Appwrite.',
-    href: 'https://github.com/appwrite/appwrite',
+    href: 'https://github.com/appwrite/appwrite/stargazers',
     external: true,
     icon: GitHubBrandIcon,
   },
