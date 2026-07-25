@@ -85,7 +85,7 @@ Http::get('/v1/graphql')
             $query['variables'] = \json_decode($variables, true);
         }
 
-        $output = execute($schema, $promiseAdapter, $query);
+        $output = runGraphQL($schema, $promiseAdapter, $query);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -136,7 +136,7 @@ Http::post('/v1/graphql/mutation')
             $query = parseMultipart($query, $request);
         }
 
-        $output = execute($schema, $promiseAdapter, $query);
+        $output = runGraphQL($schema, $promiseAdapter, $query);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -187,7 +187,7 @@ Http::post('/v1/graphql')
             $query = parseMultipart($query, $request);
         }
 
-        $output = execute($schema, $promiseAdapter, $query);
+        $output = runGraphQL($schema, $promiseAdapter, $query);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -203,7 +203,7 @@ Http::post('/v1/graphql')
  * @return array
  * @throws Exception
  */
-function execute(
+function runGraphQL(
     GQLSchema $schema,
     Adapter $promiseAdapter,
     array $query
