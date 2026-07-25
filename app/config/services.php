@@ -403,7 +403,12 @@ return [
         'docs' => false,
         'docsUrl' => '',
         'tests' => true,
-        'optional' => true,
+        // Not optional yet: `optional` services are surfaced in the project
+        // response and the per-project service toggle, whose serviceId enum is
+        // generated into the SDKs. Flipping this on before the SDK ships a
+        // `videos` ProjectServiceId makes the generated client reject the
+        // project payload. Revisit together with `sdk => true`.
+        'optional' => false,
         'icon' => '/images/services/storage.png',
         'platforms' => ['client', 'server', 'console'],
     ],
