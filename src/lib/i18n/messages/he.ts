@@ -165,6 +165,7 @@ export const heCatalog: EnCatalog = {
           education: 'חינוך',
           partners: 'שותפים',
           enterprise: 'אנטרפרייז',
+          affiliates: 'אפיליאייטס',
         },
         about: {
           ...enCatalog.app.footer.expanded.about,

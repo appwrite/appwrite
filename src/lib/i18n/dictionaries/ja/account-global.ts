@@ -43,8 +43,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'アフィリエイトプログラムでは、招待した人が Appwrite に参加して Pro にアップグレードすると報酬を受け取れます。リンクを作成して始めましょう。',
   'Time after signup during which a Pro upgrade still counts for you':
     '登録後、Pro へのアップグレードがあなたに紐付く期間',
-  'When a referred user upgrades to Pro, you receive $10 in organization credits.':
-    '紹介したユーザーが Pro にアップグレードすると、$10 の Organization クレジットを受け取れます。',
+  'When a referred user upgrades to Pro, you receive $15 in organization credits.':
+    '紹介したユーザーが Pro にアップグレードすると、$15 の Organization クレジットを受け取れます。',
   'All links': 'すべてのリンク',
   'Attribution window': 'アトリビューション期間',
   Attributed: 'アトリビューション日',
@@ -65,8 +65,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     '共有可能な招待リンクを作成します。リンク ID が紹介コードになります。',
   'Create or join an organization you own to claim credits.':
     'クレジットを受け取るには、所有する Organization を作成するか参加してください。',
-  'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
-    '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $10 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $15 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
   'Create your first invite link to start referring users.':
     '最初の招待リンクを作成してユーザーの紹介を始めましょう。',
   'Credits claimed for organization': 'Organization 向けにクレジットを受け取りました',

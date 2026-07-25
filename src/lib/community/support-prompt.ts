@@ -201,7 +201,7 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     description:
       'Publish blogs, videos, or tutorials that help developers discover Appwrite.',
     href: '/community',
-    external: false,
+    external: true,
     icon: FileText,
   },
   {
@@ -209,8 +209,8 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     title: 'Join the Affiliates program',
     description:
       'Share invite links and earn credits when developers upgrade to Pro.',
-    href: '/account/affiliates',
-    external: false,
+    href: '/affiliates',
+    external: true,
     icon: Gift,
   },
   {
@@ -218,7 +218,7 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     title: 'Build integrations',
     description: 'Connect Appwrite to the tools your stack already uses.',
     href: '/integrations',
-    external: false,
+    external: true,
     icon: Blocks,
   },
 ]

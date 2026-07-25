@@ -49,8 +49,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'תוכנית האפיליאייטס מתגמלת אתכם כשאנשים שהזמנתם מצטרפים ל-Appwrite ומשדרגים ל-Pro. צרו קישור כדי להתחיל.',
   'Time after signup during which a Pro upgrade still counts for you':
     'הזמן אחרי ההרשמה שבו שדרוג ל-Pro עדיין נספר לזכותכם',
-  'When a referred user upgrades to Pro, you receive $10 in organization credits.':
-    'כשמשתמש מופנה משדרג ל-Pro, אתם מקבלים $10 בקרדיטים לארגון.',
+  'When a referred user upgrades to Pro, you receive $15 in organization credits.':
+    'כשמשתמש מופנה משדרג ל-Pro, אתם מקבלים $15 בקרדיטים לארגון.',
   'All links': 'כל הקישורים',
   'Attribution window': 'חלון ייחוס',
   Attributed: 'יוחס',
@@ -71,8 +71,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'צרו קישור הזמנה לשיתוף. מזהה הקישור הוא קוד ההפניה שלכם.',
   'Create or join an organization you own to claim credits.':
     'צרו או הצטרפו לארגון שבבעלותכם כדי לממש קרדיטים.',
-  'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
-    'צרו קישורים לשיתוף והרוויחו $10 בקרדיטים כשמשתמש מופנה משדרג ל-Pro. הייחוס תקף ל-180 ימים.',
+  'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    'צרו קישורים לשיתוף והרוויחו $15 בקרדיטים כשמשתמש מופנה משדרג ל-Pro. הייחוס תקף ל-180 ימים.',
   'Credits claimed for organization': 'הקרדיטים מומשו עבור הארגון',
   '1 pending reward': 'תגמול ממתין אחד',
   'Credits earned from converted referrals. Claim pending rewards to an organization you own.':

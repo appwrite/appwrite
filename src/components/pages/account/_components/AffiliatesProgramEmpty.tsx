@@ -39,7 +39,7 @@ const PROGRAM_STEPS = [
     icon: Sparkles,
     title: 'Earn Pro credits',
     description:
-      'When a referred user upgrades to Pro, you receive $10 in organization credits.',
+      'When a referred user upgrades to Pro, you receive $15 in organization credits.',
   },
 ] as const
 

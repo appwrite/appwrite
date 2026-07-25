@@ -320,7 +320,7 @@ export function AffiliatesOverview({
             </h3>
             <p className="mt-2 text-[13px] text-muted-foreground max-w-xl">
               {t(
-                'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.',
+                'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.',
               )}
             </p>
           </div>

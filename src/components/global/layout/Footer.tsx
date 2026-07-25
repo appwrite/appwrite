@@ -178,6 +178,11 @@ function getExpandedFooterGroups(
         href: getMarketingPageUrl('/enterprise', marketing),
         external: isMarketingPageExternal(marketing),
       },
+      {
+        label: footerCopy.expanded.programs.affiliates,
+        href: getMarketingPageUrl('/affiliates', marketing),
+        external: isMarketingPageExternal(marketing),
+      },
     ],
   },
   {

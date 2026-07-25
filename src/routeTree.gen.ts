@@ -49,6 +49,7 @@ import { Route as MarketingCompanyRouteImport } from './routes/_marketing/compan
 import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
+import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
@@ -544,6 +545,11 @@ const MarketingBaaRoute = MarketingBaaRouteImport.update({
 const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
   id: '/assets',
   path: '/assets',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
   getParentRoute: () => MarketingRoute,
 } as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
@@ -2506,6 +2512,7 @@ export interface FileRoutesByFullPath {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/affiliates': typeof MarketingAffiliatesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -2841,6 +2848,7 @@ export interface FileRoutesByTo {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/affiliates': typeof MarketingAffiliatesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -3143,6 +3151,7 @@ export interface FileRoutesById {
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_marketing/affiliates': typeof MarketingAffiliatesRoute
   '/_marketing/assets': typeof MarketingAssetsRoute
   '/_marketing/baa': typeof MarketingBaaRoute
   '/_marketing/community': typeof MarketingCommunityRoute
@@ -3482,6 +3491,7 @@ export interface FileRouteTypes {
     | '/sign-out'
     | '/sign-up'
     | '/verify-email'
+    | '/affiliates'
     | '/assets'
     | '/baa'
     | '/community'
@@ -3817,6 +3827,7 @@ export interface FileRouteTypes {
     | '/sign-out'
     | '/sign-up'
     | '/verify-email'
+    | '/affiliates'
     | '/assets'
     | '/baa'
     | '/community'
@@ -4118,6 +4129,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-out'
     | '/_auth/sign-up'
     | '/_auth/verify-email'
+    | '/_marketing/affiliates'
     | '/_marketing/assets'
     | '/_marketing/baa'
     | '/_marketing/community'
@@ -4748,6 +4760,13 @@ declare module '@tanstack/react-router' {
       path: '/assets'
       fullPath: '/assets'
       preLoaderRoute: typeof MarketingAssetsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/affiliates': {
+      id: '/_marketing/affiliates'
+      path: '/affiliates'
+      fullPath: '/affiliates'
+      preLoaderRoute: typeof MarketingAffiliatesRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_auth/verify-email': {
@@ -6879,6 +6898,7 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface MarketingRouteChildren {
+  MarketingAffiliatesRoute: typeof MarketingAffiliatesRoute
   MarketingAssetsRoute: typeof MarketingAssetsRoute
   MarketingBaaRoute: typeof MarketingBaaRoute
   MarketingCommunityRoute: typeof MarketingCommunityRoute
@@ -6910,6 +6930,7 @@ interface MarketingRouteChildren {
 }
 
 const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingAffiliatesRoute: MarketingAffiliatesRoute,
   MarketingAssetsRoute: MarketingAssetsRoute,
   MarketingBaaRoute: MarketingBaaRoute,
   MarketingCommunityRoute: MarketingCommunityRoute,

@@ -29,7 +29,7 @@ export {
   isValidAffiliateLinkId,
 } from '@/lib/affiliates/invite-url'
 
-export const AFFILIATE_REWARD_AMOUNT_USD = 10
+export const AFFILIATE_REWARD_AMOUNT_USD = 15
 export const AFFILIATE_ATTRIBUTION_DAYS = 180
 
 export const AFFILIATE_METRICS = {

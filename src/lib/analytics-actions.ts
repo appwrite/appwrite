@@ -53,6 +53,7 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
 
   // Pricing page CTAs

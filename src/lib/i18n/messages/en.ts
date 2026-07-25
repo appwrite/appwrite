@@ -146,6 +146,7 @@ export const enCatalog = {
           education: 'Education',
           partners: 'Partners',
           enterprise: 'Enterprise',
+          affiliates: 'Affiliates',
         },
         about: {
           company: 'Company',
