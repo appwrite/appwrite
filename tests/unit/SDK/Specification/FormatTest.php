@@ -603,3 +603,371 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
     }
 }
+
+class TestOpenAPI3 extends OpenAPI3
+{
+    public function __construct(array $keys = [])
+    {
+        parent::__construct(new Container(), [], [], [], $keys, 0, 'console');
+    }
+
+    public function exposeBuildBaseStructure(): array
+    {
+        return $this->buildBaseStructure();
+    }
+
+    public function exposeBuildModelProperty(string $name, array $rule): array
+    {
+        return $this->buildModelProperty($name, $rule);
+    }
+
+    /**
+     * @return array{schema: array, consumes: string|null}
+     */
+    public function exposeBuildParameterNode(string $name, array $param, Method $sdk): array
+    {
+        $result = $this->buildParameterNode($name, $param, $sdk);
+        return [
+            'schema' => $result['node']['schema'],
+            'consumes' => $result['consumes'],
+        ];
+    }
+
+    public function exposeProcessResponses(Method $sdk, string $produces, array &$temp, array &$usedModels): void
+    {
+        $this->processResponses($sdk, $produces, $temp, $usedModels);
+    }
+
+    public function exposeProcessSecurity(Method $sdk, array &$temp): void
+    {
+        $this->processSecurity($sdk, $temp);
+    }
+
+    public function exposeBuildRequest(array &$methodTemp, array $parameterDataList, string $method, string $consumes): void
+    {
+        $this->buildRequest($methodTemp, $parameterDataList, $method, $consumes);
+    }
+}
+
+final class OpenAPI3Test extends TestCase
+{
+    private TestOpenAPI3 $openApi;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $this->openApi = new TestOpenAPI3();
+    }
+
+    public function testBuildBaseStructureContainsExpectedKeys(): void
+    {
+        $structure = $this->openApi->exposeBuildBaseStructure();
+
+        $this->assertArrayHasKey('openapi', $structure);
+        $this->assertSame('3.0.0', $structure['openapi']);
+        $this->assertArrayHasKey('info', $structure);
+        $this->assertArrayHasKey('paths', $structure);
+        $this->assertArrayHasKey('tags', $structure);
+        $this->assertArrayHasKey('components', $structure);
+        $this->assertArrayHasKey('externalDocs', $structure);
+        $this->assertArrayHasKey('schemas', $structure['components']);
+        $this->assertArrayHasKey('securitySchemes', $structure['components']);
+    }
+
+    public function testBuildBaseStructureDemoInjection(): void
+    {
+        $structure = $this->openApi->exposeBuildBaseStructure();
+
+        $this->assertEmpty($structure['components']['securitySchemes']);
+    }
+
+    public function testBuildModelPropertyStringType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('name', [
+            'type' => 'string',
+            'description' => 'The name.',
+        ]);
+
+        $this->assertSame('string', $property['type']);
+        $this->assertSame('The name.', $property['description']);
+        $this->assertArrayNotHasKey('items', $property);
+        $this->assertArrayNotHasKey('enum', $property);
+    }
+
+    public function testBuildModelPropertyIntegerType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('count', [
+            'type' => 'integer',
+            'format' => 'int64',
+            'description' => 'The count.',
+        ]);
+
+        $this->assertSame('integer', $property['type']);
+        $this->assertSame('int64', $property['format']);
+    }
+
+    public function testBuildModelPropertyBooleanType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('enabled', [
+            'type' => 'boolean',
+            'description' => 'Is enabled.',
+        ]);
+
+        $this->assertSame('boolean', $property['type']);
+    }
+
+    public function testBuildModelPropertyArrayType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('tags', [
+            'type' => 'array',
+            'description' => 'List of tags.',
+            'example' => ['a', 'b'],
+        ]);
+
+        $this->assertSame('array', $property['type']);
+        $this->assertArrayHasKey('items', $property);
+    }
+
+    public function testBuildModelPropertyEnumType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('status', [
+            'type' => 'enum',
+            'description' => 'Status.',
+            'enum' => ['active', 'inactive', 'pending'],
+            'enumSDKName' => 'StatusType',
+        ]);
+
+        $this->assertSame('string', $property['type']);
+        $this->assertSame(['active', 'inactive', 'pending'], $property['enum']);
+        $this->assertSame('StatusType', $property['x-enum-name']);
+    }
+
+    public function testBuildModelPropertyJsonType(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('options', [
+            'type' => 'json',
+            'description' => 'JSON options.',
+        ]);
+
+        $this->assertSame('object', $property['type']);
+        $this->assertTrue($property['additionalProperties']);
+        $this->assertArrayNotHasKey('nullable', $property);
+    }
+
+    public function testBuildModelPropertyWithArrayRef(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('items', [
+            'type' => 'Document',
+            'array' => true,
+            'description' => 'List of documents.',
+        ]);
+
+        $this->assertSame('array', $property['type']);
+        $this->assertSame(['$ref' => '#/components/schemas/Document'], $property['items']);
+    }
+
+    public function testBuildModelPropertyWithObjectRef(): void
+    {
+        $property = $this->openApi->exposeBuildModelProperty('prefs', [
+            'type' => 'Preferences',
+            'array' => false,
+            'description' => 'User preferences.',
+        ]);
+
+        $this->assertSame('object', $property['type']);
+        $this->assertCount(1, $property['allOf']);
+        $this->assertSame(
+            ['$ref' => '#/components/schemas/Preferences'],
+            $property['allOf'][0]
+        );
+    }
+
+    public function testBuildModelPropertyNullable(): void
+    {
+        $this->markTestSkipped('Nullable is applied in buildModelSchema, not buildModelProperty');
+    }
+
+    public function testBuildParameterNodeTextValidator(): void
+    {
+        $route = (new Route('POST', '/v1/tests'))
+            ->param('name', '', new Text(128), 'Name.');
+
+        $result = $this->openApi->exposeBuildParameterNode(
+            'name',
+            $route->getParams()['name'],
+            new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ),
+        );
+
+        $this->assertSame('string', $result['schema']['type']);
+        $this->assertNull($result['consumes']);
+    }
+
+    public function testBuildParameterNodeBooleanValidator(): void
+    {
+        $route = (new Route('POST', '/v1/tests'))
+            ->param('enabled', false, new \Utopia\Validator\Boolean(), 'Enabled.', true);
+
+        $result = $this->openApi->exposeBuildParameterNode(
+            'enabled',
+            $route->getParams()['enabled'],
+            new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ),
+        );
+
+        $this->assertSame('boolean', $result['schema']['type']);
+        $this->assertFalse($result['schema']['x-example']);
+    }
+
+    public function testBuildParameterNodeIntegerValidator(): void
+    {
+        $route = (new Route('POST', '/v1/tests'))
+            ->param('count', 0, new \Utopia\Validator\Integer(), 'Count.');
+
+        $result = $this->openApi->exposeBuildParameterNode(
+            'count',
+            $route->getParams()['count'],
+            new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ),
+        );
+
+        $this->assertSame('integer', $result['schema']['type']);
+    }
+
+    public function testBuildParameterNodeCustomId(): void
+    {
+        $route = (new Route('POST', '/v1/tests'))
+            ->param('userId', '', new CustomId(), 'User ID.');
+
+        $result = $this->openApi->exposeBuildParameterNode(
+            'userId',
+            $route->getParams()['userId'],
+            new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ),
+        );
+
+        $this->assertSame('string', $result['schema']['type']);
+        $this->assertSame(
+            ['idGenerator' => 'ID.unique'],
+            $result['schema']['x-appwrite']
+        );
+    }
+
+    public function testBuildParameterNodeFileValidator(): void
+    {
+        $route = (new Route('POST', '/v1/tests'))
+            ->param('file', '', new \Appwrite\Utopia\Request\Validator\File(), 'File.');
+
+        $result = $this->openApi->exposeBuildParameterNode(
+            'file',
+            $route->getParams()['file'],
+            new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+            ),
+        );
+
+        $this->assertSame('string', $result['schema']['type']);
+        $this->assertSame('binary', $result['schema']['format']);
+        $this->assertSame('multipart/form-data', $result['consumes']);
+    }
+
+    public function testBuildRequestSplitsParamsByLocation(): void
+    {
+        $methodTemp = [
+            'parameters' => [],
+        ];
+
+        $parameterDataList = [
+            [
+                'name' => 'testId',
+                'config' => ['required' => true, 'nullable' => false, 'emitDefault' => false],
+                'node' => [
+                    'name' => 'testId',
+                    'description' => 'Test ID.',
+                    'required' => true,
+                    'schema' => ['type' => 'string'],
+                ],
+                'path' => true,
+            ],
+            [
+                'name' => 'limit',
+                'config' => ['required' => false, 'nullable' => false, 'emitDefault' => true],
+                'node' => [
+                    'name' => 'limit',
+                    'description' => 'Limit.',
+                    'required' => false,
+                    'schema' => ['type' => 'integer', 'default' => 25],
+                ],
+                'path' => false,
+            ],
+        ];
+
+        $this->openApi->exposeBuildRequest($methodTemp, $parameterDataList, 'GET', 'application/json');
+
+        $this->assertArrayNotHasKey('requestBody', $methodTemp);
+        $this->assertCount(2, $methodTemp['parameters']);
+        $this->assertSame('path', $methodTemp['parameters'][0]['in']);
+        $this->assertSame('query', $methodTemp['parameters'][1]['in']);
+    }
+
+    public function testBuildRequestBodyParamsInPost(): void
+    {
+        $methodTemp = [
+            'parameters' => [],
+        ];
+
+        $parameterDataList = [
+            [
+                'name' => 'name',
+                'config' => ['required' => true, 'nullable' => false, 'emitDefault' => false],
+                'node' => [
+                    'name' => 'name',
+                    'description' => 'Name.',
+                    'required' => true,
+                    'schema' => ['type' => 'string'],
+                ],
+                'path' => false,
+            ],
+        ];
+
+        $this->openApi->exposeBuildRequest($methodTemp, $parameterDataList, 'POST', 'application/json');
+
+        $this->assertArrayHasKey('requestBody', $methodTemp);
+        $this->assertSame(
+            'name',
+            $methodTemp['requestBody']['content']['application/json']['schema']['required'][0]
+        );
+    }
+}
