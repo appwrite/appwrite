@@ -148,11 +148,11 @@ function SignUpPage() {
     onSuccess: async () => {
       setLastLoginMethod('email')
       const account = await refreshConsoleAccountAfterAuth(queryClient)
-      await prefetchPostAuthDestination(queryClient, account, search.redirect)
-      await router.invalidate()
-
       const features = getActiveProfileFeatures()
-      if (features.userVerification) {
+
+      // Cloud requires a verified console account before org/project APIs work.
+      // Skip post-auth provisioning until after /verify-email; that page handles it.
+      if (features.userVerification && !account.emailVerification) {
         try {
           const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
           await sdk.forConsole.account.createEmailVerification({
@@ -174,24 +174,33 @@ function SignUpPage() {
         return
       }
 
-      // If we're headed to a specific destination (e.g. an OAuth2 consent/device
-      // flow), go straight there without provisioning a personal org/project.
-      const targetRedirect = resolvePostAuthRedirect(search.redirect)
-      if (targetRedirect) {
-        navigate(toRedirectNavigateOptions(targetRedirect))
-        return
-      }
-
-      // No verification: org was ensured during prefetchPostAuthDestination
       try {
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
+        await router.invalidate()
+
+        // If we're headed to a specific destination (e.g. an OAuth2 consent/device
+        // flow), go straight there without provisioning a personal org/project.
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate(toRedirectNavigateOptions(targetRedirect))
+          return
+        }
+
+        // Org was ensured during prefetchPostAuthDestination
         const orgId = await resolvePostAuthOrganizationId(account)
         navigate({
           to: '/organizations/$orgId',
           params: { orgId },
           replace: true,
         })
-      } catch {
-        navigate({ to: '/' })
+      } catch (error: unknown) {
+        console.error('Post sign-up navigation error:', error)
+        toast.error(
+          getErrorMessage(
+            error,
+            t('Account created but could not open the console'),
+          ),
+        )
       }
     },
     onError: async (error: unknown) => {

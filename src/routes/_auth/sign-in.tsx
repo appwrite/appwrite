@@ -18,6 +18,7 @@ import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
@@ -143,6 +144,20 @@ function SignInPage() {
       setLastLoginMethod('email')
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
+        const features = getActiveProfileFeatures()
+
+        // Cloud requires verification before org/project APIs; send unverified
+        // users to /verify-email instead of provisioning a personal org.
+        if (features.userVerification && !account.emailVerification) {
+          navigate({
+            to: '/verify-email',
+            search: search.redirect
+              ? { redirect: search.redirect }
+              : undefined,
+          })
+          return
+        }
+
         await prefetchPostAuthDestination(
           queryClient,
           account,

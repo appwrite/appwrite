@@ -564,6 +564,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'By clicking continue, you agree to our': '続行をクリックすると、次に同意したことになります:',
   'Signed in but could not open the console': 'サインインは完了しましたが、コンソールを開けませんでした',
   'Account created but verification email could not be sent': 'アカウントは作成されましたが、確認メールを送信できませんでした',
+  'Account created but could not open the console': 'アカウントは作成されましたが、コンソールを開けませんでした',
   'Verification link is invalid or has expired.': '確認リンクが無効か、有効期限が切れています。',
   'This password reset link is invalid or has expired. Please request a new one.': 'このパスワードリセットリンクは無効か、有効期限が切れています。新しいリンクをリクエストしてください。',
   'This authorization request is invalid or has expired.': 'この承認リクエストは無効か、有効期限が切れています。',

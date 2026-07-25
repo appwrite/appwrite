@@ -730,6 +730,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Failed to sign in': 'ההתחברות נכשלה',
   'Account created but verification email could not be sent':
     'החשבון נוצר אך לא ניתן היה לשלוח את אימייל האימות',
+  'Account created but could not open the console':
+    'החשבון נוצר אך לא ניתן היה לפתוח את הקונסולה',
   'Failed to sign up': 'ההרשמה נכשלה',
   'Recovery email sent': 'אימייל השחזור נשלח',
   'Failed to send recovery email': 'שליחת אימייל השחזור נכשלה',
