@@ -1499,7 +1499,30 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (
+        string $provider,
+        string $code,
+        string $state,
+        string $error,
+        string $error_description,
+        Request $request,
+        Response $response,
+        Document $project,
+        Validator $redirectValidator,
+        Document $devKey,
+        User $user,
+        Database $dbForProject,
+        GeoRecord $geoRecord,
+        Database $dbForPlatform,
+        Event $queueForEvents,
+        Store $store,
+        ProofsPassword $proofForPassword,
+        ProofsToken $proofForToken,
+        array $plan,
+        bool $domainVerification,
+        ?string $cookieDomain,
+        Authorization $authorization
+    ) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
