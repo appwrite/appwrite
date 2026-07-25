@@ -51,6 +51,7 @@ final class DeletesTest extends TestCase
                     $device,
                     $device,
                     $device,
+                    $device,
                     $certificates,
                     $project,
                 );

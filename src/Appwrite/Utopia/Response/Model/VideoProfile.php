@@ -12,39 +12,51 @@ class VideoProfile extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID.',
-                'default' => null,
+                'description' => 'Video profile ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Video profile creation time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Video profile update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Video profile name.',
-                'default' => null,
-                'example' => '360P',
+                'default' => '',
+                'example' => '360p',
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video bitrate.',
+                'description' => 'Target video bitrate in kilobits per second.',
                 'default' => 0,
-                'example' => 3050,
+                'example' => 890,
             ])
             ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Audio bitrate.',
+                'description' => 'Target audio bitrate in kilobits per second.',
                 'default' => 0,
                 'example' => 64,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video width.',
+                'description' => 'Target video width in pixels.',
                 'default' => 0,
-                'example' => 300,
+                'example' => 640,
             ])
             ->addRule('height', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video height.',
+                'description' => 'Target video height in pixels.',
                 'default' => 0,
-                'example' => 400,
+                'example' => 360,
             ])
         ;
     }
@@ -66,6 +78,6 @@ class VideoProfile extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_PROFILE;
+        return Response::MODEL_VIDEO_PROFILE;
     }
 }

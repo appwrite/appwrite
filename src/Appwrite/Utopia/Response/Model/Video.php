@@ -12,115 +12,137 @@ class Video extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID.',
+                'description' => 'Video ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Video creation time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Video update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('bucketId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Bucket ID.',
+                'description' => 'Storage bucket ID holding the source file.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('fileId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File ID.',
+                'description' => 'Source file ID.',
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
             ->addRule('previewId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File preview image ID.',
+                'description' => 'Preview image ID, taken from the sprite timeline.',
                 'default' => '',
                 'example' => 'd5fg5ehg56c168g5b',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'File size.',
+                'description' => 'Source file size in bytes.',
                 'default' => 0,
                 'example' => 23647142,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Format.',
+                'description' => 'Container format.',
                 'default' => '',
                 'example' => 'MPEG-4',
             ])
-            ->addRule('aspectRatio', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Aspect ratio .',
-                'default' => '',
-                'example' => '16:9',
-            ])
+            // Milliseconds, matching the VAR_INTEGER column the metadata probe writes.
             ->addRule('duration', [
-                'type' => self::TYPE_STRING,
-                'require' => false,
-                'description' => 'Video duration.',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video duration in milliseconds.',
                 'default' => 0,
-                'example' => 92.739989,
+                'example' => 92810,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,
-                'require' => false,
-                'description' => 'Video width.',
+                'description' => 'Video width in pixels.',
                 'default' => 0,
                 'example' => 960,
             ])
             ->addRule('height', [
                 'type' => self::TYPE_INTEGER,
-                'require' => false,
-                'description' => 'Video height.',
+                'description' => 'Video height in pixels.',
                 'default' => 0,
                 'example' => 544,
             ])
+            ->addRule('aspectRatio', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video aspect ratio.',
+                'default' => '',
+                'example' => '16:9',
+            ])
+            ->addRule('videoCodec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video codec.',
+                'default' => '',
+                'example' => 'h264',
+            ])
             ->addRule('videoFormat', [
                 'type' => self::TYPE_STRING,
-                'require' => false,
                 'description' => 'Video format.',
                 'default' => '',
                 'example' => 'AVC',
             ])
             ->addRule('videoFormatProfile', [
                 'type' => self::TYPE_STRING,
-                'require' => false,
                 'description' => 'Video format profile.',
                 'default' => '',
                 'example' => 'Baseline@L3.1',
             ])
-             ->addRule('videoBitRate', [
-            'type' => self::TYPE_INTEGER,
-            'require' => false,
-            'description' => 'Video bitrate.',
-            'default' => 0,
-            'example' => 564790,
-             ])
+            ->addRule('videoBitRate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video bitrate in bits per second.',
+                'default' => 0,
+                'example' => 564790,
+            ])
             ->addRule('videoFrameRate', [
                 'type' => self::TYPE_STRING,
-                'require' => false,
                 'description' => 'Video frame rate.',
-                'default' => 0,
-                'example' => '231947377/4638947',
+                'default' => '',
+                'example' => '25.000',
+            ])
+            ->addRule('videoFrameRateMode', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video frame rate mode.',
+                'default' => '',
+                'example' => 'CFR',
+            ])
+            ->addRule('audioCodec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Audio codec.',
+                'default' => '',
+                'example' => 'aac',
             ])
             ->addRule('audioFormat', [
                 'type' => self::TYPE_STRING,
-                'require' => false,
                 'description' => 'Audio format.',
                 'default' => '',
                 'example' => 'AAC',
             ])
             ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'require' => false,
-                'description' => 'Audio bitrate.',
+                'description' => 'Audio bitrate in bits per second.',
                 'default' => 0,
                 'example' => 127999,
             ])
+            // Stored as a string because mediainfo reports values such as "48.0 kHz".
             ->addRule('audioSampleRate', [
-                'type' => self::TYPE_INTEGER,
-                'require' => false,
+                'type' => self::TYPE_STRING,
                 'description' => 'Audio sample rate.',
-                'default' => '0',
-                'example' => '',
+                'default' => '',
+                'example' => '48000',
             ])
         ;
     }

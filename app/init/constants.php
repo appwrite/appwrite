@@ -80,6 +80,7 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Transcoded renditions, subtitles and sprite timelines
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -230,6 +231,9 @@ const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+// Must equal the `videos` collection id: the DELETE_TYPE_DOCUMENT branch of the
+// deletes worker dispatches on $document->getCollection().
+const DELETE_TYPE_VIDEOS = 'videos';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';

@@ -22,6 +22,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueu
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Notifications\Get as GetQueueNotifications;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsResources\Get as GetQueueStatsResources;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage\Get as GetQueueUsage;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Videos\Get as GetQueueVideos;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Webhooks\Get as GetQueueWebhooks;
 use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
@@ -59,6 +60,7 @@ class Http extends Service
         $this->addAction(GetQueueMigrations::getName(), new GetQueueMigrations());
         $this->addAction(GetQueueNotifications::getName(), new GetQueueNotifications());
         $this->addAction(GetQueueFunctions::getName(), new GetQueueFunctions());
+        $this->addAction(GetQueueVideos::getName(), new GetQueueVideos());
         $this->addAction(GetQueueStatsResources::getName(), new GetQueueStatsResources());
         $this->addAction(GetQueueUsage::getName(), new GetQueueUsage());
         $this->addAction(GetFailedJobs::getName(), new GetFailedJobs());

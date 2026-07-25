@@ -16,6 +16,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -129,6 +130,11 @@ $container->set('publisherForCertificates', fn (Publisher $publisher) => new Cer
 $container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForVideos', fn (Publisher $publisher) => new VideoPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_VIDEOS_QUEUE_NAME', Event::VIDEOS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(

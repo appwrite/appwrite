@@ -397,4 +397,14 @@ return [
         'description' => 'Access to create, update, and delete your project\'s presences',
         'category' => 'Presences',
     ],
+
+    // Videos
+    'videos.read' => [
+        'description' => 'Access to read your project\'s video content',
+        'category' => 'Videos',
+    ],
+    'videos.write' => [
+        'description' => 'Access to create, update, and delete your project\'s video content',
+        'category' => 'Videos',
+    ],
 ];

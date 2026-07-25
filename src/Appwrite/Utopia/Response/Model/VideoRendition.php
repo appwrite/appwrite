@@ -12,80 +12,99 @@ class VideoRendition extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID.',
-                'default' => null,
+                'description' => 'Rendition ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Rendition creation time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Rendition update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('videoId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Video ID.',
-                'default' => null,
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('profileId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'profile ID.',
-                'default' => null,
+                'description' => 'Video profile ID this rendition was encoded against.',
+                'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition name.',
-                'default' => null,
-                'example' => '720P',
+                'description' => 'Rendition name, derived from its dimensions and bitrate.',
+                'default' => '',
+                'example' => '1280X720@3679',
             ])
+            // VAR_DATETIME columns, filtered through the `datetime` filter.
             ->addRule('startedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Transcoding time started in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981220,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Transcoding start time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('endedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Transcoding time ended in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981290,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Transcoding end time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video width.',
+                'description' => 'Rendition width in pixels.',
                 'default' => 0,
-                'example' => 300,
+                'example' => 1280,
             ])
             ->addRule('height', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video height.',
+                'description' => 'Rendition height in pixels.',
                 'default' => 0,
-                'example' => 400,
+                'example' => 720,
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video bitrate.',
+                'description' => 'Video bitrate in kilobits per second.',
                 'default' => 0,
-                'example' => 3050,
+                'example' => 3551,
             ])
             ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Audio bitrate.',
+                'description' => 'Audio bitrate in kilobits per second.',
                 'default' => 0,
-                'example' => 64,
+                'example' => 128,
+            ])
+            ->addRule('targetDuration', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Longest segment duration in seconds.',
+                'default' => '',
+                'example' => '6',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition transcoding status',
-                'default' => null,
+                'description' => 'Transcoding status: one of `waiting`, `started`, `ended`, `uploading`, `ready` or `error`.',
+                'default' => '',
                 'example' => 'ready',
             ])
             ->addRule('progress', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition transcoding progress',
-                'default' => 0,
-                'example' => 88,
+                'description' => 'Transcoding progress as a percentage.',
+                'default' => '',
+                'example' => '88',
             ])
             ->addRule('output', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition output type',
-                'default' => null,
+                'description' => 'Streaming output format: either `hls` or `dash`.',
+                'default' => '',
                 'example' => 'hls',
             ])
         ;
@@ -108,6 +127,6 @@ class VideoRendition extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_RENDITION;
+        return Response::MODEL_VIDEO_RENDITION;
     }
 }
