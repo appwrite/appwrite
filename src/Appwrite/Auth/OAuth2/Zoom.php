@@ -41,12 +41,13 @@ class Zoom extends OAuth2
      */
     public function getLoginURL(): string
     {
+        $state = \array_merge($this->state, ['nonce' => \bin2hex(\random_bytes(16))]);
         return $this->endpoint . '/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state),
+            'state' => \json_encode($state),
         ]);
     }
 
