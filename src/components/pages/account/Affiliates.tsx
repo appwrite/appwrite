@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, Copy, Gift, Link2, Loader2, Plus, Trash2 } from 'lucide-react'
+import { Gift, Globe, Link2, Loader2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -39,21 +39,24 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  AFFILIATE_ATTRIBUTION_DAYS,
-  AFFILIATE_REWARD_AMOUNT_USD,
   affiliateLinksQueryOptions,
   buildAffiliateInviteUrl,
-  countriesQueryOptions,
   organizationsFullQueryOptions,
   useAffiliateLinks,
   useAffiliateReferrals,
   useAffiliateRewards,
-  useAffiliateUsage,
-  useClaimAffiliateReward,
+  useCountryLookups,
   useCreateAffiliateLink,
   useDeleteAffiliateLink,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import {
+  getCountryDisplayName,
+  normalizeCountryCode,
+} from '@/lib/locale/country-lookups'
+import { AffiliatesOverview } from './_components/AffiliatesOverview'
+import { AffiliatesProgramEmpty } from './_components/AffiliatesProgramEmpty'
+import { ClaimAffiliateReward } from './_components/ClaimAffiliateReward'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -64,8 +67,64 @@ export type AccountAffiliatesInitialData = {
   links?: Models.AffiliateLinkList
   referrals?: Models.AffiliateReferralList
   rewards?: Models.AffiliateRewardList
+  pendingRewards?: Models.AffiliateRewardList
   usage?: Models.UsageEventList
   organizations?: Models.Organization[]
+  /** Set by the route loader so first paint matches empty vs dashboard. */
+  isProgramEmpty?: boolean
+}
+
+const AFFILIATE_PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
+/** Enough links for referral/reward name lookup without paging the lookup itself. */
+const AFFILIATE_LINK_LOOKUP_LIMIT = 100
+
+function useAffiliateCardPagination(defaultPageSize = DEFAULT_PAGE_SIZE) {
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
+
+  const handlePageChange = useCallback((page: number) => {
+    setRequestedPage(page)
+  }, [])
+
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size)
+    setRequestedPage(1)
+    setDisplayedPage(1)
+  }, [])
+
+  return {
+    requestedPage,
+    displayedPage,
+    setDisplayedPage,
+    pageSize,
+    handlePageChange,
+    handlePageSizeChange,
+  }
+}
+
+function ReferralCountryFlag({ flagUrl }: { flagUrl: string | null }) {
+  const [failed, setFailed] = useState(false)
+
+  if (!flagUrl || failed) {
+    return (
+      <Globe
+        className="h-4 w-4 shrink-0 text-muted-foreground/60"
+        aria-hidden
+      />
+    )
+  }
+
+  return (
+    <img
+      src={flagUrl}
+      alt=""
+      className="h-4 w-4 shrink-0 rounded-sm border border-border/30 object-cover shadow-sm"
+      width={16}
+      height={16}
+      onError={() => setFailed(true)}
+    />
+  )
 }
 
 function referralStatusVariant(
@@ -94,85 +153,6 @@ function rewardStatusLabel(status: string, t: (text: string) => string) {
   if (status === 'claimed') return t('Claimed')
   if (status === 'pending') return t('Pending')
   return status
-}
-
-function OverviewCard({
-  initialUsage,
-}: {
-  initialUsage?: Models.UsageEventList
-}) {
-  const t = useT()
-  const { usage, clicks, signups, conversions, isLoading } = useAffiliateUsage()
-
-  const resolvedUsage = usage ?? initialUsage
-  const displayClicks = usage
-    ? clicks
-    : (resolvedUsage?.metrics
-        ?.find((m) => m.metric === 'affiliates.clicks')
-        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
-  const displaySignups = usage
-    ? signups
-    : (resolvedUsage?.metrics
-        ?.find((m) => m.metric === 'affiliates.signups')
-        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
-  const displayConversions = usage
-    ? conversions
-    : (resolvedUsage?.metrics
-        ?.find((m) => m.metric === 'affiliates.conversions')
-        ?.points?.reduce((sum, p) => sum + (p.value || 0), 0) ?? 0)
-
-  return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Affiliates program')}
-        </h3>
-        <p className="text-[13px] text-muted-foreground mt-2">
-          {t(
-            'Create shareable links and earn $10 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.',
-          )}
-        </p>
-      </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Clicks')}
-            </p>
-            <p className="mt-1 text-[22px] font-semibold text-foreground">
-              {isLoading && !resolvedUsage ? '…' : displayClicks}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Signups')}
-            </p>
-            <p className="mt-1 text-[22px] font-semibold text-foreground">
-              {isLoading && !resolvedUsage ? '…' : displaySignups}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Conversions')}
-            </p>
-            <p className="mt-1 text-[22px] font-semibold text-foreground">
-              {isLoading && !resolvedUsage ? '…' : displayConversions}
-            </p>
-          </div>
-        </div>
-        <ul className="list-disc pl-5 space-y-1 text-[13px] text-muted-foreground">
-          <li>
-            {t('Reward')}: {formatCurrency(AFFILIATE_REWARD_AMOUNT_USD)}
-          </li>
-          <li>
-            {t('Attribution window')}: {AFFILIATE_ATTRIBUTION_DAYS} {t('days')}
-          </li>
-          <li>{t('Qualifying plan')}: Pro</li>
-        </ul>
-      </div>
-    </div>
-  )
 }
 
 function CreateLinkDialog({
@@ -331,47 +311,59 @@ function LinksCard({
   initialData?: Models.AffiliateLinkList
 }) {
   const t = useT()
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const {
+    requestedPage,
+    displayedPage,
+    setDisplayedPage,
+    pageSize,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useAffiliateCardPagination()
   const [createOpen, setCreateOpen] = useState(false)
   const [linkToDelete, setLinkToDelete] = useState<Models.AffiliateLink | null>(
     null,
   )
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-
-  const requested = useAffiliateLinks(requestedPage - 1, DEFAULT_PAGE_SIZE)
-  const displayed = useAffiliateLinks(displayedPage - 1, DEFAULT_PAGE_SIZE)
+  const requested = useAffiliateLinks(requestedPage - 1, pageSize)
+  const displayed = useAffiliateLinks(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (
-      requestedPage !== displayedPage &&
-      !requested.isFetching &&
-      requested.links
-    ) {
+    if (requestedPage !== displayedPage && !requested.isFetching) {
       setDisplayedPage(requestedPage)
     }
-  }, [requestedPage, displayedPage, requested.isFetching, requested.links])
+  }, [
+    requestedPage,
+    displayedPage,
+    requested.isFetching,
+    setDisplayedPage,
+  ])
 
   const isFirstPage = displayedPage === 1
+  const matchesDefaultPageSize = pageSize === DEFAULT_PAGE_SIZE
   const links =
-    isFirstPage && initialData && displayed.links.length === 0
+    isFirstPage &&
+    matchesDefaultPageSize &&
+    initialData &&
+    displayed.links.length === 0
       ? initialData.links
       : displayed.links
   const total =
-    isFirstPage && initialData
+    isFirstPage && matchesDefaultPageSize && initialData
       ? displayed.total || initialData.total
       : displayed.total
 
-  const handleCopyInvite = async (linkId: string) => {
-    try {
-      await navigator.clipboard.writeText(buildAffiliateInviteUrl(linkId))
-      setCopiedId(linkId)
-      toast.success(t('Invite link copied'))
-      window.setTimeout(() => setCopiedId(null), 2000)
-    } catch {
-      toast.error(t('Failed to copy invite link'))
-    }
-  }
+  useEffect(() => {
+    if (total <= 0) return
+    const maxPage = Math.max(1, Math.ceil(total / pageSize))
+    if (requestedPage > maxPage) handlePageChange(maxPage)
+    if (displayedPage > maxPage) setDisplayedPage(maxPage)
+  }, [
+    total,
+    pageSize,
+    requestedPage,
+    displayedPage,
+    handlePageChange,
+    setDisplayedPage,
+  ])
 
   return (
     <>
@@ -398,11 +390,11 @@ function LinksCard({
           </Button>
         </div>
         <div className="border-t border-border" />
-        {displayed.isLoading && links.length === 0 ? (
+        {displayed.isLoading && links.length === 0 && total === 0 ? (
           <div className="px-6 py-10 text-center text-[13px] text-muted-foreground">
             {t('Loading links...')}
           </div>
-        ) : links.length === 0 ? (
+        ) : total === 0 ? (
           <div className="px-6 py-6">
             <EmptyState
               icon={Link2}
@@ -421,7 +413,7 @@ function LinksCard({
                     {t('Name')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Link ID')}
+                    {t('Invite link')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     {t('Status')}
@@ -429,58 +421,45 @@ function LinksCard({
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     {t('Created')}
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[160px]" />
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {links.map((link) => (
-                  <TableRow key={link.$id}>
-                    <TableCell className="px-4 py-3">
-                      <span className="text-[13px] font-medium">
-                        {link.name?.trim() || t('Untitled')}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <CopyableId
-                        id={link.$id}
-                        displayText={link.$id}
-                        variant="inline"
-                        size="sm"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge
-                        variant={
-                          link.status === 'active' ? 'success' : 'inactive'
-                        }
-                        className="text-[10px] shrink-0"
-                      >
-                        {link.status === 'active'
-                          ? t('Active')
-                          : t('Disabled')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip date={link.$createdAt} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          type="button"
+                {links.map((link) => {
+                  const inviteUrl = buildAffiliateInviteUrl(link.$id)
+                  return (
+                    <TableRow key={link.$id}>
+                      <TableCell className="px-4 py-3">
+                        <span className="text-[13px] font-medium">
+                          {link.name?.trim() || t('Untitled')}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 max-w-[min(420px,40vw)]">
+                        <CopyableId
+                          id={inviteUrl}
+                          displayText={inviteUrl}
+                          variant="inline"
                           size="sm"
-                          variant="outline"
-                          className="h-8 text-[12px]"
-                          onClick={() => handleCopyInvite(link.$id)}
-                          disabled={link.status !== 'active'}
-                          {...analyticsAttrs('copy-affiliate-link')}
+                          constrainToContainer
+                          copyToastLabel="Invite link"
+                        />
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <Badge
+                          variant={
+                            link.status === 'active' ? 'success' : 'inactive'
+                          }
+                          className="text-[10px] shrink-0"
                         >
-                          {copiedId === link.$id ? (
-                            <Check className="mr-1.5 h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="mr-1.5 h-3.5 w-3.5" />
-                          )}
-                          {t('Copy invite')}
-                        </Button>
+                          {link.status === 'active'
+                            ? t('Active')
+                            : t('Disabled')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <DateTooltip date={link.$createdAt} />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
                         <Button
                           type="button"
                           size="sm"
@@ -491,25 +470,24 @@ function LinksCard({
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
-            {total > DEFAULT_PAGE_SIZE ? (
-              <div className="border-t border-border px-4 py-3">
-                <Pagination
-                  currentPage={displayedPage}
-                  totalItems={total}
-                  pageSize={DEFAULT_PAGE_SIZE}
-                  onPageChange={setRequestedPage}
-                  onPageSizeChange={() => {}}
-                  showPageSizeSelector={false}
-                  itemLabel={t('links')}
-                />
-              </div>
-            ) : null}
+            <div className="border-t border-border px-4">
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={AFFILIATE_PAGE_SIZE_OPTIONS}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                itemLabel={t('links')}
+                scrollToTopOnPageChange={false}
+              />
+            </div>
           </>
         )}
       </div>
@@ -534,37 +512,57 @@ function ReferralsCard({
   links: Models.AffiliateLink[]
 }) {
   const t = useT()
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
-  const { data: countriesData } = useQuery(countriesQueryOptions())
+  const {
+    requestedPage,
+    displayedPage,
+    setDisplayedPage,
+    pageSize,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useAffiliateCardPagination()
+  const { lookups: countryLookups } = useCountryLookups()
 
-  const requested = useAffiliateReferrals(requestedPage - 1, DEFAULT_PAGE_SIZE)
-  const displayed = useAffiliateReferrals(displayedPage - 1, DEFAULT_PAGE_SIZE)
+  const requested = useAffiliateReferrals(requestedPage - 1, pageSize)
+  const displayed = useAffiliateReferrals(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (
-      requestedPage !== displayedPage &&
-      !requested.isFetching &&
-      requested.referrals
-    ) {
+    if (requestedPage !== displayedPage && !requested.isFetching) {
       setDisplayedPage(requestedPage)
     }
   }, [
     requestedPage,
     displayedPage,
     requested.isFetching,
-    requested.referrals,
+    setDisplayedPage,
   ])
 
   const isFirstPage = displayedPage === 1
+  const matchesDefaultPageSize = pageSize === DEFAULT_PAGE_SIZE
   const referrals =
-    isFirstPage && initialData && displayed.referrals.length === 0
+    isFirstPage &&
+    matchesDefaultPageSize &&
+    initialData &&
+    displayed.referrals.length === 0
       ? initialData.referrals
       : displayed.referrals
   const total =
-    isFirstPage && initialData
+    isFirstPage && matchesDefaultPageSize && initialData
       ? displayed.total || initialData.total
       : displayed.total
+
+  useEffect(() => {
+    if (total <= 0) return
+    const maxPage = Math.max(1, Math.ceil(total / pageSize))
+    if (requestedPage > maxPage) handlePageChange(maxPage)
+    if (displayedPage > maxPage) setDisplayedPage(maxPage)
+  }, [
+    total,
+    pageSize,
+    requestedPage,
+    displayedPage,
+    handlePageChange,
+    setDisplayedPage,
+  ])
 
   const linkNameById = useMemo(() => {
     const map = new Map<string, string>()
@@ -574,17 +572,10 @@ function ReferralsCard({
     return map
   }, [links])
 
-  const countryNameByCode = useMemo(() => {
-    const map = new Map<string, string>()
-    countriesData?.countries?.forEach((country) => {
-      map.set(country.code, country.name)
-    })
-    return map
-  }, [countriesData])
-
   const getCountryFlagUrl = (countryCode?: string) => {
-    if (!countryCode || countryCode === '--') return null
-    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    const code = normalizeCountryCode(countryCode)
+    if (!code) return null
+    return `${getBaseEndpoint()}/avatars/flags/${code.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
   return (
@@ -600,11 +591,11 @@ function ReferralsCard({
         </p>
       </div>
       <div className="border-t border-border" />
-      {displayed.isLoading && referrals.length === 0 ? (
+      {displayed.isLoading && referrals.length === 0 && total === 0 ? (
         <div className="px-6 py-10 text-center text-[13px] text-muted-foreground">
           {t('Loading referrals...')}
         </div>
-      ) : referrals.length === 0 ? (
+      ) : total === 0 ? (
         <div className="px-6 py-6">
           <EmptyState
             icon={Gift}
@@ -643,9 +634,10 @@ function ReferralsCard({
               {referrals.map((referral) => {
                 const flagUrl = getCountryFlagUrl(referral.referredUserCountry)
                 const countryLabel =
-                  countryNameByCode.get(referral.referredUserCountry) ||
-                  referral.referredUserCountry ||
-                  t('Unknown')
+                  getCountryDisplayName(
+                    referral.referredUserCountry,
+                    countryLookups,
+                  ) ?? t('Unknown')
 
                 return (
                   <TableRow key={referral.$id}>
@@ -656,15 +648,7 @@ function ReferralsCard({
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {flagUrl ? (
-                          <img
-                            src={flagUrl}
-                            alt=""
-                            className="h-3.5 w-5 rounded-[2px] object-cover"
-                            width={20}
-                            height={14}
-                          />
-                        ) : null}
+                        <ReferralCountryFlag flagUrl={flagUrl} />
                         <span className="text-[13px] text-muted-foreground">
                           {countryLabel}
                         </span>
@@ -694,122 +678,21 @@ function ReferralsCard({
               })}
             </TableBody>
           </Table>
-          {total > DEFAULT_PAGE_SIZE ? (
-            <div className="border-t border-border px-4 py-3">
-              <Pagination
-                currentPage={displayedPage}
-                totalItems={total}
-                pageSize={DEFAULT_PAGE_SIZE}
-                onPageChange={setRequestedPage}
-                onPageSizeChange={() => {}}
-                showPageSizeSelector={false}
-                itemLabel={t('referrals')}
-              />
-            </div>
-          ) : null}
+          <div className="border-t border-border px-4">
+            <Pagination
+              currentPage={displayedPage}
+              totalItems={total}
+              pageSize={pageSize}
+              pageSizeOptions={AFFILIATE_PAGE_SIZE_OPTIONS}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              itemLabel={t('referrals')}
+              scrollToTopOnPageChange={false}
+            />
+          </div>
         </>
       )}
     </div>
-  )
-}
-
-function ClaimRewardDialog({
-  reward,
-  open,
-  onOpenChange,
-  organizations,
-}: {
-  reward: Models.AffiliateReward | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  organizations: Models.Organization[]
-}) {
-  const t = useT()
-  const claimReward = useClaimAffiliateReward()
-  const [organizationId, setOrganizationId] = useState('')
-
-  useEffect(() => {
-    if (!open) {
-      setOrganizationId('')
-      return
-    }
-    if (organizations.length === 1) {
-      setOrganizationId(organizations[0]!.$id)
-    }
-  }, [open, organizations])
-
-  const handleClaim = async () => {
-    if (!reward || !organizationId) return
-    try {
-      await claimReward.mutateAsync({
-        rewardId: reward.$id,
-        organizationId,
-      })
-      toast.success(t('Credits claimed for organization'))
-      onOpenChange(false)
-    } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to claim credits')))
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>{t('Claim credits')}</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            {t(
-              'Choose an organization you own to receive these affiliate credits.',
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-        <div className="px-6 pb-4 pt-4 space-y-3">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Amount')}:{' '}
-            <span className="font-medium text-foreground">
-              {formatCurrency(reward?.amount ?? 0)}
-            </span>
-          </p>
-          <div className="space-y-2">
-            <label className="text-[13px] font-medium text-foreground">
-              {t('Organization')}
-            </label>
-            <Select value={organizationId} onValueChange={setOrganizationId}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder={t('Select organization')} />
-              </SelectTrigger>
-              <SelectContent>
-                {organizations.map((org) => (
-                  <SelectItem key={org.$id} value={org.$id}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={claimReward.isPending}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            disabled={!organizationId || claimReward.isPending}
-            onClick={handleClaim}
-            {...analyticsAttrs('claim-affiliate-reward')}
-          >
-            {claimReward.isPending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
-            {t('Claim credits')}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   )
 }
 
@@ -823,33 +706,58 @@ function RewardsCard({
   links: Models.AffiliateLink[]
 }) {
   const t = useT()
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const {
+    requestedPage,
+    displayedPage,
+    setDisplayedPage,
+    pageSize,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useAffiliateCardPagination()
   const [selectedReward, setSelectedReward] =
     useState<Models.AffiliateReward | null>(null)
 
-  const requested = useAffiliateRewards(requestedPage - 1, DEFAULT_PAGE_SIZE)
-  const displayed = useAffiliateRewards(displayedPage - 1, DEFAULT_PAGE_SIZE)
+  const requested = useAffiliateRewards(requestedPage - 1, pageSize)
+  const displayed = useAffiliateRewards(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (
-      requestedPage !== displayedPage &&
-      !requested.isFetching &&
-      requested.rewards
-    ) {
+    if (requestedPage !== displayedPage && !requested.isFetching) {
       setDisplayedPage(requestedPage)
     }
-  }, [requestedPage, displayedPage, requested.isFetching, requested.rewards])
+  }, [
+    requestedPage,
+    displayedPage,
+    requested.isFetching,
+    setDisplayedPage,
+  ])
 
   const isFirstPage = displayedPage === 1
+  const matchesDefaultPageSize = pageSize === DEFAULT_PAGE_SIZE
   const rewards =
-    isFirstPage && initialData && displayed.rewards.length === 0
+    isFirstPage &&
+    matchesDefaultPageSize &&
+    initialData &&
+    displayed.rewards.length === 0
       ? initialData.rewards
       : displayed.rewards
   const total =
-    isFirstPage && initialData
+    isFirstPage && matchesDefaultPageSize && initialData
       ? displayed.total || initialData.total
       : displayed.total
+
+  useEffect(() => {
+    if (total <= 0) return
+    const maxPage = Math.max(1, Math.ceil(total / pageSize))
+    if (requestedPage > maxPage) handlePageChange(maxPage)
+    if (displayedPage > maxPage) setDisplayedPage(maxPage)
+  }, [
+    total,
+    pageSize,
+    requestedPage,
+    displayedPage,
+    handlePageChange,
+    setDisplayedPage,
+  ])
 
   const orgNameById = useMemo(() => {
     const map = new Map<string, string>()
@@ -879,11 +787,11 @@ function RewardsCard({
           </p>
         </div>
         <div className="border-t border-border" />
-        {displayed.isLoading && rewards.length === 0 ? (
+        {displayed.isLoading && rewards.length === 0 && total === 0 ? (
           <div className="px-6 py-10 text-center text-[13px] text-muted-foreground">
             {t('Loading rewards...')}
           </div>
-        ) : rewards.length === 0 ? (
+        ) : total === 0 ? (
           <div className="px-6 py-6">
             <EmptyState
               icon={Gift}
@@ -966,24 +874,23 @@ function RewardsCard({
                 ))}
               </TableBody>
             </Table>
-            {total > DEFAULT_PAGE_SIZE ? (
-              <div className="border-t border-border px-4 py-3">
-                <Pagination
-                  currentPage={displayedPage}
-                  totalItems={total}
-                  pageSize={DEFAULT_PAGE_SIZE}
-                  onPageChange={setRequestedPage}
-                  onPageSizeChange={() => {}}
-                  showPageSizeSelector={false}
-                  itemLabel={t('rewards')}
-                />
-              </div>
-            ) : null}
+            <div className="border-t border-border px-4">
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={AFFILIATE_PAGE_SIZE_OPTIONS}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                itemLabel={t('rewards')}
+                scrollToTopOnPageChange={false}
+              />
+            </div>
           </>
         )}
       </div>
 
-      <ClaimRewardDialog
+      <ClaimAffiliateReward
         reward={selectedReward}
         open={!!selectedReward}
         onOpenChange={(open) => {
@@ -1000,17 +907,30 @@ export function AccountAffiliatesPage({
 }: {
   initialData?: AccountAffiliatesInitialData
 } = {}) {
-  const { data: linksData } = useQuery(affiliateLinksQueryOptions(0, DEFAULT_PAGE_SIZE))
-  const { data: organizationsFromQuery } = useQuery(
-    organizationsFullQueryOptions(),
+  const { data: linksPageData } = useQuery(
+    affiliateLinksQueryOptions(0, DEFAULT_PAGE_SIZE),
   )
+  const { data: linksLookupData } = useQuery({
+    ...affiliateLinksQueryOptions(0, AFFILIATE_LINK_LOOKUP_LIMIT),
+    enabled:
+      (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
+  })
+  const { data: organizationsFromQuery } = useQuery({
+    ...organizationsFullQueryOptions(),
+    enabled:
+      (linksPageData?.total ?? initialData?.links?.total ?? 0) > 0,
+  })
 
   const links =
-    linksData?.links ??
+    linksLookupData?.links ??
+    linksPageData?.links ??
     initialData?.links?.links ??
     []
   const organizations =
     organizationsFromQuery ?? initialData?.organizations ?? []
+
+  // Prefer live query total after create/delete; fall back to loader for first paint.
+  const totalLinks = linksPageData?.total ?? initialData?.links?.total
 
   const cards = useMemo<SettingsCardItem[]>(
     () => [
@@ -1028,9 +948,19 @@ export function AccountAffiliatesPage({
             'clicks',
             'signups',
             'conversions',
+            'funnel',
+            'analytics',
+            'chart',
           ],
         },
-        node: <OverviewCard initialUsage={initialData?.usage} />,
+        node: (
+          <AffiliatesOverview
+            initialUsage={initialData?.usage}
+            initialPendingRewards={initialData?.pendingRewards}
+            links={links}
+            organizations={organizations}
+          />
+        ),
       },
       {
         id: 'affiliates-links',
@@ -1072,11 +1002,21 @@ export function AccountAffiliatesPage({
       initialData?.links,
       initialData?.referrals,
       initialData?.rewards,
+      initialData?.pendingRewards,
       initialData?.usage,
       links,
       organizations,
     ],
   )
+
+  // Stay blank until loader (or cache) resolves so we never flash the wrong branch.
+  if (totalLinks === undefined) {
+    return null
+  }
+
+  if (totalLinks === 0) {
+    return <AffiliatesProgramEmpty />
+  }
 
   return <SettingsCardsList cards={cards} />
 }

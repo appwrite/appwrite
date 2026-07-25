@@ -21,6 +21,7 @@ import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
 import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
@@ -402,6 +403,11 @@ const LlmsTxtRoute = LlmsTxtRouteImport.update({
 const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   id: '/llms-full/txt',
   path: '/llms-full/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ILinkIdRoute = ILinkIdRouteImport.update({
+  id: '/i/$linkId',
+  path: '/i/$linkId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
@@ -2527,6 +2533,7 @@ export interface FileRoutesByFullPath {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -2860,6 +2867,7 @@ export interface FileRoutesByTo {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -3162,6 +3170,7 @@ export interface FileRoutesById {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_public/': typeof PublicIndexRoute
@@ -3500,6 +3509,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -3833,6 +3843,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -4134,6 +4145,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_public/'
@@ -4442,6 +4454,7 @@ export interface RootRouteChildren {
   GeneratorRoute: typeof GeneratorRouteWithChildren
   ApiHelloRoute: typeof ApiHelloRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
+  ILinkIdRoute: typeof ILinkIdRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
@@ -4539,6 +4552,13 @@ declare module '@tanstack/react-router' {
       path: '/llms-full/txt'
       fullPath: '/llms-full/txt'
       preLoaderRoute: typeof LlmsFullTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/i/$linkId': {
+      id: '/i/$linkId'
+      path: '/i/$linkId'
+      fullPath: '/i/$linkId'
+      preLoaderRoute: typeof ILinkIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generator/$generationId': {
@@ -8393,6 +8413,7 @@ const rootRouteChildren: RootRouteChildren = {
   GeneratorRoute: GeneratorRouteWithChildren,
   ApiHelloRoute: ApiHelloRoute,
   DomainsContinueRoute: DomainsContinueRoute,
+  ILinkIdRoute: ILinkIdRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,

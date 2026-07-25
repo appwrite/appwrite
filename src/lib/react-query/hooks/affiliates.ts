@@ -5,9 +5,29 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ID, Query, type Models } from '@appwrite.io/console'
-import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import { Query, type Models } from '@appwrite.io/console'
+import type { DateRange } from 'react-day-picker'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  fillChartPointsGaps,
+  type UsageChartPoint,
+} from '@/lib/usage/usage-events-common'
+import {
+  isUsageChartIntervalValidForRange,
+  resolveUsageChartIntervalForRange,
+} from '@/lib/usage/chart-interval'
+import {
+  getStableUsageChartDateRange,
+  resolveUsageDateBounds,
+} from '@/lib/usage/usage-date-range'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
+
+export {
+  buildAffiliateApiInviteUrl,
+  buildAffiliateInvitePath,
+  buildAffiliateInviteUrl,
+  isValidAffiliateLinkId,
+} from '@/lib/affiliates/invite-url'
 
 export const AFFILIATE_REWARD_AMOUNT_USD = 10
 export const AFFILIATE_ATTRIBUTION_DAYS = 180
@@ -18,10 +38,66 @@ export const AFFILIATE_METRICS = {
   conversions: 'affiliates.conversions',
 } as const
 
-/** Public invite URL that records a click, sets the attribution cookie, and redirects to signup. */
-export function buildAffiliateInviteUrl(linkId: string): string {
-  const endpoint = getApiEndpoint().replace(/\/$/, '')
-  return `${endpoint}/affiliates/invite/${encodeURIComponent(linkId)}`
+/** Affiliates usage API supports hourly and daily buckets only. */
+export const AFFILIATE_USAGE_INTERVALS = ['1h', '1d'] as const
+export type AffiliateUsageInterval = (typeof AFFILIATE_USAGE_INTERVALS)[number]
+
+export type AffiliateUsageQueryParams = {
+  linkId?: string
+  interval: AffiliateUsageInterval
+  startAt: string
+  endAt: string
+}
+
+export type AffiliateFunnelChartPoint = {
+  date: string
+  day: Date
+  clicks: number
+  signups: number
+  conversions: number
+}
+
+/**
+ * Default affiliates analytics window matches project usage charts:
+ * rolling last 24 hours at 1h buckets (session-stable via getStableUsageChartDateRange).
+ */
+export function getDefaultAffiliateUsageQueryParams(): AffiliateUsageQueryParams {
+  const dateRange = getStableUsageChartDateRange()
+  const interval = resolveAffiliateUsageInterval('1h', dateRange)
+  const { from, to } = resolveUsageDateBounds(dateRange)
+  return {
+    interval,
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+  }
+}
+
+export function resolveAffiliateUsageInterval(
+  interval: AffiliateUsageInterval,
+  dateRange: DateRange | undefined,
+): AffiliateUsageInterval {
+  const resolved = resolveUsageChartIntervalForRange(interval, dateRange)
+  if (resolved === '15m') {
+    return isUsageChartIntervalValidForRange('1h', dateRange) ? '1h' : '1d'
+  }
+  return resolved
+}
+
+/** Short codes for invite URLs (vs ~20-char ID.unique()). CustomId-safe: a-z A-Z 0-9. */
+const AFFILIATE_LINK_ID_LENGTH = 8
+const AFFILIATE_LINK_ID_ALPHABET =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+export function generateAffiliateLinkId(
+  length: number = AFFILIATE_LINK_ID_LENGTH,
+): string {
+  const bytes = new Uint8Array(length)
+  crypto.getRandomValues(bytes)
+  let id = ''
+  for (let i = 0; i < length; i++) {
+    id += AFFILIATE_LINK_ID_ALPHABET[bytes[i]! % AFFILIATE_LINK_ID_ALPHABET.length]!
+  }
+  return id
 }
 
 export async function fetchAffiliateLinks(
@@ -42,7 +118,7 @@ export async function createAffiliateLink(params: {
   name?: string
 }): Promise<Models.AffiliateLink> {
   return await sdk.forConsole.affiliates.createLink({
-    linkId: params.linkId?.trim() || ID.unique(),
+    linkId: params.linkId?.trim() || generateAffiliateLinkId(),
     name: params.name?.trim() || undefined,
   })
 }
@@ -77,6 +153,28 @@ export async function fetchAffiliateRewards(
   })
 }
 
+/** Pending rewards for overview totals / claim CTA (not the paginated Rewards table). */
+export const AFFILIATE_PENDING_REWARDS_LIMIT = 100
+
+export async function fetchPendingAffiliateRewards(
+  limit: number = AFFILIATE_PENDING_REWARDS_LIMIT,
+): Promise<Models.AffiliateRewardList> {
+  return await sdk.forConsole.affiliates.listRewards({
+    queries: [
+      Query.equal('status', 'pending'),
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(0),
+    ],
+  })
+}
+
+export function sumPendingAffiliateRewardAmount(
+  rewards: Models.AffiliateReward[] | undefined,
+): number {
+  return (rewards ?? []).reduce((sum, reward) => sum + (reward.amount || 0), 0)
+}
+
 export async function claimAffiliateReward(
   rewardId: string,
   organizationId: string,
@@ -88,20 +186,19 @@ export async function claimAffiliateReward(
   })
 }
 
-export async function fetchAffiliateUsage(params?: {
-  linkId?: string
-  startAt?: string
-  endAt?: string
-}): Promise<Models.UsageEventList> {
+export async function fetchAffiliateUsage(
+  params: AffiliateUsageQueryParams,
+): Promise<Models.UsageEventList> {
   return await sdk.forConsole.affiliates.getUsage({
     metrics: [
       AFFILIATE_METRICS.clicks,
       AFFILIATE_METRICS.signups,
       AFFILIATE_METRICS.conversions,
     ],
-    startAt: params?.startAt,
-    endAt: params?.endAt,
-    linkId: params?.linkId,
+    interval: params.interval,
+    startAt: params.startAt,
+    endAt: params.endAt,
+    linkId: params.linkId,
   })
 }
 
@@ -112,6 +209,59 @@ export function sumUsageMetric(
   const series = usage?.metrics?.find((entry) => entry.metric === metric)
   if (!series?.points?.length) return 0
   return series.points.reduce((sum, point) => sum + (point.value || 0), 0)
+}
+
+function metricToFilledPoints(
+  usage: Models.UsageEventList | undefined,
+  metric: string,
+  from: Date,
+  to: Date,
+  interval: AffiliateUsageInterval,
+): UsageChartPoint[] {
+  const series = usage?.metrics?.find((entry) => entry.metric === metric)
+  const merged = new Map<string, number>()
+  for (const point of series?.points ?? []) {
+    if (!point.time) continue
+    merged.set(point.time, (merged.get(point.time) ?? 0) + (point.value || 0))
+  }
+  return fillChartPointsGaps(merged, from, to, interval)
+}
+
+export function buildAffiliateFunnelChartPoints(
+  usage: Models.UsageEventList | undefined,
+  from: Date,
+  to: Date,
+  interval: AffiliateUsageInterval,
+): AffiliateFunnelChartPoint[] {
+  const clicks = metricToFilledPoints(
+    usage,
+    AFFILIATE_METRICS.clicks,
+    from,
+    to,
+    interval,
+  )
+  const signups = metricToFilledPoints(
+    usage,
+    AFFILIATE_METRICS.signups,
+    from,
+    to,
+    interval,
+  )
+  const conversions = metricToFilledPoints(
+    usage,
+    AFFILIATE_METRICS.conversions,
+    from,
+    to,
+    interval,
+  )
+
+  return clicks.map((point, index) => ({
+    date: point.date,
+    day: point.day,
+    clicks: point.total,
+    signups: signups[index]?.total ?? 0,
+    conversions: conversions[index]?.total ?? 0,
+  }))
 }
 
 export function affiliateLinksQueryOptions(
@@ -162,15 +312,38 @@ export function affiliateRewardsQueryOptions(
   })
 }
 
-export function affiliateUsageQueryOptions(linkId?: string) {
+export function affiliatePendingRewardsQueryOptions(
+  limit: number = AFFILIATE_PENDING_REWARDS_LIMIT,
+) {
   return queryOptions({
-    queryKey: ['affiliates', 'account', 'usage', linkId ?? 'all'],
-    queryFn: () => fetchAffiliateUsage({ linkId }),
+    queryKey: ['affiliates', 'account', 'rewards', 'pending', limit],
+    queryFn: () => fetchPendingAffiliateRewards(limit),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+  })
+}
+
+export function affiliateUsageQueryOptions(params: AffiliateUsageQueryParams) {
+  return queryOptions({
+    queryKey: [
+      'affiliates',
+      'account',
+      'usage',
+      params.linkId ?? 'all',
+      params.interval,
+      params.startAt,
+      params.endAt,
+    ],
+    queryFn: () => fetchAffiliateUsage(params),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -228,9 +401,29 @@ export function useAffiliateRewards(
   }
 }
 
-export function useAffiliateUsage(linkId?: string) {
+export function usePendingAffiliateRewards(
+  limit: number = AFFILIATE_PENDING_REWARDS_LIMIT,
+) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    affiliateUsageQueryOptions(linkId),
+    affiliatePendingRewardsQueryOptions(limit),
+  )
+
+  const rewards = data?.rewards ?? []
+  return {
+    data,
+    rewards,
+    total: data?.total ?? 0,
+    amount: sumPendingAffiliateRewardAmount(rewards),
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useAffiliateUsage(params: AffiliateUsageQueryParams) {
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery(
+    affiliateUsageQueryOptions(params),
   )
 
   return {
@@ -240,6 +433,7 @@ export function useAffiliateUsage(linkId?: string) {
     conversions: sumUsageMetric(data, AFFILIATE_METRICS.conversions),
     isLoading,
     isFetching,
+    isError,
     error,
     refetch,
   }

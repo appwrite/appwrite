@@ -4,8 +4,7 @@ import { useId, useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { useT } from '@/lib/i18n/translate'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import { useCountries } from '@/lib/react-query/hooks'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import { useCountryLookups } from '@/lib/react-query/hooks'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
@@ -110,11 +109,7 @@ export function DatabaseOperationBentoCard({
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
   const breakdownHeadingId = useId()
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const { standardEntries, resourceEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),

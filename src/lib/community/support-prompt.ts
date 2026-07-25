@@ -1,6 +1,7 @@
 import {
   Blocks,
   FileText,
+  Gift,
   HeartHandshake,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ export type CommunitySupportActionId =
   | 'contribute'
   | 'share'
   | 'content'
+  | 'affiliates'
   | 'integrations'
 
 export type CommunitySupportIcon =
@@ -201,6 +203,15 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     href: '/community',
     external: false,
     icon: FileText,
+  },
+  {
+    id: 'affiliates',
+    title: 'Join the Affiliates program',
+    description:
+      'Share invite links and earn credits when developers upgrade to Pro.',
+    href: '/account/affiliates',
+    external: false,
+    icon: Gift,
   },
   {
     id: 'integrations',

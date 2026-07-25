@@ -181,6 +181,9 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Write content': 'コンテンツを書く',
   'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
     '開発者が Appwrite を発見できるブログ、動画、チュートリアルを公開しましょう。',
+  'Join the Affiliates program': 'アフィリエイトプログラムに参加',
+  'Share invite links and earn credits when developers upgrade to Pro.':
+    '招待リンクを共有し、開発者が Pro にアップグレードするとクレジットを獲得できます。',
   'Build integrations': 'インテグレーションを作る',
   'Connect Appwrite to the tools your stack already uses.':
     'すでにお使いのスタックのツールに Appwrite をつなげましょう。',

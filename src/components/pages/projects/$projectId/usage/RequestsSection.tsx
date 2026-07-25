@@ -27,12 +27,11 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   useProjectRequestsBreakdowns,
   useProjectRequestsChartOnly,
-  useCountries,
+  useCountryLookups,
   refetchProjectRequestsUsageQueries,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -347,11 +346,7 @@ export function RequestsSection({
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<RequestsBreakdownDrawerState | null>(null)
   const showBreakdown = !disableUsageBreakdownQueries
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const {
     data: chartOverview,
