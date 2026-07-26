@@ -1605,16 +1605,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ...(import.meta.env.DEV
                 ? [
                     createDebugFeatureFlagItem(
-                      'Dev construction stripe',
-                      'Yellow/black construction tape strip at the top of the header stack in Vite DEV (above alerts and promos).',
-                      'showDevConstructionStripe',
-                      overrides.showDevConstructionStripe,
+                      'Construction',
+                      'Header construction bar in Vite DEV. Default from VITE_CONSTRUCTION (unset = on).',
+                      'showConstruction',
+                      overrides.showConstruction,
                       (checked) => {
                         setOverrides((prev) => ({
                           ...prev,
-                          showDevConstructionStripe: checked,
+                          showConstruction: checked,
                         }))
-                        setDebugOverride('showDevConstructionStripe', checked)
+                        setDebugOverride('showConstruction', checked)
                       },
                       undefined,
                       'UI & tools',

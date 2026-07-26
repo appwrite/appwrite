@@ -5,8 +5,8 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
  * (above status / promo / impersonation banners and the main header bar).
  */
 export function DevConstructionStripe() {
-  const { showDevConstructionStripe } = useDebugOverrides()
-  if (!import.meta.env.DEV || !showDevConstructionStripe) return null
+  const { showConstruction } = useDebugOverrides()
+  if (!import.meta.env.DEV || !showConstruction) return null
 
   return (
     <div

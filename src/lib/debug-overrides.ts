@@ -17,7 +17,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
-  showDevConstructionStripe: 'debug:showDevConstructionStripe',
+  showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
@@ -80,10 +80,10 @@ export type DebugOverrides = {
    */
   showFunctionsLocalEditor: boolean
   /**
-   * When true, show the yellow/black construction tape strip at the top of the
-   * header stack in Vite DEV (above alerts and promos). Default true.
+   * When true, show the DEV construction bar at the top of the header stack.
+   * Default true, or VITE_CONSTRUCTION when set.
    */
-  showDevConstructionStripe: boolean
+  showConstruction: boolean
   /**
    * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
    * 7 = 7+ days after event, org promo banner hidden).
@@ -129,6 +129,21 @@ function readBooleanFromStorage(key: string, defaultValue = false) {
   const raw = storage.getItem(key)
   if (raw === null) return defaultValue
   return raw === 'true'
+}
+
+/**
+ * Default for the Vite DEV construction bar when localStorage has no override.
+ * Set `VITE_CONSTRUCTION=false` (or 0/off/no) to hide it for agent browsers.
+ * Unset defaults to on.
+ */
+export function getShowConstructionDefault(): boolean {
+  const raw = String(import.meta.env.VITE_CONSTRUCTION ?? '')
+    .trim()
+    .toLowerCase()
+  if (!raw) return true
+  if (['0', 'false', 'off', 'no'].includes(raw)) return false
+  if (['1', 'true', 'on', 'yes'].includes(raw)) return true
+  return true
 }
 
 function readStringFromStorage<T extends string>(
@@ -188,9 +203,9 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
-    showDevConstructionStripe: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showDevConstructionStripe,
-      true,
+    showConstruction: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showConstruction,
+      getShowConstructionDefault(),
     ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
@@ -310,7 +325,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
-  'showDevConstructionStripe',
+  'showConstruction',
   'disableUsageBreakdownQueries',
   'disableOverviewBandwidthChart',
   'disableOverviewRequestsChart',
@@ -335,7 +350,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
-  showDevConstructionStripe: true,
+  showConstruction: getShowConstructionDefault(),
   disableUsageBreakdownQueries: false,
   disableOverviewBandwidthChart: false,
   disableOverviewRequestsChart: false,
