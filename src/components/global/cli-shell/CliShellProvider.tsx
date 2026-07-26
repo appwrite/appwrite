@@ -1358,6 +1358,22 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       const trimmed = rawCommand.trim()
       if (!trimmed) return
 
+      // Shell builtin: close this terminal (or minimize the panel if last).
+      if (/^exit(?:\s+\d+)?$/i.test(trimmed)) {
+        const toRemove = collectCliShellSessionsToRemove(
+          targetSessionId,
+          sessionsRef.current,
+        )
+        if (sessionsRef.current.length - toRemove.length < 1) {
+          heightBeforeFullscreenRef.current = null
+          setFullscreen(false)
+          setOpen(false)
+          return
+        }
+        removeSession(targetSessionId)
+        return
+      }
+
       const blockedMessage = getBlockedCliCommandMessage(rawCommand)
       if (blockedMessage) {
         const lines = blockedMessage.split('\n')
@@ -1500,6 +1516,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       bootstrapError,
       ensureRuntime,
       initializeCliAuth,
+      removeSession,
+      setOpen,
       showInputPromptIfIdle,
       writeStderrLine,
       writeSystemLine,
