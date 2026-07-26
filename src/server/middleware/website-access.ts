@@ -20,6 +20,11 @@ function resolvePathname(
 export const websiteAccessMiddleware = createMiddleware({
   type: 'request',
 }).server(async ({ request, pathname, next }) => {
+  // Prerender fetches must reach the page HTML; a 302 fails the build.
+  if (process.env.TSS_PRERENDERING === 'true') {
+    return next()
+  }
+
   const path = resolvePathname(pathname, request.url)
 
   if (!isWebsiteAccessProtectedPath(path)) {
