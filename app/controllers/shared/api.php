@@ -1202,8 +1202,15 @@ Http::shutdown()
         ];
 
         try {
+            // A first-time burst of the same milestone (e.g. many concurrent
+            // createTable calls) would otherwise each run this locking
+            // updateDocument() on the single project row and convoy on its FOR
+            // UPDATE lock. Scoping the lock per-method lets one request record
+            // the milestone while the duplicates skip instantly — the skip is a
+            // no-op since the winner writes that same stage. Different milestones
+            // use different keys, so they never block each other.
             $lock->tryWithKey(
-                'lock:platform:' . $project->getSequence() . ':onboarding',
+                'lock:platform:' . $project->getSequence() . ':onboarding:' . $method,
                 fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                     'onboarding' => $byMethod,
                 ]))),
