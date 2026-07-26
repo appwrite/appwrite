@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
+import { Route as AccessRouteImport } from './routes/access'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as MarketingRouteImport } from './routes/_marketing'
@@ -360,6 +361,11 @@ const DocsRoute = DocsRouteImport.update({
 const DiscordRoute = DiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessRoute = AccessRouteImport.update({
+  id: '/access',
+  path: '/access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRoute = PublicRouteImport.update({
@@ -2483,6 +2489,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
@@ -2818,6 +2825,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -3116,6 +3124,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
@@ -3453,6 +3462,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/access'
     | '/discord'
     | '/docs'
     | '/generator'
@@ -3788,6 +3798,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/access'
     | '/discord'
     | '/hello'
     | '/join'
@@ -4085,6 +4096,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/access'
     | '/discord'
     | '/docs'
     | '/generator'
@@ -4425,6 +4437,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AccessRoute: typeof AccessRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   GeneratorRoute: typeof GeneratorRouteWithChildren
@@ -4464,6 +4477,13 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof DiscordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -8367,6 +8387,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AccessRoute: AccessRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   GeneratorRoute: GeneratorRouteWithChildren,

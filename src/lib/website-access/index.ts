@@ -1,0 +1,35 @@
+export const WEBSITE_ACCESS_COOKIE_NAME = 'aw_website_access'
+export const WEBSITE_ACCESS_PASSWORD = 'Appwrite2'
+
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 // 1 year
+
+const COOKIE_PATTERN = new RegExp(
+  `(?:^|;\\s*)${WEBSITE_ACCESS_COOKIE_NAME}=([^;]*)`,
+)
+
+export function hasWebsiteAccessCookieFromHeader(
+  cookieHeader: string | null | undefined,
+): boolean {
+  if (!cookieHeader) return false
+  const match = cookieHeader.match(COOKIE_PATTERN)
+  return Boolean(match?.[1]?.trim())
+}
+
+export function hasWebsiteAccessCookie(): boolean {
+  if (typeof document === 'undefined') return false
+  return hasWebsiteAccessCookieFromHeader(document.cookie)
+}
+
+export function setWebsiteAccessCookie(): void {
+  if (typeof document === 'undefined') return
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${WEBSITE_ACCESS_COOKIE_NAME}=1; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${secure}`
+}
+
+/** Soft-launch gate: every page except `/access`. */
+export function isWebsiteAccessProtectedPath(
+  pathname: string | null | undefined,
+): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  return normalized !== '/access'
+}

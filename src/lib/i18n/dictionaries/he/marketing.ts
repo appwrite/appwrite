@@ -434,6 +434,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Enlarge image:': 'הגדלת תמונה:',
   'Enroll on GitHub Education': 'הירשמו ל-GitHub Education',
   'Enroll to the GitHub Student Developer Pack': 'הירשמו ל-GitHub Student Developer Pack',
+  'Enter the password to continue.': 'הזינו את הסיסמה כדי להמשיך.',
   'Enter verification code': 'הזינו קוד אימות',
   'Enterprise': 'אנטרפרייז',
   'Enterprise customers receive a dedicated success manager, 24/7 support on Slack, and priority response times. We also help with onboarding, architecture reviews, and ongoing optimization.':
@@ -612,6 +613,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'In app notifications': 'התראות בתוך האפליקציה',
   'Included': 'כלול',
   'Index database rows for search-as-you-type.': 'צרו אינדקס לשורות במסד הנתונים לחיפוש תוך כדי הקלדה.',
+  'Incorrect password': 'סיסמה שגויה',
   'Innovation': 'חדשנות',
   'Inspire and get inspired': 'תעניקו השראה וקבלו השראה',
   "Inspire and get inspired. Join Appwrite's community of maintainers and contributors and help us make Appwrite better for developers worldwide.": // pragma: allowlist secret
@@ -781,6 +783,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Partners Program': 'תוכנית השותפים',
   'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות אימות.',
   'Password policies': 'מדיניות סיסמאות',
+  'Password protected': 'מוגן בסיסמה',
   'Password reset': 'איפוס סיסמה',
   'Path': 'נתיב',
   'Pay for storage and database operations. No fixed compute fee.': 'שלמו על אחסון ופעולות מסד נתונים. ללא עלות מחשוב קבועה.',

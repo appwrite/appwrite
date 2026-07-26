@@ -47,6 +47,10 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  WebsiteAccessGate,
+  WEBSITE_ACCESS_BOOT_SCRIPT,
+} from '@/components/global/auth/WebsiteAccessGate'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
@@ -403,29 +407,48 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
+        <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
           <I18nProvider>
-            <AnalyticsSessionPropsSync />
-            <PageDirectionProvider>
-              <CookieConsentProvider>
-                <NavigationHistoryProvider>
-                  <RecentResourcesProvider>
-                    {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-                    {!skipStaticLoader ? (
-                      <FullscreenLoader
-                        isVisible={clientMounted ? isLoaderVisible : true}
-                        statusBanner={clientMounted ? statusBanner : undefined}
-                      />
-                    ) : null}
-                    <SentryContextProvider>
-                      <RootShellCatchBoundary>
-                        <DebugModeProvider>
-                          <ConsoleRightPaneProvider>
-                            {features.aiAssistant ? (
-                              <AIChatProvider>
+            <WebsiteAccessGate>
+              <AnalyticsSessionPropsSync />
+              <PageDirectionProvider>
+                <CookieConsentProvider>
+                  <NavigationHistoryProvider>
+                    <RecentResourcesProvider>
+                      {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
+                      {!skipStaticLoader ? (
+                        <FullscreenLoader
+                          isVisible={clientMounted ? isLoaderVisible : true}
+                          statusBanner={clientMounted ? statusBanner : undefined}
+                        />
+                      ) : null}
+                      <SentryContextProvider>
+                        <RootShellCatchBoundary>
+                          <DebugModeProvider>
+                            <ConsoleRightPaneProvider>
+                              {features.aiAssistant ? (
+                                <AIChatProvider>
+                                  <DocsPreviewProvider>
+                                    <PromoBannerProvider>
+                                      <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                        <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                          <MarketingSiteLayoutGate>
+                                            {children}
+                                          </MarketingSiteLayoutGate>
+                                        </div>
+                                        <ConsoleRightPane />
+                                      </div>
+                                      <ClientOnly>
+                                        <DebugMenu />
+                                      </ClientOnly>
+                                    </PromoBannerProvider>
+                                  </DocsPreviewProvider>
+                                </AIChatProvider>
+                              ) : (
                                 <DocsPreviewProvider>
                                   <PromoBannerProvider>
                                     <div className="flex w-full min-w-0 overflow-hidden root-container">
@@ -441,43 +464,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                                     </ClientOnly>
                                   </PromoBannerProvider>
                                 </DocsPreviewProvider>
-                              </AIChatProvider>
-                            ) : (
-                              <DocsPreviewProvider>
-                                <PromoBannerProvider>
-                                  <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                      <MarketingSiteLayoutGate>
-                                        {children}
-                                      </MarketingSiteLayoutGate>
-                                    </div>
-                                    <ConsoleRightPane />
-                                  </div>
-                                  <ClientOnly>
-                                    <DebugMenu />
-                                  </ClientOnly>
-                                </PromoBannerProvider>
-                              </DocsPreviewProvider>
-                            )}
-                            <ClientOnly>
-                              <CommunitySupportPromptProvider />
-                            </ClientOnly>
-                          </ConsoleRightPaneProvider>
-                        </DebugModeProvider>
-                      </RootShellCatchBoundary>
-                    </SentryContextProvider>
-                    <ClientOnly>
-                      <Toaster />
-                    </ClientOnly>
-                    <ClientOnly>
-                      {!isProjectRoute(location.pathname) && (
-                        <GlobalUploadProgress />
-                      )}
-                    </ClientOnly>
-                  </RecentResourcesProvider>
-                </NavigationHistoryProvider>
-              </CookieConsentProvider>
-            </PageDirectionProvider>
+                              )}
+                              <ClientOnly>
+                                <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                            </ConsoleRightPaneProvider>
+                          </DebugModeProvider>
+                        </RootShellCatchBoundary>
+                      </SentryContextProvider>
+                      <ClientOnly>
+                        <Toaster />
+                      </ClientOnly>
+                      <ClientOnly>
+                        {!isProjectRoute(location.pathname) && (
+                          <GlobalUploadProgress />
+                        )}
+                      </ClientOnly>
+                    </RecentResourcesProvider>
+                  </NavigationHistoryProvider>
+                </CookieConsentProvider>
+              </PageDirectionProvider>
+            </WebsiteAccessGate>
           </I18nProvider>
         </ClientThemeProvider>
         <Scripts />

@@ -34,6 +34,7 @@ function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
     return true
   }
   if (normalized === '/reset') return true
+  if (normalized === '/access') return true
   return false
 }
 
