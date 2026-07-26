@@ -17,6 +17,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
+  showDevConstructionStripe: 'debug:showDevConstructionStripe',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
@@ -78,6 +79,11 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
+  /**
+   * When true, show the yellow/black construction tape strip above the header
+   * in Vite DEV. Default true (DEV only).
+   */
+  showDevConstructionStripe: boolean
   /**
    * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
    * 7 = 7+ days after event, org promo banner hidden).
@@ -181,6 +187,10 @@ export function loadDebugOverrides(): DebugOverrides {
     showFunctionsLocalEditor: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
+    ),
+    showDevConstructionStripe: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showDevConstructionStripe,
+      true,
     ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
@@ -300,6 +310,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'showDevConstructionStripe',
   'disableUsageBreakdownQueries',
   'disableOverviewBandwidthChart',
   'disableOverviewRequestsChart',
@@ -324,6 +335,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
+  showDevConstructionStripe: true,
   disableUsageBreakdownQueries: false,
   disableOverviewBandwidthChart: false,
   disableOverviewRequestsChart: false,
