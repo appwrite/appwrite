@@ -468,9 +468,11 @@ async function initializeStaticRoutes(
           // build-time config frozen into window.__APP_CONFIG__).
           routes[route] = async (req: Request) => {
             if (metadata.type.includes('text/html')) {
+              // Never cache HTML: it embeds hashed asset URLs. Caching across
+              // deploys leaves tabs on a shell that 404s deleted /assets/*.js.
               return htmlResponse(req, await Bun.file(filepath).text(), {
                 'Content-Type': metadata.type,
-                'Cache-Control': 'public, max-age=3600',
+                'Cache-Control': 'no-store',
               })
             }
             const fileOnDemand = Bun.file(filepath)
@@ -506,7 +508,8 @@ async function initializeStaticRoutes(
       routes[urlPath] = async (req: Request) =>
         htmlResponse(req, await Bun.file(filepath).text(), {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
+          // Same as SSR HTML: hashed script URLs must not outlive a deploy.
+          'Cache-Control': 'no-store',
         })
 
       skipped.push({

@@ -51,6 +51,7 @@ import {
   WebsiteAccessGate,
   WEBSITE_ACCESS_BOOT_SCRIPT,
 } from '@/components/global/auth/WebsiteAccessGate'
+import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
@@ -408,6 +409,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
+        {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
+            auto-recover before the app module graph (and router listeners) load. */}
+        <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
         <ContextualDocumentTitle />
