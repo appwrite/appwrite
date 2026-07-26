@@ -8,6 +8,12 @@ import { useT } from '@/lib/i18n/translate'
 const CREATE_OAUTH2_SESSION_DOCS =
   'https://appwrite.io/docs/references/cloud/client-web/account#createOAuth2Session'
 
+type OAuthError = {
+  message?: string
+  type?: string
+  code?: number
+}
+
 /**
  * Native OAuth2 callback relay. The client SDK sends the OS browser here after a
  * social login; this page bounces back into the native app via its custom
@@ -20,11 +26,21 @@ export function OAuth2RelayCard({ title }: { title: string }) {
   // Client-only route (ssr: false) — read the live query string on mount.
   const [search, setSearch] = useState('')
   const [project, setProject] = useState<string | null>(null)
+  const [oauthError, setOauthError] = useState<OAuthError | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setSearch(window.location.search)
     setProject(params.get('project'))
+
+    const errorParam = params.get('error')
+    if (errorParam) {
+      try {
+        setOauthError(JSON.parse(errorParam) as OAuthError)
+      } catch {
+        setOauthError({ message: errorParam })
+      }
+    }
   }, [])
 
   const callbackLink = useMemo(
@@ -56,6 +72,21 @@ export function OAuth2RelayCard({ title }: { title: string }) {
                 </a>
                 .
               </p>
+            </div>
+          ) : oauthError ? (
+            <div className="space-y-3 text-center">
+              <h1 className="text-xl font-semibold tracking-tight">
+                {t('Login failed')}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {oauthError.message ??
+                  t('An error occurred during the OAuth login flow.')}
+              </p>
+              {oauthError.type ? (
+                <p className="text-muted-foreground text-sm">
+                  {t('Error type:')} {oauthError.type}
+                </p>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-3 text-center">
