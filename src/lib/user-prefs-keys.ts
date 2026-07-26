@@ -2189,12 +2189,13 @@ export function parseCliShellSessions(
   }
 }
 
-export function mergeCliShellSessionsIntoPrefs(
-  prefs: UserPrefs,
-  projectId: string,
+/**
+ * Canonical form written to account prefs. Use for equality checks so in-memory
+ * state (e.g. omitted `parentSessionId`) matches the stored JSON shape.
+ */
+export function normalizeCliShellSessionsState(
   state: PersistedCliShellSessionsState,
-): UserPrefs {
-  const key = getCliShellSessionsKey(projectId)
+): PersistedCliShellSessionsState {
   const sessions = state.sessions
     .slice(0, MAX_CLI_SHELL_SESSIONS)
     .map((session) => ({
@@ -2210,7 +2211,7 @@ export function mergeCliShellSessionsIntoPrefs(
         .filter((id) => sessions.some((session) => session.id === id))
         .slice(0, MAX_CLI_SHELL_SESSIONS)
     : []
-  const payload: PersistedCliShellSessionsState = {
+  return {
     sessions,
     activeSessionId: activeExists
       ? state.activeSessionId
@@ -2218,9 +2219,23 @@ export function mergeCliShellSessionsIntoPrefs(
     splitPaneSessionIds:
       splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined,
   }
+}
+
+export function serializeCliShellSessionsState(
+  state: PersistedCliShellSessionsState,
+): string {
+  return JSON.stringify(normalizeCliShellSessionsState(state))
+}
+
+export function mergeCliShellSessionsIntoPrefs(
+  prefs: UserPrefs,
+  projectId: string,
+  state: PersistedCliShellSessionsState,
+): UserPrefs {
+  const key = getCliShellSessionsKey(projectId)
   return {
     ...prefs,
-    [key]: JSON.stringify(payload),
+    [key]: serializeCliShellSessionsState(state),
   }
 }
 

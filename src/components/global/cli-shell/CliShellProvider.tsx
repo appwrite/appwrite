@@ -98,6 +98,7 @@ import {
   MAX_CLI_SHELL_SESSIONS,
   MAX_CLI_SHELL_SESSION_NAME_LENGTH,
   parseCliShellSessions,
+  serializeCliShellSessionsState,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import {
@@ -250,15 +251,17 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     new Map<string, CliTerminalSearchResults>(),
   )
   const [searchCaseSensitive, setSearchCaseSensitive] = useState(false)
+  // One shared bootstrap so session ids stay consistent across state slices.
+  const [sessionBootstrap] = useState(createInitialCliShellSessionState)
   const [sessions, setSessions] = useState<CliShellSession[]>(
-    () => createInitialCliShellSessionState().sessions,
+    sessionBootstrap.sessions,
   )
   const [activeSessionId, setActiveSessionIdState] = useState<string>(
-    () => createInitialCliShellSessionState().activeSessionId,
+    sessionBootstrap.activeSessionId,
   )
   const [splitPaneSessionIds, setSplitPaneSessionIds] = useState<string[]>([])
   const [focusedSessionId, setFocusedSessionId] = useState<string>(
-    () => createInitialCliShellSessionState().activeSessionId,
+    sessionBootstrap.activeSessionId,
   )
   const isRunning = runningSessionId !== null
   const runningSessionIdRef = useRef<string | null>(null)
@@ -274,6 +277,8 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
   const suppressSearchReportRef = useRef(false)
   const sessionsHydratedForProjectRef = useRef<string | null>(null)
   const sessionsDirtyRef = useRef(false)
+  /** Skip one persist after hydrating saved prefs (same-commit state is still stale). */
+  const suppressSessionsPersistRef = useRef(false)
   const previousProjectIdRef = useRef<string | null>(null)
   const lastPersistedSessionsRef = useRef('')
   const persistSessionsRef = useRef(persistSessions)
@@ -966,6 +971,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     suggestionCommandsRef.current = CLI_SHELL_TRY_COMMANDS
     sessionsHydratedForProjectRef.current = null
     sessionsDirtyRef.current = false
+    suppressSessionsPersistRef.current = false
     lastPersistedSessionsRef.current = ''
     const nextState = createInitialCliShellSessionState()
     setSessions(nextState.sessions)
@@ -979,7 +985,18 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     if (!consoleAccount) return
     if (sessionsHydratedForProjectRef.current === projectId) return
     if (sessionsDirtyRef.current) {
+      // In-memory edits already applied for this project; treat them as baseline.
+      const persistedSplitPaneIds =
+        splitPaneSessionIdsRef.current.length > 1
+          ? splitPaneSessionIdsRef.current
+          : undefined
+      lastPersistedSessionsRef.current = serializeCliShellSessionsState({
+        sessions: sessionsRef.current,
+        activeSessionId: activeSessionIdRef.current,
+        splitPaneSessionIds: persistedSplitPaneIds,
+      })
       sessionsHydratedForProjectRef.current = projectId
+      suppressSessionsPersistRef.current = false
       return
     }
 
@@ -989,22 +1006,28 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     )
     if (saved) {
       setSessions(saved.sessions)
-      setActiveSessionId(saved.activeSessionId)
+      setActiveSessionIdState(saved.activeSessionId)
+      setFocusedSessionId(saved.activeSessionId)
       setSplitPaneSessionIds(saved.splitPaneSessionIds ?? [])
-      lastPersistedSessionsRef.current = JSON.stringify({
-        sessions: saved.sessions,
-        activeSessionId: saved.activeSessionId,
-        splitPaneSessionIds: saved.splitPaneSessionIds,
-      })
+      lastPersistedSessionsRef.current = serializeCliShellSessionsState(saved)
     } else {
-      const defaultState = createInitialCliShellSessionState()
-      lastPersistedSessionsRef.current = JSON.stringify({
-        sessions: defaultState.sessions,
-        activeSessionId: defaultState.activeSessionId,
-        splitPaneSessionIds: undefined,
+      // No saved prefs: mark the in-memory default as baseline so we do not
+      // write until the user actually changes sessions.
+      const persistedSplitPaneIds =
+        splitPaneSessionIdsRef.current.length > 1
+          ? splitPaneSessionIdsRef.current
+          : undefined
+      lastPersistedSessionsRef.current = serializeCliShellSessionsState({
+        sessions: sessionsRef.current,
+        activeSessionId: activeSessionIdRef.current,
+        splitPaneSessionIds: persistedSplitPaneIds,
       })
     }
 
+    // Keep suppress set across React Strict Mode's effect double-invoke so the
+    // persist effect cannot write ephemeral bootstrap sessions after the first
+    // invoke consumed a one-shot flag.
+    suppressSessionsPersistRef.current = true
     sessionsHydratedForProjectRef.current = projectId
   }, [consoleAccount, projectId])
 
@@ -1013,12 +1036,45 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
     const persistedSplitPaneIds =
       splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined
-    const payload = JSON.stringify({
+    const payload = serializeCliShellSessionsState({
       sessions,
       activeSessionId,
       splitPaneSessionIds: persistedSplitPaneIds,
     })
-    if (lastPersistedSessionsRef.current === payload) return
+    if (lastPersistedSessionsRef.current === payload) {
+      // State has caught up to the hydration baseline (or a prior write).
+      suppressSessionsPersistRef.current = false
+      return
+    }
+
+    // After hydration, React may still flush once with bootstrap session ids
+    // (Strict Mode remount / batched setState). Never clobber saved prefs with
+    // that ephemeral state; wait until session ids match the baseline (or the
+    // user edits, which updates lastPersisted via a real persist).
+    if (suppressSessionsPersistRef.current) {
+      try {
+        const baseline = JSON.parse(
+          lastPersistedSessionsRef.current || 'null',
+        ) as { sessions?: { id: string }[] } | null
+        const baselineIds = new Set(
+          (baseline?.sessions ?? []).map((session) => session.id),
+        )
+        const stateIds = sessions.map((session) => session.id)
+        const sameSessionSet =
+          baselineIds.size > 0 &&
+          stateIds.length === baselineIds.size &&
+          stateIds.every((id) => baselineIds.has(id))
+        if (!sameSessionSet) {
+          return
+        }
+      } catch {
+        return
+      }
+      suppressSessionsPersistRef.current = false
+      // Session set matches baseline; if only active/split changed, fall through
+      // and persist. If payload somehow still equals after normalize, bail.
+      if (lastPersistedSessionsRef.current === payload) return
+    }
 
     lastPersistedSessionsRef.current = payload
     persistSessionsRef.current({

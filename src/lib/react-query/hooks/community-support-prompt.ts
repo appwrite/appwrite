@@ -95,6 +95,7 @@ export function useCommunitySupportPrompt(
           (currentAccount.prefs ?? {}) as UserPrefs,
           next,
         ),
+        'community-support-prompt',
       )
     },
     onMutate: async (next) => {

@@ -25,6 +25,7 @@ import {
 } from '@/lib/appwrite/sdk'
 import {
   clearConsoleAccountCache,
+  getConsoleAccountSync,
   getConsoleAccountUnauthenticatedError,
   setConsoleAccountCache,
 } from '@/lib/console-account-cache'
@@ -93,8 +94,10 @@ import {
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
+  getCliShellSessionsKey,
   parseCliShellHistory,
   parseCliShellSessions,
+  serializeCliShellSessionsState,
   type PersistedCliShellSessionsState,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
@@ -1173,6 +1176,60 @@ export function useAccountSessions() {
 // ============================================================================
 
 /**
+ * Diff previous account prefs against the sanitized write payload.
+ * Used only for console debug logging in `updateAccountPrefs`.
+ */
+function diffAccountPrefs(
+  previous: Record<string, unknown> | undefined,
+  next: Record<string, string | number | boolean>,
+): {
+  added: Record<string, unknown>
+  changed: Record<string, { from: unknown; to: unknown }>
+  removed: string[]
+} {
+  const prev = previous ?? {}
+  const added: Record<string, unknown> = {}
+  const changed: Record<string, { from: unknown; to: unknown }> = {}
+  const removed: string[] = []
+
+  for (const key of Object.keys(next)) {
+    if (!(key in prev)) {
+      added[key] = next[key]
+      continue
+    }
+    if (prev[key] !== next[key]) {
+      changed[key] = { from: prev[key], to: next[key] }
+    }
+  }
+  for (const key of Object.keys(prev)) {
+    if (!(key in next)) {
+      removed.push(key)
+    }
+  }
+
+  return { added, changed, removed }
+}
+
+function getAccountPrefsCallerStack(): string[] {
+  return (
+    new Error().stack
+      ?.split('\n')
+      .slice(1)
+      .map((line) => line.trim().replace(/^at\s+/, ''))
+      .filter((line) => {
+        if (!line) return false
+        if (line.includes('updateAccountPrefs')) return false
+        if (line.includes('getAccountPrefsCallerStack')) return false
+        if (line.includes('diffAccountPrefs')) return false
+        if (line.includes('node_modules')) return false
+        if (line.includes('@tanstack')) return false
+        return true
+      })
+      .slice(0, 8) ?? []
+  )
+}
+
+/**
  * Mutation function to update account preferences.
  * Sanitizes nested/legacy values so Appwrite does not 400 on write.
  * Silently skips while console impersonation is active so the target user's prefs are not mutated.
@@ -1180,15 +1237,46 @@ export function useAccountSessions() {
  * When skipping, returns `undefined` (not a partial User). Callers that sync the
  * account cache must treat a missing result as a no-op so they do not poison
  * React Query with `{ prefs }` only — that crashed account UI after impersonation.
+ *
+ * @param reason - Short label for debug logs (which feature/hook requested the write).
  */
 export async function updateAccountPrefs(
   prefs: Record<string, unknown>,
+  reason = 'unknown',
 ): Promise<Models.User | undefined> {
   if (hasConsoleImpersonationSessionTarget()) {
     return undefined
   }
+
+  const sanitized = sanitizeAccountPrefsForWrite(prefs)
+  const cachedAccount = getConsoleAccountSync(getConsoleAccountQueryRevision())
+  const previous = cachedAccount?.prefs as Record<string, unknown> | undefined
+  const diff = diffAccountPrefs(previous, sanitized)
+  const hasDiff =
+    Object.keys(diff.added).length > 0 ||
+    Object.keys(diff.changed).length > 0 ||
+    diff.removed.length > 0
+  const caller = getAccountPrefsCallerStack()
+
+  if (!hasDiff) {
+    console.log('[account prefs] skip (unchanged)', {
+      reason,
+      keyCount: Object.keys(sanitized).length,
+      caller,
+    })
+    // Avoid a no-op `account.updatePrefs` round-trip. Callers treat a returned
+    // User like a successful write; fall back to undefined only if uncached.
+    return cachedAccount
+  }
+
+  console.log('[account prefs] update', diff, {
+    reason,
+    keyCount: Object.keys(sanitized).length,
+    caller,
+  })
+
   return (await sdk.forConsole.account.updatePrefs({
-    prefs: sanitizeAccountPrefsForWrite(prefs),
+    prefs: sanitized,
   })) as Models.User
 }
 
@@ -1216,7 +1304,7 @@ export async function flushRecentImpersonationUsersToAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
-  const updatedAccount = await updateAccountPrefs(updatedPrefs)
+  const updatedAccount = await updateAccountPrefs(updatedPrefs, 'flush-recent-impersonation-users')
   setConsoleAccountCache(
     updatedAccount && isConsoleAccountUser(updatedAccount)
       ? updatedAccount
@@ -1273,7 +1361,7 @@ export function useToggleFeatureNotification() {
         [USER_PREFS_KEY_FEATURE_NOTIFICATIONS]: updatedNotificationsStr,
       }
 
-      return await updateAccountPrefs(updatedPrefs)
+      return await updateAccountPrefs(updatedPrefs, 'feature-notifications')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -1311,6 +1399,7 @@ export function useSidebarCollapsed(
           { ...(account.prefs ?? {}) },
           value,
         ),
+        'sidebar-collapsed',
       )
     },
     // The auth query key includes consoleImpersonationRevision, so an exact
@@ -1386,7 +1475,8 @@ export function useTableViewSidebarWidth(
       return await updateAccountPrefs({
         ...account.prefs,
         ...build(value),
-      })
+      },
+        'table-view-sidebar-width')
     },
     onMutate: async (value) => {
       const patch = build(value)
@@ -1438,7 +1528,8 @@ export function usePostgresSqlEditorHeight(
       return await updateAccountPrefs({
         ...account.prefs,
         ...buildPostgresSqlEditorHeightPrefs(value),
-      })
+      },
+        'postgres-sql-editor-height')
     },
     onMutate: async (value) => {
       const patch = buildPostgresSqlEditorHeightPrefs(value)
@@ -1500,6 +1591,7 @@ function usePersistedPanelLayoutPref(
       }
       return await updateAccountPrefs(
         mergeIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
+        'persisted-panel-layout',
       )
     },
     onMutate: async (value) => {
@@ -1624,6 +1716,7 @@ export function useGeneratorPanelVisibility(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'generator-panel-visibility',
       )
     },
     onMutate: async (value) => {
@@ -1737,6 +1830,7 @@ export function useApiExplorerExpandedProductGroup(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'api-explorer-expanded-product-group',
       )
     },
     onMutate: async (value) => {
@@ -1861,7 +1955,7 @@ async function migrateLegacyBrowserPrefsToAccount(
     return
   }
 
-  const updatedAccount = await updateAccountPrefs(next)
+  const updatedAccount = await updateAccountPrefs(next, 'migrate-legacy-browser-prefs')
   clearLegacyAIChatLocalStorage()
   clearLegacyBuildNotificationsOptedOutLocalStorage()
   clearLegacyCliShellHeightLocalStorage()
@@ -1914,6 +2008,7 @@ export function useAIChatPanelOpen(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'ai-chat-panel-open',
       )
     },
     onMutate: async (value) => {
@@ -1973,6 +2068,7 @@ export function useAuthPasswordStrengthComplianceOpen(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'auth-password-strength-compliance-open',
       )
     },
     onMutate: async (value) => {
@@ -2035,6 +2131,7 @@ export function useRightPaneWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'right-pane-width',
       )
     },
     onMutate: async (value) => {
@@ -2132,6 +2229,7 @@ export function useCliShellOpen(account: ConsoleAccountCache | undefined) {
           (currentAccount.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-open',
       )
     },
     onMutate: async (value) => {
@@ -2192,6 +2290,7 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-height',
       )
     },
     onMutate: async (value) => {
@@ -2285,6 +2384,7 @@ export function useCliShellSessionsSidebarWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-sessions-sidebar-width',
       )
     },
     onMutate: async (value) => {
@@ -2376,6 +2476,7 @@ export function useCliShellHistory(
           projectId,
           value,
         ),
+        'cli-shell-history',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -2440,9 +2541,42 @@ export function useCliShellSessionsPrefs(
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingPersistRef = useRef<PersistedCliShellSessionsState | null>(null)
 
+  const isSessionsPrefsUnchanged = useCallback(
+    (value: PersistedCliShellSessionsState) => {
+      const key = getCliShellSessionsKey(projectId)
+      const nextValue = serializeCliShellSessionsState(value)
+      const singletonPrefs = getConsoleAccountSync(
+        getConsoleAccountQueryRevision(),
+      )?.prefs as UserPrefs | undefined
+      const rqPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+        | UserPrefs
+        | undefined
+      const accountPrefs = account?.prefs as UserPrefs | undefined
+
+      for (const prefs of [singletonPrefs, rqPrefs, accountPrefs]) {
+        if (!prefs) continue
+        const existing = prefs[key]
+        if (existing === nextValue) return true
+        // Stored JSON may predate canonical fields (e.g. parentSessionId).
+        const parsed = parseCliShellSessions(prefs, projectId)
+        if (parsed && serializeCliShellSessionsState(parsed) === nextValue) {
+          return true
+        }
+      }
+      return false
+    },
+    [account?.prefs, projectId, queryClient],
+  )
+
   const updateMutation = useMutation({
     mutationFn: async (value: PersistedCliShellSessionsState) => {
-      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (isSessionsPrefsUnchanged(value)) {
+        return getConsoleAccountSync(getConsoleAccountQueryRevision())
+      }
+      const currentAccount =
+        getConsoleAccountFromCache(queryClient) ??
+        getConsoleAccountSync(getConsoleAccountQueryRevision()) ??
+        account
       if (!currentAccount) {
         throw new Error('Account data not available')
       }
@@ -2452,6 +2586,7 @@ export function useCliShellSessionsPrefs(
           projectId,
           value,
         ),
+        'cli-shell-sessions',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -2464,12 +2599,19 @@ export function useCliShellSessionsPrefs(
   const persistSessions = useCallback(
     (value: PersistedCliShellSessionsState) => {
       if (!account) return
-      pendingPersistRef.current = value
+      if (isSessionsPrefsUnchanged(value)) {
+        return
+      }
+      const currentPrefs = (getConsoleAccountFromCache(queryClient)?.prefs ??
+        getConsoleAccountSync(getConsoleAccountQueryRevision())?.prefs ??
+        account.prefs ??
+        {}) as UserPrefs
       const patch = mergeCliShellSessionsIntoPrefs(
-        (account.prefs ?? {}) as UserPrefs,
+        currentPrefs,
         projectId,
         value,
       )
+      pendingPersistRef.current = value
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
@@ -2489,7 +2631,13 @@ export function useCliShellSessionsPrefs(
         updateMutation.mutate(value)
       }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
     },
-    [account, projectId, queryClient, updateMutation],
+    [
+      account,
+      isSessionsPrefsUnchanged,
+      projectId,
+      queryClient,
+      updateMutation,
+    ],
   )
 
   const flushPersistSessions = useCallback(() => {
@@ -2500,8 +2648,9 @@ export function useCliShellSessionsPrefs(
     const pending = pendingPersistRef.current
     if (!pending) return
     pendingPersistRef.current = null
+    if (isSessionsPrefsUnchanged(pending)) return
     updateMutation.mutate(pending)
-  }, [updateMutation])
+  }, [isSessionsPrefsUnchanged, updateMutation])
 
   useEffect(() => {
     return () => {
@@ -2537,6 +2686,7 @@ export function useBuildNotificationsOptedOut(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'build-notifications-opted-out',
       )
     },
     onMutate: async (value) => {
@@ -2596,6 +2746,7 @@ export function useStorageFilesTablePaneWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'storage-files-table-pane-width',
       )
     },
     onMutate: async (value) => {
@@ -2689,7 +2840,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2742,7 +2894,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2780,7 +2933,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, orderedFilters),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2858,7 +3012,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2950,6 +3105,7 @@ export function useTablesDbRowsListColumns(
           tableId,
           keys,
         ),
+        'tablesdb-rows-list-columns',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -3013,7 +3169,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3060,7 +3217,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3091,7 +3249,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(ordered),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3127,7 +3286,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {

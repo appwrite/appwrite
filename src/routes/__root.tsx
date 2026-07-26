@@ -37,7 +37,9 @@ import { CommunitySupportPromptProvider } from '@/components/global/providers/Co
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
+import { RootShellCatchBoundary } from '@/components/global/providers/RootShellCatchBoundary'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
+import { ErrorComponent } from '@/components/error/Component'
 import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
 import {
   FullscreenLoader,
@@ -167,6 +169,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       currentUser: null,
     }
   },
+  // Explicit root error UI; reporting goes through router defaultOnCatch
+  // (route onCatch typing omits errorInfo, so we do not override it here).
+  errorComponent: ({ error, info, reset }) => (
+    <ErrorComponent error={error} info={info} reset={reset} />
+  ),
   head: () => ({
     meta: [
       {
@@ -414,10 +421,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                       />
                     ) : null}
                     <SentryContextProvider>
-                      <DebugModeProvider>
-                        <ConsoleRightPaneProvider>
-                          {features.aiAssistant ? (
-                            <AIChatProvider>
+                      <RootShellCatchBoundary>
+                        <DebugModeProvider>
+                          <ConsoleRightPaneProvider>
+                            {features.aiAssistant ? (
+                              <AIChatProvider>
+                                <DocsPreviewProvider>
+                                  <PromoBannerProvider>
+                                    <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                        <MarketingSiteLayoutGate>
+                                          {children}
+                                        </MarketingSiteLayoutGate>
+                                      </div>
+                                      <ConsoleRightPane />
+                                    </div>
+                                    <ClientOnly>
+                                      <DebugMenu />
+                                    </ClientOnly>
+                                  </PromoBannerProvider>
+                                </DocsPreviewProvider>
+                              </AIChatProvider>
+                            ) : (
                               <DocsPreviewProvider>
                                 <PromoBannerProvider>
                                   <div className="flex w-full min-w-0 overflow-hidden root-container">
@@ -433,29 +458,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                                   </ClientOnly>
                                 </PromoBannerProvider>
                               </DocsPreviewProvider>
-                            </AIChatProvider>
-                          ) : (
-                            <DocsPreviewProvider>
-                              <PromoBannerProvider>
-                                <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                    <MarketingSiteLayoutGate>
-                                      {children}
-                                    </MarketingSiteLayoutGate>
-                                  </div>
-                                  <ConsoleRightPane />
-                                </div>
-                                <ClientOnly>
-                                  <DebugMenu />
-                                </ClientOnly>
-                              </PromoBannerProvider>
-                            </DocsPreviewProvider>
-                          )}
-                          <ClientOnly>
-                            <CommunitySupportPromptProvider />
-                          </ClientOnly>
-                        </ConsoleRightPaneProvider>
-                      </DebugModeProvider>
+                            )}
+                            <ClientOnly>
+                              <CommunitySupportPromptProvider />
+                            </ClientOnly>
+                          </ConsoleRightPaneProvider>
+                        </DebugModeProvider>
+                      </RootShellCatchBoundary>
                     </SentryContextProvider>
                     <ClientOnly>
                       <Toaster />
