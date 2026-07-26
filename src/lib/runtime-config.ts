@@ -36,7 +36,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   growthEndpoint: '',
   stripePublishableKey: '',
   sentryDsn: '',
-  instrumentationScriptSrc: '',
   plausibleScriptSrc: '',
   userVerification: '',
 }

@@ -8,6 +8,7 @@ import {
 
 import {
   ensureAppwriteBinStub,
+  ensureAppwriteCliExitHandling,
   installAppwriteCliPackage,
   isAppwriteCliPackageInstalled,
   resolveAppwriteCliVersion,
@@ -179,6 +180,10 @@ export async function bootstrapCliRuntime(
       'Appwrite CLI failed to install in the browser runtime. Check your network connection and try again.',
     )
   }
+
+  // Apply after install/cache restore so every session gets the exit catch,
+  // including CLIs restored from IndexedDB that predate this patch.
+  ensureAppwriteCliExitHandling(vfs)
 
   return container
 }

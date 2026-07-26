@@ -77,7 +77,6 @@ Edit `.env` and configure the following variables:
 VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 
 # Optional
-VITE_INSTRUMENTATION_SCRIPT_SRC=https://your-analytics-script.js
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_... # For billing features
 VITE_COMPANY_NAME=Appwrite
 VITE_CONTACT_SALES_URL=https://appwrite.io/contact
@@ -263,7 +262,6 @@ bun run format:check
 | --------------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
 | `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
 | `VITE_CONSOLE_PROFILE`            | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL                             |
 | `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing                               |
 | `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding                                        |
 | `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL                                           |

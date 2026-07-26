@@ -58,6 +58,8 @@ import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
 import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
+import { isDocsProductNavNew } from '@/lib/products/new-badge'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import {
   getDocsAudienceFromPathname,
   getDocsGlobalNav,
@@ -227,7 +229,8 @@ function DocsGlobalNavItem({
     getDocsNavAnalyticsAction(item.href) ?? sectionAnalytics
   const analytics = navAnalytics ? analyticsAttrs(navAnalytics) : undefined
 
-  const hasTrailing = (!collapsed || isMobile) && (external || item.new)
+  const showNewBadge = Boolean(item.new) || isDocsProductNavNew(item.href)
+  const hasTrailing = (!collapsed || isMobile) && (external || showNewBadge)
 
   const className = cn(
     'rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
@@ -266,10 +269,8 @@ function DocsGlobalNavItem({
           aria-hidden
         />
       ) : null}
-      {(!collapsed || isMobile) && item.new ? (
-        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          New
-        </span>
+      {(!collapsed || isMobile) && showNewBadge ? (
+        <ProductNewBadge label="New" />
       ) : null}
     </>
   )

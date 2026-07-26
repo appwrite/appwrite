@@ -1602,6 +1602,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
+              ...(import.meta.env.DEV
+                ? [
+                    createDebugFeatureFlagItem(
+                      'Dev construction stripe',
+                      'Yellow/black construction tape strip above the header in Vite DEV.',
+                      'showDevConstructionStripe',
+                      overrides.showDevConstructionStripe,
+                      (checked) => {
+                        setOverrides((prev) => ({
+                          ...prev,
+                          showDevConstructionStripe: checked,
+                        }))
+                        setDebugOverride('showDevConstructionStripe', checked)
+                      },
+                      undefined,
+                      'UI & tools',
+                    ),
+                  ]
+                : []),
               createDebugFeatureFlagItem(
                 'Unlock onboarding',
                 'Unlock all Get started product sections without completing Connect.',

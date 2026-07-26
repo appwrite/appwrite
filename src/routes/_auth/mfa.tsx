@@ -6,6 +6,7 @@ import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
   prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
@@ -53,6 +54,15 @@ export const Route = createFileRoute('/_auth/mfa')({
       await sdk.forConsole.account.get()
 
       const account = await refreshConsoleAccountAfterAuth(queryClient)
+
+      if (requiresConsoleEmailVerification(account)) {
+        throw redirect({
+          to: '/verify-email',
+          search: redirectSearch ? { redirect: redirectSearch } : undefined,
+          replace: true,
+        })
+      }
+
       await prefetchPostAuthDestination(queryClient, account, redirectSearch)
 
       const targetRedirect = resolvePostAuthRedirect(redirectSearch)

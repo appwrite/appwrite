@@ -10,6 +10,10 @@ import {
   scheduleClearStaleChunkReloadGuard,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
+import {
+  reportRouterCaughtError,
+  reportUnhandledError,
+} from '@/lib/sentry/report-error'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
 // single loader. Showing a router pending UI here caused a dual-loader flash on
 // static build (text "Loading data for you" then logo).
@@ -27,6 +31,13 @@ export function getRouter() {
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),
+    // Fires when any route CatchBoundary catches — before the error UI mounts.
+    // Critical for max-update-depth and other crashes that can break the error page.
+    defaultOnCatch: (error, errorInfo) => {
+      reportRouterCaughtError(error, errorInfo, {
+        source: 'router-defaultOnCatch',
+      })
+    },
     Wrap: (props: { children: React.ReactNode }) => {
       return (
         <TanstackQuery.Provider {...rqContext}>
@@ -47,12 +58,18 @@ export function getRouter() {
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (tryReloadForStaleChunk(event.reason)) {
         event.preventDefault()
+        return
       }
+      reportUnhandledError(event.reason, 'unhandledrejection')
     }
     const onWindowError = (event: ErrorEvent) => {
       if (tryReloadForStaleChunk(event.error ?? event.message)) {
         event.preventDefault()
+        return
       }
+      // Ignore ResizeObserver noise and events without a real error payload.
+      if (!event.error && !event.message) return
+      reportUnhandledError(event.error ?? event.message, 'window.error')
     }
     window.addEventListener('unhandledrejection', onUnhandledRejection)
     window.addEventListener('error', onWindowError)

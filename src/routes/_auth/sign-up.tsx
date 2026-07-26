@@ -18,7 +18,6 @@ import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import {
   ensureConsoleAccountQueryData,
@@ -28,6 +27,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
@@ -55,10 +55,19 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
-  loader: async ({ context }) => {
+  loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (account) {
+      if (requiresConsoleEmailVerification(account)) {
+        const pendingRedirect = (location.search as { redirect?: string })
+          .redirect
+        throw redirect({
+          to: '/verify-email',
+          search: pendingRedirect ? { redirect: pendingRedirect } : undefined,
+          replace: true,
+        })
+      }
       throw redirect({ to: '/', replace: true })
     }
   },
@@ -148,11 +157,10 @@ function SignUpPage() {
     onSuccess: async () => {
       setLastLoginMethod('email')
       const account = await refreshConsoleAccountAfterAuth(queryClient)
-      await prefetchPostAuthDestination(queryClient, account, search.redirect)
-      await router.invalidate()
 
-      const features = getActiveProfileFeatures()
-      if (features.userVerification) {
+      // Cloud requires a verified console account before org/project APIs work.
+      // Skip post-auth provisioning until after /verify-email; that page handles it.
+      if (requiresConsoleEmailVerification(account)) {
         try {
           const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
           await sdk.forConsole.account.createEmailVerification({
@@ -174,24 +182,33 @@ function SignUpPage() {
         return
       }
 
-      // If we're headed to a specific destination (e.g. an OAuth2 consent/device
-      // flow), go straight there without provisioning a personal org/project.
-      const targetRedirect = resolvePostAuthRedirect(search.redirect)
-      if (targetRedirect) {
-        navigate(toRedirectNavigateOptions(targetRedirect))
-        return
-      }
-
-      // No verification: org was ensured during prefetchPostAuthDestination
       try {
+        await prefetchPostAuthDestination(queryClient, account, search.redirect)
+        await router.invalidate()
+
+        // If we're headed to a specific destination (e.g. an OAuth2 consent/device
+        // flow), go straight there without provisioning a personal org/project.
+        const targetRedirect = resolvePostAuthRedirect(search.redirect)
+        if (targetRedirect) {
+          navigate(toRedirectNavigateOptions(targetRedirect))
+          return
+        }
+
+        // Org was ensured during prefetchPostAuthDestination
         const orgId = await resolvePostAuthOrganizationId(account)
         navigate({
           to: '/organizations/$orgId',
           params: { orgId },
           replace: true,
         })
-      } catch {
-        navigate({ to: '/' })
+      } catch (error: unknown) {
+        console.error('Post sign-up navigation error:', error)
+        toast.error(
+          getErrorMessage(
+            error,
+            t('Account created but could not open the console'),
+          ),
+        )
       }
     },
     onError: async (error: unknown) => {

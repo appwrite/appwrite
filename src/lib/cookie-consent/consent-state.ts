@@ -38,7 +38,7 @@ export function setCookieConsentState(args: {
   notifyConsentListeners()
 }
 
-/** True when Plausible events, Sentry, and instrumentation may run. */
+/** True when Plausible events and Sentry may run. */
 export function canTrackAnalytics(): boolean {
   if (!consentResolved) return false
   if (!bannerRequired) return true

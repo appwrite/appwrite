@@ -16,6 +16,23 @@ import { resolveDependencies, type ResolvedPackage } from './npm-resolver'
 
 const LEGACY_BIN_MARKERS = ['__appwrite_cli_entry', '__cli_global_shim'] as const
 
+/** Marker written into cli.cjs so we only patch the async entry once. */
+const CLI_EXIT_CATCH_MARKER = '__appwrite_cli_exit_catch__'
+
+/**
+ * almostnode makes `process.exit` throw so Commander stops. The Appwrite CLI
+ * boots with `void (async () => { ... })()`, so that throw becomes an unhandled
+ * rejection (Vite/Chrome still log it even when preventDefault runs). Attach a
+ * .catch that swallows exit errors.
+ */
+const CLI_EXIT_CATCH_HANDLER = `.catch((err) => {
+  /* ${CLI_EXIT_CATCH_MARKER} */
+  if (err && typeof err.message === "string" && err.message.startsWith("Process exited with code")) {
+    return;
+  }
+  console.error(err);
+})`
+
 export function resolveAppwriteCliMainPath(cwd = '/'): string {
   return path.join(cwd, 'node_modules', CLI_APPWRITE_CLI_PACKAGE, 'dist/cli.cjs')
 }
@@ -67,6 +84,49 @@ export function ensureAppwriteBinStub(vfs: CliShellContainer['vfs']): boolean {
     CLI_APPWRITE_BIN,
     `node "${mainPath}" "$@"\n`,
   )
+  return true
+}
+
+/**
+ * Patch appwrite-cli's top-level async IIFEs so `process.exit` throws from the
+ * browser runtime do not surface as uncaught promise rejections.
+ */
+export function ensureAppwriteCliExitHandling(
+  vfs: CliShellContainer['vfs'],
+): boolean {
+  const mainPath = resolveAppwriteCliMainPath()
+  if (!vfs.existsSync(mainPath)) return false
+
+  let source: string
+  try {
+    source = vfs.readFileSync(mainPath, 'utf8')
+  } catch {
+    return false
+  }
+
+  if (source.includes(CLI_EXIT_CATCH_MARKER)) {
+    return true
+  }
+
+  if (!source.includes('void (async () =>')) {
+    return false
+  }
+
+  let patched = source
+    .replace(
+      /process\.exit\(0\);\s*\}\)\(\);/g,
+      `process.exit(0);\n  })()${CLI_EXIT_CATCH_HANDLER};`,
+    )
+    .replace(
+      /process\.stdout\.columns = oldWidth;\s*\}\)\(\);/g,
+      `process.stdout.columns = oldWidth;\n  })()${CLI_EXIT_CATCH_HANDLER};`,
+    )
+
+  if (patched === source || !patched.includes(CLI_EXIT_CATCH_MARKER)) {
+    return false
+  }
+
+  vfs.writeFileSync(mainPath, patched)
   return true
 }
 

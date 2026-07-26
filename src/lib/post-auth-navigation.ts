@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import {
@@ -7,6 +8,19 @@ import {
   prefetchOrganizationOverviewData,
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+
+/**
+ * Cloud (and any profile with userVerification) requires a verified console
+ * email before org/project APIs. Unverified sessions must stay on /verify-email.
+ */
+export function requiresConsoleEmailVerification(
+  account: Pick<Models.User, 'emailVerification'> | null | undefined,
+): boolean {
+  if (!account) return false
+  return (
+    getActiveProfileFeatures().userVerification && !account.emailVerification
+  )
+}
 
 // `/join` is intentionally absent: accepting a team invite requires auth, so it
 // is a valid post-auth destination (e.g. after "Switch account" on the invite page).

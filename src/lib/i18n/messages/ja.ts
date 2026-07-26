@@ -120,6 +120,7 @@ export const jaCatalog: EnCatalog = {
           ...enCatalog.app.footer.expanded.quickStarts,
           web: 'Web',
           nextjs: 'Next.js',
+          tanstackStart: 'TanStack Start',
           react: 'React',
           vue: 'Vue.js',
           nuxt: 'Nuxt',
@@ -143,7 +144,9 @@ export const jaCatalog: EnCatalog = {
           messaging: 'メッセージング',
           realtime: 'Realtime',
           hosting: 'ホスティング',
+          domains: 'Domains',
           network: 'Network',
+          firewall: 'Firewall',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -185,6 +188,9 @@ export const jaCatalog: EnCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          nextjsHosting: 'Next.js ホスティング',
+          reactHosting: 'React ホスティング',
+          vueHosting: 'Vue.js ホスティング',
           baas: 'Backend as a service (BaaS)',
         },
       },
@@ -379,6 +385,7 @@ export const jaCatalog: EnCatalog = {
         desktopTitle: 'プラットフォームプロダクト',
         desktopSubtitle: '一つの Backend プラットフォームで構築、デプロイ、スケール',
         viewOverview: 'プラットフォーム概要を見る',
+        newLabel: '新着',
         categories: {
           ...enCatalog.website.products.navigation.categories,
           build: '構築',

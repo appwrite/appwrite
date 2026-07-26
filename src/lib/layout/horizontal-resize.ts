@@ -144,7 +144,8 @@ export function verticalPanelResizeHandleClass(
     'relative z-[45] w-[0.5px] bg-border',
     'before:pointer-events-none before:absolute before:inset-y-0 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
     RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-    'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
+    // Library sets hover via hit-area margins; CSS :hover alone misses the 0.5px rail.
+    'hover:before:opacity-100 data-[resize-handle-state=hover]:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
     'after:pointer-events-none after:absolute after:inset-y-0 after:w-2',
     RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
     ...extra,

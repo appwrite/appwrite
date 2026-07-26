@@ -7,11 +7,14 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { getRuntimeConfig } from '@/lib/runtime-config'
-import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
+import {
+  captureExceptionWithContext,
+  isSentryReportingEnabled,
+} from '@/lib/sentry/report-error'
 
-const isSentryEnabled = () =>
-  !!getRuntimeConfig().sentryDsn && canTrackAnalytics()
+const isSentryEnabled = () => isSentryReportingEnabled()
+
+export { captureExceptionWithContext }
 
 /**
  * Extracts project ID from URL pathname
@@ -160,51 +163,4 @@ export function SentryContextProvider({
   }, [orgPlan])
 
   return <>{children}</>
-}
-
-/**
- * Helper function to capture an exception with full context.
- * Use this for manual error capturing with rich context data.
- * @returns The Sentry event ID (trace ID) if available, otherwise undefined
- */
-export function captureExceptionWithContext(
-  error: Error,
-  additionalContext?: {
-    projectId?: string
-    orgId?: string
-    functionId?: string
-    bucketId?: string
-    databaseId?: string
-    userId?: string
-    siteId?: string
-    componentStack?: string
-    [key: string]: unknown
-  },
-): string | undefined {
-  if (!isSentryEnabled()) return undefined
-  Sentry.captureException(error, {
-    extra: {
-      ...additionalContext,
-      timestamp: new Date().toISOString(),
-    },
-    tags: {
-      ...(additionalContext?.projectId && {
-        project_id: additionalContext.projectId,
-      }),
-      ...(additionalContext?.orgId && { org_id: additionalContext.orgId }),
-      ...(additionalContext?.functionId && {
-        function_id: additionalContext.functionId,
-      }),
-      ...(additionalContext?.bucketId && {
-        bucket_id: additionalContext.bucketId,
-      }),
-      ...(additionalContext?.databaseId && {
-        database_id: additionalContext.databaseId,
-      }),
-      ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
-    },
-  })
-
-  // Get the event ID after capturing (Sentry.lastEventId() gets the last captured event)
-  return Sentry.lastEventId()
 }

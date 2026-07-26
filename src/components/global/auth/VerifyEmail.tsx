@@ -55,12 +55,12 @@ export function VerifyEmail({
                         : t('Resend verification email')}
                     </Button>
                   )}
-                  <Link to="/" search={undefined}>
+                  <Link to="/sign-out" className="block">
                     <Button
                       variant={onResend ? 'ghost' : 'default'}
                       className="w-full"
                     >
-                      {t('Go to console')}
+                      {t('Sign out')}
                     </Button>
                   </Link>
                 </div>

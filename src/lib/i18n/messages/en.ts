@@ -104,6 +104,7 @@ export const enCatalog = {
         quickStarts: {
           web: 'Web',
           nextjs: 'Next.js',
+          tanstackStart: 'TanStack Start',
           react: 'React',
           vue: 'Vue.js',
           nuxt: 'Nuxt',
@@ -126,7 +127,9 @@ export const enCatalog = {
           messaging: 'Messaging',
           realtime: 'Realtime',
           hosting: 'Hosting',
+          domains: 'Domains',
           network: 'Network',
+          firewall: 'Firewall',
         },
         learn: {
           blog: 'Blog',
@@ -164,6 +167,9 @@ export const enCatalog = {
           vsNetlify: 'Appwrite vs. Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite vs. Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite vs. Auth0', // pragma: allowlist secret
+          nextjsHosting: 'Next.js hosting',
+          reactHosting: 'React hosting',
+          vueHosting: 'Vue.js hosting',
           baas: 'Backend as a service (BaaS)',
         },
       },
@@ -371,6 +377,7 @@ export const enCatalog = {
         desktopTitle: 'Platform products',
         desktopSubtitle: 'Build, deploy, and scale on one backend platform',
         viewOverview: 'View platform overview',
+        newLabel: 'New',
         categories: {
           build: 'Build',
           deploy: 'Deploy',

@@ -26,6 +26,7 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
@@ -57,6 +58,15 @@ export const Route = createFileRoute('/_auth/sign-in')({
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (account) {
+      if (requiresConsoleEmailVerification(account)) {
+        const pendingRedirect = (location.search as { redirect?: string })
+          .redirect
+        throw redirect({
+          to: '/verify-email',
+          search: pendingRedirect ? { redirect: pendingRedirect } : undefined,
+          replace: true,
+        })
+      }
       // Already signed in: honor a console redirect (e.g. a /join invite link)
       // instead of always bouncing to the dashboard.
       const target = resolvePostAuthRedirect(
@@ -143,6 +153,19 @@ function SignInPage() {
       setLastLoginMethod('email')
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
+
+        // Cloud requires verification before org/project APIs; send unverified
+        // users to /verify-email instead of provisioning a personal org.
+        if (requiresConsoleEmailVerification(account)) {
+          navigate({
+            to: '/verify-email',
+            search: search.redirect
+              ? { redirect: search.redirect }
+              : undefined,
+          })
+          return
+        }
+
         await prefetchPostAuthDestination(
           queryClient,
           account,

@@ -24,6 +24,7 @@ import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
@@ -250,6 +251,15 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
 
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
+
+        if (requiresConsoleEmailVerification(account)) {
+          navigate({
+            to: '/verify-email',
+            search: redirect ? { redirect } : undefined,
+          })
+          return
+        }
+
         await prefetchPostAuthDestination(queryClient, account, redirect)
         await router.invalidate()
 
