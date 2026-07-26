@@ -3732,6 +3732,55 @@ trait DatabasesBase
         }
     }
 
+    public function testGetDocumentCacheEmpty(): void
+    {
+        $data = $this->setupIndexes();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $documentId = ID::unique();
+
+        // Read a document that does not exist yet -> negatively caches the miss.
+        $missing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+
+        // Create that same id. This must purge the cached "not found".
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'title' => 'Cached Empty',
+                'releaseYear' => 2020,
+                'birthDay' => null,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals($documentId, $created['body']['$id']);
+
+        // The freshly created document must be visible right away. Without cache
+        // invalidation on create this would still return 404 from the marker.
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($documentId, $fetched['body']['$id']);
+        $this->assertEquals('Cached Empty', $fetched['body']['title']);
+    }
+
     public function testGetDocumentWithQueries(): void
     {
         $data = $this->getDocumentsList();
