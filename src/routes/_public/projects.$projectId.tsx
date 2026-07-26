@@ -8,6 +8,7 @@ import {
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
+import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
 import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
@@ -677,6 +678,7 @@ function ProjectLayout() {
     return (
       <div className="org-layout-container flex h-full flex-col bg-background">
         <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+          <DevConstructionStripe />
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
         </div>

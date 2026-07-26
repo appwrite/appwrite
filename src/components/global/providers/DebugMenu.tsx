@@ -1606,7 +1606,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 ? [
                     createDebugFeatureFlagItem(
                       'Dev construction stripe',
-                      'Yellow/black construction tape strip above the header in Vite DEV.',
+                      'Yellow/black construction tape strip at the top of the header stack in Vite DEV (above alerts and promos).',
                       'showDevConstructionStripe',
                       overrides.showDevConstructionStripe,
                       (checked) => {

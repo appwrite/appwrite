@@ -462,16 +462,6 @@ export function ConsoleHeader({
 
   return (
     <div className="@container w-full overflow-visible">
-      {import.meta.env.DEV && overrides.showDevConstructionStripe ? (
-        <div
-          aria-hidden
-          className="h-1 w-full shrink-0 opacity-50"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(-45deg, #fbbf24 0 6px, #171717 6px 12px)',
-          }}
-        />
-      ) : null}
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',

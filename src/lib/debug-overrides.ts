@@ -80,8 +80,8 @@ export type DebugOverrides = {
    */
   showFunctionsLocalEditor: boolean
   /**
-   * When true, show the yellow/black construction tape strip above the header
-   * in Vite DEV. Default true (DEV only).
+   * When true, show the yellow/black construction tape strip at the top of the
+   * header stack in Vite DEV (above alerts and promos). Default true.
    */
   showDevConstructionStripe: boolean
   /**
