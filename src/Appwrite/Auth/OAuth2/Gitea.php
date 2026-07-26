@@ -137,7 +137,7 @@ class Gitea extends OAuth2
         return $this->user;
     }
 
-    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
         $repository = $this->request('POST', $this->endpoint . '/api/v1/user/repos', ['Authorization: token ' . $accessToken, 'Content-Type: application/json'], \json_encode([
             'name' => $repositoryName,

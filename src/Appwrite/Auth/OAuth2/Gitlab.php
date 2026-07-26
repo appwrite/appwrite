@@ -183,12 +183,18 @@ class Gitlab extends OAuth2
      *
      * @return array
      */
-    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
-        $repository = $this->request('POST', $this->getEndpoint() . '/api/v4/projects', ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'], \json_encode([
+        $payload = [
             'name' => $repositoryName,
             'visibility' => $private ? 'private' : 'public',
-        ]));
+        ];
+
+        if (!empty($namespaceId)) {
+            $payload['namespace_id'] = (int) $namespaceId;
+        }
+
+        $repository = $this->request('POST', $this->getEndpoint() . '/api/v4/projects', ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'], \json_encode($payload));
 
         $repository = \json_decode($repository, true) ?? [];
 
