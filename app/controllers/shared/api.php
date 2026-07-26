@@ -1204,7 +1204,7 @@ Http::shutdown()
         try {
             // last write overwriting the other's stage on multiple request
             // onboarding is not a native array attribute, it is a string with json filter.
-            // we do not arrayObject operator as well, once we have both we can update
+            // we do not have a query operator for array merge keys
             $lock->tryWithKey(
                 'lock:platform:' . $project->getSequence() . ':onboarding',
                 fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
