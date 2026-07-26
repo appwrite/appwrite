@@ -8,6 +8,7 @@ env:
   COMPOSE_FILE: docker-compose.yml:docker-compose.override.yml
   IMAGE: appwrite-dev
   K6_VERSION: '0.53.0'
+  DOCKERHUB_AUTH_AVAILABLE: ${{ secrets.DOCKERHUB_TOKEN != '' }}
 
 on:
   pull_request:
@@ -102,7 +103,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
         with:
-          php-version: '8.3'
+          php-version: '8.5'
           extensions: swoole
           tools: composer:v2
           coverage: none
@@ -119,44 +120,46 @@ jobs:
         id: install
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
-      - name: Install Node dependencies
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm ci
+      - parallel:
+          - name: Install Node dependencies
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: npm ci
 
-      - name: Cache PHPStan result cache
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: .phpstan-cache
-          key: phpstan-${{ github.sha }}
-          restore-keys: |
-            phpstan-
+          - name: Cache PHPStan result cache
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+            with:
+              path: .phpstan-cache
+              key: phpstan-${{ github.sha }}
+              restore-keys: |
+                phpstan-
 
-      - name: Audit dependencies
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        env:
-          COMPOSER_NO_AUDIT: 0
-        run: composer audit
+      - parallel:
+          - name: Audit dependencies
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            env:
+              COMPOSER_NO_AUDIT: 0
+            run: composer audit
 
-      - name: Run Linter
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer lint
+          - name: Run Linter
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer lint
 
-      - name: Check Docker Compose formatting
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run lint:compose
+          - name: Check Docker Compose formatting
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: npm run lint:compose
 
-      - name: Run Rector
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer refactor:check
+          - name: Run Rector
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer refactor:check
 
-      - name: Run PHPStan
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer analyze -- --no-progress
+          - name: Run PHPStan
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer analyze -- --no-progress
 
-      - name: Generate specs
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
+          - name: Generate specs
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
     name: Checks / Locale
@@ -186,36 +189,37 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
-            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
 
             const services = [
-              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 15 },
-              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 15 },
-              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
-              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Account',           runner: runner4, functional: true,  processes: null },
+              { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
+              { name: 'Console',           runner: runner4, functional: true,  processes: null },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3 },
+              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
+              { name: 'Functions',         runner: runner4, functional: false, processes: null },
+              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
+              { name: 'GraphQL',           runner: runner4, functional: false, processes: null },
+              { name: 'Health',            runner: runner4, functional: true,  processes: null },
+              { name: 'Advisor',           runner: runner4, functional: true,  processes: null },
+              { name: 'Locale',            runner: runner4, functional: true,  processes: null },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null },
+              { name: 'Sites',             runner: runner4, functional: true,  processes: null },
+              { name: 'Proxy',             runner: runner4, functional: true,  processes: null },
+              { name: 'Storage',           runner: runner4, functional: true,  processes: null },
+              { name: 'Tokens',            runner: runner4, functional: true,  processes: null },
+              { name: 'Teams',             runner: runner4, functional: true,  processes: null },
+              { name: 'Users',             runner: runner4, functional: true,  processes: null },
+              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null },
+              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null },
+              { name: 'VCS',               runner: runner4, functional: true,  processes: null },
+              { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1 },
+              { name: 'Project',           runner: runner4, functional: true,  processes: null },
+              { name: 'Presences',         runner: runner4, functional: true,  processes: null },
             ];
             core.setOutput('services', JSON.stringify(services));
 
@@ -239,18 +243,22 @@ jobs:
               return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
             };
 
-            if (!pr || await isDatabaseVersionChanged()) {
+            const fullMatrix = context.eventName === 'workflow_dispatch'
+              || (pr && await isDatabaseVersionChanged());
+
+            if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
               core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
               return;
             }
 
-            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('databases', JSON.stringify(['PostgreSQL']));
             core.setOutput('modes', JSON.stringify(['dedicated']));
 
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+s3-cache+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+s3-cache+ecr-cache
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -258,6 +266,7 @@ jobs:
           submodules: recursive
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -282,79 +291,105 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     steps:
       - name: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
-        run: |
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Environment Variables
         run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/unit
-          command: >-
-            docker compose exec
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/unit
+        run: >-
+          docker compose exec
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/unit
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     steps:
       - name: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
-        run: |
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -366,32 +401,24 @@ jobs:
 
       - name: Run General Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/General
 
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
+    timeout-minutes: 20
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -425,15 +452,34 @@ jobs:
           fi
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -442,9 +488,7 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -456,46 +500,38 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: ${{ matrix.service.timeout }}
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service.name }}
-          command: |
-            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
+        run: |
+          SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
-            FUNCTIONAL_FLAG=""
-            if [ "${{ matrix.service.functional }}" = "true" ]; then
-              FUNCTIONAL_FLAG="--functional"
-            fi
+          FUNCTIONAL_FLAG=""
+          if [ "${{ matrix.service.functional }}" = "true" ]; then
+            FUNCTIONAL_FLAG="--functional"
+          fi
 
-            PARATEST_PROCESSES="${{ matrix.service.processes }}"
-            if [ -z "$PARATEST_PROCESSES" ]; then
-              PARATEST_PROCESSES="$(nproc)"
-            fi
+          PARATEST_PROCESSES="${{ matrix.service.processes }}"
+          if [ -z "$PARATEST_PROCESSES" ]; then
+            PARATEST_PROCESSES="$(nproc)"
+          fi
 
-            docker compose exec -T \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
-              -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+          docker compose exec -T \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
+            -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -508,15 +544,34 @@ jobs:
           fetch-depth: 1
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -525,38 +580,28 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -567,15 +612,34 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -583,9 +647,7 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          docker compose pull --quiet --ignore-buildable
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -597,29 +659,22 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Sites
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
 
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
+    timeout-minutes: 20
     needs: build
     permissions:
       actions: read
@@ -634,21 +689,23 @@ jobs:
           fetch-depth: 1
 
       - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Appwrite image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
+      - parallel:
+          - name: Pull Appwrite image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
 
-      - name: Setup k6
-        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
-        with:
-          k6-version: ${{ env.K6_VERSION }}
+          - name: Setup k6
+            uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
+            with:
+              k6-version: ${{ env.K6_VERSION }}
 
       - name: Prepare benchmark before
         id: benchmark_before_prepare

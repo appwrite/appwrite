@@ -21,6 +21,9 @@ class Event
     public const MAILS_QUEUE_NAME = 'v1-mails';
     public const MAILS_CLASS_NAME = 'MailsV1';
 
+    public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
+    public const NOTIFICATIONS_CLASS_NAME = 'NotificationsV1';
+
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
@@ -39,6 +42,9 @@ class Event
 
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
+
+    public const JOBS_QUEUE_NAME = 'v1-jobs';
+    public const JOBS_CLASS_NAME = 'JobsV1';
 
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
     public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';

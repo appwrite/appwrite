@@ -621,6 +621,82 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
+    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        $github = new GitHub(new Cache(new None()));
+        $github->initializeVariables(
+            $this->providerInstallationId,
+            System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'),
+            System::getEnv('_APP_VCS_GITHUB_APP_ID'),
+        );
+        $commit = $github->getLatestCommit('appwrite-test', 'ruby-starter', 'main');
+        $payload = [
+            'created' => false,
+            'deleted' => false,
+            'ref' => 'refs/heads/main',
+            'before' => $commit['commitHash'],
+            'after' => $commit['commitHash'],
+            'repository' => [
+                'id' => (int) $this->providerRepositoryId,
+                'name' => 'ruby-starter',
+                'full_name' => 'appwrite-test/ruby-starter',
+                'private' => false,
+                'html_url' => 'https://github.com/appwrite-test/ruby-starter',
+                'owner' => ['name' => 'appwrite-test'],
+            ],
+            'installation' => ['id' => (int) $this->providerInstallationId],
+            'head_commit' => [
+                'author' => [
+                    'name' => $commit['commitAuthor'],
+                    'email' => 'vcs-e2e@appwrite.io',
+                ],
+                'message' => $commit['commitMessage'],
+                'url' => $commit['commitUrl'],
+            ],
+            'commits' => [[
+                'id' => $commit['commitHash'],
+                'added' => [],
+                'removed' => [],
+                'modified' => ['main.rb'],
+            ]],
+            'sender' => [
+                'html_url' => $commit['commitAuthorUrl'],
+                'avatar_url' => $commit['commitAuthorAvatar'],
+            ],
+        ];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-github-event' => 'push',
+        ];
+        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        if (!empty($secret)) {
+            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+                'sha256',
+                \json_encode($payload, JSON_THROW_ON_ERROR),
+                $secret,
+            );
+        }
+
+        // GitHub webhooks are public and intentionally have no x-appwrite-project header.
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+
+        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('providerCommitHash', [$commit['commitHash']])->toString(),
+                Query::equal('type', ['vcs'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
+        $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
+    }
+
     public function testUpdateFunctionUsingVCS(): void
     {
         $data = $this->setupFunctionUsingVCS();

@@ -4,8 +4,8 @@
     const getLockedDatabase = () => getBodyDataset().lockedDatabase || '';
     const getEnabledDatabases = () => {
         const raw = getBodyDataset().enabledDatabases;
-        if (!raw) return ['mongodb', 'mariadb'];
-        try { return JSON.parse(raw); } catch (e) { return ['mongodb', 'mariadb']; }
+        if (!raw) return ['postgresql', 'mariadb', 'mongodb'];
+        try { return JSON.parse(raw); } catch (e) { return ['postgresql', 'mariadb', 'mongodb']; }
     };
 
     const STEP_IDS = Object.freeze({

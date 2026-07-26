@@ -383,7 +383,7 @@ final class MessagingFanoutTest extends TestCase
      * Build a topic-backed dataset: $count subscribers, each pointing at one email target. A single identifier
      * is duplicated so per-page dedup is exercised when the dataset fits in one page.
      *
-     * @return array{subscribers: array<Document>, targets: array<string, Document>}
+     * @return array{subscribers: array<Document>, targets: array<int|string, Document>}
      */
     private function topicDataset(int $count): array
     {
@@ -698,7 +698,7 @@ class RecordingDatabase extends Database
 
     /**
      * @param array<Document> $subscribers Subscriber rows (carry $sequence + targetInternalId + providerType).
-     * @param array<string, Document> $targets Target rows keyed by $sequence (resolved from a subscriber page).
+     * @param array<int|string, Document> $targets Target rows keyed by $sequence (resolved from a subscriber page).
      * @param array<Document> $userTargets Targets addressed by userId.
      * @param array<Document> $directTargets Targets addressed directly by id.
      */

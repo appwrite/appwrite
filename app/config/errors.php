@@ -54,6 +54,11 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
+    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
@@ -342,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',
@@ -510,6 +520,11 @@ return [
     Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
         'description' => 'The given file extension is not supported.',
+        'code' => 400,
+    ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
@@ -1200,6 +1215,11 @@ return [
         'name' => Exception::KEY_ALREADY_EXISTS,
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,

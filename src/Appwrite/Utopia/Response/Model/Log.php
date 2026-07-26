@@ -42,7 +42,7 @@ class Log extends Model
             ])
             ->addRule('userType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User type who triggered the audit log. Possible values: user, admin, guest, keyProject, keyAccount, keyOrganization.',
+                'description' => 'User type who triggered the audit log. Possible values: user, admin, guest, hidden, keyProject, keyAccount, keyOrganization.',
                 'default' => '',
                 'example' => 'user',
             ])

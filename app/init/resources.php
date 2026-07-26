@@ -7,20 +7,28 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -40,11 +48,10 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Storage;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 global $register;
 global $container;
@@ -64,6 +71,30 @@ $container->set('platform', fn () => Config::getParam('platform', []), []);
 $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $container->set('executor', fn () => new Executor(), []);
+
+$container->set('jobs', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
+        ->withTimeout(30);
+
+    // No host on executor-only installs: keep the injection resolvable and
+    // fail at call time instead (the client is only used when
+    // _APP_BUILDS_BACKEND=orchestrator, which requires _APP_JOBS_HOST).
+    $host = System::getEnv('_APP_JOBS_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Jobs($client);
+}, []);
+
+$container->set('screenshots', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+
+    return new ScreenshotsClient($client);
+}, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
@@ -105,11 +136,6 @@ $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePubli
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('publisherForExecutions', fn (Publisher $publisher) => new ExecutionPublisher(
-    $publisher,
-    new Queue(System::getEnv('_APP_EXECUTIONS_QUEUE_NAME', Event::EXECUTIONS_QUEUE_NAME))
-), ['publisher']);
-
 $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
@@ -130,6 +156,11 @@ $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPubl
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
     $publisherDatabases,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
@@ -148,6 +179,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -224,18 +260,16 @@ function getDevice(string $root, string $connection = ''): Device
 {
     $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    if (! empty($connection)) {
-        $acl = 'private';
-        $device = Storage::DEVICE_LOCAL;
-        $accessKey = '';
-        $accessSecret = '';
-        $bucket = '';
-        $region = '';
-        $url = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+    $device = DeviceType::Local;
+    $accessKey = '';
+    $accessSecret = '';
+    $bucket = '';
+    $region = '';
 
+    if (! empty($connection)) {
         try {
             $dsn = new DSN($connection);
-            $device = $dsn->getScheme();
+            $device = DeviceType::tryFrom($dsn->getScheme()) ?? DeviceType::Local;
             $accessKey = $dsn->getUser() ?? '';
             $accessSecret = $dsn->getPassword() ?? '';
             $bucket = $dsn->getPath() ?? '';
@@ -243,87 +277,45 @@ function getDevice(string $root, string $connection = ''): Device
         } catch (\Throwable $e) {
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
-
-        switch ($device) {
-            case Storage::DEVICE_S3:
-                if (! empty($url)) {
-                    $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
-
-                    return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
-                } else {
-                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-                }
-                // no break
-            case Storage::DEVICE_DO_SPACES:
-                $device = new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
-
-                return $device;
-            case Storage::DEVICE_BACKBLAZE:
-                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LINODE:
-                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_WASABI:
-                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
-        }
     } else {
-        switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
-            case Storage::DEVICE_S3:
-                $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-                $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
-                $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
-                $s3Bucket = System::getEnv('_APP_STORAGE_S3_BUCKET', '');
-                $s3Acl = 'private';
-                $s3EndpointUrl = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
-                if (! empty($s3EndpointUrl)) {
-                    $bucketRoot = (! empty($s3Bucket) ? "{$s3Bucket}/" : '') . \ltrim($root, '/');
-
-                    return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
-                } else {
-                    return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-                }
-                // no break
-            case Storage::DEVICE_DO_SPACES:
-                $doSpacesAccessKey = System::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-                $doSpacesSecretKey = System::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-                $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-                $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-                $doSpacesAcl = 'private';
-                $device = new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-                $device->setHttpVersion(S3::HTTP_VERSION_1_1);
-
-                return $device;
-            case Storage::DEVICE_BACKBLAZE:
-                $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-                $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-                $backblazeRegion = System::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-                $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
-                $backblazeAcl = 'private';
-
-                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
-            case Storage::DEVICE_LINODE:
-                $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-                $linodeSecretKey = System::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-                $linodeRegion = System::getEnv('_APP_STORAGE_LINODE_REGION', '');
-                $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
-                $linodeAcl = 'private';
-
-                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
-            case Storage::DEVICE_WASABI:
-                $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-                $wasabiSecretKey = System::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-                $wasabiRegion = System::getEnv('_APP_STORAGE_WASABI_REGION', '');
-                $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
-                $wasabiAcl = 'private';
-
-                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
+        $device = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
+        $prefix = match ($device) {
+            DeviceType::S3, DeviceType::AwsS3 => 'S3',
+            DeviceType::DoSpaces => 'DO_SPACES',
+            DeviceType::Backblaze => 'BACKBLAZE',
+            DeviceType::Linode => 'LINODE',
+            DeviceType::Wasabi => 'WASABI',
+            DeviceType::Local => null,
+        };
+        if ($prefix !== null) {
+            $accessKey = System::getEnv("_APP_STORAGE_{$prefix}_ACCESS_KEY", '');
+            $accessSecret = System::getEnv("_APP_STORAGE_{$prefix}_SECRET", '');
+            $region = System::getEnv("_APP_STORAGE_{$prefix}_REGION", '');
+            $bucket = System::getEnv("_APP_STORAGE_{$prefix}_BUCKET", '');
         }
+    }
+
+    switch ($device) {
+        case DeviceType::S3:
+        case DeviceType::AwsS3:
+            $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+            if (! empty($endpoint)) {
+                $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+
+                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+            }
+
+            return new AWS($root, $accessKey, $accessSecret, $bucket, $region);
+        case DeviceType::DoSpaces:
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region);
+        case DeviceType::Backblaze:
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region);
+        case DeviceType::Linode:
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region);
+        case DeviceType::Wasabi:
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region);
+        case DeviceType::Local:
+            return new Local($root);
     }
 }
 
@@ -342,13 +334,21 @@ $container->set('servers', function () {
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('gitHub', fn (Cache $cache) => new VcsGitHub($cache), ['cache']);
+$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+$container->set('installationTokens', fn () => new InstallationTokens(), []);
+$container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
+
+$container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
+
+$container->set('vcsConfigured', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->isConfigured($provider), ['vcsFactory']);
+
+$container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->getWebhookSecret($provider), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
 
 $container->set('smsRates', fn () => []);
 
 $container->set(
-    'isResourceBlocked',
+    'getIsResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );

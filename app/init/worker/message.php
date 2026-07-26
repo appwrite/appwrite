@@ -1,10 +1,14 @@
 <?php
 
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Usage\Context;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
@@ -17,6 +21,7 @@ use Utopia\DI\Container;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
@@ -145,6 +150,16 @@ return function (Container $container): void {
         return new Webhook($publisher);
     }, ['publisher']);
 
+    $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
+        $publisher,
+        new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
+    ), ['publisher']);
+
+    $container->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
+        $publisher,
+        new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
+    ), ['publisher']);
+
     $container->set('queueForRealtime', function () {
         return new Realtime();
     }, []);
@@ -172,6 +187,12 @@ return function (Container $container): void {
     $container->set('deviceForCache', function (Document $project, Telemetry $telemetry) {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
+
+    // Only the Builds worker uses this, handing template-into-repo pushes to
+    // the jobs-service when _APP_BUILDS_BACKEND=orchestrator — no backend switch.
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
+        return new Orchestrator($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {

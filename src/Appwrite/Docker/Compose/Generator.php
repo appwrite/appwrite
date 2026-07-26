@@ -8,20 +8,20 @@ class Generator
 {
     private const array SELECTABLE_SERVICE_GROUPS = [
         'database' => [
-            'default' => 'mongodb',
+            'default' => 'postgresql',
             'services' => [
+                'postgresql',
                 'mariadb',
                 'mongodb',
-                'postgresql',
             ],
         ],
     ];
 
     private const array SELECTABLE_VOLUME_GROUPS = [
         'database' => [
+            'postgresql' => ['appwrite-postgresql'],
             'mariadb' => ['appwrite-mariadb'],
             'mongodb' => ['appwrite-mongodb', 'appwrite-mongodb-keyfile'],
-            'postgresql' => ['appwrite-postgresql'],
         ],
     ];
 
@@ -36,9 +36,14 @@ class Generator
         ],
     ];
 
+    private const array HOST_PATH_REWRITABLE_BINDS = [
+        './mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro',
+        './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+    ];
+
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
-        'database' => 'mongodb',
+        'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
     ];
@@ -50,6 +55,7 @@ class Generator
                 'condition' => 'service_healthy',
             ],
             'placeholders' => [
+                '${_APP_DB_HOST:-postgresql}',
                 '${_APP_DB_HOST:-mongodb}',
                 '${_APP_DB_HOST:-mariadb}',
             ],
@@ -72,9 +78,9 @@ class Generator
     private array $params = [];
 
     private array $selectableServices = [
+        'postgresql',
         'mariadb',
         'mongodb',
-        'postgresql',
     ];
 
     public function __construct(string $compose)
@@ -106,6 +112,7 @@ class Generator
             }
 
             $this->rewriteDependencies($service);
+            $this->rewriteRelativeBindMounts($service);
             $this->rewriteLocalVolumes($name, $service);
         }
         unset($service);
@@ -221,8 +228,9 @@ class Generator
                     }
                 ));
 
-                if ($hasSelectedDependency && !\in_array($selected, $dependsOn, true)) {
-                    $dependsOn[] = $selected;
+                if ($hasSelectedDependency) {
+                    $dependsOn = \array_fill_keys($dependsOn, ['condition' => 'service_started']);
+                    $dependsOn[$selected] = $selector['condition'];
                 }
 
                 $service['depends_on'] = $dependsOn;
@@ -242,6 +250,29 @@ class Generator
                 $service['depends_on'][$selected] = $selector['condition'];
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed> $service
+     */
+    private function rewriteRelativeBindMounts(array &$service): void
+    {
+        if (empty($this->params['hostPath']) || empty($service['volumes'])) {
+            return;
+        }
+
+        foreach ($service['volumes'] as &$volume) {
+            if (!\is_string($volume) || !\str_starts_with($volume, './')) {
+                continue;
+            }
+
+            if ($this->params['version'] !== 'local' && !\in_array($volume, self::HOST_PATH_REWRITABLE_BINDS, true)) {
+                continue;
+            }
+
+            $volume = $this->params['hostPath'] . '/' . \substr($volume, 2);
+        }
+        unset($volume);
     }
 
     /**

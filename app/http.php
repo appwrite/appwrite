@@ -11,9 +11,6 @@ use Swoole\Constant;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\Audit\Adapter\Database as AdapterDatabase;
-use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
-use Utopia\Audit\Audit;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -303,12 +300,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
             $authorization = $container->get('authorization');
 
-            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
-
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
@@ -455,12 +446,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 }
             }
 
-            if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
-
             $collectionsCreated = 0;
             foreach ($projectCollections as $key => $collection) {
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -572,7 +557,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($th->getMessage());
 
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
+            $log->addTag('method', \implode(',', $route?->getMethods() ?? [$request->getMethod()]));
             $log->addTag('url', $route?->getPath() ?? $request->getURI());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());

@@ -21,7 +21,6 @@ use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Indexes\Del
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Indexes\Get as GetColumnIndex;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Indexes\XList as ListColumnIndexes;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Update as UpdateTable;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Usage\Get as GetTableUsage;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\XList as ListTables;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Create as CreateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Delete as DeleteTablesDatabase;
@@ -33,8 +32,6 @@ use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Operations
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Update as UpdateTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Usage\Get as GetTablesDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Usage\XList as ListTablesDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\XList as ListTablesDatabase;
 use Utopia\Platform\Service;
 
@@ -56,8 +53,6 @@ class DocumentsDB extends Base
         $service->addAction(UpdateTablesDatabase::getName(), new UpdateTablesDatabase());
         $service->addAction(DeleteTablesDatabase::getName(), new DeleteTablesDatabase());
         $service->addAction(ListTablesDatabase::getName(), new ListTablesDatabase());
-        $service->addAction(GetTablesDatabaseUsage::getName(), new GetTablesDatabaseUsage());
-        $service->addAction(ListTablesDatabaseUsage::getName(), new ListTablesDatabaseUsage());
     }
 
     private function registerTableActions(Service $service): void
@@ -67,7 +62,6 @@ class DocumentsDB extends Base
         $service->addAction(UpdateTable::getName(), new UpdateTable());
         $service->addAction(DeleteTable::getName(), new DeleteTable());
         $service->addAction(ListTables::getName(), new ListTables());
-        $service->addAction(GetTableUsage::getName(), new GetTableUsage());
     }
 
     private function registerIndexActions(Service $service): void

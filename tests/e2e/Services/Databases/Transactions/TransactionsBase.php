@@ -100,6 +100,22 @@ trait TransactionsBase
         parent::tearDownAfterClass();
     }
 
+    protected function assertStagedWriteResponseSystemAttributes(array $body, bool $empty = false): void
+    {
+        $this->assertArrayHasKey('$sequence', $body, 'Staged write response should include $sequence for SDK model hydration.');
+        $this->assertArrayHasKey('$createdAt', $body, 'Staged write response should include $createdAt for SDK model hydration.');
+        $this->assertArrayHasKey('$updatedAt', $body, 'Staged write response should include $updatedAt for SDK model hydration.');
+        $this->assertIsString($body['$sequence']);
+        $this->assertIsString($body['$createdAt']);
+        $this->assertIsString($body['$updatedAt']);
+
+        if ($empty) {
+            $this->assertSame('', $body['$sequence']);
+            $this->assertSame('', $body['$createdAt']);
+            $this->assertSame('', $body['$updatedAt']);
+        }
+    }
+
     /**
      * Test creating a transaction
      */
@@ -1661,6 +1677,7 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertStagedWriteResponseSystemAttributes($response['body'], empty: true);
 
         // Document should not exist outside transaction yet
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, "doc_from_route"), array_merge([

@@ -162,7 +162,6 @@ trait Base
     public const string GET_ACCOUNT_SESSION = 'get_account_session';
     public const string GET_ACCOUNT_SESSIONS = 'get_account_sessions';
     public const string GET_ACCOUNT_PREFS = 'get_account_preferences';
-    public const string GET_ACCOUNT_LOGS = 'get_account_logs';
     public const string UPDATE_ACCOUNT_NAME = 'update_account_name';
     public const string UPDATE_ACCOUNT_EMAIL = 'update_account_email';
     public const string UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
@@ -183,7 +182,6 @@ trait Base
     public const string GET_USER_PREFERENCES = 'get_user_preferences';
     public const string GET_USER_SESSIONS = 'get_user_sessions';
     public const string GET_USER_MEMBERSHIPS = 'get_user_memberships';
-    public const string GET_USER_LOGS = 'get_user_logs';
     public const string UPDATE_USER_STATUS = 'update_user_status';
     public const string UPDATE_USER_NAME = 'update_user_name';
     public const string UPDATE_USER_EMAIL = 'update_user_email';
@@ -259,18 +257,6 @@ trait Base
     public const string GET_FILE_VIEW = 'get_file_view';
     public const string UPDATE_FILE = 'update_file';
     public const string DELETE_FILE = 'delete_file';
-
-    // Health
-    public const string GET_HTTP_HEALTH = 'get_http_health';
-    public const string GET_DB_HEALTH = 'get_db_health';
-    public const string GET_CACHE_HEALTH = 'get_cache_health';
-    public const string GET_TIME_HEALTH = 'get_time_health';
-    public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
-    public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
-    public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
-    public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
-    public const string GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
     public const string GET_LOCALE = 'get_locale';
@@ -1514,16 +1500,6 @@ trait Base
                         }
                     }
                 }';
-            case self::GET_USER_LOGS:
-                return 'query listUserLogs($userId : String!) {
-                    usersListLogs(userId : $userId) {
-                        total
-                        logs {
-                            event
-                            userId
-                        }
-                    }
-                }';
             case self::GET_USERS:
                 return 'query listUsers($queries: [String!], $search: String) {
                     usersList(queries: $queries, search: $search) {
@@ -1957,18 +1933,6 @@ trait Base
                             _id
                             userId
                             expire
-                        }
-                    }
-                }';
-            case self::GET_ACCOUNT_LOGS:
-                return 'query getAccountLogs {
-                    accountListLogs {
-                        total
-                        logs {
-                            event
-                            userId
-                            ip
-                            countryName
                         }
                     }
                 }';
@@ -2431,79 +2395,6 @@ trait Base
             case self::DELETE_FILE:
                 return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
                     storageDeleteFile(bucketId: $bucketId, fileId: $fileId) {
-                        status
-                    }
-                }';
-            case self::GET_HTTP_HEALTH:
-                return 'query getHttpHealth {
-                    healthGet {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_DB_HEALTH:
-                return 'query getDbHealth {
-                    healthGetDB {
-                        statuses {
-                            ping
-                            status
-                        }
-                        total
-                    }
-                }';
-            case self::GET_CACHE_HEALTH:
-                return 'query getCacheHealth {
-                    healthGetCache {
-                        statuses {
-                            ping
-                            status
-                        }
-                        total
-                    }
-                }';
-            case self::GET_TIME_HEALTH:
-                return 'query getTimeHealth {
-                    healthGetTime {
-                        remoteTime
-                        localTime
-                        diff
-                    }
-                }';
-            case self::GET_WEBHOOKS_QUEUE_HEALTH:
-                return 'query getWebhooksQueueHealth {
-                    healthGetQueueWebhooks {
-                        size
-                    }
-                }';
-            case self::GET_LOGS_QUEUE_HEALTH:
-                return 'query getLogsQueueHealth {
-                    healthGetQueueLogs {
-                        size
-                    }
-                }';
-            case self::GET_CERTIFICATES_QUEUE_HEALTH:
-                return 'query getCertificatesQueueHealth {
-                    healthGetQueueCertificates {
-                        size
-                    }
-                }';
-            case self::GET_FUNCTION_QUEUE_HEALTH:
-                return 'query getFunctionQueueHealth {
-                    healthGetQueueFunctions {
-                        size
-                    }
-                }';
-            case self::GET_LOCAL_STORAGE_HEALTH:
-                return 'query getLocalStorageHealth {
-                    healthGetStorageLocal {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_ANITVIRUS_HEALTH:
-                return 'query getAntivirusHealth {
-                    healthGetAntivirus {
-                        version
                         status
                     }
                 }';
