@@ -3734,9 +3734,34 @@ trait DatabasesBase
 
     public function testGetDocumentCacheEmpty(): void
     {
-        $data = $this->setupIndexes();
-        $databaseId = $data['databaseId'];
-        $containerId = $data['moviesId'];
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // Dedicated collection so the inserted document cannot change the
+        // document counts asserted by the shared movies-collection tests.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'CacheEmpty',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $containerId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->createAttribute($databaseId, $containerId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
 
         $documentId = ID::unique();
 
@@ -3756,13 +3781,9 @@ trait DatabasesBase
             $this->getRecordIdParam() => $documentId,
             'data' => [
                 'title' => 'Cached Empty',
-                'releaseYear' => 2020,
-                'birthDay' => null,
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
