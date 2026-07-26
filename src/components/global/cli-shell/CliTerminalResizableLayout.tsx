@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import {
   useCallback,
   useEffect,
@@ -26,11 +26,7 @@ import {
   computeTwoPanelHorizontalLayout,
   syncPanelGroupFirstPanePx,
 } from '@/lib/resizable-layout'
-import {
-  verticalPanelResizeHandleClass,
-  setBodyResizeDragActive,
-} from '@/lib/layout/horizontal-resize'
-import { cn } from '@/lib/utils'
+import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
 import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
 
 const HANDLE_CLASS = verticalPanelResizeHandleClass('z-[45]')
@@ -175,19 +171,16 @@ export function CliTerminalResizableLayout({
     [containerWidth, persistSidebarWidthPx],
   )
 
-  const finishSidebarResize = useCallback(
-    (e?: PointerEvent<HTMLDivElement>) => {
+  const handleSidebarDragging = useCallback(
+    (isDragging: boolean) => {
+      if (isDragging) {
+        isSidebarResizingRef.current = true
+        onSidebarResizingChange?.(true)
+        return
+      }
       if (!isSidebarResizingRef.current) return
       isSidebarResizingRef.current = false
-      setBodyResizeDragActive(false)
       onSidebarResizingChange?.(false)
-      if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
-        try {
-          e.currentTarget.releasePointerCapture(e.pointerId)
-        } catch {
-          /* already released */
-        }
-      }
       if (persistTimerRef.current !== null) {
         window.clearTimeout(persistTimerRef.current)
         persistTimerRef.current = null
@@ -201,16 +194,6 @@ export function CliTerminalResizableLayout({
       }
     },
     [onSidebarResizingChange, persistSidebarWidthPx],
-  )
-
-  const handleSidebarResizePointerDown = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
-      isSidebarResizingRef.current = true
-      setBodyResizeDragActive(true)
-      onSidebarResizingChange?.(true)
-      e.currentTarget.setPointerCapture(e.pointerId)
-    },
-    [onSidebarResizingChange],
   )
 
   useEffect(() => {
@@ -282,9 +265,7 @@ export function CliTerminalResizableLayout({
         </ResizablePanel>
         <ResizableHandle
           className={HANDLE_CLASS}
-          onPointerDown={handleSidebarResizePointerDown}
-          onPointerUp={finishSidebarResize}
-          onPointerCancel={finishSidebarResize}
+          onDragging={handleSidebarDragging}
         />
         <ResizablePanel
           defaultSize={panelLayout.secondPercent}

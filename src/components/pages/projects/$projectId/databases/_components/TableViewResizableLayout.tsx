@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import {
   useCallback,
   useEffect,
@@ -164,29 +164,17 @@ export function TableViewResizableLayout({
     [containerWidth],
   )
 
-  const finishSidebarResize = useCallback(
-    (e?: PointerEvent<HTMLDivElement>) => {
+  const handleSidebarDragging = useCallback(
+    (isDragging: boolean) => {
+      if (isDragging) {
+        isSidebarResizingRef.current = true
+        return
+      }
       if (!isSidebarResizingRef.current) return
       isSidebarResizingRef.current = false
-      if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
-        try {
-          e.currentTarget.releasePointerCapture(e.pointerId)
-        } catch {
-          /* already released */
-        }
-      }
-      const nextPx = latestSidebarPxRef.current
-      persistSidebarWidthPx(nextPx)
+      persistSidebarWidthPx(latestSidebarPxRef.current)
     },
     [persistSidebarWidthPx],
-  )
-
-  const handleSidebarResizePointerDown = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
-      isSidebarResizingRef.current = true
-      e.currentTarget.setPointerCapture(e.pointerId)
-    },
-    [],
   )
 
   const shellClassName = cn(
@@ -232,9 +220,7 @@ export function TableViewResizableLayout({
         </ResizablePanel>
         <ResizableHandle
           className={HANDLE_CLASS}
-          onPointerDown={handleSidebarResizePointerDown}
-          onPointerUp={finishSidebarResize}
-          onPointerCancel={finishSidebarResize}
+          onDragging={handleSidebarDragging}
         />
         <ResizablePanel
           defaultSize={panelLayout.secondPercent}

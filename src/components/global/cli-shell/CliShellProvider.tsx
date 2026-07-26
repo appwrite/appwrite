@@ -37,6 +37,7 @@ import { isAppwriteCliCommand } from '@/lib/cli-shell/is-appwrite-command'
 import { ensureAppwriteBinStub } from '@/lib/cli-shell/install-appwrite-cli'
 import { prepareCliCommand } from '@/lib/cli-shell/prepare-command'
 import { shouldWriteCliStderr } from '@/lib/cli-shell/almostnode-patches'
+import '@/lib/cli-shell/suppress-process-exit-rejections'
 import {
   CLI_TERMINAL_MUTED,
   CLI_TERMINAL_RESET,
