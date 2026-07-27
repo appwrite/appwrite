@@ -426,14 +426,8 @@ class Install extends Action
             }
         }
 
-        foreach ($input as $key => $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-            if (str_contains($value, "\n") || str_contains($value, "\r")) {
-                throw new \InvalidArgumentException('Invalid value for ' . $key);
-            }
-        }
+        // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
+        // encodes them as escaped single-line double-quoted assignments.
 
         // Set database-specific connection details
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
