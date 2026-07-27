@@ -10,6 +10,7 @@ use Appwrite\SDK\Specification\Format;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\VcsRepositories;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
@@ -35,6 +36,9 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
@@ -601,5 +605,41 @@ final class FormatTest extends TestCase
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+    }
+
+    public function testQueriesSubclassesEmitArrayOfStrings(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        // VcsRepositories extends Queries directly rather than Queries\Base, and a
+        // deeper subclass proves arbitrary inheritance depth is normalised too.
+        $deepSubclass = new class () extends VcsRepositories {};
+
+        $route = (new Route('GET', '/v1/tests/queries'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
+            ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $parameters = $openApi['paths']['/tests/queries']['get']['parameters'];
+        $schemas = \array_column($parameters, 'schema', 'name');
+
+        $this->assertCount(3, $schemas);
+
+        foreach (['queries', 'repositoryQueries', 'deepQueries'] as $name) {
+            $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
+            $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
+        }
     }
 }
