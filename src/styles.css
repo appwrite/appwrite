@@ -148,7 +148,7 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
   /* Cloud profile - matches appwrite/website; files in public/fonts/aeonik-pro */
   --font-aeonik-pro:
     'Aeonik Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  /* Long-form content body copy — matches appwrite/website (--web-font-family-inter) */
+  /* Long-form content body copy - matches appwrite/website (--web-font-family-inter) */
   --font-inter: 'Inter', arial, sans-serif;
   /* Self-hosted / non-cloud project overview title */
   --font-inter-overview: var(--font-inter);
@@ -615,7 +615,7 @@ html:not([lang='en']):not([lang='he']) {
     font-family: var(--font-inter-overview);
   }
 
-  /* Hero/marketing headline gradient — tints from --brand-cta (theme primary on debug palettes). */
+  /* Hero/marketing headline gradient - tints from --brand-cta (theme primary on debug palettes). */
   .text-gradient-brand {
     background-image: linear-gradient(
       145deg,
@@ -1924,7 +1924,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   opacity: 0;
 }
 
-/* xterm font measurement probe — must stay off-screen (see @xterm/xterm/css/xterm.css) */
+/* xterm font measurement probe - must stay off-screen (see @xterm/xterm/css/xterm.css) */
 .cli-terminal .xterm-char-measure-element {
   display: inline-block;
   visibility: hidden;
@@ -1961,7 +1961,7 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
   pointer-events: none;
 }
 
-/* CodeBlock (prism-react-renderer): no fill — page/dialog background shows through */
+/* CodeBlock (prism-react-renderer): no fill - page/dialog background shows through */
 pre.prism-code,
 pre.prism-code code,
 pre.prism-code .token-line,
@@ -1973,7 +1973,7 @@ pre.prism-code .token-line > span {
   box-shadow: none !important;
 }
 
-/* Overlay scrollbar — hidden until hover/focus; thin rounded thumb on Windows/Linux */
+/* Overlay scrollbar - hidden until hover/focus; thin rounded thumb on Windows/Linux */
 .overlay-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -2011,7 +2011,7 @@ pre.prism-code .token-line > span {
 }
 
 @layer components {
-  /* Neutral inline links — dotted underline, no brand pink. */
+  /* Neutral inline links - dotted underline, no brand pink. */
   .link-neutral,
   :is(.docs-prose, .policy-prose, .prose-links-neutral) a[href]:not(.link-unstyled) {
     cursor: pointer;
@@ -2031,7 +2031,7 @@ pre.prism-code .token-line > span {
     text-decoration-color: color-mix(in oklch, var(--muted-foreground) 58%, transparent);
   }
 
-  /* Card / block UI inside prose — wrapper links, not inline text links. */
+  /* Card / block UI inside prose - wrapper links, not inline text links. */
   :is(.docs-prose, .policy-prose, .prose-links-neutral) .not-prose a[href]:not(.link-neutral) {
     font-weight: inherit;
     color: inherit;
@@ -2043,7 +2043,7 @@ pre.prism-code .token-line > span {
     text-decoration: none;
   }
 
-  /* Nav chrome, cards, and buttons — no default dashed underline. */
+  /* Nav chrome, cards, and buttons - no default dashed underline. */
   .link-unstyled,
   .link-unstyled a[href] {
     font-weight: inherit;

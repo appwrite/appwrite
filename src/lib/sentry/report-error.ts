@@ -181,7 +181,7 @@ export function captureExceptionWithContext(
 
 /**
  * Report an error caught by a TanStack Router CatchBoundary (`onCatch` / `defaultOnCatch`).
- * Prefer this over waiting for the error UI to mount — the UI can fail to render.
+ * Prefer this over waiting for the error UI to mount - the UI can fail to render.
  */
 export function reportRouterCaughtError(
   error: Error,

@@ -31,7 +31,7 @@ export type SettingsLayoutNavItem = {
   label: string
   icon: LucideIcon
   keywords?: string[]
-  /** Route `to` — typed loosely so org/project layouts can share this shell. */
+  /** Route `to` - typed loosely so org/project layouts can share this shell. */
   to: string
   params?: Record<string, string>
   /** Optional trailing content (e.g. warning icon) after the label. */
@@ -130,7 +130,7 @@ function SettingsLayoutShellContent({
   onNavigateToSectionRef.current = onNavigateToSection
 
   // Debounce auto-switch so typing does not navigate on every keystroke (which steals focus).
-  // Do not list onNavigateToSection in deps — parents often pass inline handlers that change every render.
+  // Do not list onNavigateToSection in deps - parents often pass inline handlers that change every render.
   useEffect(() => {
     if (!q) return
 

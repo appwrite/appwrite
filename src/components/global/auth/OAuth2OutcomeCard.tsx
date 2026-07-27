@@ -67,7 +67,7 @@ export function OAuth2OutcomeCard({
   if (!approved) {
     message = `${t('No access was granted to')} ${appName}. ${t('You can close this tab.')}`
   } else if (flow === 'device') {
-    message = `${t("You've authorized")} ${appName}. ${t('Return to your device — it will continue automatically.')}`
+    message = `${t("You've authorized")} ${appName}. ${t('Return to your device - it will continue automatically.')}`
   } else if (redirectUrl) {
     message = `${t('Return to')} ${appName} ${t('to continue. If it didn’t open automatically, use the button below.')}`
   } else {

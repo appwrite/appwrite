@@ -479,7 +479,7 @@ Checklist (in this order):
 
 ### Copy
 
-- **No em dashes** - Do not use em dashes (`—`) in user-facing copy, labels, descriptions, or empty states. Use a period, comma, colon, or parentheses instead.
+- **No em dashes** - Never use the Unicode em dash character (U+2014). For empty or N/A table cells, use a regular hyphen (`-`). In prose, prefer a period, comma, colon, or parentheses instead of dash punctuation.
 - **All copy must be translatable** - Wrap every new user-facing string in `t('...')` and add a dictionary entry for each supported language. See "Internationalization (i18n)" for the full workflow, style guide, and what not to wrap.
 
 ### Visual Design
@@ -1074,7 +1074,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                                                                                                         |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                                                                                                 |
 | Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                                                                                                           |
-| Em dashes              | Never use `—` in user-facing copy; use a period, comma, colon, or parentheses instead                                                                                                                                                                                                                                   |
+| Em dashes              | Never use the Unicode em dash (U+2014); use `-` for empty/N/A cells, or a period, comma, colon, or parentheses in prose                                                                                                                                                                                                  |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                                                                                                        |
 | Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                                                                                               |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                                                                                                   |

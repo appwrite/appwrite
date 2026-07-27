@@ -139,7 +139,7 @@ function shouldSkipDuplicateAuthRedirect(key: string): boolean {
 }
 
 /**
- * Navigate to MFA or sign-in when the account query fails. Must run in useEffect —
+ * Navigate to MFA or sign-in when the account query fails. Must run in useEffect -
  * never call navigate from inside queryFn (async updates before mount).
  */
 function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
@@ -209,7 +209,7 @@ function isMfaRequiredError(error: unknown) {
   )
 }
 
-// Client-side sign out — always hard-redirects to sign-in when complete.
+// Client-side sign out - always hard-redirects to sign-in when complete.
 async function signOut(
   _navigate?: (options: { to: string }) => void,
   queryClient?: ReturnType<typeof useQueryClient>,

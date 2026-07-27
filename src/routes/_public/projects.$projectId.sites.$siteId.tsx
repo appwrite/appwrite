@@ -15,7 +15,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId',
 )({
   validateSearch: listSearchSchema,
-  // Site layout data depends on path params only — not logs pagination/filters.
+  // Site layout data depends on path params only - not logs pagination/filters.
   loaderDeps: () => ({}),
   staleTime: 30_000,
   head: ({ loaderData }) => ({

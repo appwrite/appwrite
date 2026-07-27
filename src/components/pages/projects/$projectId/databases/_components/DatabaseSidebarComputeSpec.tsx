@@ -117,6 +117,7 @@ export function DatabaseSidebarComputeSpec({
   const { database: productDatabase } = useProjectDatabase(
     projectId,
     mode === 'product' ? databaseId : null,
+    dbKind ?? 'tablesdb',
   )
   const { database: postgresDatabase } = usePostgresDatabase(
     projectId,

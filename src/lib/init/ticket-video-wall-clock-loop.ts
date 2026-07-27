@@ -1,4 +1,4 @@
-/** ~60Hz tick — uses timers so capture continues when rAF is throttled (hidden tab). */
+/** ~60Hz tick - uses timers so capture continues when rAF is throttled (hidden tab). */
 const DEFAULT_TICK_INTERVAL_MS = 16
 
 export function sleep(ms: number) {
@@ -45,7 +45,7 @@ export async function runWallClockLoop({
 
 /**
  * Wall-clock loop that pauses while the document is hidden.
- * Use for tab element capture — the compositor stops updating off-screen tabs.
+ * Use for tab element capture - the compositor stops updating off-screen tabs.
  */
 export async function runVisibilityPausedWallClockLoop({
   durationMs,

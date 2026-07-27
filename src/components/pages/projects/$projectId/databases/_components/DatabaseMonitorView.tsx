@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import { cn } from '@/lib/utils'
 import {
@@ -133,12 +134,14 @@ function MonitorChartAnchor({
 
 export type DatabaseMonitorViewProps = {
   databaseId: string
+  dbKind: DatabaseRouteKind
   dateRange: DateRange
   chartTick: number
 }
 
 export function DatabaseMonitorView({
   databaseId,
+  dbKind,
   dateRange,
   chartTick,
 }: DatabaseMonitorViewProps) {
@@ -161,7 +164,7 @@ export function DatabaseMonitorView({
     [chartInterval, dateRange],
   )
 
-  const { database } = useProjectDatabase(projectId, databaseId)
+  const { database } = useProjectDatabase(projectId, databaseId, dbKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
     projectId,
   )

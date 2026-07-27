@@ -79,19 +79,31 @@ export const Route = createFileRoute(
     await Promise.all([
       // Fetch tables list - blocks navigation until ready
       queryClient.ensureQueryData(
-        tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
+        tablesQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          0,
+          TABLES_PER_PAGE,
+        ),
       ),
       // Fetch database - blocks navigation until ready
       queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)),
       // Fetch columns - blocks navigation until ready
       queryClient.ensureQueryData(
-        tableColumnsQueryOptions(projectId, databaseId, tableId),
+        tableColumnsQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ),
       ),
       // Fetch indexes with URL filters/page/limit so component uses same query key (single request, filtered list)
       queryClient.ensureQueryData(
         tableIndexesQueryOptions(
           projectId,
           databaseId,
+          dbKind as DatabaseRouteKind,
           tableId,
           indexesFilterQueries,
           pageIndexed,
@@ -100,14 +112,24 @@ export const Route = createFileRoute(
       ),
       // Fetch table - blocks navigation until ready
       queryClient.ensureQueryData(
-        tableQueryOptions(projectId, databaseId, tableId),
+        tableQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ),
       ),
     ])
     const database = queryClient.getQueryData<{ name?: string }>(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
     )
     const table = queryClient.getQueryData<{ name?: string }>(
-      tableQueryOptions(projectId, databaseId, tableId).queryKey,
+      tableQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        tableId,
+      ).queryKey,
     )
     return { database, table }
   },

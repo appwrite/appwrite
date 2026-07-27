@@ -37,6 +37,7 @@ import {
   useDatabaseCsvMigrations,
 } from '@/lib/react-query/hooks'
 import { getMigrationTableRef } from '@/lib/migrations/csv-resource'
+import { isDatabaseRouteKind, type DatabaseRouteKind } from '@/lib/database-routes'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
@@ -72,7 +73,9 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const dbKind = params.dbKind as string
+  const dbKind: DatabaseRouteKind = isDatabaseRouteKind(params.dbKind ?? '')
+    ? (params.dbKind as DatabaseRouteKind)
+    : 'tablesdb'
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -90,6 +93,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const { tables, isLoading: tablesLoading } = useProjectTables(
     projectId,
     databaseId,
+    dbKind,
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
     undefined,

@@ -55,7 +55,7 @@ export function ApiReferenceModelPropertyRow({
               className="border-0 bg-transparent p-0 text-[12px] leading-relaxed text-muted-foreground [&_a]:text-foreground [&_a]:underline-offset-4 [&_a]:hover:underline [&_code]:bg-muted/50"
             />
           ) : (
-            <span className="text-muted-foreground/60">—</span>
+            <span className="text-muted-foreground/60">-</span>
           )}
         </div>
       </div>

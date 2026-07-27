@@ -430,7 +430,7 @@ function HomePage() {
           </nav>
         </section>
 
-        {/* Top customer logos — hidden for now. Restore from git history when needed. */}
+        {/* Top customer logos - hidden for now. Restore from git history when needed. */}
 
         <section className="bg-background py-16 sm:py-20">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">

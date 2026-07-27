@@ -35,8 +35,8 @@ import {
 import {
   consoleDatabasesQueryOptions,
   dedicatedDatabasesQueryOptions,
-  databaseQueryOptions,
 } from '@/lib/react-query/hooks'
+import { Query } from '@appwrite.io/console'
 import type { DatabaseSwitcherSelection } from '@/lib/databases/navigate-to-database-switcher'
 import {
   engineFromDatabaseTypeValue,
@@ -202,8 +202,12 @@ export function DatabaseSelector({
   const skipProductDatabaseLookup =
     selectedIsNative || Boolean(selectedDedicated)
 
+  // Product-agnostic lookup: fetch the selected database's metadata via the
+  // console list filtered by ID (never probe per-product APIs to guess type).
   const { data: selectedProductDatabase } = useQuery({
-    ...databaseQueryOptions(projectId, value),
+    ...consoleDatabasesQueryOptions(projectId, 0, 1, undefined, [
+      Query.equal('$id', [value || '']),
+    ]),
     enabled: !!projectId && !!value && !skipProductDatabaseLookup,
   })
 
@@ -243,7 +247,9 @@ export function DatabaseSelector({
   const displayName = selectedName || selectedItem?.name || t(placeholder)
 
   const selectedApiType =
-    selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
+    selectedItem?.apiType ??
+    selectedProductDatabase?.databases?.[0]?.type ??
+    null
   const selectedEngine =
     selectedItem?.engine ?? selectedDedicated?.engine ?? null
   const selectedProduct =

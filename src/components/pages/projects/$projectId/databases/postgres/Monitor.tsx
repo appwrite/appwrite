@@ -302,7 +302,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
   const maxConnections = useMemo(() => {
     const fromSpec = currentSpec?.connections
-    if (fromSpec && fromSpec !== '—' && fromSpec !== 'Serverless') {
+    if (fromSpec && fromSpec !== '-' && fromSpec !== 'Serverless') {
       const parsed = Number.parseInt(fromSpec, 10)
       if (Number.isFinite(parsed) && parsed > 0) return parsed
     }
@@ -626,7 +626,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       snapshot
                         ? String(snapshot.totalConnections)
                         : isLoading
-                          ? '—'
+                          ? '-'
                           : '0'
                     }
                     subValue={
@@ -642,7 +642,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       storageUsedBytes != null
                         ? formatCompactBytes(storageUsedBytes)
                         : storageChartLoading
-                          ? '—'
+                          ? '-'
                           : '0B'
                     }
                     subValue={
@@ -675,7 +675,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       snapshot
                         ? `${snapshot.cacheHitRatio.toFixed(1)}%`
                         : isLoading
-                          ? '—'
+                          ? '-'
                           : '0%'
                     }
                     description={t('Share of blocks served from memory instead of disk.')}
@@ -715,7 +715,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                               date={new Date(snapshot.serverStartedAt)}
                             />
                           ) : (
-                            '—'
+                            '-'
                           ),
                           description:
                             'When the PostgreSQL server process was last started.',
@@ -752,7 +752,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                   <PostgresMetricKpiCard
                     label={t('CPU')}
                     value={
-                      cpuPoints.length > 0 ? `${cpuPercent.toFixed(1)}%` : '—'
+                      cpuPoints.length > 0 ? `${cpuPercent.toFixed(1)}%` : '-'
                     }
                     description={t(DEDICATED_DATABASE_CPU_DESCRIPTION)}
                     progress={cpuPoints.length > 0 ? cpuPercent : null}
@@ -765,7 +765,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     value={
                       memoryPoints.length > 0
                         ? `${memoryPercent.toFixed(1)}%`
-                        : '—'
+                        : '-'
                     }
                     description={t(DEDICATED_DATABASE_MEMORY_DESCRIPTION)}
                     progress={memoryPoints.length > 0 ? memoryPercent : null}
@@ -776,7 +776,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                   <PostgresMetricKpiCard
                     label={t('Queries per second')}
                     value={
-                      qpsPoints.length > 0 ? qpsLatest.toFixed(1) : '—'
+                      qpsPoints.length > 0 ? qpsLatest.toFixed(1) : '-'
                     }
                     description={t(DEDICATED_DATABASE_QPS_DESCRIPTION)}
                   />
@@ -786,7 +786,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       iopsChartLoading &&
                       iopsReadPoints.length === 0 &&
                       iopsWritePoints.length === 0
-                        ? '—'
+                        ? '-'
                         : `${(iopsReadPoints.length > 0 ? iopsReadLatest : 0).toFixed(1)} ${t('read')} · ${(iopsWritePoints.length > 0 ? iopsWriteLatest : 0).toFixed(1)} ${t('write')}`
                     }
                     description={t(DEDICATED_DATABASE_IOPS_DESCRIPTION)}

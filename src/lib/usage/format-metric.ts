@@ -15,7 +15,7 @@ function trimTrailingZeros(value: string): string {
   return value.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
 }
 
-/** Decimal places by unit — smaller units keep a fractional digit for readability. */
+/** Decimal places by unit - smaller units keep a fractional digit for readability. */
 function getByteDecimals(scaled: number, unit: ByteUnit): number {
   if (unit === 'B') return 0
   if (unit === 'KB' || unit === 'MB') return 1

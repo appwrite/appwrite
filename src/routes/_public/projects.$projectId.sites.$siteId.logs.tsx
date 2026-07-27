@@ -27,7 +27,7 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Site metadata only — logs load in the view with a skeleton (do not block navigation)
+    // Site metadata only - logs load in the view with a skeleton (do not block navigation)
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
   },
   component: SiteLogsPage,

@@ -73,7 +73,7 @@ export function getCoverTitleGradientUserSpaceLine(
   }
 }
 
-/** CSS background for preview — uses color-mix like the marketing hero. */
+/** CSS background for preview - uses color-mix like the marketing hero. */
 export function getCoverTitleGradientBackgroundImage(
   theme: CoverThemeDefinition,
 ): string {

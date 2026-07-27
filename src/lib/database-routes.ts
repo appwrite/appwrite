@@ -237,29 +237,12 @@ export function isNativeDedicatedDatabase(
 }
 
 export function needsDedicatedProductTypeLookup(
-  db: DedicatedDatabaseLinkInput,
+  _db: DedicatedDatabaseLinkInput,
 ): boolean {
-  // Product `api` already identifies the route tree.
-  if (isProductOwnedDedicatedDatabase(db)) return false
-
-  const api = (db.api ?? '').toLowerCase().trim()
-  // Known native / engine api values: never probe product GET endpoints.
-  if (
-    api === 'postgresql' ||
-    api === 'postgres' ||
-    api === 'mysql' ||
-    api === 'mariadb' ||
-    api === 'mongodb' ||
-    api === 'mongo' ||
-    api === 'nativedb'
-  ) {
-    return false
-  }
-  if (isPostgresDedicatedEngine(db.engine)) return false
-
-  // Only probe when api is missing (legacy rows). Empty api used to trigger
-  // documentsDB → vectorsDB → tablesDB GETs for every dedicated MySQL card.
-  return api.length === 0
+  // Never probe documentsDB / vectorsDB / tablesDB by dedicated ID.
+  // Product rows carry `api`; native rows use `engine`. Missing `api` must not
+  // trigger GET /documentsdb/{id} + /vectorsdb/{id} for TablesDB databases.
+  return false
 }
 
 export function isPostgresDedicatedEngine(

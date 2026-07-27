@@ -221,7 +221,7 @@ export function parseActivityResourcePath(
     }
   }
 
-  // Unknown root — still expose a best-effort parse for tooling.
+  // Unknown root - still expose a best-effort parse for tooling.
   const id = rest[0] ?? null
   return {
     raw,
@@ -262,6 +262,6 @@ export function inferActivityUiResourceTypeFromPath(
     return 'project'
   }
 
-  // Messaging, rules, tokens, sites infra, etc. — single “console” bucket in UI.
+  // Messaging, rules, tokens, sites infra, etc. - single “console” bucket in UI.
   return 'project'
 }

@@ -6,7 +6,7 @@ interface ContextMenuIconProps {
   icon: LucideIcon
 }
 
-/** 8px gap between leading icon and label — matches menu item `gap-2`. */
+/** 8px gap between leading icon and label - matches menu item `gap-2`. */
 export const menuItemIconGapClassName = 'gap-2'
 
 export function ContextMenuIcon({ icon: Icon }: ContextMenuIconProps) {
@@ -17,7 +17,7 @@ export function ContextMenuIcon({ icon: Icon }: ContextMenuIconProps) {
   )
 }
 
-/** Alias for dropdown menus — same icon slot as context menus. */
+/** Alias for dropdown menus - same icon slot as context menus. */
 export const MenuItemIcon = ContextMenuIcon
 
 interface MenuItemContentProps {

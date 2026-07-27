@@ -37,7 +37,7 @@ type ConnectCodePanelProps = {
   wrapLines?: boolean
 }
 
-/** Syntax-highlighted block — framed or headless inside a parent wrapper. */
+/** Syntax-highlighted block - framed or headless inside a parent wrapper. */
 export function ConnectCodePanel({
   code,
   language,
@@ -80,7 +80,7 @@ type ConnectCodeExampleProps = {
   headless?: boolean
 }
 
-/** Toolbar (optional language selector + copy) and code — connect modal SDK code panel. */
+/** Toolbar (optional language selector + copy) and code - connect modal SDK code panel. */
 export function ConnectCodeExample({
   code,
   language,

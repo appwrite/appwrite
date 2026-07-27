@@ -38,6 +38,7 @@ export const Route = createFileRoute(
       tablesQueryOptions(
         projectId,
         databaseId,
+        dbKind as DatabaseRouteKind,
         0,
         TABLE_WORKSPACE_TABLES_LIST_LIMIT,
         undefined,

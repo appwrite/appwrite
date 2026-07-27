@@ -1,6 +1,6 @@
 /**
  * Presence-only env status for the debug menu.
- * Never returns or exposes env values — only whether each key is set.
+ * Never returns or exposes env values - only whether each key is set.
  */
 
 import { getRuntimeConfig } from '@/lib/runtime-config'

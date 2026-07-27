@@ -338,8 +338,8 @@ function resolveDedicatedDbSpecLabel(
     fromLookup?.cpu && fromLookup?.memory
       ? `${fromLookup.cpu} · ${fromLookup.memory}`
       : fromStaticSpec &&
-          fromStaticSpec.cpu !== '—' &&
-          fromStaticSpec.memory !== '—'
+          fromStaticSpec.cpu !== '-' &&
+          fromStaticSpec.memory !== '-'
         ? `${fromStaticSpec.cpu} · ${fromStaticSpec.memory}`
         : null
 

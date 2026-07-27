@@ -46,7 +46,7 @@ export const IDE_CONFIGS: IDEConfig[] = [
     name: 'Codex',
     iconPath: '/icons/chatgpt.svg',
     supportsAIChat: true,
-    /** Handled by `generateCodexNewThreadDeeplink` — opens the Codex desktop app. */
+    /** Handled by `generateCodexNewThreadDeeplink` - opens the Codex desktop app. */
     aiChatDeeplink: 'codex://threads/new',
     pluginDocsUrl: '/docs/tooling/ai/agents/codex',
   },

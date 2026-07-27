@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { CheckCircle2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { DedicatedDatabaseRegionUnavailableBadge } from '../_components/DedicatedDatabaseRegionUnavailableCard'
 import {
@@ -31,6 +36,7 @@ import type { DatabaseRouteKind } from '@/lib/database-routes'
 import {
   invalidateDatabaseModel,
   refetchProjectDatabaseLists,
+  seedDatabaseProductRouteKind,
   updateProductDatabaseSpecification,
   useDatabaseSpecifications,
   useProject,
@@ -117,6 +123,7 @@ export function DatabaseSpecificationCard({
         database.name,
       ),
     onSuccess: async () => {
+      seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
       invalidateDatabaseModel(projectId, databaseId)
       await Promise.all([
         queryClient.invalidateQueries({
@@ -236,9 +243,8 @@ export function DatabaseSpecificationCard({
                     {isCurrent ? (
                       <Badge
                         variant="success"
-                        className="gap-1 text-[10px] shrink-0"
+                        className="text-[10px] shrink-0"
                       >
-                        <CheckCircle2 className="h-3 w-3" />
                         {t('Current')}
                       </Badge>
                     ) : null}
@@ -253,22 +259,35 @@ export function DatabaseSpecificationCard({
                   </span>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                  {isServerlessDatabaseSpecId(spec.id) ? t(spec.cpu) : spec.cpu}
+                  {spec.cpu}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                  {isServerlessDatabaseSpecId(spec.id)
-                    ? t(spec.memory)
-                    : spec.memory}
+                  {spec.memory}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
-                  {isServerlessDatabaseSpecId(spec.id)
-                    ? t(spec.connections)
-                    : spec.connections}
+                  {spec.connections}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-end text-[13px] font-medium tabular-nums text-foreground">
-                  {isServerlessDatabaseSpecId(spec.id)
-                    ? t(spec.price)
-                    : spec.price}
+                  {isServerlessDatabaseSpecId(spec.id) ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                            {t(spec.price)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[240px]">
+                          <p className="text-[12px]">
+                            {t(
+                              'Billed for disk storage and database operations.',
+                            )}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    spec.price
+                  )}
                 </TableCell>
                 <TableCell className="px-6 py-3 text-end">
                   {canUpgrade ? (

@@ -187,7 +187,7 @@ export function RuleImpactPreview({
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
                 {isLoading && !impact
-                  ? '—'
+                  ? '-'
                   : summary.matched.toLocaleString()}
               </p>
             </div>
@@ -198,7 +198,7 @@ export function RuleImpactPreview({
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
                 {isLoading && !impact
-                  ? '—'
+                  ? '-'
                   : `${(summary.rate * 100).toFixed(1)}%`}
               </p>
             </div>

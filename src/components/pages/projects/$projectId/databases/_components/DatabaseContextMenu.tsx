@@ -88,7 +88,7 @@ export function DatabaseContextMenu({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await deleteProjectDatabase(projectId, database.$id)
+      await deleteProjectDatabase(projectId, database.$id, dbKind)
     },
     onSuccess: async () => {
       invalidateDatabaseModelAndType(projectId, database.$id)

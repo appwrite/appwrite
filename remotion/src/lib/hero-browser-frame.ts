@@ -35,7 +35,7 @@ export function getFrameContentHeight(
   return getScreenshotContentWidth(frameWidth) * aspectRatio
 }
 
-/** Inner clip radii — bottom corners align concentrically with the closed shell. */
+/** Inner clip radii - bottom corners align concentrically with the closed shell. */
 export function getScreenshotRadii(closed: boolean) {
   const { outerRadius, innerRadius, paddingX } = HERO_BROWSER_FRAME
   const bottomRadius = closed

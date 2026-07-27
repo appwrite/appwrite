@@ -50,7 +50,7 @@ function isAuthPagePath(pathname: string): boolean {
 }
 
 // OAuth2 server flows (consent / device). When a user authenticates only to
-// authorize an application, we must NOT provision a personal org + project —
+// authorize an application, we must NOT provision a personal org + project -
 // just return them to the flow. On single-tenant profiles org creation also
 // throws ("supports only one organization"), which would otherwise abort the
 // whole authorization after the account is already created.
@@ -80,7 +80,7 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
 /**
  * Split a validated relative redirect into the `{ to, search }` shape TanStack
  * Router needs. Passing a URL with a query string directly as `to` drops the
- * search params — which would lose OAuth2 params like `client_id` (consent) or
+ * search params - which would lose OAuth2 params like `client_id` (consent) or
  * `user_code` (device) when returning to the flow after sign-up / verification.
  */
 export function toRedirectNavigateOptions(redirect: string): {
@@ -107,7 +107,7 @@ async function prefetchOrganizationOverviewSafe(
 
 /**
  * Prefetch org overview data before navigating after sign-in / sign-up.
- * Never throws for stale org prefs or missing org resources — navigation should
+ * Never throws for stale org prefs or missing org resources - navigation should
  * still proceed and route loaders can recover.
  */
 export async function prefetchPostAuthDestination(

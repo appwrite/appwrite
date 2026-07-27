@@ -152,7 +152,7 @@ export function parseUsageChartDateRange(
   return getStableUsageChartDateRange()
 }
 
-/** Bounds for API calls — rolling presets always resolve to a fresh window. */
+/** Bounds for API calls - rolling presets always resolve to a fresh window. */
 export function resolveUsageChartFetchBounds(
   dateRange: DateRange | undefined,
   presetId?: string | null,

@@ -52,6 +52,7 @@ export function CollectionAttributesSpreadsheet({
   const { columns, total, isLoading } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    dbKind,
     collectionId,
     undefined,
     0,

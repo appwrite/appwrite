@@ -269,7 +269,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     const planUsageLimitReached = context.planUsageLimitReached === true
     let budgetLimitTeamId = context.budgetLimitTeamId
 
-    // When budget-locked, project.get returns 402 — do not fetch the project.
+    // When budget-locked, project.get returns 402 - do not fetch the project.
     if (budgetLimitReached) {
       if (!budgetLimitTeamId) {
         budgetLimitTeamId = await resolveProjectTeamIdFromConsole(projectId)
@@ -664,7 +664,7 @@ function ProjectLayout() {
 
   // Show error component if project is not found or access denied
   // Only show after loading is complete to avoid flashing
-  // Skip when budget-locked (402) — the curtain handles that state.
+  // Skip when budget-locked (402) - the curtain handles that state.
   if (
     !budgetLimitReached &&
     !planUsageLimitReached &&

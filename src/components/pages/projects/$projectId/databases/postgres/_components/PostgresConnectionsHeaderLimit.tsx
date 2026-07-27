@@ -70,7 +70,7 @@ export function PostgresConnectionsHeaderLimit({
   const connectionsLimitLabel = currentSpec?.connections?.trim()
   const isServerlessLimit = connectionsLimitLabel === 'Serverless'
 
-  if (!connectionsLimitLabel || connectionsLimitLabel === '—') {
+  if (!connectionsLimitLabel || connectionsLimitLabel === '-') {
     return null
   }
 
@@ -88,11 +88,11 @@ export function PostgresConnectionsHeaderLimit({
   const inlineLabel =
     maxConnections != null
       ? isLoading
-        ? `— / ${maxConnections.toLocaleString()}`
+        ? `- / ${maxConnections.toLocaleString()}`
         : `${clientConnectionCount.toLocaleString()} / ${maxConnections.toLocaleString()}`
       : isServerlessLimit
         ? isLoading
-          ? '—'
+          ? '-'
           : clientConnectionCount.toLocaleString()
         : connectionsLimitLabel
 

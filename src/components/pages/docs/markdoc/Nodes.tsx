@@ -192,7 +192,7 @@ export function Blockquote({
   )
 }
 
-/** Passthrough for `{% table %}` — styling is applied on the inner table node. */
+/** Passthrough for `{% table %}` - styling is applied on the inner table node. */
 export function MarkdocTableTag({ children }: { children?: ReactNode }) {
   return <>{children}</>
 }

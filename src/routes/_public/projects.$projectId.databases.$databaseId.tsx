@@ -7,7 +7,9 @@ import {
 
 /**
  * Legacy path without product segment: /projects/:projectId/databases/:databaseId
- * Redirects to /projects/:projectId/databases/:dbKind/:databaseId
+ * Redirects to /projects/:projectId/databases/:dbKind/:databaseId when the
+ * product kind is already known from cache/list seeding. Never probes other
+ * product APIs by ID.
  */
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId',

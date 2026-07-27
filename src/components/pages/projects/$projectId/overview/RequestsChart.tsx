@@ -81,7 +81,7 @@ function getOverviewChartAxisFormat(metric: MetricType): UsageChartAxisFormat {
   return 'count'
 }
 
-/** Soft greyscale placeholder — visible on the real chart canvas. */
+/** Soft greyscale placeholder - visible on the real chart canvas. */
 const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
 const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
 const SKELETON_CHART_FILL_TOP_OPACITY = 0.14

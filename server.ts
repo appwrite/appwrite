@@ -93,7 +93,7 @@ const CLIENT_DIRECTORY = './dist/client'
 const SERVER_ENTRY_POINT = './dist/server/server.js'
 
 // Public runtime config, read once from the process env (constant per process)
-// and stamped into every HTML response in place of the build-time placeholder —
+// and stamped into every HTML response in place of the build-time placeholder -
 // see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
 const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
 const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
@@ -761,7 +761,7 @@ async function initializeServer() {
           }
 
           // Incomplete strip-only redirects may land on /project-{region}-{id}/...
-          // without the /console prefix — rewrite those before the SPA.
+          // without the /console prefix - rewrite those before the SPA.
           if (isLegacyConsolePath(url.pathname)) {
             return redirectLegacyConsolePath(req)
           }

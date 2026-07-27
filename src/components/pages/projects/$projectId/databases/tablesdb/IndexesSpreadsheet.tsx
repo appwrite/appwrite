@@ -188,6 +188,7 @@ export function IndexesSpreadsheet({
   } = useProjectTableIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     tableId,
     indexesFilterQueries,
     indexesPageIndexed,
@@ -210,7 +211,7 @@ export function IndexesSpreadsheet({
 
   // Fetch columns for index creation (first page, default limit)
   const { columns: availableColumns, isLoading: columnsLoading } =
-    useProjectTableColumns(projectId, databaseId, tableId)
+    useProjectTableColumns(projectId, databaseId, DB_KIND, tableId)
 
   // TablesDB only: notify parent when the table has no non-relationship columns.
   useEffect(() => {
@@ -251,6 +252,7 @@ export function IndexesSpreadsheet({
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         tableId,
         apiData,
       )
@@ -276,6 +278,7 @@ export function IndexesSpreadsheet({
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         tableId,
         indexKey,
       )

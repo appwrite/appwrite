@@ -1,4 +1,4 @@
-/** Chrome Region / Element Capture (CropTarget) — records painted pixels at display refresh rate. */
+/** Chrome Region / Element Capture (CropTarget) - records painted pixels at display refresh rate. */
 export interface CropTarget {}
 
 export interface CropTargetConstructor {

@@ -121,7 +121,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               dedicatedDatabasesQueryOptions(projectId),
             )
           : Promise.resolve(),
-        // Unified All Databases list (console.listDatabases) — includes type filters
+        // Unified All Databases list (console.listDatabases) - includes type filters
         profileFeatures.dedicatedDbsSupport
           ? queryClient.ensureQueryData(
               consoleDatabasesQueryOptions(

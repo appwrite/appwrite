@@ -31,7 +31,7 @@ export function getRouter() {
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),
-    // Fires when any route CatchBoundary catches — before the error UI mounts.
+    // Fires when any route CatchBoundary catches - before the error UI mounts.
     // Critical for max-update-depth and other crashes that can break the error page.
     defaultOnCatch: (error, errorInfo) => {
       reportRouterCaughtError(error, errorInfo, {
@@ -75,7 +75,7 @@ export function getRouter() {
     }
     // Vite dispatches this when a dynamically imported chunk fails to load
     // (common right after a deploy deletes the previous hashed assets).
-    // This is the canonical signal — no message matching required.
+    // This is the canonical signal - no message matching required.
     const onVitePreloadError = (event: Event) => {
       const payload = (event as Event & { payload?: unknown }).payload
       if (

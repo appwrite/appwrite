@@ -964,7 +964,7 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Charts card - usage stats (cloud only) */}
         {visibleOverviewChartTabs.length > 0 && (
           <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-            {/* Filters first, then metric tabs — stacked below @[700px], side-by-side above */}
+            {/* Filters first, then metric tabs - stacked below @[700px], side-by-side above */}
             <div className="border-b border-border">
               <div className="flex min-w-0 flex-col @[700px]:flex-row @[700px]:items-center @[700px]:gap-3 @[700px]:px-5">
                 <div className="order-1 flex w-full min-w-0 flex-col gap-2 px-4 py-2.5 @[520px]:flex-row @[520px]:flex-wrap @[520px]:items-center @[700px]:order-2 @[700px]:w-auto @[700px]:shrink-0 @[700px]:px-0 @[700px]:py-3">
@@ -1044,7 +1044,7 @@ export function View({ projectId, initialData }: ViewProps) {
               </div>
             </div>
 
-            {/* Chart content — stacked in one grid cell for stable height across tabs */}
+            {/* Chart content - stacked in one grid cell for stable height across tabs */}
             <div className={overviewChartTabPanelsContainerClass}>
             {isOverviewChartTabVisible('bandwidth') ? (
             <div

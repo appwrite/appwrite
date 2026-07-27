@@ -46,7 +46,7 @@ export const API_SERVICE_ORDER = [
   'mongo',
 ] as const
 
-/** Console-only SDK services — never shown in the explorer or API reference nav. */
+/** Console-only SDK services - never shown in the explorer or API reference nav. */
 export const INTERNAL_API_SERVICES = [] as const
 
 /**

@@ -54,8 +54,8 @@ function OAuth2DevicePage() {
   const hasPrefilledCode = Boolean(normalizeUserCode(search.user_code ?? ''))
 
   // The code the page is currently acting on. Set synchronously at the two
-  // points it can change — on submit (below) and on a URL `user_code` change
-  // (sync effect) — so a `createGrant` that resolves after the user moved to a
+  // points it can change - on submit (below) and on a URL `user_code` change
+  // (sync effect) - so a `createGrant` that resolves after the user moved to a
   // different code is ignored, without depending on render/effect timing.
   const activeCodeRef = useRef(code)
 
@@ -117,7 +117,7 @@ function OAuth2DevicePage() {
 
       setAccount(loggedInAccount)
       // Always show the code (prefilled from the URL or typed) so the user can
-      // confirm it matches their device before exchanging it — never auto-submit.
+      // confirm it matches their device before exchanging it - never auto-submit.
       setPhase('enter-code')
     }
 
@@ -132,7 +132,7 @@ function OAuth2DevicePage() {
   // stays mounted (e.g. the user follows a fresh `verification_uri_complete`
   // link, or navigates back to the bare `/oauth2/device`). Any change means a
   // different request, so drop the loaded grant and return to confirmation
-  // rather than showing or approving the previous code — including when the
+  // rather than showing or approving the previous code - including when the
   // code is removed entirely.
   useEffect(() => {
     const next = normalizeUserCode(search.user_code ?? '')

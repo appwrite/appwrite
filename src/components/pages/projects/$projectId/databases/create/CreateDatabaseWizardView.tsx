@@ -47,6 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -80,6 +86,7 @@ import {
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
   getDefaultEnabledSpecId,
   hasLockedDatabaseSpecifications,
+  isServerlessDatabaseSpecId,
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
@@ -1227,6 +1234,26 @@ export function CreateDatabaseWizardView() {
                               >
                                 {t('Upgrade')}
                               </Badge>
+                            ) : isServerlessDatabaseSpecId(spec.id) ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                                      {t(spec.price)}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-[240px]"
+                                  >
+                                    <p className="text-[12px]">
+                                      {t(
+                                        'Billed for disk storage and database operations.',
+                                      )}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             ) : (
                               <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
                                 {spec.price}

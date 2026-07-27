@@ -46,7 +46,7 @@ export const CLOUD_ONLY_SCOPE_IDS = new Set([
 
 /**
  * Renamed legacy scope ids omitted from the catalog unless the API key already
- * includes them. There is no mapping to modern scope ids — the key stores and
+ * includes them. There is no mapping to modern scope ids - the key stores and
  * toggles the exact scope string.
  */
 export const LEGACY_CATALOG_ONLY_WHEN_ON_KEY = new Set([

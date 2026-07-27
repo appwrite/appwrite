@@ -50,7 +50,7 @@ export function DatabaseDangerZoneCard({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await deleteProjectDatabase(projectId, databaseId)
+      await deleteProjectDatabase(projectId, databaseId, dbKind)
     },
     onSuccess: async () => {
       invalidateDatabaseModelAndType(projectId, databaseId)

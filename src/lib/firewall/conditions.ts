@@ -61,7 +61,7 @@ export type FirewallConditionOperatorDef = {
   noValue?: boolean
 }
 
-/** Operators that filter on the value being absent — no value input is shown. */
+/** Operators that filter on the value being absent - no value input is shown. */
 const NO_VALUE_OPERATORS = new Set<FirewallConditionOperator>([
   'isNull',
   'isNotNull',

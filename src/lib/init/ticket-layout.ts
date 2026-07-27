@@ -1,4 +1,4 @@
-/** Init ticket frame assets — 1024×682 with outer padding baked in. */
+/** Init ticket frame assets - 1024×682 with outer padding baked in. */
 export const INIT_TICKET_BG_SRC_LIGHT = '/images/init/ticket-bg-light.avif'
 export const INIT_TICKET_BG_SRC_DARK = '/images/init/ticket-bg-dark.avif'
 export const INIT_TICKET_BG_SRC_GOLD = '/images/init/ticket-bg-gold.avif'
@@ -46,7 +46,7 @@ export const INIT_TICKET_CONTENT_INSET = {
   left: 12.5,
 } as const
 
-/** Vertical perforation line — main body vs stub (percent of image width). */
+/** Vertical perforation line - main body vs stub (percent of image width). */
 export const INIT_TICKET_STUB_SPLIT = 57
 
 export function initTicketInsetStyle(): {
@@ -88,7 +88,7 @@ export const INIT_TICKET_STUB_LABEL_INSET = {
   bottom: 8,
 } as const
 
-/** Stub title — smaller type when the line is long (pre-rotation width). */
+/** Stub title - smaller type when the line is long (pre-rotation width). */
 export function initTicketStubTitleClass(title: string): string {
   const len = title.trim().length
   if (len > 36) return 'text-[clamp(5px,0.9vw,8px)]'
@@ -141,7 +141,7 @@ export function initTicketOgContentBox() {
   }
 }
 
-/** Front-face holder name — smaller clamp when the display name is long. */
+/** Front-face holder name - smaller clamp when the display name is long. */
 export function initTicketHolderNameFontSizeClass(name: string): string {
   const len = name.trim().length
   if (len > 32) return 'text-[clamp(16px,3.8vw,28px)]'

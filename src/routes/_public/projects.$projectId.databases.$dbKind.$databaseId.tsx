@@ -103,9 +103,9 @@ export const Route = createFileRoute(
 function DatabaseKindLayout() {
   const { projectId, dbKind, databaseId } = Route.useParams()
   const features = getActiveProfileFeatures()
-  const routeKind = isDatabaseRouteKind(dbKind)
-    ? (dbKind as DatabaseRouteKind)
-    : undefined
+  const routeKind = (
+    isDatabaseRouteKind(dbKind) ? dbKind : 'tablesdb'
+  ) as DatabaseRouteKind
 
   const { database } = useProjectDatabase(projectId, databaseId, routeKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(

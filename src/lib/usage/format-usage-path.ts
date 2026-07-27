@@ -2,7 +2,7 @@ const OBJECT_ID_PATTERN = /^[a-f0-9]{20,}$/i
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-/** Known REST path tokens — not resource IDs. */
+/** Known REST path tokens - not resource IDs. */
 const STATIC_PATH_SEGMENTS = new Set([
   'account',
   'attributes',

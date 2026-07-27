@@ -515,8 +515,8 @@ function CompactClusterNode({
   const connectionsLabel =
     metrics.kind === 'connections'
       ? `${
-          metrics.current == null ? '—' : metrics.current.toLocaleString()
-        } / ${metrics.max == null ? '—' : metrics.max.toLocaleString()}`
+          metrics.current == null ? '-' : metrics.current.toLocaleString()
+        } / ${metrics.max == null ? '-' : metrics.max.toLocaleString()}`
       : null
 
   return (

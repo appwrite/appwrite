@@ -7,11 +7,18 @@ import type {
   DowngradeResourceType,
   ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 
-export type ResourcesToDelete = Record<
-  string,
-  Partial<Record<DowngradeResourceType, string[]>>
->
+export type DowngradeDatabaseRef = { $id: string; dbKind: DatabaseRouteKind }
+
+export type ResourcesToDeleteEntry = {
+  databases?: DowngradeDatabaseRef[]
+  buckets?: string[]
+  functions?: string[]
+  sites?: string[]
+}
+
+export type ResourcesToDelete = Record<string, ResourcesToDeleteEntry>
 
 export async function deleteDowngradeResources(
   resourcesToDelete: ResourcesToDelete,
@@ -23,13 +30,15 @@ export async function deleteDowngradeResources(
 
     const projectSdk = sdk.forProject(projectId)
 
-    for (const databaseId of resourceMap.databases ?? []) {
+    for (const database of resourceMap.databases ?? []) {
       // Route through the owning product API (tables/documents/vectors), not
       // always tablesDB. Native dedicated DBs are handled separately.
       tasks.push(
-        deleteProjectDatabase(projectId, databaseId).then(() => {
-          invalidateDatabaseModelAndType(projectId, databaseId)
-        }),
+        deleteProjectDatabase(projectId, database.$id, database.dbKind).then(
+          () => {
+            invalidateDatabaseModelAndType(projectId, database.$id)
+          },
+        ),
       )
     }
 
@@ -53,19 +62,26 @@ export function buildResourcesToDelete(
   projectId: string,
   resources: ProjectDowngradeResources,
   keepSelections: Partial<Record<DowngradeResourceType, Set<string>>>,
-): Partial<Record<DowngradeResourceType, string[]>> {
-  const result: Partial<Record<DowngradeResourceType, string[]>> = {}
+): ResourcesToDeleteEntry {
+  const result: ResourcesToDeleteEntry = {}
 
   for (const type of Object.keys(resources) as DowngradeResourceType[]) {
     const keepIds = keepSelections[type] ?? new Set<string>()
-    const deleteIds = resources[type].items
-      .map((item) => item.$id)
-      .filter((id) => !keepIds.has(id))
+    const remainingItems = resources[type].items.filter(
+      (item) => !keepIds.has(item.$id),
+    )
 
-    if (deleteIds.length > 0) {
-      result[type] = deleteIds
+    if (remainingItems.length === 0) continue
+
+    if (type === 'databases') {
+      result.databases = remainingItems.map((item) => ({
+        $id: item.$id,
+        dbKind: item.dbKind ?? 'tablesdb',
+      }))
+    } else {
+      result[type] = remainingItems.map((item) => item.$id)
     }
   }
 
-  return Object.keys(result).length > 0 ? result : {}
+  return result
 }

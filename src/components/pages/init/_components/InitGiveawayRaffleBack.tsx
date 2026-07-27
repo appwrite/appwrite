@@ -186,7 +186,7 @@ export function InitGiveawayRaffleBack({
                 </span>
                 <p className="text-[13px] leading-relaxed">
                   {isSpinning
-                    ? 'Hold tight — the wheel is spinning.'
+                    ? 'Hold tight - the wheel is spinning.'
                     : 'Press raffle winner when you are ready to draw.'}
                 </p>
               </div>

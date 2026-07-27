@@ -1289,7 +1289,7 @@ function useTypingSpeedActivity(
 ) {
   const activityRef = useRef(TYPING_IDLE_ACTIVITY)
   const lastKeystrokeRef = useRef<number | null>(null)
-  /** Smoothed ms between keystrokes — lower means faster typing */
+  /** Smoothed ms between keystrokes - lower means faster typing */
   const emaIntervalRef = useRef(320)
   const isThinkingRef = useRef(isThinking)
   const isActiveRef = useRef(isActive)

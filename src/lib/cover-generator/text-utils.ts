@@ -1,4 +1,4 @@
-/** Strip trailing brand underscores — templates append `_` in brand pink. */
+/** Strip trailing brand underscores - templates append `_` in brand pink. */
 export function stripCoverTitleSuffix(value: string): string {
   return value.trimEnd().replace(/_+$/u, '')
 }

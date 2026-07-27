@@ -7,6 +7,7 @@
 import { DatabaseType } from '@/lib/databases/database-type'
 import { sdk } from '@/lib/appwrite/sdk'
 import { isHtmlDarkChrome } from '@/lib/html-theme'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import {
   fetchProjectTableColumns,
   fetchProjectTableIndexes,
@@ -78,8 +79,9 @@ function readRowSecurity(
 export async function fetchDatabaseSchema(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
 ): Promise<DatabaseSchema> {
-  const db = await getDatabaseModel(projectId, databaseId)
+  const db = await getDatabaseModel(projectId, databaseId, dbKind)
   if (!db) {
     throw new Error('Database not found')
   }
@@ -88,6 +90,7 @@ export async function fetchDatabaseSchema(
   const tablesResponse = await fetchProjectTables(
     projectId,
     databaseId,
+    dbKind,
     0,
     1000,
   )
@@ -96,8 +99,8 @@ export async function fetchDatabaseSchema(
     (tablesResponse.tables || []).map(async (table: Record<string, unknown>) => {
       const tableId = String(table.$id ?? '')
       const [columnsResponse, indexesResponse] = await Promise.all([
-        fetchProjectTableColumns(projectId, databaseId, tableId),
-        fetchProjectTableIndexes(projectId, databaseId, tableId),
+        fetchProjectTableColumns(projectId, databaseId, dbKind, tableId),
+        fetchProjectTableIndexes(projectId, databaseId, dbKind, tableId),
       ])
 
       const columns: ColumnSchema[] = (columnsResponse.columns || []).map(

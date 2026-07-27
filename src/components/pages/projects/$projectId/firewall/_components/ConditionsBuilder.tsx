@@ -51,7 +51,7 @@ const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   userAgent: UserRound,
 }
 
-/** Examples only. Never use bare `/` — it looks like a real value when the field is empty. */
+/** Examples only. Never use bare `/` - it looks like a real value when the field is empty. */
 const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
   api: 'e.g. /v1/account',
   functions: 'e.g. /api',

@@ -23,7 +23,7 @@ Run \`bun run socials <platform> help\` for platform commands.
 }
 
 export function printPlatformHelp(platform: string, config: SocialPlatform): void {
-  console.log(`${platform} — ${config.description}
+  console.log(`${platform} - ${config.description}
 
 Usage: bun run socials ${platform} <command> [options]
 

@@ -109,7 +109,7 @@ function parseServerStartedAt(value: unknown): number | null {
 
 /** Human-readable PostgreSQL server uptime from `pg_postmaster_start_time()`. */
 export function formatPostgresUptime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds <= 0) return '—'
+  if (!Number.isFinite(seconds) || seconds <= 0) return '-'
 
   const days = Math.floor(seconds / 86_400)
   const hours = Math.floor((seconds % 86_400) / 3_600)
@@ -379,17 +379,17 @@ export function formatPostgresConnectionUsername(
 ): string {
   if (username?.trim()) return username.trim()
   if (!isPostgresClientBackend({ backendType })) return 'System'
-  return '—'
+  return '-'
 }
 
 export function formatPostgresConnectionDatabase(database: string | null): string {
-  return database?.trim() || '—'
+  return database?.trim() || '-'
 }
 
 export function formatPostgresApplicationName(
   applicationName: string | null,
 ): string {
-  return applicationName?.trim() || '—'
+  return applicationName?.trim() || '-'
 }
 
 export function formatPostgresConnectionStateLabel(
@@ -398,7 +398,7 @@ export function formatPostgresConnectionStateLabel(
 ): string {
   if (state?.trim()) return formatConnectionStateLabel(state.trim())
   if (!isPostgresClientBackend({ backendType })) return 'System'
-  return '—'
+  return '-'
 }
 
 export function formatPostgresClientAddress(
@@ -517,9 +517,9 @@ export function isLongRunningConnection(
 }
 
 export function formatPostgresDurationSince(isoDate: string | null): string {
-  if (!isoDate) return '—'
+  if (!isoDate) return '-'
   const parsed = Date.parse(isoDate)
-  if (!Number.isFinite(parsed)) return '—'
+  if (!Number.isFinite(parsed)) return '-'
 
   const totalSeconds = Math.max(0, Math.floor((Date.now() - parsed) / 1000))
   if (totalSeconds < 60) return `${totalSeconds}s`
@@ -539,9 +539,9 @@ export function formatPostgresWaitEvent(
   waitEventType: string | null,
   waitEvent: string | null,
 ): string {
-  if (!waitEventType && !waitEvent) return '—'
+  if (!waitEventType && !waitEvent) return '-'
   if (waitEventType && waitEvent) return `${waitEventType} / ${waitEvent}`
-  return waitEventType ?? waitEvent ?? '—'
+  return waitEventType ?? waitEvent ?? '-'
 }
 
 export function serializePostgresActiveConnectionJson(

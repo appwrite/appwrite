@@ -403,7 +403,7 @@ function renderServiceFile(
   for (const [name, method] of [...methods.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     const eps = httpByMethod.get(name) ?? []
     if (eps.length === 0) {
-      lines.push(`| [\`${name}\`](#${service.id}-${slugify(name)}) | — | — | \`${method.returnType}\` |`)
+      lines.push(`| [\`${name}\`](#${service.id}-${slugify(name)}) | - | - | \`${method.returnType}\` |`)
       continue
     }
     for (const ep of eps) {

@@ -12,11 +12,13 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import type { ProjectDatabaseDetail } from './types'
 
 type DatabaseDetailsCardProps = {
   projectId: string
   databaseId: string
+  dbKind: DatabaseRouteKind
   database: ProjectDatabaseDetail
   canWrite: boolean
 }
@@ -24,6 +26,7 @@ type DatabaseDetailsCardProps = {
 export function DatabaseDetailsCard({
   projectId,
   databaseId,
+  dbKind,
   database,
   canWrite,
 }: DatabaseDetailsCardProps) {
@@ -38,10 +41,15 @@ export function DatabaseDetailsCard({
 
   const updateMutation = useMutation({
     mutationFn: async (nextEnabled: boolean) => {
-      await updateProjectDatabase(projectId, databaseId, {
-        name: database.name,
-        enabled: nextEnabled,
-      })
+      await updateProjectDatabase(
+        projectId,
+        databaseId,
+        {
+          name: database.name,
+          enabled: nextEnabled,
+        },
+        dbKind,
+      )
     },
     onSuccess: (_data, nextEnabled) => {
       toast.success(

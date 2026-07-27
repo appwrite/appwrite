@@ -306,7 +306,7 @@ function resolveInitHeaderNavPhase(
   return 'active'
 }
 
-/** Header ghost button on `/init` — before event vs per-day during vs after. */
+/** Header ghost button on `/init` - before event vs per-day during vs after. */
 export function resolveInitHeaderNavCta(options?: {
   event?: LaunchEvent
   now?: Date

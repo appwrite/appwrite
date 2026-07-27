@@ -10,18 +10,21 @@ import {
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
 import { useT } from '@/lib/i18n/translate'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 
 type DatabaseMonitorMobileNavProps = {
   projectId: string
   databaseId: string
+  dbKind: DatabaseRouteKind
 }
 
 export function DatabaseMonitorMobileNav({
   projectId,
   databaseId,
+  dbKind,
 }: DatabaseMonitorMobileNavProps) {
   const t = useT()
-  const { database } = useProjectDatabase(projectId, databaseId)
+  const { database } = useProjectDatabase(projectId, databaseId, dbKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
     projectId,
   )

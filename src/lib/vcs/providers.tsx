@@ -1,5 +1,5 @@
 /**
- * VCS provider metadata — single source of truth for the console's Git
+ * VCS provider metadata - single source of truth for the console's Git
  * integration UI (icons, display labels, "open in provider" links, and the
  * OAuth authorize URL). Adding a provider here lights it up everywhere that
  * reads from this module instead of hardcoding "github".

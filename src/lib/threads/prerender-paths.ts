@@ -1,6 +1,6 @@
 /**
  * Threads routes are always SSR at runtime (index, detail, authors).
- * Do not add thread URLs to marketing prerender paths — ~14k thread pages
+ * Do not add thread URLs to marketing prerender paths - ~14k thread pages
  * would bloat the Sites artifact and build cache without meaningful benefit.
  */
 

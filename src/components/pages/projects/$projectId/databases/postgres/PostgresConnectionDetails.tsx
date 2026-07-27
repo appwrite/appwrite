@@ -103,7 +103,7 @@ const STATE_FILTERS: Array<{
 ]
 
 function truncateQuery(query: string | null, maxLength = 72): string {
-  if (!query) return '—'
+  if (!query) return '-'
   const trimmed = query.replace(/\s+/g, ' ').trim()
   if (trimmed.length <= maxLength) return trimmed
   return `${trimmed.slice(0, maxLength)}…`
@@ -617,7 +617,7 @@ export function PostgresConnectionDetails({
                             <span
                               className={cn(
                                 'block truncate font-mono text-[13px]',
-                                databaseLabel === '—'
+                                databaseLabel === '-'
                                   ? 'text-muted-foreground'
                                   : 'text-foreground',
                               )}
@@ -644,9 +644,9 @@ export function PostgresConnectionDetails({
                           </TableCell>
                           <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
                             <div className="flex items-center gap-1.5">
-                              {stateLabel === '—' ? (
+                              {stateLabel === '-' ? (
                                 <span className="text-[13px] text-muted-foreground">
-                                  —
+                                  -
                                 </span>
                               ) : (
                                 <Badge
@@ -707,7 +707,7 @@ export function PostgresConnectionDetails({
                               />
                             ) : (
                               <span className="text-[12px] text-muted-foreground">
-                                —
+                                -
                               </span>
                             )}
                           </TableCell>

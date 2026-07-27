@@ -183,7 +183,9 @@ function isDatabaseLifecycleReady(status: string | null | undefined): boolean {
 export async function waitForDedicatedDatabaseReady(
   projectId: string,
   databaseId: string,
-  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+  source:
+    | { type: 'product'; dbKind: DatabaseRouteKind }
+    | { type: 'engine'; engine: string },
   maxAttempts = 60,
 ): Promise<boolean> {
   let intervalMs = 500
@@ -192,7 +194,7 @@ export async function waitForDedicatedDatabaseReady(
       const database = await fetchDedicatedDatabaseById(
         projectId,
         databaseId,
-        engineHints,
+        source,
       )
       const status = database?.status
       if (isDatabaseLifecycleFailed(status)) {
@@ -231,14 +233,13 @@ export async function waitForCreatedDatabaseLifecycleReady(
   if (!projectId || !databaseId) return false
 
   if (kind.type === 'native') {
-    const engineHints =
-      kind.engine === 'postgres'
-        ? ['postgresql', 'postgres']
-        : ['mysql', 'mariadb']
     return waitForDedicatedDatabaseReady(
       projectId,
       databaseId,
-      engineHints,
+      {
+        type: 'engine',
+        engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
+      },
       maxAttempts,
     )
   }
@@ -436,13 +437,14 @@ export function seedCreatedDatabaseCaches(
     routeKind,
   )
   queryClient.setQueryData(
-    databaseQueryOptions(projectId, databaseId).queryKey,
+    databaseQueryOptions(projectId, databaseId, routeKind).queryKey,
     buildProjectDatabaseDetail(normalized),
   )
   queryClient.setQueryData(
     tablesQueryOptions(
       projectId,
       databaseId,
+      routeKind,
       0,
       ROWS_DEFAULT_PAGE_SIZE,
       undefined,
@@ -511,70 +513,31 @@ export function invalidateDatabaseModelAndType(
   databaseTypeCache.delete(databaseModelCacheKey(projectId, databaseId))
 }
 
-/** Resolve which product SDK owns a database (probe order: documents, vectors, tables). */
-export async function resolveProjectDatabaseType(
-  projectId: string,
-  databaseId: string,
-  routeKindHint?: DatabaseRouteKind,
-): Promise<DatabaseType> {
-  if (!projectId || !databaseId) return DatabaseType.Tablesdb
-
-  if (routeKindHint) {
-    return routeKindToDatabaseType(routeKindHint)
-  }
-
-  const key = databaseModelCacheKey(projectId, databaseId)
-  const now = Date.now()
-
-  const cached = databaseTypeCache.get(key)
-  if (cached && cached.expiresAt > now) {
-    return cached.value
-  }
-
-  const inFlight = databaseTypeInflight.get(key)
-  if (inFlight) return inFlight
-
-  const promise = (async () => {
-    const routeKind = await resolveProductRouteKindForDatabase(
-      projectId,
-      databaseId,
-    )
-    return routeKind
-      ? routeKindToDatabaseType(routeKind)
-      : DatabaseType.Tablesdb
-  })()
-
-  databaseTypeInflight.set(key, promise)
-  try {
-    const value = await promise
-    databaseTypeCache.set(key, {
-      value,
-      expiresAt: Date.now() + DEFAULT_STALE_TIME,
-    })
-    return value
-  } finally {
-    databaseTypeInflight.delete(key)
-  }
+/**
+ * Map a typed route kind to its product SDK. No cache, no network, no fallback.
+ * Callers must pass the URL `$dbKind` (or equivalent); never guess ownership.
+ */
+export function resolveProjectDatabaseType(
+  dbKind: DatabaseRouteKind,
+): DatabaseType {
+  return routeKindToDatabaseType(dbKind)
 }
 
-/** Resolve a database from whichever product API owns it (Tables, Documents, or Vectors). */
+/** Fetch a database from its product API only (`$dbKind` required). */
 export async function getDatabaseModel(
   projectId: string,
   databaseId: string,
-  routeKindHint?: DatabaseRouteKind,
+  dbKind: DatabaseRouteKind,
 ): Promise<Models.Database | null> {
-  if (!projectId || !databaseId) return null
+  if (!projectId || !databaseId || !dbKind) return null
 
   const key = databaseModelCacheKey(projectId, databaseId)
   const now = Date.now()
+  const backend = routeKindToDatabaseType(dbKind)
 
   const cached = databaseModelCache.get(key)
   if (cached && cached.expiresAt > now) {
-    const typeHint =
-      routeKindHint != null
-        ? routeKindToDatabaseType(routeKindHint)
-        : readCachedDatabaseType(projectId, databaseId)
-    if (!typeHint || cached.value?.type === typeHint) {
+    if (cached.value?.type === backend) {
       return cached.value
     }
     databaseModelCache.delete(key)
@@ -584,28 +547,11 @@ export async function getDatabaseModel(
   if (inFlight) return inFlight
 
   const projectSdk = sdk.forProject(projectId)
-  const typeHint =
-    routeKindHint != null
-      ? routeKindToDatabaseType(routeKindHint)
-      : readCachedDatabaseType(projectId, databaseId)
 
   const promise = (async () => {
-    if (typeHint) {
-      const db = await getProductDatabase(projectSdk, typeHint, databaseId)
-      if (db?.$id) {
-        return normalizeProductDatabase(db, typeHint)
-      }
-      // Known product route / cached type: do not probe other product APIs.
-      // Fallthrough caused GET /documentsdb/{id} and /vectorsdb/{id} for
-      // TablesDB databases whenever tablesDB.get briefly failed or returned null.
-      return null
-    }
-
-    for (const { backend } of PRODUCT_ROUTE_KIND_PROBES) {
-      const db = await getProductDatabase(projectSdk, backend, databaseId)
-      if (db?.$id) {
-        return normalizeProductDatabase(db, backend)
-      }
+    const db = await getProductDatabase(projectSdk, backend, databaseId)
+    if (db?.$id) {
+      return normalizeProductDatabase(db, backend)
     }
     return null
   })()
@@ -984,14 +930,14 @@ export async function fetchProjectDatabasesByIds(
 export async function fetchProjectDatabase(
   projectId: string,
   databaseId: string,
-  routeKindHint?: DatabaseRouteKind,
+  dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     return null
   }
 
   try {
-    const db = await getDatabaseModel(projectId, databaseId, routeKindHint)
+    const db = await getDatabaseModel(projectId, databaseId, dbKind)
 
     if (!db) {
       return null
@@ -1099,59 +1045,31 @@ async function getProductDatabase(
   }
 }
 
-const PRODUCT_ROUTE_KIND_PROBES: Array<{
-  kind: DatabaseRouteKind
-  backend: DatabaseType
-}> = [
-  { kind: 'documentsdb', backend: DatabaseType.Documentsdb },
-  { kind: 'vectorsdb', backend: DatabaseType.Vectorsdb },
-  { kind: 'tablesdb', backend: DatabaseType.Tablesdb },
-]
-
 /**
- * Resolve which product route tree owns a database by probing each product API.
- * Prefer documentsdb and vectorsdb over tablesdb when IDs collide.
- *
- * When `hint` is set (URL `$dbKind` or seeded type), only that product API is
- * checked. Never fall through to other products for a typed route.
+ * Confirm a database exists on the product API for `$dbKind`.
+ * Never probes other product services.
  */
 export async function resolveProductRouteKindForDatabase(
   projectId: string,
   databaseId: string,
-  hint?: DatabaseRouteKind,
+  dbKind: DatabaseRouteKind,
 ): Promise<DatabaseRouteKind | null> {
-  if (!projectId || !databaseId) return null
+  if (!projectId || !databaseId || !dbKind) return null
 
   const features = getActiveProfileFeatures()
-  const cachedType = readCachedDatabaseType(projectId, databaseId)
-  if (cachedType && isProductDatabaseTypeEnabled(cachedType, features)) {
-    const cachedKind = databaseRouteKindFromApiType(cachedType)
-    // URL / caller hint wins when it disagrees with a stale cache entry.
-    if (!hint || hint === cachedKind) return cachedKind
-  }
+  if (!isProductDatabaseRouteKindEnabled(dbKind, features)) return null
 
   const projectSdk = sdk.forProject(projectId)
-
-  if (hint) {
-    const backend = routeKindToDatabaseType(hint)
-    const db = await getProductDatabase(projectSdk, backend, databaseId)
-    if (db?.$id) {
-      seedDatabaseModelCache(projectId, databaseId, db, backend)
-      return hint
-    }
-    return null
-  }
-
-  for (const { kind, backend } of PRODUCT_ROUTE_KIND_PROBES) {
-    const db = await getProductDatabase(projectSdk, backend, databaseId)
-    if (db?.$id) {
-      seedDatabaseModelCache(projectId, databaseId, db, backend)
-      return kind
-    }
+  const backend = routeKindToDatabaseType(dbKind)
+  const db = await getProductDatabase(projectSdk, backend, databaseId)
+  if (db?.$id) {
+    seedDatabaseModelCache(projectId, databaseId, db, backend)
+    return dbKind
   }
   return null
 }
 
+/** Cache-only lookup of a previously seeded product route kind. No network. */
 export function productRouteKindQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1164,7 +1082,7 @@ export function productRouteKindQueryOptions(
       if (cachedType && isProductDatabaseTypeEnabled(cachedType, features)) {
         return databaseRouteKindFromApiType(cachedType)
       }
-      return resolveProductRouteKindForDatabase(projectId!, databaseId!)
+      return null
     },
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1377,9 +1295,10 @@ export async function waitForCreatedDatabaseHaReady(
         const database = await fetchDedicatedDatabaseById(
           projectId,
           databaseId,
-          kind.engine === 'postgres'
-            ? ['postgresql', 'postgres']
-            : ['mysql', 'mariadb'],
+          {
+            type: 'engine',
+            engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
+          },
         )
         if (
           database &&
@@ -1444,9 +1363,10 @@ export async function waitForCreatedDatabasePitrReady(
       const database = await fetchDedicatedDatabaseById(
         projectId,
         databaseId,
-        kind.engine === 'postgres'
-          ? ['postgresql', 'postgres']
-          : ['mysql', 'mariadb'],
+        {
+          type: 'engine',
+          engine: kind.engine === 'postgres' ? 'postgresql' : 'mysql',
+        },
       )
       if (database?.pitr === true) return true
     } catch {
@@ -1467,12 +1387,13 @@ export async function updateProjectDatabase(
   projectId: string,
   databaseId: string,
   data: { name: string; enabled?: boolean },
+  dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
   }
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
   const payload = {
     databaseId,
     name: data.name.trim(),
@@ -1599,12 +1520,13 @@ export async function updateProductDatabaseSpecification(
 export async function deleteProjectDatabase(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     throw new Error('Project ID and Database ID are required')
   }
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.delete({ databaseId })
@@ -1984,35 +1906,6 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   return { databases, total }
 }
 
-function productBackendsFromEngineHints(
-  engineHints: string[],
-): DatabaseType[] {
-  const backends: DatabaseType[] = []
-  const seen = new Set<DatabaseType>()
-  const add = (backend: DatabaseType) => {
-    if (seen.has(backend)) return
-    seen.add(backend)
-    backends.push(backend)
-  }
-  for (const hint of engineHints) {
-    const key = hint.trim().toLowerCase()
-    if (key === 'mongodb' || key === 'mongo') {
-      add(DatabaseType.Documentsdb)
-      continue
-    }
-    if (key === 'mysql' || key === 'mariadb') {
-      add(DatabaseType.Tablesdb)
-      continue
-    }
-    if (key === 'postgresql' || key === 'postgres') {
-      // VectorsDB is Postgres-backed; TablesDB dedicated may also be.
-      add(DatabaseType.Vectorsdb)
-      add(DatabaseType.Tablesdb)
-    }
-  }
-  return backends
-}
-
 function dedicatedCardSourceFromProductDatabase(
   db: Models.Database,
   backend: DatabaseType,
@@ -2045,71 +1938,78 @@ function dedicatedCardSourceFromProductDatabase(
 }
 
 /**
- * Resolve a dedicated database by ID. Product-owned dedicated compute often
- * shares the product database ID but may be omitted from engine `list`
- * responses; `get` / id-filtered `list` still return the row on the right engine.
- * When the engine row is missing, fall back to the product get payload's
- * (untyped) `specification` field so list cards can show the compute tier.
+ * Resolve dedicated compute for one database.
+ *
+ * Product DBs: only that product API (`dbKind`). Native DBs: only that engine.
+ * Never try other products or engines for the same ID.
  */
 export async function fetchDedicatedDatabaseById(
   projectId: string,
   databaseId: string,
-  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+  source:
+    | { type: 'product'; dbKind: DatabaseRouteKind }
+    | { type: 'engine'; engine: string },
 ): Promise<Models.DedicatedDatabase | null> {
   if (!projectId || !databaseId) return null
 
   const projectSdk = sdk.forProject(projectId)
-  const allowed = allowedDedicatedEngineKeys()
 
-  const seen = new Set<string>()
-  for (const hint of engineHints) {
-    const key = hint.trim().toLowerCase()
-    if (!key || seen.has(key) || !allowed.has(key)) continue
-    seen.add(key)
-    const engine = dedicatedEngineService(projectSdk, key)
-    try {
-      const database = await engine.get({ databaseId })
-      if (database?.$id) return database
-    } catch {
-      /* try list filter, then next engine */
-    }
-    try {
-      const listed = await engine.list({
-        queries: [Query.equal('$id', databaseId), Query.limit(1)],
-      })
-      const database = listed.databases?.[0]
-      if (database?.$id) return database
-    } catch {
-      /* try next engine */
-    }
-  }
-
-  for (const backend of productBackendsFromEngineHints(engineHints)) {
+  if (source.type === 'product') {
+    const backend = routeKindToDatabaseType(source.dbKind)
     const product = await getProductDatabase(projectSdk, backend, databaseId)
-    if (!product) continue
-    const fromProduct = dedicatedCardSourceFromProductDatabase(product, backend)
-    if (fromProduct) return fromProduct
+    if (!product) return null
+    return dedicatedCardSourceFromProductDatabase(product, backend)
   }
 
-  return null
+  const key = source.engine.trim().toLowerCase()
+  if (!key || !allowedDedicatedEngineKeys().has(key)) return null
+  const engine = dedicatedEngineService(projectSdk, key)
+  try {
+    const database = await engine.get({ databaseId })
+    if (database?.$id) return database
+  } catch {
+    /* try id-filtered list on the same engine only */
+  }
+  try {
+    const listed = await engine.list({
+      queries: [Query.equal('$id', databaseId), Query.limit(1)],
+    })
+    return listed.databases?.[0] ?? null
+  } catch {
+    return null
+  }
 }
 
 export function dedicatedDatabaseByIdQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engineHints: string[] = ['postgresql', 'mysql', 'mongodb'],
+  source:
+    | { type: 'product'; dbKind: DatabaseRouteKind }
+    | { type: 'engine'; engine: string }
+    | null
+    | undefined,
 ) {
+  const sourceKey =
+    source?.type === 'product'
+      ? `product:${source.dbKind}`
+      : source?.type === 'engine'
+        ? `engine:${source.engine}`
+        : ''
   return queryOptions({
     queryKey: [
       'dedicated-database',
       'project',
       projectId,
       databaseId,
-      engineHints.join(','),
+      sourceKey,
     ],
     queryFn: () =>
-      fetchDedicatedDatabaseById(projectId!, databaseId!, engineHints),
-    enabled: !!projectId && !!databaseId && isDedicatedEngineAccessSupported(),
+      fetchDedicatedDatabaseById(projectId!, databaseId!, source!),
+    enabled:
+      !!projectId &&
+      !!databaseId &&
+      !!source &&
+      isDedicatedEngineAccessSupported(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -2180,6 +2080,7 @@ export type CreateCollectionAttributeInput = {
 export async function createProjectTable(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   data: {
     tableId?: string | null
     name: string
@@ -2196,7 +2097,7 @@ export async function createProjectTable(
       ? data.tableId.trim()
       : ID.unique()
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Vectorsdb) {
     const dimension =
@@ -2401,12 +2302,12 @@ export type TablesSortBy = '$createdAt' | 'name' | '$updatedAt'
 export async function fetchProjectTables(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
-  routeKindHint?: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     return { tables: [], total: 0 }
@@ -2420,11 +2321,7 @@ export async function fetchProjectTables(
   ]
   const searchArg = search?.trim() || undefined
 
-  const kind = await resolveProjectDatabaseType(
-    projectId,
-    databaseId,
-    routeKindHint,
-  )
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     try {
@@ -2564,6 +2461,7 @@ async function enrichCollectionsForVisualizer(
 export async function fetchAllProjectTablesForVisualizer(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     return { tables: [] }
@@ -2575,7 +2473,7 @@ export async function fetchAllProjectTablesForVisualizer(
     Query.limit(1000),
   ]
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     try {
@@ -2676,6 +2574,7 @@ function buildRowListSelectQuery(
 export async function fetchProjectTableRows(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
@@ -2694,7 +2593,7 @@ export async function fetchProjectTableRows(
 
   const projectSdk = sdk.forProject(projectId)
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   const selectQuery = buildRowListSelectQuery(
     listSelectAttrKeys,
@@ -2755,6 +2654,7 @@ export async function fetchProjectTableRows(
 export async function fetchProjectTableRow(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   rowId: string,
 ) {
@@ -2762,7 +2662,7 @@ export async function fetchProjectTableRow(
     return null
   }
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   try {
     if (kind === DatabaseType.Documentsdb) {
@@ -2808,6 +2708,7 @@ export async function fetchProjectTableRow(
 export async function fetchProjectTableColumns(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   filterQueries?: string[],
   page: number = 0,
@@ -2825,7 +2726,7 @@ export async function fetchProjectTableColumns(
     Query.offset(page * limit),
   ]
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     try {
@@ -2883,6 +2784,7 @@ export async function fetchProjectTableColumns(
 export async function fetchProjectTableIndexes(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   filterQueries?: string[],
   page: number = 0,
@@ -2900,7 +2802,7 @@ export async function fetchProjectTableIndexes(
     Query.offset(page * limit),
   ]
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     try {
@@ -2969,6 +2871,7 @@ export async function fetchProjectTableIndexes(
 export async function fetchProjectTable(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
 ) {
   if (!projectId || !databaseId || !tableId) {
@@ -2976,7 +2879,7 @@ export async function fetchProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   try {
     let response: Record<string, unknown> | null = null
@@ -3037,6 +2940,7 @@ export async function fetchProjectTable(
 export async function deleteProjectTableRow(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   rowId: string,
 ) {
@@ -3045,7 +2949,7 @@ export async function deleteProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     await projectSdk.documentsDB.deleteDocument({
@@ -3079,6 +2983,7 @@ export async function deleteProjectTableRow(
 async function ensureDocumentOrVectorCreateDataPopulated(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   payloadWithoutId: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
@@ -3087,6 +2992,7 @@ async function ensureDocumentOrVectorCreateDataPopulated(
   const { columns } = await fetchProjectTableColumns(
     projectId,
     databaseId,
+    dbKind,
     tableId,
   )
   const filled: Record<string, unknown> = {}
@@ -3138,6 +3044,7 @@ async function ensureDocumentOrVectorCreateDataPopulated(
 export async function createProjectTableRow(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   data: Record<string, unknown>,
   rowId?: string,
@@ -3148,7 +3055,7 @@ export async function createProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
   const { ID } = await import('@appwrite.io/console')
   const id = rowId || (data.$id as string) || ID.unique()
 
@@ -3159,6 +3066,7 @@ export async function createProjectTableRow(
     payload = await ensureDocumentOrVectorCreateDataPopulated(
       projectId,
       databaseId,
+      dbKind,
       tableId,
       payload,
     )
@@ -3176,6 +3084,7 @@ export async function createProjectTableRow(
     payload = await ensureDocumentOrVectorCreateDataPopulated(
       projectId,
       databaseId,
+      dbKind,
       tableId,
       payload,
     )
@@ -3210,6 +3119,7 @@ export async function createProjectTableRow(
 export async function updateProjectTableRow(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   rowId: string,
   data: Record<string, unknown>,
@@ -3220,7 +3130,7 @@ export async function updateProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   const payload = { ...data } as Record<string, unknown>
   if (payload.$id) delete payload.$id
@@ -3269,6 +3179,7 @@ export async function updateProjectTableRow(
 export async function createProjectTableRows(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   rows: Record<string, unknown>[],
   hasRelationshipColumns: boolean = false,
@@ -3282,11 +3193,12 @@ export async function createProjectTableRows(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const kind = resolveProjectDatabaseType(dbKind)
   const errors: Error[] = []
   let created = 0
 
-  // If no relationship columns, try bulk insert
-  if (!hasRelationshipColumns) {
+  // Bulk insert is only supported for TablesDB; Documents/Vectors always insert one-by-one below.
+  if (!hasRelationshipColumns && kind === DatabaseType.Tablesdb) {
     try {
       const { ID } = await import('@appwrite.io/console')
       const rowsToInsert = rows.map((row) => {
@@ -3326,6 +3238,7 @@ export async function createProjectTableRows(
           await createProjectTableRow(
             projectId,
             databaseId,
+            dbKind,
             tableId,
             row,
             typeof rid === 'string' ? rid : undefined,
@@ -3846,6 +3759,7 @@ export async function deleteProjectTableColumn(
 export async function createProjectTableIndex(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   indexData: unknown,
 ) {
@@ -3854,7 +3768,7 @@ export async function createProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   const raw = indexData as Record<string, unknown>
   const key = raw.key as string
@@ -3913,6 +3827,7 @@ export async function createProjectTableIndex(
 export async function deleteProjectTableIndex(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   indexKey: string,
 ) {
@@ -3921,7 +3836,7 @@ export async function deleteProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.deleteIndex({
@@ -3957,6 +3872,7 @@ export async function deleteProjectTableIndex(
 export async function updateProjectTable(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
   data: {
     name: string
@@ -3970,7 +3886,7 @@ export async function updateProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   const collectionPayload = {
     databaseId,
@@ -4009,6 +3925,7 @@ export async function updateProjectTable(
 export async function deleteProjectTable(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableId: string,
 ) {
   if (!projectId || !databaseId || !tableId) {
@@ -4016,7 +3933,7 @@ export async function deleteProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.deleteCollection({
@@ -4224,12 +4141,12 @@ function mapProjectDatabaseListItems(
 export function tablesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
-  routeKindHint?: DatabaseRouteKind,
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -4245,17 +4162,18 @@ export function tablesQueryOptions(
       normalizedSearch,
       order,
       sortBy,
+      dbKind,
     ],
     queryFn: () =>
       fetchProjectTables(
         projectId!,
         databaseId!,
+        dbKind,
         page,
         limit,
         normalizedSearch,
         order,
         sortBy,
-        routeKindHint,
       ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -4278,6 +4196,7 @@ export function tableRowsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
@@ -4306,11 +4225,13 @@ export function tableRowsQueryOptions(
       sortBy,
       filterQueries,
       listSelectKey,
+      dbKind,
     ],
     queryFn: () =>
       fetchProjectTableRows(
         projectId!,
         databaseId!,
+        dbKind,
         tableId!,
         page,
         limit,
@@ -4340,11 +4261,17 @@ export function tableRowsQueryOptions(
 export function databaseQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  routeKindHint?: DatabaseRouteKind,
+  dbKind: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: ['database', 'project', projectId, databaseId],
-    queryFn: () => fetchProjectDatabase(projectId!, databaseId!, routeKindHint),
+    queryKey: [
+      'database',
+      'project',
+      projectId,
+      databaseId,
+      dbKind,
+    ],
+    queryFn: () => fetchProjectDatabase(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -4449,6 +4376,7 @@ export async function refetchProjectTableRelatedQueries(
 export function tableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -4461,6 +4389,7 @@ export function tableColumnsQueryOptions(
       'project',
       projectId,
       databaseId,
+      dbKind,
       tableId,
       ...(hasFilters ? [filterQueries] : []),
       page,
@@ -4470,6 +4399,7 @@ export function tableColumnsQueryOptions(
       fetchProjectTableColumns(
         projectId!,
         databaseId!,
+        dbKind,
         tableId!,
         filterQueries,
         page,
@@ -4497,11 +4427,12 @@ export function tableColumnsQueryOptions(
 export function tableQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   return queryOptions({
     queryKey: ['table', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTable(projectId!, databaseId!, tableId!),
+    queryFn: () => fetchProjectTable(projectId!, databaseId!, dbKind, tableId!),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -4525,6 +4456,7 @@ export function tableQueryOptions(
 export function tableIndexesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -4537,6 +4469,7 @@ export function tableIndexesQueryOptions(
       'project',
       projectId,
       databaseId,
+      dbKind,
       tableId,
       ...(hasFilters ? [filterQueries] : []),
       page,
@@ -4546,6 +4479,7 @@ export function tableIndexesQueryOptions(
       fetchProjectTableIndexes(
         projectId!,
         databaseId!,
+        dbKind,
         tableId!,
         filterQueries,
         page,
@@ -4570,10 +4504,19 @@ export function tableIndexesQueryOptions(
 export function allTablesForVisualizerQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
 ) {
   return queryOptions({
-    queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-    queryFn: () => fetchAllProjectTablesForVisualizer(projectId!, databaseId!),
+    queryKey: [
+      'tables',
+      'visualizer',
+      'project',
+      projectId,
+      databaseId,
+      dbKind,
+    ],
+    queryFn: () =>
+      fetchAllProjectTablesForVisualizer(projectId!, databaseId!, dbKind),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -4734,7 +4677,7 @@ export function useProjectConsoleDatabases(
 export function useProjectDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  routeKindHint?: DatabaseRouteKind,
+  dbKind: DatabaseRouteKind,
 ) {
   const queryClient = useQueryClient()
   const {
@@ -4744,7 +4687,7 @@ export function useProjectDatabase(
     error,
     refetch,
   } = useQuery({
-    ...databaseQueryOptions(projectId, databaseId, routeKindHint),
+    ...databaseQueryOptions(projectId, databaseId, dbKind),
     refetchInterval: (query) =>
       shouldPollDedicatedDatabaseStatus(
         (query.state.data as { status?: string | null } | undefined)?.status,
@@ -4799,12 +4742,12 @@ export function useProjectDatabase(
 export function useProjectTables(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
-  routeKindHint?: DatabaseRouteKind,
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -4820,12 +4763,12 @@ export function useProjectTables(
     tablesQueryOptions(
       projectId,
       databaseId,
+      dbKind,
       page,
       limit,
       normalizedSearch,
       order,
       sortBy,
-      routeKindHint,
     ),
   )
 
@@ -4876,6 +4819,7 @@ export function useProjectTables(
 export function useAllProjectTablesForVisualizer(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
 ) {
   const {
     data: tablesData,
@@ -4883,7 +4827,9 @@ export function useAllProjectTablesForVisualizer(
     isPending,
     error,
     refetch,
-  } = useQuery(allTablesForVisualizerQueryOptions(projectId, databaseId))
+  } = useQuery(
+    allTablesForVisualizerQueryOptions(projectId, databaseId, dbKind),
+  )
 
   return {
     tables: tablesData?.tables ?? [],
@@ -4911,6 +4857,7 @@ export function useProjectTableRows(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
@@ -4932,6 +4879,7 @@ export function useProjectTableRows(
       projectId,
       databaseId,
       tableId,
+      dbKind,
       page,
       limit,
       normalizedSearch,
@@ -4972,6 +4920,7 @@ export function useProjectTableRows(
 export function useProjectTableColumns(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -4987,6 +4936,7 @@ export function useProjectTableColumns(
     tableColumnsQueryOptions(
       projectId,
       databaseId,
+      dbKind,
       tableId,
       filterQueries,
       page,
@@ -5018,6 +4968,7 @@ export function useProjectTableColumns(
 export function useProjectTableIndexes(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -5033,6 +4984,7 @@ export function useProjectTableIndexes(
     tableIndexesQueryOptions(
       projectId,
       databaseId,
+      dbKind,
       tableId,
       filterQueries,
       page,
@@ -5064,6 +5016,7 @@ export const collectionAttributesQueryOptions = tableColumnsQueryOptions
 export function useProjectCollectionAttributes(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -5072,6 +5025,7 @@ export function useProjectCollectionAttributes(
   return useProjectTableColumns(
     projectId,
     databaseId,
+    dbKind,
     tableId,
     filterQueries,
     page,
@@ -5088,6 +5042,7 @@ export const collectionIndexesQueryOptions = tableIndexesQueryOptions
 export function useProjectCollectionIndexes(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
   filterQueries?: string[],
   page: number = 0,
@@ -5096,6 +5051,7 @@ export function useProjectCollectionIndexes(
   return useProjectTableIndexes(
     projectId,
     databaseId,
+    dbKind,
     tableId,
     filterQueries,
     page,
@@ -5114,6 +5070,7 @@ export function useProjectCollectionIndexes(
 export function useProjectTable(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const {
@@ -5122,7 +5079,7 @@ export function useProjectTable(
     isPending,
     error,
     refetch,
-  } = useQuery(tableQueryOptions(projectId, databaseId, tableId))
+  } = useQuery(tableQueryOptions(projectId, databaseId, dbKind, tableId))
 
   return {
     table: tableData || null,
@@ -5143,6 +5100,7 @@ export function useProjectTable(
 export function useCreateProjectTableRow(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5164,6 +5122,7 @@ export function useCreateProjectTableRow(
       return await createProjectTableRow(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         data,
         rowId,
@@ -5191,6 +5150,7 @@ export function useCreateProjectTableRow(
 export function useUpdateProjectTableRow(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5212,6 +5172,7 @@ export function useUpdateProjectTableRow(
       return await updateProjectTableRow(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         rowId,
         data,
@@ -5236,6 +5197,7 @@ export function useUpdateProjectTableRow(
 export function useDeleteProjectTableRow(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5246,7 +5208,13 @@ export function useDeleteProjectTableRow(
         throw new Error('Missing required parameters')
       }
       requireOperationalDatabase(queryClient, projectId, databaseId)
-      return await deleteProjectTableRow(projectId, databaseId, tableId, rowId)
+      return await deleteProjectTableRow(
+        projectId,
+        databaseId,
+        dbKind,
+        tableId,
+        rowId,
+      )
     },
     onSuccess: async () => {
       // Refetch rows list so the UI updates (list uses refetchOnMount: false)
@@ -5270,6 +5238,7 @@ export function useDeleteProjectTableRow(
 export function useCreateProjectTableRows(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5289,6 +5258,7 @@ export function useCreateProjectTableRows(
       return await createProjectTableRows(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         rows,
         hasRelationshipColumns,
@@ -5468,6 +5438,7 @@ export function useDeleteProjectTableColumn(
 export function useCreateProjectTableIndex(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5481,6 +5452,7 @@ export function useCreateProjectTableIndex(
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         indexData,
       )
@@ -5509,6 +5481,7 @@ export function useCreateProjectTableIndex(
 export function useDeleteProjectTableIndex(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5522,6 +5495,7 @@ export function useDeleteProjectTableIndex(
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         indexKey,
       )
@@ -5551,6 +5525,7 @@ export function useDeleteProjectTableIndex(
 export function useUpdateProjectTable(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5566,7 +5541,13 @@ export function useUpdateProjectTable(
         throw new Error('Missing required parameters')
       }
       requireOperationalDatabase(queryClient, projectId, databaseId)
-      return await updateProjectTable(projectId, databaseId, tableId, data)
+      return await updateProjectTable(
+        projectId,
+        databaseId,
+        dbKind,
+        tableId,
+        data,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -5589,6 +5570,7 @@ export function useUpdateProjectTable(
 export function useDeleteProjectTable(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  dbKind: DatabaseRouteKind,
   tableId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
@@ -5599,7 +5581,7 @@ export function useDeleteProjectTable(
         throw new Error('Missing required parameters')
       }
       requireOperationalDatabase(queryClient, projectId, databaseId)
-      return await deleteProjectTable(projectId, databaseId, tableId)
+      return await deleteProjectTable(projectId, databaseId, dbKind, tableId)
     },
     onSuccess: async () => {
       // Refetch tables/databases list so the UI updates (list uses refetchOnMount: false)
@@ -5738,6 +5720,7 @@ async function stageRowEditTransactionOperations(
 
 export async function commitProjectTableRowEdits(
   projectId: string,
+  dbKind: DatabaseRouteKind,
   edits: PendingRowCellEdit[],
 ) {
   if (!projectId) {
@@ -5748,8 +5731,7 @@ export async function commitProjectTableRowEdits(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const databaseId = edits[0].databaseId
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
   const transactionSdk = getRowEditTransactionSdk(projectSdk, kind)
 
   if (typeof transactionSdk.createTransaction !== 'function') {

@@ -110,7 +110,7 @@ function VerifyEmailPage() {
 
         // If we're headed to a specific destination (e.g. an OAuth2
         // consent/device flow), go straight there without provisioning a
-        // personal org/project — provisioning throws on single-tenant
+        // personal org/project - provisioning throws on single-tenant
         // profiles and would otherwise drop the pending authorization.
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {
