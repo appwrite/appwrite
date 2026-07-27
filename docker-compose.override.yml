@@ -456,6 +456,14 @@ services:
   appwrite-embedding:
     ports:
       - "9505:3000"
+  clamav:
+    profiles:
+      - antivirus
+    image: clamav/clamav:1.4-debian
+    container_name: appwrite-clamav
+    restart: unless-stopped
+    networks:
+      - appwrite
 configs:
   redisinsight-connections.json:
     content: |
