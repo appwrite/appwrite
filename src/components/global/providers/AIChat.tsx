@@ -2006,18 +2006,32 @@ export function AIChatPanelContent() {
     if (directContextProjectId) return directContextProjectId
 
     try {
-      const projects = await listConsoleProjects({
-        queries: [
-          Query.or([
-            Query.isNull('status'),
-            Query.notEqual('status', 'archived'),
-          ]),
-          Query.orderDesc('$createdAt'),
-          Query.limit(1),
-        ],
-        total: false,
-      })
-      return projects.projects?.[0]?.$id ?? null
+      const { fetchOrganizations } = await import(
+        '@/lib/react-query/hooks/organizations'
+      )
+      const orgs = await fetchOrganizations()
+      for (const org of orgs.teams ?? []) {
+        try {
+          const projects = await listConsoleProjects({
+            organizationId: org.$id,
+            queries: [
+              Query.equal('teamId', org.$id),
+              Query.or([
+                Query.isNull('status'),
+                Query.notEqual('status', 'archived'),
+              ]),
+              Query.orderDesc('$createdAt'),
+              Query.limit(1),
+            ],
+            total: false,
+          })
+          const projectIdFromOrg = projects.projects?.[0]?.$id
+          if (projectIdFromOrg) return projectIdFromOrg
+        } catch {
+          // Try the next organization.
+        }
+      }
+      return null
     } catch {
       return null
     }

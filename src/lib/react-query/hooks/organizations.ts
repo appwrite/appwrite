@@ -108,23 +108,31 @@ export async function resolveProjectTeamIdFromConsole(
 ): Promise<string | null> {
   if (!projectId) return null
   try {
-    const { getConsoleProject } = await import('@/lib/appwrite/console-projects')
-    const project = await getConsoleProject({ projectId })
-    return project?.teamId ?? null
-  } catch {
-    try {
-      const { listConsoleProjects } = await import(
-        '@/lib/appwrite/console-projects'
-      )
-      const { Query } = await import('@appwrite.io/console')
-      const list = await listConsoleProjects({
-        queries: [Query.equal('$id', projectId), Query.limit(1)],
-        total: false,
-      })
-      return list.projects?.[0]?.teamId ?? null
-    } catch {
-      return null
+    const orgs = await fetchOrganizations()
+    const { listConsoleProjects } = await import(
+      '@/lib/appwrite/console-projects'
+    )
+    const { Query } = await import('@appwrite.io/console')
+    for (const org of orgs.teams ?? []) {
+      try {
+        const list = await listConsoleProjects({
+          organizationId: org.$id,
+          queries: [
+            Query.equal('teamId', org.$id),
+            Query.equal('$id', projectId),
+            Query.limit(1),
+          ],
+          total: false,
+        })
+        const teamId = list.projects?.[0]?.teamId
+        if (teamId) return teamId
+      } catch {
+        // Try the next organization.
+      }
     }
+    return null
+  } catch {
+    return null
   }
 }
 

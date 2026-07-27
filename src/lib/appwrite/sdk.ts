@@ -235,7 +235,30 @@ function createConsoleSdkRaw(client: Client) {
     sites: new Sites(client),
     domains: new Domains(client),
     storage: new Storage(client),
-    organization: new Organization(client),
+    /**
+     * Organization-scoped console API (`X-Appwrite-Organization`).
+     * Required for `/organization/projects` and related org project routes.
+     * Matches the reference console: `sdk.forConsole.organization(orgId)`.
+     */
+    organization(organizationId: string) {
+      const id = String(organizationId ?? '').trim()
+      if (!id) {
+        throw new Error('Organization ID is required')
+      }
+      const organizationClient = new Client()
+      installSetProjectWithHeader(organizationClient)
+      organizationClient.setEndpoint(client.config.endpoint)
+      if (client.config.project) {
+        organizationClient.setProject(client.config.project)
+      }
+      if (client.config.locale) {
+        organizationClient.setLocale(client.config.locale)
+      }
+      Object.assign(organizationClient.headers, client.getHeaders(), {
+        'X-Appwrite-Organization': id,
+      })
+      return new Organization(organizationClient)
+    },
     organizations: new Organizations(client),
     presences: new Presences(client),
     usage: new Usage(client),
