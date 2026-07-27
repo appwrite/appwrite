@@ -20,12 +20,6 @@ class Client
      */
     public const SCALE = 1.5;
 
-    /**
-     * Wait for subresources such as webfonts and images, not just the DOM,
-     * otherwise pages are captured mid-render.
-     */
-    public const WAIT_UNTIL = 'load';
-
     private Factory $factory;
 
     /**
@@ -55,7 +49,6 @@ class Client
                 'height' => self::VIEWPORT_HEIGHT,
             ],
             'deviceScaleFactor' => self::SCALE,
-            'waitUntil' => self::WAIT_UNTIL,
         ]));
 
         $status = $response->getStatusCode();

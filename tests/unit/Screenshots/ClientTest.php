@@ -60,7 +60,6 @@ final class ClientTest extends TestCase
             'sleep' => 500,
             'viewport' => ['width' => 1280, 'height' => 720],
             'deviceScaleFactor' => 1.5,
-            'waitUntil' => 'load',
         ], \json_decode((string)$this->request->getBody(), true));
     }
 
@@ -80,16 +79,18 @@ final class ClientTest extends TestCase
         $this->assertSame(720, $body['viewport']['height']);
     }
 
-    public function testCreateWaitsForSubresources(): void
+    public function testCreateDoesNotBlockOnSubresources(): void
     {
         $response = (new Response(200, body: new Stream('png-bytes')))
             ->withHeader('Content-Type', 'image/png');
 
         $this->client($response)->create('http://appwrite/', 'light');
 
-        // The browser service defaults to `domcontentloaded`, which fires before
-        // webfonts and images have settled.
-        $this->assertSame('load', \json_decode((string)$this->request->getBody(), true)['waitUntil']);
+        // The browser service navigates with `domcontentloaded` unless told
+        // otherwise. Waiting for `load` risks exhausting the request timeout on
+        // sites with slow or hanging subresources, which yields no screenshot at
+        // all rather than an early one.
+        $this->assertArrayNotHasKey('waitUntil', \json_decode((string)$this->request->getBody(), true));
     }
 
     public function testCreateError(): void
