@@ -1517,6 +1517,10 @@ export function organizationUsageQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow usage must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -1804,6 +1808,10 @@ export function organizationBillingAggregationQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow usage aggregation must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
   })
 }
 

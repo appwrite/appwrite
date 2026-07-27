@@ -59,13 +59,15 @@ export const Route = createFileRoute('/_public/upgrade')({
             '',
           ),
         ),
-        queryClient
-          .ensureQueryData(organizationUsageQueryOptions(orgId))
-          .catch(() => {}),
-        queryClient
-          .ensureQueryData(organizationProjectsQueryOptions(orgId))
-          .catch(() => {}),
       ])
+
+      // Usage / project lists are non-critical for the wizard first paint.
+      void queryClient
+        .prefetchQuery(organizationUsageQueryOptions(orgId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(organizationProjectsQueryOptions(orgId))
+        .catch(() => undefined)
       return
     }
 

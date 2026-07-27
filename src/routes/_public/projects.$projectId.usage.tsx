@@ -19,9 +19,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/usage')({
     if (typeof window === 'undefined') return
 
     const { queryClient } = context
-    await queryClient.ensureQueryData(countriesQueryOptions()).catch(() => {
-      // Country names/flags are optional for the usage page
-    })
+    // Optional for country names/flags; never block the usage page.
+    void queryClient
+      .prefetchQuery(countriesQueryOptions())
+      .catch(() => undefined)
   },
   component: UsageLayoutPage,
 })
