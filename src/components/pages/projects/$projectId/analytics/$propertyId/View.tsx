@@ -22,15 +22,20 @@ import type { Models } from '@appwrite.io/console'
 import {
   ANALYTICS_PAGEVIEW_EVENT,
   DEFAULT_ANALYTICS_DATE_RANGE,
+  DEFAULT_ANALYTICS_RANGE,
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsEventMetrics,
   useAnalyticsEvents,
   useAnalyticsProperty,
   useAnalyticsStats,
-  type AnalyticsDateRange,
-  type AnalyticsMetricPoint,
+  useOrganizationScopes,
+  useProject,
+  type AnalyticsRange,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DateRangeSelect } from '../_components/DateRangeSelect'
+import { PropertySettings } from '../_components/PropertySettings'
 import {
   formatDuration,
   formatNumber,
@@ -55,7 +60,7 @@ export type PropertyDetailInitialData = {
   property: Models.AnalyticsProperty
   stats?: Models.AnalyticsMetric
   events?: { events: Models.AnalyticsEvent[]; total: number }
-  series?: { points: AnalyticsMetricPoint[]; total: number }
+  series?: { points: Models.AnalyticsMetricPoint[]; total: number }
 }
 
 interface ViewProps {
@@ -65,8 +70,15 @@ interface ViewProps {
   initialData?: PropertyDetailInitialData
 }
 
+/**
+ * Series points are `YYYY-MM-DD` day buckets, not instants. Parse as a plain
+ * calendar date so the label never shifts a day across timezones.
+ */
 function formatChartDate(value: string): string {
-  const parsed = new Date(value)
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  const [, year, month, day] = match
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day))
   if (Number.isNaN(parsed.getTime())) return value
   return parsed.toLocaleDateString(undefined, {
     day: 'numeric',
@@ -150,21 +162,6 @@ function SummaryTile({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SettingsRow({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <span className="text-[13px] text-muted-foreground">{label}</span>
-      <div className="min-w-0 text-[13px] text-foreground">{children}</div>
-    </div>
-  )
-}
-
 export function View({
   projectId,
   propertyId,
@@ -174,20 +171,25 @@ export function View({
   const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
   const [activeMetric, setActiveMetric] = useState<ChartSeriesKey>('visitors')
-  const [dateRange, setDateRange] = useState<AnalyticsDateRange>(
-    DEFAULT_ANALYTICS_DATE_RANGE,
-  )
+  const [range, setRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE)
 
   const { property: propertyFromHook, isLoading: propertyLoading } =
     useAnalyticsProperty(projectId, propertyId)
   const property = propertyFromHook ?? initialData?.property
 
-  const isDefaultRange = dateRange === DEFAULT_ANALYTICS_DATE_RANGE
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const canWrite = canCreateAnalyticsProperty(access, features)
+
+  const isDefaultRange =
+    range.kind === 'shorthand' &&
+    range.dateRange === DEFAULT_ANALYTICS_DATE_RANGE
 
   const { stats: statsFromHook, error: statsError } = useAnalyticsStats(
     projectId,
     propertyId,
-    dateRange,
+    range,
   )
   const stats =
     statsFromHook ??
@@ -195,7 +197,7 @@ export function View({
     EMPTY_ANALYTICS_METRIC
 
   const { events: eventsFromHook, isLoading: eventsLoading } =
-    useAnalyticsEvents(projectId, propertyId, dateRange)
+    useAnalyticsEvents(projectId, propertyId, range)
   const events = useMemo(() => {
     if (eventsFromHook.length > 0) return eventsFromHook
     if (isDefaultRange) return initialData?.events?.events ?? []
@@ -206,7 +208,7 @@ export function View({
     projectId,
     propertyId,
     ANALYTICS_PAGEVIEW_EVENT,
-    dateRange,
+    range,
   )
   const points = useMemo(() => {
     if (pointsFromHook.length > 0) return pointsFromHook
@@ -341,7 +343,7 @@ export function View({
                 <span className="text-[12px] font-medium text-muted-foreground">
                   {property?.domain || t('No domain')}
                 </span>
-                <DateRangeSelect value={dateRange} onChange={setDateRange} />
+                <DateRangeSelect value={range} onChange={setRange} />
               </div>
 
               {statsError ? (
@@ -555,69 +557,12 @@ export function View({
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div className="px-4 py-4 sm:px-6">
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Property')}
-                  </h3>
-                  <p className="text-[13px] text-muted-foreground mt-2">
-                    {t(
-                      'Configuration for this property. These values are read-only in the Console.',
-                    )}
-                  </p>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <SettingsRow label={t('Property ID')}>
-                    <CopyableId id={propertyId} size="xs" />
-                  </SettingsRow>
-                  <SettingsRow label={t('Snippet ID')}>
-                    {property?.snippetId ? (
-                      <CopyableId id={property.snippetId} size="xs" />
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </SettingsRow>
-                  <SettingsRow label={t('Domain')}>
-                    {property?.domain || (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </SettingsRow>
-                  <SettingsRow label={t('Timezone')}>
-                    {property?.timezone || (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </SettingsRow>
-                  <SettingsRow label={t('Tracking')}>
-                    <Badge
-                      variant={property?.enabled ? 'success' : 'warning'}
-                      className="text-[10px] shrink-0"
-                    >
-                      {property?.enabled ? t('Enabled') : t('Disabled')}
-                    </Badge>
-                  </SettingsRow>
-                  <SettingsRow label={t('Public stats')}>
-                    <Badge
-                      variant={property?.public ? 'success' : 'info'}
-                      className="text-[10px] shrink-0"
-                    >
-                      {property?.public ? t('Public') : t('Private')}
-                    </Badge>
-                  </SettingsRow>
-                  <SettingsRow label={t('Allowed origins')}>
-                    {property?.allowedOrigins?.length ? (
-                      <span className="break-all">
-                        {property.allowedOrigins.join(', ')}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </SettingsRow>
-                </div>
-              </div>
-            </div>
+          {activeTab === 'settings' && property && (
+            <PropertySettings
+              projectId={projectId}
+              property={property}
+              canWrite={canWrite}
+            />
           )}
         </div>
       </div>

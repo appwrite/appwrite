@@ -10,7 +10,8 @@ import { pageTitle } from '@/lib/utils/page-title'
 import {
   analyticsPropertiesQueryOptions,
   analyticsStatsQueryOptions,
-  DEFAULT_ANALYTICS_DATE_RANGE,
+  DEFAULT_ANALYTICS_RANGE,
+  DEFAULT_PAGE_SIZE,
   fetchProject,
 } from '@/lib/react-query/hooks'
 
@@ -39,8 +40,11 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
       staleTime: 5 * 60 * 1000,
     })
 
+    // Same page/limit/search defaults as the View so the query keys match.
     const propertiesData = await queryClient
-      .ensureQueryData(analyticsPropertiesQueryOptions(projectId))
+      .ensureQueryData(
+        analyticsPropertiesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+      )
       .catch(() => undefined)
 
     // Stats are fetched per property (listProperties does not embed metrics).
@@ -53,7 +57,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
             analyticsStatsQueryOptions(
               projectId,
               property.$id,
-              DEFAULT_ANALYTICS_DATE_RANGE,
+              DEFAULT_ANALYTICS_RANGE,
             ),
           )
           .catch(() => undefined),

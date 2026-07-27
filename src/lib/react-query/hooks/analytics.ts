@@ -12,25 +12,42 @@ import {
   useQueries,
   useQuery,
   useQueryClient,
+  keepPreviousData,
 } from '@tanstack/react-query'
-import { ID, type Models } from '@appwrite.io/console'
+import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_STALE_TIME,
+  isClientQueryEnabled,
+} from './constants'
 
 /**
  * Date range shorthands accepted by the Analytics API (`dateRange` query param).
- * The API takes a shorthand string, not an arbitrary from/to pair, so the UI
- * offers a fixed set of ranges instead of a calendar range picker.
+ * For an arbitrary window use an explicit `startAt`/`endAt` range instead.
  */
 export const ANALYTICS_DATE_RANGES = ['24h', '7d', '30d', '90d'] as const
 
 export type AnalyticsDateRange = (typeof ANALYTICS_DATE_RANGES)[number]
 
 /**
- * Default range used by both route loaders and views. Must stay in sync so the
+ * An analytics window: either a shorthand the API understands directly, or an
+ * explicit ISO 8601 window mapped onto `startAt`/`endAt`.
+ */
+export type AnalyticsRange =
+  | { kind: 'shorthand'; dateRange: AnalyticsDateRange }
+  | { kind: 'custom'; startAt: string; endAt: string }
+
+export const DEFAULT_ANALYTICS_DATE_RANGE: AnalyticsDateRange = '30d'
+
+/**
+ * Default window used by both route loaders and views. Must stay in sync so the
  * prefetched query key matches what the view requests (no layout shift).
  */
-export const DEFAULT_ANALYTICS_DATE_RANGE: AnalyticsDateRange = '30d'
+export const DEFAULT_ANALYTICS_RANGE: AnalyticsRange = {
+  kind: 'shorthand',
+  dateRange: DEFAULT_ANALYTICS_DATE_RANGE,
+}
 
 /** Conventional event name used for the pageview time series. */
 export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
@@ -39,6 +56,25 @@ export function isAnalyticsDateRange(
   value: string | undefined | null,
 ): value is AnalyticsDateRange {
   return !!value && (ANALYTICS_DATE_RANGES as readonly string[]).includes(value)
+}
+
+/** Stable serialization of a range, used as a query-key segment. */
+export function analyticsRangeKey(range: AnalyticsRange): string {
+  return range.kind === 'shorthand'
+    ? range.dateRange
+    : `${range.startAt}..${range.endAt}`
+}
+
+/**
+ * Map a range onto the API's parameters. The backend ignores `dateRange` for
+ * any bound supplied explicitly, so the two forms are kept mutually exclusive.
+ */
+function analyticsRangeParams(
+  range: AnalyticsRange,
+): { dateRange: string } | { startAt: string; endAt: string } {
+  return range.kind === 'shorthand'
+    ? { dateRange: range.dateRange }
+    : { startAt: range.startAt, endAt: range.endAt }
 }
 
 /** Zero-filled metric used while loading or when a property has no data yet. */
@@ -55,106 +91,31 @@ export const EMPTY_ANALYTICS_METRIC: Models.AnalyticsMetric = {
   engagementTime: 0,
 }
 
-/**
- * One point of the daily time series returned by `getEventMetrics`.
- *
- * NOTE: `Models.AnalyticsMetricList.metrics` is typed as a bare `object` in the
- * SDK, so the time-series shape is not expressed by the generated types. We
- * declare this narrow type and validate defensively at the boundary rather than
- * spreading `any` through the component tree.
- */
-export type AnalyticsMetricPoint = {
-  /** ISO date (or whatever bucket label the API returns) for this point. */
-  date: string
-  events: number
-  visitors: number
-  sessions: number
-}
-
-function toFiniteNumber(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string') {
-    const parsed = Number(value)
-    if (Number.isFinite(parsed)) return parsed
-  }
-  return 0
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function pickDateLabel(entry: Record<string, unknown>): string | undefined {
-  for (const key of ['date', 'period', 'time', 'timestamp', '$id']) {
-    const value = entry[key]
-    if (typeof value === 'string' && value.trim()) return value
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return new Date(value).toISOString()
-    }
-  }
-  return undefined
-}
-
-function pointFromRecord(
-  entry: Record<string, unknown>,
-  fallbackDate?: string,
-): AnalyticsMetricPoint | undefined {
-  const date = pickDateLabel(entry) ?? fallbackDate
-  if (!date) return undefined
-  return {
-    date,
-    events: toFiniteNumber(entry.events ?? entry.count ?? entry.value),
-    visitors: toFiniteNumber(entry.visitors),
-    sessions: toFiniteNumber(entry.sessions ?? entry.visits),
-  }
-}
-
-/**
- * Defensively normalize the untyped `metrics` payload into a sorted time series.
- *
- * Handles both plausible encodings (an array of points, or an object keyed by
- * date) and drops anything that does not parse, so a server-side shape change
- * degrades to an empty chart instead of a runtime crash.
- */
-export function parseAnalyticsMetricSeries(
-  metrics: unknown,
-): AnalyticsMetricPoint[] {
-  const points: AnalyticsMetricPoint[] = []
-
-  if (Array.isArray(metrics)) {
-    for (const entry of metrics) {
-      if (!isRecord(entry)) continue
-      const point = pointFromRecord(entry)
-      if (point) points.push(point)
-    }
-  } else if (isRecord(metrics)) {
-    for (const [key, value] of Object.entries(metrics)) {
-      if (isRecord(value)) {
-        const point = pointFromRecord(value, key)
-        if (point) points.push(point)
-      } else if (typeof value === 'number' || typeof value === 'string') {
-        const numeric = toFiniteNumber(value)
-        points.push({
-          date: key,
-          events: numeric,
-          visitors: 0,
-          sessions: 0,
-        })
-      }
-    }
-  }
-
-  return points.sort((a, b) => a.date.localeCompare(b.date))
-}
-
 // ─── Properties ─────────────────────────────────────────────────────────────
 
-export async function fetchAnalyticsProperties(projectId: string) {
+/**
+ * Properties are paginated and searched server side via
+ * `listProperties({ queries, search, total })`.
+ */
+export async function fetchAnalyticsProperties(
+  projectId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
   if (!projectId) {
     return { properties: [] as Models.AnalyticsProperty[], total: 0 }
   }
 
-  const response = await sdk.forProject(projectId).analytics.listProperties()
+  const response = await sdk.forProject(projectId).analytics.listProperties({
+    queries: [
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
+    search: search?.trim() || undefined,
+    total: true,
+  })
 
   return {
     properties: response.properties || [],
@@ -164,23 +125,32 @@ export async function fetchAnalyticsProperties(projectId: string) {
 
 export function analyticsPropertiesQueryOptions(
   projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
 ) {
   return queryOptions({
-    queryKey: ['analytics', 'properties', projectId],
-    queryFn: () => fetchAnalyticsProperties(projectId!),
+    queryKey: ['analytics', 'properties', projectId, page, limit, search ?? ''],
+    queryFn: () => fetchAnalyticsProperties(projectId!, page, limit, search),
     enabled: !!projectId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
 
-export function useAnalyticsProperties(projectId: string | null | undefined) {
+export function useAnalyticsProperties(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsPropertiesQueryOptions(projectId),
+    analyticsPropertiesQueryOptions(projectId, page, limit, search),
   )
 
   return {
@@ -233,21 +203,28 @@ export function useAnalyticsProperty(
 export async function fetchAnalyticsStats(
   projectId: string,
   propertyId: string,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
-  return await sdk
-    .forProject(projectId)
-    .analytics.getStats({ propertyId, dateRange })
+  return await sdk.forProject(projectId).analytics.getStats({
+    propertyId,
+    ...analyticsRangeParams(range),
+  })
 }
 
 export function analyticsStatsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   return queryOptions({
-    queryKey: ['analytics', 'stats', projectId, propertyId, dateRange],
-    queryFn: () => fetchAnalyticsStats(projectId!, propertyId!, dateRange),
+    queryKey: [
+      'analytics',
+      'stats',
+      projectId,
+      propertyId,
+      analyticsRangeKey(range),
+    ],
+    queryFn: () => fetchAnalyticsStats(projectId!, propertyId!, range),
     enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -261,10 +238,10 @@ export function analyticsStatsQueryOptions(
 export function useAnalyticsStats(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsStatsQueryOptions(projectId, propertyId, dateRange),
+    analyticsStatsQueryOptions(projectId, propertyId, range),
   )
 
   return { stats: data, isLoading, isFetching, error, refetch }
@@ -278,11 +255,11 @@ export function useAnalyticsStats(
 export function useAnalyticsPropertiesStats(
   projectId: string | null | undefined,
   propertyIds: string[],
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   const results = useQueries({
     queries: propertyIds.map((propertyId) =>
-      analyticsStatsQueryOptions(projectId, propertyId, dateRange),
+      analyticsStatsQueryOptions(projectId, propertyId, range),
     ),
   })
 
@@ -303,11 +280,12 @@ export function useAnalyticsPropertiesStats(
 export async function fetchAnalyticsEvents(
   projectId: string,
   propertyId: string,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
-  const response = await sdk
-    .forProject(projectId)
-    .analytics.listEvents({ propertyId, dateRange })
+  const response = await sdk.forProject(projectId).analytics.listEvents({
+    propertyId,
+    ...analyticsRangeParams(range),
+  })
 
   return {
     events: response.events || [],
@@ -318,11 +296,17 @@ export async function fetchAnalyticsEvents(
 export function analyticsEventsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   return queryOptions({
-    queryKey: ['analytics', 'events', projectId, propertyId, dateRange],
-    queryFn: () => fetchAnalyticsEvents(projectId!, propertyId!, dateRange),
+    queryKey: [
+      'analytics',
+      'events',
+      projectId,
+      propertyId,
+      analyticsRangeKey(range),
+    ],
+    queryFn: () => fetchAnalyticsEvents(projectId!, propertyId!, range),
     enabled: !!projectId && !!propertyId && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -336,10 +320,10 @@ export function analyticsEventsQueryOptions(
 export function useAnalyticsEvents(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsEventsQueryOptions(projectId, propertyId, dateRange),
+    analyticsEventsQueryOptions(projectId, propertyId, range),
   )
 
   return {
@@ -356,14 +340,16 @@ export async function fetchAnalyticsEventMetrics(
   projectId: string,
   propertyId: string,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
-  const response = await sdk
-    .forProject(projectId)
-    .analytics.getEventMetrics({ propertyId, eventName, dateRange })
+  const response = await sdk.forProject(projectId).analytics.getEventMetrics({
+    propertyId,
+    eventName,
+    ...analyticsRangeParams(range),
+  })
 
   return {
-    points: parseAnalyticsMetricSeries(response.metrics),
+    points: response.metrics || [],
     total: response.total || 0,
   }
 }
@@ -372,7 +358,7 @@ export function analyticsEventMetricsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   return queryOptions({
     queryKey: [
@@ -381,10 +367,10 @@ export function analyticsEventMetricsQueryOptions(
       projectId,
       propertyId,
       eventName,
-      dateRange,
+      analyticsRangeKey(range),
     ],
     queryFn: () =>
-      fetchAnalyticsEventMetrics(projectId!, propertyId!, eventName, dateRange),
+      fetchAnalyticsEventMetrics(projectId!, propertyId!, eventName, range),
     enabled: !!projectId && !!propertyId && !!eventName && isClientQueryEnabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -399,15 +385,10 @@ export function useAnalyticsEventMetrics(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  dateRange: AnalyticsDateRange = DEFAULT_ANALYTICS_DATE_RANGE,
+  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    analyticsEventMetricsQueryOptions(
-      projectId,
-      propertyId,
-      eventName,
-      dateRange,
-    ),
+    analyticsEventMetricsQueryOptions(projectId, propertyId, eventName, range),
   )
 
   return {
@@ -446,6 +427,81 @@ export function useCreateAnalyticsProperty(
       })
     },
     onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['analytics', 'properties', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Sparse update: only the keys present here are sent, and the backend leaves
+ * every omitted attribute untouched. `false`, `''` and `[]` are meaningful
+ * values, so callers must omit unchanged fields rather than passing falsy
+ * placeholders.
+ */
+export type UpdateAnalyticsPropertyInput = {
+  propertyId: string
+  name?: string
+  domain?: string
+  timezone?: string
+  enabled?: boolean
+  /** Maps to the API's `xpublic` (public stats visibility). */
+  xpublic?: boolean
+  allowedOrigins?: string[]
+}
+
+export function useUpdateAnalyticsProperty(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: UpdateAnalyticsPropertyInput) => {
+      if (!projectId) throw new Error('Project ID is required')
+
+      return await sdk.forProject(projectId).analytics.updateProperty({
+        propertyId: input.propertyId,
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.domain !== undefined && { domain: input.domain }),
+        ...(input.timezone !== undefined && { timezone: input.timezone }),
+        ...(input.enabled !== undefined && { enabled: input.enabled }),
+        ...(input.xpublic !== undefined && { xpublic: input.xpublic }),
+        ...(input.allowedOrigins !== undefined && {
+          allowedOrigins: input.allowedOrigins,
+        }),
+      })
+    },
+    onSuccess: async (property) => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['analytics', 'property', projectId, property.$id],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['analytics', 'properties', projectId],
+        }),
+      ])
+    },
+  })
+}
+
+export function useDeleteAnalyticsProperty(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (propertyId: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+
+      return await sdk
+        .forProject(projectId)
+        .analytics.deleteProperty({ propertyId })
+    },
+    onSuccess: async (_result, propertyId) => {
+      queryClient.removeQueries({
+        queryKey: ['analytics', 'property', projectId, propertyId],
+      })
       await queryClient.refetchQueries({
         queryKey: ['analytics', 'properties', projectId],
       })

@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   List,
   MousePointerClick,
+  Trash2,
   Users,
 } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -39,24 +40,29 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
-  DEFAULT_ANALYTICS_DATE_RANGE,
+  DEFAULT_ANALYTICS_RANGE,
+  DEFAULT_PAGE_SIZE,
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsProperties,
   useAnalyticsPropertiesStats,
   useCreateAnalyticsProperty,
+  useDeleteAnalyticsProperty,
   useOrganizationScopes,
   useProject,
   type CreateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { CreateProperty } from './_components/CreateProperty'
+import { DeleteProperty } from './_components/DeleteProperty'
 import {
   formatDuration,
   formatNumber,
@@ -97,16 +103,18 @@ export function View() {
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [createOpen, setCreateOpen] = useState(false)
+  const [propertyToDelete, setPropertyToDelete] = useState<
+    Models.AnalyticsProperty | undefined
+  >(undefined)
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
 
-  // Pagination state (the API returns every property in one response, so the
-  // list is paginated client side).
+  // Pagination and search are handled by the API via listProperties({queries, search, total}).
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
-  const { properties, isLoading, error, refetch, isFetching } =
-    useAnalyticsProperties(projectId)
+  const { properties, total, isLoading, error, refetch, isFetching } =
+    useAnalyticsProperties(projectId, page - 1, pageSize, searchValue)
 
   const propertyIds = useMemo(
     () => properties.map((property) => property.$id),
@@ -115,7 +123,7 @@ export function View() {
   const { statsByPropertyId } = useAnalyticsPropertiesStats(
     projectId,
     propertyIds,
-    DEFAULT_ANALYTICS_DATE_RANGE,
+    DEFAULT_ANALYTICS_RANGE,
   )
 
   const { project } = useProject(projectId)
@@ -146,20 +154,17 @@ export function View() {
     })
   }
 
-  const filteredProperties = useMemo(() => {
-    const search = searchValue.trim().toLowerCase()
-    if (!search) return properties
-    return properties.filter(
-      (property) =>
-        property.name.toLowerCase().includes(search) ||
-        property.domain.toLowerCase().includes(search),
-    )
-  }, [properties, searchValue])
+  const deleteMutation = useDeleteAnalyticsProperty(projectId)
 
-  const paginatedProperties = filteredProperties.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  )
+  const handleDelete = (propertyId: string) => {
+    deleteMutation.mutate(propertyId, {
+      onSuccess: () => {
+        setPropertyToDelete(undefined)
+        toast.success(t('Property deleted'))
+      },
+      onError: (deleteError) => toast.error(getErrorMessage(deleteError)),
+    })
+  }
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
@@ -243,7 +248,7 @@ export function View() {
     )
   }
 
-  const showEmptyState = !isLoading && paginatedProperties.length === 0
+  const showEmptyState = !isLoading && properties.length === 0
 
   return (
     <div className="flex flex-col">
@@ -266,7 +271,7 @@ export function View() {
         {viewMode === 'grid' ? (
           <div className="flex flex-col gap-2">
             <div className={RESOURCE_CARD_GRID_2_COL_CLASSNAME}>
-              {paginatedProperties.map((property) => {
+              {properties.map((property) => {
                 const stats = statsFor(property.$id)
                 return (
                   <div
@@ -358,6 +363,21 @@ export function View() {
                               </MenuItemContent>
                             </DropdownMenuItem>
                           )}
+                          {!noCreatePermission && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setPropertyToDelete(property)
+                                }}
+                              >
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -427,10 +447,10 @@ export function View() {
                 <div className="col-span-full py-12">{emptyState()}</div>
               )}
             </div>
-            {paginatedProperties.length > 0 && (
+            {properties.length > 0 && (
               <Pagination
                 currentPage={page}
-                totalItems={filteredProperties.length}
+                totalItems={total}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={setPage}
@@ -442,7 +462,7 @@ export function View() {
               />
             )}
           </div>
-        ) : paginatedProperties.length > 0 ? (
+        ) : properties.length > 0 ? (
           <>
             <div className="rounded-lg border border-border bg-card">
               <Table>
@@ -470,7 +490,7 @@ export function View() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedProperties.map((property) => {
+                  {properties.map((property) => {
                     const stats = statsFor(property.$id)
                     const linkParams = {
                       projectId: projectId as string,
@@ -601,6 +621,20 @@ export function View() {
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                               )}
+                              {!noCreatePermission && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setPropertyToDelete(property)
+                                    }
+                                  >
+                                    <MenuItemContent icon={Trash2}>
+                                      {t('Delete')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -612,7 +646,7 @@ export function View() {
             </div>
             <Pagination
               currentPage={page}
-              totalItems={filteredProperties.length}
+              totalItems={total}
               pageSize={pageSize}
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={setPage}
@@ -633,6 +667,16 @@ export function View() {
         onOpenChange={setCreateOpen}
         onCreate={handleCreate}
         isLoading={createMutation.isPending}
+      />
+
+      <DeleteProperty
+        property={propertyToDelete}
+        open={!!propertyToDelete}
+        onOpenChange={(open) => {
+          if (!open) setPropertyToDelete(undefined)
+        }}
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
       />
     </div>
   )
