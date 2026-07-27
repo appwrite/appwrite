@@ -777,6 +777,49 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Same period last year': 'אותה תקופה בשנה שעברה',
   'Same dates, one year ago': 'אותם תאריכים, לפני שנה',
 
+  // Analytics properties
+  Property: 'נכס',
+  properties: 'נכסים',
+  'Property ID': 'מזהה נכס',
+  'Snippet ID': 'מזהה סניפט',
+  'No properties yet': 'אין נכסים עדיין',
+  'Create your first property to start tracking analytics for a website or app':
+    'צרו את הנכס הראשון שלכם כדי להתחיל לעקוב אחר נתוני אנליטיקה של אתר או אפליקציה',
+  'Search properties...': 'חיפוש נכסים...',
+  'Create property': 'יצירת נכס',
+  'Property created': 'הנכס נוצר',
+  'Failed to create property': 'יצירת הנכס נכשלה',
+  'Property not found': 'הנכס לא נמצא',
+  'This analytics property no longer exists.': 'נכס האנליטיקה הזה כבר לא קיים.',
+  'Track a website or application. Daily boundaries use your current timezone.':
+    'עקבו אחר אתר או אפליקציה. גבולות היום נקבעים לפי אזור הזמן הנוכחי שלכם.',
+  'Enter property name': 'הזינו שם נכס',
+  'Optional for native apps.': 'אופציונלי עבור אפליקציות נייטיב.',
+  'example.com': 'example.com',
+  "You don't have permission to create analytics properties.":
+    'אין לכם הרשאה ליצור נכסי אנליטיקה.',
+  'Could not load analytics properties': 'לא ניתן לטעון את נכסי האנליטיקה',
+  'Could not load analytics data': 'לא ניתן לטעון את נתוני האנליטיקה',
+  'Something went wrong': 'משהו השתבש',
+  'No domain': 'ללא דומיין',
+  'Tracking is disabled': 'המעקב מושבת',
+  Tracking: 'מעקב',
+  'Public stats': 'סטטיסטיקות ציבוריות',
+  Private: 'פרטי',
+  'Allowed origins': 'מקורות מורשים',
+  'Configuration for this property. These values are read-only in the Console.':
+    'ההגדרות של הנכס הזה. הערכים האלה הם לקריאה בלבד בקונסולה.',
+  Pageviews: 'צפיות בדפים',
+  'Views per visit': 'צפיות לביקור',
+  'Scroll depth': 'עומק גלילה',
+  Engagement: 'מעורבות',
+  Count: 'כמות',
+  'Distinct events recorded in the selected range':
+    'אירועים ייחודיים שנרשמו בטווח הנבחר',
+  'No events recorded in this range': 'לא נרשמו אירועים בטווח הזה',
+  'Data appears once the property receives its first event.':
+    'הנתונים יופיעו לאחר שהנכס יקבל את האירוע הראשון שלו.',
+
   // Realtime
   Realtime: 'Realtime',
   Connected: 'מחובר',

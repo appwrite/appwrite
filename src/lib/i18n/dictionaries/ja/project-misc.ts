@@ -434,6 +434,51 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Same dates, previous year': '前年の同じ日付',
   'Same period last year': '昨年同期',
   'Same dates, one year ago': '1 年前の同じ日付',
+
+  // Analytics properties
+  Property: 'プロパティ',
+  properties: 'プロパティ',
+  'Property ID': 'プロパティ ID',
+  'Snippet ID': 'スニペット ID',
+  'No properties yet': 'プロパティがまだありません',
+  'Create your first property to start tracking analytics for a website or app':
+    '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
+  'Search properties...': 'プロパティを検索...',
+  'Create property': 'プロパティを作成',
+  'Property created': 'プロパティを作成しました',
+  'Failed to create property': 'プロパティの作成に失敗しました',
+  'Property not found': 'プロパティが見つかりません',
+  'This analytics property no longer exists.':
+    'このアナリティクスプロパティは存在しません。',
+  'Track a website or application. Daily boundaries use your current timezone.':
+    'ウェブサイトまたはアプリケーションを計測します。日次の区切りには現在のタイムゾーンを使用します。',
+  'Enter property name': 'プロパティ名を入力',
+  'Optional for native apps.': 'ネイティブアプリの場合は任意です。',
+  'example.com': 'example.com',
+  "You don't have permission to create analytics properties.":
+    'アナリティクスプロパティを作成する権限がありません。',
+  'Could not load analytics properties':
+    'アナリティクスプロパティを読み込めませんでした',
+  'Could not load analytics data': 'アナリティクスデータを読み込めませんでした',
+  'Something went wrong': '問題が発生しました',
+  'No domain': 'ドメインなし',
+  'Tracking is disabled': '計測が無効です',
+  Tracking: '計測',
+  'Public stats': '統計の公開',
+  Private: '非公開',
+  'Allowed origins': '許可するオリジン',
+  'Configuration for this property. These values are read-only in the Console.':
+    'このプロパティの設定です。これらの値はコンソールでは読み取り専用です。',
+  Pageviews: 'ページビュー',
+  'Views per visit': '訪問あたりのビュー数',
+  'Scroll depth': 'スクロール深度',
+  Engagement: 'エンゲージメント',
+  Count: '件数',
+  'Distinct events recorded in the selected range':
+    '選択した期間に記録された個別のイベント',
+  'No events recorded in this range': 'この期間に記録されたイベントはありません',
+  'Data appears once the property receives its first event.':
+    'プロパティが最初のイベントを受信すると、データが表示されます。',
   'Connection failed': '接続に失敗しました',
   'WebSocket URL copied': 'WebSocket URL をコピーしました',
   'Connection status': '接続ステータス',
