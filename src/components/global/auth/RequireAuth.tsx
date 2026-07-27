@@ -31,6 +31,9 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
+  // Debug demos must stay reachable without auth redirects (and without
+  // signing the user out via linked auth routes).
+  if (pathname.startsWith('/debug/')) return true
   return isMarketingPagePath(pathname)
 }
 

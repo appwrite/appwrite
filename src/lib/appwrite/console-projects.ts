@@ -8,89 +8,70 @@ type ListConsoleProjectsParams = {
   total?: boolean
 }
 
-function projectsUrl(path = ''): URL {
-  const endpoint = sdk.forConsole.client.config.endpoint as string
-  return new URL(`${endpoint}/projects${path}`)
-}
-
-function listPayload(params?: ListConsoleProjectsParams): Record<string, unknown> {
-  const payload: Record<string, unknown> = {}
-  if (params?.queries !== undefined) payload.queries = params.queries
-  if (params?.search !== undefined) payload.search = params.search
-  if (params?.total !== undefined) payload.total = params.total
-  return payload
-}
-
 /**
- * List projects via GET /projects — matches production console and cloud.appwrite.io.
- *
- * The b1cfedd SDK types project listing on `organization.listProjects` (`GET
- * /organization/projects`), but cloud still serves the legacy route used by the
- * reference console (`GET /projects` with `teamId` in queries).
+ * List projects via the console Organization SDK
+ * (`GET /organization/projects`). Filter by organization with
+ * `Query.equal('teamId', orgId)` in `queries`.
  */
 export function listConsoleProjects(
   params?: ListConsoleProjectsParams,
 ): Promise<Models.ProjectList> {
-  return sdk.forConsole.client.call(
-    'get',
-    projectsUrl(),
-    {},
-    listPayload(params),
-  ) as Promise<Models.ProjectList>
+  return sdk.forConsole.organization.listProjects({
+    queries: params?.queries,
+    search: params?.search,
+    total: params?.total,
+  })
 }
 
-/** Create a project via POST /projects (requires `teamId` on cloud). */
-export function createConsoleProject(params: {
+/**
+ * Create a project via the console Organization SDK
+ * (`POST /organization/projects`), then assign it to `teamId` when needed
+ * (`PATCH /projects/{id}/team`).
+ */
+export async function createConsoleProject(params: {
   projectId: string
   name: string
   region?: Region
   teamId: string
 }): Promise<Models.Project> {
-  const payload: Record<string, unknown> = {
+  const project = await sdk.forConsole.organization.createProject({
     projectId: params.projectId,
     name: params.name,
-    teamId: params.teamId,
-  }
-  if (params.region !== undefined) payload.region = params.region
+    ...(params.region !== undefined ? { region: params.region } : {}),
+  })
 
-  return sdk.forConsole.client.call(
-    'post',
-    projectsUrl(),
-    { 'content-type': 'application/json' },
-    payload,
-  ) as Promise<Models.Project>
+  if (project.teamId === params.teamId) {
+    return project
+  }
+
+  return sdk.forConsole.projects.updateTeam({
+    projectId: project.$id,
+    teamId: params.teamId,
+  })
 }
 
 export function getConsoleProject(params: {
   projectId: string
 }): Promise<Models.Project> {
-  return sdk.forConsole.client.call(
-    'get',
-    projectsUrl(`/${params.projectId}`),
-    {},
-    {},
-  ) as Promise<Models.Project>
+  return sdk.forConsole.organization.getProject({
+    projectId: params.projectId,
+  })
 }
 
 export function updateConsoleProject(params: {
   projectId: string
   name: string
 }): Promise<Models.Project> {
-  return sdk.forConsole.client.call(
-    'patch',
-    projectsUrl(`/${params.projectId}`),
-    { 'content-type': 'application/json' },
-    { name: params.name },
-  ) as Promise<Models.Project>
+  return sdk.forConsole.organization.updateProject({
+    projectId: params.projectId,
+    name: params.name,
+  })
 }
 
 export function deleteConsoleProject(params: {
   projectId: string
 }): Promise<{}> {
-  return sdk.forConsole.client.call(
-    'delete',
-    projectsUrl(`/${params.projectId}`),
-    { 'content-type': 'application/json' },
-    {},
-  ) as Promise<{}>
+  return sdk.forConsole.organization.deleteProject({
+    projectId: params.projectId,
+  })
 }

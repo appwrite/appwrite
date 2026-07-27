@@ -43,6 +43,7 @@ function VerifyEmailPreviewPage() {
 
       <div className="w-full max-w-sm md:max-w-4xl pt-12">
         <VerifyEmail
+          preview
           status={status}
           isResendLoading={isResendLoading}
           onResend={() => {
