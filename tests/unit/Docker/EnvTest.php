@@ -131,4 +131,15 @@ final class EnvTest extends TestCase
         $this->assertSame('example.com', $env->getVar('_APP_DOMAIN'));
         $this->assertSame('enabled', $env->getVar('_APP_OPTIONS_FORCE_HTTPS'));
     }
+
+    public function testUnterminatedQuoteDoesNotAbsorbLaterQuotedAssignment(): void
+    {
+        $data = "_APP_BROKEN=\"partial-value\n_APP_DOMAIN=\"example.com\"\n_APP_OPTIONS_FORCE_HTTPS=enabled\n";
+
+        $env = new Env($data);
+
+        $this->assertSame('partial-value', $env->getVar('_APP_BROKEN'));
+        $this->assertSame('example.com', $env->getVar('_APP_DOMAIN'));
+        $this->assertSame('enabled', $env->getVar('_APP_OPTIONS_FORCE_HTTPS'));
+    }
 }

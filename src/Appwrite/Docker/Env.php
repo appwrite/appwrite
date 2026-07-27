@@ -67,11 +67,21 @@ class Env
                 $scanOffset = $contentStart;
                 $value = '';
                 $closed = false;
+                $crossedNewline = false;
 
                 while ($scanOffset < $length) {
                     $char = $data[$scanOffset];
 
+                    if ($char === "\n" || $char === "\r") {
+                        $crossedNewline = true;
+                    }
+
                     if ($char === $quote) {
+                        // A later line's opening quote (KEY=") must not close an
+                        // earlier unterminated value, or upgrade will drop that key.
+                        if ($crossedNewline && self::isAssignmentOpener($data, $scanOffset)) {
+                            break;
+                        }
                         $scanOffset++;
                         $closed = true;
                         break;
@@ -199,6 +209,18 @@ class Env
     public static function encodeValue(string $value): string
     {
         return \addcslashes($value, "\"\\\n\r\t\$`");
+    }
+
+    /**
+     * True when $quoteOffset points at a quote that opens a new KEY="..." assignment.
+     */
+    private static function isAssignmentOpener(string $data, int $quoteOffset): bool
+    {
+        $lineStart = \strrpos(\substr($data, 0, $quoteOffset), "\n");
+        $lineStart = $lineStart === false ? 0 : $lineStart + 1;
+        $before = \substr($data, $lineStart, $quoteOffset - $lineStart);
+
+        return \preg_match('/^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*$/', $before) === 1;
     }
 
     /**
