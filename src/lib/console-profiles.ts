@@ -77,6 +77,8 @@ export type ConsoleProfileFeatures = {
   userVerification: boolean
   /** Project Firewall (rules, analytics, logs) under Protect */
   firewall: boolean
+  /** Product analytics: tracked properties, visitor stats, and per-event metrics */
+  analytics: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -114,6 +116,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
   firewall: 'Firewall',
+  analytics: 'Analytics',
 }
 
 export type ConsoleProfile = {
@@ -159,6 +162,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: true,
       userVerification: true,
       firewall: true,
+      // Product analytics is still in development; keep it off until the
+      // cloud analytics API ships. Toggle via the debug menu to work on it.
+      analytics: false,
     },
   },
   'self-hosted': {
@@ -196,6 +202,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       edgeNetwork: false,
       userVerification: false,
       firewall: false,
+      analytics: false,
     },
   },
 }

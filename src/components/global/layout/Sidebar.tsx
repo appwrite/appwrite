@@ -246,7 +246,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.analytics,
           icon: BarChart2,
           path: `/projects/${projectId}/analytics`,
-          comingSoon: true,
         },
         {
           id: 'errors',
@@ -334,6 +333,8 @@ export function ConsoleSidebar({
             return features.activity && canSeeActivityNav(access, features)
           if (item.id === 'firewall')
             return features.firewall && canSeeProjectNavItem(access, features, item.id)
+          if (item.id === 'analytics')
+            return features.analytics && canSeeProjectNavItem(access, features, item.id)
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))

@@ -1,9 +1,24 @@
-import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useMatches,
+} from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/analytics/View'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
   head: () => ({ meta: [{ title: pageTitle('Analytics') }] }),
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().analytics) {
+      throw redirect({
+        to: '/projects/$projectId',
+        params: { projectId: params.projectId },
+        replace: true,
+      })
+    }
+  },
   component: AnalyticsPage,
 })
 
