@@ -51,6 +51,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
+            ->param('providerNamespace', '', new Text(256), 'Namespace of the git repository. Defaults to the installation\'s own namespace.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('user')
@@ -63,6 +64,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
+        string $providerNamespace,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Document $user,
@@ -99,14 +101,18 @@ class Create extends Action
             $accessToken = $installation->getAttribute('personalAccessToken');
 
             try {
-                $repository = $oauth2->createRepository($accessToken, $name, $private);
+                if (!empty($providerNamespace)) {
+                    $repository = $oauth2->createRepository($accessToken, $name, $private, $providerNamespace);
+                } else {
+                    $repository = $oauth2->createRepository($accessToken, $name, $private);
+                }
             } catch (\Throwable $exception) {
                 throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "VCS provider failed to process the request: " . $exception->getMessage());
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $vcs = $vcsFactory->fromInstallation($installation);
-            $owner = $vcs->getOwnerName($providerInstallationId);
+            $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
 
             try {
                 $repository = $vcs->createRepository($owner, $name, $private);

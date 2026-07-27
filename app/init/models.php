@@ -225,6 +225,7 @@ use Appwrite\Utopia\Response\Model\UsageVectorsDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\VcsNamespace;
 use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 
@@ -261,6 +262,8 @@ Response::setModel(new BaseList('Function Templates List', Response::MODEL_TEMPL
 Response::setModel(new BaseList('Installations List', Response::MODEL_INSTALLATION_LIST, 'installations', Response::MODEL_INSTALLATION));
 Response::setModel(new ProviderRepositoryFrameworkList());
 Response::setModel(new ProviderRepositoryRuntimeList());
+Response::setModel(new VcsNamespace());
+Response::setModel(new BaseList('VCS Namespaces List', Response::MODEL_VCS_NAMESPACE_LIST, 'namespaces', Response::MODEL_VCS_NAMESPACE));
 Response::setModel(new BaseList('Branches List', Response::MODEL_BRANCH_LIST, 'branches', Response::MODEL_BRANCH));
 Response::setModel(new BaseList('Frameworks List', Response::MODEL_FRAMEWORK_LIST, 'frameworks', Response::MODEL_FRAMEWORK));
 Response::setModel(new BaseList('Runtimes List', Response::MODEL_RUNTIME_LIST, 'runtimes', Response::MODEL_RUNTIME));

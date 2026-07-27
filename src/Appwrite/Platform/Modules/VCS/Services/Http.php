@@ -14,6 +14,7 @@ use Appwrite\Platform\Modules\VCS\Http\Gitlab\Callback\Get as GetGitlabCallback;
 use Appwrite\Platform\Modules\VCS\Http\Gitlab\Events\Create as CreateGitlabEvent;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
+use Appwrite\Platform\Modules\VCS\Http\Installations\Namespaces\XList as ListNamespaces;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Branches\XList as ListRepositoryBranches;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Contents\Get as GetRepositoryContents;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Create as CreateRepository;
@@ -46,6 +47,7 @@ class Http extends Service
         $this->addAction(GetInstallation::getName(), new GetInstallation());
         $this->addAction(ListInstallations::getName(), new ListInstallations());
         $this->addAction(DeleteInstallation::getName(), new DeleteInstallation());
+        $this->addAction(ListNamespaces::getName(), new ListNamespaces());
 
         // Repositories
         $this->addAction(CreateRepository::getName(), new CreateRepository());
