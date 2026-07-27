@@ -22,7 +22,14 @@ import {
   Activity,
 } from 'lucide-react'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useLayoutEffect,
+} from 'react'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -162,6 +169,7 @@ import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'vectorsdb' as const satisfies DatabaseRouteKind
 const SHOW_GRID_DEBUG_TOOLS = true
+const sidebarTableListScrollTopByKey = new Map<string, number>()
 
 export function Workspace({
   databaseId,
@@ -279,6 +287,24 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
+  const sidebarScrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const sidebarScrollKey = `${projectId}:${databaseId}:${sidebarTablesDisplayedPage}:${sidebarTablesSearch.trim()}:${sidebarTablesOrder}:${sidebarTablesSortBy}`
+
+  const handleSidebarListScroll = useCallback(() => {
+    const currentTop = sidebarScrollContainerRef.current?.scrollTop
+    if (typeof currentTop === 'number') {
+      sidebarTableListScrollTopByKey.set(sidebarScrollKey, currentTop)
+    }
+  }, [sidebarScrollKey])
+
+  useLayoutEffect(() => {
+    const node = sidebarScrollContainerRef.current
+    if (!node) return
+    const savedTop = sidebarTableListScrollTopByKey.get(sidebarScrollKey)
+    if (typeof savedTop === 'number') {
+      node.scrollTop = savedTop
+    }
+  }, [sidebarScrollKey, displayedSidebarTables.length])
 
   // Reset sidebar to page 1 when search, sort, or database changes
   useEffect(() => {
@@ -1091,7 +1117,11 @@ export function Workspace({
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div
+          ref={sidebarScrollContainerRef}
+          onScroll={handleSidebarListScroll}
+          className="min-h-0 flex-1 overflow-y-auto"
+        >
           {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
               {t('Loading…')}
@@ -1153,6 +1183,7 @@ export function Workspace({
                         databaseId,
                         resourceId: table.$id,
                       })}
+                      onClick={handleSidebarListScroll}
                       className={cn(secondarySidebarNavLinkClassName(isTableSelected, 'transition-colors duration-150'), SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS)}
                     >
                       <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
