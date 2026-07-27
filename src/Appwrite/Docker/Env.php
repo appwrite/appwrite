@@ -15,60 +15,66 @@ class Env
         $offset = 0;
 
         while ($offset < $length) {
-            // Skip blank lines and comments.
-            if ($data[$offset] === "\n" || $data[$offset] === "\r") {
-                $offset++;
+            $lineEnd = \strpos($data, "\n", $offset);
+            if ($lineEnd === false) {
+                $lineEnd = $length;
+            }
+
+            $line = \substr($data, $offset, $lineEnd - $offset);
+            // Normalize Windows newlines for line-oriented parsing of keys.
+            if (\str_ends_with($line, "\r")) {
+                $line = \substr($line, 0, -1);
+            }
+
+            $trimmed = \ltrim($line, " \t");
+
+            // Skip blank lines and comments (including indented comments).
+            if ($trimmed === '' || $trimmed[0] === '#') {
+                $offset = $lineEnd < $length ? $lineEnd + 1 : $length;
                 continue;
             }
 
-            if ($data[$offset] === '#') {
-                $nextLine = \strpos($data, "\n", $offset);
-                $offset = $nextLine === false ? $length : $nextLine + 1;
-                continue;
-            }
-
-            $equals = \strpos($data, '=', $offset);
+            $equals = \strpos($line, '=');
             if ($equals === false) {
-                break;
-            }
-
-            $key = \trim(\substr($data, $offset, $equals - $offset));
-            $offset = $equals + 1;
-
-            if ($key === '') {
-                // Skip malformed lines without a key.
-                $nextLine = \strpos($data, "\n", $offset);
-                $offset = $nextLine === false ? $length : $nextLine + 1;
+                // Skip malformed lines without an assignment on this line.
+                $offset = $lineEnd < $length ? $lineEnd + 1 : $length;
                 continue;
             }
+
+            $key = \trim(\substr($line, 0, $equals));
+            if ($key === '') {
+                $offset = $lineEnd < $length ? $lineEnd + 1 : $length;
+                continue;
+            }
+
+            // Value starts after '=' in the full buffer so quoted values may span lines.
+            $valueOffset = $offset + $equals + 1;
 
             // Consume optional whitespace before the value.
-            while ($offset < $length && ($data[$offset] === ' ' || $data[$offset] === "\t")) {
-                $offset++;
+            while ($valueOffset < $length && ($data[$valueOffset] === ' ' || $data[$valueOffset] === "\t")) {
+                $valueOffset++;
             }
 
-            if ($offset >= $length || $data[$offset] === "\n" || $data[$offset] === "\r") {
+            if ($valueOffset >= $length || $data[$valueOffset] === "\n" || $data[$valueOffset] === "\r") {
                 $this->vars[$key] = '';
-                if ($offset < $length) {
-                    $offset++;
-                }
+                $offset = $valueOffset < $length ? (($data[$valueOffset] === "\r" && $valueOffset + 1 < $length && $data[$valueOffset + 1] === "\n") ? $valueOffset + 2 : $valueOffset + 1) : $length;
                 continue;
             }
 
-            $quote = $data[$offset];
+            $quote = $data[$valueOffset];
             if ($quote === '"' || $quote === "'") {
-                $offset++;
+                $valueOffset++;
                 $value = '';
-                while ($offset < $length) {
-                    $char = $data[$offset];
+                while ($valueOffset < $length) {
+                    $char = $data[$valueOffset];
 
                     if ($char === $quote) {
-                        $offset++;
+                        $valueOffset++;
                         break;
                     }
 
-                    if ($quote === '"' && $char === '\\' && $offset + 1 < $length) {
-                        $next = $data[$offset + 1];
+                    if ($quote === '"' && $char === '\\' && $valueOffset + 1 < $length) {
+                        $next = $data[$valueOffset + 1];
                         $value .= match ($next) {
                             'n' => "\n",
                             'r' => "\r",
@@ -78,36 +84,47 @@ class Env
                             "'" => "'",
                             '$' => '$',
                             '`' => '`',
-                            default => $next,
+                            // Preserve unknown escapes as a literal backslash + next char
+                            // (e.g. Windows paths or patterns like `\d`, `\q`).
+                            default => '\\' . $next,
                         };
-                        $offset += 2;
+                        $valueOffset += 2;
                         continue;
                     }
 
                     $value .= $char;
-                    $offset++;
+                    $valueOffset++;
                 }
 
                 // Consume trailing characters until end of line (comments/whitespace).
-                while ($offset < $length && $data[$offset] !== "\n" && $data[$offset] !== "\r") {
-                    $offset++;
+                while ($valueOffset < $length && $data[$valueOffset] !== "\n" && $data[$valueOffset] !== "\r") {
+                    $valueOffset++;
                 }
-                if ($offset < $length) {
-                    $offset++;
+                if ($valueOffset < $length) {
+                    if ($data[$valueOffset] === "\r" && $valueOffset + 1 < $length && $data[$valueOffset + 1] === "\n") {
+                        $valueOffset += 2;
+                    } else {
+                        $valueOffset++;
+                    }
                 }
 
                 $this->vars[$key] = $value;
+                $offset = $valueOffset;
                 continue;
             }
 
             // Unquoted value: read until end of line, trim trailing whitespace.
-            $end = \strpos($data, "\n", $offset);
+            $end = \strpos($data, "\n", $valueOffset);
             if ($end === false) {
-                $raw = \substr($data, $offset);
+                $raw = \substr($data, $valueOffset);
                 $offset = $length;
             } else {
-                $raw = \substr($data, $offset, $end - $offset);
+                $raw = \substr($data, $valueOffset, $end - $valueOffset);
                 $offset = $end + 1;
+            }
+
+            if (\str_ends_with($raw, "\r")) {
+                $raw = \substr($raw, 0, -1);
             }
 
             // Strip inline comments preceded by whitespace.
@@ -115,7 +132,7 @@ class Env
                 $raw = \substr($raw, 0, $matches[0][1]);
             }
 
-            $this->vars[$key] = \rtrim($raw, " \t\r");
+            $this->vars[$key] = \rtrim($raw, " \t");
         }
     }
 

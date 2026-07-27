@@ -88,4 +88,36 @@ final class EnvTest extends TestCase
             Env::encodeValue("say\"hi\nnext\$path")
         );
     }
+
+    public function testUnknownEscapesPreserveBackslash(): void
+    {
+        // .env contains unknown escapes \q and \d; both must keep the backslash.
+        $data = "_APP_PATTERN=\"prefix\\q and \\d digits\"\n";
+
+        $env = new Env($data);
+
+        $this->assertSame('prefix\\q and \\d digits', $env->getVar('_APP_PATTERN'));
+    }
+
+    public function testIndentedCommentDoesNotCaptureNextAssignment(): void
+    {
+        $data = "  # indented note\n_APP_DOMAIN=example.com\n   \n_APP_OPTIONS_FORCE_HTTPS=enabled\n";
+
+        $env = new Env($data);
+
+        $this->assertSame('example.com', $env->getVar('_APP_DOMAIN'));
+        $this->assertSame('enabled', $env->getVar('_APP_OPTIONS_FORCE_HTTPS'));
+        $this->assertArrayNotHasKey('  # indented note', $env->list());
+        $this->assertArrayNotHasKey('# indented note', $env->list());
+    }
+
+    public function testLineWithoutAssignmentIsSkipped(): void
+    {
+        $data = "NOT_AN_ASSIGNMENT\n_APP_DOMAIN=example.com\n";
+
+        $env = new Env($data);
+
+        $this->assertSame('example.com', $env->getVar('_APP_DOMAIN'));
+        $this->assertCount(1, $env->list());
+    }
 }
