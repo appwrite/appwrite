@@ -63,18 +63,22 @@ class Env
 
             $quote = $data[$valueOffset];
             if ($quote === '"' || $quote === "'") {
-                $valueOffset++;
+                $contentStart = $valueOffset + 1;
+                $scanOffset = $contentStart;
                 $value = '';
-                while ($valueOffset < $length) {
-                    $char = $data[$valueOffset];
+                $closed = false;
+
+                while ($scanOffset < $length) {
+                    $char = $data[$scanOffset];
 
                     if ($char === $quote) {
-                        $valueOffset++;
+                        $scanOffset++;
+                        $closed = true;
                         break;
                     }
 
-                    if ($quote === '"' && $char === '\\' && $valueOffset + 1 < $length) {
-                        $next = $data[$valueOffset + 1];
+                    if ($quote === '"' && $char === '\\' && $scanOffset + 1 < $length) {
+                        $next = $data[$scanOffset + 1];
                         $value .= match ($next) {
                             'n' => "\n",
                             'r' => "\r",
@@ -88,13 +92,33 @@ class Env
                             // (e.g. Windows paths or patterns like `\d`, `\q`).
                             default => '\\' . $next,
                         };
-                        $valueOffset += 2;
+                        $scanOffset += 2;
                         continue;
                     }
 
                     $value .= $char;
-                    $valueOffset++;
+                    $scanOffset++;
                 }
+
+                if (!$closed) {
+                    // Unterminated quote: keep only the remainder of the starting line so
+                    // later assignments are not absorbed into this value during upgrade.
+                    $end = \strpos($data, "\n", $contentStart);
+                    if ($end === false) {
+                        $raw = \substr($data, $contentStart);
+                        $offset = $length;
+                    } else {
+                        $raw = \substr($data, $contentStart, $end - $contentStart);
+                        $offset = $end + 1;
+                    }
+                    if (\str_ends_with($raw, "\r")) {
+                        $raw = \substr($raw, 0, -1);
+                    }
+                    $this->vars[$key] = $raw;
+                    continue;
+                }
+
+                $valueOffset = $scanOffset;
 
                 // Consume trailing characters until end of line (comments/whitespace).
                 while ($valueOffset < $length && $data[$valueOffset] !== "\n" && $data[$valueOffset] !== "\r") {
