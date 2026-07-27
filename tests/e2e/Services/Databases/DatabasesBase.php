@@ -3732,6 +3732,76 @@ trait DatabasesBase
         }
     }
 
+    public function testGetDocumentCacheEmpty(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // Dedicated collection so the inserted document cannot change the
+        // document counts asserted by the shared movies-collection tests.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'CacheEmpty',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $containerId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->createAttribute($databaseId, $containerId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
+
+        $documentId = ID::unique();
+
+        // Read a document that does not exist yet -> negatively caches the miss.
+        $missing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+
+        // Create that same id. This must purge the cached "not found".
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'title' => 'Cached Empty',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals($documentId, $created['body']['$id']);
+
+        // The freshly created document must be visible right away. Without cache
+        // invalidation on create this would still return 404 from the marker.
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($documentId, $fetched['body']['$id']);
+        $this->assertEquals('Cached Empty', $fetched['body']['title']);
+    }
+
     public function testGetDocumentWithQueries(): void
     {
         $data = $this->getDocumentsList();

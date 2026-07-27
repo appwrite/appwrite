@@ -935,7 +935,7 @@ services:
       - _APP_MIGRATION_HOST
   appwrite-task-maintenance:
     entrypoint: maintenance
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -982,7 +982,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-interval:
     entrypoint: interval
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1024,7 +1024,7 @@ services:
 
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1063,7 +1063,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1102,7 +1102,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1290,7 +1290,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    restart: on-failure:3
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
