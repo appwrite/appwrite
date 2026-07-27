@@ -772,7 +772,14 @@ class Builds extends Action
                                 $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '', $resource->getAttribute('framework', ''));
                             }
 
-                            $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
+                            $userBuildCommand = $deployment->getAttribute('buildCommands', '');
+                            $logCommand = '';
+                            if (! empty($userBuildCommand)) {
+                                $escapedForLog = \str_replace('$', '\\$', $userBuildCommand);
+                                $logCommand = 'echo ' . \escapeshellarg('Build command: ' . $escapedForLog) . ' && ';
+                            }
+
+                            $command = $logCommand . 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
                         }
 
                         $response = $executor->createRuntime(
