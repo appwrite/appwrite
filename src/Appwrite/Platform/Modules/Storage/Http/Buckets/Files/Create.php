@@ -360,7 +360,7 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
-                    if (!$antivirus->fileScan($path)) {
+                    if (!$antivirus->fileScanInStream($path)) {
                         $deviceForFiles->delete($path);
                         throw new Exception(Exception::STORAGE_INVALID_FILE);
                     }
