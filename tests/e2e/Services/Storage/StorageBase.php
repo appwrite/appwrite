@@ -2167,34 +2167,37 @@ trait StorageBase
         $this->assertEquals(['', '', ''], \array_column($folders, 'parent'));
 
         // nested level -- deep files imply intermediate folders
-        $folders = $listFolders(['folder' => 'photos']);
+        $folders = $listFolders(['queries' => [Query::equal('folder', ['photos'])->toString()]]);
         $this->assertEquals(['photos/2025/', 'photos/2026/'], \array_column($folders, 'key'));
 
-        $folders = $listFolders(['folder' => 'photos/2026']);
+        $folders = $listFolders(['queries' => [Query::equal('folder', ['photos/2026'])->toString()]]);
         $this->assertEquals(['photos/2026/july/'], \array_column($folders, 'key'));
 
         // pagination
-        $page = $listFolders(['limit' => 1]);
+        $page = $listFolders(['queries' => [Query::limit(1)->toString()]]);
         $this->assertEquals(['Photos/'], \array_column($page, 'key'));
-        $page = $listFolders(['limit' => 1, 'cursor' => 'Photos/']);
+        $page = $listFolders(['queries' => [Query::limit(1)->toString(), Query::offset(1)->toString()]]);
         $this->assertEquals(['invoices/'], \array_column($page, 'key'));
-        $page = $listFolders(['limit' => 1, 'cursor' => 'invoices/']);
+        $page = $listFolders(['queries' => [Query::limit(1)->toString(), Query::offset(2)->toString()]]);
         $this->assertEquals(['photos/'], \array_column($page, 'key'));
-        $page = $listFolders(['limit' => 1, 'cursor' => 'photos/']);
+        $page = $listFolders(['queries' => [Query::limit(1)->toString(), Query::offset(3)->toString()]]);
         $this->assertCount(0, $page);
 
         // nonexistent prefix -- empty list, not 404
-        $this->assertCount(0, $listFolders(['folder' => 'missing']));
+        $this->assertCount(0, $listFolders(['queries' => [Query::equal('folder', ['missing'])->toString()]]));
 
-        // crafted cursors -- must be an immediate child of parent
+        // unsupported and malformed queries
         foreach ([
-            ['folder' => 'photos', 'cursor' => 'photos/2026/july'], // grandchild
-            ['folder' => 'photos', 'cursor' => 'invoices'], // outside parent
-        ] as $params) {
+            [Query::startsWith('folder', 'photos')->toString()],
+            [Query::equal('name', ['photos'])->toString()],
+            [Query::equal('folder', ['photos', 'invoices'])->toString()],
+            [Query::equal('folder', ['photos//2026'])->toString()],
+            [Query::limit(101)->toString()],
+        ] as $queries) {
             $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/folders', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), $params);
+            ], $this->getHeaders()), ['queries' => $queries]);
             $this->assertEquals(400, $response['headers']['status-code']);
         }
 
@@ -2204,7 +2207,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(204, $delete['headers']['status-code']);
-        $this->assertEquals(['photos/2025/'], \array_column($listFolders(['folder' => 'photos']), 'key'));
+        $this->assertEquals(['photos/2025/'], \array_column($listFolders(['queries' => [Query::equal('folder', ['photos'])->toString()]]), 'key'));
 
         $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'content-type' => 'application/json',

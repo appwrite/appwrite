@@ -12,13 +12,17 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Range;
 
 class XList extends Action
 {
@@ -43,7 +47,9 @@ class XList extends Action
                 namespace: 'storage',
                 group: 'files',
                 name: 'listFolders',
-                description: '/docs/references/storage/list-folders.md',
+                description: <<<EOT
+                Get a list of the child folders directly inside a virtual folder in a bucket. Folders are derived from the folder paths of existing files: a folder exists while at least one file lives under it, and empty pages mean the listing is complete.
+                EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -53,9 +59,17 @@ class XList extends Action
                 ]
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-            ->param('folder', '', new Folder(), 'Virtual folder to list the child folders of. Defaults to the bucket root.', true)
-            ->param('limit', 25, new Range(1, 100), 'Maximum number of folders to return. Must be between 1 and 100. A page shorter than this limit means the listing is complete.', true)
-            ->param('cursor', '', new Folder(), 'Folder path returned last by a previous page, used to continue the listing.', true)
+            ->param('queries', [], new Queries([
+                new Limit(100),
+                new Offset(),
+                new Filter([
+                    new Document([
+                        'key' => 'folder',
+                        'type' => Database::VAR_STRING,
+                        'array' => false,
+                    ]),
+                ], Database::VAR_STRING, 1),
+            ]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are equal on the folder attribute, limit, and offset.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -65,9 +79,7 @@ class XList extends Action
 
     public function action(
         string $bucketId,
-        string $folder,
-        int $limit,
-        string $cursor,
+        array $queries,
         Response $response,
         Database $dbForProject,
         Authorization $authorization,
@@ -88,15 +100,37 @@ class XList extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $parent = Folder::normalize($folder);
-        $cursor = Folder::normalize($cursor);
-
-        if ($cursor !== '') {
-            $remainder = \substr($cursor, \strlen($parent), -1);
-            if (!\str_starts_with($cursor, $parent) || $cursor === $parent || \str_contains($remainder, '/')) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Folder '{$cursor}' for the 'cursor' value is not an immediate child of '{$parent}'.");
-            }
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        $grouped = Query::groupByType($queries);
+        $filters = $grouped['filters'];
+        if (\count($filters) > 1) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Only one folder filter is allowed.');
+        }
+
+        $parent = '';
+        if (!empty($filters)) {
+            $filter = $filters[0];
+            if ($filter->getMethod() !== Query::TYPE_EQUAL || $filter->getAttribute() !== 'folder' || \count($filter->getValues()) !== 1) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Only equal queries on the folder attribute are supported.');
+            }
+
+            $folder = $filter->getValue();
+            $validator = new Folder();
+            if (!$validator->isValid($folder)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $parent = Folder::normalize($folder);
+        }
+
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+        $pageEnd = $offset > PHP_INT_MAX - $limit ? PHP_INT_MAX : $offset + $limit;
 
         $collection = 'bucket_' . $bucket->getSequence();
         $folders = [];
@@ -105,15 +139,15 @@ class XList extends Action
 
         try {
             do {
-                $queries = [Query::limit($batch)];
+                $batchQueries = [Query::limit($batch)];
                 if ($latest !== null) {
-                    $queries[] = Query::cursorAfter($latest);
+                    $batchQueries[] = Query::cursorAfter($latest);
                 }
 
                 if ($fileSecurity && !$valid) {
-                    $results = $dbForProject->find($collection, $queries);
+                    $results = $dbForProject->find($collection, $batchQueries);
                 } else {
-                    $results = $authorization->skip(fn () => $dbForProject->find($collection, $queries));
+                    $results = $authorization->skip(fn () => $dbForProject->find($collection, $batchQueries));
                 }
 
                 if (empty($results)) {
@@ -128,9 +162,6 @@ class XList extends Action
 
                     $segment = \explode('/', \substr($fileParent, \strlen($parent)))[0];
                     $key = $parent . $segment . '/';
-                    if ($cursor !== '' && \strcmp($key, $cursor) <= 0) {
-                        continue;
-                    }
 
                     $folders[$key] = new Document([
                         'key' => $key,
@@ -140,7 +171,7 @@ class XList extends Action
                 }
 
                 \ksort($folders, \SORT_STRING);
-                $folders = \array_slice($folders, 0, $limit, true);
+                $folders = \array_slice($folders, 0, $pageEnd, true);
                 $latest = $results[\array_key_last($results)];
             } while (\count($results) === $batch);
         } catch (NotFoundException) {
@@ -148,7 +179,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'folders' => \array_values($folders),
+            'folders' => \array_slice(\array_values($folders), $offset, $limit),
         ]), Response::MODEL_FOLDER_LIST);
     }
 

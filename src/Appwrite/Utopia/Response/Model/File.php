@@ -140,7 +140,6 @@ class File extends Model
         $document->setAttribute('encryption', $encryption);
 
         $folder = $document->getAttribute('folder') ?? '';
-        $document->setAttribute('folder', $folder);
         $document->setAttribute('key', $folder . $document->getAttribute('name', ''));
 
         return $document;
