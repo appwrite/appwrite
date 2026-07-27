@@ -145,7 +145,7 @@ readonly class Orchestrator extends Backend
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
-                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true),
+                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
                 // Appwrite never sees the remote source (the sidecar fetches it),
                 // so unlike the uploaded-tarball path it can't size it. Stat the
                 // downloaded archive so the orchestrator reports its byte size in
@@ -165,7 +165,7 @@ readonly class Orchestrator extends Backend
             ]);
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $sourceUrl, out: 'source.tar.gz'),
-                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source'),
+                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', depends: 'source'),
             ];
         }
 
