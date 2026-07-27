@@ -13,7 +13,6 @@ use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Push\Get as GetFileForP
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Update as UpdateFile;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\View\Get as GetFileView;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\XList as ListFiles;
-use Appwrite\Platform\Modules\Storage\Http\Buckets\Folders\XList as ListFolders;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Get as GetBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Update as UpdateBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\XList as ListBuckets;
@@ -42,8 +41,5 @@ class Http extends Service
         $this->addAction(GetFileDownload::getName(), new GetFileDownload());
         $this->addAction(GetFileView::getName(), new GetFileView());
         $this->addAction(GetFileForPush::getName(), new GetFileForPush());
-
-        // Folders
-        $this->addAction(ListFolders::getName(), new ListFolders());
     }
 }
