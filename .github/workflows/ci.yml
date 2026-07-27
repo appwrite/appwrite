@@ -517,7 +517,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -525,10 +525,10 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
 
-  e2e_abuse:
-    name: Tests / E2E / Abuse (${{ matrix.mode }})
+  e2e_grouped:
+    name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
-    timeout-minutes: 15
+    timeout-minutes: 35
     needs: [build, matrix]
     permissions:
       contents: read
@@ -537,6 +537,30 @@ jobs:
       fail-fast: false
       matrix:
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
+        config:
+          - label: Abuse
+            group: abuseEnabled
+            path: /usr/src/code/tests/e2e
+            options_abuse: enabled
+            storage_antivirus: disabled
+            compose_profiles: ''
+            wait: ''
+          - label: Screenshots
+            group: screenshots
+            path: /usr/src/code/tests/e2e/Services/Sites
+            options_abuse: disabled
+            storage_antivirus: disabled
+            compose_profiles: ''
+            wait: executor
+          - label: Antivirus
+            group: antivirus
+            path: /usr/src/code/tests/e2e/Services/Storage
+            options_abuse: disabled
+            storage_antivirus: enabled
+            compose_profiles: antivirus
+            wait: clamav
+    env:
+      COMPOSE_PROFILES: ${{ matrix.config.compose_profiles }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -574,82 +598,22 @@ jobs:
               done
 
       - name: Load and Start Appwrite
-        timeout-minutes: 5
+        timeout-minutes: ${{ matrix.config.wait == 'clamav' && 15 || 5 }}
         env:
-          _APP_OPTIONS_ABUSE: enabled
+          _APP_OPTIONS_ABUSE: ${{ matrix.config.options_abuse }}
+          _APP_STORAGE_ANTIVIRUS: ${{ matrix.config.storage_antivirus }}
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: docker compose up -d --quiet-pull --wait
-
-      - name: Run tests
-        timeout-minutes: 15
-        run: >-
-          docker compose exec -T
-          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
-
-      - name: Failure Logs
-        if: failure()
         run: |
-          echo "=== Appwrite Logs ==="
-          docker compose logs --timestamps
-
-  e2e_screenshots:
-    name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
-    timeout-minutes: 15
-    needs: [build, matrix]
-    permissions:
-      contents: read
-      packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Login to Docker Hub
-        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - parallel:
-          - name: Pull Docker Image
-            run: |
-              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
-
-          - name: Pull Docker Compose images
-            timeout-minutes: 5
-            run: |
-              # Docker Hub registry timeouts are a common transient CI failure
-              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-              # keep `up` single-shot so genuine container health failures still surface.
-              for attempt in 1 2 3; do
-                if docker compose pull --quiet --ignore-buildable; then
-                  break
-                elif [ "$attempt" -eq 3 ]; then
-                  echo "::error::docker compose pull failed after 3 attempts; aborting"
-                  exit 1
-                fi
-                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-                sleep 15
-              done
-
-      - name: Load and Start Appwrite
-        timeout-minutes: 5
-        env:
-          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
-          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
-          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: docker compose up -d --quiet-pull --wait
+          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
+            docker compose up -d --quiet-pull --wait --wait-timeout 780
+          else
+            docker compose up -d --quiet-pull --wait
+          fi
 
       - name: Wait for Open Runtimes
+        if: matrix.config.wait == 'executor'
         timeout-minutes: 3
         run: |
           while ! docker logs exc1 | grep -q "Executor is ready."; do
@@ -657,18 +621,44 @@ jobs:
             sleep 1
           done
 
+      - name: Wait for ClamAV
+        if: matrix.config.wait == 'clamav'
+        timeout-minutes: 10
+        run: |
+          for attempt in $(seq 1 120); do
+            if docker compose exec -T appwrite php -r '
+              require "/usr/src/code/vendor/autoload.php";
+              $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
+              $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
+              $av = new Appwrite\ClamAV\Network($host, $port);
+              exit(@$av->ping() ? 0 : 1);
+            '; then
+              echo "ClamAV is ready"
+              exit 0
+            fi
+            echo "Waiting for ClamAV (attempt ${attempt}/120)"
+            sleep 5
+          done
+          echo "::error::ClamAV did not become ready"
+          docker compose logs --timestamps clamav || true
+          exit 1
+
       - name: Run tests
         timeout-minutes: 15
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+          appwrite test ${{ matrix.config.path }} --group=${{ matrix.config.group }}
 
       - name: Failure Logs
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
           docker compose logs --timestamps
+          if [ "${{ matrix.config.wait }}" = "clamav" ]; then
+            echo "=== ClamAV Logs ==="
+            docker compose logs --timestamps clamav || true
+          fi
 
   benchmark:
     name: Benchmark
