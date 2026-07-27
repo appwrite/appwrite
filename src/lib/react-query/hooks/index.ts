@@ -16,6 +16,7 @@ export * from './constants'
 export * from './dependencies'
 
 // Re-export from organized modules
+export * from './analytics'
 export * from './organizations'
 export * from './addons'
 export * from './teams'

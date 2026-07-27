@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Analytics,
   Apps,
   Assistant,
   Avatars,
@@ -472,6 +473,7 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),
   backups: new Backups(clientProject),
