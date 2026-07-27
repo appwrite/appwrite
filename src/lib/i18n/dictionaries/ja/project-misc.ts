@@ -479,6 +479,40 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No events recorded in this range': 'この期間に記録されたイベントはありません',
   'Data appears once the property receives its first event.':
     'プロパティが最初のイベントを受信すると、データが表示されます。',
+  'Custom range': 'カスタム期間',
+
+  // Analytics property settings
+  'Property name': 'プロパティ名',
+  "Update this property's display name.":
+    'このプロパティの表示名を更新します。',
+  'Name updated': '名前を更新しました',
+  'Property details': 'プロパティの詳細',
+  'Control whether this property accepts events and who can see its stats.':
+    'このプロパティがイベントを受け付けるかどうか、また統計を誰が閲覧できるかを設定します。',
+  'Tracking enabled': '計測を有効にしました',
+  'Tracking disabled': '計測を無効にしました',
+  'Tracking is enabled': '計測は有効です',
+  'Stats are now public': '統計を公開しました',
+  'Stats are now private': '統計を非公開にしました',
+  'Stats are publicly viewable': '統計は一般に公開されています',
+  'Stats are private': '統計は非公開です',
+  'Primary domain being tracked. Optional for native apps.':
+    '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
+  'Domain updated': 'ドメインを更新しました',
+  'IANA timezone used to decide where each day starts and ends for stats.':
+    '統計における 1 日の開始と終了を決定する IANA タイムゾーンです。',
+  'Timezone updated': 'タイムゾーンを更新しました',
+  'Origins allowed to send tracking events. Use * to allow all origins.':
+    '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
+  'https://example.com': 'https://example.com',
+  'Allowed origins updated': '許可するオリジンを更新しました',
+  'Delete property': 'プロパティを削除',
+  'Property deleted': 'プロパティを削除しました',
+  'Type the property name to confirm': '確認のためプロパティ名を入力してください',
+  'Permanently delete this property and every event and session collected for it. This action cannot be undone.':
+    'このプロパティと、収集されたすべてのイベントおよびセッションを完全に削除します。この操作は取り消せません。',
+  'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
+    'プロパティと、収集されたすべてのイベントおよびセッションが完全に削除されます。この操作は取り消せません。',
   'Connection failed': '接続に失敗しました',
   'WebSocket URL copied': 'WebSocket URL をコピーしました',
   'Connection status': '接続ステータス',

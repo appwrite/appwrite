@@ -819,6 +819,39 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No events recorded in this range': 'לא נרשמו אירועים בטווח הזה',
   'Data appears once the property receives its first event.':
     'הנתונים יופיעו לאחר שהנכס יקבל את האירוע הראשון שלו.',
+  'Custom range': 'טווח מותאם אישית',
+
+  // Analytics property settings
+  'Property name': 'שם הנכס',
+  "Update this property's display name.": 'עדכנו את שם התצוגה של הנכס הזה.',
+  'Name updated': 'השם עודכן',
+  'Property details': 'פרטי הנכס',
+  'Control whether this property accepts events and who can see its stats.':
+    'קבעו אם הנכס הזה מקבל אירועים ומי יכול לראות את הסטטיסטיקות שלו.',
+  'Tracking enabled': 'המעקב הופעל',
+  'Tracking disabled': 'המעקב הושבת',
+  'Tracking is enabled': 'המעקב פעיל',
+  'Stats are now public': 'הסטטיסטיקות ציבוריות כעת',
+  'Stats are now private': 'הסטטיסטיקות פרטיות כעת',
+  'Stats are publicly viewable': 'הסטטיסטיקות ניתנות לצפייה ציבורית',
+  'Stats are private': 'הסטטיסטיקות פרטיות',
+  'Primary domain being tracked. Optional for native apps.':
+    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Domain updated': 'הדומיין עודכן',
+  'IANA timezone used to decide where each day starts and ends for stats.':
+    'אזור זמן IANA שקובע היכן כל יום מתחיל ומסתיים לצורך הסטטיסטיקות.',
+  'Timezone updated': 'אזור הזמן עודכן',
+  'Origins allowed to send tracking events. Use * to allow all origins.':
+    'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
+  'https://example.com': 'https://example.com',
+  'Allowed origins updated': 'המקורות המורשים עודכנו',
+  'Delete property': 'מחיקת נכס',
+  'Property deleted': 'הנכס נמחק',
+  'Type the property name to confirm': 'הקלידו את שם הנכס כדי לאשר',
+  'Permanently delete this property and every event and session collected for it. This action cannot be undone.':
+    'מחיקה לצמיתות של הנכס הזה ושל כל אירוע וסשן שנאספו עבורו. לא ניתן לבטל את הפעולה הזו.',
+  'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
+    'פעולה זו מוחקת לצמיתות את הנכס ואת כל אירוע וסשן שנאספו עבורו. לא ניתן לבטל את הפעולה הזו.',
 
   // Realtime
   Realtime: 'Realtime',
