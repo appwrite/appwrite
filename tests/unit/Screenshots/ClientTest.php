@@ -58,7 +58,38 @@ final class ClientTest extends TestCase
             'theme' => 'dark',
             'headers' => ['x-appwrite-hostname' => 'example.com'],
             'sleep' => 500,
+            'viewport' => ['width' => 1280, 'height' => 720],
+            'deviceScaleFactor' => 1.5,
+            'waitUntil' => 'load',
         ], \json_decode((string)$this->request->getBody(), true));
+    }
+
+    public function testCreateCapturesAboveViewportResolution(): void
+    {
+        $response = (new Response(200, body: new Stream('png-bytes')))
+            ->withHeader('Content-Type', 'image/png');
+
+        $this->client($response)->create('http://appwrite/', 'light');
+
+        $body = \json_decode((string)$this->request->getBody(), true);
+
+        // Left unset, the browser service defaults to a scale factor of 1, which
+        // captures exactly one pixel per CSS pixel and renders soft previews.
+        $this->assertGreaterThan(1, $body['deviceScaleFactor']);
+        $this->assertSame(1280, $body['viewport']['width']);
+        $this->assertSame(720, $body['viewport']['height']);
+    }
+
+    public function testCreateWaitsForSubresources(): void
+    {
+        $response = (new Response(200, body: new Stream('png-bytes')))
+            ->withHeader('Content-Type', 'image/png');
+
+        $this->client($response)->create('http://appwrite/', 'light');
+
+        // The browser service defaults to `domcontentloaded`, which fires before
+        // webfonts and images have settled.
+        $this->assertSame('load', \json_decode((string)$this->request->getBody(), true)['waitUntil']);
     }
 
     public function testCreateError(): void

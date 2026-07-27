@@ -9,6 +9,23 @@ use Utopia\Psr7\Request\Factory;
 
 class Client
 {
+    public const VIEWPORT_WIDTH = 1280;
+
+    public const VIEWPORT_HEIGHT = 720;
+
+    /**
+     * Captured pixels per CSS pixel. Above 1 the page is rendered at a higher
+     * resolution than the viewport, so previews stay sharp when the console
+     * displays them on high-density screens or scales them up.
+     */
+    public const SCALE = 1.5;
+
+    /**
+     * Wait for subresources such as webfonts and images, not just the DOM,
+     * otherwise pages are captured mid-render.
+     */
+    public const WAIT_UNTIL = 'load';
+
     private Factory $factory;
 
     /**
@@ -33,6 +50,12 @@ class Client
             'theme' => $theme,
             'headers' => $headers,
             'sleep' => $sleep,
+            'viewport' => [
+                'width' => self::VIEWPORT_WIDTH,
+                'height' => self::VIEWPORT_HEIGHT,
+            ],
+            'deviceScaleFactor' => self::SCALE,
+            'waitUntil' => self::WAIT_UNTIL,
         ]));
 
         $status = $response->getStatusCode();
