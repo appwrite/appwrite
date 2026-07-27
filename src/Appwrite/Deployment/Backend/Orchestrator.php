@@ -16,6 +16,7 @@ use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
@@ -91,7 +92,17 @@ readonly class Orchestrator extends Backend
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
         ]));
 
-        $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
+        try {
+            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
+        } catch (\Throwable $error) {
+            $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'status' => 'failed',
+                'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                'buildEndedAt' => DateTime::now(),
+            ]));
+
+            throw $error;
+        }
 
         return $deployment;
     }
