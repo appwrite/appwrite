@@ -33,7 +33,10 @@
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions"
-        }
+        },
+        "files": [
+            "tests/extensions/SwooleStubs.php"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -130,6 +133,7 @@
     },
     "config": {
         "platform": {
+            "php": "8.3.0"
         },
         "allow-plugins": {
             "php-http/discovery": true,
