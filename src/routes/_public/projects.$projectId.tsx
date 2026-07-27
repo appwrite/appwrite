@@ -5,6 +5,7 @@ import {
   isRedirect,
   useLocation,
 } from '@tanstack/react-router'
+import { NotFoundView } from '@/components/error/NotFound'
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
@@ -136,6 +137,8 @@ const EMPTY_PROJECT_LAYOUT_CONTEXT: ProjectLayoutRouteContext = {
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
+  // Parent ProjectCliShellLayout already provides ConsoleLayout; avoid a nested shell.
+  notFoundComponent: NotFoundView,
   // Region + budget/plan-limit check must run before child loaders (loaders execute in parallel).
   // When the org is blocked, nested project routes are redirected to the project root
   // so heavy service loaders cannot hang the navigation.

@@ -461,14 +461,9 @@ export function getClaudeDeepLink(schema: DatabaseSchema): string {
 }
 
 /**
- * Downloads content as a file
+ * Downloads a blob as a file
  */
-export function downloadAsFile(
-  content: string,
-  filename: string,
-  mimeType: string = 'text/plain',
-) {
-  const blob = new Blob([content], { type: mimeType })
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -477,4 +472,15 @@ export function downloadAsFile(
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+/**
+ * Downloads content as a file
+ */
+export function downloadAsFile(
+  content: string,
+  filename: string,
+  mimeType: string = 'text/plain',
+) {
+  downloadBlob(new Blob([content], { type: mimeType }), filename)
 }

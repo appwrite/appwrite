@@ -2,7 +2,9 @@ import {
   Link,
   useCanGoBack,
   useLocation,
+  useMatches,
   useRouter,
+  type AnyRouteMatch,
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { ArrowLeft, FileQuestion, Home } from 'lucide-react'
@@ -35,6 +37,66 @@ function isConsoleAreaPath(pathname: string): boolean {
 function isDocsPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   return normalized === '/docs' || normalized.startsWith('/docs/')
+}
+
+/**
+ * Org layout skips OrgOverview (and its ConsoleLayout) for these children.
+ * Mirror `organizations.$orgId.tsx` so nested 404s still get a single shell.
+ */
+function isOrgOutletOnlyPath(
+  pathname: string,
+  matches: AnyRouteMatch[],
+): boolean {
+  if (
+    pathname.includes('/domains/buy') ||
+    pathname.includes('/domains/transfer-in') ||
+    pathname === '/upgrade'
+  ) {
+    return true
+  }
+
+  return matches.some(
+    (match) =>
+      match.routeId.includes('/domains/$domainId') ||
+      match.routeId.includes('/marketplace/$appId') ||
+      match.routeId.includes('/apps/$appId') ||
+      match.routeId.includes('/support'),
+  )
+}
+
+/**
+ * True when a matched parent already renders ConsoleLayout (or equivalent chrome)
+ * around the not-found outlet. Returning a second shell duplicates header/footer.
+ */
+function shouldRenderContentOnly(
+  pathname: string,
+  matches: AnyRouteMatch[],
+): boolean {
+  if (isDocsPath(pathname)) return true
+
+  if (matches.some((m) => m.routeId === '/_public/projects/$projectId')) {
+    return true
+  }
+
+  if (matches.some((m) => m.routeId === '/_public/account')) {
+    return true
+  }
+
+  // App detail layout wraps <Outlet /> in ConsoleLayout.
+  if (
+    matches.some(
+      (m) => m.routeId === '/_public/organizations/$orgId/apps/$appId',
+    )
+  ) {
+    return true
+  }
+
+  // Org overview wraps the outlet unless an outlet-only child is active.
+  if (matches.some((m) => m.routeId === '/_public/organizations/$orgId')) {
+    return !isOrgOutletOnlyPath(pathname, matches)
+  }
+
+  return false
 }
 
 function shouldUseMarketingShell(
@@ -182,10 +244,11 @@ export function NotFoundView() {
 /** Full-page 404 with layout shell for unmatched routes and leaf routes without a parent shell. */
 export function NotFound() {
   const location = useLocation()
+  const matches = useMatches()
   const { features } = useConsoleProfile()
 
-  // Thrown from /docs/$ inside DocsPageShell — only render content, not another shell.
-  if (isDocsPath(location.pathname)) {
+  // Parent layout already provides header/footer (docs, project, account, org overview, app detail).
+  if (shouldRenderContentOnly(location.pathname, matches)) {
     return <NotFoundView />
   }
 
