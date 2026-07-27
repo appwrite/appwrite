@@ -117,6 +117,24 @@ function isValidRelativeRedirect(url: string): boolean {
 
 type RouterLocation = ReturnType<typeof useLocation>
 
+const AUTH_REDIRECT_DEDUPE_WINDOW_MS = 750
+let lastAuthRedirectKey: string | null = null
+let lastAuthRedirectAtMs = 0
+
+function shouldSkipDuplicateAuthRedirect(key: string): boolean {
+  if (typeof window === 'undefined') return false
+  const now = Date.now()
+  if (
+    lastAuthRedirectKey === key &&
+    now - lastAuthRedirectAtMs < AUTH_REDIRECT_DEDUPE_WINDOW_MS
+  ) {
+    return true
+  }
+  lastAuthRedirectKey = key
+  lastAuthRedirectAtMs = now
+  return false
+}
+
 /**
  * Navigate to MFA or sign-in when the account query fails. Must run in useEffect —
  * never call navigate from inside queryFn (async updates before mount).
@@ -133,6 +151,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
   useEffect(() => {
     if (!needsMfa || location.pathname === '/mfa') return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectKey = `mfa:${redirectUrl ?? ''}`
+    if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigateRef.current({ to: '/mfa', search: { redirect: redirectUrl } })
     } else {
@@ -154,6 +174,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
       return
     }
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectKey = `signin:${redirectUrl ?? ''}`
+    if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
     } else {
