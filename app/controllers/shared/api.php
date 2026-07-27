@@ -1130,7 +1130,8 @@ Http::shutdown()
     ->inject('authorization')
     ->inject('apiKey')
     ->inject('mode')
-    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode) {
+    ->inject('lock')
+    ->action(function (Route $route, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1201,9 +1202,16 @@ Http::shutdown()
         ];
 
         try {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'onboarding' => $byMethod,
-            ])));
+            // last write overwriting the other's stage on multiple request
+            // onboarding is not a native array attribute, it is a string with json filter.
+            // we do not have a query operator for array merge keys
+            $lock->tryWithKey(
+                'lock:platform:' . $project->getSequence() . ':onboarding',
+                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'onboarding' => $byMethod,
+                ]))),
+                target: 'projects',
+            );
         } catch (\Throwable) {
             // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
