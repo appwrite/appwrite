@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   deleteProjectDatabase,
-  invalidateDatabaseModel,
+  invalidateDatabaseModelAndType,
   refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
@@ -53,7 +53,7 @@ export function DatabaseDangerZoneCard({
       await deleteProjectDatabase(projectId, databaseId)
     },
     onSuccess: async () => {
-      invalidateDatabaseModel(projectId, databaseId)
+      invalidateDatabaseModelAndType(projectId, databaseId)
       await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database deleted successfully'))
       setDeleteDialogOpen(false)

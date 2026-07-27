@@ -41,6 +41,7 @@ import {
 } from '@/lib/usage/format-metric'
 import { mapDedicatedDatabaseSpecifications } from '@/lib/database-specs'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   useDedicatedDatabaseMonitorMetrics,
   usePostgresConnectionApps,
@@ -234,7 +235,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
     }
   }, [replicaCount, selectedOrdinal])
 
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
   const specs = useMemo(
     () =>
       mapDedicatedDatabaseSpecifications(specificationsData?.specifications),

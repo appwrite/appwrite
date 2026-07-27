@@ -39,7 +39,7 @@ import { DatabaseType } from '@/lib/databases/database-type'
 import {
   deleteProjectDatabase,
   fetchProjectDatabase,
-  invalidateDatabaseModel,
+  invalidateDatabaseModelAndType,
   refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import {
@@ -91,7 +91,7 @@ export function DatabaseContextMenu({
       await deleteProjectDatabase(projectId, database.$id)
     },
     onSuccess: async () => {
-      invalidateDatabaseModel(projectId, database.$id)
+      invalidateDatabaseModelAndType(projectId, database.$id)
       await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database deleted successfully'))
       setDeleteDialogOpen(false)

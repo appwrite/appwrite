@@ -6,7 +6,7 @@ import {
   useProject,
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
-  useDatabaseSpecifications,
+  useMergedDatabaseSpecifications,
   dedicatedBackupPoliciesQueryOptions,
   dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -496,7 +496,7 @@ export function AllDatabasesSection({
   const { databases: dedicatedDatabases } =
     useProjectDedicatedDatabases(projectId)
 
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useMergedDatabaseSpecifications(projectId)
   const computeLabelOptions = useMemo<ResolveDatabaseComputeLabelOptions>(
     () => ({
       specs: mapDedicatedDatabaseSpecifications(

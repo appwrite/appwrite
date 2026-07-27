@@ -1,5 +1,8 @@
 import { sdk } from '@/lib/appwrite/sdk'
-import { invalidateDatabaseModel } from '@/lib/react-query/hooks/databases'
+import {
+  deleteProjectDatabase,
+  invalidateDatabaseModelAndType,
+} from '@/lib/react-query/hooks/databases'
 import type {
   DowngradeResourceType,
   ProjectDowngradeResources,
@@ -21,9 +24,11 @@ export async function deleteDowngradeResources(
     const projectSdk = sdk.forProject(projectId)
 
     for (const databaseId of resourceMap.databases ?? []) {
+      // Route through the owning product API (tables/documents/vectors), not
+      // always tablesDB. Native dedicated DBs are handled separately.
       tasks.push(
-        projectSdk.tablesDB.delete({ databaseId }).then(() => {
-          invalidateDatabaseModel(projectId, databaseId)
+        deleteProjectDatabase(projectId, databaseId).then(() => {
+          invalidateDatabaseModelAndType(projectId, databaseId)
         }),
       )
     }

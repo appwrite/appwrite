@@ -23,6 +23,15 @@ import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/d
 import { SERVERLESS_DATABASE_SPEC_ID, isServerlessDatabaseSpecId } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import {
+  dedicatedDatabaseService,
+  dedicatedDatabaseSourceFromDatabaseType,
+  dedicatedDatabaseSourceFromEngine,
+  dedicatedDatabaseSourceFromRouteKind,
+  dedicatedDatabaseSourceKey,
+  POSTGRES_DATABASE_SPECS_SOURCE,
+  type DedicatedDatabaseSource,
+} from '@/lib/databases/dedicated-database-source'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
@@ -120,7 +129,11 @@ function databaseModelCacheKey(projectId: string, databaseId: string): string {
   return `${projectId}:${databaseId}`
 }
 
-/** Clear the dedup cache for one database (call after delete/update). */
+/** Clear the model dedup cache for one database (call after delete/update).
+ * Keeps the product-type cache: ownership does not change on rename / HA
+ * updates, and clearing it forced cold callers to re-probe documentsDB →
+ * vectorsDB → tablesDB.
+ */
 export function invalidateDatabaseModel(
   projectId: string,
   databaseId: string,
@@ -128,7 +141,6 @@ export function invalidateDatabaseModel(
   const key = databaseModelCacheKey(projectId, databaseId)
   databaseModelCache.delete(key)
   databaseModelInflight.delete(key)
-  databaseTypeCache.delete(key)
   databaseTypeInflight.delete(key)
 }
 
@@ -490,6 +502,15 @@ export function seedDatabaseProductRouteKind(
   }
 }
 
+/** Clear model + product-type caches (e.g. after delete). */
+export function invalidateDatabaseModelAndType(
+  projectId: string,
+  databaseId: string,
+): void {
+  invalidateDatabaseModel(projectId, databaseId)
+  databaseTypeCache.delete(databaseModelCacheKey(projectId, databaseId))
+}
+
 /** Resolve which product SDK owns a database (probe order: documents, vectors, tables). */
 export async function resolveProjectDatabaseType(
   projectId: string,
@@ -574,10 +595,13 @@ export async function getDatabaseModel(
       if (db?.$id) {
         return normalizeProductDatabase(db, typeHint)
       }
+      // Known product route / cached type: do not probe other product APIs.
+      // Fallthrough caused GET /documentsdb/{id} and /vectorsdb/{id} for
+      // TablesDB databases whenever tablesDB.get briefly failed or returned null.
+      return null
     }
 
     for (const { backend } of PRODUCT_ROUTE_KIND_PROBES) {
-      if (typeHint && backend === typeHint) continue
       const db = await getProductDatabase(projectSdk, backend, databaseId)
       if (db?.$id) {
         return normalizeProductDatabase(db, backend)
@@ -771,6 +795,13 @@ export async function fetchProjectDatabases(
       new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime(),
   )
 
+  // Pin product routing from list payloads so detail/sidebar lookups do not
+  // re-probe documentsDB / vectorsDB / tablesDB for every database ID.
+  for (const db of sorted) {
+    const backend = coerceDatabaseType(db.type)
+    seedDatabaseModelCache(projectId, db.$id, db, backend)
+  }
+
   const total = sorted.length
   const slice = sorted.slice(page * limit, page * limit + limit)
 
@@ -815,6 +846,10 @@ export async function fetchProjectProductDatabases(
     normalizeProductDatabase(db, backend),
   )
 
+  for (const db of databases) {
+    seedDatabaseModelCache(projectId, db.$id, db, backend)
+  }
+
   return {
     databases,
     total: response.total ?? databases.length,
@@ -853,6 +888,15 @@ export async function fetchProjectConsoleDatabases(
   const databases = (response.databases ?? []).map((db) =>
     normalizeProductDatabase(db, db.type ?? DatabaseType.Tablesdb),
   )
+
+  for (const db of databases) {
+    seedDatabaseModelCache(
+      projectId,
+      db.$id,
+      db,
+      coerceDatabaseType(db.type),
+    )
+  }
 
   return {
     databases,
@@ -916,6 +960,15 @@ export async function fetchProjectDatabasesByIds(
     },
   ])
 
+  for (const db of databases) {
+    seedDatabaseModelCache(
+      projectId,
+      db.$id,
+      db,
+      coerceDatabaseType(db.type),
+    )
+  }
+
   return { databases }
 }
 
@@ -978,9 +1031,11 @@ function computeApiForDatabaseType(backend: DatabaseType): string {
 
 function dedicatedComputeEngineForProductBackend(
   backend: DatabaseType,
-): 'mongodb' | 'postgres' | undefined {
+): 'mongodb' | 'postgres' | 'mysql' | undefined {
   if (backend === DatabaseType.Documentsdb) return 'mongodb'
   if (backend === DatabaseType.Vectorsdb) return 'postgres'
+  // TablesDB dedicated compute is MySQL-backed (same as productDedicatedEngineHints).
+  if (backend === DatabaseType.Tablesdb) return 'mysql'
   return undefined
 }
 
@@ -995,7 +1050,7 @@ async function resolveDedicatedSpecification(
   projectId: string,
   region?: string | null,
   explicit?: string,
-  engine?: string,
+  source?: DedicatedDatabaseSource,
 ): Promise<string> {
   if (explicit && explicit !== SERVERLESS_DATABASE_SPEC_ID) return explicit
 
@@ -1005,8 +1060,10 @@ async function resolveDedicatedSpecification(
       ? region.trim()
       : undefined,
   )
+  const specsSource =
+    source ?? dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb)
   const response =
-    await dedicatedEngineService(projectSdk, engine).listSpecifications()
+    await dedicatedDatabaseService(projectSdk, specsSource).listSpecifications()
   const specs = mapDedicatedDatabaseSpecifications(response.specifications)
   const defaultId = getDefaultEnabledSpecId(specs)
   if (!defaultId) {
@@ -1054,6 +1111,9 @@ const PRODUCT_ROUTE_KIND_PROBES: Array<{
 /**
  * Resolve which product route tree owns a database by probing each product API.
  * Prefer documentsdb and vectorsdb over tablesdb when IDs collide.
+ *
+ * When `hint` is set (URL `$dbKind` or seeded type), only that product API is
+ * checked. Never fall through to other products for a typed route.
  */
 export async function resolveProductRouteKindForDatabase(
   projectId: string,
@@ -1065,7 +1125,9 @@ export async function resolveProductRouteKindForDatabase(
   const features = getActiveProfileFeatures()
   const cachedType = readCachedDatabaseType(projectId, databaseId)
   if (cachedType && isProductDatabaseTypeEnabled(cachedType, features)) {
-    return databaseRouteKindFromApiType(cachedType)
+    const cachedKind = databaseRouteKindFromApiType(cachedType)
+    // URL / caller hint wins when it disagrees with a stale cache entry.
+    if (!hint || hint === cachedKind) return cachedKind
   }
 
   const projectSdk = sdk.forProject(projectId)
@@ -1073,13 +1135,19 @@ export async function resolveProductRouteKindForDatabase(
   if (hint) {
     const backend = routeKindToDatabaseType(hint)
     const db = await getProductDatabase(projectSdk, backend, databaseId)
-    if (db?.$id) return hint
+    if (db?.$id) {
+      seedDatabaseModelCache(projectId, databaseId, db, backend)
+      return hint
+    }
+    return null
   }
 
   for (const { kind, backend } of PRODUCT_ROUTE_KIND_PROBES) {
-    if (hint && kind === hint) continue
     const db = await getProductDatabase(projectSdk, backend, databaseId)
-    if (db?.$id) return kind
+    if (db?.$id) {
+      seedDatabaseModelCache(projectId, databaseId, db, backend)
+      return kind
+    }
   }
   return null
 }
@@ -1241,7 +1309,7 @@ export async function createProjectDatabase(
       projectId,
       region,
       options?.specification,
-      dedicatedComputeEngineForProductBackend(backend),
+      dedicatedDatabaseSourceFromDatabaseType(backend),
     )
 
     const created = await createProductDatabaseWithExistsRecovery(
@@ -1273,27 +1341,19 @@ export async function createProjectDatabase(
 
 /**
  * Enable PITR on a product-owned dedicated database after create.
- * Product create APIs do not accept `pitr`; the engine update applies it once
- * the database is ready.
+ *
+ * Product create/update APIs do not accept `pitr`. Do not fall back to engine
+ * services (mysql / postgresql / mongo) for product IDs. Until the product
+ * APIs expose PITR, this is a no-op and callers should skip product PITR waits.
  */
 export async function enableProductDatabasePitr(
-  projectId: string,
-  databaseId: string,
-  backend: DatabaseType,
-  region?: string | null,
+  _projectId: string,
+  _databaseId: string,
+  _backend: DatabaseType,
+  _region?: string | null,
 ): Promise<void> {
-  if (!projectId || !databaseId) {
-    throw new Error('Project ID and Database ID are required')
-  }
-
-  const resolvedRegion =
-    region && region.trim() !== '' && region !== 'unknown'
-      ? region.trim()
-      : undefined
-  const projectSdk = sdk.forProject(projectId, resolvedRegion)
-  const engine = dedicatedComputeEngineForProductBackend(backend)
-  const engineService = dedicatedEngineService(projectSdk, engine ?? undefined)
-  await engineService.update({ databaseId, pitr: true })
+  // Intentionally empty: product SDKs have no PITR mutation. Never PATCH
+  // product database IDs via dedicatedEngineService.
 }
 
 /**
@@ -1364,6 +1424,10 @@ export async function waitForCreatedDatabaseHaReady(
 
 /**
  * Poll until PITR is reported enabled on the created database.
+ *
+ * Native DBs are checked via the engine get. Product DBs have no PITR field or
+ * mutation on the product API, so this returns true immediately for product
+ * kinds (never probe mysql / postgresql / mongo with product IDs).
  */
 export async function waitForCreatedDatabasePitrReady(
   projectId: string,
@@ -1372,32 +1436,19 @@ export async function waitForCreatedDatabasePitrReady(
   maxAttempts = 40,
 ): Promise<boolean> {
   if (!projectId || !databaseId) return false
+  if (kind.type !== 'native') return true
 
   let intervalMs = 500
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      if (kind.type === 'native') {
-        const database = await fetchDedicatedDatabaseById(
-          projectId,
-          databaseId,
-          kind.engine === 'postgres'
-            ? ['postgresql', 'postgres']
-            : ['mysql', 'mariadb'],
-        )
-        if (database?.pitr === true) return true
-      } else {
-        const engine = dedicatedComputeEngineForProductBackend(kind.backend)
-        const database = await fetchDedicatedDatabaseById(
-          projectId,
-          databaseId,
-          engine === 'mongodb'
-            ? ['mongodb', 'mongo']
-            : engine === 'postgres'
-              ? ['postgresql', 'postgres']
-              : ['postgresql', 'postgres', 'mysql', 'mariadb'],
-        )
-        if (database?.pitr === true) return true
-      }
+      const database = await fetchDedicatedDatabaseById(
+        projectId,
+        databaseId,
+        kind.engine === 'postgres'
+          ? ['postgresql', 'postgres']
+          : ['mysql', 'mariadb'],
+      )
+      if (database?.pitr === true) return true
     } catch {
       /* retry */
     }
@@ -1435,6 +1486,111 @@ export async function updateProjectDatabase(
     return await projectSdk.vectorsDB.update(payload)
   }
   return await projectSdk.tablesDB.update(payload)
+}
+
+/**
+ * Migrate a serverless TablesDB database onto a dedicated specification.
+ * Only valid while the database is still serverless (`database_not_serverless`
+ * if already dedicated). Dedicated tier changes use
+ * `updateTablesDatabaseSpecification` instead.
+ */
+export async function createTablesDatabaseMigration(
+  projectId: string,
+  databaseId: string,
+  specification: string,
+) {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+  const trimmed = specification.trim()
+  if (!trimmed || isServerlessDatabaseSpecId(trimmed)) {
+    throw new Error('A dedicated specification is required.')
+  }
+  return sdk.forProject(projectId).tablesDB.createMigration({
+    databaseId,
+    specification: trimmed,
+  })
+}
+
+/**
+ * Change the dedicated compute specification via the product SDK `update`
+ * method (`tablesDB` / `documentsDB` / `vectorsDB`). Never use engine
+ * services or raw REST `client.call` from feature code.
+ */
+async function updateProductDatabaseSpecificationViaUpdate(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  specification: string,
+  name?: string,
+): Promise<Models.Database> {
+  const projectSdk = sdk.forProject(projectId)
+  const trimmedName = name?.trim()
+  // `specification` is accepted by our project SDK update polyfill until the
+  // console package serializes it upstream.
+  const payload = {
+    databaseId,
+    specification,
+    ...(trimmedName ? { name: trimmedName } : {}),
+  }
+
+  if (dbKind === 'documentsdb') {
+    return projectSdk.documentsDB.update({
+      databaseId,
+      name: trimmedName || databaseId,
+      specification,
+    } as never)
+  }
+  if (dbKind === 'vectorsdb') {
+    return projectSdk.vectorsDB.update({
+      databaseId,
+      name: trimmedName || databaseId,
+      specification,
+    } as never)
+  }
+  return projectSdk.tablesDB.update(payload as never)
+}
+
+/**
+ * Change the compute specification for a product database.
+ *
+ * Product DBs must only use their own service (`tablesDB` / `documentsDB` /
+ * `vectorsDB`). Never route product IDs through mysql / postgresql / mongo.
+ *
+ * - Serverless TablesDB → dedicated: `tablesDB.createMigration`
+ * - Already-dedicated product DB: product `update` with `specification`
+ */
+export async function updateProductDatabaseSpecification(
+  projectId: string,
+  databaseId: string,
+  dbKind: DatabaseRouteKind,
+  specification: string,
+  currentSpecification?: string | null,
+  name?: string,
+) {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+  const trimmed = specification.trim()
+  if (!trimmed || isServerlessDatabaseSpecId(trimmed)) {
+    throw new Error('A dedicated specification is required.')
+  }
+
+  const currentIsServerless =
+    !currentSpecification?.trim() ||
+    isServerlessDatabaseSpecId(currentSpecification)
+
+  if (dbKind === 'tablesdb' && currentIsServerless) {
+    return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+  }
+
+  return updateProductDatabaseSpecificationViaUpdate(
+    projectId,
+    databaseId,
+    dbKind,
+    trimmed,
+    name,
+  )
 }
 
 /**
@@ -1511,26 +1667,77 @@ export async function createNativeDatabase(
   })
 }
 
-/** True when any feature needing the shared compute-tier specs endpoint is on. */
+/** True when any feature needing a compute-tier specs endpoint is on. */
 function isDatabaseSpecificationsSupported(): boolean {
   const features = getActiveProfileFeatures()
   return (
     features.dedicatedDbsSupport ||
+    features.dedicatedDbsDocumentsDB ||
+    features.dedicatedDbsVectorsDB ||
     features.nativeDbsPostgres ||
     features.nativeDbsMySQL ||
     features.nativeDbsMongo
   )
 }
 
-export async function fetchDatabaseSpecifications(projectId: string) {
-  if (!projectId || !isDatabaseSpecificationsSupported()) {
+function isDatabaseSpecificationsSourceSupported(
+  source: DedicatedDatabaseSource,
+): boolean {
+  const features = getActiveProfileFeatures()
+  if (source.type === 'product') {
+    if (source.api === 'documentsdb') return features.dedicatedDbsDocumentsDB
+    if (source.api === 'vectorsdb') return features.dedicatedDbsVectorsDB
+    return features.dedicatedDbsSupport
+  }
+  const engine = source.engine.toLowerCase()
+  if (engine === 'mysql' || engine === 'mariadb') return features.nativeDbsMySQL
+  if (engine === 'mongodb' || engine === 'mongo') return features.nativeDbsMongo
+  return features.nativeDbsPostgres || features.dedicatedDbsVectorsDB
+}
+
+/**
+ * Spec sources enabled for the active console profile. Used when a screen
+ * needs a merged catalog (billing, mixed database lists).
+ */
+export function enabledDatabaseSpecificationsSources(): DedicatedDatabaseSource[] {
+  const features = getActiveProfileFeatures()
+  const sources: DedicatedDatabaseSource[] = []
+  if (features.dedicatedDbsSupport) {
+    sources.push({ type: 'product', api: 'tablesdb' })
+  }
+  if (features.dedicatedDbsDocumentsDB) {
+    sources.push({ type: 'product', api: 'documentsdb' })
+  }
+  if (features.dedicatedDbsVectorsDB) {
+    sources.push({ type: 'product', api: 'vectorsdb' })
+  }
+  if (features.nativeDbsPostgres || features.dedicatedDbsVectorsDB) {
+    sources.push({ type: 'engine', engine: 'postgresql' })
+  }
+  if (features.nativeDbsMySQL) {
+    sources.push({ type: 'engine', engine: 'mysql' })
+  }
+  if (features.nativeDbsMongo) {
+    sources.push({ type: 'engine', engine: 'mongodb' })
+  }
+  return sources
+}
+
+export async function fetchDatabaseSpecifications(
+  projectId: string,
+  source: DedicatedDatabaseSource,
+) {
+  if (
+    !projectId ||
+    !isDatabaseSpecificationsSupported() ||
+    !isDatabaseSpecificationsSourceSupported(source)
+  ) {
     return { specifications: [], total: 0, pricing: null }
   }
 
-  // Compute tiers are shared across engines; postgres is the representative set.
-  const response = await dedicatedEngineService(
+  const response = await dedicatedDatabaseService(
     sdk.forProject(projectId),
-    'postgres',
+    source,
   ).listSpecifications()
 
   return {
@@ -1540,12 +1747,74 @@ export async function fetchDatabaseSpecifications(projectId: string) {
   }
 }
 
+/**
+ * Merge specifications from every enabled product/engine service.
+ * Prefer first occurrence of a given spec id (product sources are listed first).
+ */
+export async function fetchMergedDatabaseSpecifications(projectId: string) {
+  if (!projectId || !isDatabaseSpecificationsSupported()) {
+    return { specifications: [], total: 0, pricing: null }
+  }
+
+  const sources = enabledDatabaseSpecificationsSources()
+  const settled = await Promise.allSettled(
+    sources.map((source) => fetchDatabaseSpecifications(projectId, source)),
+  )
+
+  const byId = new Map<string, Models.DedicatedDatabaseSpecification>()
+  let pricing: Models.DedicatedDatabaseSpecificationPricing | null = null
+
+  for (const result of settled) {
+    if (result.status !== 'fulfilled') continue
+    if (!pricing && result.value.pricing) {
+      pricing = result.value.pricing
+    }
+    for (const spec of result.value.specifications) {
+      const key = spec.slug?.trim()
+      if (!key || byId.has(key)) continue
+      byId.set(key, spec)
+    }
+  }
+
+  const specifications = Array.from(byId.values())
+  return {
+    specifications,
+    total: specifications.length,
+    pricing,
+  }
+}
+
 export function databaseSpecificationsQueryOptions(
+  projectId: string | null | undefined,
+  source: DedicatedDatabaseSource,
+) {
+  return queryOptions({
+    queryKey: [
+      'database-specifications',
+      'project',
+      projectId,
+      dedicatedDatabaseSourceKey(source),
+    ],
+    queryFn: () => fetchDatabaseSpecifications(projectId!, source),
+    enabled:
+      !!projectId &&
+      isDatabaseSpecificationsSupported() &&
+      isDatabaseSpecificationsSourceSupported(source),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function mergedDatabaseSpecificationsQueryOptions(
   projectId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: ['database-specifications', 'project', projectId],
-    queryFn: () => fetchDatabaseSpecifications(projectId!),
+    queryKey: ['database-specifications', 'project', projectId, 'merged'],
+    queryFn: () => fetchMergedDatabaseSpecifications(projectId!),
     enabled: !!projectId && isDatabaseSpecificationsSupported(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1558,8 +1827,23 @@ export function databaseSpecificationsQueryOptions(
 
 export function useDatabaseSpecifications(
   projectId: string | null | undefined,
+  source: DedicatedDatabaseSource,
 ) {
-  return useQuery(databaseSpecificationsQueryOptions(projectId))
+  return useQuery(databaseSpecificationsQueryOptions(projectId, source))
+}
+
+export function useMergedDatabaseSpecifications(
+  projectId: string | null | undefined,
+) {
+  return useQuery(mergedDatabaseSpecificationsQueryOptions(projectId))
+}
+
+export type { DedicatedDatabaseSource }
+export {
+  dedicatedDatabaseSourceFromDatabaseType,
+  dedicatedDatabaseSourceFromEngine,
+  dedicatedDatabaseSourceFromRouteKind,
+  POSTGRES_DATABASE_SPECS_SOURCE,
 }
 
 /** True when at least one native DB engine (PostgreSQL/MySQL/MongoDB) is available. */
@@ -1676,6 +1960,19 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
     .flatMap((r) => r.value.databases ?? [])
     .sort((a, b) => (a.$createdAt < b.$createdAt ? 1 : -1))
     .slice(0, MERGED_DATABASE_LIST_LIMIT)
+
+  // Product-owned dedicated rows carry `api` (tablesdb/documentsdb/vectorsdb).
+  // Seed routing so list cards never probe other product APIs by ID.
+  for (const db of databases) {
+    const api = db.api?.toLowerCase().trim()
+    if (
+      api === 'tablesdb' ||
+      api === 'documentsdb' ||
+      api === 'vectorsdb'
+    ) {
+      seedDatabaseProductRouteKind(projectId, db.$id, api)
+    }
+  }
 
   // Sum each engine's server-side count so `total` stays accurate even when the
   // merged list is capped at MERGED_DATABASE_LIST_LIMIT.

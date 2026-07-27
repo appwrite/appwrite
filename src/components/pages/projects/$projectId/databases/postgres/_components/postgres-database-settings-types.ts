@@ -8,12 +8,13 @@ export type PostgresDatabaseSettingsCardProps = {
   canWrite: boolean
   /**
    * Where getReplicas / failover / HA updates are routed.
+   * Product DBs must use `{ type: 'product', api }`; native DBs use the engine.
    * Defaults to the native PostgreSQL engine.
    */
   replicationSource?: DedicatedReplicationSource
   /**
-   * Engine used for HA updates that require engine APIs (replicas + syncMode).
-   * Defaults to `database.engine` or postgresql.
+   * Backing engine hint for engine-only UI (e.g. Postgres connection metrics).
+   * Not used for product-owned HA mutations. Defaults to `database.engine`.
    */
   haEngine?: string
 }

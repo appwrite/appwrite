@@ -41,11 +41,6 @@ export const DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['primary', 'main', 'leader', 'failover', 'promote', 'promotion'],
   },
   {
-    sectionId: 'replication',
-    title: 'Sync mode',
-    keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
-  },
-  {
     sectionId: 'security',
     title: 'Permissions',
     keywords: ['permissions', 'rls', 'row level', 'access', 'security'],

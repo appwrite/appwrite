@@ -11,9 +11,6 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  dedicatedEngineService,
-} from '@/lib/databases/dedicated-engine'
-import {
   dedicatedReplicationService,
   dedicatedReplicationSourceKey,
   type DedicatedReplicationSource,
@@ -174,28 +171,55 @@ export function useCreateDedicatedDatabaseFailover(
 export type UpdateDedicatedDatabaseHaInput = {
   replicas?: number
   syncMode?: string
+  /** Required by documentsDB / vectorsDB update; optional for tablesDB. */
+  name?: string
 }
 
 /**
- * Update HA fields on the backing dedicated engine (replicas + syncMode).
- * Product SDKs accept `replicas` but not `syncMode`; engine update covers both.
+ * Update HA fields on the owning API for this database.
+ *
+ * Product-owned DBs (tablesDB / documentsDB / vectorsDB) must be updated via
+ * the product SDK. Engine services reject mutations on product-owned IDs
+ * ("reached only through their product APIs"). Product `update` accepts
+ * `replicas` only; `syncMode` is engine-native.
  */
 export async function updateDedicatedDatabaseHa(
   projectId: string,
   databaseId: string,
-  engine: string,
+  source: DedicatedReplicationSource,
   input: UpdateDedicatedDatabaseHaInput,
 ) {
-  return dedicatedEngineService(sdk.forProject(projectId), engine).update({
+  const service = dedicatedReplicationService(
+    sdk.forProject(projectId),
+    source,
+  )
+
+  if (source.type === 'product') {
+    if (input.syncMode != null && input.replicas == null) {
+      throw new Error(
+        'Sync mode can only be updated on native dedicated databases.',
+      )
+    }
+    return service.update({
+      databaseId,
+      ...(input.name != null && input.name !== ''
+        ? { name: input.name }
+        : {}),
+      ...(input.replicas != null ? { replicas: input.replicas } : {}),
+    })
+  }
+
+  const { name: _name, ...engineInput } = input
+  return service.update({
     databaseId,
-    ...input,
+    ...engineInput,
   })
 }
 
 export function useUpdateDedicatedDatabaseHa(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  engine: string,
+  source: DedicatedReplicationSource,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -204,7 +228,7 @@ export function useUpdateDedicatedDatabaseHa(
       return updateDedicatedDatabaseHa(
         projectId!,
         databaseId!,
-        engine,
+        source,
         input,
       )
     },

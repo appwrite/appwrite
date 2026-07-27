@@ -5,6 +5,7 @@ import {
 } from '@/lib/database-specs'
 import { isPostgresClientBackend } from '@/lib/postgres-metrics'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   usePostgresActiveConnections,
   usePostgresDatabase,
@@ -38,7 +39,7 @@ export function PostgresConnectionsHeaderLimit({
 }: PostgresConnectionsHeaderLimitProps) {
   const t = useT()
   const { database } = usePostgresDatabase(projectId, databaseId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
   const { connections, isLoading } = usePostgresActiveConnections(
     projectId,
     databaseId,

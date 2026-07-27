@@ -149,7 +149,8 @@ function formatLagSeconds(
   lagSeconds: number | null | undefined,
   t: ReturnType<typeof useT>,
 ) {
-  if (isPrimaryRole(role)) return t('N/A')
+  // Primary is the source of truth; lag only applies to replicas.
+  if (isPrimaryRole(role)) return '—'
   if (lagSeconds == null || !Number.isFinite(lagSeconds)) return t('N/A')
   return t('{seconds}s lag').replace('{seconds}', String(lagSeconds))
 }

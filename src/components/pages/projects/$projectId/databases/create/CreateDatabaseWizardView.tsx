@@ -54,7 +54,8 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
-  enableProductDatabasePitr,
+  dedicatedDatabaseSourceFromDatabaseType,
+  dedicatedDatabaseSourceFromEngine,
   fetchBackupPolicies,
   fetchDedicatedBackupPolicies,
   refetchProjectDatabaseLists,
@@ -65,6 +66,7 @@ import {
   waitForCreatedDatabaseWorkspaceReady,
   useOrganizationPlan,
   useProject,
+  type DedicatedDatabaseSource,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -200,6 +202,19 @@ function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
   return t === 'Postgres' ? 'postgres' : 'mysql'
 }
 
+function specificationsSourceForWizardType(
+  dbType: DatabaseTypeOption | null,
+): DedicatedDatabaseSource | null {
+  if (!dbType) return null
+  if (dbType === 'Postgres') {
+    return dedicatedDatabaseSourceFromEngine('postgresql')
+  }
+  if (dbType === 'MySQL') {
+    return dedicatedDatabaseSourceFromEngine('mysql')
+  }
+  return dedicatedDatabaseSourceFromDatabaseType(wizardBackend(dbType))
+}
+
 export function CreateDatabaseWizardView() {
   const t = useT()
   const { projectId } = useParams({ strict: false })
@@ -213,8 +228,20 @@ export function CreateDatabaseWizardView() {
   const supportsDedicatedDatabaseCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
 
+  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
+  const specificationsSource = useMemo(
+    () => specificationsSourceForWizardType(dbType),
+    [dbType],
+  )
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useQuery(databaseSpecificationsQueryOptions(pid))
+    useQuery({
+      ...databaseSpecificationsQueryOptions(
+        pid,
+        specificationsSource ??
+          dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb),
+      ),
+      enabled: !!pid && !!specificationsSource,
+    })
   const apiSpecOptions = useMemo(
     () => mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
     [specificationsData?.specifications],
@@ -227,8 +254,6 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
-
-  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
@@ -731,7 +756,8 @@ export function CreateDatabaseWizardView() {
     const trimmedName = name.trim()
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
-    const showPitrStep = pitrEnabled
+    // Product APIs have no PITR mutation; never enable/wait via engine for product IDs.
+    const showPitrStep = pitrEnabled && isNativeDatabaseType(dbType)
     const shouldCreateBackupPolicies =
       features.databaseBackups &&
       planBackupsEnabled === true &&
@@ -801,14 +827,6 @@ export function CreateDatabaseWizardView() {
 
       if (showPitrStep) {
         setSetupPhase('enabling-pitr')
-        if (!isNativeDatabaseType(dbType) && dbType) {
-          await enableProductDatabasePitr(
-            pid,
-            database.$id,
-            wizardBackend(dbType),
-            project?.region,
-          )
-        }
         const pitrReady = await waitForCreatedDatabasePitrReady(
           pid,
           database.$id,

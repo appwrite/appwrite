@@ -16,6 +16,7 @@ import {
 } from '@/lib/database-specs'
 import { postgresNav } from '@/lib/postgres-database-routes'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   usePostgresDatabase,
   useProject,
@@ -119,7 +120,7 @@ export function PostgresSpecificationCard({
     databaseId,
   )
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useDatabaseSpecifications(projectId)
+  useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
 
   const specs = useMemo(
     () =>
