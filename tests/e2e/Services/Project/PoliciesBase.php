@@ -707,10 +707,10 @@ trait PoliciesBase
 
     public function testUpdateSessionDurationPolicyMin(): void
     {
-        $response = $this->updateSessionDurationPolicy(5);
+        $response = $this->updateSessionDurationPolicy(60);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5, $response['body']['authDuration']);
+        $this->assertSame(60, $response['body']['authDuration']);
 
         // Cleanup
         $this->updateSessionDurationPolicy(31536000);
@@ -726,7 +726,7 @@ trait PoliciesBase
 
     public function testUpdateSessionDurationPolicyBelowMin(): void
     {
-        $response = $this->updateSessionDurationPolicy(4);
+        $response = $this->updateSessionDurationPolicy(59);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -930,10 +930,10 @@ trait PoliciesBase
 
     public function testUpdateUserLimitPolicyMax(): void
     {
-        $response = $this->updateUserLimitPolicy(5000);
+        $response = $this->updateUserLimitPolicy(10000);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authLimit']);
+        $this->assertSame(10000, $response['body']['authLimit']);
 
         // Cleanup
         $this->updateUserLimitPolicy(null);
@@ -953,16 +953,24 @@ trait PoliciesBase
         $this->assertSame(0, $project['body']['authLimit']);
     }
 
-    public function testUpdateUserLimitPolicyBelowMin(): void
+    public function testUpdateUserLimitPolicyZeroMeansUnlimited(): void
     {
         $response = $this->updateUserLimitPolicy(0);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['authLimit']);
+    }
+
+    public function testUpdateUserLimitPolicyBelowMin(): void
+    {
+        $response = $this->updateUserLimitPolicy(-1);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
     public function testUpdateUserLimitPolicyAboveMax(): void
     {
-        $response = $this->updateUserLimitPolicy(5001);
+        $response = $this->updateUserLimitPolicy(10001);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }

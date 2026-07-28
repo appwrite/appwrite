@@ -774,7 +774,7 @@ Http::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
-        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
 
         if ($sessionLimit === 0) {
             return;
