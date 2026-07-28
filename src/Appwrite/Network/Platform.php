@@ -32,6 +32,21 @@ class Platform
      * development works without registering a platform. IPv6 is bracketed to
      * match what parse_url() returns for a host.
      *
+     * Trusting these for credentialed CORS is deliberate. It cannot be turned
+     * against a remote page: a credentialed response must carry an
+     * Access-Control-Allow-Origin that literally equals the caller's own origin
+     * (the wildcard is illegal with credentials), so the only way to reach an
+     * API this way is to genuinely serve the page from a loopback port on the
+     * user's own machine. `localhost` was already trusted like this wherever
+     * _APP_CONSOLE_DOMAIN keeps its default, and 127.0.0.1 and [::1] address
+     * the very same interface.
+     *
+     * Match exactly, and on the host only. A prefix or substring test would
+     * wrongly accept remote hosts such as `127.0.0.1.example.com`, `xlocalhost`
+     * or `[::1].evil.com`. Spellings outside this list (`127.0.0.2`,
+     * `0:0:0:0:0:0:0:1`, `localhost.`) fail closed and fall through to the
+     * configured allow list.
+     *
      * @var array<string>
      */
     public const array LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];

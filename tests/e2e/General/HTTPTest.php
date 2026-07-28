@@ -179,6 +179,11 @@ final class HTTPTest extends Scope
                 'origin' => $origin,
             ]);
             $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was not allowed');
+
+            // Trusting loopback with credentials relies on the origin being
+            // echoed verbatim, so the browser's literal match still applies
+            $this->assertNotEquals('*', $response['headers']['access-control-allow-origin']);
+            $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         }
 
         /**
@@ -191,9 +196,14 @@ final class HTTPTest extends Scope
             'http://localhost.example.com',
             'http://128.0.0.1',
             'http://[2001:db8::1]',
+            // A prefix or substring match would wrongly accept these
+            'http://xlocalhost',
+            'http://127.0.0.1x.example.com',
+            'http://[::1].evil.com',
             // Only the exact loopback spellings are hardcoded
             'http://127.0.0.2',
             'http://[0:0:0:0:0:0:0:1]',
+            'http://localhost.',
         ];
 
         foreach ($origins as $origin) {

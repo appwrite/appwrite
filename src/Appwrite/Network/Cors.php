@@ -77,8 +77,9 @@ final class Cors
             return $headers;
         }
 
-        // Match only by host. Loopback clients are always allowed, so local
-        // development needs no platform registration.
+        // Match only by host. Loopback clients are always allowed so local
+        // development needs no platform registration; see
+        // Platform::LOOPBACK_HOSTNAMES for why that is safe with credentials.
         if (!\in_array($host, Platform::LOOPBACK_HOSTNAMES, true)) {
             $validator = new Hostname($this->allowedHosts);
             if (!$validator->isValid($host)) {
@@ -86,7 +87,8 @@ final class Cors
             }
         }
 
-        // Accepted
+        // Accepted. Echo the caller's origin exactly, never a wildcard, so the
+        // browser's own literal-match rule stays the last line of defence.
         $headers[self::HEADER_ALLOW_ORIGIN] = $origin;
 
         return $headers;

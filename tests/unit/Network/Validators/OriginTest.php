@@ -105,9 +105,16 @@ final class OriginTest extends TestCase
         $this->assertEquals(false, $validator->isValid('http://128.0.0.1'));
         $this->assertEquals(false, $validator->isValid('http://[2001:db8::1]'));
 
+        /* A prefix or substring match would wrongly accept these */
+        $this->assertEquals(false, $validator->isValid('http://xlocalhost'));
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1x.example.com'));
+        $this->assertEquals(false, $validator->isValid('http://[::1].evil.com'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]evil.com'));
+
         /* Only the exact loopback spellings are hardcoded */
         $this->assertEquals(false, $validator->isValid('http://127.0.0.2'));
         $this->assertEquals(false, $validator->isValid('http://[0:0:0:0:0:0:0:1]'));
+        $this->assertEquals(false, $validator->isValid('http://localhost.'));
 
         /* Loopback does not bypass the scheme allow list */
         $this->assertEquals(false, $validator->isValid('random-scheme://127.0.0.1'));
