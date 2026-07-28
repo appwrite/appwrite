@@ -80,9 +80,10 @@ readonly class Deployments
     /**
      * Finalizes the deployment document (see upload() for what `$deployment`
      * should carry) and dispatches it for building from its own uploaded
-     * source. Deactivates any other active deployment for $resource, marks
-     * it queued and writes its buildPath. Returns the persisted, updated
-     * deployment.
+     * source. Marks it queued, writes its buildPath and deactivates any other
+     * active deployment for $resource. A deployment canceled before it is
+     * queued is left canceled and never dispatched. Returns the persisted,
+     * updated deployment.
      */
     public function createFromUpload(Document $resource, Document $deployment): Document
     {
@@ -128,22 +129,44 @@ readonly class Deployments
 
     private function submit(Document $resource, Document $deployment, ?array $source): Document
     {
+        // The caller may have been holding this deployment for a while (the
+        // Builds worker pushes a template commit first), so its status is stale
+        // by now — dropping it keeps upload() from writing a cancel away, and
+        // the queued transition below is guarded instead.
+        $deployment->removeAttribute('status');
         $deployment = $this->upload($resource, $deployment);
-        $this->deactivateOthers($resource, $deployment);
 
-        $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
-        ]));
+        ]), [
+            Query::equal('$id', [$deployment->getId()]),
+            Query::notEqual('status', 'canceled'),
+        ]);
+
+        $deployment = $this->dbForProject->getDocument('deployments', $deployment->getId());
+
+        // Canceled before it could be queued: leave it canceled, submit nothing,
+        // and leave the currently active deployment alone.
+        if ($queued === 0) {
+            return $deployment;
+        }
+
+        $this->deactivateOthers($resource, $deployment);
 
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
-            $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            // Guarded like the transition above: a cancel that landed while the
+            // job was being submitted must not be reported as a failure.
+            $this->dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'failed',
                 'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
                 'buildEndedAt' => DateTime::now(),
-            ]));
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
 
             throw $error;
         }
@@ -163,7 +186,7 @@ readonly class Deployments
 
     /**
      * Deactivates any other active deployment for $resource before this one
-     * goes live, called right before the deployment is marked queued.
+     * goes live, called once the deployment is queued for building.
      */
     protected function deactivateOthers(Document $resource, Document $deployment): void
     {
