@@ -20,6 +20,7 @@ export const API_REFERENCE_NAV_SERVICE_ORDER = [
   'vectorsDB',
   'postgresql',
   'mysql',
+  'mongo',
   'sites',
   'storage',
   'functions',
@@ -49,6 +50,7 @@ export const API_REFERENCE_PRODUCT_GROUPS: ApiReferenceProductGroupDefinition[] 
         'vectorsDB',
         'postgresql',
         'mysql',
+        'mongo',
       ],
     },
     {

@@ -228,7 +228,7 @@ export function PostgresConnectionDrawer({
                       >
                         {typeLabel}
                       </Badge>
-                      {stateLabel === '—' ? null : (
+                      {stateLabel === '-' ? null : (
                         <Badge
                           variant={connectionStateBadgeVariant(
                             connection.state,
@@ -249,13 +249,13 @@ export function PostgresConnectionDrawer({
                       <span
                         className={cn(
                           usernameLabel !== 'System' &&
-                            usernameLabel !== '—' &&
+                            usernameLabel !== '-' &&
                             'font-medium text-foreground',
                         )}
                       >
                         {usernameLabel}
                       </span>
-                      {databaseLabel !== '—' ? (
+                      {databaseLabel !== '-' ? (
                         <>
                           <span className="mx-1.5 text-border">·</span>
                           <span className="font-mono">{databaseLabel}</span>
@@ -299,7 +299,7 @@ export function PostgresConnectionDrawer({
                     <p
                       className={cn(
                         'text-[13px]',
-                        usernameLabel === 'System' || usernameLabel === '—'
+                        usernameLabel === 'System' || usernameLabel === '-'
                           ? 'text-muted-foreground'
                           : 'font-medium text-foreground',
                       )}
@@ -332,8 +332,8 @@ export function PostgresConnectionDrawer({
               <DetailSection title={t('Activity')}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <DetailField label={t('Connection state')}>
-                    {stateLabel === '—' ? (
-                      <p className="text-[13px] text-muted-foreground">—</p>
+                    {stateLabel === '-' ? (
+                      <p className="text-[13px] text-muted-foreground">-</p>
                     ) : (
                       <Badge
                         variant={connectionStateBadgeVariant(
@@ -361,21 +361,21 @@ export function PostgresConnectionDrawer({
                     {connection.backendStart ? (
                       <DateTooltip date={connection.backendStart} />
                     ) : (
-                      <p className="text-[13px] text-muted-foreground">—</p>
+                      <p className="text-[13px] text-muted-foreground">-</p>
                     )}
                   </DetailField>
                   <DetailField label={t('Query start')}>
                     {connection.queryStart ? (
                       <DateTooltip date={connection.queryStart} />
                     ) : (
-                      <p className="text-[13px] text-muted-foreground">—</p>
+                      <p className="text-[13px] text-muted-foreground">-</p>
                     )}
                   </DetailField>
                   <DetailField label={t('State change')} className="sm:col-span-2">
                     {connection.stateChange ? (
                       <DateTooltip date={connection.stateChange} />
                     ) : (
-                      <p className="text-[13px] text-muted-foreground">—</p>
+                      <p className="text-[13px] text-muted-foreground">-</p>
                     )}
                   </DetailField>
                 </div>

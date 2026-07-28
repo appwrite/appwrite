@@ -44,7 +44,7 @@ export function registerConsoleAccountGet(fn: RawConsoleAccountGet): void {
   rawConsoleAccountGet = fn
 }
 
-/** Partial auth (MFA pending) is not a guest session — do not cache or replay as 401. */
+/** Partial auth (MFA pending) is not a guest session - do not cache or replay as 401. */
 function isConsoleMfaRequiredError(error: unknown): boolean {
   return (
     error instanceof AppwriteException &&

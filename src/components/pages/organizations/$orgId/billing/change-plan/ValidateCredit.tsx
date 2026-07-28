@@ -16,6 +16,7 @@ import { fetchCouponAccount } from '@/lib/react-query/hooks'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 interface ValidateCreditModalProps {
@@ -160,6 +161,7 @@ export function ValidateCreditModal({
           <Button
             onClick={() => void handleApply()}
             disabled={!trimmedCode || isApplying}
+            {...analyticsAttrs('upgrade-apply-coupon-confirm')}
           >
             {t('Apply coupon')}
           </Button>

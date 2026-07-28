@@ -7,6 +7,7 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import {
+  fetchProjectConsoleDatabases,
   fetchProjectDatabases,
   fetchProjectTable,
   resolveProjectDatabaseType,
@@ -48,9 +49,26 @@ export function normalizeTableBreakdownResourceLabels(labels: string[]): string[
   ].slice(0, USAGE_BREAKDOWN_DRAWER_LIMIT)
 }
 
+/** Resolve a database's product route kind via a single console lookup (no per-product probing). */
+async function resolveDbKindForDatabase(
+  projectId: string,
+  databaseId: string,
+): Promise<DatabaseRouteKind | null> {
+  const { databases } = await fetchProjectConsoleDatabases(
+    projectId,
+    0,
+    1,
+    undefined,
+    [Query.equal('$id', [databaseId])],
+  ).catch(() => ({ databases: [], total: 0 }))
+  const type = databases[0]?.type
+  return type ? databaseRouteKindFromApiType(type) : null
+}
+
 async function listTablesByIdsInDatabase(
   projectId: string,
   databaseId: string,
+  dbKind: DatabaseRouteKind,
   tableIds: string[],
 ): Promise<Array<{ $id: string; name: string }>> {
   if (tableIds.length === 0) return []
@@ -65,7 +83,7 @@ async function listTablesByIdsInDatabase(
       ? Query.equal('name', names[0])
       : Query.or(names.map((name) => Query.equal('name', name)))
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = resolveProjectDatabaseType(dbKind)
 
   const listMatches = async (query: string[]) => {
     if (kind === DatabaseType.Documentsdb) {
@@ -158,15 +176,21 @@ export async function fetchTableBreakdownResources(
       if (!tableId) return
 
       if (databaseId) {
-        const table = await fetchProjectTable(projectId, databaseId, tableId).catch(
-          () => null,
-        )
-        if (!table) return
-
-        const databaseType = await resolveProjectDatabaseType(
+        const resolvedDbKind = await resolveDbKindForDatabase(
           projectId,
           databaseId,
-        ).catch(() => DatabaseType.Tablesdb)
+        ).catch(() => null)
+        if (!resolvedDbKind) return
+
+        const table = await fetchProjectTable(
+          projectId,
+          databaseId,
+          resolvedDbKind,
+          tableId,
+        ).catch(() => null)
+        if (!table) return
+
+        const databaseType = resolveProjectDatabaseType(resolvedDbKind)
 
         storeTableBreakdownResource(resources, label, {
           id: table.$id,
@@ -203,15 +227,17 @@ export async function fetchTableBreakdownResources(
     if (unresolvedTableIds.size === 0) break
     if (!database?.$id) continue
 
+    const databaseType = database.type ?? DatabaseType.Tablesdb
+    const dbKind = databaseRouteKindFromApiType(databaseType)
     const idsToQuery = [...unresolvedTableIds]
     const tables = await listTablesByIdsInDatabase(
       projectId,
       database.$id,
+      dbKind,
       idsToQuery,
     ).catch(() => [])
 
     for (const table of tables) {
-      const databaseType = database.type ?? DatabaseType.Tablesdb
       const resource: TableBreakdownResource = {
         id: table.$id,
         name: table.name,
@@ -257,7 +283,7 @@ export function getTableBreakdownResourceRoute(
 
   return {
     to: link.to,
-    params: link.params as Record<string, string>,
+    params: link.params as unknown as Record<string, string>,
   }
 }
 

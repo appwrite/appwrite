@@ -11,6 +11,11 @@ import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { pricingPlans } from '@/lib/pricing/plans'
 import type { ComparisonCell, ComparisonLinkCell, PlanId, PricingPlan } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
+import {
+  analyticsAttrs,
+  getPricingPlanCtaAnalyticsAction,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 
 export const outlineTierButtonClassName =
   'border-[var(--brand-cta)]/30 text-foreground hover:bg-[var(--brand-cta)]/10 hover:text-foreground'
@@ -28,10 +33,13 @@ export function PricingPlanCta({
   plan,
   className,
   size = 'default',
+  analyticsAction,
 }: {
-  plan: Pick<PricingPlan, 'cta' | 'ctaVariant' | 'href' | 'internal'>
+  plan: Pick<PricingPlan, 'id' | 'cta' | 'ctaVariant' | 'href' | 'internal'>
   className?: string
   size?: 'default' | 'sm'
+  /** Override default plan-id mapping (e.g. promo / compare section CTAs). */
+  analyticsAction?: AnalyticsActionId
 }) {
   const t = useT()
   const buttonClassName = cn(
@@ -40,11 +48,14 @@ export function PricingPlanCta({
     plan.ctaVariant === 'outline' && outlineTierButtonClassName,
     className,
   )
+  const action =
+    analyticsAction ?? getPricingPlanCtaAnalyticsAction(plan.id)
+  const analytics = action ? analyticsAttrs(action) : undefined
 
   if (plan.internal) {
     return (
       <Button variant={plan.ctaVariant} className={buttonClassName} asChild>
-        <Link to={plan.href} search={{ redirect: '/' }}>
+        <Link to={plan.href} search={{ redirect: '/' }} {...analytics}>
           {t(plan.cta)}
         </Link>
       </Button>
@@ -53,7 +64,7 @@ export function PricingPlanCta({
 
   return (
     <Button variant={plan.ctaVariant} className={buttonClassName} asChild>
-      <a href={plan.href} target="_blank" rel="noopener noreferrer">
+      <a href={plan.href} target="_blank" rel="noopener noreferrer" {...analytics}>
         {t(plan.cta)}
       </a>
     </Button>

@@ -31,6 +31,16 @@ export const DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     ],
   },
   {
+    sectionId: 'replication',
+    title: 'Read replicas',
+    keywords: ['replica', 'replicas', 'failover', 'ha', 'topology', 'cluster'],
+  },
+  {
+    sectionId: 'replication',
+    title: 'Primary instance',
+    keywords: ['primary', 'main', 'leader', 'failover', 'promote', 'promotion'],
+  },
+  {
     sectionId: 'security',
     title: 'Permissions',
     keywords: ['permissions', 'rls', 'row level', 'access', 'security'],

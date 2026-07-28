@@ -22,6 +22,8 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/llms/txt',
   '/llms-full/txt',
   '/upgrade',
+  '/r/v.js',
+  '/r/e',
 ] as const
 
 /** Path prefixes for authenticated console areas and non-indexable routes. */

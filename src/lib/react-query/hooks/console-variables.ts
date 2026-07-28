@@ -47,5 +47,7 @@ export function useConsoleVariables(region?: string) {
           .map((s) => s.trim())
           .filter(Boolean)
       : ([] as string[]),
+    sitesDomain: vars?._APP_DOMAIN_SITES,
+    functionsDomain: vars?._APP_DOMAIN_FUNCTIONS,
   }
 }

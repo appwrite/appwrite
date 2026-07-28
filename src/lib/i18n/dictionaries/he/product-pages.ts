@@ -263,8 +263,8 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Site domains': 'דומיינים של אתרים',
   'Site logs': 'לוגים של אתרים',
   'Sites overview': 'סקירת אתרים',
-  'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Web Application Firewall (WAF), and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.':
-    'אתרים רצים על Appwrite Network עם משלוח CDN גלובלי, הגנת DDoS, Web Application Firewall (WAF) והצפנת TLS. עומסי SSR יכולים לרוץ קרוב יותר למשתמשים בקצה, בעוד אימות, מסדי נתונים, אחסון ושירותי פרויקט אחרים נשארים באזור שבחרתם.',
+  'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Firewall, and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.':
+    'אתרים רצים על Appwrite Network עם משלוח CDN גלובלי, הגנת DDoS, Firewall והצפנת TLS. עומסי SSR יכולים לרוץ קרוב יותר למשתמשים בקצה, בעוד אימות, מסדי נתונים, אחסון ושירותי פרויקט אחרים נשארים באזור שבחרתם.',
   'Sites supports popular frameworks including Next.js, Nuxt, SvelteKit, Astro, Vue, TanStack Start, Remix, Angular, React, and more. Static hosting works with any framework that outputs HTML assets; SSR is available for supported server-rendered stacks. See the frameworks page for build settings per preset.':
     'אתרים תומכים ב-frameworks פופולריים כולל Next.js, Nuxt, SvelteKit, Astro, Vue, TanStack Start, Remix, Angular, React ועוד. אירוח סטטי עובד עם כל framework שמפיק נכסי HTML; SSR זמין לסטאקים נתמכים עם רינדור בשרת. ראו את דף ה-frameworks להגדרות Build לכל פריסט.',
   'Spend less time waiting on builds and more time shipping updates. Cached dependencies speed up repeat deploys, path filters help monorepos skip unnecessary rebuilds, and deployment retention automatically removes old inactive deployments to save storage. Tune build and runtime CPU and memory when compilation or SSR needs more headroom.':
@@ -350,8 +350,8 @@ export const heProductPagesDictionary: Record<string, string> = {
     'כן. פונקציות מקבלות מפתח API דינמי ורצות בהקשר פרויקט. הגדירו scopes בהגדרות, ואז קראו למסדי נתונים, אחסון, הודעות, אימות ו-APIs אחרים מ-server SDKs בתוך ה-handler.',
   'Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user\'s first successful sign-in.':
     'כן. ייבאו משתמשים דרך הקונסולה או Users API עם Server SDK. לחשבונות אימייל וסיסמה, צרו משתמשים עם סיסמאות בטקסט רגיל או ייבאו hashes סיסמה קיימים כשהספק משתמש באלגוריתם נתמך: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5 או PHPass. סיסמאות חדשות נשמרות עם Argon2. Hashes שיובאו מאלגוריתמים אחרים משודרגים ל-Argon2 אחרי ההתחברות המוצלחת הראשונה של המשתמש.',
-  'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and WAF.':
-    'כן. רכשו דומיינים מלשונית Domains בארגון ונהלו רשומות עם Appwrite DNS באותה קונסולה. חברו את הדומיין לאתר ל-TLS אוטומטי, או השתמשו ב-URL שנוצר ב-.appwrite.network בזמן שמגדירים DNS. דומייני apex יכולים להאציל ל-Appwrite nameservers; תת-דומיינים משתמשים ברשומות CNAME. תעבורת אתרים מסופקת דרך Appwrite Network עם CDN, הגנת DDoS ו-WAF.',
+  'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and Firewall.':
+    'כן. רכשו דומיינים מלשונית Domains בארגון ונהלו רשומות עם Appwrite DNS באותה קונסולה. חברו את הדומיין לאתר ל-TLS אוטומטי, או השתמשו ב-URL שנוצר ב-.appwrite.network בזמן שמגדירים DNS. דומייני apex יכולים להאציל ל-Appwrite nameservers; תת-דומיינים משתמשים ברשומות CNAME. תעבורת אתרים מסופקת דרך Appwrite Network עם CDN, הגנת DDoS ו-Firewall.',
   'Yes. Push deployments with the Appwrite CLI from CI or your machine, or upload a .tar.gz archive from the Console for manual deploys. Git remains the recommended path for automatic builds on push and branch previews, but every deploy method uses the same build pipeline and settings.':
     'כן. דחפו פריסות עם Appwrite CLI מ-CI או מהמחשב, או העלו ארכיון .tar.gz מהקונסולה לפריסות ידניות. Git נשאר המסלול המומלץ ל-Builds אוטומטיים ב-push ותצוגות מקדימות של Branches, אבל כל שיטת פריסה משתמשת באותו צינור Build והגדרות.',
   'Yes. Request transformations through the preview endpoint to resize, crop, convert format, and adjust quality on the fly. Keep one original upload and let Appwrite generate variants on demand.':
@@ -373,4 +373,302 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Yes. Use the Server SDK from Functions, your API server, or any trusted backend with a project API key. This is the standard pattern for transactional flows such as OTP verification, password reset, order receipts, and inventory alerts triggered by platform events or custom logic.':
     'כן. השתמשו ב-Server SDK מפונקציות, שרת ה-API שלכם או כל backend מהימן עם מפתח API לפרויקט. זה התבנית הסטנדרטית לתהליכים טרנזקציוניים כמו אימות OTP, איפוס סיסמה, קבלות הזמנה והתראות מלאי שמופעלות על ידי אירועי פלטפורמה או לוגיקה מותאמת.',
   'gzip and zstd buckets': 'באקטים עם gzip ו-zstd',
+  '2 filters': '2 מסננים',
+  '3 rules': '3 כללים',
+  'Add read replicas on dedicated databases to absorb query load and improve failover resilience. Enable high availability when replica count is greater than zero, then tune sync mode and failover from Replication settings.':
+    'הוסיפו read replicas במסדי נתונים ייעודיים כדי לספוג עומס שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס, ואז כוונו מצב סנכרון ו-failover מהגדרות Replication.',
+  'Appwrite Databases include five engines in two categories. Appwrite DBs are TablesDB for relational-style tables and columns, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. Native DBs are managed PostgreSQL and MySQL for teams that need full SQL compatibility, extensions, and portable schemas.':
+    'Appwrite Databases כוללים חמישה מנועים בשתי קטגוריות. Appwrite DBs הם TablesDB לטבלאות ועמודות בסגנון יחסי, DocumentsDB למסמכי JSON גמישים, ו-VectorsDB ל-embeddings ולחיפוש דמיון. Native DBs הם PostgreSQL ו-MySQL מנוהלים לצוותים שצריכים תאימות SQL מלאה, הרחבות וסכמות ניידות.',
+  'Appwrite DBs': 'Appwrite DBs',
+  'Appwrite DBs cover tables, documents, and vectors. Native DBs bring managed PostgreSQL and MySQL when you need full SQL control. Pick the model that matches your data, then operate every engine from the same Console and project.':
+    'Appwrite DBs מכסים טבלאות, מסמכים ווקטורים. Native DBs מביאים PostgreSQL ו-MySQL מנוהלים כשצריך שליטת SQL מלאה. בחרו את המודל שמתאים לנתונים, ואז הפעילו כל מנוע מאותה קונסולה ואותו פרויקט.',
+  'Appwrite still supports legacy Collections APIs alongside TablesDB and DocumentsDB. Docs cover migration paths, compatibility notes, and how to move schemas and documents without disrupting clients.':
+    'Appwrite עדיין תומכת ב-APIs הישנים של Collections לצד TablesDB ו-DocumentsDB. התיעוד מכסה מסלולי מיגרציה, הערות תאימות, ואיך להעביר סכמות ומסמכים בלי לשבש לקוחות.',
+  'Are backups and PITR included?': 'האם גיבויים ו-PITR כלולים?',
+  'Auth linked': 'מקושר לאימות',
+  'Automate encrypted hot backups with policies, or create a manual backup when you need a snapshot now. Enable PITR on dedicated databases to restore to a specific moment after accidental deletes, failed migrations, or bad writes.':
+    'הגדירו גיבויי hot מוצפנים עם מדיניות, או צרו גיבוי ידני כשצריך snapshot עכשיו. הפעילו PITR במסדי נתונים ייעודיים כדי לשחזר לרגע מסוים אחרי מחיקות בטעות, מיגרציות שנכשלו או כתיבות שגויות.',
+  'Backups and point-in-time recovery': 'גיבויים ו-point-in-time recovery',
+  'Backups docs': 'תיעוד גיבויים',
+  'Can I query, relate, and bulk-update data from the SDKs?':
+    'האם אפשר לשאול, לקשר ולעדכן נתונים בכמות גדולה דרך ה-SDKs?',
+  'Choose how this database is provisioned.': 'בחרו איך מסד הנתונים הזה מסופק.',
+  'Choose TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, Console workflows, and Auth-aware permissions out of the box. Choose PostgreSQL or MySQL when you need advanced SQL, existing ORM tooling, extensions such as pgvector, or to run schemas you already operate elsewhere.':
+    'בחרו TablesDB, DocumentsDB או VectorsDB כשאתם רוצים Appwrite SDKs, תהליכי קונסולה והרשאות מודעות לאימות מהקופסה. בחרו PostgreSQL או MySQL כשצריך SQL מתקדם, כלי ORM קיימים, הרחבות כמו pgvector, או להריץ סכמות שאתם כבר מפעילים במקום אחר.',
+  'Commit multi-step writes atomically.': 'בצעו כתיבות מרובות שלבים באופן אטומי.',
+  'Compute model': 'מודל Compute',
+  'Compute models': 'מודלי Compute',
+  'Connect with standard SQL clients, ORMs, and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    'התחברו עם לקוחות SQL סטנדרטיים, ORMs ועורך השאילתות בקונסולה. שמרו על סכמות ניידות, השתמשו בהרחבות שהסטאק שלכם צריך, ונהלו תפקידים, חיבורים וגיבויים לצד פרויקט Appwrite.',
+  'Connections, schemas, and backups': 'חיבורים, סכמות וגיבויים',
+  'Create a database, choose your engine and compute model, and query your first data in minutes.':
+    'צרו מסד נתונים, בחרו מנוע ומודל Compute, ושאלו את הנתונים הראשונים שלכם תוך דקות.',
+  'Databases docs': 'תיעוד מסדי נתונים',
+  'Databases for every data model': 'מסדי נתונים לכל מודל נתונים',
+  'Do Appwrite DBs integrate with Auth permissions?': 'האם Appwrite DBs משתלבים עם הרשאות אימות?',
+  'Embeddings and similarity search for semantic retrieval and AI features.':
+    'Embeddings וחיפוש דמיון לשליפה סמנטית וליכולות AI.',
+  'Extensions, roles, SQL editor': 'הרחבות, תפקידים ועורך SQL',
+  'Familiar MySQL compatibility for common relational apps and migrations.':
+    'תאימות MySQL מוכרת לאפליקציות יחסיות נפוצות ולמיגרציות.',
+  'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
+    'סננו, מיינו ופגנו מה-SDKs ומהקונסולה. מדלו נתונים קשורים עם relationships, הריצו כתיבות מרובות שלבים ב-transactions, והשתמשו בפעולות bulk כשצריך לעדכן הרבה שורות או מסמכים בבת אחת.',
+  'Five engines, two categories': 'חמישה מנועים, שתי קטגוריות',
+  'Five engines for tables, documents, vectors, and native SQL':
+    'חמישה מנועים לטבלאות, מסמכים, וקטורים ו-SQL מקורי',
+  'Flexible JSON documents with filters and full-text search for evolving schemas.':
+    'מסמכי JSON גמישים עם מסננים וחיפוש טקסט מלא לסכמות שמשתנות.',
+  'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':
+    'SQL מלא, הרחבות וסכמות ניידות לעומסים יחסיים ולכלים קיימים.',
+  'HA enabled': 'HA פעיל',
+  'Hot backups with zero downtime and fast recovery.': 'גיבויי hot ללא downtime ועם שחזור מהיר.',
+  'How do replication and high availability work?': 'איך עובדים replication ו-high availability?',
+  'Ideal for prototypes': 'אידיאלי לפרוטוטיפים',
+  'Instant provisioning': 'הקצאה מיידית',
+  'Isolated compute with replicas, HA, and PITR.': 'Compute מבודד עם replicas, HA ו-PITR.',
+  'Isolated resources': 'משאבים מבודדים',
+  'Legacy collections': 'Collections ישנים',
+  'Legacy documents': 'מסמכים ישנים',
+  'Link related tables without custom joins.': 'קשרו טבלאות קשורות בלי joins מותאמים.',
+  'Native DBs': 'Native DBs',
+  'Native SQL for PostgreSQL and MySQL': 'SQL מקורי ל-PostgreSQL ו-MySQL',
+  'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
+    'במסדי נתונים ייעודיים אפשר להוסיף read replicas כדי להרחיב תעבורת שאילתות ולשפר חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. הגדירו מצב סנכרון ו-failover מהגדרות Replication בקונסולה למנועים נתמכים.',
+  'Permissions wired to Auth': 'הרשאות שמחוברות לאימות',
+  'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.':
+    'בחרו את המנוע שמתאים לעומס שלכם, ואז הגדילו אותו באותה דרך. Appwrite Databases מכסים טבלאות מובנות, מסמכים, וקטורים ו-SQL מקורי, עם Compute Serverless או ייעודי, replication, גיבויים ו-point-in-time recovery.',
+  'Queries docs': 'תיעוד שאילתות',
+  'Queries, relationships, and transactions': 'שאילתות, relationships ו-transactions',
+  'Read replicas & HA': 'Read replicas ו-HA',
+  'Relational-style tables, columns, and indexes for structured data and complex queries.':
+    'טבלאות, עמודות ואינדקסים בסגנון יחסי לנתונים מובנים ולשאילתות מורכבות.',
+  'Relationships': 'Relationships',
+  'Replication and high availability': 'Replication ו-high availability',
+  'Restore to a specific moment beyond the latest backup.': 'שחזרו לרגע מסוים מעבר לגיבוי האחרון.',
+  'Row-level permissions': 'הרשאות ברמת שורה',
+  'Scale query traffic and improve failover resilience.': 'הרחיבו תעבורת שאילתות ושפרו חוסן failover.',
+  'Scope access with Auth users, teams, and roles.': 'הגדירו גישה עם משתמשי אימות, צוותים ותפקידים.',
+  'Scope TablesDB and DocumentsDB access with users, teams, and roles from Appwrite Auth. Set rules at the table, collection, row, or document level so each tenant only sees their data.':
+    'הגדירו גישה ל-TablesDB ו-DocumentsDB עם משתמשים, צוותים ותפקידים מ-Appwrite Auth. הגדירו כללים ברמת טבלה, collection, שורה או מסמך כדי שכל לקוח יראה רק את הנתונים שלו.',
+  'Serverless databases run on a shared pool and are the fastest way to start. Billing is usage-based: there is no fixed compute fee, and you pay for storage plus reads and writes against your plan quota (then overage). Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production options such as read replicas, high availability, and point-in-time recovery. Billing is a fixed monthly compute tier per database (from $10/mo), with reads and writes included in the tier. HA replicas and PITR are optional add-ons, and extra storage or bandwidth is billed as overage. You pick a specification when you create the database and can upgrade later.':
+    'מסדי נתונים Serverless רצים על מאגר משותף והם הדרך המהירה ביותר להתחיל. החיוב מבוסס שימוש: אין דמי Compute קבועים, ומשלמים על אחסון ועל קריאות וכתיבות לפי מכסת התוכנית (ואחר כך overage). מסדי נתונים ייעודיים מקצים Compute מבודד לביצועים צפויים, מגבלות חיבור גבוהות יותר ואפשרויות פרודקשן כמו read replicas, high availability ו-point-in-time recovery. החיוב הוא שכבת Compute חודשית קבועה לכל מסד נתונים (מ-$10 לחודש), עם קריאות וכתיבות כלולות בשכבה. HA replicas ו-PITR הם add-ons אופציונליים, ואחסון או רוחב פס עודפים מחויבים כ-overage. בוחרים specification ביצירה ואפשר לשדרג אחר כך.',
+  'Serverless or dedicated compute': 'Compute Serverless או ייעודי',
+  'Shared compute pool': 'מאגר Compute משותף',
+  'Shared pool. Fast to create, no capacity planning.': 'מאגר משותף. יצירה מהירה, בלי תכנון קיבולת.',
+  'Start on a shared serverless pool when you want speed and simplicity. Move to dedicated specifications when you need isolated resources, higher connection limits, and production options like replicas and PITR. Choose at create time or upgrade later.':
+    'התחילו במאגר Serverless משותף כשאתם רוצים מהירות ופשטות. עברו ל-specifications ייעודיים כשצריך משאבים מבודדים, מגבלות חיבור גבוהות יותר ואפשרויות פרודקשן כמו replicas ו-PITR. בחרו ביצירה או שדרגו אחר כך.',
+  'Store and query data with TablesDB, DocumentsDB, VectorsDB, PostgreSQL, and MySQL. Choose serverless or dedicated, with replication, backups, and PITR.':
+    'שמרו ושאלו נתונים עם TablesDB, DocumentsDB, VectorsDB, PostgreSQL ו-MySQL. בחרו Serverless או ייעודי, עם replication, גיבויים ו-PITR.',
+  'Transactions': 'Transactions',
+  'What database engines does Appwrite offer?': 'אילו מנועי מסדי נתונים Appwrite מציעה?',
+  'What is the difference between serverless and dedicated databases?':
+    'מה ההבדל בין מסדי נתונים Serverless לייעודיים?',
+  'When should I use Appwrite DBs vs native PostgreSQL or MySQL?':
+    'מתי להשתמש ב-Appwrite DBs מול PostgreSQL או MySQL מקוריים?',
+  'Yes on Appwrite Cloud for supported plans and engines. Create automated backup policies or run manual backups from the Backups tab. Point-in-time recovery (PITR) on dedicated databases lets you restore to a specific moment beyond the latest scheduled backup, which helps after accidental deletes, failed migrations, or bad writes.':
+    'כן ב-Appwrite Cloud לתוכניות ולמנועים נתמכים. צרו מדיניות גיבוי אוטומטית או הריצו גיבויים ידניים מלשונית Backups. Point-in-time recovery (PITR) במסדי נתונים ייעודיים מאפשר לשחזר לרגע מסוים מעבר לגיבוי המתוזמן האחרון, וזה עוזר אחרי מחיקות בטעות, מיגרציות שנכשלו או כתיבות שגויות.',
+  'Yes. Appwrite DBs support filters, ordering, pagination, relationships, transactions, bulk operations, and geo queries through the SDKs and Console. Native PostgreSQL and MySQL databases support full SQL from the in-console editor and your existing SQL clients.':
+    'כן. Appwrite DBs תומכים במסננים, מיון, pagination, relationships, transactions, פעולות bulk ושאילתות geo דרך ה-SDKs והקונסולה. מסדי PostgreSQL ו-MySQL מקוריים תומכים ב-SQL מלא מעורך הקונסולה ומלקוחות SQL קיימים.',
+  'Yes. TablesDB and DocumentsDB permissions can reference users, teams, and roles from Appwrite Auth at the table, collection, row, and document level. Scope data per customer or workspace without building custom access control.':
+    'כן. הרשאות TablesDB ו-DocumentsDB יכולות להפנות למשתמשים, צוותים ותפקידים מ-Appwrite Auth ברמת טבלה, collection, שורה ומסמך. הגדירו נתונים לפי לקוח או workspace בלי לבנות בקרת גישה מותאמת.',
+  'Accepts writes and serves as the source of truth for replicas.':
+    'מקבל כתיבות ומשמש כמקור האמת ל-replicas.',
+  'Active Record and Data Mapper patterns for TypeScript.':
+    'תבניות Active Record ו-Data Mapper ל-TypeScript.',
+  'Connect with standard SQL clients and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    'התחברו עם לקוחות SQL סטנדרטיים ועורך השאילתות בקונסולה. שמרו על סכמות ניידות, השתמשו בהרחבות שהסטאק שלכם צריך, ונהלו תפקידים, חיבורים וגיבויים לצד פרויקט Appwrite.',
+  'Dedicated databases run behind a connection pooler with a primary for writes and read replicas for query scale and failover. Choose asynchronous, synchronous, or quorum sync mode, then promote a replica when you need to move write traffic.':
+    'מסדי נתונים ייעודיים רצים מאחורי מאגר חיבורים עם primary לכתיבות ו-read replicas להרחבת שאילתות ול-failover. בחרו מצב סנכרון Asynchronous, Synchronous או Quorum, ואז קדמו replica כשצריך להעביר תעבורת כתיבה.',
+  'Lightweight TypeScript ORM with SQL-like query builder.':
+    'ORM קל משקל ל-TypeScript עם בונה שאילתות דמוי SQL.',
+  'Official PostgreSQL CLI for ad-hoc SQL and schema exploration.':
+    'CLI רשמי של PostgreSQL ל-SQL נקודתי ולחקירת סכמות.',
+  'On serverless databases, replication and high availability are abstracted and managed by the platform, so you do not configure replicas or sync mode yourself. On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.':
+    'במסדי נתונים Serverless, replication ו-high availability מופשטים ומנוהלים על ידי הפלטפורמה, כך שאין צורך להגדיר replicas או מצב סנכרון בעצמכם. במסדי נתונים ייעודיים תעבורה יכולה להיכנס דרך מאגר חיבורים כמו PgDog או ProxySQL. מופע primary מקבל קריאה וכתיבה, ו-read replicas מרחיבים תעבורת שאילתות ומשפרים חוסן failover. High availability מופעל כשמספר ה-replicas גדול מאפס. בחרו מצב סנכרון Asynchronous, Synchronous או Quorum, וקדמו replica מהקונסולה כשצריך להעביר תעבורת כתיבה.',
+  'Promise-based ORM for Node.js with multi-dialect support.':
+    'ORM מבוסס Promise ל-Node.js עם תמיכה במספר דיאלקטים.',
+  'Proxy, primary, and read replicas for high availability.':
+    'Proxy, primary ו-read replicas ל-high availability.',
+  'Python SQL toolkit and ORM for expressive queries.':
+    'ערכת כלים ו-ORM של SQL ל-Python לשאילתות אקספרסיביות.',
+  'Routes client connections and pools traffic to the cluster.': 'מנתב חיבורי לקוח ומאגד תעבורה לאשכול.',
+  'Scale query traffic and stand ready for failover promotion.':
+    'מרחיבים תעבורת שאילתות ומוכנים לקידום ב-failover.',
+  'Type-safe schema and client for Node.js and TypeScript.': 'סכמה ולקוח type-safe ל-Node.js ול-TypeScript.',
+  'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
+    'השתמשו באותם מחרוזות חיבור עם Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql ושאר כלי ה-SQL שלכם. העתיקו snippets מוכנים מלשונית Connect בקונסולה והמשיכו לשחרר עם הסטאק שהצוות כבר מכיר.',
+  'Works with your ORM and toolstack': 'עובד עם ה-ORM והסטאק שלכם',
+
+  // Firewall product page
+  '24h ago': 'לפני 24 שעות',
+  '5 attributes': '5 מאפיינים',
+  'A specific Function execution endpoint.': 'Endpoint להרצת Function ספציפית.',
+  'A specific Site deployment hostname.': 'Hostname של פריסת Site ספציפית.',
+  'Actions docs': 'תיעוד פעולות',
+  'All conditions must match (AND).': 'כל התנאים חייבים להתאים (AND).',
+  'Allow the request and skip later Firewall rules.':
+    'אפשרו את הבקשה ודלגו על כללי Firewall הבאים.',
+  'Apply policies to the project API, a specific Function, or a specific Site. Keep production APIs locked down while preview sites and health checks stay reachable.':
+    'החילו מדיניות על ה-API של הפרויקט, על Function ספציפית או על Site ספציפי. שמרו על APIs של פרודקשן נעולים בזמן שאתרי תצוגה מקדימה ובדיקות תקינות נשארים נגישים.',
+  'Can I preview impact before enabling a rule?': 'האם אפשר לצפות בהשפעה לפני הפעלת כלל?',
+  'Choose where the rule evaluates matching traffic.':
+    'בחרו איפה הכלל מעריך תעבורה תואמת.',
+  'Condition matching': 'התאמת תנאים',
+  'Conditions docs': 'תיעוד תנאים',
+  'Continue': 'המשך',
+  'Control traffic before it reaches your app': 'שלטו בתעבורה לפני שהיא מגיעה לאפליקציה',
+  'Create your first deny, bypass, rate limit, or redirect rule from the Console and preview impact before you enable it.':
+    'צרו את כלל הדחייה, העקיפה, מגבלת הקצב או ההפניה הראשון מהקונסולה וצפו בהשפעה לפני ההפעלה.',
+  'Define project rules that match requests by IP, path, method, country, or user agent, then deny, bypass, rate limit, or redirect them before they hit your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים בקשות לפי IP, נתיב, method, מדינה או user agent, ואז דחו, עקפו, הגבילו קצב או הפנו אותן לפני שהן מגיעות ל-API, ל-Functions או ל-Sites.',
+  'Deny account mutations': 'דחיית שינויי account',
+  'Deny, bypass, rate limit, or redirect': 'דחייה, עקיפה, מגבלת קצב או הפניה',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, and Redirect sends clients to another location with a 3xx status. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny or rate limit rules.':
+    'כל כלל תואם מחיל פעולה אחת: Deny מחזיר 403, Bypass מאפשר את הבקשה ומדלג על כללים הבאים, Rate limit מגביל לפי IP של לקוח עם 429 מעל המכסה, ו-Redirect שולח לקוחות ליעד אחר עם סטטוס 3xx. אין פעולת Allow נפרדת. השתמשו ב-Bypass כדי לאפשר תעבורה שצריכה לדלג על כללי דחייה או מגבלת קצב מאוחרים יותר.',
+  'Every rule applies one action when conditions match. Deny abusive traffic with 403, bypass trusted clients past later rules, throttle per IP with rate limits, or redirect to maintenance and migration URLs.':
+    'כל כלל מחיל פעולה אחת כשהתנאים מתאימים. דחו תעבורה פוגענית עם 403, עקפו לקוחות מהימנים מעבר לכללים הבאים, הגבילו לפי IP עם מגבלות קצב, או הפנו לכתובות תחזוקה ומיגרציה.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, or user agent. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). תנאים יכולים לסנן לפי IP, נתיב בקשה, HTTP method, מדינה או user agent. כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Filter by IP address, request path, HTTP method, country, or user agent. Combine conditions with AND so a rule only fires when every filter matches.':
+    'סננו לפי כתובת IP, נתיב בקשה, HTTP method, מדינה או user agent. שלבו תנאים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'First match': 'התאמה ראשונה',
+  'Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan. Disabled rules still count toward plan limits but are not evaluated.':
+    'Firewall זמין ב-Appwrite Cloud. מגבלות כללים תלויות בתוכנית הארגון. כללים מושבתים עדיין נספרים במגבלות התוכנית אבל לא מוערכים.',
+  'Firewall overview': 'סקירת Firewall',
+  'Firewall rules run on Appwrite Cloud before traffic reaches your project resources. Scope a rule to the project API, a specific Function, or a specific Site. Console traffic is never blocked, so you can keep managing rules even when deny or rate limit policies are active.':
+    'כללי Firewall רצים ב-Appwrite Cloud לפני שהתעבורה מגיעה למשאבי הפרויקט. הגדירו היקף לכלל ל-API של הפרויקט, ל-Function ספציפית או ל-Site ספציפי. תעבורת הקונסולה אף פעם לא נחסמת, כך שתוכלו להמשיך לנהל כללים גם כשמדיניות דחייה או מגבלת קצב פעילה.',
+  'Functions and Sites scopes': 'היקפי Functions ו-Sites',
+  'How do conditions and priority work together?': 'איך תנאים ועדיפות עובדים יחד?',
+  'Impact before enable': 'השפעה לפני הפעלה',
+  'Impact preview docs': 'תיעוד תצוגת השפעה',
+  'Is Firewall available on every plan?': 'האם Firewall זמין בכל תוכנית?',
+  'Last 24 hours': '24 השעות האחרונות',
+  'Lower numbers evaluate first. The first match stops the chain.':
+    'מספרים נמוכים מוערכים קודם. ההתאמה הראשונה עוצרת את השרשרת.',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny or rate limit rules so trusted traffic skips the rest of the chain.':
+    'מספרי עדיפות נמוכים מוערכים קודם. הציבו רשימות עקיפה לפני כללי דחייה או מגבלת קצב רחבים יותר כדי שתעבורה מהימנה תדלג על שאר השרשרת.',
+  'Match on the request attributes that matter': 'התאימו לפי מאפייני הבקשה שחשובים',
+  'Matched': 'תואמות',
+  'Matched requests over time': 'בקשות תואמות לאורך זמן',
+  'Monitor denied, limited, and redirected traffic': 'עקבו אחרי תעבורה שנדחתה, הוגבלה או הופנתה',
+  'Monitor docs': 'תיעוד ניטור',
+  'Now': 'עכשיו',
+  'Office IP allowlist': 'רשימת IP משרדי',
+  'One action per matching rule. Evaluation stops at the first match.':
+    'פעולה אחת לכל כלל תואם. ההערכה נעצרת בהתאמה הראשונה.',
+  'Passed': 'עברו',
+  'Path starts with /v1/account': 'הנתיב מתחיל ב-/v1/account',
+  'Plan limits': 'מגבלות תוכנית',
+  'Preview impact before you enable': 'צפו בהשפעה לפני ההפעלה',
+  'Priority decides the first match': 'עדיפות קובעת את ההתאמה הראשונה',
+  'Priority docs': 'תיעוד עדיפות',
+  'Project REST and GraphQL endpoints.': 'Endpoints של REST ו-GraphQL בפרויקט.',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, or redirect matching traffic from the Console.':
+    'הגנו על APIs, Functions ו-Sites של הפרויקט עם Appwrite Firewall. צרו כללים לדחייה, עקיפה, מגבלת קצב או הפניה של תעבורה תואמת מהקונסולה.',
+  'Rate limit public API': 'מגבלת קצב ל-API ציבורי',
+  'Rate limited': 'הוגבלו בקצב',
+  'Recent requests that would match these conditions.':
+    'בקשות אחרונות שהיו מתאימות לתנאים האלה.',
+  'Reject matching requests before they reach your project.':
+    'דחו בקשות תואמות לפני שהן מגיעות לפרויקט.',
+  'Resource scope': 'היקף משאב',
+  'Resource scopes': 'היקפי משאבים',
+  'Rule actions': 'פעולות כלל',
+  'Rule conditions': 'תנאי כלל',
+  'Rule priority': 'עדיפות כלל',
+  'Rules': 'כללים',
+  'Scope rules to API, Functions, or Sites': 'הגדירו היקף כללים ל-API, Functions או Sites',
+  'Scopes docs': 'תיעוד היקפים',
+  'Send matching clients to another location with a 3xx status.':
+    'שלחו לקוחות תואמים ליעד אחר עם סטטוס 3xx.',
+  'Skipped': 'דולגו',
+  'Start protecting with Firewall': 'התחילו להגן עם Firewall',
+  'The Firewall page chart summarizes Passed request volume alongside Denied, Rate limited, Redirected, and Challenged series for the selected date range. Bypass matches and under-quota rate limit matches allow traffic without publishing a Firewall outcome metric. Use the overview with your rules list to verify policies after enablement.':
+    'התרשים בעמוד Firewall מסכם נפח בקשות Passed לצד סדרות Denied, Rate limited, Redirected ו-Challenged לטווח התאריכים שנבחר. התאמות Bypass והתאמות מגבלת קצב מתחת למכסה מאפשרות תעבורה בלי לפרסם מדד תוצאה של Firewall. השתמשו בסקירה יחד עם רשימת הכללים כדי לאמת מדיניות אחרי הפעלה.',
+  'Throttle matching requests that exceed a per-IP quota.':
+    'הגבילו בקשות תואמות שחורגות ממכסה לפי IP.',
+  'Track request volume alongside denied, rate-limited, redirected, and challenged outcomes on the Firewall page. Confirm policies after enablement without leaving the Console.':
+    'עקבו אחרי נפח בקשות לצד תוצאות דחייה, מגבלת קצב, הפניה ו-challenge בעמוד Firewall. אשרו מדיניות אחרי הפעלה בלי לעזוב את הקונסולה.',
+  'What can Firewall protect?': 'מה Firewall יכול להגן?',
+  'What does traffic overview show?': 'מה סקירת התעבורה מציגה?',
+  'Which actions can a rule take?': 'אילו פעולות כלל יכול לבצע?',
+  'While creating a rule, estimate how many recent requests would match your conditions for the selected scope and date range. Tighten filters before traffic is affected.':
+    'בזמן יצירת כלל, העריכו כמה בקשות אחרונות היו מתאימות לתנאים שלכם להיקף ולטווח התאריכים שנבחרו. הדקו מסננים לפני שהתעבורה מושפעת.',
+  'Yes. While creating a rule, the Console estimates how many recent usage events would match your current conditions for the selected resource scope and date range. Use that preview to tighten filters before you enable the rule, then confirm outcomes in traffic overview.':
+    'כן. בזמן יצירת כלל, הקונסולה מעריכה כמה אירועי שימוש אחרונים היו מתאימים לתנאים הנוכחיים להיקף המשאב ולטווח התאריכים שנבחרו. השתמשו בתצוגה המקדימה כדי להדק מסננים לפני הפעלת הכלל, ואז אשרו תוצאות בסקירת התעבורה.',
+
+  // Firewall product page updates
+  '10+': '10+',
+  'Act on automated traffic with score-based conditions.':
+    'פעלו על תעבורה אוטומטית עם תנאים מבוססי ציון.',
+  'ASN': 'ASN',
+  'Bot score': 'ציון בוט',
+  'Combine attributes with AND so a rule only fires when every filter matches.':
+    'שלבו מאפיינים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Create your first deny, bypass, rate limit, redirect, or challenge rule from the Console and preview impact before you enable it.':
+    'צרו את כלל הדחייה, העקיפה, מגבלת הקצב, ההפניה או ה-Challenge הראשון מהקונסולה וצפו בהשפעה לפני ההפעלה.',
+  'Define project rules that match rich request attributes, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים מאפייני בקשה עשירים, ואז דחו, עקפו, הגבילו קצב, הפנו או אתגרו תעבורה לפני שהיא מגיעה ל-API, ל-Functions או ל-Sites.',
+  'Deny, bypass, rate limit, redirect, or challenge':
+    'דחייה, עקיפה, מגבלת קצב, הפניה או Challenge',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, Redirect sends clients to another location with a 3xx status, and Challenge verifies suspicious clients before allowing them through. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny, rate limit, or challenge rules.':
+    'כל כלל תואם מחיל פעולה אחת: Deny מחזיר 403, Bypass מאפשר את הבקשה ומדלג על כללים הבאים, Rate limit מגביל לפי IP של לקוח עם 429 מעל המכסה, Redirect שולח לקוחות ליעד אחר עם סטטוס 3xx, ו-Challenge מאמת לקוחות חשודים לפני שמאפשר להם להמשיך. אין פעולת Allow נפרדת. השתמשו ב-Bypass כדי לאפשר תעבורה שצריכה לדלג על כללי דחייה, מגבלת קצב או Challenge מאוחרים יותר.',
+  'Every rule applies one action when conditions match. Deny abusive traffic, bypass trusted clients, throttle per IP, redirect to maintenance URLs, or challenge suspicious requests before they continue.':
+    'כל כלל מחיל פעולה אחת כשהתנאים מתאימים. דחו תעבורה פוגענית, עקפו לקוחות מהימנים, הגבילו לפי IP, הפנו לכתובות תחזוקה, או אתגרו בקשות חשודות לפני שהן ממשיכות.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). תנאים יכולים לסנן לפי IP, נתיב בקשה, HTTP method, מדינה, user agent, ASN, headers, פרמטרי query, טביעות TLS, ציון בוט ועוד. כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Filter by IP, path, method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Combine conditions with AND so a rule only fires when every filter matches.':
+    'סננו לפי IP, נתיב, method, מדינה, user agent, ASN, headers, פרמטרי query, טביעות TLS, ציון בוט ועוד. שלבו תנאים עם AND כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Filter on query keys and values without changing path rules.':
+    'סננו לפי מפתחות וערכי query בלי לשנות כללי נתיב.',
+  'Geo allow or deny by resolved ISO country code.':
+    'אפשרו או דחו לפי קוד מדינה ISO שזוהה.',
+  'Header': 'Header',
+  'Identify clients by TLS fingerprint when IPs rotate.':
+    'זהו לקוחות לפי טביעת TLS כשכתובות IP מתחלפות.',
+  'JA4 fingerprint': 'טביעת JA4',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny, rate limit, or challenge rules so trusted traffic skips the rest of the chain.':
+    'מספרי עדיפות נמוכים מוערכים קודם. הציבו רשימות עקיפה לפני כללי דחייה, מגבלת קצב או Challenge רחבים יותר כדי שתעבורה מהימנה תדלג על שאר השרשרת.',
+  'Match exact client IPs for allowlists and denylists.':
+    'התאימו כתובות IP מדויקות לרשימות היתר וחסימה.',
+  'Match on rich request attributes': 'התאימו לפי מאפייני בקשה עשירים',
+  'Match request headers for tokens, clients, or custom signals.':
+    'התאימו headers של בקשה לטוקנים, לקוחות או אותות מותאמים.',
+  'Match traffic by autonomous system for hosting and ISP ranges.':
+    'התאימו תעבורה לפי מערכת אוטונומית לטווחי hosting ו-ISP.',
+  'Monitor denied, limited, redirected, and challenged traffic':
+    'עקבו אחרי תעבורה שנדחתה, הוגבלה, הופנתה או עברה Challenge',
+  'Present a challenge before allowing suspicious clients through.':
+    'הציגו Challenge לפני שמאפשרים ללקוחות חשודים להמשיך.',
+  'Protect prefixes like /v1/account or sensitive routes.':
+    'הגנו על קידומות כמו /v1/account או נתיבים רגישים.',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, redirect, or challenge matching traffic from the Console.':
+    'הגנו על APIs, Functions ו-Sites של הפרויקט עם Appwrite Firewall. צרו כללים לדחייה, עקיפה, מגבלת קצב, הפניה או Challenge של תעבורה תואמת מהקונסולה.',
+  'Query parameter': 'פרמטר query',
+  'Restrict mutating methods such as POST, PUT, and DELETE.':
+    'הגבילו מתודות משנות כמו POST, PUT ו-DELETE.',
+  'See how many recent requests would match before you enable a rule.':
+    'ראו כמה בקשות אחרונות היו מתאימות לפני שתפעילו כלל.',
+  'Filter bots, scripts, monitors, and known clients.':
+    'סננו בוטים, סקריפטים, מוניטורים ולקוחות מוכרים.',
+
+  'Build rules from the request properties that matter to your app. Combine conditions so a rule only fires when every filter matches.':
+    'בנו כללים ממאפייני הבקשה שחשובים לאפליקציה שלכם. שלבו תנאים כדי שכלל יופעל רק כשכל המסננים מתאימים.',
+  'Define project rules that match the request properties you care about, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    'הגדירו כללי פרויקט שמתאימים למאפייני הבקשה שחשובים לכם, ואז דחו, עקפו, הגבילו קצב, הפנו או אתגרו תעבורה לפני שהיא מגיעה ל-API, ל-Functions או ל-Sites.',
+  'Every condition on a rule must match before the action runs.':
+    'כל תנאי בכלל חייב להתאים לפני שהפעולה רצה.',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    'כל כלל דורש לפחות תנאי אחד. כל התנאים בכלל חייבים להתאים (AND). כללים מוערכים לפי עדיפות (מספרים נמוכים קודם). הכלל המופעל הראשון שמתאים קובע את התוצאה ומפסיק את ההערכה.',
+  'Match on request properties such as identity, location, path, and client signals.':
+    'התאימו לפי מאפייני בקשה כמו זהות, מיקום, נתיב ואותות לקוח.',
+  'Estimate how much recent traffic a draft rule would affect, then refine conditions before you turn it on.':
+    'העריכו כמה תעבורה אחרונה כלל טיוטה ישפיע עליה, ואז הדקו תנאים לפני ההפעלה.',
+  'See how much recent traffic a draft rule would affect.':
+    'ראו כמה תעבורה אחרונה כלל טיוטה ישפיע עליה.',
+  'Incoming': 'נכנסות',
+  'Your app': 'האפליקציה שלכם',
 }
+
+
+

@@ -29,6 +29,7 @@ type UsageResourceBreakdownCardProps = {
   items: UsageBreakdownItem[]
   isLoading: boolean
   isError: boolean
+  error?: unknown
   countryLookups?: CountryLookups | null
   databaseLookup?: DatabaseBreakdownResourceMap | null
   computeLookup?: ComputeBreakdownResourceMap | null
@@ -52,6 +53,7 @@ export function UsageResourceBreakdownCard({
   items,
   isLoading,
   isError,
+  error,
   countryLookups = null,
   databaseLookup,
   computeLookup,
@@ -115,6 +117,7 @@ export function UsageResourceBreakdownCard({
           <UsageBreakdownListError
             title={errorTitle}
             message={errorMessage}
+            error={error}
             onRetry={onRetry}
           />
         ) : isLoading && items.length === 0 ? (

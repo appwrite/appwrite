@@ -39,7 +39,7 @@ type HomeHeroBrowserFrameProps = {
   videoFitCard?: boolean
   /** Pixels of video content clipped on the left (overflow hidden inside the content area). */
   videoClipLeft?: number
-  /** @deprecated Use videoClipLeft — shift via object-position (less reliable with cover). */
+  /** @deprecated Use videoClipLeft - shift via object-position (less reliable with cover). */
   videoTrimLeft?: number
 }
 

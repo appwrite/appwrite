@@ -4,7 +4,6 @@
  */
 export const hePricingDictionary: Record<string, string> = {
   '-': 'לא כלול',
-  '—': 'לא זמין',
   '+20% of base': '+20% מהבסיס',
   '+50% of base per replica': '+50% מהבסיס לכל replica',
   '$0': '$0',
@@ -57,6 +56,7 @@ export const hePricingDictionary: Record<string, string> = {
   '2 (Shared resources)': '2 (משאבים משותפים)',
   '2 GB': '2 GB',
   '2 per project': '2 לפרויקט',
+  '50 per project': '50 לפרויקט',
   '2-core (dedicated)': '2 ליבות (ייעודי)',
   '2-core (shared)': '2 ליבות (משותף)',
   '200,000 monthly active users': '200,000 משתמשים פעילים חודשיים',
@@ -103,6 +103,8 @@ export const hePricingDictionary: Record<string, string> = {
   'Available across all Appwrite services, with 200+ global PoP locations for low-latency delivery across Backend API, Serverless Functions, Storage files, and hosted websites.': // pragma: allowlist secret
     'זמין בכל שירותי Appwrite, עם יותר מ-200 מיקומי PoP גלובליים להגשה בזמן תגובה נמוך דרך Backend API, פונקציות Serverless, קבצי אחסון ואתרים מאוחסנים.',
   'Basic': 'בסיסי',
+  'Billed for disk storage and database operations.':
+    'חיוב לפי אחסון דיסק ופעולות מסד נתונים.',
   'Bring your own Cloud': 'Bring your own Cloud',
   'Community support': 'תמיכת קהילה',
   'Compute tiers from $10/mo': 'רמות מחשוב החל מ-$10/חודש',
@@ -117,6 +119,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Fewer systems to integrate, secure, and maintain':
     'פחות מערכות לשלב, לאבטח ולתחזק',
   'Firewall': 'Firewall',
+  'Firewall rules': 'כללי חומת אש',
   'Fixed monthly compute tiers with reserved CPU, memory, and connections. See Database pricing for tier details and add-ons.':
     'רמות מחשוב חודשיות קבועות עם CPU, זיכרון וחיבורים שמורים. לפרטי רמות ותוספות, ראו תמחור מסדי נתונים.',
   'Free projects are paused after 1 week of inactivity. Limit of 2 projects.':
@@ -152,7 +155,6 @@ export const hePricingDictionary: Record<string, string> = {
   'One platform across the app lifecycle': 'פלטפורמה אחת לאורך מחזור חיי האפליקציה',
   'One subscription with simpler billing and procurement':
     'מנוי אחד עם חיוב ורכש פשוטים יותר',
-  'Pay as you go (disk + DB ops)': 'Pay as you go (דיסק + פעולות DB)',
   'Pay as you go': 'Pay as you go',
   'Plan quota, then overage': 'מכסת תוכנית, ואז חריגה',
   'Production workloads and direct SQL clients.':

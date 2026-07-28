@@ -667,6 +667,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Payment setup did not complete': '支払い設定が完了しませんでした',
   ', all billable services will be paused until the next billing cycle or until you increase your limit.': '、次の請求サイクルまで、または上限を引き上げるまで、課金対象のすべてのサービスが一時停止されます。',
   "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.": 'サービスプロバイダーが対象事業者に代わって保護対象保健情報(PHI)を扱う場合、HIPAA の下で BAA が必要です。アプリケーションが米国の患者の健康関連データを処理、保存、または送信する場合は、BAA を締結する必要があります。',
+  'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
+    'Appwrite が組織に代わって保護対象保健情報 (PHI) を扱う場合、HIPAA の下で BAA が必要です。米国の患者の健康データを処理、保存、または送信する場合は有効にしてください。',
   'A DPA is a legally binding document that outlines how': 'DPA は、次のように個人データを取り扱うかを定める法的拘束力のある文書です:',
   'A backup payment method ensures uninterrupted service if your primary method fails.': 'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.': '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
@@ -780,7 +782,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'OAuth2 apps published by your organization to the marketplace.': '組織がマーケットプレイスに公開している OAuth2 アプリ。',
   'Only one free organization is allowed per account.': 'アカウントあたり無料組織は1つのみ許可されています。',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.': '組織レベルのキーは利用可能になり次第、ここで管理できるようになります。それまではサーバーサイドのアクセスにプロジェクトキーを使用してください。',
-  'Payment failed - organization in read-only mode': '支払いに失敗しました。組織は読み取り専用モードです',
+  'Payment failed - organization has restricted access': '支払いに失敗しました。組織は制限付きアクセスです',
   'Payment form not ready. Please try again.': '支払いフォームの準備ができていません。もう一度お試しください。',
   'Payment method has been added to your organization': '支払い方法が組織に追加されました',
   'Permanently delete this app and revoke all associated tokens. This action cannot be undone.': 'このアプリを完全に削除し、関連するすべてのトークンを取り消します。この操作は元に戻せません。',
@@ -1091,4 +1093,39 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   to: 'へ',
   used: '使用済み',
   years: '年',
+  'BAA is not available on your current plan. Upgrade your plan to enable it.':
+    'BAA は現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'BAA is not available on your current plan.':
+    'BAA は現在のプランでは利用できません。',
+  'BAA is enabled for your organization ({price}/month).':
+    '組織で BAA が有効です ({price}/月)。',
+  'BAA will be removed at the end of your current billing cycle.':
+    'BAA は現在の請求サイクル終了時に削除されます。',
+  'Keep BAA': 'BAA を維持',
+  'Disable BAA': 'BAA を無効にする',
+  'Enable BAA': 'BAA を有効にする',
+  'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.':
+    '組織で BAA を有効にします。このアドオンは {price}/月で、現在の請求サイクルに按分されます。',
+  'BAA addon has been enabled': 'BAA アドオンが有効になりました',
+  'BAA addon is already active for your organization':
+    'BAA アドオンは組織ですでに有効です',
+  'BAA addon has been re-enabled': 'BAA アドオンが再有効化されました',
+  'BAA addon will be removed at the end of your current billing cycle':
+    'BAA アドオンは現在の請求サイクル終了時に削除されます',
+  'Unable to verify BAA addon status. Please retry.':
+    'BAA アドオンの状態を確認できませんでした。再試行してください。',
+  'HIPAA BAA': 'HIPAA BAA',
+  'By clicking Accept & Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    '「同意して有効にする」をクリックすると、月額アドオン料金がサブスクリプションに追加され、請求サイクルの残日数分の按分額がすぐに支払い方法に請求されます。',
+  'By clicking Accept & Enable, you confirm acceptance of the Business Associate Agreement and related terms.':
+    '「同意して有効にする」をクリックすると、ビジネスアソシエイト契約および関連条項への同意を確認したことになります。',
+  "Your action confirms acceptance of Appwrite's Business Associate Agreement and related terms.":
+    'この操作により、Appwrite のビジネスアソシエイト契約および関連条項への同意を確認します。',
+  'View BAA': 'BAA を表示',
+  'Accept & Enable': '同意して有効にする',
+  'Are you sure you want to disable the BAA addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'BAA アドオンを無効にしますか? アドオンは現在の請求サイクル終了まで有効のままで、更新されません。',
+  Addons: 'アドオン',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Dedicated DB compute credit': '専用 DB コンピュートクレジット',
 }

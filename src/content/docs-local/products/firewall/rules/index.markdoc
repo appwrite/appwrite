@@ -1,0 +1,61 @@
+---
+layout: article
+title: Rules
+description: Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.
+---
+
+A **Firewall rule** is a named policy that matches inbound requests and applies an [action](/docs/products/firewall/actions). Rules belong to a **project**. They are managed under **Project** > **Firewall**.
+
+# What a rule contains {% #what-a-rule-contains %}
+
+| Field | Purpose |
+|-------|---------|
+| Name | Label shown in the rules list |
+| Description | Optional notes for your team |
+| Resource type | [API, Functions, or Sites](/docs/products/firewall/scopes) |
+| Resource ID | Required for Functions and Sites scopes |
+| Conditions | One or more [request filters](/docs/products/firewall/conditions) (required) |
+| Action | Deny, bypass, rate limit, or redirect (set at create time) |
+| Priority | Evaluation order ([lower first](/docs/products/firewall/priority)), `-100000` to `100000` |
+| Enabled | Whether the rule participates in evaluation |
+| Rule ID | Optional custom ID at create time |
+
+Action-specific fields (rate limit quota, redirect location and status code) are stored with the rule when those actions are selected.
+
+When at least one **enabled** rule exists, Appwrite marks the project as Firewall-enabled so evaluation runs for eligible traffic. Disabling or deleting the last enabled rule turns evaluation off for the project.
+
+# Enabled and disabled {% #enabled-and-disabled %}
+
+- **Enabled** rules are loaded and evaluated according to priority.
+- **Disabled** rules remain in the project and **count toward plan limits**, but they are not evaluated.
+
+Use disable when you want to pause a rule without deleting it (for example during an incident investigation).
+
+# Console layout {% #console-layout %}
+
+The Firewall page groups rules by resource scope tabs (**API**, **Functions**, **Sites**). Each tab lists rules for that scope. Function and site rules can be grouped by the target resource.
+
+Empty states differ by tab: API rules protect project API traffic; function and site rules target a selected resource's public traffic. See [Resource scopes](/docs/products/firewall/scopes).
+
+# Plan limits {% #plan-limits %}
+
+Firewall rule limits are **per project** and depend on your organization plan:
+
+| Plan | Rules per project |
+|------|------------------:|
+| Free (Starter) | 2 |
+| Pro | 50 |
+
+Creating a rule is blocked when you reach the limit until you [delete a rule](/docs/products/firewall/delete) or [upgrade your plan](/docs/advanced/platform/billing). Disabled rules count toward the same limit.
+
+The Console shows current usage next to the Firewall title when a limit applies.
+
+# Access {% #access %}
+
+Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud with [organization roles](/docs/advanced/platform/roles) enabled, members with write access can create, update, and delete rules. Read-only roles (for example analysts) can view rules but cannot change them.
+
+When organization roles are disabled, all organization members can manage rules where the feature is available.
+
+{% arrow_link href="/docs/products/firewall/create" %}
+Create a rule
+{% /arrow_link %}

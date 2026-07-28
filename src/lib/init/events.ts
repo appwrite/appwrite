@@ -101,10 +101,10 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     prizes: INIT_JULY_2026_PRIZES,
     releaseAvailability: {
       unlockDay: 5,
-      sectionTitle: 'The full release is live',
+      sectionTitle: 'Cloud and Self-host are live.',
       sectionDescription:
-        'On Cloud, each Init feature went live the day it dropped. Self-host Community Edition for the complete Appwrite 2.0 release on your infrastructure.',
-      lockedTitle: 'Cloud ships daily. Self-host unlocks later.',
+        'Every Init feature is available on Appwrite Cloud, and Community Edition ships the complete Appwrite 2.0 release for self-hosting.',
+      lockedTitle: 'Cloud ships daily. Self-host unlocks soon.',
       lockedDescription:
         'Every Init feature goes live on Appwrite Cloud the same day. Community Edition unlocks with the complete release when Init week wraps up.',
       cloud: {
@@ -156,7 +156,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Init July 20 - 24 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
-        'From Appwrite 2.0 to Appwrite Firewall. Explore the full launch timeline, blog posts, and session replays.',
+        'From Appwrite 2.0 to Appwrite Firewall & Domains. Explore the full launch timeline, blog posts, and session replays.',
       getInvolvedSectionTitle: 'Keep exploring',
       getInvolved: [
         {
@@ -306,7 +306,7 @@ function resolveInitHeaderNavPhase(
   return 'active'
 }
 
-/** Header ghost button on `/init` — before event vs per-day during vs after. */
+/** Header ghost button on `/init` - before event vs per-day during vs after. */
 export function resolveInitHeaderNavCta(options?: {
   event?: LaunchEvent
   now?: Date

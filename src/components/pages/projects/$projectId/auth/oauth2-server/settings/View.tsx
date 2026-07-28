@@ -626,10 +626,10 @@ export function View({ projectId }: OAuth2ServerViewProps) {
         )}
         headerExtra={
           <Badge
-            variant={enabled ? 'success' : 'secondary'}
+            variant={serverState?.enabled ? 'success' : 'secondary'}
             className="shrink-0 text-[10px] uppercase tracking-wide"
           >
-            {enabled ? t('Active') : t('Inactive')}
+            {serverState?.enabled ? t('Active') : t('Inactive')}
           </Badge>
         }
         footer={

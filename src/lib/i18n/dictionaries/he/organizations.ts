@@ -13,6 +13,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   '@ or subdomain': '@ או תת-דומיין',
   "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.":
     'הסכם BAA נדרש לפי HIPAA כאשר ספק שירות מטפל במידע רפואי מוגן (PHI) עבור גוף מכוסה. אם האפליקציה שלכם מעבדת, מאחסנת או משדרת נתוני בריאות של מטופלים בארה"ב, תצטרכו הסכם BAA בתוקף.',
+  'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
+    'הסכם BAA נדרש לפי HIPAA כאשר Appwrite מטפל במידע רפואי מוגן (PHI) עבור הארגון שלכם. הפעילו אותו אם אתם מעבדים, מאחסנים או משדרים נתוני בריאות של מטופלים בארה"ב.',
   'A DPA is a legally binding document that outlines how':
     'הסכם DPA הוא מסמך מחייב משפטית המגדיר כיצד',
   'A backup payment method ensures uninterrupted service if your primary method fails.':
@@ -748,8 +750,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Payment confirmed': 'התשלום אושר',
   'Payment confirmed successfully': 'התשלום אושר בהצלחה',
   'Payment failed': 'התשלום נכשל',
-  'Payment failed - organization in read-only mode':
-    'התשלום נכשל, הארגון במצב קריאה בלבד',
+  'Payment failed - organization has restricted access':
+    'התשלום נכשל, לארגון יש גישה מוגבלת',
   'Payment form not ready. Please try again.':
     'טופס התשלום אינו מוכן. נסו שוב.',
   'Payment history': 'היסטוריית תשלומים',
@@ -1316,4 +1318,39 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'When pay-as-you-go plans do not meet your support or billing needs':
     'כשתוכניות תשלום לפי שימוש אינן עונות על צורכי התמיכה או החיוב שלכם',
   'Payment setup did not complete': 'הגדרת התשלום לא הושלמה',
+  'BAA is not available on your current plan. Upgrade your plan to enable it.':
+    'BAA אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'BAA is not available on your current plan.':
+    'BAA אינו זמין בתוכנית הנוכחית שלכם.',
+  'BAA is enabled for your organization ({price}/month).':
+    'BAA מופעל בארגון שלכם ({price}/חודש).',
+  'BAA will be removed at the end of your current billing cycle.':
+    'BAA יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  'Keep BAA': 'שמירת BAA',
+  'Disable BAA': 'השבתת BAA',
+  'Enable BAA': 'הפעלת BAA',
+  'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.':
+    'הפעילו BAA עבור הארגון שלכם. התוסף עולה {price}/חודש, בחיוב יחסי למחזור הנוכחי.',
+  'BAA addon has been enabled': 'תוסף BAA הופעל',
+  'BAA addon is already active for your organization':
+    'תוסף BAA כבר פעיל בארגון שלכם',
+  'BAA addon has been re-enabled': 'תוסף BAA הופעל מחדש',
+  'BAA addon will be removed at the end of your current billing cycle':
+    'תוסף BAA יוסר בסוף מחזור החיוב הנוכחי',
+  'Unable to verify BAA addon status. Please retry.':
+    'לא ניתן לאמת את סטטוס תוסף BAA. נסו שוב.',
+  'HIPAA BAA': 'HIPAA BAA',
+  'By clicking Accept & Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    'בלחיצה על אישור והפעלה, הסכום החודשי של התוסף יתווסף למנוי שלכם ואמצעי התשלום יחויב מיד בסכום היחסי עבור הימים שנותרו במחזור החיוב.',
+  'By clicking Accept & Enable, you confirm acceptance of the Business Associate Agreement and related terms.':
+    'בלחיצה על אישור והפעלה, אתם מאשרים את הסכם השותף העסקי ואת התנאים הנלווים.',
+  "Your action confirms acceptance of Appwrite's Business Associate Agreement and related terms.":
+    'פעולה זו מאשרת את הסכמתכם להסכם השותף העסקי של Appwrite ולתנאים הנלווים.',
+  'View BAA': 'צפייה ב-BAA',
+  'Accept & Enable': 'אישור והפעלה',
+  'Are you sure you want to disable the BAA addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף BAA? התוסף יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש.',
+  Addons: 'תוספים',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Dedicated DB compute credit': 'זיכוי חישוב למסד נתונים ייעודי',
 }

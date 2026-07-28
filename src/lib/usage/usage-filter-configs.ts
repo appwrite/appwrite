@@ -14,13 +14,15 @@ export const USAGE_EVENT_FILTER_ATTRIBUTES = [
   'resourceType',
   'resourceId',
   'country',
-  'region',
+  'city',
   'hostname',
   'ip',
   'osName',
   'clientType',
   'clientName',
   'deviceName',
+  'sdk',
+  'sdkVersion',
 ] as const
 
 /** listGauges filter attributes (teamId excluded from console UI). */
@@ -139,13 +141,15 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceType', 'Resource type'),
   stringColumn('resourceId', 'Resource ID'),
   stringColumn('country', 'Country'),
-  stringColumn('region', 'Region'),
+  stringColumn('city', 'Caller city'),
   stringColumn('hostname', 'Hostname'),
   stringColumn('ip', 'IP address'),
   stringColumn('osName', 'Operating system'),
   stringColumn('clientType', 'Client type'),
   stringColumn('clientName', 'Client name'),
   stringColumn('deviceName', 'Device name'),
+  stringColumn('sdk', 'SDK'),
+  stringColumn('sdkVersion', 'SDK version'),
 ]
 
 /** Storage gauge metrics (listGauges). */

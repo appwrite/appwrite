@@ -89,6 +89,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
@@ -134,6 +136,8 @@ type ViewProps = {
 
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const supportsMultiTenancy = features.multiTenancy
   const { orgId, domainId } = useParams({
     strict: false})
   const navigate = useNavigate()
@@ -1323,6 +1327,7 @@ export function View({ initialData }: ViewProps = {}) {
                     variant="brandCta"
                     onClick={() => setCreateRecordDialogOpen(true)}
                     className="h-9 gap-1.5 text-[13px] font-medium cursor-pointer"
+                    {...analyticsAttrs('create-dns-record')}
                   >
                     <Plus className="h-4 w-4" />
                     {t('Create Record')}
@@ -1804,8 +1809,8 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               )}
 
-              {/* Transfer Domain Section */}
-              {domain && (
+              {/* Transfer Domain Section (cloud multi-tenancy only) */}
+              {domain && supportsMultiTenancy && (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
@@ -1875,7 +1880,7 @@ export function View({ initialData }: ViewProps = {}) {
               )}
 
               {/* Transfer Confirmation Dialog */}
-              {domain && (
+              {domain && supportsMultiTenancy && (
                 <Dialog
                   open={transferDialogOpen}
                   onOpenChange={setTransferDialogOpen}

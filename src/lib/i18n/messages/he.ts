@@ -120,6 +120,7 @@ export const heCatalog: EnCatalog = {
           ...enCatalog.app.footer.expanded.quickStarts,
           web: 'ווב',
           nextjs: 'Next.js',
+          tanstackStart: 'TanStack Start',
           react: 'React',
           vue: 'Vue.js',
           nuxt: 'Nuxt',
@@ -143,7 +144,9 @@ export const heCatalog: EnCatalog = {
           messaging: 'הודעות',
           realtime: 'Realtime',
           hosting: 'אירוח',
+          domains: 'דומיינים',
           network: 'רשת',
+          firewall: 'Firewall',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -184,6 +187,9 @@ export const heCatalog: EnCatalog = {
           vsNetlify: 'Appwrite מול Netlify', // pragma: allowlist secret
           vsCloudinary: 'Appwrite מול Cloudinary', // pragma: allowlist secret
           vsAuth0: 'Appwrite מול Auth0', // pragma: allowlist secret
+          nextjsHosting: 'אירוח Next.js',
+          reactHosting: 'אירוח React',
+          vueHosting: 'אירוח Vue.js',
           baas: 'Backend as a service (BaaS)',
         },
       },
@@ -378,6 +384,7 @@ export const heCatalog: EnCatalog = {
         desktopTitle: 'מוצרי הפלטפורמה',
         desktopSubtitle: 'לבנות, לפרוס ולהתרחב על פלטפורמת Backend אחת',
         viewOverview: 'צפו בסקירת הפלטפורמה',
+        newLabel: 'חדש',
         categories: {
           ...enCatalog.website.products.navigation.categories,
           build: 'פיתוח',
@@ -397,7 +404,7 @@ export const heCatalog: EnCatalog = {
           domainsName: 'Domains',
           domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
           firewallName: 'חומת אש',
-          firewallTagline: 'WAF מנוהל לתעבורה זדונית.',
+          firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',
           advisorTagline: 'תובנות אבטחה וביצועים.',
         },

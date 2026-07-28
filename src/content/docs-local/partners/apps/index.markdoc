@@ -98,7 +98,7 @@ Confidential apps authenticate with a client secret. Create and rotate secrets o
 ```server-nodejs
 const secret = await apps.createSecret({ appId: app.$id });
 
-// Store secret.secret securely — it is shown once
+// Store secret.secret securely - it is shown once
 
 await apps.deleteSecret({ appId: app.$id, secretId: '<OLD_SECRET_ID>' });
 ```

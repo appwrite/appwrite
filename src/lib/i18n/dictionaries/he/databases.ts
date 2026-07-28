@@ -76,6 +76,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'מזהה הגיבוי הועתק ללוח',
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policies': 'מדיניות גיבויים',
+  'backup policies': 'מדיניות גיבויים',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
@@ -210,14 +211,27 @@ export const heDatabasesDictionary: Record<string, string> = {
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
     'מגדיר גיבויים רציפים למסד הנתונים שלכם.',
+  'Configuring continuous recovery for your database.':
+    'מגדיר שחזור רציף למסד הנתונים שלכם.',
   'Configuring high availability': 'מגדיר high availability',
+  'Creating backup policies for your database.':
+    'יוצר מדיניות גיבוי למסד הנתונים שלכם.',
   'Enabling point-in-time recovery': 'מפעיל point-in-time recovery',
+  'Opening your database.': 'פותח את מסד הנתונים שלכם.',
+  'Preparing workspace': 'מכין את סביבת העבודה',
   'Preparing your database workspace.': 'מכין את סביבת העבודה של מסד הנתונים.',
   'Provisioning compute': 'מספק compute',
+  'Setting up backups': 'מגדיר גיבויים',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
   'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
   'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
+  'High availability setup failed or timed out. Try again in a moment.':
+    'הגדרת high availability נכשלה או חרגה מהזמן. נסו שוב בעוד רגע.',
+  'Point-in-time recovery setup failed or timed out. Try again in a moment.':
+    'הגדרת point-in-time recovery נכשלה או חרגה מהזמן. נסו שוב בעוד רגע.',
+  'Database workspace is not ready yet. Try again in a moment.':
+    'סביבת העבודה של מסד הנתונים עדיין לא מוכנה. נסו שוב בעוד רגע.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
   'Create Index': 'יצירת אינדקס',
   'Create index': 'יצירת אינדקס',
@@ -293,7 +307,11 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current': 'נוכחי',
   'Current database': 'מסד הנתונים הנוכחי',
   'Current session states from pg_stat_activity.': 'מצבי הסשנים הנוכחיים מתוך pg_stat_activity.',
-  'Current tier: Serverless. Dedicated tiers are coming soon.': 'הרמה הנוכחית: Serverless. רמות ייעודיות יגיעו בקרוב.',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
+    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים. המיגרציה כוללת חלון קצר לקריאה בלבד בזמן המעבר.',
+  'Migration to dedicated compute started': 'מיגרציה למחשוב ייעודי התחילה',
+  'Compute and connection limits for this database.':
+    'מגבלות מחשוב וחיבורים עבור מסד הנתונים הזה.',
   'Custom Policies': 'כללי מדיניות מותאמים אישית',
   'Custom Policy': 'מדיניות מותאמת אישית',
   'Custom dimension': 'ממד מותאם אישית',
@@ -477,6 +495,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to create backup': 'יצירת הגיבוי נכשלה',
   'Failed to create backup policy': 'יצירת מדיניות הגיבוי נכשלה',
   'Failed to create database': 'יצירת מסד הנתונים נכשלה',
+  'Database provisioning failed or timed out. Try again in a moment.':
+    'הקצאת מסד הנתונים נכשלה או שחלף הזמן. נסו שוב בעוד רגע.',
   'Failed to create schema': 'יצירת הסכימה נכשלה',
   'Failed to create table': 'יצירת הטבלה נכשלה',
   'Failed to delete backup': 'מחיקת הגיבוי נכשלה',
@@ -1501,6 +1521,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': 'מקביל',
   'Replication': 'שכפול',
+  'Replication is available on dedicated databases':
+    'שכפול זמין במסדי נתונים ייעודיים',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    'שדרגו את מסד הנתונים למפרט ייעודי כדי להגדיר רפליקות קריאה ו-failover.',
   'Background': 'רקע',
   'Fulltext': 'Fulltext',
   'Complete': 'הושלם',

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { cn } from '@/lib/utils'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 type UpgradePlanLinkProps = {
@@ -29,14 +30,23 @@ export function UpgradePlanLink({
 
   if (orgId) {
     return (
-      <Link to="/upgrade" search={{ orgId }} className={linkClassName}>
+      <Link
+        to="/upgrade"
+        search={{ orgId }}
+        className={linkClassName}
+        {...analyticsAttrs('upgrade-clicked')}
+      >
         {content}
       </Link>
     )
   }
 
   return (
-    <Link to="/upgrade" className={linkClassName}>
+    <Link
+      to="/upgrade"
+      className={linkClassName}
+      {...analyticsAttrs('upgrade-clicked')}
+    >
       {content}
     </Link>
   )

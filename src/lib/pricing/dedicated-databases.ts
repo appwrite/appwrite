@@ -39,12 +39,12 @@ export const DATABASE_PRICING_COMPARISON_ROWS = [
   },
   {
     label: 'HA replicas',
-    serverless: '—',
+    serverless: '-',
     dedicated: DEDICATED_DB_HA_REPLICA_PRICING_LABEL,
   },
   {
     label: 'Point-in-time recovery',
-    serverless: '—',
+    serverless: '-',
     dedicated: DEDICATED_DB_PITR_PRICING_LABEL,
   },
   {

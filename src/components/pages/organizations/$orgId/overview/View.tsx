@@ -67,6 +67,7 @@ import {
   useUpdateMembershipRole,
   useRemoveTeamMember,
   syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
   mapProjectToListItem,
   useProjectListPlatforms,
   useProjectListRequestsUsage,
@@ -205,6 +206,7 @@ import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -283,6 +285,7 @@ function EmptyMemberAvatarSlot({
       type="button"
       disabled={disabled}
       onClick={onClick}
+      {...analyticsAttrs('invite-org-member')}
       className={cn(
         'relative flex shrink-0 items-center justify-center rounded-full border-2 border-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
@@ -1064,10 +1067,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const accountPrefs = (
         account as { prefs?: Record<string, unknown> } | null | undefined
       )?.prefs
-      return await sdk.forConsole.account.updatePrefs({
-        prefs: {
-          ...accountPrefs,
-          organization: orgId}})
+      return await updateAccountPrefs({
+        ...accountPrefs,
+        organization: orgId,
+      })
     },
     onMutate: (orgId) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
@@ -1288,29 +1291,45 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handlePinProject = (projectId: string) => {
     if (!canPinProjectsResult) return
-    if (
-      pinnedIds.length >= MAX_PINNED_PROJECTS &&
-      !pinnedIds.includes(projectId)
-    ) {
-      toast.error(`You can pin up to ${MAX_PINNED_PROJECTS} projects`)
-      return
-    }
-    const next = pinnedIds.includes(projectId)
-      ? pinnedIds.filter((id) => id !== projectId)
-      : [...pinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
-    const prefs = {
-      ...(teamPrefs || {}),
-      ...buildPinnedProjectIdsPrefs(next)}
-    updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['projects'] })
-        toast.success(
-          next.includes(projectId)
-            ? t('Project pinned')
-            : t('Project unpinned'),
-        )
+    updateTeamPrefsMutation.mutate(
+      (freshPrefs) => {
+        const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+        if (
+          currentPinnedIds.length >= MAX_PINNED_PROJECTS &&
+          !currentPinnedIds.includes(projectId)
+        ) {
+          throw new Error(
+            `You can pin up to ${MAX_PINNED_PROJECTS} projects`,
+          )
+        }
+        const next = currentPinnedIds.includes(projectId)
+          ? currentPinnedIds.filter((id) => id !== projectId)
+          : [...currentPinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
+        return buildPinnedProjectIdsPrefs(next)
       },
-      onError: () => toast.error(t('Failed to update pinned projects'))})
+      {
+        onSuccess: (prefs) => {
+          queryClient.invalidateQueries({ queryKey: ['projects'] })
+          const nextIds = parsePinnedProjectIds(
+            prefs as Record<string, unknown> | undefined,
+          )
+          toast.success(
+            nextIds.includes(projectId)
+              ? t('Project pinned')
+              : t('Project unpinned'),
+          )
+        },
+        onError: (error) => {
+          const message =
+            error instanceof Error ? error.message : undefined
+          toast.error(
+            message?.startsWith('You can pin up to')
+              ? message
+              : t('Failed to update pinned projects'),
+          )
+        },
+      },
+    )
   }
 
   const handlePinnedDragStart = useCallback(
@@ -1380,15 +1399,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     try {
       const { index: dragIndex } = JSON.parse(raw) as { index: number }
       if (dragIndex === dropIndex) return
-      const next = reorderPinnedProjectIds(pinnedIds, dragIndex, dropIndex)
-      const prefs = {
-        ...(teamPrefs || {}),
-        ...buildPinnedProjectIdsPrefs(next)}
-      updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['projects'] })
+      updateTeamPrefsMutation.mutate(
+        (freshPrefs) => {
+          const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+          const next = reorderPinnedProjectIds(
+            currentPinnedIds,
+            dragIndex,
+            dropIndex,
+          )
+          return buildPinnedProjectIdsPrefs(next)
         },
-        onError: () => toast.error(t('Failed to reorder pinned projects'))})
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+          },
+          onError: () => toast.error(t('Failed to reorder pinned projects')),
+        },
+      )
     } catch {
       // ignore invalid payload
     }
@@ -1396,13 +1423,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handleProjectDeleted = async (projectId: string) => {
     if (!pinnedIds.includes(projectId)) return
-    const prefs = {
-      ...(teamPrefs || {}),
-      ...buildPinnedProjectIdsPrefs(pinnedIds.filter((id) => id !== projectId))}
     try {
-      await updateTeamPrefsMutation.mutateAsync(
-        prefs as Record<string, unknown>,
-      )
+      await updateTeamPrefsMutation.mutateAsync((freshPrefs) => {
+        const currentPinnedIds = parsePinnedProjectIds(freshPrefs)
+        if (!currentPinnedIds.includes(projectId)) {
+          return {}
+        }
+        return buildPinnedProjectIdsPrefs(
+          currentPinnedIds.filter((id) => id !== projectId),
+        )
+      })
     } catch {
       // Keep project deletion successful even if pin cleanup fails.
     }
@@ -1896,6 +1926,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     <PopoverTrigger asChild>
                       <button
                         type="button"
+                        {...analyticsAttrs('organization-switcher')}
                         className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
                         <InitialsAvatar name={selectedOrg.name} size="sm" />
@@ -1974,6 +2005,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       </div>
                       <div className="border-t border-border p-2">
                         <button
+                          type="button"
+                          {...analyticsAttrs('create-organization')}
                           onClick={() => {
                             setOrgSwitcherOpen(false)
                             handleOpenCreateOrganization()
@@ -2018,6 +2051,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
                       aria-label={t('Create organization')}
                       onClick={handleOpenCreateOrganization}
+                      {...analyticsAttrs('create-organization')}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -2141,6 +2175,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         className="h-8 gap-2 border-border text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
                         onClick={() => setInviteDialogOpen(true)}
                         disabled={inviteDisabled}
+                        {...analyticsAttrs('invite-org-member')}
                       >
                         <UserPlus className="h-3.5 w-3.5" />
                         {t('Invite')}
@@ -2164,7 +2199,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               role="tablist"
             >
               {orgTabs.length > 0 ? (
-                orgTabs.map((tab) => (
+                orgTabs.map((tab) => {
+                  const tabAnalytics = getOrgTabAnalyticsAction(tab.id)
+                  return (
                   <Link
                     key={tab.id}
                     to={tab.to as unknown}
@@ -2172,6 +2209,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     replace
                     role="tab"
                     aria-selected={activeTab === tab.id}
+                    {...(tabAnalytics ? analyticsAttrs(tabAnalytics) : {})}
                     className={cn(
                       'relative flex h-[2.75rem] shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium leading-none transition-colors rounded-sm',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -2185,7 +2223,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-foreground" />
                     )}
                   </Link>
-                ))
+                  )
+                })
               ) : orgId ? (
                 <div
                   className="flex h-[2.75rem] w-full items-center gap-6 px-3"
@@ -2438,6 +2477,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           variant="brandCta"
                                           className="h-9 gap-2 text-[13px] font-medium opacity-50 cursor-not-allowed"
                                           disabled
+                                          {...analyticsAttrs('create-project')}
                                         >
                                           <Plus className="h-4 w-4" />
                                           {t('Create project')}
@@ -2463,6 +2503,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   onClick={() =>
                                     setCreateProjectDialogOpen(true)
                                   }
+                                  {...analyticsAttrs('create-project')}
                                 >
                                   <Plus className="h-4 w-4" />
                                   {t('Create project')}
@@ -2495,6 +2536,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         onClick={() =>
                                           setCreateProjectDialogOpen(true)
                                         }
+                                        {...analyticsAttrs('create-project')}
                                       >
                                         <Plus className="h-4 w-4" />
                                         {t('Create project')}
@@ -3295,6 +3337,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           setInviteDialogOpen(true)
                                         }
                                         disabled={inviteDisabled}
+                                        {...analyticsAttrs('invite-org-member')}
                                       >
                                         <Plus className="h-4 w-4" />
                                         {t('Invite')}

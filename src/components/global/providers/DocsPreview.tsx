@@ -42,6 +42,10 @@ import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import {
+  isFirewallDocsEnabled,
+  isFirewallDocsSlug,
+} from '@/lib/docs/firewall-docs-feature'
+import {
   isPartnersDocsEnabled,
   isPartnersDocsSlug,
 } from '@/lib/docs/partners-docs-feature'
@@ -121,6 +125,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
       if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
+      if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
@@ -172,13 +177,15 @@ export function DocsPreviewContent() {
   const { features } = useConsoleProfile()
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
+  const firewallDocsEnabled = features.firewall
 
   const showMenu =
     slug !== null &&
     slug !== '' &&
     view === 'menu' &&
     canShowDocsPreviewMenu(slug) &&
-    (!isPartnersDocsSlug(slug) || partnersDocsEnabled)
+    (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
+    (!isFirewallDocsSlug(slug) || firewallDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -189,6 +196,7 @@ export function DocsPreviewContent() {
       slug !== '' &&
       !showMenu &&
       (!isPartnersDocsSlug(slug!) || partnersDocsEnabled) &&
+      (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -204,19 +212,33 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isFirewallDocsSlug(nextSlug) && !firewallDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
       if (nextSlug === slug && resolvedView === view) return
       openDocsPreview(nextSlug, { view: nextView })
     },
-    [openDocsPreview, partnersDocsEnabled, slug, view],
+    [firewallDocsEnabled, openDocsPreview, partnersDocsEnabled, slug, view],
   )
 
   useEffect(() => {
-    if (!isOpen || slug === null || partnersDocsEnabled) return
-    if (isPartnersDocsSlug(slug)) {
+    if (!isOpen || slug === null) return
+    if (!partnersDocsEnabled && isPartnersDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
+      return
+    }
+    if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
     }
-  }, [isOpen, openDocsPreview, partnersDocsEnabled, slug])
+  }, [
+    firewallDocsEnabled,
+    isOpen,
+    openDocsPreview,
+    partnersDocsEnabled,
+    slug,
+  ])
 
   const handleOpenInNewTab = useCallback(() => {
     if (slug === null) return
@@ -269,6 +291,10 @@ export function DocsPreviewContent() {
   if (!isOpen || slug === null) return null
 
   if (!partnersDocsEnabled && isPartnersDocsSlug(slug)) {
+    return null
+  }
+
+  if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
     return null
   }
 

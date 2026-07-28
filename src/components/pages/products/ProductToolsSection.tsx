@@ -124,7 +124,10 @@ function CompactRealtimePreview({
 export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
   const { catalog } = useI18n()
   const toolsCopy = catalog.website.products.tools
-  const { codeExample, realtime, terraform } = getProductToolsContent(productId)
+  const toolsContent = getProductToolsContent(productId)
+  if (!toolsContent) return null
+
+  const { codeExample, realtime, terraform } = toolsContent
 
   return (
     <section className="border-b border-border py-16 sm:py-20">

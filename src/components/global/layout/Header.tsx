@@ -49,6 +49,10 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
@@ -161,6 +165,18 @@ function getDefaultMarketingHeaderNav(
   ] as const
 }
 
+function getMarketingNavAnalyticsAction(
+  href: string,
+): AnalyticsActionId | undefined {
+  if (href === '/docs') return 'marketing-nav-docs'
+  if (href === '/pricing') return 'marketing-nav-pricing'
+  if (href === '/enterprise') return 'marketing-nav-enterprise'
+  if (href === '/blog/category/customer-stories') return 'marketing-nav-customers'
+  if (href === '/blog') return 'marketing-nav-blog'
+  if (href === '/changelog') return 'marketing-nav-changelog'
+  return undefined
+}
+
 const ACCOUNT_MENU_ITEM_CLASS =
   'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
 
@@ -195,6 +211,7 @@ function MarketingNavLink({
   changelogAriaLabel: string
   className?: string
 }) {
+  const navAnalytics = getMarketingNavAnalyticsAction(item.href)
   return (
     <a
       href={item.href}
@@ -202,6 +219,7 @@ function MarketingNavLink({
         'link-unstyled inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
       )}
+      {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
       {...(item.href === '/changelog' && showChangelogBadge
         ? { 'aria-label': changelogAriaLabel }
         : {})}
@@ -223,11 +241,13 @@ function MarketingMobileNavLink({
   showChangelogBadge: boolean
   changelogAriaLabel: string
 }) {
+  const navAnalytics = getMarketingNavAnalyticsAction(item.href)
   return (
     <SheetClose asChild>
       <a
         href={item.href}
         className="link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         {...(item.href === '/changelog' && showChangelogBadge
           ? { 'aria-label': changelogAriaLabel }
           : {})}
@@ -668,6 +688,7 @@ export function ConsoleHeader({
               {showConnectAndCreate && projectId && (
                 <button
                   type="button"
+                  {...analyticsAttrs('connect-project')}
                   className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
                   onClick={() => projectConnectDialog?.openConnect()}
                 >
@@ -683,7 +704,10 @@ export function ConsoleHeader({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
+                          <button
+                            {...analyticsAttrs('header-create-menu')}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+                          >
                             <Plus className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
@@ -714,6 +738,7 @@ export function ConsoleHeader({
                         </Tooltip>
                       ) : (
                         <DropdownMenuItem
+                          {...analyticsAttrs('create-project')}
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
@@ -739,6 +764,7 @@ export function ConsoleHeader({
                       )}
                       {supportsMultiTenancy && (
                         <DropdownMenuItem
+                          {...analyticsAttrs('create-organization')}
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
@@ -785,6 +811,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-database')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/databases',
@@ -822,6 +849,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-user')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/auth',
@@ -859,6 +887,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-bucket')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/storage/',
@@ -896,6 +925,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-function')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/functions/create',
@@ -929,6 +959,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-topic')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/messaging',
@@ -972,6 +1003,7 @@ export function ConsoleHeader({
                             </Tooltip>
                           ) : (
                             <DropdownMenuItem
+                              {...analyticsAttrs('create-site')}
                               onClick={() => {
                                 navigate({
                                   to: '/projects/$projectId/sites/create',
@@ -1026,6 +1058,7 @@ export function ConsoleHeader({
           <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[900px]:block">
             <button
               type="button"
+              {...analyticsAttrs('command-center')}
               onClick={openCommandCenter}
               className="pointer-events-auto flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent"
             >
@@ -1069,6 +1102,7 @@ export function ConsoleHeader({
               {showCenterSearch ? (
                 <button
                   type="button"
+                  {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   aria-label={resolvedCenterSearchPlaceholder}
@@ -1085,6 +1119,7 @@ export function ConsoleHeader({
                 <Link
                   to="/sign-in"
                   search={authRedirect ? { redirect: authRedirect } : undefined}
+                  {...analyticsAttrs('auth-sign-in')}
                 >
                   {headerCopy.actions.signIn}
                 </Link>
@@ -1098,6 +1133,7 @@ export function ConsoleHeader({
                 <Link
                   to="/sign-up"
                   search={authRedirect ? { redirect: authRedirect } : undefined}
+                  {...analyticsAttrs('auth-sign-up')}
                 >
                   {headerCopy.actions.signUp}
                 </Link>
@@ -1112,6 +1148,7 @@ export function ConsoleHeader({
                   <>
                     <button
                       type="button"
+                      {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
                       className="hidden h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-accent/50 px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
                       aria-label={headerCopy.search.compactPlaceholder}
@@ -1128,6 +1165,7 @@ export function ConsoleHeader({
                     </button>
                     <button
                       type="button"
+                      {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
                       className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
                       aria-label={headerCopy.search.compactPlaceholder}
@@ -1139,6 +1177,7 @@ export function ConsoleHeader({
                   <>
                     <button
                       type="button"
+                      {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
                       className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
                     >
@@ -1160,6 +1199,7 @@ export function ConsoleHeader({
 
                     <button
                       type="button"
+                      {...analyticsAttrs('command-center')}
                       onClick={openCommandCenter}
                       className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
                       aria-label={headerCopy.search.compactPlaceholder}
@@ -1171,6 +1211,7 @@ export function ConsoleHeader({
               ) : showCenterSearch ? (
                 <button
                   type="button"
+                  {...analyticsAttrs('command-center')}
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
                   aria-label={resolvedCenterSearchPlaceholder}
@@ -1179,7 +1220,7 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Feedback / Support — console tools; on marketing only at very wide
+              {/* Feedback / Support - console tools; on marketing only at very wide
                   widths so they cannot crowd the centered Changelog / stars. */}
               <div
                 className={cn(
@@ -1218,6 +1259,7 @@ export function ConsoleHeader({
                   <TooltipTrigger asChild>
                     <button
                       onClick={toggleChat}
+                      {...analyticsAttrs('ai-assistant-open')}
                       className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                     >
                       <Bot className="h-4 w-4" />
@@ -1254,7 +1296,11 @@ export function ConsoleHeader({
                       variant="brandCta"
                       className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                     >
-                      <Link to="/upgrade" search={{ orgId }}>
+                      <Link
+                        to="/upgrade"
+                        search={{ orgId }}
+                        {...analyticsAttrs('upgrade-clicked')}
+                      >
                         <ArrowUpCircle className="h-4 w-4" />
                         {headerCopy.actions.upgrade}
                       </Link>
@@ -1274,7 +1320,10 @@ export function ConsoleHeader({
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0">
+                  <button
+                    {...analyticsAttrs('user-menu')}
+                    className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
+                  >
                     <InitialsAvatar
                       name={displayName}
                       size="sm"
@@ -1460,6 +1509,7 @@ export function ConsoleHeader({
                               }
                             : { to: '/' })}
                           className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...analyticsAttrs('header-console')}
                         >
                           <LayoutDashboard className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.console}</span>
@@ -1472,6 +1522,7 @@ export function ConsoleHeader({
                           target="_blank"
                           rel="noopener noreferrer"
                           className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...analyticsAttrs('header-home')}
                         >
                           <Home className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.home}</span>
@@ -1479,7 +1530,11 @@ export function ConsoleHeader({
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
-                        <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
+                        <Link
+                          to="/home"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...analyticsAttrs('header-home')}
+                        >
                           <Home className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.home}</span>
                         </Link>
@@ -1493,12 +1548,17 @@ export function ConsoleHeader({
                           target="_blank"
                           rel="noopener noreferrer"
                           className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...analyticsAttrs('header-docs')}
                         >
                           <BookOpen className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.docs}</span>
                         </a>
                       ) : (
-                        <Link to="/docs" className={ACCOUNT_MENU_ITEM_CLASS}>
+                        <Link
+                          to="/docs"
+                          className={ACCOUNT_MENU_ITEM_CLASS}
+                          {...analyticsAttrs('header-docs')}
+                        >
                           <BookOpen className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.docs}</span>
                         </Link>

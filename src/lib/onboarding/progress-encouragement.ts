@@ -53,6 +53,7 @@ const DONE: string[] = [
   'That’s the full tour. Go build.',
   'You did it - your stack is ready when you are.',
   'All green - now go make something people love.',
+  'You\u2019re ready - and the community helps Appwrite grow.',
 ]
 
 const POOLS: Record<EncouragementBand, string[]> = {

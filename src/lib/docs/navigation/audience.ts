@@ -1,4 +1,8 @@
-import type { DocsNavTree } from '../types'
+import type { DocsNavGroup, DocsNavTree } from '../types'
+import {
+  isFirewallDocsEnabled,
+  isFirewallDocsHref,
+} from '../firewall-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
@@ -16,8 +20,27 @@ export function getDocsAudienceFromPathname(pathname: string): DocsAudience {
   return 'developers'
 }
 
+function isNavGroup(item: DocsNavTree[number]): item is DocsNavGroup {
+  return 'items' in item
+}
+
+function withoutFirewallDocsLinks(navigation: DocsNavTree): DocsNavTree {
+  return navigation.flatMap((entry) => {
+    if (isNavGroup(entry)) {
+      const items = entry.items.filter((item) => !isFirewallDocsHref(item.href))
+      if (items.length === 0) return []
+      return [{ ...entry, items }]
+    }
+    if (isFirewallDocsHref(entry.href)) return []
+    return [entry]
+  })
+}
+
 export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
-  return audience === 'partners' ? DOCS_PARTNERS_GLOBAL_NAV : DOCS_GLOBAL_NAV
+  const navigation =
+    audience === 'partners' ? DOCS_PARTNERS_GLOBAL_NAV : DOCS_GLOBAL_NAV
+  if (audience === 'partners' || isFirewallDocsEnabled()) return navigation
+  return withoutFirewallDocsLinks(navigation)
 }
 
 export function getDocsAudienceHomeHref(audience: DocsAudience): string {

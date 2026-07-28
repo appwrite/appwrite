@@ -196,6 +196,7 @@ export function View() {
               <MarketingApplicationForm
                 fields={PARTNER_FORM_FIELDS}
                 submitLabel={t('Submit application')}
+                submitAnalyticsAction="partners-form-submit"
                 successTitle={t('Thank you for applying')}
                 successDescription={t(
                   "Our team will review your application and follow up to ensure we're a perfect fit.",

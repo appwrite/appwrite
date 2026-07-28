@@ -30,7 +30,7 @@ export type InitTicketStackOption = {
   iconKey: string
 }
 
-/** Technologies Appwrite supports — used for ticket stack picker. */
+/** Technologies Appwrite supports - used for ticket stack picker. */
 export const INIT_TICKET_STACK_OPTIONS: InitTicketStackOption[] = [
   { id: 'appwrite', label: 'Appwrite', iconKey: 'appwrite' },
   { id: 'react', label: 'React', iconKey: 'react' },

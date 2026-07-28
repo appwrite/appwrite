@@ -28,7 +28,13 @@ import {
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
 import { useDiagramGenerations } from '@/lib/react-query/hooks/diagram-generations'
+import {
+  deleteDiagramGenerationDraft,
+  getDiagramGenerationDraft,
+  setDiagramGenerationDraft,
+} from '@/lib/generator/generation-drafts'
 import { useRouteGenerationEditor } from '@/lib/generator/use-route-generation-editor'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 
 const RESIZE_HANDLE_CLASS = cn(
@@ -82,6 +88,19 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
     [],
   )
 
+  const resolveDraft = useCallback(
+    (id: string) => getDiagramGenerationDraft(id),
+    [],
+  )
+
+  const discardDraftIfUnsaved = useCallback(
+    (generationId: string | null | undefined) => {
+      if (!generationId) return
+      deleteDiagramGenerationDraft(generationId)
+    },
+    [],
+  )
+
   const {
     phase,
     activeGenerationId,
@@ -96,9 +115,13 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
     generations,
     getGenerationId: getDiagramGenerationId,
     loadGeneration: loadSavedDiagramGeneration,
+    resolveDraft,
     migrateLegacyIfNeeded,
     onEnterEditor: () => setLeftPanelOpen(false),
-    onLeaveEditor: () => leaveEditorRef.current(),
+    onLeaveEditor: (generationId) => {
+      leaveEditorRef.current()
+      discardDraftIfUnsaved(generationId)
+    },
     notFoundMessage: 'Diagram not found',
   })
 
@@ -107,14 +130,20 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
       const generationId = activeGenerationIdRef.current
       if (!generationId) return
 
+      const draft = getDiagramGenerationDraft(generationId)
       void saveGeneration({
         id: generationId,
-        name: document.title.trim() || 'Untitled diagram',
+        name: document.title.trim() || draft?.name || 'Untitled diagram',
         updatedAt: Date.now(),
+        ...(draft?.templateId ? { templateId: draft.templateId } : {}),
         document: normalizeDiagramDocument(document),
-      }).catch(() => {
-        toast.error('Could not save diagram')
       })
+        .then(() => {
+          deleteDiagramGenerationDraft(generationId)
+        })
+        .catch((error) => {
+          toast.error(getErrorMessage(error, 'Could not save diagram'))
+        })
     },
     [saveGeneration],
   )
@@ -154,6 +183,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
     setCanvasSize,
     loadDocument,
     flushPersist,
+    isDirty,
   } = useDiagramGeneratorState({ onDocumentPersist: persistActiveGeneration })
 
   loadDocumentRef.current = loadDocument
@@ -183,29 +213,27 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
   }, [document, phase, setDiagramDocument])
 
   const openEditor = useCallback(
-    async (generationId: string, nextDocument: ReturnType<typeof createDefaultDiagramDocument>, templateId?: DiagramTemplateId) => {
-      try {
-        await saveGeneration({
-          id: generationId,
-          name: nextDocument.title.trim() || 'Untitled diagram',
-          updatedAt: Date.now(),
-          ...(templateId ? { templateId } : {}),
-          document: normalizeDiagramDocument(nextDocument),
-        })
-      } catch {
-        toast.error('Could not save diagram')
-        return
-      }
-
+    (
+      generationId: string,
+      nextDocument: ReturnType<typeof createDefaultDiagramDocument>,
+      templateId?: DiagramTemplateId,
+    ) => {
+      setDiagramGenerationDraft({
+        id: generationId,
+        name: nextDocument.title.trim() || 'Untitled diagram',
+        updatedAt: Date.now(),
+        ...(templateId ? { templateId } : {}),
+        document: normalizeDiagramDocument(nextDocument),
+      })
       openEditorRoute(generationId)
     },
-    [openEditorRoute, saveGeneration],
+    [openEditorRoute],
   )
 
   const handleSelectTemplate = useCallback(
     (templateId: DiagramTemplateId) => {
       const nextDocument = normalizeDiagramDocument(createDiagramFromTemplate(templateId))
-      void openEditor(crypto.randomUUID(), nextDocument, templateId)
+      openEditor(crypto.randomUUID(), nextDocument, templateId)
     },
     [openEditor],
   )
@@ -223,12 +251,23 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
   )
 
   const handleBackToStart = useCallback(() => {
+    const generationId = activeGenerationIdRef.current
     backToStart(() => {
       flushPersist()
       leaveEditorRef.current()
+      if (!isDirty()) {
+        discardDraftIfUnsaved(generationId)
+      }
     })
     setLeftPanelOpen(false)
-  }, [backToStart, flushPersist, setLeftPanelOpen])
+  }, [
+    activeGenerationIdRef,
+    backToStart,
+    discardDraftIfUnsaved,
+    flushPersist,
+    isDirty,
+    setLeftPanelOpen,
+  ])
 
   const handleBackToStartRef = useRef(handleBackToStart)
   handleBackToStartRef.current = handleBackToStart
@@ -251,6 +290,7 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
     async (generationId: string) => {
       try {
         await deleteGeneration(generationId)
+        deleteDiagramGenerationDraft(generationId)
         if (activeGenerationId === generationId) {
           handleBackToStart()
         }
@@ -278,10 +318,33 @@ export function DiagramsView({ generationId: routeGenerationId }: DiagramsViewPr
   const handleEditorTitleChange = useCallback(
     async (name: string) => {
       if (!activeGenerationId) return
-      await handleRenameGeneration(activeGenerationId, name)
-      setDocument({ ...document, title: name })
+
+      const trimmed = name.trim().slice(0, maxNameLength)
+      if (!trimmed) return
+
+      setDocument({ title: trimmed })
+
+      const draft = getDiagramGenerationDraft(activeGenerationId)
+      if (draft) {
+        setDiagramGenerationDraft({
+          ...draft,
+          name: trimmed,
+          updatedAt: Date.now(),
+          document: { ...draft.document, title: trimmed },
+        })
+      }
+
+      if (generations.some((item) => item.id === activeGenerationId)) {
+        await handleRenameGeneration(activeGenerationId, trimmed)
+      }
     },
-    [activeGenerationId, document, handleRenameGeneration, setDocument],
+    [
+      activeGenerationId,
+      generations,
+      handleRenameGeneration,
+      maxNameLength,
+      setDocument,
+    ],
   )
 
   const handleEditorTitleChangeRef = useRef(handleEditorTitleChange)

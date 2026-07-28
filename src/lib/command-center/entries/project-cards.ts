@@ -63,7 +63,9 @@ const PROJECT_CARDS: CommandEntry[] = [
     description: 'Move this project to a different organization',
     icon: ArrowRightLeft,
     keywords: ['transfer', 'move', 'organization', 'ownership'],
-    available: (ctx) => canShowProjectSettings(ctx.access, ctx.features),
+    available: (ctx) =>
+      Boolean(ctx.features.multiTenancy) &&
+      canShowProjectSettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/settings#card-transfer-project`,
   },
   {

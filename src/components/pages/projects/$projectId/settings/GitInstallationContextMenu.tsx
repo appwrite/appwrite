@@ -10,25 +10,16 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { Copy, FileJson, Link2, Settings, Trash2 } from 'lucide-react'
-import {
-  copyResourceAsJson,
-  copyToClipboard,
-} from '@/lib/utils/context-menu'
+import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { getProviderOwnerUrl } from '@/lib/vcs/providers'
 
 interface GitInstallationContextMenuProps {
   installation: Models.Installation
-  configureHref: string
+  configureHref: string | null
   onDisconnect: (installation: Models.Installation) => void
   children: React.ReactNode
-}
-
-function getProviderUrl(provider: string, organization: string) {
-  if (provider === 'github') {
-    return `https://github.com/${organization}`
-  }
-  return null
 }
 
 export function GitInstallationContextMenu({
@@ -38,7 +29,7 @@ export function GitInstallationContextMenu({
   children,
 }: GitInstallationContextMenuProps) {
   const t = useT()
-  const providerUrl = getProviderUrl(
+  const providerUrl = getProviderOwnerUrl(
     installation.provider,
     installation.organization,
   )
@@ -47,12 +38,16 @@ export function GitInstallationContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem
-          onSelect={() => window.open(configureHref, '_blank', 'noreferrer')}
-        >
-          <ContextMenuIcon icon={Settings} />
-          {t('Configure')}
-        </ContextMenuItem>
+        {configureHref ? (
+          <ContextMenuItem
+            onSelect={() =>
+              window.open(configureHref, '_blank', 'noreferrer')
+            }
+          >
+            <ContextMenuIcon icon={Settings} />
+            {t('Configure')}
+          </ContextMenuItem>
+        ) : null}
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>

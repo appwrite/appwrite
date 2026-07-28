@@ -6,7 +6,7 @@ const COVER_SVG_CAP_HEIGHT = 0.82
 
 /**
  * Convert layout Y (line box top, px from canvas top) to SVG text baseline.
- * layoutY values in templates are tops — not baselines.
+ * layoutY values in templates are tops - not baselines.
  */
 export function coverSvgTextBaseline(layoutY: number, fontSize: number): number {
   return Math.round(layoutY + fontSize * COVER_SVG_CAP_HEIGHT)

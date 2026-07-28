@@ -15,7 +15,7 @@ export type CodeSyntaxColors = {
   string: string
 }
 
-/** Dark chrome — matches snapwrite CodeMirror HighlightStyle. */
+/** Dark chrome - matches snapwrite CodeMirror HighlightStyle. */
 export const CODE_SYNTAX_COLORS_DARK: CodeSyntaxColors = {
   moduleKeyword: '#9685FE',
   function: '#67A3FE',
@@ -26,7 +26,7 @@ export const CODE_SYNTAX_COLORS_DARK: CodeSyntaxColors = {
   string: '#4AD4AB',
 }
 
-/** Light chrome — same brand hues, slightly deeper for contrast on white. */
+/** Light chrome - same brand hues, slightly deeper for contrast on white. */
 export const CODE_SYNTAX_COLORS_LIGHT: CodeSyntaxColors = {
   moduleKeyword: '#7B6AEE',
   function: '#4A8FE8',

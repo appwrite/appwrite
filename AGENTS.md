@@ -479,7 +479,7 @@ Checklist (in this order):
 
 ### Copy
 
-- **No em dashes** - Do not use em dashes (`—`) in user-facing copy, labels, descriptions, or empty states. Use a period, comma, colon, or parentheses instead.
+- **No em dashes** - Never use the Unicode em dash character (U+2014). For empty or N/A table cells, use a regular hyphen (`-`). In prose, prefer a period, comma, colon, or parentheses instead of dash punctuation.
 - **All copy must be translatable** - Wrap every new user-facing string in `t('...')` and add a dictionary entry for each supported language. See "Internationalization (i18n)" for the full workflow, style guide, and what not to wrap.
 
 ### Visual Design
@@ -1074,7 +1074,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                                                                                                         |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                                                                                                 |
 | Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                                                                                                           |
-| Em dashes              | Never use `—` in user-facing copy; use a period, comma, colon, or parentheses instead                                                                                                                                                                                                                                   |
+| Em dashes              | Never use the Unicode em dash (U+2014); use `-` for empty/N/A cells, or a period, comma, colon, or parentheses in prose                                                                                                                                                                                                  |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                                                                                                        |
 | Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                                                                                               |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                                                                                                   |
@@ -1105,7 +1105,7 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
-**Debug mode:** When debug menu is open (press `.`), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
+**Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
 
@@ -1267,8 +1267,8 @@ Product analytics uses Plausible and must stay privacy-friendly. Most interactio
 
 - **Use the shared helper**: Import `useAnalytics` from `@/hooks/use-analytics` in components, or use `trackEvent` / `trackPageView` from `@/lib/analytics` outside React.
 - **Use automatic tracking by default**: `useGlobalAnalyticsTracker` in the root tracks links, buttons, menu items, tabs, non-text controls, form submits, and dialog open/close events across the app.
-- **Prefer dynamic event names**: Do not add explicit analytics metadata attributes to buttons. The root tracker builds click and control event names from the element label, tooltip, or icon when available, with a generic fallback such as `Button Clicked`.
-- **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs.
+- **Name important controls via the action catalog**: Do not derive event names from visible text, aria-labels, or tooltips (those often include project/org/resource names). For specific, low-cardinality names, add a key to `ANALYTICS_ACTIONS` in `src/lib/analytics-actions.ts` and spread `analyticsAttrs('your-action')` on the control. Unknown `data-analytics` values are ignored.
+- **Never send raw IDs or user-entered values**: Do not send project IDs, organization IDs, resource IDs, names, emails, domains, search terms, query strings, or full URLs. Never put those values in event names either.
 - **Use route templates**: Page views and events should use sanitized routes such as `/projects/$projectId/databases/$databaseId`, not concrete paths.
 - **Keep manual tracking low-cardinality**: Manual event props should be booleans, counts, fixed enums, route templates, resource types, steps, results, or error names. Avoid labels or arbitrary strings from the UI.
 - **Track important outcomes manually**: For create/update/delete flows, track success and API failure when automatic form/click tracking is not enough.
@@ -1276,14 +1276,22 @@ Product analytics uses Plausible and must stay privacy-friendly. Most interactio
 
 ### Automatic event names
 
-Click and control events are named from the best safe descriptor available:
+1. If the clicked element (or a close ancestor) has `data-analytics` matching a key in `ANALYTICS_ACTIONS`, use that catalog event name (e.g. `Project Switcher Clicked`).
+2. Otherwise use a fixed base name from the control role: `Button Clicked`, `Menu Item Clicked`, `Control Changed`, `Tab Changed`, `Navigation Clicked`, or `External Link Opened`.
 
-- `aria-label` / `aria-labelledby`
-- visible text
-- tooltip text (`title` / `aria-describedby`)
-- icon name, including Lucide icon classes
+Example:
 
-Examples: `Create Project Button Clicked`, `Trash Menu Item Clicked`, `Docs External Link Opened`. If no safe descriptor exists, the tracker falls back to generic names such as `Button Clicked`, `Menu Item Clicked`, `Control Changed`, `Navigation Clicked`, or `External Link Opened`.
+```tsx
+import { analyticsAttrs } from '@/lib/analytics-actions'
+
+<button {...analyticsAttrs('project-switcher')} type="button">
+  {/* trigger content may include the project name; event name stays fixed */}
+</button>
+```
+
+Put `data-analytics` on the interactive control itself, not a broad layout wrapper, so nested actions do not inherit the wrong name.
+
+For list/service create buttons, pass `createAnalyticsAction` to `ServiceHeader` (e.g. `createAnalyticsAction="create-database"`).
 
 ### Manual tracking
 
@@ -1296,7 +1304,7 @@ Use manual tracking only for outcomes and flows that generic interaction trackin
 - `Wizard Opened`
 - `Wizard Option Selected`
 
-If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section.
+If you add a new reusable manual event name, update `AnalyticsEventName` in `src/lib/analytics.ts` and this section. For click instrumentation of a specific control, prefer a new `ANALYTICS_ACTIONS` entry instead.
 
 ### Tracking opt-outs
 
@@ -1314,7 +1322,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `account.organization` (user-level).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `organization` (preferred org on account prefs).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format
@@ -1329,9 +1337,12 @@ Console uses **team** (organization) and **user** (account) preferences to store
 
 ### Adding a new setting
 
-1. Define the key (and max length/format) in code (e.g. `src/lib/team-prefs-keys.ts`).
+1. Define the key (and max length/format) in code (e.g. `src/lib/user-prefs-keys.ts` or `src/lib/team-prefs-keys.ts`).
 2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
-3. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+3. Register the key in `src/lib/prefs-catalog.ts` (`PREFS_CATALOG`) with scope, description, and category so the debug Prefs panel can classify it as known (green) vs unknown (red).
+4. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+
+**Catalog**: `src/lib/prefs-catalog.ts` is the single enumeration of managed account/team preference keys. Exact keys and dynamic prefixes (e.g. `console.savedFilters.<scope>`) both belong there. The debug menu Prefs structured view reads from this catalog.
 
 ### User prefs: saved filter presets
 
@@ -1362,7 +1373,7 @@ All user-facing copy in the app and website is translatable. **English is the on
    - `translate(text)` is the non-React variant for utilities (e.g. toast/error formatting in `src/lib/utils/error-formatting.ts`).
    - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/<lang>/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
 
-Language selection: debug menu (press `.`) → Settings → Language. RTL languages (e.g. Hebrew) auto-enable the matching page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
+Language selection: debug menu (type `pink`, case-insensitive) → Settings → Language. RTL languages (e.g. Hebrew) auto-enable the matching page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
 
 ### Debug menu (English + LTR only)
 
@@ -1582,8 +1593,8 @@ Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`)
 
 - **Runtime/package manager**: This project uses **Bun** (not npm/pnpm, even though a `pnpm-lock.yaml` exists). Use `bun run <script>` for all scripts in `package.json`. Bun is installed at `~/.bun/bin/bun`; the update script runs `bun install`.
 - **No local backend**: There is no local backend server and no `docker-compose`. The console is a client-side app that talks to a **remote backend** whose endpoint is set via the `VITE_*` endpoint variable documented in the `## Environment` section above. Copy `.env` from `.env.example` (`.env` is gitignored). In Cloud Agent VMs, the endpoint, the console fingerprint key, and other `VITE_*` values are injected as secrets and take precedence over the placeholder values in `.env.example`.
-- **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` (Vitest unit tests), `bun run e2e` (Playwright; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`).
-- **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`/`vitest.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
+- **Standard commands** (see README "Scripts" and `package.json`): `bun run dev` (Vite dev server on port 3000), `bun run lint` (ESLint), `bun run check` (`tsc --noEmit`), `bun run test` / `bun run e2e` (Playwright read-only smoke; needs `bun run install-browsers` first plus a reachable backend and `E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD` or `E2E_TEST_SESSION_SECRET`).
+- **Pre-existing lint/type issues**: `bun run lint` and `bun run check` currently report many pre-existing errors in the repo (e.g. unused imports, and config-file type mismatches from the `rolldown-vite` alias in `vite.config.ts`). These are not caused by environment setup; do not treat them as setup failures.
 - **Login for manual testing**: To exercise authenticated flows, log into the dev server (`http://localhost:3000/sign-in`) with the injected `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` secrets. The account's project creation may be blocked by org permissions/plan limits on some orgs; project-scoped write actions (e.g. creating an Auth user, storage bucket, or database inside an existing project) work for hello-world verification.
 - **Vite alias**: `vite` is aliased to `npm:rolldown-vite` (Rolldown), so dev/build logs mention `ROLLDOWN-VITE`; this is expected.
 - **`remotion/` subfolder** is an independent package (launch video) with its own deps and no lockfile; it is not needed to run or test the console.

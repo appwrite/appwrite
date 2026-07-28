@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import {
   useCallback,
   useEffect,
@@ -25,6 +25,7 @@ import {
 import {
   clampTableViewSidebarWidthPx,
   computeTwoPanelHorizontalLayout,
+  effectivePanelGroupWidthPx,
   syncPanelGroupFirstPanePx,
   TABLE_VIEW_MAIN_MIN_WIDTH_PX,
   TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX,
@@ -82,8 +83,13 @@ export function TableViewResizableLayout({
     [accountPrefs?.prefs, parsePersistedSidebarPx],
   )
 
-  /** Px used for `defaultSize` — set once the group is measured; updated after drag. */
-  const [mountedSidebarPx, setMountedSidebarPx] = useState<number | null>(null)
+  /**
+   * Px used for panel sizes. Start from the persisted preference immediately so
+   * we can mount `ResizablePanelGroup` on the first paint. Waiting for measure
+   * and swapping from a fallback DOM tree remounts the sidebar and resets its
+   * scroll position (visible on the first table selection after refresh).
+   */
+  const [mountedSidebarPx, setMountedSidebarPx] = useState(sidebarWidthPx)
   const isSidebarResizingRef = useRef(false)
 
   useLayoutEffect(() => {
@@ -99,30 +105,32 @@ export function TableViewResizableLayout({
   }, [])
 
   useEffect(() => {
-    if (containerWidth <= 0 || isSidebarResizingRef.current) return
+    if (isSidebarResizingRef.current) return
     setMountedSidebarPx((prev) =>
-      prev === null || prev !== sidebarWidthPx ? sidebarWidthPx : prev,
+      prev !== sidebarWidthPx ? sidebarWidthPx : prev,
     )
-  }, [containerWidth, sidebarWidthPx])
+  }, [sidebarWidthPx])
 
-  const panelLayout = useMemo(() => {
-    if (mountedSidebarPx === null || containerWidth <= 0) return null
-    return computeTwoPanelHorizontalLayout({
-      containerWidth,
-      firstPx: mountedSidebarPx,
-      firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
-      firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
-      secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
-    })
-  }, [containerWidth, mountedSidebarPx])
+  const panelLayout = useMemo(
+    () =>
+      computeTwoPanelHorizontalLayout({
+        containerWidth: effectivePanelGroupWidthPx(containerWidth),
+        firstPx: mountedSidebarPx,
+        firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
+        firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
+        secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
+      }),
+    [containerWidth, mountedSidebarPx],
+  )
 
   useLayoutEffect(() => {
-    if (mountedSidebarPx === null || containerWidth <= 0) return
+    if (containerWidth <= 0) return
     if (isSidebarResizingRef.current) return
 
     const prevWidth = prevContainerWidthRef.current
     prevContainerWidthRef.current = containerWidth
-    if (prevWidth <= 0 || prevWidth === containerWidth) return
+    // Sync on first real measure (prevWidth === 0) and on later width changes.
+    if (prevWidth === containerWidth) return
 
     const nextPx = syncPanelGroupFirstPanePx(
       firstPanelRef.current,
@@ -151,10 +159,10 @@ export function TableViewResizableLayout({
       if (!isSidebarResizingRef.current) return
       const percent = sizes[0]
       if (typeof percent !== 'number' || !Number.isFinite(percent)) return
-      if (containerWidth <= 0) return
+      const width = effectivePanelGroupWidthPx(containerWidth)
       const layout = computeTwoPanelHorizontalLayout({
-        containerWidth,
-        firstPx: (percent / 100) * containerWidth,
+        containerWidth: width,
+        firstPx: (percent / 100) * width,
         firstMinPx: TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
         firstMaxPx: TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
         secondMinPx: TABLE_VIEW_MAIN_MIN_WIDTH_PX,
@@ -164,53 +172,23 @@ export function TableViewResizableLayout({
     [containerWidth],
   )
 
-  const finishSidebarResize = useCallback(
-    (e?: PointerEvent<HTMLDivElement>) => {
+  const handleSidebarDragging = useCallback(
+    (isDragging: boolean) => {
+      if (isDragging) {
+        isSidebarResizingRef.current = true
+        return
+      }
       if (!isSidebarResizingRef.current) return
       isSidebarResizingRef.current = false
-      if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
-        try {
-          e.currentTarget.releasePointerCapture(e.pointerId)
-        } catch {
-          /* already released */
-        }
-      }
-      const nextPx = latestSidebarPxRef.current
-      persistSidebarWidthPx(nextPx)
+      persistSidebarWidthPx(latestSidebarPxRef.current)
     },
     [persistSidebarWidthPx],
-  )
-
-  const handleSidebarResizePointerDown = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
-      isSidebarResizingRef.current = true
-      e.currentTarget.setPointerCapture(e.pointerId)
-    },
-    [],
   )
 
   const shellClassName = cn(
     'flex h-full min-h-0 min-w-0 flex-1 flex-col',
     className,
   )
-
-  if (!panelLayout) {
-    return (
-      <div ref={containerRef} className={shellClassName}>
-        <div className="flex h-full min-h-0 min-w-0 flex-1">
-          <div
-            className="flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-e border-border bg-background"
-            style={{ width: sidebarWidthPx }}
-          >
-            {sidebar}
-          </div>
-          <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            {children}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div ref={containerRef} className={shellClassName}>
@@ -232,9 +210,7 @@ export function TableViewResizableLayout({
         </ResizablePanel>
         <ResizableHandle
           className={HANDLE_CLASS}
-          onPointerDown={handleSidebarResizePointerDown}
-          onPointerUp={finishSidebarResize}
-          onPointerCancel={finishSidebarResize}
+          onDragging={handleSidebarDragging}
         />
         <ResizablePanel
           defaultSize={panelLayout.secondPercent}

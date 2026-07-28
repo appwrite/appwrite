@@ -77,7 +77,6 @@ Edit `.env` and configure the following variables:
 VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 
 # Optional
-VITE_INSTRUMENTATION_SCRIPT_SRC=https://your-analytics-script.js
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_... # For billing features
 VITE_COMPANY_NAME=Appwrite
 VITE_CONTACT_SALES_URL=https://appwrite.io/contact
@@ -126,13 +125,12 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `check` | TypeScript check |
 | `clean` | Remove build artifacts |
 | `dev` | Dev server on port 3000 |
-| `e2e` / `test:e2e:ui` | Playwright tests |
+| `e2e` / `e2e:ui` / `test` / `test:ui` | Playwright e2e smoke tests |
 | `format` / `format:check` | Prettier |
 | `install-browsers` | Install Chromium for Playwright |
 | `lint` | ESLint |
 | `serve` | Preview production build |
 | `start` | Production Bun server |
-| `test` | Vitest unit tests |
 | `import:blog` | Import blog from website |
 | `import:docs` | Import docs from website, then `generate:docs` |
 | `import:integrations` | Import integrations catalog |
@@ -213,10 +211,26 @@ The monitor tracks intervals, React Query queries, frame rate, and memory usage 
 
 ## Testing
 
-This project uses [Vitest](https://vitest.dev/) for testing. Run tests with:
+This project uses [Playwright](https://playwright.dev/) for end-to-end smoke tests
+(read-only page checks for the website and console). Set credentials in `.env`:
 
 ```bash
+E2E_TEST_EMAIL=you@example.com
+E2E_TEST_PASSWORD=your-password
+# Optional: pin which org/project console tests open
+# E2E_ORG_ID=
+# E2E_PROJECT_ID=
+```
+
+```bash
+# Install Chromium once
+bun run install-browsers
+
+# Run the suite (builds the app, signs in, visits pages)
 bun run test
+
+# Interactive UI mode
+bun run test:ui
 ```
 
 ## Linting & Formatting
@@ -248,7 +262,6 @@ bun run format:check
 | --------------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
 | `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
 | `VITE_CONSOLE_PROFILE`            | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL                             |
 | `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing                               |
 | `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding                                        |
 | `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL                                           |

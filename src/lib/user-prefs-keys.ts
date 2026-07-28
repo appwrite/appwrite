@@ -42,6 +42,64 @@ import type { DateRange } from 'react-day-picker'
 
 export type UserPrefs = Record<string, unknown>
 
+/**
+ * Preferred organization ID for post-auth redirects and console context.
+ * Value: organization (team) ID string.
+ */
+export const USER_PREFS_KEY_ORGANIZATION = 'organization'
+
+/**
+ * Comma-separated feature IDs the user has dismissed (coming-soon curtains).
+ * Value: string (legacy array format may still appear until rewritten).
+ */
+export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
+
+/**
+ * Appwrite `Assoc` prefs validator (`new Assoc()`): max JSON body size in bytes.
+ * Oversized payloads fail with the same message as a non-object prefs value:
+ * "Invalid `prefs` param: Value must be a valid object."
+ */
+export const APPWRITE_ACCOUNT_PREFS_MAX_BYTES = 65535
+
+/**
+ * Drop nested/legacy values before `account.updatePrefs`.
+ * Nested objects/arrays bloat the JSON and are not used by this console
+ * (structured data is stored as JSON strings on flat keys).
+ */
+export function sanitizeAccountPrefsForWrite(
+  prefs: Record<string, unknown>,
+): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {}
+  for (const [key, value] of Object.entries(prefs)) {
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      // Appwrite rejects NaN / Infinity as preference values.
+      if (typeof value === 'number' && !Number.isFinite(value)) continue
+      out[key] = value
+    }
+  }
+  return out
+}
+
+/** UTF-8 byte size of the sanitized prefs payload Appwrite will validate. */
+export function getAccountPrefsPayloadByteSize(
+  prefs: Record<string, unknown>,
+): number {
+  return new TextEncoder().encode(
+    JSON.stringify(sanitizeAccountPrefsForWrite(prefs)),
+  ).length
+}
+
+export function isAccountPrefsPayloadWithinLimit(
+  prefs: Record<string, unknown>,
+  maxBytes: number = APPWRITE_ACCOUNT_PREFS_MAX_BYTES,
+): boolean {
+  return getAccountPrefsPayloadByteSize(prefs) <= maxBytes
+}
+
 /** Max number of saved filter presets per view scope */
 export const MAX_SAVED_FILTERS_PER_SCOPE = 20
 
@@ -1401,13 +1459,13 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Databases: Tables DB — which row attributes to fetch & column order (account)
+// Databases: Tables DB - which row attributes to fetch & column order (account)
 // ---------------------------------------------------------------------------
 
 /**
  * Per-table preference key: `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`
  *
- * Value: JSON string `string[]` — ordered column keys: optional system fields
+ * Value: JSON string `string[]` - ordered column keys: optional system fields
  * (`$sequence`, `$id`, `$createdAt`, `$updatedAt`) plus attribute keys.
  * Prefix `!` on a key means it is hidden but keeps its position in the list.
  * Absent or invalid: fetch and show all columns (default).
@@ -1754,7 +1812,7 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Console right pane width (account prefs) — shared by docs, assistant, etc.
+// Console right pane width (account prefs) - shared by docs, assistant, etc.
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.rightPane.widthPx` - shared right pane width in pixels. */
@@ -2131,12 +2189,13 @@ export function parseCliShellSessions(
   }
 }
 
-export function mergeCliShellSessionsIntoPrefs(
-  prefs: UserPrefs,
-  projectId: string,
+/**
+ * Canonical form written to account prefs. Use for equality checks so in-memory
+ * state (e.g. omitted `parentSessionId`) matches the stored JSON shape.
+ */
+export function normalizeCliShellSessionsState(
   state: PersistedCliShellSessionsState,
-): UserPrefs {
-  const key = getCliShellSessionsKey(projectId)
+): PersistedCliShellSessionsState {
   const sessions = state.sessions
     .slice(0, MAX_CLI_SHELL_SESSIONS)
     .map((session) => ({
@@ -2152,7 +2211,7 @@ export function mergeCliShellSessionsIntoPrefs(
         .filter((id) => sessions.some((session) => session.id === id))
         .slice(0, MAX_CLI_SHELL_SESSIONS)
     : []
-  const payload: PersistedCliShellSessionsState = {
+  return {
     sessions,
     activeSessionId: activeExists
       ? state.activeSessionId
@@ -2160,9 +2219,23 @@ export function mergeCliShellSessionsIntoPrefs(
     splitPaneSessionIds:
       splitPaneSessionIds.length > 1 ? splitPaneSessionIds : undefined,
   }
+}
+
+export function serializeCliShellSessionsState(
+  state: PersistedCliShellSessionsState,
+): string {
+  return JSON.stringify(normalizeCliShellSessionsState(state))
+}
+
+export function mergeCliShellSessionsIntoPrefs(
+  prefs: UserPrefs,
+  projectId: string,
+  state: PersistedCliShellSessionsState,
+): UserPrefs {
+  const key = getCliShellSessionsKey(projectId)
   return {
     ...prefs,
-    [key]: JSON.stringify(payload),
+    [key]: serializeCliShellSessionsState(state),
   }
 }
 
@@ -2380,6 +2453,78 @@ export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-refer
 export const USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT =
   'console.buildNotifications.optedOut'
 
+// ---------------------------------------------------------------------------
+// Community support prompt (account prefs)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.communitySupport` - JSON state for the skippable
+ * community-support wizard (unique active days, show count, last shown, action).
+ */
+export const USER_PREFS_KEY_COMMUNITY_SUPPORT = 'console.communitySupport'
+
+export type CommunitySupportPrefs = {
+  uniqueDayCount: number
+  lastActiveDay: string | null
+  /** How many times the wizard was presented to this user. */
+  shownCount: number
+  lastShownAt: string | null
+  actionTakenAt: string | null
+  actionId: string | null
+}
+
+export const EMPTY_COMMUNITY_SUPPORT_PREFS: CommunitySupportPrefs = {
+  uniqueDayCount: 0,
+  lastActiveDay: null,
+  shownCount: 0,
+  lastShownAt: null,
+  actionTakenAt: null,
+  actionId: null,
+}
+
+function parseNonNegativeInt(value: unknown): number {
+  return typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0
+    ? Math.floor(value)
+    : 0
+}
+
+export function parseCommunitySupportPrefs(
+  prefs: UserPrefs | null | undefined,
+): CommunitySupportPrefs {
+  const raw = prefs?.[USER_PREFS_KEY_COMMUNITY_SUPPORT]
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return { ...EMPTY_COMMUNITY_SUPPORT_PREFS }
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<CommunitySupportPrefs>
+    return {
+      uniqueDayCount: parseNonNegativeInt(parsed.uniqueDayCount),
+      lastActiveDay:
+        typeof parsed.lastActiveDay === 'string' ? parsed.lastActiveDay : null,
+      shownCount: parseNonNegativeInt(parsed.shownCount),
+      lastShownAt:
+        typeof parsed.lastShownAt === 'string' ? parsed.lastShownAt : null,
+      actionTakenAt:
+        typeof parsed.actionTakenAt === 'string' ? parsed.actionTakenAt : null,
+      actionId: typeof parsed.actionId === 'string' ? parsed.actionId : null,
+    }
+  } catch {
+    return { ...EMPTY_COMMUNITY_SUPPORT_PREFS }
+  }
+}
+
+export function mergeCommunitySupportPrefsIntoPrefs(
+  prefs: UserPrefs,
+  value: CommunitySupportPrefs,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_COMMUNITY_SUPPORT]: JSON.stringify(value),
+  }
+}
+
 /** @deprecated Migrated to account prefs; cleared after first sync. */
 export const LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT =
   'appwrite.buildNotifications.optedOut'
@@ -2584,13 +2729,23 @@ export function mergeServiceListViewModeIntoPrefs(
 
 // ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
+//
+// Account prefs store only ordered user ID references (small). Display fields
+// (name/email) live in localStorage so we never write avatars, data URLs, or
+// other large blobs into Appwrite account prefs.
 // ---------------------------------------------------------------------------
 
-/** Full key: `console.impersonation.recentUsers` - JSON RecentImpersonationUser[] */
+/**
+ * Full key: `console.impersonation.recentUsers`
+ * Value: JSON string[] of user IDs (legacy: JSON RecentImpersonationUser[] is still read).
+ */
 export const USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT =
   'console.impersonation.recentUsers'
 
 export const MAX_RECENT_IMPERSONATION_USERS = 5
+
+/** Caps for labels stored in local/session storage (never images / data URLs). */
+export const MAX_RECENT_IMPERSONATION_LABEL_LENGTH = 128
 
 export interface RecentImpersonationUser {
   $id: string
@@ -2598,8 +2753,73 @@ export interface RecentImpersonationUser {
   email?: string
 }
 
+type RecentImpersonationDetails = {
+  name?: string
+  email?: string
+}
+
 const SESSION_STORAGE_RECENT_BY_OPERATOR_KEY =
   'console.impersonation.recentByOperator'
+
+/** localStorage: Record<operatorId, Record<userId, { name?, email? }>> */
+const LOCAL_STORAGE_RECENT_DETAILS_BY_OPERATOR_KEY =
+  'console.impersonation.recentUserDetails'
+
+function isOversizedOrBinaryLabel(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  if (trimmed.length > MAX_RECENT_IMPERSONATION_LABEL_LENGTH) return true
+  // Reject data URLs / base64 payloads that must never enter prefs or local details.
+  if (/^data:/i.test(trimmed)) return true
+  if (/^blob:/i.test(trimmed)) return true
+  return false
+}
+
+function sanitizeRecentImpersonationLabel(
+  value: unknown,
+): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  if (!trimmed || isOversizedOrBinaryLabel(trimmed)) return undefined
+  return trimmed.slice(0, MAX_RECENT_IMPERSONATION_LABEL_LENGTH)
+}
+
+/** Keep only `$id` + short name/email. Drops avatar/image/photo and any other keys. */
+export function sanitizeRecentImpersonationUser(
+  raw: unknown,
+): RecentImpersonationUser | null {
+  if (raw == null || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const id =
+    typeof record.$id === 'string'
+      ? record.$id.trim()
+      : typeof record.id === 'string'
+        ? record.id.trim()
+        : ''
+  if (!id || id.length > 64) return null
+  const entry: RecentImpersonationUser = { $id: id }
+  const name = sanitizeRecentImpersonationLabel(record.name)
+  const email = sanitizeRecentImpersonationLabel(record.email)
+  if (name) entry.name = name
+  if (email) entry.email = email
+  return entry
+}
+
+function sanitizeRecentImpersonationList(
+  list: unknown,
+): RecentImpersonationUser[] {
+  if (!Array.isArray(list)) return []
+  const out: RecentImpersonationUser[] = []
+  const seen = new Set<string>()
+  for (const item of list) {
+    const user = sanitizeRecentImpersonationUser(item)
+    if (!user || seen.has(user.$id)) continue
+    seen.add(user.$id)
+    out.push(user)
+    if (out.length >= MAX_RECENT_IMPERSONATION_USERS) break
+  }
+  return out
+}
 
 function readRecentByOperatorMap(): Record<string, RecentImpersonationUser[]> {
   if (typeof sessionStorage === 'undefined') return {}
@@ -2608,7 +2828,14 @@ function readRecentByOperatorMap(): Record<string, RecentImpersonationUser[]> {
     if (!raw) return {}
     const parsed = JSON.parse(raw) as unknown
     if (typeof parsed !== 'object' || parsed === null) return {}
-    return parsed as Record<string, RecentImpersonationUser[]>
+    const out: Record<string, RecentImpersonationUser[]> = {}
+    for (const [operatorId, list] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
+      const sanitized = sanitizeRecentImpersonationList(list)
+      if (sanitized.length > 0) out[operatorId] = sanitized
+    }
+    return out
   } catch {
     return {}
   }
@@ -2619,13 +2846,124 @@ function writeRecentByOperatorMap(
 ) {
   if (typeof sessionStorage === 'undefined') return
   try {
+    const sanitized: Record<string, RecentImpersonationUser[]> = {}
+    for (const [operatorId, list] of Object.entries(map)) {
+      sanitized[operatorId] = sanitizeRecentImpersonationList(list)
+    }
     sessionStorage.setItem(
       SESSION_STORAGE_RECENT_BY_OPERATOR_KEY,
+      JSON.stringify(sanitized),
+    )
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+function readRecentDetailsByOperatorMap(): Record<
+  string,
+  Record<string, RecentImpersonationDetails>
+> {
+  if (typeof localStorage === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(
+      LOCAL_STORAGE_RECENT_DETAILS_BY_OPERATOR_KEY,
+    )
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as unknown
+    if (typeof parsed !== 'object' || parsed === null) return {}
+    const out: Record<string, Record<string, RecentImpersonationDetails>> = {}
+    for (const [operatorId, users] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
+      if (typeof users !== 'object' || users === null) continue
+      const byUser: Record<string, RecentImpersonationDetails> = {}
+      for (const [userId, details] of Object.entries(
+        users as Record<string, unknown>,
+      )) {
+        const id = userId.trim()
+        if (!id) continue
+        const sanitized = sanitizeRecentImpersonationUser({
+          $id: id,
+          ...(typeof details === 'object' && details !== null
+            ? (details as Record<string, unknown>)
+            : {}),
+        })
+        if (!sanitized) continue
+        const entry: RecentImpersonationDetails = {}
+        if (sanitized.name) entry.name = sanitized.name
+        if (sanitized.email) entry.email = sanitized.email
+        if (entry.name || entry.email) byUser[id] = entry
+      }
+      if (Object.keys(byUser).length > 0) out[operatorId] = byUser
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+function writeRecentDetailsByOperatorMap(
+  map: Record<string, Record<string, RecentImpersonationDetails>>,
+) {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(
+      LOCAL_STORAGE_RECENT_DETAILS_BY_OPERATOR_KEY,
       JSON.stringify(map),
     )
   } catch {
-    /* private mode */
+    /* private mode / quota */
   }
+}
+
+/**
+ * Persist short display labels for recent targets in localStorage (not account prefs).
+ * Call whenever the operator's recent list changes so the picker can show names offline.
+ */
+export function writeRecentImpersonationDetails(
+  operatorId: string,
+  list: RecentImpersonationUser[],
+) {
+  const id = operatorId?.trim()
+  if (!id) return
+  const map = readRecentDetailsByOperatorMap()
+  const previous = map[id] ?? {}
+  const byUser: Record<string, RecentImpersonationDetails> = {}
+  const sanitizedList = sanitizeRecentImpersonationList(list)
+
+  for (const user of sanitizedList) {
+    const prev = previous[user.$id]
+    const details: RecentImpersonationDetails = {}
+    const name = user.name || prev?.name
+    const email = user.email || prev?.email
+    if (name) details.name = name
+    if (email) details.email = email
+    if (details.name || details.email) byUser[user.$id] = details
+  }
+
+  if (Object.keys(byUser).length === 0) {
+    delete map[id]
+  } else {
+    map[id] = byUser
+  }
+  writeRecentDetailsByOperatorMap(map)
+}
+
+function enrichRecentImpersonationUsers(
+  operatorId: string,
+  list: RecentImpersonationUser[],
+): RecentImpersonationUser[] {
+  const id = operatorId?.trim()
+  const detailsByUser = id ? readRecentDetailsByOperatorMap()[id] : undefined
+  return list.map((user) => {
+    const details = detailsByUser?.[user.$id]
+    if (!details) return user
+    return {
+      $id: user.$id,
+      name: user.name || details.name,
+      email: user.email || details.email,
+    }
+  })
 }
 
 /** While impersonating, prefs belong to the target user - store recents per operator here until exit. */
@@ -2635,22 +2973,10 @@ export function readRecentImpersonationSessionList(
   const id = operatorId?.trim()
   if (!id) return []
   const map = readRecentByOperatorMap()
-  const list = map[id]
-  if (!Array.isArray(list)) return []
-  return list
-    .filter(
-      (u): u is RecentImpersonationUser =>
-        u != null &&
-        typeof u === 'object' &&
-        typeof (u as RecentImpersonationUser).$id === 'string',
-    )
-    .map((u) => ({
-      $id: String(u.$id).trim(),
-      ...(typeof u.name === 'string' ? { name: u.name } : {}),
-      ...(typeof u.email === 'string' ? { email: u.email } : {}),
-    }))
-    .filter((u) => u.$id.length > 0)
-    .slice(0, MAX_RECENT_IMPERSONATION_USERS)
+  return enrichRecentImpersonationUsers(
+    id,
+    sanitizeRecentImpersonationList(map[id]),
+  )
 }
 
 export function writeRecentImpersonationSessionList(
@@ -2659,9 +2985,11 @@ export function writeRecentImpersonationSessionList(
 ) {
   const id = operatorId?.trim()
   if (!id) return
+  const sanitized = sanitizeRecentImpersonationList(list)
   const map = readRecentByOperatorMap()
-  map[id] = list.slice(0, MAX_RECENT_IMPERSONATION_USERS)
+  map[id] = sanitized
   writeRecentByOperatorMap(map)
+  writeRecentImpersonationDetails(id, sanitized)
 }
 
 export function clearRecentImpersonationSessionList(operatorId: string) {
@@ -2672,31 +3000,51 @@ export function clearRecentImpersonationSessionList(operatorId: string) {
   writeRecentByOperatorMap(map)
 }
 
+/**
+ * Parse recent impersonation targets from account prefs.
+ * Prefs hold ID references only; name/email are filled from localStorage when `operatorId` is passed.
+ * Legacy prefs that stored full `{ $id, name, email }` objects are still accepted (IDs used; labels migrated to localStorage).
+ */
 export function parseRecentImpersonationUsers(
   prefs: UserPrefs | null | undefined,
+  operatorId?: string,
 ): RecentImpersonationUser[] {
   const key = USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT
   if (!prefs || typeof prefs[key] !== 'string') return []
   try {
     const raw = JSON.parse(prefs[key] as string)
     if (!Array.isArray(raw)) return []
-    return raw
-      .filter(
-        (item): item is RecentImpersonationUser =>
-          item != null &&
-          typeof item === 'object' &&
-          typeof (item as RecentImpersonationUser).$id === 'string',
+
+    const fromPrefs: RecentImpersonationUser[] = []
+    for (const item of raw) {
+      if (typeof item === 'string') {
+        const id = item.trim()
+        if (id && id.length <= 64) fromPrefs.push({ $id: id })
+        continue
+      }
+      const sanitized = sanitizeRecentImpersonationUser(item)
+      if (sanitized) fromPrefs.push(sanitized)
+      if (fromPrefs.length >= MAX_RECENT_IMPERSONATION_USERS) break
+    }
+
+    const limited = fromPrefs.slice(0, MAX_RECENT_IMPERSONATION_USERS)
+    const opId = operatorId?.trim()
+    if (opId) {
+      // Migrate any legacy labels that were still embedded in prefs into localStorage.
+      const withLabels = limited.filter((u) => u.name || u.email)
+      if (withLabels.length > 0) {
+        writeRecentImpersonationDetails(opId, limited)
+      }
+      return enrichRecentImpersonationUsers(
+        opId,
+        limited.map((u) => ({ $id: u.$id })),
       )
-      .map((item) => {
-        const u = item as RecentImpersonationUser
-        return {
-          $id: String(u.$id).trim(),
-          ...(typeof u.name === 'string' ? { name: u.name } : {}),
-          ...(typeof u.email === 'string' ? { email: u.email } : {}),
-        }
-      })
-      .filter((u) => u.$id.length > 0)
-      .slice(0, MAX_RECENT_IMPERSONATION_USERS)
+    }
+    return limited.map((u) => ({
+      $id: u.$id,
+      ...(u.name ? { name: u.name } : {}),
+      ...(u.email ? { email: u.email } : {}),
+    }))
   } catch {
     return []
   }
@@ -2709,10 +3057,10 @@ export function mergeRecentImpersonationLists(
   const seen = new Set<string>()
   const out: RecentImpersonationUser[] = []
   for (const u of [...a, ...b]) {
-    const id = u.$id?.trim()
-    if (!id || seen.has(id)) continue
-    seen.add(id)
-    out.push(u)
+    const sanitized = sanitizeRecentImpersonationUser(u)
+    if (!sanitized || seen.has(sanitized.$id)) continue
+    seen.add(sanitized.$id)
+    out.push(sanitized)
     if (out.length >= MAX_RECENT_IMPERSONATION_USERS) break
   }
   return out
@@ -2722,27 +3070,25 @@ export function appendRecentImpersonationUser(
   current: RecentImpersonationUser[],
   user: { $id: string; name?: string | null; email?: string | null },
 ): RecentImpersonationUser[] {
-  const id = user.$id?.trim()
-  if (!id) return current
-  const entry: RecentImpersonationUser = { $id: id }
-  const name = user.name?.trim()
-  const email = user.email?.trim()
-  if (name) entry.name = name
-  if (email) entry.email = email
+  const entry = sanitizeRecentImpersonationUser(user)
+  if (!entry) return sanitizeRecentImpersonationList(current)
   return mergeRecentImpersonationLists(
     [entry],
-    current.filter((u) => u.$id !== id),
+    current.filter((u) => u.$id !== entry.$id),
   )
 }
 
+/**
+ * Write only ordered user ID references into account prefs.
+ * Display labels must be stored via `writeRecentImpersonationDetails` (localStorage).
+ */
 export function mergeRecentImpersonationIntoAccountPrefs(
   prefs: UserPrefs | null | undefined,
   list: RecentImpersonationUser[],
 ): Record<string, unknown> {
+  const ids = sanitizeRecentImpersonationList(list).map((u) => u.$id)
   return {
     ...(prefs ?? {}),
-    [USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT]: JSON.stringify(
-      list.slice(0, MAX_RECENT_IMPERSONATION_USERS),
-    ),
+    [USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT]: JSON.stringify(ids),
   }
 }

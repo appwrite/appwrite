@@ -7,6 +7,7 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
+import { DevConstructionStripe } from './DevConstructionStripe'
 import { cn } from '@/lib/utils'
 import {
   loadDebugOverrides,
@@ -147,6 +148,7 @@ export function ConsoleLayout({
         showAppHeader ||
         headerBanner) && (
         <div className="sticky top-0 z-[110] flex shrink-0 flex-col overflow-visible bg-background">
+          <DevConstructionStripe />
           {showNativeAppBar && <NativeAppBar />}
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />

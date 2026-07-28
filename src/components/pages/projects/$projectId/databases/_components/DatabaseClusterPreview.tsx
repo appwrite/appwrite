@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { SchemaVisualizerRelationshipEdges } from '@/components/global/shared/SchemaVisualizerRelationshipEdges'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import type { SchemaVisualizerRelationshipPath } from '@/lib/schema-visualizer-relationship-paths'
 import { Button } from '@/components/ui/button'
 import {
@@ -514,8 +515,8 @@ function CompactClusterNode({
   const connectionsLabel =
     metrics.kind === 'connections'
       ? `${
-          metrics.current == null ? '—' : metrics.current.toLocaleString()
-        } / ${metrics.max == null ? '—' : metrics.max.toLocaleString()}`
+          metrics.current == null ? '-' : metrics.current.toLocaleString()
+        } / ${metrics.max == null ? '-' : metrics.max.toLocaleString()}`
       : null
 
   return (
@@ -668,6 +669,15 @@ type DatabaseClusterPreviewProps = {
    * leave off for compact list cards.
    */
   interactive?: boolean
+  /** Shown in the interactive toolbar; refreshes live metrics and member status. */
+  onRefresh?: () => void
+  isRefreshing?: boolean
+  /**
+   * Override non-interactive preview height (defaults to
+   * `DATABASE_CLUSTER_PREVIEW_HEIGHT`). Useful for marketing surfaces that
+   * include a proxy node and need more vertical room.
+   */
+  previewHeight?: number
 }
 
 function resolveNodeResourceMetrics(
@@ -752,6 +762,9 @@ export function DatabaseClusterPreview({
   className,
   withSectionDivider = true,
   interactive = false,
+  onRefresh,
+  isRefreshing = false,
+  previewHeight = DATABASE_CLUSTER_PREVIEW_HEIGHT,
 }: DatabaseClusterPreviewProps) {
   const t = useT()
   const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
@@ -869,6 +882,14 @@ export function DatabaseClusterPreview({
     >
       <div className="pointer-events-none absolute end-3 top-3 z-30 flex items-center gap-1.5">
         <div className="pointer-events-auto flex items-center gap-1.5">
+          {onRefresh ? (
+            <RefreshButton
+              onClick={onRefresh}
+              isRefreshing={isRefreshing}
+              className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm text-foreground hover:bg-accent"
+            />
+          ) : null}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -958,7 +979,7 @@ export function DatabaseClusterPreview({
   ) : (
     <div
       className={cn('min-w-0', className)}
-      style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
+      style={{ height: previewHeight }}
       role="img"
       aria-label={ariaLabel}
     >
@@ -973,7 +994,7 @@ export function DatabaseClusterPreview({
             height: layout.height,
             transform: `translate(-50%, -50%) scale(${Math.min(
               1,
-              (DATABASE_CLUSTER_PREVIEW_HEIGHT - 4) / layout.height,
+              (previewHeight - 4) / layout.height,
               (PREVIEW_FIT_WIDTH - 4) / layout.width,
             )})`,
             transformOrigin: 'center center',

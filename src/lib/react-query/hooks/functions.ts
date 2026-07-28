@@ -93,7 +93,7 @@ export async function fetchProjectFunction(
   return await projectSdk.functions.get({ functionId })
 }
 
-/** Fetch up to 8 functions by ID in a single list call (overview compute breakdown). */
+/** Fetch functions by ID in a single list call. */
 export async function fetchProjectFunctionsByIds(
   projectId: string,
   functionIds: string[],
@@ -104,7 +104,7 @@ export async function fetchProjectFunctionsByIds(
 
   const validIds = [
     ...new Set(functionIds.filter((id) => typeof id === 'string' && id.trim())),
-  ].slice(0, 8)
+  ]
   if (validIds.length === 0) {
     return { functions: [] }
   }

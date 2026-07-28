@@ -25,6 +25,7 @@ import {
 } from '@/lib/appwrite/sdk'
 import {
   clearConsoleAccountCache,
+  getConsoleAccountSync,
   getConsoleAccountUnauthenticatedError,
   setConsoleAccountCache,
 } from '@/lib/console-account-cache'
@@ -34,8 +35,11 @@ import {
   hasLikelyConsoleSession,
   type FetchConsoleAccountOptions,
 } from '@/lib/console-account-get'
-import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
-import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
+import {
+  clearConsoleImpersonationSession,
+  getConsoleAccountQueryRevision,
+  hasConsoleImpersonationSessionTarget,
+} from '@/lib/console-impersonation'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
@@ -62,6 +66,7 @@ import {
   parseRecentImpersonationUsers,
   parseTablesDbRowsListColumnsFromPrefs,
   readRecentImpersonationSessionList,
+  writeRecentImpersonationDetails,
   clearLegacyAIChatLocalStorage,
   clearLegacyBuildNotificationsOptedOutLocalStorage,
   clearLegacyCliShellHeightLocalStorage,
@@ -89,8 +94,10 @@ import {
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
+  getCliShellSessionsKey,
   parseCliShellHistory,
   parseCliShellSessions,
+  serializeCliShellSessionsState,
   type PersistedCliShellSessionsState,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
   parseAIChatPanelOpen,
@@ -114,6 +121,8 @@ import {
   readLegacyBuildNotificationsOptedOutFromLocalStorage,
   readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
+  sanitizeAccountPrefsForWrite,
+  USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import {
@@ -208,16 +217,23 @@ export function syncConsoleAccountAfterMutation(
   let next: Models.User | undefined
 
   if (options?.apiResult && isConsoleAccountUser(options.apiResult)) {
+    // Prefer the API prefs as source of truth. Merging cached prefs back in
+    // reintroduced nested/legacy keys and bloated the client prefs bag until
+    // the next write exceeded Appwrite's 64KB Assoc limit.
     next = cached
       ? ({
           ...cached,
           ...options.apiResult,
-          prefs: {
-            ...(cached.prefs ?? {}),
-            ...(options.apiResult.prefs ?? {}),
-          },
+          prefs: sanitizeAccountPrefsForWrite(
+            (options.apiResult.prefs ?? {}) as Record<string, unknown>,
+          ),
         } as Models.User)
-      : options.apiResult
+      : ({
+          ...options.apiResult,
+          prefs: sanitizeAccountPrefsForWrite(
+            (options.apiResult.prefs ?? {}) as Record<string, unknown>,
+          ),
+        } as Models.User)
   } else if (options?.updater && cached) {
     next = options.updater(cached)
   } else if (options?.patch && cached) {
@@ -246,7 +262,7 @@ export function syncConsoleAccountSingletonFromQueryClient(
 }
 
 /**
- * Console `account.get` — shared by route loaders (prefetch prefs before child
+ * Console `account.get` - shared by route loaders (prefetch prefs before child
  * loaders) and auth UI. Pass `revision` from `useConsoleImpersonationRevision` when
  * overriding `queryFn` in components.
  */
@@ -1160,10 +1176,108 @@ export function useAccountSessions() {
 // ============================================================================
 
 /**
- * Mutation function to update account preferences
+ * Diff previous account prefs against the sanitized write payload.
+ * Used only for console debug logging in `updateAccountPrefs`.
  */
-export async function updateAccountPrefs(prefs: Record<string, unknown>) {
-  return await sdk.forConsole.account.updatePrefs({ prefs })
+function diffAccountPrefs(
+  previous: Record<string, unknown> | undefined,
+  next: Record<string, string | number | boolean>,
+): {
+  added: Record<string, unknown>
+  changed: Record<string, { from: unknown; to: unknown }>
+  removed: string[]
+} {
+  const prev = previous ?? {}
+  const added: Record<string, unknown> = {}
+  const changed: Record<string, { from: unknown; to: unknown }> = {}
+  const removed: string[] = []
+
+  for (const key of Object.keys(next)) {
+    if (!(key in prev)) {
+      added[key] = next[key]
+      continue
+    }
+    if (prev[key] !== next[key]) {
+      changed[key] = { from: prev[key], to: next[key] }
+    }
+  }
+  for (const key of Object.keys(prev)) {
+    if (!(key in next)) {
+      removed.push(key)
+    }
+  }
+
+  return { added, changed, removed }
+}
+
+function getAccountPrefsCallerStack(): string[] {
+  return (
+    new Error().stack
+      ?.split('\n')
+      .slice(1)
+      .map((line) => line.trim().replace(/^at\s+/, ''))
+      .filter((line) => {
+        if (!line) return false
+        if (line.includes('updateAccountPrefs')) return false
+        if (line.includes('getAccountPrefsCallerStack')) return false
+        if (line.includes('diffAccountPrefs')) return false
+        if (line.includes('node_modules')) return false
+        if (line.includes('@tanstack')) return false
+        return true
+      })
+      .slice(0, 8) ?? []
+  )
+}
+
+/**
+ * Mutation function to update account preferences.
+ * Sanitizes nested/legacy values so Appwrite does not 400 on write.
+ * Silently skips while console impersonation is active so the target user's prefs are not mutated.
+ *
+ * When skipping, returns `undefined` (not a partial User). Callers that sync the
+ * account cache must treat a missing result as a no-op so they do not poison
+ * React Query with `{ prefs }` only - that crashed account UI after impersonation.
+ *
+ * @param reason - Short label for debug logs (which feature/hook requested the write).
+ */
+export async function updateAccountPrefs(
+  prefs: Record<string, unknown>,
+  reason = 'unknown',
+): Promise<Models.User | undefined> {
+  if (hasConsoleImpersonationSessionTarget()) {
+    return undefined
+  }
+
+  const sanitized = sanitizeAccountPrefsForWrite(prefs)
+  const cachedAccount = getConsoleAccountSync(getConsoleAccountQueryRevision())
+  const previous = cachedAccount?.prefs as Record<string, unknown> | undefined
+  const diff = diffAccountPrefs(previous, sanitized)
+  const hasDiff =
+    Object.keys(diff.added).length > 0 ||
+    Object.keys(diff.changed).length > 0 ||
+    diff.removed.length > 0
+  const caller = getAccountPrefsCallerStack()
+
+  if (!hasDiff) {
+    console.log('[account prefs] skip (unchanged)', {
+      reason,
+      keyCount: Object.keys(sanitized).length,
+      caller,
+    })
+    // Avoid a no-op `account.updatePrefs` round-trip. Callers treat a returned
+    // User like a successful write; fall back to undefined only if uncached.
+    return cachedAccount
+  }
+
+  console.log('[account prefs] update', diff, {
+    reason,
+    keyCount: Object.keys(sanitized).length,
+    caller,
+  })
+
+  return (await sdk.forConsole.account.updatePrefs({
+    prefs: sanitized,
+  })) as Models.User
 }
 
 /**
@@ -1177,16 +1291,24 @@ export async function flushRecentImpersonationUsersToAccountPrefs(
   const list = readRecentImpersonationSessionList(operatorId)
   if (list.length === 0) return
   clearRecentImpersonationSessionList(operatorId)
+  // Labels stay in localStorage; account prefs only get ID references.
+  writeRecentImpersonationDetails(operatorId, list)
   const account = await fetchConsoleAccount({ force: true })
-  const fromPrefs = parseRecentImpersonationUsers(account.prefs as UserPrefs)
+  const fromPrefs = parseRecentImpersonationUsers(
+    account.prefs as UserPrefs,
+    operatorId,
+  )
   const merged = mergeRecentImpersonationLists(fromPrefs, list)
+  writeRecentImpersonationDetails(operatorId, merged)
   const updatedPrefs = mergeRecentImpersonationIntoAccountPrefs(
     account.prefs as UserPrefs,
     merged,
   )
-  const updatedAccount = await updateAccountPrefs(updatedPrefs)
+  const updatedAccount = await updateAccountPrefs(updatedPrefs, 'flush-recent-impersonation-users')
   setConsoleAccountCache(
-    (updatedAccount ?? { ...account, prefs: updatedPrefs }) as Models.User,
+    updatedAccount && isConsoleAccountUser(updatedAccount)
+      ? updatedAccount
+      : ({ ...account, prefs: updatedPrefs } as Models.User),
     getConsoleAccountQueryRevision(),
   )
 }
@@ -1211,7 +1333,8 @@ export function useToggleFeatureNotification() {
       }
 
       // Get current feature notifications (handle both string and legacy array formats)
-      const currentNotificationsRaw = account.prefs?.featureNotifications
+      const currentNotificationsRaw =
+        account.prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
 
       // Parse into an array, handling different data types
       let currentNotifications: string[] = []
@@ -1235,10 +1358,10 @@ export function useToggleFeatureNotification() {
       // Update preferences with the new string
       const updatedPrefs = {
         ...account.prefs,
-        featureNotifications: updatedNotificationsStr,
+        [USER_PREFS_KEY_FEATURE_NOTIFICATIONS]: updatedNotificationsStr,
       }
 
-      return await updateAccountPrefs(updatedPrefs)
+      return await updateAccountPrefs(updatedPrefs, 'feature-notifications')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -1276,6 +1399,7 @@ export function useSidebarCollapsed(
           { ...(account.prefs ?? {}) },
           value,
         ),
+        'sidebar-collapsed',
       )
     },
     // The auth query key includes consoleImpersonationRevision, so an exact
@@ -1351,7 +1475,8 @@ export function useTableViewSidebarWidth(
       return await updateAccountPrefs({
         ...account.prefs,
         ...build(value),
-      })
+      },
+        'table-view-sidebar-width')
     },
     onMutate: async (value) => {
       const patch = build(value)
@@ -1403,7 +1528,8 @@ export function usePostgresSqlEditorHeight(
       return await updateAccountPrefs({
         ...account.prefs,
         ...buildPostgresSqlEditorHeightPrefs(value),
-      })
+      },
+        'postgres-sql-editor-height')
     },
     onMutate: async (value) => {
       const patch = buildPostgresSqlEditorHeightPrefs(value)
@@ -1465,17 +1591,20 @@ function usePersistedPanelLayoutPref(
       }
       return await updateAccountPrefs(
         mergeIntoPrefs((account.prefs ?? {}) as UserPrefs, value),
+        'persisted-panel-layout',
       )
     },
     onMutate: async (value) => {
-      const patch = mergeIntoPrefs((account?.prefs ?? {}) as UserPrefs, value)
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, ...patch },
+                prefs: mergeIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
               }
             : current,
       )
@@ -1587,20 +1716,20 @@ export function useGeneratorPanelVisibility(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'generator-panel-visibility',
       )
     },
     onMutate: async (value) => {
-      const patch = mergeGeneratorPanelVisibilityIntoPrefs(
-        (account?.prefs ?? {}) as UserPrefs,
-        value,
-      )
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
           current
             ? {
                 ...current,
-                prefs: { ...current.prefs, ...patch },
+                prefs: mergeGeneratorPanelVisibilityIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
               }
             : current,
       )
@@ -1701,6 +1830,7 @@ export function useApiExplorerExpandedProductGroup(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'api-explorer-expanded-product-group',
       )
     },
     onMutate: async (value) => {
@@ -1825,7 +1955,7 @@ async function migrateLegacyBrowserPrefsToAccount(
     return
   }
 
-  const updatedAccount = await updateAccountPrefs(next)
+  const updatedAccount = await updateAccountPrefs(next, 'migrate-legacy-browser-prefs')
   clearLegacyAIChatLocalStorage()
   clearLegacyBuildNotificationsOptedOutLocalStorage()
   clearLegacyCliShellHeightLocalStorage()
@@ -1878,6 +2008,7 @@ export function useAIChatPanelOpen(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'ai-chat-panel-open',
       )
     },
     onMutate: async (value) => {
@@ -1937,6 +2068,7 @@ export function useAuthPasswordStrengthComplianceOpen(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'auth-password-strength-compliance-open',
       )
     },
     onMutate: async (value) => {
@@ -1999,6 +2131,7 @@ export function useRightPaneWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'right-pane-width',
       )
     },
     onMutate: async (value) => {
@@ -2096,6 +2229,7 @@ export function useCliShellOpen(account: ConsoleAccountCache | undefined) {
           (currentAccount.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-open',
       )
     },
     onMutate: async (value) => {
@@ -2156,6 +2290,7 @@ export function useCliShellHeight(account: ConsoleAccountCache | undefined) {
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-height',
       )
     },
     onMutate: async (value) => {
@@ -2249,6 +2384,7 @@ export function useCliShellSessionsSidebarWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'cli-shell-sessions-sidebar-width',
       )
     },
     onMutate: async (value) => {
@@ -2340,6 +2476,7 @@ export function useCliShellHistory(
           projectId,
           value,
         ),
+        'cli-shell-history',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -2404,9 +2541,42 @@ export function useCliShellSessionsPrefs(
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingPersistRef = useRef<PersistedCliShellSessionsState | null>(null)
 
+  const isSessionsPrefsUnchanged = useCallback(
+    (value: PersistedCliShellSessionsState) => {
+      const key = getCliShellSessionsKey(projectId)
+      const nextValue = serializeCliShellSessionsState(value)
+      const singletonPrefs = getConsoleAccountSync(
+        getConsoleAccountQueryRevision(),
+      )?.prefs as UserPrefs | undefined
+      const rqPrefs = getConsoleAccountFromCache(queryClient)?.prefs as
+        | UserPrefs
+        | undefined
+      const accountPrefs = account?.prefs as UserPrefs | undefined
+
+      for (const prefs of [singletonPrefs, rqPrefs, accountPrefs]) {
+        if (!prefs) continue
+        const existing = prefs[key]
+        if (existing === nextValue) return true
+        // Stored JSON may predate canonical fields (e.g. parentSessionId).
+        const parsed = parseCliShellSessions(prefs, projectId)
+        if (parsed && serializeCliShellSessionsState(parsed) === nextValue) {
+          return true
+        }
+      }
+      return false
+    },
+    [account?.prefs, projectId, queryClient],
+  )
+
   const updateMutation = useMutation({
     mutationFn: async (value: PersistedCliShellSessionsState) => {
-      const currentAccount = getConsoleAccountFromCache(queryClient)
+      if (isSessionsPrefsUnchanged(value)) {
+        return getConsoleAccountSync(getConsoleAccountQueryRevision())
+      }
+      const currentAccount =
+        getConsoleAccountFromCache(queryClient) ??
+        getConsoleAccountSync(getConsoleAccountQueryRevision()) ??
+        account
       if (!currentAccount) {
         throw new Error('Account data not available')
       }
@@ -2416,6 +2586,7 @@ export function useCliShellSessionsPrefs(
           projectId,
           value,
         ),
+        'cli-shell-sessions',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -2428,12 +2599,19 @@ export function useCliShellSessionsPrefs(
   const persistSessions = useCallback(
     (value: PersistedCliShellSessionsState) => {
       if (!account) return
-      pendingPersistRef.current = value
+      if (isSessionsPrefsUnchanged(value)) {
+        return
+      }
+      const currentPrefs = (getConsoleAccountFromCache(queryClient)?.prefs ??
+        getConsoleAccountSync(getConsoleAccountQueryRevision())?.prefs ??
+        account.prefs ??
+        {}) as UserPrefs
       const patch = mergeCliShellSessionsIntoPrefs(
-        (account.prefs ?? {}) as UserPrefs,
+        currentPrefs,
         projectId,
         value,
       )
+      pendingPersistRef.current = value
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
         { queryKey: ['account', 'console'] },
         (current) =>
@@ -2453,7 +2631,13 @@ export function useCliShellSessionsPrefs(
         updateMutation.mutate(value)
       }, CLI_SHELL_PREFS_PERSIST_DEBOUNCE_MS)
     },
-    [account, projectId, queryClient, updateMutation],
+    [
+      account,
+      isSessionsPrefsUnchanged,
+      projectId,
+      queryClient,
+      updateMutation,
+    ],
   )
 
   const flushPersistSessions = useCallback(() => {
@@ -2464,8 +2648,9 @@ export function useCliShellSessionsPrefs(
     const pending = pendingPersistRef.current
     if (!pending) return
     pendingPersistRef.current = null
+    if (isSessionsPrefsUnchanged(pending)) return
     updateMutation.mutate(pending)
-  }, [updateMutation])
+  }, [isSessionsPrefsUnchanged, updateMutation])
 
   useEffect(() => {
     return () => {
@@ -2501,6 +2686,7 @@ export function useBuildNotificationsOptedOut(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'build-notifications-opted-out',
       )
     },
     onMutate: async (value) => {
@@ -2560,6 +2746,7 @@ export function useStorageFilesTablePaneWidth(
           (account.prefs ?? {}) as UserPrefs,
           value,
         ),
+        'storage-files-table-pane-width',
       )
     },
     onMutate: async (value) => {
@@ -2653,7 +2840,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2672,28 +2860,20 @@ export function useSavedFilters(
       query: string
       sort?: string
     }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
-        name: trimmedName,
-        query,
-        ...(sort ? { sort } : {}),
-      }
-      const next = [newFilter, ...current]
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        const newFilter: SavedFilter = {
+          id: crypto.randomUUID(),
+          name: trimmedName,
+          query,
+          ...(sort ? { sort } : {}),
+        }
+        return buildSavedFiltersPrefs(scope, [newFilter, ...current])
       })
     },
     onSuccess: () => {
@@ -2714,7 +2894,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2725,20 +2906,15 @@ export function useSavedFilters(
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
-      const next = current.filter((f) => f.id !== id)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        return buildSavedFiltersPrefs(
+          scope,
+          current.filter((f) => f.id !== id),
+        )
       })
     },
     onSuccess: () => {
@@ -2757,7 +2933,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, orderedFilters),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2768,16 +2945,12 @@ export function useSavedFilters(
 
   const reorderTeamMutation = useMutation({
     mutationFn: async (orderedFilters: SavedFilter[]) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, orderedFilters),
-      })
+      await updateTeamPrefs.mutateAsync(
+        buildSavedFiltersPrefs(scope, orderedFilters),
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -2839,7 +3012,8 @@ export function useSavedFilters(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedFiltersPrefs(scope, next),
-      })
+      },
+        'saved-filters')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -2850,24 +3024,17 @@ export function useSavedFilters(
 
   const updateTeamFilterMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !scope || !teamId) {
+      if (!scope || !teamId) {
         throw new Error('Team or filter scope not available')
       }
-      const current = parseSavedFilters(
-        currentTeam.prefs as Record<string, unknown>,
-        scope,
-      )
       const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const next = current.map((f) =>
-        f.id === id ? { ...f, name: trimmedName } : f,
-      )
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedFiltersPrefs(scope, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedFilters(freshPrefs, scope)
+        const next = current.map((f) =>
+          f.id === id ? { ...f, name: trimmedName } : f,
+        )
+        return buildSavedFiltersPrefs(scope, next)
       })
     },
     onSuccess: () => {
@@ -2938,6 +3105,7 @@ export function useTablesDbRowsListColumns(
           tableId,
           keys,
         ),
+        'tablesdb-rows-list-columns',
       )
     },
     onSuccess: (updatedAccount) => {
@@ -3001,7 +3169,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3012,28 +3181,26 @@ export function useImageTransformSavedPresets(
 
   const addTeamMutation = useMutation({
     mutationFn: async ({ name, json }: { name: string; json: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
+      if (!teamId) throw new Error('Team not available')
       if (json.length > MAX_SAVED_IMAGE_TRANSFORM_PRESET_JSON_CHARS) {
         throw new Error('Preset data is too large')
       }
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
-      const trimmedName = name.trim().slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
+      const trimmedName = name
+        .trim()
+        .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
-        throw new Error(`Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`)
-      }
-      const next: SavedImageTransformPreset[] = [
-        { id: crypto.randomUUID(), name: trimmedName, json },
-        ...current,
-      ]
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        if (current.length >= MAX_SAVED_IMAGE_TRANSFORM_PRESETS) {
+          throw new Error(
+            `Maximum ${MAX_SAVED_IMAGE_TRANSFORM_PRESETS} presets`,
+          )
+        }
+        const next: SavedImageTransformPreset[] = [
+          { id: crypto.randomUUID(), name: trimmedName, json },
+          ...current,
+        ]
+        return buildSavedImageTransformPresetsPrefs(next)
       })
     },
     onSuccess: () => {
@@ -3050,7 +3217,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3061,17 +3229,12 @@ export function useImageTransformSavedPresets(
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
-      const next = current.filter((p) => p.id !== id)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      if (!teamId) throw new Error('Team not available')
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        return buildSavedImageTransformPresetsPrefs(
+          current.filter((p) => p.id !== id),
+        )
       })
     },
     onSuccess: () => {
@@ -3086,7 +3249,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(ordered),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3097,14 +3261,10 @@ export function useImageTransformSavedPresets(
 
   const reorderTeamMutation = useMutation({
     mutationFn: async (ordered: SavedImageTransformPreset[]) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(ordered),
-      })
+      if (!teamId) throw new Error('Team not available')
+      await updateTeamPrefs.mutateAsync(
+        buildSavedImageTransformPresetsPrefs(ordered),
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', 'console', teamId] })
@@ -3126,7 +3286,8 @@ export function useImageTransformSavedPresets(
       return await updateAccountPrefs({
         ...currentAccount.prefs,
         ...buildSavedImageTransformPresetsPrefs(next),
-      })
+      },
+        'image-transform-saved-presets')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
@@ -3137,23 +3298,17 @@ export function useImageTransformSavedPresets(
 
   const updateTeamPresetNameMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !teamId) throw new Error('Team not available')
-      const current = parseSavedImageTransformPresets(
-        currentTeam.prefs as Record<string, unknown>,
-      )
+      if (!teamId) throw new Error('Team not available')
       const trimmedName = name
         .trim()
         .slice(0, MAX_SAVED_IMAGE_TRANSFORM_PRESET_NAME_LENGTH)
       if (!trimmedName) throw new Error('Name is required')
-      const next = current.map((p) =>
-        p.id === id ? { ...p, name: trimmedName } : p,
-      )
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildSavedImageTransformPresetsPrefs(next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parseSavedImageTransformPresets(freshPrefs)
+        const next = current.map((p) =>
+          p.id === id ? { ...p, name: trimmedName } : p,
+        )
+        return buildSavedImageTransformPresetsPrefs(next)
       })
     },
     onSuccess: () => {

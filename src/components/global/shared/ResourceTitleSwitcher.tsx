@@ -149,7 +149,7 @@ const RESOURCE_ICONS: Record<ResourceTitleKind, LucideIcon> = {
   domain: Globe,
 }
 
-/** Buckets and tables/collections already have sidebar selectors — no title switcher. */
+/** Buckets and tables/collections already have sidebar selectors - no title switcher. */
 export const RESOURCE_TITLE_SWITCHER_DISABLED_KINDS = [
   'bucket',
   'table',
@@ -278,8 +278,18 @@ function useResourceTitleList(
     enabled: enabled && kind === 'database' && !!projectId,
     placeholderData: keepPreviousData,
   })
+  // 'table' is in RESOURCE_TITLE_SWITCHER_DISABLED_KINDS (tables already have a
+  // sidebar selector), so this query never actually enables; 'tablesdb' is a
+  // placeholder dbKind for the (dead) product API call shape.
   const tableQuery = useQuery({
-    ...tablesQueryOptions(projectId, databaseId, 0, PICK_LIMIT, search),
+    ...tablesQueryOptions(
+      projectId,
+      databaseId,
+      'tablesdb',
+      0,
+      PICK_LIMIT,
+      search,
+    ),
     enabled: enabled && kind === 'table' && !!projectId && !!databaseId,
     placeholderData: keepPreviousData,
   })

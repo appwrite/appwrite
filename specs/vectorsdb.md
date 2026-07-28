@@ -1,6 +1,6 @@
 # VectorsDB API specifications
 
-Reference extracted from `@appwrite.io/console` v15.2.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -16,6 +16,7 @@ Base path prefix: `/v1/vectorsdb`
 | --- | --- | --- | --- |
 | [`create`](#vectorsdb-create) | POST | `/v1/vectorsdb` | `Promise<Models.Database>` |
 | [`createCollection`](#vectorsdb-createcollection) | POST | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollection>` |
+| [`createFailover`](#vectorsdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
 | [`createIndex`](#vectorsdb-createindex) | POST | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.Index>` |
 | [`createOperations`](#vectorsdb-createoperations) | POST | `/v1/vectorsdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createTextEmbeddings`](#vectorsdb-createtextembeddings) | POST | `/v1/vectorsdb/embeddings/text` | `Promise<Models.EmbeddingList>` |
@@ -28,10 +29,13 @@ Base path prefix: `/v1/vectorsdb`
 | [`get`](#vectorsdb-get) | GET | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#vectorsdb-getcollection) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
 | [`getIndex`](#vectorsdb-getindex) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
+| [`getReplicas`](#vectorsdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#vectorsdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
 | [`getTransaction`](#vectorsdb-gettransaction) | GET | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#vectorsdb-list) | GET | `/v1/vectorsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#vectorsdb-listcollections) | GET | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollectionList>` |
 | [`listIndexes`](#vectorsdb-listindexes) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
+| [`listSpecifications`](#vectorsdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTransactions`](#vectorsdb-listtransactions) | GET | `/v1/vectorsdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#vectorsdb-update) | PUT | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#vectorsdb-updatecollection) | PUT | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
@@ -63,6 +67,7 @@ Create a new Database.
 | `name` | `string` | Yes | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
 | `specification` | `string` | No | Database specification. Defaults to `serverless`, which creates the database on the shared pool. Any other value provisions a dedicated database on that specification. |
+| `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Requires a dedicated `specification`; must be 0 for a serverless database. High availability is enabled when greater than 0. |
 
 **SDK signature**
 
@@ -72,6 +77,7 @@ sdk.forProject(projectId).vectorsDB.create({
   name: string;
   enabled?: boolean;
   specification?: string;
+  replicas?: number;
 })
 ```
 
@@ -360,6 +366,7 @@ Update a database by its unique ID.
 | `databaseId` | `string` | Yes | Database ID. |
 | `name` | `string` | Yes | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
+| `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification. High availability is enabled when greater than 0. |
 
 **SDK signature**
 
@@ -368,6 +375,7 @@ sdk.forProject(projectId).vectorsDB.update({
   databaseId: string;
   name: string;
   enabled?: boolean;
+  replicas?: number;
 })
 ```
 
@@ -680,5 +688,91 @@ sdk.forProject(projectId).vectorsDB.updateCollection({
   permissions?: string[];
   documentSecurity?: boolean;
   enabled?: boolean;
+})
+```
+
+<a id="vectorsdb-listspecifications"></a>
+
+#### `listSpecifications`
+
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
+
+- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
+
+**Parameters**
+
+_No request parameters._
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).vectorsDB.listSpecifications()
+```
+
+<a id="vectorsdb-createfailover"></a>
+
+#### `createFailover`
+
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).vectorsDB.createFailover({
+  databaseId: string;
+  targetReplicaId?: string;
+})
+```
+
+<a id="vectorsdb-getreplicas"></a>
+
+#### `getReplicas`
+
+Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
+
+- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).vectorsDB.getReplicas({
+  databaseId: string;
+})
+```
+
+<a id="vectorsdb-getstatus"></a>
+
+#### `getStatus`
+
+Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
+
+- **Returns:** `Promise<Models.DatabaseStatus>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).vectorsDB.getStatus({
+  databaseId: string;
 })
 ```

@@ -3,6 +3,7 @@ import {
   readCoverGeneratorEditorState,
   restoreCoverRenderDataFromJson,
 } from '@/lib/cover-generator/editor-storage'
+import { coverRenderDataToSearchParams } from '@/lib/cover-generator/parse-params'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { COVER_TEMPLATE_DEFINITIONS } from '@/lib/cover-generator/template-config'
 
@@ -117,13 +118,39 @@ export function parseSavedCoverGenerations(raw: unknown): SavedCoverGeneration[]
     .slice(0, MAX_SAVED_COVER_GENERATIONS)
 }
 
+/**
+ * Persist only URL-param-safe string fields so prefs stay a flat JSON string
+ * (no nested booleans/objects that can confuse account.updatePrefs payloads).
+ */
+function serializeCoverGenerationForPrefs(entry: SavedCoverGeneration) {
+  const data = Object.fromEntries(coverRenderDataToSearchParams(entry.data).entries())
+  return {
+    id: entry.id,
+    name: entry.name,
+    updatedAt: entry.updatedAt,
+    templateId: entry.templateId,
+    data,
+  }
+}
+
 export function buildSavedCoverGenerationsPrefs(
   list: SavedCoverGeneration[],
 ): Record<string, string> {
   return {
     [USER_PREFS_KEY_COVER_GENERATIONS]: JSON.stringify(
-      list.slice(0, MAX_SAVED_COVER_GENERATIONS),
+      list.slice(0, MAX_SAVED_COVER_GENERATIONS).map(serializeCoverGenerationForPrefs),
     ),
+  }
+}
+
+/** Merge saved covers into account prefs before `updateAccountPrefs`. */
+export function mergeCoverGenerationsIntoPrefs(
+  prefs: Record<string, unknown>,
+  list: SavedCoverGeneration[],
+): Record<string, unknown> {
+  return {
+    ...prefs,
+    ...buildSavedCoverGenerationsPrefs(list),
   }
 }
 

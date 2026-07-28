@@ -44,6 +44,7 @@ import {
   getConsoleAccountFromCache,
   fetchConsoleAccount,
   syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
   useStorageFilesTablePaneWidth,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
@@ -1299,9 +1300,7 @@ export function View() {
           (acct.prefs || {}) as UserPrefs,
           widths as Record<string, number>,
         )
-        const updatedAccount = await sdk.forConsole.account.updatePrefs({
-          prefs,
-        })
+        const updatedAccount = await updateAccountPrefs(prefs)
         syncConsoleAccountAfterMutation(queryClient, {
           apiResult: updatedAccount,
         })
@@ -1412,6 +1411,9 @@ export function View() {
         searchValue={activeTab === 'files' ? searchInput : ''}
         onSearchChange={activeTab === 'files' ? handleSearchChange : undefined}
         createLabel={activeTab === 'files' ? t('Create file') : undefined}
+        createAnalyticsAction={
+          activeTab === 'files' ? 'upload-file' : undefined
+        }
         onCreate={
           activeTab === 'files'
             ? () => setUploadFileDialogOpen(true)

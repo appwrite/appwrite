@@ -6,6 +6,7 @@
 
 import {
   useQuery,
+  useQueries,
   useMutation,
   useQueryClient,
   queryOptions,
@@ -21,6 +22,18 @@ import {
 } from './constants'
 
 export const REPOSITORY_BRANCHES_LIMIT = 100
+
+/**
+ * listRepositories returns either a framework or runtime list depending on
+ * `type`. Consumers often read both keys with optional chaining, so expose a
+ * combined shape rather than the SDK union.
+ */
+export type ProviderRepositoriesResult = {
+  total: number
+  type?: string
+  frameworkProviderRepositories?: Models.ProviderRepositoryFramework[]
+  runtimeProviderRepositories?: Models.ProviderRepositoryRuntime[]
+}
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -61,6 +74,36 @@ export async function fetchRepository(
   return await projectSdk.vcs.getRepository({
     installationId,
     providerRepositoryId,
+  })
+}
+
+/**
+ * Query function to fetch installation details (includes `provider`).
+ */
+export async function fetchInstallation(
+  projectId: string,
+  installationId: string,
+): Promise<Models.Installation> {
+  if (!projectId || !installationId) {
+    throw new Error('Project ID and Installation ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.vcs.getInstallation(installationId)
+}
+
+/**
+ * Hook to fetch installation details (includes `provider`).
+ */
+export function useInstallation(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return useQuery({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
   })
 }
 
@@ -107,24 +150,115 @@ export async function fetchRepositories(
   page: number = 0,
   limit: number = 5,
   search?: string,
-): Promise<Models.ProviderRepositoryFrameworkList> {
+  providerNamespace?: string,
+): Promise<ProviderRepositoriesResult> {
   if (!projectId || !installationId) {
     return {
-      runtimeProviderRepositories: [],
       frameworkProviderRepositories: [],
+      runtimeProviderRepositories: [],
       total: 0,
     }
   }
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [Query.limit(limit), Query.offset(page * limit)]
+  if (providerNamespace) {
+    queries.push(Query.equal('namespace', providerNamespace))
+  }
 
-  return await projectSdk.vcs.listRepositories({
+  // Console SDK 15.4 mistypes `queries` as `string`; runtime still accepts string[].
+  return (await projectSdk.vcs.listRepositories({
     installationId,
     type,
     search: search?.trim() || undefined,
+    queries: queries as unknown as string,
+  })) as ProviderRepositoriesResult
+}
+
+/**
+ * Query function to fetch namespaces (personal + groups) for an installation.
+ * Only GitLab returns more than one -- other providers already scope an
+ * installation to a single org/user, so this returns that org as the only item.
+ */
+export async function fetchNamespaces(
+  projectId: string,
+  installationId: string,
+  page: number = 0,
+  limit: number = 20,
+  search?: string,
+): Promise<Models.VcsNamespaceList> {
+  if (!projectId || !installationId) {
+    return { namespaces: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
+
+  return await projectSdk.vcs.listNamespaces({
+    installationId,
+    search: search?.trim() || undefined,
     queries,
   })
+}
+
+/**
+ * Hook to fetch namespaces (personal + groups) for an installation.
+ */
+export function useNamespaces(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  page: number = 0,
+  limit: number = 20,
+  search?: string,
+) {
+  return useQuery({
+    queryKey: [
+      'vcs',
+      'namespaces',
+      projectId,
+      installationId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchNamespaces(projectId!, installationId!, page, limit, search),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Fetch namespaces for every installation at once, so a combined
+ * GitHub+GitLab org picker can flatten "installation -> its namespaces"
+ * into a single list without a separate account/group selection step.
+ * For providers other than GitLab this is a one-item no-op (the
+ * installation's own organization), so the same flattening logic works
+ * uniformly for every provider.
+ */
+export function useNamespacesForInstallations(
+  projectId: string | null | undefined,
+  installations: Models.Installation[],
+) {
+  const queries = useQueries({
+    queries: installations.map((installation) => ({
+      queryKey: ['vcs', 'namespaces', projectId, installation.$id],
+      queryFn: () => fetchNamespaces(projectId!, installation.$id, 0, 100),
+      enabled: !!projectId,
+      staleTime: DEFAULT_STALE_TIME,
+    })),
+  })
+
+  const namespacesByInstallation: Record<string, Models.VcsNamespace[]> = {}
+  installations.forEach((installation, index) => {
+    namespacesByInstallation[installation.$id] =
+      queries[index]?.data?.namespaces ?? []
+  })
+
+  return {
+    namespacesByInstallation,
+    isLoading: queries.some((query) => query.isLoading),
+  }
 }
 
 /**
@@ -265,6 +399,7 @@ export function useCreateVcsRepository(projectId: string | null | undefined) {
       installationId: string
       name: string
       xprivate: boolean
+      providerNamespace?: string
     }): Promise<Models.ProviderRepository> => {
       if (!projectId) {
         throw new Error('Project ID is required')
@@ -275,6 +410,7 @@ export function useCreateVcsRepository(projectId: string | null | undefined) {
         installationId: params.installationId,
         name: params.name,
         xprivate: params.xprivate,
+        providerNamespace: params.providerNamespace || undefined,
       })
     },
     onSuccess: (_, variables) => {
@@ -317,12 +453,14 @@ export function useRepositoryBranches(
   providerRepositoryId: string | null | undefined,
   search?: string,
 ) {
-  return useQuery(repositoryBranchesQueryOptions(
-    projectId,
-    installationId,
-    providerRepositoryId,
-    search,
-  ))
+  return useQuery(
+    repositoryBranchesQueryOptions(
+      projectId,
+      installationId,
+      providerRepositoryId,
+      search,
+    ),
+  )
 }
 
 /**
@@ -335,6 +473,7 @@ export function useRepositories(
   page: number = 0,
   limit: number = 5,
   search?: string,
+  providerNamespace?: string,
 ) {
   return useQuery({
     queryKey: [
@@ -346,9 +485,18 @@ export function useRepositories(
       page,
       limit,
       search,
+      providerNamespace,
     ],
     queryFn: () =>
-      fetchRepositories(projectId!, installationId!, type, page, limit, search),
+      fetchRepositories(
+        projectId!,
+        installationId!,
+        type,
+        page,
+        limit,
+        search,
+        providerNamespace,
+      ),
     enabled: !!projectId && !!installationId,
     staleTime: DEFAULT_STALE_TIME,
   })

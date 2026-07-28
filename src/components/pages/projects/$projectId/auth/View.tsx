@@ -1317,6 +1317,13 @@ export function View({
               : undefined
         }
         createLabel={activeTab === 'templates' ? undefined : getCreateLabel()}
+        createAnalyticsAction={
+          activeTab === 'users'
+            ? 'create-user'
+            : activeTab === 'teams'
+              ? 'create-team'
+              : undefined
+        }
         onCreate={activeTab === 'templates' ? undefined : handleCreateClick}
         createDisabled={noCreatePermission}
         createDisabledTooltip={createPermissionTooltip}

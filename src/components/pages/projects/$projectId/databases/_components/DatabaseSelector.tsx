@@ -35,16 +35,17 @@ import {
 import {
   consoleDatabasesQueryOptions,
   dedicatedDatabasesQueryOptions,
-  databaseQueryOptions,
 } from '@/lib/react-query/hooks'
+import { Query } from '@appwrite.io/console'
 import type { DatabaseSwitcherSelection } from '@/lib/databases/navigate-to-database-switcher'
 import {
   engineFromDatabaseTypeValue,
   productFromDatabaseTypeValue,
 } from '@/lib/databases/database-type'
-import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
+import { resolveDatabaseComputeSpecId } from '@/lib/databases/database-compute'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import {
   DatabaseTypeIcon,
@@ -201,14 +202,24 @@ export function DatabaseSelector({
   const skipProductDatabaseLookup =
     selectedIsNative || Boolean(selectedDedicated)
 
+  // Product-agnostic lookup: fetch the selected database's metadata via the
+  // console list filtered by ID (never probe per-product APIs to guess type).
   const { data: selectedProductDatabase } = useQuery({
-    ...databaseQueryOptions(projectId, value),
+    ...consoleDatabasesQueryOptions(projectId, 0, 1, undefined, [
+      Query.equal('$id', [value || '']),
+    ]),
     enabled: !!projectId && !!value && !skipProductDatabaseLookup,
   })
 
   const items = useMemo((): DatabaseSelectorItem[] => {
     return (consoleData?.databases ?? []).map((db) => {
       const dedicated = dedicatedById.get(db.$id)
+      const productHints = {
+        databaseType: db.type,
+        status: db.status,
+        replicas: typeof db.replicas === 'number' ? db.replicas : null,
+        specification: db.specification?.trim() ? db.specification : null,
+      }
       return {
         id: db.$id,
         // Prefer the live selected name so a rename shows up before the console
@@ -217,6 +228,7 @@ export function DatabaseSelector({
           db.$id === value && selectedName ? selectedName : db.name,
         apiType: db.type,
         engine:
+          db.engine ??
           engineFromDatabaseTypeValue(db.type) ??
           dedicated?.engine ??
           null,
@@ -224,8 +236,8 @@ export function DatabaseSelector({
           productFromDatabaseTypeValue(db.type) ??
           dedicated?.api ??
           null,
-        specSlug: dedicated?.specSlug ?? SERVERLESS_DATABASE_SPEC_ID,
-        status: dedicated?.status ?? db.status ?? null,
+        specSlug: resolveDatabaseComputeSpecId(productHints, dedicated),
+        status: dedicated?.status ?? (typeof db.status === 'string' ? db.status : null),
       }
     })
   }, [consoleData?.databases, dedicatedById, selectedName, value])
@@ -235,7 +247,9 @@ export function DatabaseSelector({
   const displayName = selectedName || selectedItem?.name || t(placeholder)
 
   const selectedApiType =
-    selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
+    selectedItem?.apiType ??
+    selectedProductDatabase?.databases?.[0]?.type ??
+    null
   const selectedEngine =
     selectedItem?.engine ?? selectedDedicated?.engine ?? null
   const selectedProduct =
@@ -410,6 +424,7 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateDatabaseClick?.()}
+              {...analyticsAttrs('create-database')}
             >
               <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
               {t('Create database')}
@@ -421,6 +436,7 @@ export function DatabaseSelector({
               }
               className="gap-2 text-[13px]"
               onSelect={() => onCreateTableClick?.()}
+              {...analyticsAttrs('create-table')}
             >
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
               {t(createTableMenuLabel)}

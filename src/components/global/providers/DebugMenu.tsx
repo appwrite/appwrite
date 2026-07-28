@@ -29,6 +29,10 @@ import {
   Search,
   X,
   Languages,
+  HeartHandshake,
+  MessageSquareQuote,
+  Variable,
+  Mail,
 } from 'lucide-react'
 import {
   Popover,
@@ -96,6 +100,8 @@ import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMen
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
 import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuTerminalPanel'
 import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/DebugMenuRecentResourcesPanel'
+import { DebugMenuCommunityShareExamplesPanel } from '@/components/global/providers/DebugMenuCommunityShareExamplesPanel'
+import { DebugMenuEnvPanel } from '@/components/global/providers/DebugMenuEnvPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -165,12 +171,14 @@ interface MenuItem {
   /** Opens the profile comparison table instead of a submenu list. */
   submenuVariant?:
     | 'profileComparison'
+    | 'communityShareExamples'
     | 'prefsDebug'
     | 'initDayMock'
     | 'initTicketMock'
     | 'seedResources'
     | 'terminalSettings'
     | 'recentResources'
+    | 'envStatus'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -431,12 +439,14 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
   return (
     Boolean(item.submenu?.length) ||
     item.submenuVariant === 'profileComparison' ||
+    item.submenuVariant === 'communityShareExamples' ||
     item.submenuVariant === 'prefsDebug' ||
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
     item.submenuVariant === 'terminalSettings' ||
-    item.submenuVariant === 'recentResources'
+    item.submenuVariant === 'recentResources' ||
+    item.submenuVariant === 'envStatus'
   )
 }
 
@@ -788,21 +798,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }
   }, [])
 
-  const applyOverrideAndReload = (action: () => void) => {
-    setIsOpen(false)
-    setTimeout(() => {
-      action()
-      window.location.reload()
-    }, 0)
-  }
-
-  const applyProfileOverrideAndGoHome = (action: () => void) => {
+  const applyOverrideAndGoHome = useCallback((action: () => void) => {
     setIsOpen(false)
     setTimeout(() => {
       action()
       window.location.assign('/')
     }, 0)
-  }
+  }, [])
 
   useEffect(() => {
     const unsubscribe = subscribeToDebugOverrides(setOverrides)
@@ -990,7 +992,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         active: profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
         onClick: () => {
-          applyProfileOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
+          applyOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
         },
       },
       {
@@ -999,7 +1001,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         active: profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
         onClick: () => {
-          applyProfileOverrideAndGoHome(() =>
+          applyOverrideAndGoHome(() =>
             setDebugProfileOverride('self-hosted'),
           )
         },
@@ -1008,7 +1010,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Use env var',
         description: 'Reset to VITE_CONSOLE_PROFILE',
         onClick: () => {
-          applyProfileOverrideAndGoHome(() => setDebugProfileOverride(null))
+          applyOverrideAndGoHome(() => setDebugProfileOverride(null))
         },
         icon: <RotateCcw className="h-3 w-3" />,
       },
@@ -1017,6 +1019,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         description: 'Canonical Cloud vs self-hosted feature flags',
         icon: <Columns2 className="h-3 w-3" />,
         submenuVariant: 'profileComparison',
+      },
+      {
+        label: 'Community support X examples',
+        description: 'Review all Cloud and self-hosted share drafts',
+        icon: <MessageSquareQuote className="h-3 w-3" />,
+        submenuVariant: 'communityShareExamples',
       },
     ]
 
@@ -1118,22 +1126,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
     const initSubmenuItems: MenuItem[] = [
       {
-        label: 'Mock current day',
+        label: 'Day',
         description: formatInitMockCurrentDay(overrides.mockInitCurrentDay),
         icon: <CalendarDays className="h-3 w-3" />,
         submenuVariant: 'initDayMock',
       },
       {
-        label: 'Mock ticket type',
+        label: 'Ticket',
         description: formatInitMockTicketType(overrides.mockInitTicketType),
         icon: <Ticket className="h-3 w-3" />,
         submenuVariant: 'initTicketMock',
       },
       {
-        label: 'Preview reaction confetti',
+        label: 'Confetti',
         description: overrides.previewInitReactionConfetti
-          ? 'Confetti triggers with 1 user on the same reaction'
-          : 'Confetti needs 5 users on the same reaction',
+          ? 'Triggers with 1 user on the same reaction'
+          : 'Needs 5 users on the same reaction',
         icon: <Sparkles className="h-3 w-3" />,
         variant: 'switch' as const,
         switchValue: overrides.previewInitReactionConfetti,
@@ -1146,7 +1154,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         },
       },
       {
-        label: 'Low-power animations',
+        label: 'Low power',
         description: getLowPowerDecisionDescription(initLowPowerDecision),
         icon: <Sparkles className="h-3 w-3" />,
         submenu: lowPowerAnimationSubmenu,
@@ -1169,144 +1177,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: faviconOptions,
           },
           {
-            label: 'Cloud status alert',
-            description:
-              overrides.mockCloudStatusAlert === 'live'
-                ? 'Use live Appwrite Cloud status'
-                : overrides.mockCloudStatusAlert === 'operational'
-                  ? 'Preview the normal state with no alert'
-                  : `Mock ${overrides.mockCloudStatusAlert} alert`,
-            icon: <Cloud className="h-3 w-3" />,
-            submenu: [
-              {
-                label: 'Live status',
-                description: 'Use the public Appwrite Cloud status page.',
-                onClick: () => {
-                  setDebugOverride('mockCloudStatusAlert', 'live')
-                  setIsOpen(false)
-                },
-                active: overrides.mockCloudStatusAlert === 'live',
-                icon: <Cloud className="h-3 w-3" />,
-              },
-              ...(
-                [
-                  {
-                    label: 'No alert',
-                    value: 'operational',
-                    description:
-                      'Preview the normal operational state with no banner.',
-                  },
-                  {
-                    label: 'Degraded',
-                    value: 'degraded',
-                    description: 'Preview the degraded-service alert.',
-                  },
-                  {
-                    label: 'Downtime',
-                    value: 'downtime',
-                    description: 'Preview the outage alert.',
-                  },
-                  {
-                    label: 'Maintenance',
-                    value: 'maintenance',
-                    description: 'Preview the maintenance alert.',
-                  },
-                ] as const
-              ).map((option) => ({
-                label: option.label,
-                description: option.description,
-                onClick: () => {
-                  setDebugOverride(
-                    'mockCloudStatusAlert',
-                    option.value as MockCloudStatusAlert,
-                  )
-                  setIsOpen(false)
-                },
-                active: overrides.mockCloudStatusAlert === option.value,
-                icon: <AlertTriangle className="h-3 w-3" />,
-              })),
-            ],
-          },
-          {
-            label: 'Add promo banner',
-            onClick: () => {
-              addMockBanner()
-              setIsOpen(false)
-            },
-            icon: <Megaphone className="h-3 w-3" />,
-            badge: banners.length > 0 ? banners.length : undefined,
-          },
-          {
-            label: 'Demo pages and comps',
-            description: 'Preview debug-only pages and components.',
-            icon: <Bug className="h-3 w-3" />,
-            submenu: [
-              {
-                label: 'Fullscreen loader',
-                description: overrides.showFullscreenLoader
-                  ? 'Enabled'
-                  : 'Disabled',
-                icon: <Loader2 className="h-3 w-3" />,
-                submenu: [
-                  {
-                    label: 'Show fullscreen loader',
-                    description:
-                      'Keep the initial loader visible to preview it (e.g. with status banner).',
-                    onClick: () => {
-                      setOverrides((prev) => ({
-                        ...prev,
-                        showFullscreenLoader: true,
-                      }))
-                      setDebugOverride('showFullscreenLoader', true)
-                      setIsOpen(false)
-                    },
-                    active: overrides.showFullscreenLoader,
-                    icon: <Loader2 className="h-3 w-3" />,
-                  },
-                  {
-                    label: 'Hide fullscreen loader',
-                    description: 'Return to normal loading behavior.',
-                    onClick: () => {
-                      setOverrides((prev) => ({
-                        ...prev,
-                        showFullscreenLoader: false,
-                      }))
-                      setDebugOverride('showFullscreenLoader', false)
-                      setIsOpen(false)
-                    },
-                    active: !overrides.showFullscreenLoader,
-                    icon: <RotateCcw className="h-3 w-3" />,
-                  },
-                ],
-              },
-              {
-                label: 'Error page',
-                description: 'Preview the error page as users see it.',
-                onClick: () => {
-                  navigate({ to: '/debug/error-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Bug className="h-3 w-3" />,
-              },
-              {
-                label: 'Org setup wizard',
-                description:
-                  'Preview the organization creation setup progress stage.',
-                onClick: () => {
-                  navigate({ to: '/debug/org-setup-preview' })
-                  setIsOpen(false)
-                },
-                icon: <Loader2 className="h-3 w-3" />,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        title: 'Settings',
-        icon: <Settings className="h-3.5 w-3.5" />,
-        items: [
-          {
             label: 'Keyboard layout',
             description: keyboardLayoutDescription,
             icon: <Keyboard className="h-3 w-3" />,
@@ -1325,30 +1195,216 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: languageOptions,
           },
           {
-            label: 'User & team prefs',
-            description:
-              'Account prefs and team (org) prefs: view, edit JSON, set/delete keys, reset',
+            label: 'Demos',
+            description: 'Preview alerts, banners, loaders, and pages.',
+            icon: <Bug className="h-3 w-3" />,
+            submenu: [
+              {
+                label: 'Status alert',
+                description:
+                  overrides.mockCloudStatusAlert === 'live'
+                    ? 'Live'
+                    : overrides.mockCloudStatusAlert === 'operational'
+                      ? 'None'
+                      : overrides.mockCloudStatusAlert.charAt(0).toUpperCase() +
+                        overrides.mockCloudStatusAlert.slice(1),
+                icon: <Cloud className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'Live',
+                    description: 'Use the public Appwrite Cloud status page.',
+                    onClick: () => {
+                      setDebugOverride('mockCloudStatusAlert', 'live')
+                      setIsOpen(false)
+                    },
+                    active: overrides.mockCloudStatusAlert === 'live',
+                    icon: <Cloud className="h-3 w-3" />,
+                  },
+                  ...(
+                    [
+                      {
+                        label: 'None',
+                        value: 'operational',
+                        description: 'Normal operational state with no alert.',
+                      },
+                      {
+                        label: 'Degraded',
+                        value: 'degraded',
+                        description: 'Degraded-service alert.',
+                      },
+                      {
+                        label: 'Downtime',
+                        value: 'downtime',
+                        description: 'Outage alert.',
+                      },
+                      {
+                        label: 'Maintenance',
+                        value: 'maintenance',
+                        description: 'Maintenance alert.',
+                      },
+                    ] as const
+                  ).map((option) => ({
+                    label: option.label,
+                    description: option.description,
+                    onClick: () => {
+                      setDebugOverride(
+                        'mockCloudStatusAlert',
+                        option.value as MockCloudStatusAlert,
+                      )
+                      setIsOpen(false)
+                    },
+                    active: overrides.mockCloudStatusAlert === option.value,
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  })),
+                ],
+              },
+              {
+                label: 'Promo banner',
+                description:
+                  banners.length > 0
+                    ? `${banners.length} active`
+                    : 'None active',
+                icon: <Megaphone className="h-3 w-3" />,
+                badge: banners.length > 0 ? banners.length : undefined,
+                submenu: [
+                  {
+                    label: 'Add',
+                    description: 'Add a mock promo banner.',
+                    onClick: () => {
+                      addMockBanner()
+                      setIsOpen(false)
+                    },
+                    icon: <Megaphone className="h-3 w-3" />,
+                  },
+                  ...(banners.length > 0
+                    ? [
+                        {
+                          label: 'Clear all',
+                          description: 'Remove all promo banners.',
+                          onClick: () => {
+                            clearAllBanners()
+                            setIsOpen(false)
+                          },
+                          icon: <Trash2 className="h-3 w-3" />,
+                        },
+                      ]
+                    : []),
+                ],
+              },
+              {
+                label: 'Fullscreen loader',
+                description: overrides.showFullscreenLoader ? 'On' : 'Off',
+                icon: <Loader2 className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'On',
+                    description:
+                      'Keep the initial loader visible to preview it.',
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        showFullscreenLoader: true,
+                      }))
+                      setDebugOverride('showFullscreenLoader', true)
+                      setIsOpen(false)
+                    },
+                    active: overrides.showFullscreenLoader,
+                    icon: <Loader2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Off',
+                    description: 'Return to normal loading behavior.',
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        showFullscreenLoader: false,
+                      }))
+                      setDebugOverride('showFullscreenLoader', false)
+                      setIsOpen(false)
+                    },
+                    active: !overrides.showFullscreenLoader,
+                    icon: <RotateCcw className="h-3 w-3" />,
+                  },
+                ],
+              },
+              {
+                label: 'Error page',
+                description: 'Preview the error page.',
+                onClick: () => {
+                  navigate({ to: '/debug/error-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Bug className="h-3 w-3" />,
+              },
+              {
+                label: 'Org setup',
+                description: 'Preview organization creation progress.',
+                onClick: () => {
+                  navigate({ to: '/debug/org-setup-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Loader2 className="h-3 w-3" />,
+              },
+              {
+                label: 'Verify email',
+                description: 'Preview the email verification page.',
+                onClick: () => {
+                  navigate({ to: '/debug/verify-email-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Mail className="h-3 w-3" />,
+              },
+              {
+                label: 'Community support',
+                description: overrides.previewCommunitySupportWizard
+                  ? 'Previewing'
+                  : 'Force-show the wizard',
+                active: overrides.previewCommunitySupportWizard,
+                onClick: () => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    previewCommunitySupportWizard: true,
+                  }))
+                  setDebugOverride('previewCommunitySupportWizard', true)
+                  setIsOpen(false)
+                },
+                icon: <HeartHandshake className="h-3 w-3" />,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Settings',
+        icon: <Settings className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Prefs',
+            description: 'View and edit account and team prefs.',
             icon: <Braces className="h-3 w-3" />,
             submenuVariant: 'prefsDebug',
           },
           {
-            label: 'Terminal settings',
-            description:
-              'Browser CLI cache: view status and clear the local Appwrite CLI install',
+            label: 'Env',
+            description: 'Check if env vars are set (values never shown).',
+            icon: <Variable className="h-3 w-3" />,
+            submenuVariant: 'envStatus',
+          },
+          {
+            label: 'Terminal',
+            description: 'View and clear the browser CLI cache.',
             icon: <Terminal className="h-3 w-3" />,
             submenuVariant: 'terminalSettings',
           },
           {
-            label: 'Recent resources',
-            description:
-              'Command Center recent list: view stored entries and reset localStorage',
+            label: 'Recents',
+            description: 'View and reset Command Center history.',
             icon: <History className="h-3 w-3" />,
             submenuVariant: 'recentResources',
           },
           {
-            label: 'Seed resources',
-            description:
-              'Create projects, mock memberships, empty DBs, buckets, and domains in the current context.',
+            label: 'Seed',
+            description: 'Create mock projects, DBs, buckets, and domains.',
             icon: <Boxes className="h-3 w-3" />,
             submenuVariant: 'seedResources',
           },
@@ -1363,9 +1419,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ]
             : []),
           {
-            label: 'Feature flags',
-            description:
-              'Console profile overrides (dedicated DBs, org features, and more)',
+            label: 'Flags',
+            description: 'Override console profile features.',
             icon: <FlaskConical className="h-3 w-3" />,
             submenu: [
               createProfileFeatureFlagItem(
@@ -1557,6 +1612,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 undefined,
                 'UI & tools',
               ),
+              ...(import.meta.env.DEV
+                ? [
+                    createDebugFeatureFlagItem(
+                      'Construction',
+                      'Header construction bar in Vite DEV. Default from VITE_CONSTRUCTION (unset = on).',
+                      'showConstruction',
+                      overrides.showConstruction,
+                      (checked) => {
+                        setOverrides((prev) => ({
+                          ...prev,
+                          showConstruction: checked,
+                        }))
+                        setDebugOverride('showConstruction', checked)
+                      },
+                      undefined,
+                      'UI & tools',
+                    ),
+                  ]
+                : []),
               createDebugFeatureFlagItem(
                 'Unlock onboarding',
                 'Unlock all Get started product sections without completing Connect.',
@@ -1568,6 +1642,36 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     unlockOnboardingLocks: checked,
                   }))
                   setDebugOverride('unlockOnboardingLocks', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
+              createDebugFeatureFlagItem(
+                'Preview onboarding complete',
+                'Force Get started progress to 100% to preview advocacy copy and Star on GitHub.',
+                'previewOnboardingComplete',
+                overrides.previewOnboardingComplete,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    previewOnboardingComplete: checked,
+                  }))
+                  setDebugOverride('previewOnboardingComplete', checked)
+                },
+                undefined,
+                'UI & tools',
+              ),
+              createDebugFeatureFlagItem(
+                'Preview community support wizard',
+                'Force-show the skippable community support fullscreen wizard.',
+                'previewCommunitySupportWizard',
+                overrides.previewCommunitySupportWizard,
+                (checked) => {
+                  setOverrides((prev) => ({
+                    ...prev,
+                    previewCommunitySupportWizard: checked,
+                  }))
+                  setDebugOverride('previewCommunitySupportWizard', checked)
                 },
                 undefined,
                 'UI & tools',
@@ -1683,7 +1787,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 label,
                 description,
                 onClick: () => {
-                  applyOverrideAndReload(() => setDebugEndpointOverride(id))
+                  applyOverrideAndGoHome(() => setDebugEndpointOverride(id))
                 },
                 active: endpointPreset === id,
                 icon: <Globe className="h-3 w-3" />,
@@ -1699,7 +1803,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       : 'http://localhost/v1',
                   )
                   if (url?.trim()) {
-                    applyOverrideAndReload(() =>
+                    applyOverrideAndGoHome(() =>
                       setDebugEndpointOverride('custom', url.trim()),
                     )
                   }
@@ -1711,7 +1815,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 label: 'Use env var',
                 description: 'Reset to VITE_APPWRITE_ENDPOINT',
                 onClick: () => {
-                  applyOverrideAndReload(() => setDebugEndpointOverride(null))
+                  applyOverrideAndGoHome(() => setDebugEndpointOverride(null))
                 },
                 active: !endpointPreset,
                 icon: <RotateCcw className="h-3 w-3" />,
@@ -1726,24 +1830,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           })(),
         ],
       },
-      ...(banners.length > 0
-        ? [
-            {
-              title: 'Promos',
-              icon: <Sparkles className="h-3.5 w-3.5" />,
-              items: [
-                {
-                  label: 'Clear all banners',
-                  onClick: () => {
-                    clearAllBanners()
-                    setIsOpen(false)
-                  },
-                  icon: <Trash2 className="h-3 w-3" />,
-                },
-              ],
-            } as MenuSection,
-          ]
-        : []),
       ...(actions.length > 0
         ? [
             {
@@ -1788,6 +1874,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     addMockBanner,
     clearAllBanners,
     languageCopy,
+    applyOverrideAndGoHome,
   ])
 
   const currentSubmenu = useMemo(
@@ -1796,7 +1883,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     [activeSubmenu, sections],
   )
 
-  const isFeatureFlagsSubmenu = currentSubmenu?.title === 'Feature flags'
+  const isFeatureFlagsSubmenu = currentSubmenu?.title === 'Flags'
 
   const filteredFeatureFlagItems = useMemo(() => {
     if (!isFeatureFlagsSubmenu || !currentSubmenu) return []
@@ -1864,12 +1951,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           className={cn(
             'z-[10060] flex max-h-[min(85dvh,var(--radix-popper-available-height,100dvh))] flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-popover p-0 shadow-xl',
             currentSubmenu?.submenuVariant === 'profileComparison' ||
+              currentSubmenu?.submenuVariant === 'communityShareExamples' ||
               currentSubmenu?.submenuVariant === 'prefsDebug' ||
               currentSubmenu?.submenuVariant === 'seedResources' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
               currentSubmenu?.submenuVariant === 'terminalSettings' ||
-              currentSubmenu?.submenuVariant === 'recentResources'
+              currentSubmenu?.submenuVariant === 'recentResources' ||
+              currentSubmenu?.submenuVariant === 'envStatus'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1930,6 +2019,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <div className="px-1" aria-label={currentSubmenu.title}>
                   <ConsoleProfileComparisonTable activeProfileId={profileId} />
                 </div>
+              ) : currentSubmenu.submenuVariant === 'communityShareExamples' ? (
+                <DebugMenuCommunityShareExamplesPanel
+                  activeProfileId={profileId}
+                />
               ) : currentSubmenu.submenuVariant === 'prefsDebug' ? (
                 <DebugMenuPrefsPanel />
               ) : currentSubmenu.submenuVariant === 'seedResources' ? (
@@ -1942,6 +2035,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuTerminalPanel />
               ) : currentSubmenu.submenuVariant === 'recentResources' ? (
                 <DebugMenuRecentResourcesPanel />
+              ) : currentSubmenu.submenuVariant === 'envStatus' ? (
+                <DebugMenuEnvPanel />
               ) : (
                 <nav
                   className="space-y-0.5"

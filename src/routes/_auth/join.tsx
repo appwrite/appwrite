@@ -107,7 +107,7 @@ function AcceptInviteContent() {
   const hasAllParams =
     search.teamId && search.membershipId && search.userId && search.secret
 
-  // The invite carries the target userId — if it doesn't match the signed-in
+  // The invite carries the target userId - if it doesn't match the signed-in
   // account, accepting is guaranteed to fail, so surface that upfront.
   const isWrongAccount =
     !!hasAllParams && !!account && account.$id !== search.userId

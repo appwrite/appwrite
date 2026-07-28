@@ -9,14 +9,15 @@
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
     "dev": "tsr generate && vite dev --port 3000",
     "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "install-browsers": "playwright install --with-deps chromium",
     "lint": "eslint",
     "serve": "vite preview",
     "start": "bun run server.ts",
-    "test": "vitest run",
-    "test:e2e:ui": "playwright test --ui",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
     "import:blog": "bun run scripts/import-blog.ts",
     "import:docs": "bun run scripts/import-docs.ts && bun run generate:docs",
     "import:integrations": "bun run scripts/import-integrations.ts && bun run generate:sitemap",
@@ -154,9 +155,6 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tanstack/router-cli": "^1.132.21",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/bun": "^1.2.22",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
@@ -168,12 +166,10 @@
     "dotenv": "^16.4.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
-    "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",
     "vite": "npm:rolldown-vite@7.3.1",
-    "vite-plugin-devtools-json": "^1.0.0",
-    "vitest": "^3.0.5"
+    "vite-plugin-devtools-json": "^1.0.0"
   }
 }

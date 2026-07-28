@@ -56,6 +56,7 @@ import {
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
+import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 
 interface TemplateConfigViewProps {
   templateId: string
@@ -119,15 +120,22 @@ export function TemplateConfigView({
     formData.providerRootDirectory || './',
   )
 
-  const getGitHubAuthUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !projectId) return '#'
-    const origin = window.location.origin
-    const redirectUrl = `${origin}/projects/${projectId}/functions/create`
-    const successUrl = encodeURIComponent(redirectUrl)
-    const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint = getApiEndpoint(project?.region)
-    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  const getVcsAuthUrl = useMemo(() => {
+    return (provider: VcsProviderId = 'github') => {
+      if (typeof window === 'undefined' || !projectId) return '#'
+      const origin = window.location.origin
+      const redirectUrl = `${origin}/projects/${projectId}/functions/create`
+      const projectEndpoint = getApiEndpoint(project?.region)
+      return buildVcsAuthUrl({
+        endpoint: projectEndpoint,
+        provider,
+        projectId,
+        successUrl: redirectUrl,
+        failureUrl: redirectUrl,
+      })
+    }
   }, [projectId, project?.region])
+  const getGitHubAuthUrl = getVcsAuthUrl('github')
 
   const handleConnectRepoValueChange = (next: ConnectRepositoryValue) => {
     updateFormData({
@@ -683,6 +691,7 @@ export function TemplateConfigView({
           projectId={projectId}
           installations={installations}
           getGitHubAuthUrl={getGitHubAuthUrl}
+          getVcsAuthUrl={getVcsAuthUrl}
           defaultRepositoryName={functionName || template?.name || ''}
           detectionType={VCSDetectionType.Runtime}
           value={connectRepoValue}

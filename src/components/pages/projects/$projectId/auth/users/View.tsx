@@ -437,6 +437,9 @@ export function View() {
             ? () => setCreateMembershipDialogOpen(true)
             : undefined
         }
+        createAnalyticsAction={
+          activeTab === 'memberships' ? 'create-membership' : undefined
+        }
         contentAfterBorder={
           activeTab === 'targets' ? (
             <div className="border-b border-border bg-blue-500/5">

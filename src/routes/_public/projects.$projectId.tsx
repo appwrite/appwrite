@@ -5,9 +5,11 @@ import {
   isRedirect,
   useLocation,
 } from '@tanstack/react-router'
+import { NotFoundView } from '@/components/error/NotFound'
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
+import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
 import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
@@ -135,6 +137,8 @@ const EMPTY_PROJECT_LAYOUT_CONTEXT: ProjectLayoutRouteContext = {
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
+  // Parent ProjectCliShellLayout already provides ConsoleLayout; avoid a nested shell.
+  notFoundComponent: NotFoundView,
   // Region + budget/plan-limit check must run before child loaders (loaders execute in parallel).
   // When the org is blocked, nested project routes are redirected to the project root
   // so heavy service loaders cannot hang the navigation.
@@ -265,7 +269,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     const planUsageLimitReached = context.planUsageLimitReached === true
     let budgetLimitTeamId = context.budgetLimitTeamId
 
-    // When budget-locked, project.get returns 402 — do not fetch the project.
+    // When budget-locked, project.get returns 402 - do not fetch the project.
     if (budgetLimitReached) {
       if (!budgetLimitTeamId) {
         budgetLimitTeamId = await resolveProjectTeamIdFromConsole(projectId)
@@ -660,7 +664,7 @@ function ProjectLayout() {
 
   // Show error component if project is not found or access denied
   // Only show after loading is complete to avoid flashing
-  // Skip when budget-locked (402) — the curtain handles that state.
+  // Skip when budget-locked (402) - the curtain handles that state.
   if (
     !budgetLimitReached &&
     !planUsageLimitReached &&
@@ -677,6 +681,7 @@ function ProjectLayout() {
     return (
       <div className="org-layout-container flex h-full flex-col bg-background">
         <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+          <DevConstructionStripe />
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
         </div>

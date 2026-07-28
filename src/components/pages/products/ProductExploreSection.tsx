@@ -23,6 +23,7 @@ type ProductNavigationItemsCopy = {
   functionsTagline: string
   messagingTagline: string
   sitesTagline: string
+  firewallTagline: string
 }
 
 function ProductExploreCard({
@@ -50,7 +51,9 @@ function ProductExploreCard({
             ? productNavigationItemsCopy.functionsTagline
             : productId === 'messaging'
               ? productNavigationItemsCopy.messagingTagline
-              : productNavigationItemsCopy.sitesTagline
+              : productId === 'firewall'
+                ? productNavigationItemsCopy.firewallTagline
+                : productNavigationItemsCopy.sitesTagline
 
   const cardClassName = cn(
     'group flex items-start gap-3 rounded-xl border p-4 text-start transition-colors',
@@ -75,7 +78,12 @@ function ProductExploreCard({
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="text-[14px] font-semibold text-foreground">{productName}</h3>
-        <p className="mt-1 text-[13px] leading-5 text-muted-foreground">{productTagline}</p>
+        <p
+          className="mt-1 truncate text-[13px] leading-5 text-muted-foreground"
+          title={productTagline}
+        >
+          {productTagline}
+        </p>
       </div>
       {!isCurrent ? (
         <ArrowRight
@@ -102,15 +110,19 @@ export function ProductExploreSection({ currentProductId }: ProductExploreSectio
           size="md"
         />
 
-        <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
           {PRODUCT_IDS.map((productId) => (
-            <ProductExploreCard
+            <div
               key={productId}
-              productId={productId}
-              isCurrent={productId === currentProductId}
-              productNamesCopy={productNamesCopy}
-              productNavigationItemsCopy={productNavigationItemsCopy}
-            />
+              className="w-full sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]"
+            >
+              <ProductExploreCard
+                productId={productId}
+                isCurrent={productId === currentProductId}
+                productNamesCopy={productNamesCopy}
+                productNavigationItemsCopy={productNavigationItemsCopy}
+              />
+            </div>
           ))}
         </div>
       </div>

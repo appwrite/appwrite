@@ -6,7 +6,7 @@ export type ProductHeroLogoStripItem = {
 }
 
 export type ProductHeroLogoStripConfig = {
-  variant: 'frameworks' | 'runtimes'
+  variant: 'frameworks' | 'runtimes' | 'engines'
   title: string
   items: ProductHeroLogoStripItem[]
 }
@@ -54,7 +54,16 @@ const FUNCTIONS_RUNTIME_ITEMS: ProductHeroLogoStripItem[] = [
   { name: 'Rust', key: 'rust-1.83' },
 ]
 
-/** Popular Sites frameworks and Functions runtimes shown below the product hero. */
+/** Databases engines shown in the product hero (Appwrite DBs + native SQL). */
+const DATABASES_ENGINE_ITEMS: ProductHeroLogoStripItem[] = [
+  { name: 'TablesDB', key: 'tablesdb' },
+  { name: 'DocumentsDB', key: 'documentsdb' },
+  { name: 'VectorsDB', key: 'vectorsdb' },
+  { name: 'PostgreSQL', key: 'postgresql' },
+  { name: 'MySQL', key: 'mysql' },
+]
+
+/** Popular Sites frameworks, Functions runtimes, and Databases engines shown below the product hero. */
 export const PRODUCT_HERO_LOGO_STRIPS: Partial<
   Record<ProductId, ProductHeroLogoStripConfig>
 > = {
@@ -67,5 +76,10 @@ export const PRODUCT_HERO_LOGO_STRIPS: Partial<
     variant: 'runtimes',
     title: '13+ runtimes. Develop locally, deploy when ready.',
     items: FUNCTIONS_RUNTIME_ITEMS,
+  },
+  databases: {
+    variant: 'engines',
+    title: 'Five engines for tables, documents, vectors, and native SQL',
+    items: DATABASES_ENGINE_ITEMS,
   },
 }

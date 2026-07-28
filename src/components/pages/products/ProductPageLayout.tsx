@@ -11,7 +11,9 @@ import { ProductToolsSection } from '@/components/pages/products/ProductToolsSec
 import { ProductHeroLogoStrip } from '@/components/pages/products/_components/ProductHeroLogoStrip'
 import { ProductHeroIcon } from '@/components/pages/products/_components/ProductHeroIcon'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PRODUCT_HERO_LOGO_STRIPS } from '@/lib/products/hero-logo-strip'
+import { PRODUCT_HERO_VISUALS } from '@/lib/products/hero-visuals'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductPageContent } from '@/lib/products/types'
 import { useI18n } from '@/lib/i18n'
@@ -27,7 +29,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
   const product = PRODUCT_REGISTRY[content.id]
   const ProductIcon = product.icon
   const heroLogoStrip = PRODUCT_HERO_LOGO_STRIPS[content.id]
+  const HeroVisual = PRODUCT_HERO_VISUALS[content.id]
   const productName = productNamesCopy[content.id] ?? product.name
+  const hasHeroFooter = Boolean(
+    content.hero.stats?.length || heroLogoStrip || HeroVisual,
+  )
 
   return (
     <div className="relative min-w-0 bg-background">
@@ -35,10 +41,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         leading={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}
         description={content.hero.description}
-        wideFooter={content.hero.stats?.length === 5}
+        wideFooter={Boolean(HeroVisual) || content.hero.stats?.length === 5}
         footer={
-          content.hero.stats?.length || heroLogoStrip ? (
+          hasHeroFooter ? (
             <>
+              {HeroVisual ? <HeroVisual /> : null}
               {content.hero.stats?.length ? (
                 <MarketingHeroStats items={content.hero.stats} />
               ) : null}
@@ -48,12 +55,18 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         }
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('product-start-building')}
+          >
             {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={product.docsPath}>{pageLayoutCopy.viewDocs}</a>
+          <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
+            {pageLayoutCopy.viewDocs}
+          </a>
         </Button>
       </MarketingHeroSection>
 
@@ -68,12 +81,18 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
         description={content.cta.description}
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('product-start-building')}
+          >
             {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">{pageLayoutCopy.viewPricing}</Link>
+          <Link to="/pricing" {...analyticsAttrs('product-view-pricing')}>
+            {pageLayoutCopy.viewPricing}
+          </Link>
         </Button>
       </MarketingCtaSection>
 

@@ -31,7 +31,7 @@ export function GeneratorStartShell({
           <p className="max-w-3xl text-[13px] text-muted-foreground">{description}</p>
         </div>
 
-        <div className="grid min-h-0 flex-1 gap-8 overflow-hidden lg:grid-cols-5 lg:gap-10">
+        <div className="grid min-h-0 min-w-0 flex-1 gap-8 overflow-hidden lg:grid-cols-5 lg:gap-10">
           <CreateWizardLeftColumn title={savedTitle}>{saved}</CreateWizardLeftColumn>
           <CreateWizardRightColumn title={templatesTitle}>{templates}</CreateWizardRightColumn>
         </div>

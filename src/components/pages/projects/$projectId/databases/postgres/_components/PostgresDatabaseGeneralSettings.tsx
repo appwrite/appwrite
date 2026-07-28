@@ -23,6 +23,7 @@ import {
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   useProject,
   useUpdatePostgresDatabase,
@@ -285,7 +286,7 @@ export function PostgresDatabaseComputeTierCard({
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const { project } = useProject(projectId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
 
   const specs = useMemo(

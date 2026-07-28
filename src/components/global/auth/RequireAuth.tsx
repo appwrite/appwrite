@@ -11,6 +11,7 @@ import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAcce
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -30,6 +31,9 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
+  // Debug demos must stay reachable without auth redirects (and without
+  // signing the user out via linked auth routes).
+  if (pathname.startsWith('/debug/')) return true
   return isMarketingPagePath(pathname)
 }
 
@@ -116,8 +120,26 @@ function isValidRelativeRedirect(url: string): boolean {
 
 type RouterLocation = ReturnType<typeof useLocation>
 
+const AUTH_REDIRECT_DEDUPE_WINDOW_MS = 750
+let lastAuthRedirectKey: string | null = null
+let lastAuthRedirectAtMs = 0
+
+function shouldSkipDuplicateAuthRedirect(key: string): boolean {
+  if (typeof window === 'undefined') return false
+  const now = Date.now()
+  if (
+    lastAuthRedirectKey === key &&
+    now - lastAuthRedirectAtMs < AUTH_REDIRECT_DEDUPE_WINDOW_MS
+  ) {
+    return true
+  }
+  lastAuthRedirectKey = key
+  lastAuthRedirectAtMs = now
+  return false
+}
+
 /**
- * Navigate to MFA or sign-in when the account query fails. Must run in useEffect —
+ * Navigate to MFA or sign-in when the account query fails. Must run in useEffect -
  * never call navigate from inside queryFn (async updates before mount).
  */
 function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
@@ -132,6 +154,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
   useEffect(() => {
     if (!needsMfa || location.pathname === '/mfa') return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectKey = `mfa:${redirectUrl ?? ''}`
+    if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigateRef.current({ to: '/mfa', search: { redirect: redirectUrl } })
     } else {
@@ -153,6 +177,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
       return
     }
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    const redirectKey = `signin:${redirectUrl ?? ''}`
+    if (shouldSkipDuplicateAuthRedirect(redirectKey)) return
     if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
       navigateRef.current({ to: '/sign-in', search: { redirect: redirectUrl } })
     } else {
@@ -183,7 +209,7 @@ function isMfaRequiredError(error: unknown) {
   )
 }
 
-// Client-side sign out — always hard-redirects to sign-in when complete.
+// Client-side sign out - always hard-redirects to sign-in when complete.
 async function signOut(
   _navigate?: (options: { to: string }) => void,
   queryClient?: ReturnType<typeof useQueryClient>,
@@ -268,6 +294,29 @@ export function RequireAuth({
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isMfaRequired = isMfaRequiredError(error)
   const isAuthenticated = !!account && !error
+  const needsEmailVerification =
+    isAuthenticated && requiresConsoleEmailVerification(account)
+
+  // Unverified console accounts cannot use org/project APIs. Keep them on
+  // /verify-email (with a return path) instead of rendering a broken console.
+  useEffect(() => {
+    if (!needsEmailVerification) return
+    if (location.pathname === '/verify-email') return
+    if (isAuthPage(location.pathname) || isOptionalAuthPage(location.pathname)) {
+      return
+    }
+    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
+      navigate({
+        to: '/verify-email',
+        search: { redirect: redirectUrl },
+        replace: true,
+      })
+    } else {
+      navigate({ to: '/verify-email', replace: true })
+    }
+  }, [needsEmailVerification, location.pathname, location.search, navigate])
+
   const authData: AuthData = {
     currentUser,
     account,
@@ -307,6 +356,21 @@ export function RequireAuth({
       )
     }
     return <>{fallback}</>
+  }
+
+  if (
+    needsEmailVerification &&
+    location.pathname !== '/verify-email' &&
+    !isAuthPage(location.pathname) &&
+    !isOptionalAuthPage(location.pathname)
+  ) {
+    return (
+      loadingComponent ?? (
+        <div className="flex min-h-svh items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )
+    )
   }
 
   // User is authenticated - render children

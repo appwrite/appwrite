@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button'
+import { MarketingHeroSection } from '@/components/pages/marketing/MarketingSections'
 import { companyHero } from '@/lib/company/hero'
+import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
+import { scrollToCompanySection } from '@/lib/company/section-scroll'
 import { useT } from '@/lib/i18n/translate'
 
 function HeroColumn({ title, body }: { title: string; body: string }) {
@@ -16,45 +19,42 @@ function HeroColumn({ title, body }: { title: string; body: string }) {
 
 export function CompanyHero() {
   const t = useT()
+
   return (
-    <section className="relative border-b border-border">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="max-w-3xl">
-          <h1 className="font-aeonik-pro text-balance text-[28px] font-normal leading-none tracking-tight text-foreground sm:text-[36px] lg:text-[40px]">
-            {t(companyHero.title)}
-            <span className="text-[var(--brand-cta)]">_</span>
-          </h1>
-          <p className="mt-5 text-[14px] leading-7 text-muted-foreground sm:mt-6 sm:text-[15px]">
-            {t(companyHero.lead)}
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-8 border-t border-border pt-10 md:grid-cols-2 md:gap-12 lg:gap-16">
-          <HeroColumn
-            title={companyHero.mission.title}
-            body={companyHero.mission.body}
-          />
-          <HeroColumn
-            title={companyHero.platform.title}
-            body={companyHero.platform.body}
-          />
-        </div>
-
-        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-10 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[14px] font-medium text-foreground sm:text-[15px]">
+    <MarketingHeroSection
+      title={companyHero.title}
+      description={companyHero.lead}
+      wideFooter
+      footer={
+        <div className="mt-10 border-t border-border/60 pt-8 text-start sm:mt-12 sm:pt-10">
+          <div className="grid gap-8 md:grid-cols-2 md:gap-0">
+            <div className="md:pe-10 lg:pe-12">
+              <HeroColumn
+                title={companyHero.mission.title}
+                body={companyHero.mission.body}
+              />
+            </div>
+            <div className="md:border-s md:border-border/60 md:ps-10 lg:ps-12">
+              <HeroColumn
+                title={companyHero.platform.title}
+                body={companyHero.platform.body}
+              />
+            </div>
+          </div>
+          <p className="mt-8 text-[14px] font-medium text-foreground sm:mt-10 sm:text-[15px]">
             {t(companyHero.tagline)}
           </p>
-          <Button variant="brandCta" className="shrink-0" asChild>
-            <a
-              href={companyHero.careersUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('Join the team')}
-            </a>
-          </Button>
         </div>
-      </div>
-    </section>
+      }
+    >
+      <Button
+        variant="brandCta"
+        size="lg"
+        className="h-10 text-[14px]"
+        onClick={() => scrollToCompanySection(COMPANY_SECTION_IDS.careers)}
+      >
+        {t('Join the team')}
+      </Button>
+    </MarketingHeroSection>
   )
 }

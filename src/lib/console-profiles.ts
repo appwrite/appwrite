@@ -158,7 +158,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: false,
+      firewall: true,
     },
   },
   'self-hosted': {
@@ -388,7 +388,7 @@ export function getActiveProfileFeatures(): ConsoleProfileFeatures {
   return getActiveProfile().features
 }
 
-/** Feature defaults for a profile id (cloud-only gates + env overrides) — what a debug reset restores. */
+/** Feature defaults for a profile id (cloud-only gates + env overrides) - what a debug reset restores. */
 export function getCanonicalProfileFeatures(
   profileId: ConsoleProfileId,
 ): ConsoleProfileFeatures {

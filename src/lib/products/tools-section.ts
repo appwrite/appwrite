@@ -25,7 +25,7 @@ export type ProductToolsSectionContent = {
   terraform: ProductToolsTerraformExample
 }
 
-const PRODUCT_TOOLS_CONTENT: Record<ProductId, ProductToolsSectionContent> = {
+const PRODUCT_TOOLS_CONTENT: Partial<Record<ProductId, ProductToolsSectionContent>> = {
   auth: {
     codeExample: {
       language: 'typescript',
@@ -237,8 +237,10 @@ const deployment = await sites.createDeployment({
   },
 }
 
-export function getProductToolsContent(productId: ProductId): ProductToolsSectionContent {
-  return PRODUCT_TOOLS_CONTENT[productId]
+export function getProductToolsContent(
+  productId: ProductId,
+): ProductToolsSectionContent | null {
+  return PRODUCT_TOOLS_CONTENT[productId] ?? null
 }
 
 export const PRODUCT_TOOLS_LINKS = {

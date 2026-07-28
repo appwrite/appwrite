@@ -37,6 +37,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -268,6 +269,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
                     className="h-9 w-full gap-2 ps-6 pe-6 text-[13px] font-medium"
                     type="button"
                     disabled
+                    {...analyticsAttrs('create-bucket')}
                   >
                     <Plus className="h-4 w-4" />
                     {t('Create bucket')}
@@ -284,6 +286,7 @@ export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) 
               type="button"
               disabled={isCreateDisabled}
               onClick={() => setCreateOpen(true)}
+              {...analyticsAttrs('create-bucket')}
             >
               <Plus className="h-4 w-4" />
               {t('Create bucket')}

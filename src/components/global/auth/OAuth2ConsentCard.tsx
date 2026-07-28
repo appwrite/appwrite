@@ -154,7 +154,7 @@ export function OAuth2ConsentCard({
 
   // MCP grants (detected via the grant's RFC 8707 resources) get a narrowing
   // editor: the client requested the full scope catalog, so consent is the
-  // control point. Every other grant renders exactly as before — read-only
+  // control point. Every other grant renders exactly as before - read-only
   // permissions, no scope narrowing.
   const canNarrow = useMemo(() => isMcpGrant(grant), [grant])
 
@@ -225,7 +225,7 @@ export function OAuth2ConsentCard({
     !sameIdentifiers(organizationSelected, organizationIdentifiers)
 
   // The narrowed grant to send on approve. `scope: undefined` means the user
-  // kept the full request — the approve call then omits `scope` so the server
+  // kept the full request - the approve call then omits `scope` so the server
   // grants the full literal requested list and re-authorizations skip consent.
   const composed = useMemo(
     () =>
@@ -275,7 +275,7 @@ export function OAuth2ConsentCard({
     rows: EditorRow[],
     selected: boolean,
   ) {
-    // Only toggles selection — each row keeps its chosen access level, so
+    // Only toggles selection - each row keeps its chosen access level, so
     // unchecking and rechecking the tier doesn't discard Read-only choices.
     const selection =
       tier === 'project' ? projectSelection : organizationSelection
@@ -310,7 +310,7 @@ export function OAuth2ConsentCard({
     !projectGranted &&
     !organizationGranted
   // With the narrowing editor, the selection must keep at least one
-  // non-identity scope — an identity-only grant would leave the app
+  // non-identity scope - an identity-only grant would leave the app
   // "authorized" but unable to act.
   const nothingSelected = composed?.blocked ?? false
   const blocked =
@@ -383,7 +383,7 @@ export function OAuth2ConsentCard({
       // For MCP grants the editor may downscope the requested catalog; `scope`
       // stays omitted when the user kept the full request so the server grants
       // the full literal requested list (keeping the consent-skip diff empty on
-      // re-authorization). Non-MCP grants never send `scope` — only the
+      // re-authorization). Non-MCP grants never send `scope` - only the
       // resource binding is narrowed.
       //
       // Same consent-skip reasoning for the resource binding: on an MCP grant
@@ -661,7 +661,7 @@ export function OAuth2ConsentCard({
 
       {/* Body */}
       <div className="space-y-4 px-7 pb-7 pt-2">
-        {/* MCP scope-narrowing editor — only for grants aimed at the Appwrite
+        {/* MCP scope-narrowing editor - only for grants aimed at the Appwrite
             MCP server; everything else keeps the read-only permission list. */}
         {canNarrow ? (
           <div className="border-border overflow-hidden rounded-lg border">
@@ -725,7 +725,7 @@ export function OAuth2ConsentCard({
                     </span>
                     <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed">
                       {t(
-                        'Limit every selected permission to viewing data — nothing can be created, changed, or deleted.',
+                        'Limit every selected permission to viewing data - nothing can be created, changed, or deleted.',
                       )}
                     </span>
                   </span>

@@ -24,12 +24,14 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
+import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
 
 export function View() {
   const t = useT()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
+  const { resourceType: resourceScope = 'api' } = Route.useSearch()
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -135,12 +137,22 @@ export function View() {
           <RulesList
             projectId={projectId}
             canWrite={canWrite}
+            resourceScope={resourceScope}
+            onResourceScopeChange={(next) => {
+              void navigate({
+                to: '/projects/$projectId/firewall',
+                params: { projectId },
+                search: { resourceType: next },
+                replace: true,
+              })
+            }}
             createDisabled={isCreateDisabled}
             createDisabledTooltip={createDisabledTooltip}
             onCreate={() =>
               navigate({
                 to: '/projects/$projectId/firewall/create',
                 params: { projectId },
+                search: { resourceType: resourceScope },
               })
             }
           />

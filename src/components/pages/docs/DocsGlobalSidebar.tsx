@@ -56,7 +56,10 @@ import { GraphqlIcon } from '@/components/global/shared/GraphqlIcon'
 import { OAuthIcon } from '@/components/global/shared/OAuthIcon'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
 import { DOCS_NAV_ACTIVE_BG_CLASS, DOCS_NAV_SCROLL_CLASS } from '@/lib/docs/nav-styles'
+import { isFirewallDocsPathname } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
+import { isDocsProductNavNew } from '@/lib/products/new-badge'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import {
   getDocsAudienceFromPathname,
   getDocsGlobalNav,
@@ -76,8 +79,21 @@ import {
   SIDEBAR_EDGE_TOGGLE_OVERFLOW,
 } from '@/lib/layout/offcanvas-classes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  analyticsAttrs,
+  getDocsNavAnalyticsAction,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { DocsRouteLink } from './DocsRouteLink'
 import { DocsAudienceSwitcher } from './DocsAudienceSwitcher'
+
+/** Global nav group labels → curated section actions (children inherit). */
+const DOCS_NAV_GROUP_ACTIONS: Record<string, AnalyticsActionId> = {
+  Products: 'docs-nav-products',
+  APIS: 'docs-nav-apis',
+  Tooling: 'docs-nav-tooling',
+  Advanced: 'docs-nav-advanced',
+}
 
 const DOCS_MENU_ICON_STROKE = 1.25
 
@@ -176,6 +192,7 @@ function DocsGlobalNavItem({
   isMobile = false,
   onNavigate,
   marketingEnabled,
+  sectionAnalytics,
 }: {
   item: DocsNavLink
   pathname: string
@@ -183,6 +200,7 @@ function DocsGlobalNavItem({
   isMobile?: boolean
   onNavigate?: () => void
   marketingEnabled: boolean
+  sectionAnalytics?: AnalyticsActionId
 }) {
   const blogPath = parseBlogPagePath(item.href)
   const docsPath = parseDocsPagePath(item.href)
@@ -207,8 +225,12 @@ function DocsGlobalNavItem({
           ? isMarketingPageExternal(marketingEnabled)
           : resolvedHref.startsWith('http')) ||
     item.openInNewTab
+  const navAnalytics =
+    getDocsNavAnalyticsAction(item.href) ?? sectionAnalytics
+  const analytics = navAnalytics ? analyticsAttrs(navAnalytics) : undefined
 
-  const hasTrailing = (!collapsed || isMobile) && (external || item.new)
+  const showNewBadge = Boolean(item.new) || isDocsProductNavNew(item.href)
+  const hasTrailing = (!collapsed || isMobile) && (external || showNewBadge)
 
   const className = cn(
     'rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
@@ -247,10 +269,8 @@ function DocsGlobalNavItem({
           aria-hidden
         />
       ) : null}
-      {(!collapsed || isMobile) && item.new ? (
-        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          New
-        </span>
+      {(!collapsed || isMobile) && showNewBadge ? (
+        <ProductNewBadge label="New" />
       ) : null}
     </>
   )
@@ -263,11 +283,17 @@ function DocsGlobalNavItem({
       onClick={onNavigate}
       className={className}
       aria-label={`${item.label} (opens in new tab)`}
+      {...analytics}
     >
       {content}
     </a>
   ) : (
-    <DocsRouteLink href={resolvedHref} onClick={onNavigate} className={className}>
+    <DocsRouteLink
+      href={resolvedHref}
+      onClick={onNavigate}
+      className={className}
+      {...analytics}
+    >
       {content}
     </DocsRouteLink>
   )
@@ -311,6 +337,7 @@ function DocsGlobalNavCategory({
   marketingEnabled: boolean
 }) {
   const [open, setOpen] = useState(!(initiallyCollapsed ?? false))
+  const sectionAnalytics = label ? DOCS_NAV_GROUP_ACTIONS[label] : undefined
 
   const itemList = (
     <div className="space-y-0.5">
@@ -323,6 +350,7 @@ function DocsGlobalNavCategory({
           isMobile={isMobile}
           onNavigate={onNavigate}
           marketingEnabled={marketingEnabled}
+          sectionAnalytics={sectionAnalytics}
         />
       ))}
     </div>
@@ -443,8 +471,12 @@ export function DocsGlobalSidebar({
   useEffect(() => {
     if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
     }
-  }, [features.partnersDocs, navigate, pathname])
+    if (!features.firewall && isFirewallDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
+    }
+  }, [features.firewall, features.partnersDocs, navigate, pathname])
 
   return (
     <TooltipProvider>
@@ -479,6 +511,7 @@ export function DocsGlobalSidebar({
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
+          {...analyticsAttrs('docs-sidebar-collapse')}
           className={cn(
             'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             SIDEBAR_EDGE_TOGGLE_OVERFLOW,

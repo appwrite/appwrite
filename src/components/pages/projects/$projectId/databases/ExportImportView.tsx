@@ -36,14 +36,10 @@ import {
   useProjectTables,
   useDatabaseCsvMigrations,
 } from '@/lib/react-query/hooks'
+import { getMigrationTableRef } from '@/lib/migrations/csv-resource'
+import { isDatabaseRouteKind, type DatabaseRouteKind } from '@/lib/database-routes'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
-
-/** resourceId format is "databaseId:tableId" */
-function tableIdFromResourceId(resourceId: string): string {
-  const idx = resourceId.indexOf(':')
-  return idx >= 0 ? resourceId.slice(idx + 1) : resourceId
-}
 
 interface ExportImportViewProps {
   databaseId: string
@@ -77,7 +73,9 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const dbKind = params.dbKind as string
+  const dbKind: DatabaseRouteKind = isDatabaseRouteKind(params.dbKind ?? '')
+    ? (params.dbKind as DatabaseRouteKind)
+    : 'tablesdb'
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -95,6 +93,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
   const { tables, isLoading: tablesLoading } = useProjectTables(
     projectId,
     databaseId,
+    dbKind,
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
     undefined,
@@ -251,7 +250,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
               const downloadUrl = (
                 migration.options as { downloadUrl?: string }
               )?.downloadUrl
-              const tid = tableIdFromResourceId(migration.resourceId)
+              const tid = getMigrationTableRef(migration)?.tableId ?? ''
               const tableName = tableNameById[tid] ?? tid
               const status = migration.status
 

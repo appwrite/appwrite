@@ -237,7 +237,7 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Send on every channel from one Messaging service and SDK. Use createEmail, createSms, and createPush for transactional mail, OTP codes, and mobile alerts without wiring three separate vendor integrations.': '1 つの Messaging サービスと SDK からすべてのチャネルに送信できます。createEmail、createSms、createPush を使えば、3 つの別々のベンダー連携を組む必要なく、トランザクションメール、OTP コード、モバイル通知を送信できます。',
   'Share files with token-based preview, view, and download URLs that work without session cookies. Set an expiry date or keep links open-ended for external viewers.': 'セッション Cookie なしで動作する、トークンベースのプレビュー、閲覧、ダウンロード URL でファイルを共有できます。有効期限を設定することも、外部の閲覧者向けに期限なしのリンクにすることもできます。',
   'Show who is online, on the same page, or typing in team chat. Presences sync status and metadata over Realtime so you can add collaboration cues to shared docs, dashboards, and support tools without building sockets.': '誰がオンラインか、同じページを見ているか、チームチャットで入力中かを表示できます。Presences は Realtime を通じてステータスとメタデータを同期するため、ソケットを自前で構築せずに、共有ドキュメントやダッシュボード、サポートツールにコラボレーションの表示を追加できます。',
-  'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Web Application Firewall (WAF), and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.': 'サイトは、グローバル CDN 配信、DDoS 保護、Web アプリケーションファイアウォール (WAF)、TLS 暗号化を備えた Appwrite Network 上で動作します。SSR のワークロードはエッジでユーザーの近くで実行できる一方、認証、データベース、ストレージなどのプロジェクトサービスは選択したリージョンに残ります。',
+  'Sites run on Appwrite Network with global CDN delivery, DDoS protection, Firewall, and TLS encryption. SSR workloads can execute closer to users at the edge while Auth, Databases, Storage, and other project services stay in your selected region.': 'サイトは、グローバル CDN 配信、DDoS 保護、Firewall、TLS 暗号化を備えた Appwrite Network 上で動作します。SSR のワークロードはエッジでユーザーの近くで実行できる一方、認証、データベース、ストレージなどのプロジェクトサービスは選択したリージョンに残ります。',
   'Sites supports popular frameworks including Next.js, Nuxt, SvelteKit, Astro, Vue, TanStack Start, Remix, Angular, React, and more. Static hosting works with any framework that outputs HTML assets; SSR is available for supported server-rendered stacks. See the frameworks page for build settings per preset.': 'サイトは、Next.js、Nuxt、SvelteKit、Astro、Vue、TanStack Start、Remix、Angular、React など、人気のフレームワークに対応しています。静的ホスティングは HTML アセットを出力するあらゆるフレームワークで利用でき、SSR は対応するサーバーレンダリングのスタックで利用できます。プリセットごとのビルド設定は frameworks ページをご覧ください。',
   'Spend less time waiting on builds and more time shipping updates. Cached dependencies speed up repeat deploys, path filters help monorepos skip unnecessary rebuilds, and deployment retention automatically removes old inactive deployments to save storage. Tune build and runtime CPU and memory when compilation or SSR needs more headroom.': 'ビルドを待つ時間を減らし、更新のリリースに時間を使えます。キャッシュされた依存関係により繰り返しのデプロイが高速化され、パスフィルターによりモノレポで不要な再ビルドをスキップでき、デプロイの保持設定により古い非アクティブなデプロイが自動的に削除されてストレージを節約できます。コンパイルや SSR により多くのリソースが必要な場合は、ビルドおよびランタイムの CPU とメモリを調整できます。',
   'Start from official quick-starts or pick a template in the create wizard. Filter by framework and use case, connect GitHub, and deploy with build settings already tuned for Appwrite.': '公式のクイックスタートから始めるか、作成ウィザードでテンプレートを選べます。フレームワークとユースケースで絞り込み、GitHub を接続し、Appwrite 向けにあらかじめ調整されたビルド設定でデプロイできます。',
@@ -269,7 +269,7 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Yes. Every function gets a generated domain and you can add custom domains on Appwrite Cloud. Pass x-appwrite-user-jwt to authenticate users and respect Auth permissions inside your function.': 'はい。すべての関数には生成されたドメインが割り当てられ、Appwrite Cloud ではカスタムドメインを追加することもできます。x-appwrite-user-jwt を渡せば、関数内でユーザーを認証し、認証の権限を尊重できます。',
   'Yes. Functions receive a dynamic API key and run with project context. Configure scopes in Settings, then call Databases, Storage, Messaging, Auth, and other APIs from server SDKs inside your handler.': 'はい。Functions は動的な API キーを受け取り、プロジェクトのコンテキストで実行されます。Settings でスコープを設定すれば、ハンドラー内の server SDK からデータベース、ストレージ、Messaging、認証などの API を呼び出せます。',
   "Yes. Import users through the Console or the Users API with the Server SDK. For email and password accounts, create users with plain-text passwords or import existing password hashes when your provider uses a supported algorithm: Argon2, bcrypt, scrypt, scrypt-modified (Firebase), SHA, MD5, or PHPass. New passwords are stored with Argon2. Hashes imported from other algorithms are upgraded to Argon2 after the user's first successful sign-in.": 'はい。コンソール、または Server SDK を使った Users API 経由でユーザーをインポートできます。メールとパスワードのアカウントでは、平文パスワードでユーザーを作成することも、Argon2、bcrypt、scrypt、scrypt-modified (Firebase)、SHA、MD5、PHPass のいずれかの対応アルゴリズムを使っている場合は既存のパスワードハッシュをインポートすることもできます。新しいパスワードは Argon2 で保存されます。他のアルゴリズムからインポートされたハッシュは、ユーザーが最初にサインインに成功した時点で Argon2 にアップグレードされます。',
-  'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and WAF.': 'はい。組織の Domains タブからドメインを購入し、同じコンソールの Appwrite DNS でレコードを管理できます。ドメインをサイトに接続すれば TLS が自動的に発行され、DNS を設定している間は生成された .appwrite.network の URL を利用できます。ルートドメインは Appwrite のネームサーバーに委任でき、サブドメインには CNAME レコードを使用します。サイトのトラフィックは、CDN、DDoS 保護、WAF を備えた Appwrite Network を通じて配信されます。',
+  'Yes. Purchase domains from your organization Domains tab and manage records with Appwrite DNS in the same Console. Connect the domain to a site for automatic TLS, or use the generated .appwrite.network URL while you set up DNS. Apex domains can delegate to Appwrite nameservers; subdomains use CNAME records. Sites traffic is delivered through Appwrite Network with CDN, DDoS protection, and Firewall.': 'はい。組織の Domains タブからドメインを購入し、同じコンソールの Appwrite DNS でレコードを管理できます。ドメインをサイトに接続すれば TLS が自動的に発行され、DNS を設定している間は生成された .appwrite.network の URL を利用できます。ルートドメインは Appwrite のネームサーバーに委任でき、サブドメインには CNAME レコードを使用します。サイトのトラフィックは、CDN、DDoS 保護、Firewall を備えた Appwrite Network を通じて配信されます。',
   'Yes. Push deployments with the Appwrite CLI from CI or your machine, or upload a .tar.gz archive from the Console for manual deploys. Git remains the recommended path for automatic builds on push and branch previews, but every deploy method uses the same build pipeline and settings.': 'はい。CI や自分のマシンから Appwrite CLI でデプロイを push することも、コンソールから .tar.gz アーカイブをアップロードして手動でデプロイすることもできます。push 時の自動ビルドやブランチプレビューには引き続き Git を利用する方法を推奨していますが、どのデプロイ方法でも同じビルドパイプラインと設定が使われます。',
   'Yes. Request transformations through the preview endpoint to resize, crop, convert format, and adjust quality on the fly. Keep one original upload and let Appwrite generate variants on demand.': 'はい。プレビューエンドポイントに対してリクエストすれば、リサイズ、切り抜き、フォーマット変換、画質調整をその場で行えます。オリジナルのアップロードは 1 つだけ保持し、バリアントは Appwrite にオンデマンドで生成させられます。',
   'Yes. Row and table permissions can reference users, teams, and roles from Appwrite Auth.': 'はい。行やテーブルの権限では、Appwrite Auth のユーザー、チーム、ロールを参照できます。',
@@ -280,4 +280,298 @@ export const jaProductPagesDictionary: Record<string, string> = {
   'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys. Files larger than 20 MB skip encryption even when enabled.': 'はい。Settings からバケットごとに暗号化を有効にすると、新しいファイルは保存時に暗号化された状態で保存されます。万が一ファイルが流出しても、暗号化されたオブジェクトは鍵がなければ読み取れません。20 MB を超えるファイルは、有効にしていても暗号化の対象外です。',
   'Yes. Usage charts show requests, bandwidth, builds, and compute over selectable ranges, with breakdowns to see where traffic comes from. The Logs tab records every request with status code, method, path, and duration. Open a log entry for request and response headers. For SSR sites, console.log and console.error output appears in response logs.': 'はい。使用状況のグラフでは、選択した期間ごとにリクエスト、帯域幅、ビルド、コンピュートを確認でき、トラフィックの発生元も内訳で確認できます。Logs タブには、ステータスコード、メソッド、パス、所要時間とともにすべてのリクエストが記録されます。ログのエントリを開けば、リクエストとレスポンスのヘッダーを確認できます。SSR サイトでは、console.log と console.error の出力がレスポンスログに表示されます。',
   'Yes. Use the Server SDK from Functions, your API server, or any trusted backend with a project API key. This is the standard pattern for transactional flows such as OTP verification, password reset, order receipts, and inventory alerts triggered by platform events or custom logic.': 'はい。Functions、自前の API サーバー、またはプロジェクトの API キーを持つ信頼できる任意のバックエンドから Server SDK を利用できます。これは、プラットフォームのイベントや独自のロジックによってトリガーされる OTP 認証、パスワードリセット、注文の受領確認、在庫アラートなどのトランザクションフローに使われる標準的なパターンです。',
+  '2 filters': '2 件のフィルター',
+  '3 rules': '3 件のルール',
+  'Add read replicas on dedicated databases to absorb query load and improve failover resilience. Enable high availability when replica count is greater than zero, then tune sync mode and failover from Replication settings.':
+    '専用データベースにリードレプリカを追加してクエリ負荷を分散し、フェイルオーバー耐性を高めます。レプリカ数が 0 より大きいときに high availability が有効になります。その後、Replication 設定で同期モードとフェイルオーバーを調整できます。',
+  'Appwrite Databases include five engines in two categories. Appwrite DBs are TablesDB for relational-style tables and columns, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. Native DBs are managed PostgreSQL and MySQL for teams that need full SQL compatibility, extensions, and portable schemas.':
+    'Appwrite Databases は 2 つのカテゴリに分かれた 5 つのエンジンを含みます。Appwrite DBs は、リレーショナル風のテーブルとカラム向けの TablesDB、柔軟な JSON ドキュメント向けの DocumentsDB、埋め込みと類似検索向けの VectorsDB です。Native DBs は、フル SQL 互換性、拡張機能、移植可能なスキーマが必要なチーム向けのマネージド PostgreSQL と MySQL です。',
+  'Appwrite DBs': 'Appwrite DBs',
+  'Appwrite DBs cover tables, documents, and vectors. Native DBs bring managed PostgreSQL and MySQL when you need full SQL control. Pick the model that matches your data, then operate every engine from the same Console and project.':
+    'Appwrite DBs はテーブル、ドキュメント、ベクトルをカバーします。Native DBs は、フル SQL 制御が必要なときにマネージド PostgreSQL と MySQL を提供します。データに合うモデルを選び、同じ Console とプロジェクトからすべてのエンジンを運用できます。',
+  'Appwrite still supports legacy Collections APIs alongside TablesDB and DocumentsDB. Docs cover migration paths, compatibility notes, and how to move schemas and documents without disrupting clients.':
+    'Appwrite は TablesDB と DocumentsDB に加えて、レガシーの Collections API も引き続きサポートします。ドキュメントでは移行パス、互換性の注意点、クライアントを止めずにスキーマとドキュメントを移す方法を案内しています。',
+  'Are backups and PITR included?': 'バックアップと PITR は含まれますか?',
+  'Auth linked': '認証連携済み',
+  'Automate encrypted hot backups with policies, or create a manual backup when you need a snapshot now. Enable PITR on dedicated databases to restore to a specific moment after accidental deletes, failed migrations, or bad writes.':
+    'ポリシーで暗号化されたホットバックアップを自動化するか、今すぐスナップショットが必要なときに手動バックアップを作成します。専用データベースで PITR を有効にすると、誤削除、失敗したマイグレーション、不正な書き込みのあとでも特定時点へ復元できます。',
+  'Backups and point-in-time recovery': 'バックアップとポイントインタイムリカバリ',
+  'Backups docs': 'バックアップのドキュメント',
+  'Can I query, relate, and bulk-update data from the SDKs?': 'SDK からクエリ、リレーション、一括更新はできますか?',
+  'Choose how this database is provisioned.': 'このデータベースのプロビジョニング方法を選択します。',
+  'Choose TablesDB, DocumentsDB, or VectorsDB when you want Appwrite SDKs, Console workflows, and Auth-aware permissions out of the box. Choose PostgreSQL or MySQL when you need advanced SQL, existing ORM tooling, extensions such as pgvector, or to run schemas you already operate elsewhere.':
+    'Appwrite SDK、Console のワークフロー、認証連携の権限をすぐ使いたいときは TablesDB、DocumentsDB、VectorsDB を選びます。高度な SQL、既存の ORM、pgvector などの拡張、または別環境で運用中のスキーマが必要なときは PostgreSQL か MySQL を選びます。',
+  'Commit multi-step writes atomically.': '複数ステップの書き込みをアトミックにコミットします。',
+  'Compute model': 'コンピュートモデル',
+  'Compute models': 'コンピュートモデル',
+  'Connect with standard SQL clients, ORMs, and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    '標準の SQL クライアント、ORM、コンソール内クエリエディタで接続できます。移植可能なスキーマを保ち、スタックに必要な拡張を使い、ロール、接続、バックアップを Appwrite プロジェクトと一緒に管理します。',
+  'Connections, schemas, and backups': '接続、スキーマ、バックアップ',
+  'Create a database, choose your engine and compute model, and query your first data in minutes.':
+    'データベースを作成し、エンジンとコンピュートモデルを選んで、数分で最初のデータをクエリできます。',
+  'Databases docs': 'データベースのドキュメント',
+  'Databases for every data model': 'あらゆるデータモデル向けのデータベース',
+  'Do Appwrite DBs integrate with Auth permissions?': 'Appwrite DBs は認証の権限と連携しますか?',
+  'Embeddings and similarity search for semantic retrieval and AI features.':
+    'セマンティック検索と AI 機能向けの埋め込みと類似検索。',
+  'Extensions, roles, SQL editor': '拡張機能、ロール、SQL エディタ',
+  'Familiar MySQL compatibility for common relational apps and migrations.':
+    '一般的なリレーショナルアプリとマイグレーション向けの馴染みある MySQL 互換性。',
+  'Filter, order, and paginate from the SDKs and Console. Model related data with relationships, run multi-step writes in transactions, and use bulk operations when you need to update many rows or documents at once.':
+    'SDK と Console からフィルター、並び替え、ページネーションができます。リレーションで関連データをモデル化し、トランザクションで複数ステップの書き込みを実行し、多数の行やドキュメントを一度に更新するときは一括操作を使います。',
+  'Five engines, two categories': '5 つのエンジン、2 つのカテゴリ',
+  'Five engines for tables, documents, vectors, and native SQL':
+    'テーブル、ドキュメント、ベクトル、ネイティブ SQL 向けの 5 つのエンジン',
+  'Flexible JSON documents with filters and full-text search for evolving schemas.':
+    '変化するスキーマ向けに、フィルターと全文検索付きの柔軟な JSON ドキュメント。',
+  'Full SQL, extensions, and portable schemas for relational workloads and existing tooling.':
+    'リレーショナルワークロードと既存ツール向けのフル SQL、拡張機能、移植可能なスキーマ。',
+  'HA enabled': 'HA 有効',
+  'Hot backups with zero downtime and fast recovery.': 'ダウンタイムなしのホットバックアップと迅速なリカバリ。',
+  'How do replication and high availability work?': 'レプリケーションと high availability はどのように動作しますか?',
+  'Ideal for prototypes': 'プロトタイプに最適',
+  'Instant provisioning': '即座のプロビジョニング',
+  'Isolated compute with replicas, HA, and PITR.': 'レプリカ、HA、PITR 付きの分離コンピュート。',
+  'Isolated resources': '分離リソース',
+  'Legacy collections': 'レガシー Collections',
+  'Legacy documents': 'レガシー Documents',
+  'Link related tables without custom joins.': 'カスタム JOIN なしで関連テーブルをリンクします。',
+  'Native DBs': 'Native DBs',
+  'Native SQL for PostgreSQL and MySQL': 'PostgreSQL と MySQL 向けのネイティブ SQL',
+  'On dedicated databases you can add read replicas to scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Configure sync mode and failover from the Console Replication settings for supported engines.':
+    '専用データベースではリードレプリカを追加してクエリトラフィックをスケールし、フェイルオーバー耐性を高められます。レプリカ数が 0 より大きいときに high availability が有効になります。対応エンジンでは Console の Replication 設定から同期モードとフェイルオーバーを構成できます。',
+  'Permissions wired to Auth': '認証と連携した権限',
+  'Pick the engine that fits your workload, then scale it the same way. Appwrite Databases cover structured tables, documents, vectors, and native SQL, with serverless or dedicated compute, replication, backups, and point-in-time recovery.':
+    'ワークロードに合うエンジンを選び、同じ方法でスケールします。Appwrite Databases は構造化テーブル、ドキュメント、ベクトル、ネイティブ SQL をカバーし、サーバーレスまたは専用コンピュート、レプリケーション、バックアップ、ポイントインタイムリカバリに対応します。',
+  'Queries docs': 'クエリのドキュメント',
+  'Queries, relationships, and transactions': 'クエリ、リレーション、トランザクション',
+  'Read replicas & HA': 'リードレプリカと HA',
+  'Relational-style tables, columns, and indexes for structured data and complex queries.':
+    '構造化データと複雑なクエリ向けのリレーショナル風テーブル、カラム、インデックス。',
+  'Relationships': 'リレーション',
+  'Replication and high availability': 'レプリケーションと high availability',
+  'Restore to a specific moment beyond the latest backup.': '最新バックアップより先の特定時点へ復元します。',
+  'Row-level permissions': '行レベルの権限',
+  'Scale query traffic and improve failover resilience.': 'クエリトラフィックをスケールし、フェイルオーバー耐性を高めます。',
+  'Scope access with Auth users, teams, and roles.': '認証ユーザー、チーム、ロールでアクセスをスコープします。',
+  'Scope TablesDB and DocumentsDB access with users, teams, and roles from Appwrite Auth. Set rules at the table, collection, row, or document level so each tenant only sees their data.':
+    'Appwrite Auth のユーザー、チーム、ロールで TablesDB と DocumentsDB へのアクセスをスコープします。テーブル、コレクション、行、ドキュメント単位でルールを設定し、各顧客が自分のデータだけを見られるようにします。',
+  'Serverless databases run on a shared pool and are the fastest way to start. Billing is usage-based: there is no fixed compute fee, and you pay for storage plus reads and writes against your plan quota (then overage). Dedicated databases provision isolated compute for predictable performance, higher connection limits, and production options such as read replicas, high availability, and point-in-time recovery. Billing is a fixed monthly compute tier per database (from $10/mo), with reads and writes included in the tier. HA replicas and PITR are optional add-ons, and extra storage or bandwidth is billed as overage. You pick a specification when you create the database and can upgrade later.':
+    'サーバーレスデータベースは共有プールで動作し、いちばん早く始められます。課金は従量制で、固定のコンピュート料金はなく、プラン枠内のストレージと読み書き（超過分は overage）に対して支払います。専用データベースは分離コンピュートを確保し、予測可能な性能、高い接続上限、リードレプリカ、high availability、ポイントインタイムリカバリなどの本番向けオプションを利用できます。課金はデータベースごとの固定月額コンピュート階層（$10/月〜）で、読み書きはその階層に含まれます。HA レプリカと PITR はオプションのアドオンで、追加のストレージや帯域は overage として課金されます。作成時に仕様を選び、後からアップグレードもできます。',
+  'Serverless or dedicated compute': 'サーバーレスまたは専用コンピュート',
+  'Shared compute pool': '共有コンピュートプール',
+  'Shared pool. Fast to create, no capacity planning.': '共有プール。すばやく作成でき、キャパシティ計画は不要です。',
+  'Start on a shared serverless pool when you want speed and simplicity. Move to dedicated specifications when you need isolated resources, higher connection limits, and production options like replicas and PITR. Choose at create time or upgrade later.':
+    '速さとシンプルさを優先するときは共有サーバーレスプールから始めます。分離リソース、高い接続上限、レプリカや PITR などの本番オプションが必要になったら専用仕様へ移ります。作成時に選ぶか、後からアップグレードできます。',
+  'Store and query data with TablesDB, DocumentsDB, VectorsDB, PostgreSQL, and MySQL. Choose serverless or dedicated, with replication, backups, and PITR.':
+    'TablesDB、DocumentsDB、VectorsDB、PostgreSQL、MySQL でデータを保存・クエリできます。サーバーレスまたは専用を選び、レプリケーション、バックアップ、PITR を利用できます。',
+  'Transactions': 'トランザクション',
+  'What database engines does Appwrite offer?': 'Appwrite はどのデータベースエンジンを提供しますか?',
+  'What is the difference between serverless and dedicated databases?': 'サーバーレスデータベースと専用データベースの違いは何ですか?',
+  'When should I use Appwrite DBs vs native PostgreSQL or MySQL?':
+    'Appwrite DBs とネイティブの PostgreSQL / MySQL、どちらを使うべきですか?',
+  'Yes on Appwrite Cloud for supported plans and engines. Create automated backup policies or run manual backups from the Backups tab. Point-in-time recovery (PITR) on dedicated databases lets you restore to a specific moment beyond the latest scheduled backup, which helps after accidental deletes, failed migrations, or bad writes.':
+    '対応プランとエンジンでは Appwrite Cloud で利用できます。自動バックアップポリシーを作成するか、Backups タブから手動バックアップを実行できます。専用データベースのポイントインタイムリカバリ (PITR) では、最新のスケジュールバックアップより先の特定時点へ復元でき、誤削除、失敗したマイグレーション、不正な書き込みのあとに役立ちます。',
+  'Yes. Appwrite DBs support filters, ordering, pagination, relationships, transactions, bulk operations, and geo queries through the SDKs and Console. Native PostgreSQL and MySQL databases support full SQL from the in-console editor and your existing SQL clients.':
+    'はい。Appwrite DBs は SDK と Console 経由でフィルター、並び替え、ページネーション、リレーション、トランザクション、一括操作、地理クエリをサポートします。ネイティブの PostgreSQL と MySQL は、コンソール内エディタと既存の SQL クライアントからフル SQL を使えます。',
+  'Yes. TablesDB and DocumentsDB permissions can reference users, teams, and roles from Appwrite Auth at the table, collection, row, and document level. Scope data per customer or workspace without building custom access control.':
+    'はい。TablesDB と DocumentsDB の権限は、テーブル、コレクション、行、ドキュメント単位で Appwrite Auth のユーザー、チーム、ロールを参照できます。カスタムアクセス制御を作らずに、顧客やワークスペースごとにデータをスコープできます。',
+  'Accepts writes and serves as the source of truth for replicas.': '書き込みを受け付け、レプリカの信頼できる情報源として機能します。',
+  'Active Record and Data Mapper patterns for TypeScript.':
+    'TypeScript 向けの Active Record と Data Mapper パターン。',
+  'Connect with standard SQL clients and the in-console query editor. Keep portable schemas, use the extensions your stack needs, and manage roles, connections, and backups alongside your Appwrite project.':
+    '標準の SQL クライアントとコンソール内クエリエディタで接続できます。移植可能なスキーマを保ち、スタックに必要な拡張を使い、ロール、接続、バックアップを Appwrite プロジェクトと一緒に管理します。',
+  'Dedicated databases run behind a connection pooler with a primary for writes and read replicas for query scale and failover. Choose asynchronous, synchronous, or quorum sync mode, then promote a replica when you need to move write traffic.':
+    '専用データベースはコネクションプーラーの背後で動作し、書き込み用のプライマリと、クエリのスケールとフェイルオーバー向けのリードレプリカを持ちます。Asynchronous、Synchronous、Quorum の同期モードを選び、書き込みトラフィックを移す必要があるときにレプリカを昇格できます。',
+  'Lightweight TypeScript ORM with SQL-like query builder.': 'SQL 風クエリビルダー付きの軽量 TypeScript ORM。',
+  'Official PostgreSQL CLI for ad-hoc SQL and schema exploration.': 'アドホック SQL とスキーマ探索向けの公式 PostgreSQL CLI。',
+  'On serverless databases, replication and high availability are abstracted and managed by the platform, so you do not configure replicas or sync mode yourself. On dedicated databases, traffic can enter through a connection pooler such as PgDog or ProxySQL. A primary instance accepts reads and writes, and read replicas scale query traffic and improve failover resilience. High availability is enabled when replica count is greater than zero. Choose asynchronous, synchronous, or quorum sync mode, and promote a replica from the Console when you need to move write traffic.':
+    'サーバーレスデータベースでは、レプリケーションと high availability はプラットフォーム側で抽象化・管理されるため、レプリカや同期モードを自分で設定する必要はありません。専用データベースでは、PgDog や ProxySQL などのコネクションプーラー経由でトラフィックを受け取れます。プライマリは読み書きを受け付け、リードレプリカはクエリトラフィックをスケールし、フェイルオーバー耐性を高めます。レプリカ数が 0 より大きいときに high availability が有効になります。Asynchronous、Synchronous、Quorum の同期モードを選び、書き込みトラフィックを移す必要があるときは Console からレプリカを昇格できます。',
+  'Promise-based ORM for Node.js with multi-dialect support.': '複数ダイアレクト対応の Node.js 向け Promise ベース ORM。',
+  'Proxy, primary, and read replicas for high availability.': 'high availability 向けの Proxy、プライマリ、リードレプリカ。',
+  'Python SQL toolkit and ORM for expressive queries.': '表現力のあるクエリ向けの Python SQL ツールキットと ORM。',
+  'Routes client connections and pools traffic to the cluster.': 'クライアント接続をルーティングし、クラスタへのトラフィックをプールします。',
+  'Scale query traffic and stand ready for failover promotion.': 'クエリトラフィックをスケールし、フェイルオーバー昇格に備えます。',
+  'Type-safe schema and client for Node.js and TypeScript.': 'Node.js と TypeScript 向けの型安全なスキーマとクライアント。',
+  'Use the same connection strings with Prisma, Drizzle, Sequelize, TypeORM, SQLAlchemy, psql, and the rest of your SQL toolchain. Copy ready-made snippets from the Console Connect tab and keep shipping with the stack your team already knows.':
+    'Prisma、Drizzle、Sequelize、TypeORM、SQLAlchemy、psql など、既存の SQL ツールチェーンと同じ接続文字列を使えます。Console の Connect タブから用意済みスニペットをコピーして、チームがすでに知っているスタックのまま開発を続けられます。',
+  'Works with your ORM and toolstack': 'お使いの ORM とツールスタックに対応',
+
+  // Firewall product page
+  '24h ago': '24時間前',
+  '5 attributes': '5 属性',
+  'A specific Function execution endpoint.': '特定の Function 実行エンドポイント。',
+  'A specific Site deployment hostname.': '特定の Site デプロイホスト名。',
+  'Actions docs': 'アクションのドキュメント',
+  'All conditions must match (AND).': 'すべての条件が一致する必要があります (AND)。',
+  'Allow the request and skip later Firewall rules.':
+    'リクエストを許可し、後続の Firewall ルールをスキップします。',
+  'Apply policies to the project API, a specific Function, or a specific Site. Keep production APIs locked down while preview sites and health checks stay reachable.':
+    'プロジェクト API、特定の Function、または特定の Site にポリシーを適用します。プレビューサイトとヘルスチェックは到達可能なまま、本番 API をロックダウンできます。',
+  'Can I preview impact before enabling a rule?':
+    'ルールを有効にする前に影響をプレビューできますか?',
+  'Choose where the rule evaluates matching traffic.':
+    '一致するトラフィックをルールが評価する対象を選びます。',
+  'Condition matching': '条件マッチング',
+  'Conditions docs': '条件のドキュメント',
+  'Continue': '続行',
+  'Control traffic before it reaches your app':
+    'アプリに届く前にトラフィックを制御',
+  'Create your first deny, bypass, rate limit, or redirect rule from the Console and preview impact before you enable it.':
+    'Console から最初の拒否、バイパス、レート制限、またはリダイレクトルールを作成し、有効化する前に影響をプレビューできます。',
+  'Define project rules that match requests by IP, path, method, country, or user agent, then deny, bypass, rate limit, or redirect them before they hit your API, Functions, or Sites.':
+    'IP、パス、メソッド、国、またはユーザーエージェントでリクエストに一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、またはリダイレクトします。',
+  'Deny account mutations': 'アカウント変更を拒否',
+  'Deny, bypass, rate limit, or redirect': '拒否、バイパス、レート制限、リダイレクト',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, and Redirect sends clients to another location with a 3xx status. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny or rate limit rules.':
+    '一致する各ルールは 1 つのアクションを適用します。Deny は 403 を返し、Bypass はリクエストを許可して後続ルールをスキップし、Rate limit はクライアント IP ごとに制限して超過時に 429 を返し、Redirect は 3xx で別の場所へ送ります。Allow アクションは別途ありません。後続の拒否やレート制限をスキップさせたいトラフィックには Bypass を使います。',
+  'Every rule applies one action when conditions match. Deny abusive traffic with 403, bypass trusted clients past later rules, throttle per IP with rate limits, or redirect to maintenance and migration URLs.':
+    '条件が一致すると、各ルールは 1 つのアクションを適用します。不正なトラフィックは 403 で拒否し、信頼できるクライアントは後続ルールをバイパスし、IP ごとにレート制限するか、メンテナンスや移行用 URL へリダイレクトします。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, or user agent. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。条件は IP、リクエストパス、HTTP メソッド、国、ユーザーエージェントでフィルターできます。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Filter by IP address, request path, HTTP method, country, or user agent. Combine conditions with AND so a rule only fires when every filter matches.':
+    'IP アドレス、リクエストパス、HTTP メソッド、国、またはユーザーエージェントでフィルターします。条件を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'First match': '最初の一致',
+  'Firewall is available on Appwrite Cloud. Rule limits depend on your organization plan. Disabled rules still count toward plan limits but are not evaluated.':
+    'Firewall は Appwrite Cloud で利用できます。ルール上限は組織プランに依存します。無効なルールもプラン上限には含まれますが、評価されません。',
+  'Firewall overview': 'Firewall の概要',
+  'Firewall rules run on Appwrite Cloud before traffic reaches your project resources. Scope a rule to the project API, a specific Function, or a specific Site. Console traffic is never blocked, so you can keep managing rules even when deny or rate limit policies are active.':
+    'Firewall ルールは、トラフィックがプロジェクトリソースに届く前に Appwrite Cloud で実行されます。ルールのスコープはプロジェクト API、特定の Function、または特定の Site に設定できます。Console のトラフィックはブロックされないため、拒否やレート制限ポリシーが有効でもルールを管理し続けられます。',
+  'Functions and Sites scopes': 'Functions と Sites のスコープ',
+  'How do conditions and priority work together?':
+    '条件と優先度はどのように連携しますか?',
+  'Impact before enable': '有効化前の影響',
+  'Impact preview docs': '影響プレビューのドキュメント',
+  'Is Firewall available on every plan?': 'Firewall はすべてのプランで利用できますか?',
+  'Last 24 hours': '過去 24 時間',
+  'Lower numbers evaluate first. The first match stops the chain.':
+    '小さい番号から評価されます。最初の一致でチェーンが止まります。',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny or rate limit rules so trusted traffic skips the rest of the chain.':
+    '優先度の小さい番号から評価されます。信頼できるトラフィックが後続をスキップできるよう、広い拒否やレート制限ルールより前にバイパス許可リストを置きます。',
+  'Match on the request attributes that matter': '重要なリクエスト属性で一致させる',
+  'Matched': '一致',
+  'Matched requests over time': '時間経過での一致リクエスト',
+  'Monitor denied, limited, and redirected traffic':
+    '拒否、制限、リダイレクトされたトラフィックを監視',
+  'Monitor docs': '監視のドキュメント',
+  'Now': '現在',
+  'Office IP allowlist': 'オフィス IP 許可リスト',
+  'One action per matching rule. Evaluation stops at the first match.':
+    '一致するルールごとに 1 アクション。評価は最初の一致で停止します。',
+  'Passed': '通過',
+  'Path starts with /v1/account': 'パスが /v1/account で始まる',
+  'Plan limits': 'プラン上限',
+  'Preview impact before you enable': '有効化する前に影響をプレビュー',
+  'Priority decides the first match': '優先度が最初の一致を決める',
+  'Priority docs': '優先度のドキュメント',
+  'Project REST and GraphQL endpoints.': 'プロジェクトの REST と GraphQL エンドポイント。',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, or redirect matching traffic from the Console.':
+    'Appwrite Firewall でプロジェクトの API、Functions、Sites を保護します。Console から一致するトラフィックを拒否、バイパス、レート制限、またはリダイレクトするルールを作成できます。',
+  'Rate limit public API': '公開 API をレート制限',
+  'Rate limited': 'レート制限済み',
+  'Recent requests that would match these conditions.':
+    'これらの条件に一致する直近のリクエスト。',
+  'Reject matching requests before they reach your project.':
+    'プロジェクトに届く前に一致するリクエストを拒否します。',
+  'Resource scope': 'リソーススコープ',
+  'Resource scopes': 'リソーススコープ',
+  'Rule actions': 'ルールアクション',
+  'Rule conditions': 'ルール条件',
+  'Rule priority': 'ルール優先度',
+  'Rules': 'ルール',
+  'Scope rules to API, Functions, or Sites':
+    'ルールを API、Functions、Sites にスコープ',
+  'Scopes docs': 'スコープのドキュメント',
+  'Send matching clients to another location with a 3xx status.':
+    '一致するクライアントを 3xx ステータスで別の場所へ送ります。',
+  'Skipped': 'スキップ済み',
+  'Start protecting with Firewall': 'Firewall で保護を始める',
+  'The Firewall page chart summarizes Passed request volume alongside Denied, Rate limited, Redirected, and Challenged series for the selected date range. Bypass matches and under-quota rate limit matches allow traffic without publishing a Firewall outcome metric. Use the overview with your rules list to verify policies after enablement.':
+    'Firewall ページのチャートは、選択した期間の Passed リクエスト量と、Denied、Rate limited、Redirected、Challenged の系列をまとめます。Bypass の一致とクォータ未満のレート制限一致は、Firewall の結果メトリクスを出さずにトラフィックを許可します。有効化後は概要とルール一覧でポリシーを確認できます。',
+  'Throttle matching requests that exceed a per-IP quota.':
+    'IP ごとのクォータを超える一致リクエストを制限します。',
+  'Track request volume alongside denied, rate-limited, redirected, and challenged outcomes on the Firewall page. Confirm policies after enablement without leaving the Console.':
+    'Firewall ページでリクエスト量と、拒否、レート制限、リダイレクト、チャレンジの結果を追跡します。有効化後も Console を離れずにポリシーを確認できます。',
+  'What can Firewall protect?': 'Firewall は何を保護できますか?',
+  'What does traffic overview show?': 'トラフィック概要には何が表示されますか?',
+  'Which actions can a rule take?': 'ルールはどのアクションを取れますか?',
+  'While creating a rule, estimate how many recent requests would match your conditions for the selected scope and date range. Tighten filters before traffic is affected.':
+    'ルール作成中に、選択したスコープと期間で直近リクエストが何件条件に一致するかを見積もります。トラフィックに影響する前にフィルターを絞り込めます。',
+  'Yes. While creating a rule, the Console estimates how many recent usage events would match your current conditions for the selected resource scope and date range. Use that preview to tighten filters before you enable the rule, then confirm outcomes in traffic overview.':
+    'はい。ルール作成中、Console は選択したリソーススコープと期間について、現在の条件に一致する直近の利用イベント数を見積もります。そのプレビューで有効化前にフィルターを絞り、トラフィック概要で結果を確認できます。',
+
+  // Firewall product page updates
+  '10+': '10+',
+  'Act on automated traffic with score-based conditions.':
+    'スコア条件で自動トラフィックに対応します。',
+  'ASN': 'ASN',
+  'Bot score': 'ボットスコア',
+  'Combine attributes with AND so a rule only fires when every filter matches.':
+    '属性を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Create your first deny, bypass, rate limit, redirect, or challenge rule from the Console and preview impact before you enable it.':
+    'Console から最初の拒否、バイパス、レート制限、リダイレクト、または Challenge ルールを作成し、有効化する前に影響をプレビューできます。',
+  'Define project rules that match rich request attributes, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    '豊富なリクエスト属性に一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、リダイレクト、または Challenge します。',
+  'Deny, bypass, rate limit, redirect, or challenge':
+    '拒否、バイパス、レート制限、リダイレクト、Challenge',
+  'Each matching rule applies one action: Deny returns 403, Bypass allows the request and skips later rules, Rate limit throttles per client IP with a 429 when over quota, Redirect sends clients to another location with a 3xx status, and Challenge verifies suspicious clients before allowing them through. There is no separate Allow action. Use Bypass to allowlist traffic that should skip later deny, rate limit, or challenge rules.':
+    '一致する各ルールは 1 つのアクションを適用します。Deny は 403 を返し、Bypass はリクエストを許可して後続ルールをスキップし、Rate limit はクライアント IP ごとに制限して超過時に 429 を返し、Redirect は 3xx で別の場所へ送り、Challenge は疑わしいクライアントを通す前に検証します。Allow アクションは別途ありません。後続の拒否、レート制限、Challenge をスキップさせたいトラフィックには Bypass を使います。',
+  'Every rule applies one action when conditions match. Deny abusive traffic, bypass trusted clients, throttle per IP, redirect to maintenance URLs, or challenge suspicious requests before they continue.':
+    '条件が一致すると、各ルールは 1 つのアクションを適用します。不正なトラフィックは拒否し、信頼できるクライアントはバイパスし、IP ごとに制限し、メンテナンス URL へリダイレクトするか、疑わしいリクエストを続行前に Challenge します。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Conditions can filter on IP, request path, HTTP method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。条件は IP、リクエストパス、HTTP メソッド、国、ユーザーエージェント、ASN、ヘッダー、クエリパラメータ、TLS フィンガープリント、ボットスコアなどでフィルターできます。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Filter by IP, path, method, country, user agent, ASN, headers, query parameters, TLS fingerprints, bot score, and more. Combine conditions with AND so a rule only fires when every filter matches.':
+    'IP、パス、メソッド、国、ユーザーエージェント、ASN、ヘッダー、クエリパラメータ、TLS フィンガープリント、ボットスコアなどでフィルターします。条件を AND で組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Filter on query keys and values without changing path rules.':
+    'パスルールを変えずにクエリのキーと値でフィルターします。',
+  'Geo allow or deny by resolved ISO country code.':
+    '解決された ISO 国コードで許可または拒否します。',
+  'Header': 'Header',
+  'Identify clients by TLS fingerprint when IPs rotate.':
+    'IP が入れ替わるときも TLS フィンガープリントでクライアントを識別します。',
+  'JA4 fingerprint': 'JA4 フィンガープリント',
+  'Lower priority numbers evaluate first. Place bypass allowlists ahead of broader deny, rate limit, or challenge rules so trusted traffic skips the rest of the chain.':
+    '優先度の小さい番号から評価されます。信頼できるトラフィックが後続をスキップできるよう、広い拒否、レート制限、Challenge ルールより前にバイパス許可リストを置きます。',
+  'Match exact client IPs for allowlists and denylists.':
+    '許可リストと拒否リスト向けに正確なクライアント IP を一致させます。',
+  'Match on rich request attributes': '豊富なリクエスト属性で一致',
+  'Match request headers for tokens, clients, or custom signals.':
+    'トークン、クライアント、カスタムシグナル向けにリクエストヘッダーを一致させます。',
+  'Match traffic by autonomous system for hosting and ISP ranges.':
+    'ホスティングや ISP レンジ向けに自律システムでトラフィックを一致させます。',
+  'Monitor denied, limited, redirected, and challenged traffic':
+    '拒否、制限、リダイレクト、Challenge されたトラフィックを監視',
+  'Present a challenge before allowing suspicious clients through.':
+    '疑わしいクライアントを通す前に Challenge を提示します。',
+  'Protect prefixes like /v1/account or sensitive routes.':
+    '/v1/account のようなプレフィックスや機微なルートを保護します。',
+  'Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, bypass, rate limit, redirect, or challenge matching traffic from the Console.':
+    'Appwrite Firewall でプロジェクトの API、Functions、Sites を保護します。Console から一致するトラフィックを拒否、バイパス、レート制限、リダイレクト、または Challenge するルールを作成できます。',
+  'Query parameter': 'クエリパラメータ',
+  'Restrict mutating methods such as POST, PUT, and DELETE.':
+    'POST、PUT、DELETE などの変更メソッドを制限します。',
+  'See how many recent requests would match before you enable a rule.':
+    'ルールを有効にする前に、直近リクエストが何件一致するかを確認できます。',
+  'Filter bots, scripts, monitors, and known clients.':
+    'ボット、スクリプト、モニター、既知のクライアントをフィルターします。',
+
+  'Build rules from the request properties that matter to your app. Combine conditions so a rule only fires when every filter matches.':
+    'アプリにとって重要なリクエスト属性からルールを組み立てます。条件を組み合わせ、すべてのフィルターが一致したときだけルールが発火します。',
+  'Define project rules that match the request properties you care about, then deny, bypass, rate limit, redirect, or challenge traffic before it hits your API, Functions, or Sites.':
+    '重視するリクエスト属性に一致するプロジェクトルールを定義し、API、Functions、Sites に届く前に拒否、バイパス、レート制限、リダイレクト、または Challenge します。',
+  'Every condition on a rule must match before the action runs.':
+    'アクションが実行される前に、ルール上のすべての条件が一致する必要があります。',
+  'Every rule needs at least one condition. All conditions on a rule must match (AND). Rules evaluate by priority (lower numbers first). The first matching enabled rule decides the outcome and stops evaluation.':
+    '各ルールには少なくとも 1 つの条件が必要です。ルール上のすべての条件が一致する必要があります (AND)。ルールは優先度 (小さい番号から) で評価され、最初に一致した有効なルールが結果を決めて評価を止めます。',
+  'Match on request properties such as identity, location, path, and client signals.':
+    '識別情報、位置、パス、クライアント信号などのリクエスト属性で一致させます。',
+  'Estimate how much recent traffic a draft rule would affect, then refine conditions before you turn it on.':
+    '下書きルールが直近トラフィックにどの程度影響するかを見積もり、有効化する前に条件を絞り込みます。',
+  'See how much recent traffic a draft rule would affect.':
+    '下書きルールが直近トラフィックにどの程度影響するかを確認できます。',
+  'Incoming': '受信',
+  'Your app': 'アプリ',
 }
+
+
+

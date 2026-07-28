@@ -97,7 +97,7 @@ export function resolveBandwidthDualChartDisplay(
   return { showDualSeries, axisMax }
 }
 
-/** Y-axis domain for stacked inbound + outbound — pins scale to combined peak. */
+/** Y-axis domain for stacked inbound + outbound - pins scale to combined peak. */
 export function resolveBandwidthStackedYAxisDomain(
   axisMax: number,
 ): [number, number] | undefined {

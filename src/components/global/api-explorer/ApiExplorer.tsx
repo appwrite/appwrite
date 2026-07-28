@@ -3,8 +3,8 @@ import { Check, Copy, Download, ChevronDown, Loader2, AlertCircle, Search, X } f
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { StartTruncatedText } from '@/components/global/shared/StartTruncatedText'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -1243,7 +1243,7 @@ function MethodListPanel({
 
   const collapsibleGroupIdsKey = collapsibleGroupIds.join('\0')
 
-  // Expand all groups only when the service or search filter changes — not when
+  // Expand all groups only when the service or search filter changes - not when
   // selecting a method (parent re-renders must not reset manual collapse state).
   useEffect(() => {
     setExpandedGroupIds(collapsibleGroupIds)

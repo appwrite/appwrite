@@ -7,6 +7,8 @@ import {
   navigateToUpgradeWizard,
 } from '@/lib/open-upgrade-wizard'
 import { cn } from '@/lib/utils'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { useT } from '@/lib/i18n/translate'
 
 interface UpgradeCurtainProps {
   /**
@@ -23,9 +25,25 @@ interface UpgradeCurtainProps {
    */
   orgId?: string | null
   /**
+   * Optional custom title to display
+   */
+  title?: string
+  /**
    * Optional custom message to display
    */
   message?: string
+  /**
+   * Optional CTA button label
+   */
+  ctaLabel?: string
+  /**
+   * Optional CTA click handler. Defaults to navigating to the upgrade wizard.
+   */
+  onCtaClick?: () => void
+  /**
+   * When false, hides the CTA button.
+   */
+  showCta?: boolean
   /**
    * Optional className for the curtain container
    */
@@ -49,10 +67,17 @@ export function UpgradeCurtain({
   isLocked,
   children,
   orgId,
+  title,
   message = 'This feature requires an upgrade to access.',
+  ctaLabel,
+  onCtaClick,
+  showCta = true,
   className,
 }: UpgradeCurtainProps) {
+  const t = useT()
   const navigate = useNavigate()
+  const resolvedTitle = title ?? t('Upgrade required')
+  const resolvedCtaLabel = ctaLabel ?? t('Upgrade plan')
 
   // If not locked, just render children
   if (!isLocked) {
@@ -60,6 +85,10 @@ export function UpgradeCurtain({
   }
 
   const handleUpgrade = () => {
+    if (onCtaClick) {
+      onCtaClick()
+      return
+    }
     navigateToUpgradeWizard(navigate, orgId ?? getOrgIdFromPathname())
   }
 
@@ -89,7 +118,7 @@ export function UpgradeCurtain({
             {/* Content */}
             <div className="flex-1 text-center @[400px]:text-start space-y-0.5 @[200px]:space-y-1 @[300px]:space-y-1.5 @[400px]:space-y-2 min-w-0">
               <h4 className="text-[12px] @[200px]:text-[13px] @[250px]:text-[14px] @[300px]:text-[15px] font-semibold text-foreground leading-tight">
-                Upgrade required
+                {resolvedTitle}
               </h4>
               <p className="text-[10px] @[200px]:text-[11px] @[250px]:text-[12px] @[300px]:text-[13px] text-muted-foreground line-clamp-1 @[300px]:line-clamp-2 leading-tight">
                 {message}
@@ -97,15 +126,18 @@ export function UpgradeCurtain({
             </div>
 
             {/* Button */}
-            <div className="flex shrink-0 w-full @[400px]:w-auto">
-              <Button
-                size="sm"
-                className="h-6 @[200px]:h-7 @[250px]:h-8 @[300px]:h-9 text-[10px] @[200px]:text-[11px] @[250px]:text-[12px] @[300px]:text-[13px] w-full @[400px]:w-auto px-2 @[200px]:px-3 @[250px]:px-4"
-                onClick={handleUpgrade}
-              >
-                Upgrade plan
-              </Button>
-            </div>
+            {showCta ? (
+              <div className="flex shrink-0 w-full @[400px]:w-auto">
+                <Button
+                  size="sm"
+                  className="h-6 @[200px]:h-7 @[250px]:h-8 @[300px]:h-9 text-[10px] @[200px]:text-[11px] @[250px]:text-[12px] @[300px]:text-[13px] w-full @[400px]:w-auto px-2 @[200px]:px-3 @[250px]:px-4"
+                  onClick={handleUpgrade}
+                  {...analyticsAttrs('upgrade-clicked')}
+                >
+                  {resolvedCtaLabel}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

@@ -325,7 +325,7 @@ export function AccountApplications({
         ),
       )
       // A 404 means the consent is already gone (e.g. a retry after a
-      // partial failure) — treat it as revoked rather than failed.
+      // partial failure) - treat it as revoked rather than failed.
       const failed = results.filter(
         (result) =>
           result.status === 'rejected' &&

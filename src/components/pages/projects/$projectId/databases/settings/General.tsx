@@ -16,13 +16,14 @@ export function View() {
     database,
     containersTotal,
     canWrite,
+    permissionCanWrite,
     isLoading,
   } = useDatabaseSettingsPage()
 
   if (isLoading) return <DatabaseSettingsLoading />
   if (!database) return null
 
-  const cardProps = { projectId, databaseId, database, canWrite }
+  const cardProps = { projectId, databaseId, dbKind, database, canWrite }
 
   const cards: SettingsCardItem[] = [
     {
@@ -49,9 +50,13 @@ export function View() {
       },
       node: (
         <DatabaseDangerZoneCard
-          {...cardProps}
+          projectId={projectId}
+          databaseId={databaseId}
+          database={database}
           dbKind={dbKind}
           containersTotal={containersTotal}
+          // Keep delete available when ops are locked (e.g. failed create).
+          canWrite={permissionCanWrite}
         />
       ),
     },

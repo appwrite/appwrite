@@ -177,12 +177,14 @@ function filterDedicatedDatabases(
 function formatEngineLabel(engine: string): string {
   switch (engine.toLowerCase()) {
     case 'postgres':
+    case 'postgresql':
       return 'PostgreSQL'
     case 'mysql':
       return 'MySQL'
     case 'mariadb':
       return 'MariaDB'
     case 'mongodb':
+    case 'mongo':
       return 'MongoDB'
     default:
       return engine
@@ -259,7 +261,7 @@ function DedicatedDatabaseCard({
   )
   const connectionsLabel =
     connections == null
-      ? '—'
+      ? '-'
       : connections === 1
         ? `1 ${t('connection')}`
         : `${connections.toLocaleString()} ${t('connections')}`

@@ -66,7 +66,7 @@ export interface InitEventTicketTypeRule {
   when: (context: InitTicketTypeMatcherContext) => boolean
 }
 
-/** Per-event ticket type rules — first match wins. */
+/** Per-event ticket type rules - first match wins. */
 export interface InitEventTicketConfig {
   rules: InitEventTicketTypeRule[]
 }

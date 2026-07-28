@@ -16,11 +16,11 @@ export function CreateWizardLeftColumn({
 }) {
   const t = useT()
   return (
-    <div className="lg:col-span-2 flex min-h-0 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-col lg:col-span-2">
       <h2 className="mb-4 shrink-0 text-[14px] font-semibold text-foreground">
         {t(title)}
       </h2>
-      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
     </div>
   )
 }
@@ -41,9 +41,9 @@ export function CreateWizardRightColumn({
 }) {
   const t = useT()
   return (
-    <div className="flex min-h-0 flex-col lg:col-span-3">
+    <div className="flex min-h-0 min-w-0 flex-col lg:col-span-3">
       <h2 className="mb-4 shrink-0 text-[14px] font-semibold text-foreground">{t(title)}</h2>
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {search ? (
           <div className="mb-4 shrink-0">
             <div className="relative">
@@ -57,7 +57,9 @@ export function CreateWizardRightColumn({
             </div>
           </div>
         ) : null}
-        <div className="min-h-0 flex-1">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+          {children}
+        </div>
       </div>
     </div>
   )

@@ -14,6 +14,7 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Team, TeamMember } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
+import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useOrganizations } from './organizations'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
@@ -195,17 +196,83 @@ export async function fetchConsoleTeam(teamId: string) {
 }
 
 /**
+ * Patch or full replace for console team prefs.
+ * Prefer a patch object (only keys you change) or an updater that receives
+ * freshly fetched prefs. Appwrite `teams.updatePrefs` replaces the entire
+ * prefs blob, so stale full-object writes can drop unrelated keys (e.g. pins).
+ */
+export type ConsoleTeamPrefsInput =
+  | Record<string, unknown>
+  | ((freshPrefs: Record<string, unknown>) => Record<string, unknown>)
+
+export type UpdateConsoleTeamPrefsOptions = {
+  /**
+   * - `merge` (default): fetch latest prefs, shallow-merge the patch, then write
+   * - `replace`: write the provided object as-is (debug clear / delete key)
+   */
+  mode?: 'merge' | 'replace'
+}
+
+/** Serialize team-pref writes per org so concurrent patches cannot clobber each other. */
+const teamPrefsWriteChains = new Map<string, Promise<unknown>>()
+
+function enqueueConsoleTeamPrefsWrite<T>(
+  teamId: string,
+  task: () => Promise<T>,
+): Promise<T> {
+  const previous = teamPrefsWriteChains.get(teamId) ?? Promise.resolve()
+  const next = previous.then(task, task)
+  teamPrefsWriteChains.set(
+    teamId,
+    next.then(
+      () => undefined,
+      () => undefined,
+    ),
+  )
+  return next
+}
+
+/**
  * Update console team (organization) preferences.
- * Merge your keys into existing team.prefs before calling.
+ *
+ * Default `merge` mode always re-fetches prefs before writing so concurrent
+ * features (pins, saved filters, presets, SQL) do not wipe each other's keys.
+ * Pass `{ mode: 'replace' }` only when intentionally replacing the full object.
+ *
+ * Silently skips while console impersonation is active so the org's prefs are not mutated.
  */
 export async function updateConsoleTeamPrefs(
   teamId: string,
-  prefs: Record<string, unknown>,
+  prefs: ConsoleTeamPrefsInput,
+  options?: UpdateConsoleTeamPrefsOptions,
 ) {
   if (!teamId) {
     throw new Error('Team ID is required')
   }
-  await sdk.forConsole.teams.updatePrefs({ teamId, prefs })
+  if (hasConsoleImpersonationSessionTarget()) {
+    return undefined
+  }
+
+  const mode = options?.mode ?? 'merge'
+
+  return enqueueConsoleTeamPrefsWrite(teamId, async () => {
+    if (mode === 'replace' && typeof prefs !== 'function') {
+      return await sdk.forConsole.teams.updatePrefs({ teamId, prefs })
+    }
+
+    const team = await fetchConsoleTeam(teamId)
+    const freshPrefs = {
+      ...((team.prefs as Record<string, unknown> | undefined) || {}),
+    }
+    const patch = typeof prefs === 'function' ? prefs(freshPrefs) : prefs
+    const nextPrefs =
+      mode === 'replace' ? patch : { ...freshPrefs, ...patch }
+
+    return await sdk.forConsole.teams.updatePrefs({
+      teamId,
+      prefs: nextPrefs,
+    })
+  })
 }
 
 // ============================================================================
@@ -303,15 +370,28 @@ export function useConsoleTeam(teamId: string | null | undefined) {
 }
 
 /**
- * Hook to update console team preferences.
+ * Hook to update console team preferences (merge mode).
+ * Writes are serialized and merged against a fresh server fetch.
  * Invalidates the console team query on success.
  */
 export function useUpdateConsoleTeamPrefs(teamId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (prefs: Record<string, unknown>) =>
+    mutationFn: (prefs: ConsoleTeamPrefsInput) =>
       updateConsoleTeamPrefs(teamId!, prefs),
-    onSuccess: () => {
+    onSuccess: (prefs) => {
+      if (prefs && teamId) {
+        queryClient.setQueryData(
+          ['team', 'console', teamId],
+          (current: { prefs?: Record<string, unknown> } | undefined) =>
+            current
+              ? {
+                  ...current,
+                  prefs: prefs as Record<string, unknown>,
+                }
+              : current,
+        )
+      }
       queryClient.invalidateQueries({
         queryKey: ['team', 'console', teamId],
       })

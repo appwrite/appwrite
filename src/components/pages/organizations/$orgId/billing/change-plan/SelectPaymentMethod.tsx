@@ -12,6 +12,7 @@ import { Plus, Ticket } from 'lucide-react'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { formatPaymentMethodSummary } from '../utils'
 import type { Models } from '@appwrite.io/console'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 interface SelectPaymentMethodProps {
@@ -96,6 +97,7 @@ export function SelectPaymentMethod({
                 size="sm"
                 className="h-8 text-[13px]"
                 onClick={onAddPaymentMethod}
+                {...analyticsAttrs('upgrade-add-payment')}
               >
                 <Plus className="me-1.5 h-4 w-4" />
                 {t('Add payment method')}
@@ -106,6 +108,7 @@ export function SelectPaymentMethod({
                   size="sm"
                   className="h-8 text-[13px]"
                   onClick={onAddCredits}
+                  {...analyticsAttrs('upgrade-apply-coupon')}
                 >
                   <Ticket className="me-1.5 h-4 w-4" />
                   {t('Apply coupon')}
@@ -123,6 +126,7 @@ export function SelectPaymentMethod({
               size="sm"
               className="mt-3 h-8 text-[13px]"
               onClick={onAddPaymentMethod}
+              {...analyticsAttrs('upgrade-add-payment')}
             >
               {t('Add payment method')}
             </Button>

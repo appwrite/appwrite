@@ -65,13 +65,15 @@ export function ProductFeatureSection({
               {!hideVisual && !companion ? <div className="mt-6">{docsLink}</div> : null}
             </div>
 
-            {companion ? (
+            {companion && !flushBottom ? (
               <div
                 className={cn(
                   'relative z-[1] mx-auto mt-10 sm:mt-12',
-                  flushBottom && '-mx-4 mb-0 sm:-mx-6',
-                  feature.brandLight || feature.wideCompanion ? 'max-w-7xl' : centered ? 'max-w-5xl' : 'max-w-4xl',
-                  flushBottom && 'max-w-none',
+                  feature.brandLight || feature.wideCompanion
+                    ? 'max-w-7xl'
+                    : centered
+                      ? 'max-w-5xl'
+                      : 'max-w-4xl',
                 )}
               >
                 {companion}
@@ -122,6 +124,10 @@ export function ProductFeatureSection({
           </div>
         ) : null}
       </div>
+
+      {stacked && companion && flushBottom ? (
+        <div className="relative z-[1] mt-10 w-full sm:mt-12">{companion}</div>
+      ) : null}
     </section>
   )
 }

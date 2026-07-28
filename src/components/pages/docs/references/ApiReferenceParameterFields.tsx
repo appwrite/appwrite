@@ -80,7 +80,7 @@ function ReferenceParameterRow({ field }: { field: RequestFormField }) {
               className="w-full border-0 bg-transparent p-0 text-[13px] leading-relaxed text-muted-foreground [&_code]:bg-muted/50"
             />
           ) : (
-            <span className="text-muted-foreground/60">—</span>
+            <span className="text-muted-foreground/60">-</span>
           )}
         </div>
       </div>
@@ -171,7 +171,7 @@ export function ApiReferenceResponsesPanel({
               </div>
               <div className={REFERENCE_RESPONSE_TYPE_CELL}>
                 <span className="text-[13px] text-muted-foreground">
-                  {response.contentType ?? '—'}
+                  {response.contentType ?? '-'}
                 </span>
               </div>
             </div>

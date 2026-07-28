@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
@@ -10,9 +10,13 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
-import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import {
+  ensureConsoleAccountQueryData,
+  refreshConsoleAccountAfterAuth,
+} from '@/lib/react-query/hooks/auth'
 import {
   prefetchPostAuthDestination,
+  requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
@@ -55,6 +59,31 @@ function getVerificationParamsFromUrl(): {
 export const Route = createFileRoute('/_auth/verify-email')({
   component: VerifyEmailPage,
   validateSearch: searchSchema,
+  loader: async ({ context, location }) => {
+    if (typeof window === 'undefined') return
+
+    const params = getVerificationParamsFromUrl()
+    const account = await ensureConsoleAccountQueryData(context.queryClient)
+
+    // Email link confirmations can complete without an active session.
+    if (params) return
+
+    if (!account) {
+      const pendingRedirect = (location.search as { redirect?: string }).redirect
+      throw redirect({
+        to: '/sign-in',
+        search: {
+          redirect: pendingRedirect || '/verify-email',
+        },
+        replace: true,
+      })
+    }
+
+    // Already verified: leave this page for the console.
+    if (!requiresConsoleEmailVerification(account)) {
+      throw redirect({ to: '/', replace: true })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
 })
 
@@ -81,7 +110,7 @@ function VerifyEmailPage() {
 
         // If we're headed to a specific destination (e.g. an OAuth2
         // consent/device flow), go straight there without provisioning a
-        // personal org/project — provisioning throws on single-tenant
+        // personal org/project - provisioning throws on single-tenant
         // profiles and would otherwise drop the pending authorization.
         const targetRedirect = resolvePostAuthRedirect(search.redirect)
         if (targetRedirect) {

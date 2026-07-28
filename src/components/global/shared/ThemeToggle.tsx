@@ -3,6 +3,7 @@ import { Sun, Moon, Contrast } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 type ThemeToggleProps = {
   /** Compact icon group for header toolbar; default includes label for menus. */
@@ -26,6 +27,7 @@ function ThemeToggleGroup({ className }: { className?: string }) {
         value="light"
         aria-label={t('Light theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
+        {...analyticsAttrs('theme-toggle')}
       >
         <Sun className="h-4 w-4" />
       </ToggleGroupItem>
@@ -33,6 +35,7 @@ function ThemeToggleGroup({ className }: { className?: string }) {
         value="dark"
         aria-label={t('Dark theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
+        {...analyticsAttrs('theme-toggle')}
       >
         <Moon className="h-4 w-4" />
       </ToggleGroupItem>
@@ -40,6 +43,7 @@ function ThemeToggleGroup({ className }: { className?: string }) {
         value="system"
         aria-label={t('System theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
+        {...analyticsAttrs('theme-toggle')}
       >
         <Contrast className="h-4 w-4" />
       </ToggleGroupItem>

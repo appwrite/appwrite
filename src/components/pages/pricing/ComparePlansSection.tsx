@@ -21,12 +21,22 @@ import {
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { CompareToc } from './CompareToc'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { PRICING_PLAN_COLUMNS } from '@/lib/pricing/constants'
 import { comparisonTables } from '@/lib/pricing/comparison-data'
 import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
 import type { ComparisonTable, PlanId } from '@/lib/pricing/types'
 import { cn } from '@/lib/utils'
+
+const PRICING_COMPARE_CTA_ACTIONS: Record<PlanId, AnalyticsActionId> = {
+  free: 'pricing-compare-start-free',
+  pro: 'pricing-compare-start-pro',
+  enterprise: 'pricing-compare-contact-enterprise',
+}
 
 const compareTableClassName = 'w-full table-fixed'
 const compareStickyHeadClassName =
@@ -194,7 +204,12 @@ export function ComparePlansSection() {
                   className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
                   asChild
                 >
-                  <Link to={href}>{t(label)}</Link>
+                  <Link
+                    to={href}
+                    {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
+                  >
+                    {t(label)}
+                  </Link>
                 </Button>
               )
             }
@@ -209,7 +224,11 @@ export function ComparePlansSection() {
                 )}
                 asChild
               >
-                <Link to="/sign-up" search={{ redirect: '/' }}>
+                <Link
+                  to="/sign-up"
+                  search={{ redirect: '/' }}
+                  {...analyticsAttrs(PRICING_COMPARE_CTA_ACTIONS[column.id])}
+                >
                   {t(label)}
                 </Link>
               </Button>

@@ -11,7 +11,7 @@ import type {
 } from '@/lib/oauth2/authorization-details'
 
 interface OAuth2ResourceSelectorProps {
-  /** e.g. "projects" / "organizations" — used throughout the copy. */
+  /** e.g. "projects" / "organizations" - used throughout the copy. */
   pluralLabel: string
   /** Client-requested identifiers; may be `['*']`. */
   requested: string[]
@@ -52,7 +52,7 @@ export function OAuth2ResourceSelector({
     selected.length === requested.length &&
     selected.every((id) => requested.includes(id))
   // Search (which can ADD resources) is only offered when narrowing a wildcard
-  // grant; a specific requested list is fixed — the user can remove but never
+  // grant; a specific requested list is fixed - the user can remove but never
   // add resources the client didn't ask for.
   const searchable = wildcard && !isAll
 

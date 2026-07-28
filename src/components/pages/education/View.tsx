@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   educationCommunity,
   educationCta,
@@ -37,7 +38,11 @@ export function View() {
         leading={<EducationPartnerLogos />}
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('education-sign-up')}
+          >
             {t('Sign up now')}
           </Link>
         </Button>
@@ -109,7 +114,13 @@ export function View() {
                       {t(step.label)}
                     </a>
                   ) : (
-                    <Link to={step.href} search={{ redirect: '/' }}>
+                    <Link
+                      to={step.href}
+                      search={{ redirect: '/' }}
+                      {...(step.href === '/sign-up'
+                        ? analyticsAttrs('education-sign-up')
+                        : {})}
+                    >
                       {t(step.label)}
                     </Link>
                   )}
@@ -145,7 +156,11 @@ export function View() {
 
       <MarketingCtaSection title={educationCta.title} description={educationCta.description}>
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/' }}
+            {...analyticsAttrs('education-sign-up')}
+          >
             {t('Sign up')}
           </Link>
         </Button>

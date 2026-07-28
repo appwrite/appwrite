@@ -4,7 +4,6 @@
  */
 export const jaPricingDictionary: Record<string, string> = {
   '-': '含まれない',
-  '—': '利用不可',
   '+20% of base': '基本料金の+20%',
   '+50% of base per replica': 'レプリカ1台あたり基本料金の+50%',
   '$0': '$0',
@@ -53,6 +52,7 @@ export const jaPricingDictionary: Record<string, string> = {
   '2 (Shared resources)': '2（共有リソース）',
   '2 GB': '2 GB',
   '2 per project': 'プロジェクトあたり2',
+  '50 per project': 'プロジェクトあたり50',
   '2-core (dedicated)': '2コア（専用）',
   '2-core (shared)': '2コア（共有）',
   '200,000 monthly active users': '200,000月間アクティブユーザー',
@@ -97,6 +97,8 @@ export const jaPricingDictionary: Record<string, string> = {
   'Additional messages': '追加メッセージ',
   'Advanced': '上級',
   'Basic': 'ベーシック',
+  'Billed for disk storage and database operations.':
+    'ディスクストレージとデータベース操作に対して課金されます。',
   'Bring your own Cloud': 'Bring your own Cloud',
   'Community support': 'コミュニティサポート',
   'Compute tiers from $10/mo': 'コンピュート階層は $10/月から',
@@ -107,6 +109,7 @@ export const jaPricingDictionary: Record<string, string> = {
   'Email support': 'メールサポート',
   'Everything in Pro, plus:': 'Pro のすべてに加えて:',
   'Firewall': 'Firewall',
+  'Firewall rules': 'ファイアウォールルール',
   'From $10/mo per database': 'データベースあたり $10/月から',
   'How can I join the OSS program?': 'OSS プログラムへの参加方法は?',
   'How can I join the Startups program?': 'Startups プログラムへの参加方法は?',
@@ -118,7 +121,6 @@ export const jaPricingDictionary: Record<string, string> = {
   'No fixed monthly fee': '固定月額料金なし',
   'Not needed': '不要',
   'One platform across the app lifecycle': 'アプリのライフサイクル全体を支える1つのプラットフォーム',
-  'Pay as you go (disk + DB ops)': '従量課金（ディスク + DB 操作）',
   'Pay as you go': '従量課金',
   'Plan quota, then overage': 'プラン枠、超過分は追加課金',
   'Pro': 'Pro',

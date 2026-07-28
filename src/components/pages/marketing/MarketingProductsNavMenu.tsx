@@ -13,14 +13,22 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { SheetClose } from '@/components/ui/sheet'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   MARKETING_PRODUCT_NAV_CATEGORIES,
   PRODUCT_NAV_REGISTRY,
   isProductId,
+  type ProductNavCategory,
 } from '@/lib/products/registry'
+import { isProductNavItemNew } from '@/lib/products/new-badge'
 import type { ProductNavItemId } from '@/lib/products/types'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import {
+  analyticsAttrs,
+  getMarketingProductAnalyticsAction,
+} from '@/lib/analytics-actions'
 
 const NAV_TRIGGER_CLASS =
   'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
@@ -69,8 +77,26 @@ type ProductNavigationCopy = {
   desktopTitle: string
   desktopSubtitle: string
   viewOverview: string
+  newLabel: string
   categories: ProductNavigationCategoriesCopy
   items: ProductNavigationItemsCopy
+}
+
+function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
+  const { features } = useConsoleProfile()
+
+  return useMemo(
+    () =>
+      MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => ({
+        ...category,
+        productIds: category.productIds.filter((id) => {
+          if (id === 'firewall') return features.firewall
+          if (id === 'domains') return features.domains
+          return true
+        }),
+      })).filter((category) => category.productIds.length > 0),
+    [features.domains, features.firewall],
+  )
 }
 
 function getLocalizedCategoryLabel(
@@ -151,6 +177,7 @@ function ProductNavLink({
   onNavigate,
   productNamesCopy,
   navigationItemsCopy,
+  newLabel,
   variant = 'default',
   closeSheet = false,
 }: {
@@ -159,6 +186,7 @@ function ProductNavLink({
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
   navigationItemsCopy: ProductNavigationItemsCopy
+  newLabel: string
   variant?: 'default' | 'compact' | 'dense'
   closeSheet?: boolean
 }) {
@@ -177,12 +205,15 @@ function ProductNavLink({
   )
   const isDense = variant === 'dense'
   const isCompact = variant === 'compact'
+  const productAnalytics = getMarketingProductAnalyticsAction(navItemId)
+  const isNew = isProductNavItemNew(navItemId)
 
   const link = (
     <Link
       to={item.href}
       onClick={onNavigate}
       aria-current={isActive ? 'page' : undefined}
+      {...(productAnalytics ? analyticsAttrs(productAnalytics) : {})}
       className={cn(
         'group block cursor-pointer rounded-lg border border-transparent text-start transition-colors',
         isDense && 'flex items-center gap-2.5 px-2 py-2 hover:bg-accent/40',
@@ -211,11 +242,12 @@ function ProductNavLink({
       <span className={cn('min-w-0', isDense ? 'flex-1' : 'flex-1')}>
         <span
           className={cn(
-            'block font-semibold text-foreground',
+            'flex items-center gap-1.5 font-semibold text-foreground',
             isDense ? 'text-[12px]' : 'text-[13px]',
           )}
         >
-          {localizedName}
+          <span className="min-w-0 truncate">{localizedName}</span>
+          {isNew ? <ProductNewBadge label={newLabel} /> : null}
         </span>
         <span
           className={cn(
@@ -254,6 +286,7 @@ function ProductsNavCategorySection({
   onNavigate,
   productNamesCopy,
   navigationItemsCopy,
+  newLabel,
   variant = 'dense',
   closeSheet = false,
 }: {
@@ -263,6 +296,7 @@ function ProductsNavCategorySection({
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
   navigationItemsCopy: ProductNavigationItemsCopy
+  newLabel: string
   variant?: 'dense' | 'compact'
   closeSheet?: boolean
 }) {
@@ -286,6 +320,7 @@ function ProductsNavCategorySection({
             onNavigate={onNavigate}
             productNamesCopy={productNamesCopy}
             navigationItemsCopy={navigationItemsCopy}
+            newLabel={newLabel}
             variant={variant}
             closeSheet={closeSheet}
           />
@@ -296,11 +331,13 @@ function ProductsNavCategorySection({
 }
 
 function DesktopProductsNavPanel({
+  categories,
   activeNavItemId,
   onNavigate,
   productNamesCopy,
   navigationCopy,
 }: {
+  categories: readonly ProductNavCategory[]
   activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
   productNamesCopy: ProductNamesCopy
@@ -308,17 +345,14 @@ function DesktopProductsNavPanel({
 }) {
   return (
     <div className="text-start">
-      <div className="flex items-baseline justify-between gap-4 border-b border-border bg-muted/15 px-4 py-2.5">
-        <p className="shrink-0 text-start text-[13px] font-semibold text-foreground">
+      <div className="border-b border-border bg-muted/15 px-4 py-2.5">
+        <p className="text-start text-[13px] font-semibold text-foreground">
           {navigationCopy.desktopTitle}
-        </p>
-        <p className="min-w-0 truncate text-start text-[11px] text-muted-foreground">
-          {navigationCopy.desktopSubtitle}
         </p>
       </div>
 
       <div className="space-y-4 p-3">
-        {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <ProductsNavCategorySection
             key={category.id}
             label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
@@ -327,6 +361,7 @@ function DesktopProductsNavPanel({
             onNavigate={onNavigate}
             productNamesCopy={productNamesCopy}
             navigationItemsCopy={navigationCopy.items}
+            newLabel={navigationCopy.newLabel}
           />
         ))}
       </div>
@@ -346,11 +381,13 @@ function DesktopProductsNavPanel({
 }
 
 function MobileProductsNavPanel({
+  categories,
   activeNavItemId,
   productNamesCopy,
   navigationCopy,
   closeSheet,
 }: {
+  categories: readonly ProductNavCategory[]
   activeNavItemId?: ProductNavItemId
   productNamesCopy: ProductNamesCopy
   navigationCopy: ProductNavigationCopy
@@ -358,7 +395,7 @@ function MobileProductsNavPanel({
 }) {
   return (
     <div className="space-y-4 px-1 pb-1 text-start">
-      {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
+      {categories.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
           label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
@@ -366,6 +403,7 @@ function MobileProductsNavPanel({
           activeNavItemId={activeNavItemId}
           productNamesCopy={productNamesCopy}
           navigationItemsCopy={navigationCopy.items}
+          newLabel={navigationCopy.newLabel}
           variant="compact"
           closeSheet={closeSheet}
         />
@@ -397,10 +435,12 @@ export function MarketingProductsNavPanel({
   const { catalog } = useI18n()
   const productNamesCopy = catalog.website.products.productNames
   const navigationCopy = catalog.website.products.navigation
+  const categories = useVisibleMarketingProductNavCategories()
 
   if (compact) {
     return (
       <MobileProductsNavPanel
+        categories={categories}
         activeNavItemId={activeNavItemId}
         productNamesCopy={productNamesCopy}
         navigationCopy={navigationCopy}
@@ -411,6 +451,7 @@ export function MarketingProductsNavPanel({
 
   return (
     <DesktopProductsNavPanel
+      categories={categories}
       activeNavItemId={activeNavItemId}
       onNavigate={onNavigate}
       productNamesCopy={productNamesCopy}
@@ -434,6 +475,7 @@ export function MarketingProductsNavPopover() {
           className={NAV_TRIGGER_CLASS}
           aria-expanded={open}
           aria-haspopup="dialog"
+          {...analyticsAttrs('marketing-nav-products')}
         >
           {navigationCopy.triggerLabel}
           <ChevronDown
@@ -465,7 +507,10 @@ export function MarketingProductsMobileNav() {
   return (
     <Accordion type="single" collapsible className="px-1">
       <AccordionItem value="products" className="border-none">
-        <AccordionTrigger className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground">
+        <AccordionTrigger
+          className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground"
+          {...analyticsAttrs('marketing-nav-products')}
+        >
           {navigationCopy.triggerLabel}
         </AccordionTrigger>
         <AccordionContent className="pb-2 pt-1">

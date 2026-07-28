@@ -53,10 +53,10 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     labelVariant: 'default',
   },
   {
-    dimension: 'region',
-    title: 'Regions',
-    description: 'Request volume grouped by Appwrite region.',
-    metricId: 'breakdown-region',
+    dimension: 'city',
+    title: 'Cities',
+    description: 'Request volume grouped by caller city.',
+    metricId: 'breakdown-city',
     labelVariant: 'default',
   },
   {
@@ -100,6 +100,13 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     description: 'Request volume grouped by device classification.',
     metricId: 'breakdown-device',
     labelVariant: 'default',
+  },
+  {
+    dimension: 'sdk',
+    title: 'SDKs',
+    description: 'Request volume grouped by SDK and version.',
+    metricId: 'breakdown-sdk',
+    labelVariant: 'mono',
   },
   {
     dimension: 'resource',

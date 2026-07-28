@@ -5,7 +5,11 @@ import {
   MCP_CLAUDE_CODE_INSTALL_COMMAND,
   MCP_CODEX_INSTALL_COMMAND,
   MCP_EDITOR_CONFIG_SNIPPET,
+  MCP_SELF_HOSTED_DOCS_URL,
   getCursorMcpInstallUrl,
+  getSelfHostedClaudeCodeInstallCommand,
+  getSelfHostedCodexConfig,
+  getSelfHostedMcpEditorConfig,
   getVscodeMcpInstallUrl,
   openMcpInstallUrl,
 } from '@/lib/config/mcp'
@@ -13,6 +17,9 @@ import {
   MCP_TRY_IT_PROMPT_TEMPLATES,
   getMcpTryItPrompts,
 } from '@/lib/mcp-adoption'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { useProject } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +32,8 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
+  /** Current project ID (used to prefill self-hosted MCP env) */
+  projectId: string
   /** Current project name, embedded in try-it prompts so the agent targets the right project */
   projectName: string
   /** When true, render without the outer card (e.g. inside a modal tab) */
@@ -42,7 +51,7 @@ type McpToolConfig = {
   installUrl?: string
 }
 
-const MCP_TOOLS: McpToolConfig[] = [
+const CLOUD_MCP_TOOLS: McpToolConfig[] = [
   {
     id: 'claude-code',
     name: 'Claude Code',
@@ -75,26 +84,86 @@ const MCP_TOOLS: McpToolConfig[] = [
   },
 ]
 
+function getSelfHostedMcpTools(
+  projectId: string,
+  endpoint: string,
+): McpToolConfig[] {
+  const editorConfig = JSON.stringify(
+    getSelfHostedMcpEditorConfig(projectId, endpoint),
+    null,
+    2,
+  )
+  return [
+    {
+      id: 'claude-code',
+      name: 'Claude Code',
+      iconPath: '/icons/claude.svg',
+      language: 'bash',
+      code: getSelfHostedClaudeCodeInstallCommand(projectId, endpoint),
+    },
+    {
+      id: 'codex',
+      name: 'Codex',
+      iconPath: '/icons/chatgpt.svg',
+      language: 'toml',
+      code: getSelfHostedCodexConfig(projectId, endpoint),
+    },
+    {
+      id: 'cursor',
+      name: 'Cursor',
+      iconPath: '/icons/cursor-ai.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
+      id: 'vscode',
+      name: 'VS Code',
+      iconPath: '/icons/vscode.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+  ]
+}
+
 /**
- * MCP server section: single remote Appwrite MCP server with per-tool install
- * instructions, then a Try it checklist. Cursor and VS Code include a one-click
- * Install action. Reused in project settings Overview and Connect project modal.
+ * MCP server section: Cloud uses the remote Appwrite MCP server with per-tool
+ * install instructions; self-hosted uses local uvx + API key. Cursor and VS Code
+ * include a one-click Install action on Cloud. Reused in project settings
+ * Overview and Connect project modal.
  */
-export function MCPSection({ projectName, compact = false }: MCPSectionProps) {
+export function MCPSection({
+  projectId,
+  projectName,
+  compact = false,
+}: MCPSectionProps) {
   const t = useT()
+  const { isSelfHosted } = useConsoleProfile()
+  const { project } = useProject(projectId)
   const [selectedToolId, setSelectedToolId] = useState<McpToolId>('claude-code')
   const [copied, setCopied] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null)
+
+  const endpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
 
   const tryItPrompts = useMemo(
     () => getMcpTryItPrompts(projectName),
     [projectName],
   )
 
-  const selectedTool = useMemo(
+  const tools = useMemo(
     () =>
-      MCP_TOOLS.find((tool) => tool.id === selectedToolId) ?? MCP_TOOLS[0]!,
-    [selectedToolId],
+      isSelfHosted
+        ? getSelfHostedMcpTools(projectId, endpoint)
+        : CLOUD_MCP_TOOLS,
+    [isSelfHosted, projectId, endpoint],
+  )
+
+  const selectedTool = useMemo(
+    () => tools.find((tool) => tool.id === selectedToolId) ?? tools[0]!,
+    [tools, selectedToolId],
   )
 
   const handleCopyCode = () => {
@@ -111,14 +180,31 @@ export function MCPSection({ projectName, compact = false }: MCPSectionProps) {
     setTimeout(() => setCopiedPrompt(null), 2000)
   }
 
-  const description = (
+  const docsLinkClassName = 'text-foreground underline hover:no-underline'
+
+  const description = isSelfHosted ? (
+    <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
+      {t(
+        'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the',
+      )}{' '}
+      <a
+        href={MCP_SELF_HOSTED_DOCS_URL}
+        target="_blank"
+        rel="noreferrer"
+        className={docsLinkClassName}
+      >
+        {t('docs')}
+      </a>
+      .
+    </p>
+  ) : (
     <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
       {t(
         "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the", // pragma: allowlist secret
       )}{' '}
       <DocsRouteLink
         rel="noreferrer"
-        className="text-foreground underline hover:no-underline"
+        className={docsLinkClassName}
         href="/docs/tooling/ai/mcp-servers"
       >
         {t('docs')}
@@ -134,7 +220,7 @@ export function MCPSection({ projectName, compact = false }: MCPSectionProps) {
       </h4>
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1.5">
-          {MCP_TOOLS.map((tool) => {
+          {tools.map((tool) => {
             const isSelected = tool.id === selectedTool.id
             return (
               <button

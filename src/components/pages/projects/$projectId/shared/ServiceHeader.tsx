@@ -27,6 +27,10 @@ import {
   serviceHeaderShowLabel,
 } from './service-header-container'
 import { useT } from '@/lib/i18n/translate'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 
 export interface Tab {
   id: string
@@ -58,6 +62,8 @@ interface ServiceHeaderProps {
   /** When provided with createParams, renders a Link instead of onClick button (more reliable for navigation) */
   createTo?: string
   createParams?: Record<string, string>
+  /** Curated Plausible action for the create button (see ANALYTICS_ACTIONS) */
+  createAnalyticsAction?: AnalyticsActionId
   createDisabled?: boolean
   /** Tooltip when create is disabled (e.g. plan limit or missing permission) */
   createDisabledTooltip?: string
@@ -122,6 +128,7 @@ function ServiceHeaderCreateButton({
   createTo,
   createParams,
   onCreate,
+  createAnalyticsAction,
 }: {
   createLabel: string
   createDisabled: boolean
@@ -129,9 +136,13 @@ function ServiceHeaderCreateButton({
   createTo?: string
   createParams?: Record<string, string>
   onCreate?: () => void
+  createAnalyticsAction?: AnalyticsActionId
 }) {
   const t = useT()
   const label = <span className={serviceHeaderShowLabel}>{createLabel}</span>
+  const analytics = createAnalyticsAction
+    ? analyticsAttrs(createAnalyticsAction)
+    : undefined
 
   if (createDisabled) {
     return (
@@ -186,6 +197,7 @@ function ServiceHeaderCreateButton({
           to={createTo as unknown}
           params={createParams}
           aria-label={createLabel}
+          {...analytics}
         >
           <Plus className="h-4 w-4 shrink-0" />
           {label}
@@ -201,6 +213,7 @@ function ServiceHeaderCreateButton({
       onClick={onCreate}
       className={createButtonClassName}
       aria-label={createLabel}
+      {...analytics}
     >
       <Plus className="h-4 w-4 shrink-0" />
       {label}
@@ -223,6 +236,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       onCreate,
       createTo,
       createParams,
+      createAnalyticsAction,
       createDisabled = false,
       createDisabledTooltip,
       showFilters = false,
@@ -624,6 +638,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   createTo={createTo}
                   createParams={createParams}
                   onCreate={onCreate}
+                  createAnalyticsAction={createAnalyticsAction}
                 />
               )}
 

@@ -21,9 +21,16 @@ import {
   ChevronRight,
   Menu,
   Globe,
+  Shield,
   type LucideIcon,
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Sheet,
   SheetContent,
@@ -46,7 +53,9 @@ import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
-import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+import { useProject, useOrganizationPlan, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canWriteRules } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   getUsageLogRetentionDaysFromPlan,
   getUsageLogRetentionHoursFromPlan,
@@ -82,6 +91,9 @@ import {
   getUsageFilterQueriesForSurface,
   sanitizeUsageFilterMap,
 } from '@/lib/usage/usage-filter-queries'
+import {
+  canApplyUsageFiltersAsFirewallRule,
+} from '@/lib/firewall/usage'
 import type { UsageBreakdownFilterEntry } from '@/lib/usage/usage-resource-filters'
 import {
   RefreshProvider,
@@ -393,6 +405,16 @@ function UsageLayoutContent({
   const usageFilterScope = getUsageSavedFilterScope(categoryId)
   const showUsageFilters = categorySupportsUsageFilters(categoryId)
 
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const canWriteFirewallRules = canWriteRules(access, features)
+  const canApplyFiltersAsFirewallRule =
+    features.firewall &&
+    showUsageFilters &&
+    canApplyUsageFiltersAsFirewallRule(usageFilterMap)
+
   const navigateUsageFilters = useCallback(
     (query: string | undefined) => {
       navigate({
@@ -470,8 +492,23 @@ function UsageLayoutContent({
     [usageFilterMap, navigateUsageFilters, categoryId],
   )
 
-  const { project } = useProject(projectId)
-  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const applyFiltersAsFirewallRule = useCallback(() => {
+    if (!canApplyFiltersAsFirewallRule || !canWriteFirewallRules) return
+    navigate({
+      to: '/projects/$projectId/firewall/create',
+      params: { projectId },
+      search: {
+        query: mapToQueryParam(usageFilterMap),
+      },
+    })
+  }, [
+    canApplyFiltersAsFirewallRule,
+    canWriteFirewallRules,
+    navigate,
+    projectId,
+    usageFilterMap,
+  ])
+
   const {
     dateRange: usageDateRange,
     chartInterval,
@@ -642,6 +679,46 @@ function UsageLayoutContent({
                     onApplyQuery={applySavedUsageFilterQuery}
                   />
                 ) : null}
+                {canApplyFiltersAsFirewallRule ? (
+                  canWriteFirewallRules ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                      onClick={applyFiltersAsFirewallRule}
+                    >
+                      <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                      {t('Apply as firewall rule')}
+                    </Button>
+                  ) : (
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              className="h-9 border-border bg-transparent text-[13px] text-muted-foreground"
+                            >
+                              <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              {t('Apply as firewall rule')}
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>
+                            {t(
+                              "You don't have permission to create firewall rules.",
+                            )}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ) : null}
                 {showChartIntervalToggle ? (
                   <UsageChartIntervalToggle
                     value={chartInterval}
@@ -723,6 +800,7 @@ function UsageLayoutContent({
                     usageLogRetentionDays,
                     dateRange: usageDateRange,
                     chartInterval,
+                    onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,
                     eventFilterQueries: usageEventFilterQueries,
                     gaugeFilterQueries: usageGaugeFilterQueries,

@@ -3,6 +3,10 @@
 import { Link } from '@tanstack/react-router'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { cn } from '@/lib/utils'
@@ -18,6 +22,12 @@ type PricingTier = {
   href: string
   marketingAware?: boolean
   popular?: boolean
+}
+
+const HOME_PRICING_CTA_ACTIONS: Record<string, AnalyticsActionId> = {
+  free: 'home-pricing-start-free',
+  pro: 'home-pricing-start-pro',
+  enterprise: 'home-pricing-contact-enterprise',
 }
 
 const pricingTiers: PricingTier[] = [
@@ -63,18 +73,22 @@ function PricingTierCta({ tier }: { tier: PricingTier }) {
     'h-10 w-full text-[13px]',
     tier.ctaVariant === 'outline' && outlineTierButtonClassName,
   )
+  const action = HOME_PRICING_CTA_ACTIONS[tier.id]
+  const analytics = action ? analyticsAttrs(action) : undefined
 
   if (tier.marketingAware) {
     return (
       <Button variant={tier.ctaVariant} className={buttonClassName} asChild>
-        <MarketingSiteLink href={tier.href}>{t(tier.cta)}</MarketingSiteLink>
+        <MarketingSiteLink href={tier.href} {...analytics}>
+          {t(tier.cta)}
+        </MarketingSiteLink>
       </Button>
     )
   }
 
   return (
     <Button variant={tier.ctaVariant} className={buttonClassName} asChild>
-      <Link to={tier.href} search={{ redirect: '/' }}>
+      <Link to={tier.href} search={{ redirect: '/' }} {...analytics}>
         {t(tier.cta)}
       </Link>
     </Button>
@@ -127,12 +141,19 @@ export function PricingSection() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button variant="brandCta" className="h-10 text-[13px]" asChild>
-              <Link to="/sign-up" search={{ redirect: '/' }}>
+              <Link
+                to="/sign-up"
+                search={{ redirect: '/' }}
+                {...analyticsAttrs('home-start-building')}
+              >
                 {t('Start building')}
               </Link>
             </Button>
             <Button variant="outline" className="h-10 text-[13px]" asChild>
-              <MarketingSiteLink href="/pricing">
+              <MarketingSiteLink
+                href="/pricing"
+                {...analyticsAttrs('home-view-pricing')}
+              >
                 {t('View pricing plans')}
               </MarketingSiteLink>
             </Button>

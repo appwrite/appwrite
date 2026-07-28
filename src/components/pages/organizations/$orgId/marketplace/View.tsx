@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { z } from 'zod'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export const marketplaceSearchSchema = z.object({}).passthrough()
 
@@ -247,7 +248,11 @@ export function View() {
           description={emptyDescription}
           action={
             activeNavId === 'my-apps' && !searchActive ? (
-              <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+              <Button
+                size="sm"
+                onClick={() => setCreateDialogOpen(true)}
+                {...analyticsAttrs('create-marketplace-app')}
+              >
                 {t('Add app')}
               </Button>
             ) : undefined

@@ -10,7 +10,7 @@ FROM base AS build
 # (import.meta.env.VITE_*) at build time. All per-environment public config
 # (endpoint, profile, fingerprint key, growth endpoint, Stripe key, Sentry DSN,
 # instrumentation/Plausible script srcs) is now supplied at RUNTIME via the
-# container env and injected into the browser by runtime-config.ts — so a single
+# container env and injected into the browser by runtime-config.ts - so a single
 # image can be promoted across environments.
 ARG VITE_APPWRITE_PROJECT_ID
 ENV VITE_APPWRITE_PROJECT_ID=${VITE_APPWRITE_PROJECT_ID}
@@ -55,7 +55,7 @@ COPY server.ts server.ts
 
 # WORKAROUND: server.ts imports a handful of modules from src/ at runtime that
 # aren't bundled into dist (marketing/marketing-build-paths, runtime-config-shared, and
-# their transitive imports). Cherry-picking individual files here is fragile —
+# their transitive imports). Cherry-picking individual files here is fragile -
 # every new local import in that tree silently breaks the production image while
 # dev/CI stay green. Until server.ts and its runtime deps are bundled into a
 # self-contained dist, copy the whole src/ tree so transitive imports resolve.
@@ -63,7 +63,7 @@ COPY src/ src/
 
 EXPOSE 3000
 
-# Probe /health via bun — the image ships no curl/wget.
+# Probe /health via bun - the image ships no curl/wget.
 HEALTHCHECK \
   --interval=30s \
   --timeout=5s \

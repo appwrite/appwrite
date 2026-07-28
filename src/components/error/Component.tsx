@@ -15,115 +15,18 @@ import {
   WifiOff,
 } from 'lucide-react'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
+import { extractRouteContext } from '@/lib/sentry/report-error'
 import { formatError } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useConfirmedOffline } from '@/lib/network-connectivity'
 import {
+  forceReloadForStaleChunk,
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
 import { useT } from '@/lib/i18n/translate'
-
-/**
- * Extracts resource IDs from URL pathname for error context
- */
-function extractRouteContext(pathname: string): {
-  projectId?: string
-  orgId?: string
-  functionId?: string
-  bucketId?: string
-  fileId?: string
-  databaseId?: string
-  collectionId?: string
-  documentId?: string
-  userId?: string
-  siteId?: string
-  deploymentId?: string
-  providerId?: string
-  topicId?: string
-  messageId?: string
-  service?: string
-} {
-  const context: Record<string, string> = {}
-
-  // Extract project ID
-  const projectMatch = pathname.match(/\/projects\/([^/]+)/)
-  if (projectMatch) context.projectId = projectMatch[1]
-
-  // Extract organization ID
-  const orgMatch = pathname.match(/\/organizations\/([^/]+)/)
-  if (orgMatch) context.orgId = orgMatch[1]
-
-  // Extract function ID
-  const functionMatch = pathname.match(/\/functions\/([^/]+)/)
-  if (functionMatch && functionMatch[1] !== 'executions')
-    context.functionId = functionMatch[1]
-
-  // Extract bucket ID
-  const bucketMatch = pathname.match(/\/storage\/([^/]+)/)
-  if (bucketMatch && bucketMatch[1] !== 'files')
-    context.bucketId = bucketMatch[1]
-
-  // Extract file ID
-  const fileMatch = pathname.match(/\/files\/([^/]+)/)
-  if (fileMatch) context.fileId = fileMatch[1]
-
-  // Extract database ID
-  const dbMatch = pathname.match(/\/databases\/([^/]+)/)
-  if (dbMatch) context.databaseId = dbMatch[1]
-
-  // Extract collection ID
-  const collectionMatch = pathname.match(/\/collections\/([^/]+)/)
-  if (collectionMatch) context.collectionId = collectionMatch[1]
-
-  // Extract document ID
-  const documentMatch = pathname.match(/\/documents\/([^/]+)/)
-  if (documentMatch) context.documentId = documentMatch[1]
-
-  // Extract user ID (auth section) — exclude service tabs, not user detail routes
-  const authSegmentMatch = pathname.match(/\/auth\/([^/]+)/)
-  const authSegment = authSegmentMatch?.[1]
-  const authTabSegments = new Set([
-    'teams',
-    'policies',
-    'social-providers',
-    'templates',
-    'settings',
-    'security',
-    'users',
-  ])
-  if (authSegment && !authTabSegments.has(authSegment)) {
-    context.userId = authSegment
-  }
-
-  // Extract site ID
-  const siteMatch = pathname.match(/\/sites\/([^/]+)/)
-  if (siteMatch) context.siteId = siteMatch[1]
-
-  // Extract deployment ID
-  const deploymentMatch = pathname.match(/\/deployments\/([^/]+)/)
-  if (deploymentMatch) context.deploymentId = deploymentMatch[1]
-
-  // Extract messaging provider ID
-  const providerMatch = pathname.match(/\/providers\/([^/]+)/)
-  if (providerMatch) context.providerId = providerMatch[1]
-
-  // Extract topic ID
-  const topicMatch = pathname.match(/\/topics\/([^/]+)/)
-  if (topicMatch) context.topicId = topicMatch[1]
-
-  // Extract message ID
-  const messageMatch = pathname.match(/\/messages\/([^/]+)/)
-  if (messageMatch) context.messageId = messageMatch[1]
-
-  // Extract current service
-  const serviceMatch = pathname.match(/\/projects\/[^/]+\/([^/]+)/)
-  if (serviceMatch) context.service = serviceMatch[1]
-
-  return context
-}
 
 export function ErrorComponent({
   error,
@@ -235,9 +138,13 @@ export function ErrorComponent({
   )
 
   // Extract all available context from the current route
-  const routeContext = extractRouteContext(location.pathname)
+  const routeContext = useMemo(
+    () => extractRouteContext(location.pathname),
+    [location.pathname],
+  )
 
-  // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set; skipped in preview)
+  // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set; skipped in preview).
+  // Deduped if router onCatch already reported the same error object.
   // Skip 401 Unauthorized - we redirect to login and don't want these in Sentry
   const isUnauthorized = errorCode === 401 || errorWithCode.status === 401
   useEffect(() => {
@@ -246,6 +153,7 @@ export function ErrorComponent({
     captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
+      source: 'error-component',
       // Error metadata
       errorId: randomErrorId.current,
       errorName: error.name,
@@ -326,7 +234,8 @@ export function ErrorComponent({
   }
 
   const handleReload = () => {
-    window.location.reload()
+    // Cache-bust so we don't re-serve HTML that still references deleted chunks.
+    forceReloadForStaleChunk()
   }
 
   const showTechnicalDetails =

@@ -19,7 +19,7 @@ import {
   SCENES,
 } from '../constants'
 
-/** Corporate background bed — loops and fades with the finale. */
+/** Corporate background bed - loops and fades with the finale. */
 export function LaunchBackgroundMusic() {
   const { durationInFrames } = useVideoConfig()
   const totalFrames = durationInFrames ?? DURATION_IN_FRAMES

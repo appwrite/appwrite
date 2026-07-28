@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react'
+import { Settings2, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Accordion,
@@ -19,7 +19,11 @@ import {
   isBlogPageExternal,
   isMarketingPageExternal,
   isProductPageExternal,
+  type MarketingPagePath,
 } from '@/lib/marketing/urls'
+import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
+import { isProductNavItemNew } from '@/lib/products/new-badge'
+import type { ProductNavItemId } from '@/lib/products/types'
 import {
   FOOTER_CONTAINER,
   footerCompactPaddingX,
@@ -32,11 +36,18 @@ import {
 } from '@/components/global/layout/footer-container'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
+import {
+  analyticsAttrs,
+  getMarketingProductAnalyticsAction,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 
 type FooterLink = {
   label: string
   href: string
   external?: boolean
+  analyticsAction?: AnalyticsActionId
+  isNew?: boolean
 }
 
 type ExpandedFooterGroup = {
@@ -76,11 +87,31 @@ function productFooterLink(
   label: string,
   path: string,
   marketing: boolean,
+  productId?: ProductNavItemId,
 ): FooterLink {
   return {
     label,
     href: getProductPageUrl(path, marketing),
     external: isProductPageExternal(marketing),
+    analyticsAction: productId
+      ? getMarketingProductAnalyticsAction(productId)
+      : undefined,
+    isNew: productId ? isProductNavItemNew(productId) : false,
+  }
+}
+
+function marketingProductFooterLink(
+  label: string,
+  path: MarketingPagePath,
+  marketing: boolean,
+  productId: ProductNavItemId,
+): FooterLink {
+  return {
+    label,
+    href: getMarketingPageUrl(path, marketing),
+    external: isMarketingPageExternal(marketing),
+    analyticsAction: getMarketingProductAnalyticsAction(productId),
+    isNew: isProductNavItemNew(productId),
   }
 }
 
@@ -94,6 +125,11 @@ function getExpandedFooterGroups(
     links: [
       docsFooterLink(footerCopy.expanded.quickStarts.web, '/docs/quick-starts/web', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.nextjs, '/docs/quick-starts/nextjs', marketing),
+      docsFooterLink(
+        footerCopy.expanded.quickStarts.tanstackStart,
+        '/docs/quick-starts/tanstack-start',
+        marketing,
+      ),
       docsFooterLink(footerCopy.expanded.quickStarts.react, '/docs/quick-starts/react', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.vue, '/docs/quick-starts/vue', marketing),
       docsFooterLink(footerCopy.expanded.quickStarts.nuxt, '/docs/quick-starts/nuxt', marketing),
@@ -112,14 +148,24 @@ function getExpandedFooterGroups(
   {
     title: footerCopy.groups.products,
     links: [
-      productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing),
-      productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing),
-      productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing),
-      productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing),
-      productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing),
-      docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
-      productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing),
+      productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing, 'auth'),
+      productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing, 'databases'),
+      productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
+      productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
+      productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
+      {
+        ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
+        analyticsAction: getMarketingProductAnalyticsAction('realtime'),
+      },
+      productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
+      marketingProductFooterLink(
+        footerCopy.expanded.products.domains,
+        '/domains',
+        marketing,
+        'domains',
+      ),
       docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
+      productFooterLink(footerCopy.expanded.products.firewall, '/products/firewall', marketing, 'firewall'),
     ],
   },
   {
@@ -180,7 +226,11 @@ function getExpandedFooterGroups(
         href: getMarketingPageUrl('/pricing', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: footerCopy.expanded.about.careers, href: 'https://appwrite.careers', external: true }, // pragma: allowlist secret
+      {
+        label: footerCopy.expanded.about.careers,
+        href: `${getMarketingPageUrl('/company', marketing)}#careers`,
+        external: isMarketingPageExternal(marketing),
+      },
       { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
       {
         label: footerCopy.expanded.about.contactUs,
@@ -205,13 +255,22 @@ function getExpandedFooterGroups(
       blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
       blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
       blogFooterLink(footerCopy.expanded.compare.vsAuth0, 'appwrite-vs-auth0', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
+      blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.baas, 'backend-as-a-service', marketing),
     ],
   },
 ] as const
 }
 
-function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
+function FooterGroupLinks({
+  links,
+  newLabel,
+}: {
+  links: readonly FooterLink[]
+  newLabel: string
+}) {
   return (
     <ul className="space-y-2.5">
       {links.map((link) => (
@@ -221,9 +280,13 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
             {...(link.external
               ? { target: '_blank', rel: 'noopener noreferrer' }
               : {})}
-            className="link-unstyled text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
+            {...(link.analyticsAction
+              ? analyticsAttrs(link.analyticsAction)
+              : {})}
+            className="link-unstyled inline-flex items-center gap-1.5 text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             {link.label}
+            {link.isNew ? <ProductNewBadge label={newLabel} /> : null}
           </a>
         </li>
       ))}
@@ -252,6 +315,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const { isCloud, features } = useConsoleProfile()
   const { catalog } = useI18n()
   const footerCopy = catalog.app.footer
+  const newLabel = catalog.website.products.navigation.newLabel
   const cookieConsent = useOptionalCookieConsent()
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
@@ -427,23 +491,21 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                 >
                   {t(link.label)}
                 </a>
+                {link.label === 'Cookies' && showCookieSettings ? (
+                  <button
+                    type="button"
+                    onClick={() => cookieConsent?.openPreferences()}
+                    className="-ms-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-label={footerCopy.links.cookieSettings}
+                  >
+                    <Settings2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                ) : null}
                 {index < legalLinks.length - 1 && (
                   <span className="text-border">·</span>
                 )}
               </div>
             ))}
-            {showCookieSettings ? (
-              <>
-                <span className="text-border">·</span>
-                <button
-                  type="button"
-                  onClick={() => cookieConsent?.openPreferences()}
-                  className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {footerCopy.links.cookieSettings}
-                </button>
-              </>
-            ) : null}
           </nav>
 
           <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />
@@ -489,7 +551,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               </AccordionTrigger>
               <AccordionContent className="pb-1">
                 <nav aria-label={group.title}>
-                  <FooterGroupLinks links={group.links} />
+                  <FooterGroupLinks links={group.links} newLabel={newLabel} />
                 </nav>
               </AccordionContent>
             </AccordionItem>
@@ -502,7 +564,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.title}
               </h2>
-              <FooterGroupLinks links={group.links} />
+              <FooterGroupLinks links={group.links} newLabel={newLabel} />
             </nav>
           ))}
         </div>

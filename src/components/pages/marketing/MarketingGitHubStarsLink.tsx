@@ -2,6 +2,7 @@ import { SheetClose } from '@/components/ui/sheet'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 function GitHubSolidIcon({ className }: { className?: string }) {
   return (
@@ -35,6 +36,7 @@ export function MarketingGitHubStarsLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${t('Appwrite on GitHub')}, ${stat} ${t('stars')}` /* pragma: allowlist secret */}
+      {...analyticsAttrs('marketing-nav-github')}
       className={cn(
         mobile
           ? 'flex h-10 w-full items-center justify-start gap-1.5 rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'

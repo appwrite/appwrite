@@ -307,9 +307,15 @@ export function useProjectFirewallTrafficOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  logRetentionHours?: number,
 ) {
   return useQuery({
-    ...firewallTrafficOverviewQueryOptions(projectId, dateRange, interval),
+    ...firewallTrafficOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      logRetentionHours,
+    ),
     enabled: !!projectId,
   })
 }
@@ -772,7 +778,7 @@ export function overviewStorageOverviewQueryOptions(
   })
 }
 
-/** Org project list sparklines — chart only, no breakdown dimensions payload in query key. */
+/** Org project list sparklines - chart only, no breakdown dimensions payload in query key. */
 export function requestsChartOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -1741,6 +1747,7 @@ export type RequestsBreakdownQueryEntry = {
   section: RequestsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -1767,6 +1774,7 @@ export function useProjectRequestsBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -1919,6 +1927,7 @@ export type BandwidthBreakdownQueryEntry = {
   section: BandwidthBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -1945,6 +1954,7 @@ export function useProjectBandwidthBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -1986,7 +1996,7 @@ export function useProjectRequestsTopEndpoints(
   return useProjectRequestsOverview(projectId, dateRange, enabled, interval)
 }
 
-/** Last 24 hours — matches project overview usage charts. */
+/** Last 24 hours - matches project overview usage charts. */
 export function getProjectListRequestsChartDateRange(): DateRange {
   return getStableUsageChartDateRange()
 }
@@ -2451,6 +2461,7 @@ export type DatabaseReadsBreakdownQueryEntry = {
   section: DatabaseOperationsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -2481,6 +2492,7 @@ export function useProjectDatabaseReadsBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),
@@ -2492,6 +2504,7 @@ export type DatabaseWritesBreakdownQueryEntry = {
   section: DatabaseOperationsBreakdownSection
   isLoading: boolean
   isError: boolean
+  error: unknown
   items: UsageBreakdownItem[]
 }
 
@@ -2522,6 +2535,7 @@ export function useProjectDatabaseWritesBreakdowns(
           section,
           isLoading: query.isPending && !query.data && !query.isError,
           isError: query.isError,
+          error: query.error,
           items: query.data ?? [],
         }
       }),

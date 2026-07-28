@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
+import { Route as AccessRouteImport } from './routes/access'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as MarketingRouteImport } from './routes/_marketing'
@@ -66,6 +67,7 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
@@ -82,6 +84,8 @@ import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
+import { Route as ApiRVDotjsRouteImport } from './routes/_api/r/v[.]js'
+import { Route as ApiRERouteImport } from './routes/_api/r/e'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
@@ -311,6 +315,7 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComp
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.specification'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.security'
+import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.settings.replication'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.index'
@@ -357,6 +362,11 @@ const DocsRoute = DocsRouteImport.update({
 const DiscordRoute = DiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessRoute = AccessRouteImport.update({
+  id: '/access',
+  path: '/access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRoute = PublicRouteImport.update({
@@ -629,6 +639,12 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugVerifyEmailPreviewRoute =
+  PublicDebugVerifyEmailPreviewRouteImport.update({
+    id: '/debug/verify-email-preview',
+    path: '/debug/verify-email-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
@@ -715,6 +731,16 @@ const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
   id: '/auth/magic-url',
   path: '/auth/magic-url',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiRVDotjsRoute = ApiRVDotjsRouteImport.update({
+  id: '/_api/r/v.js',
+  path: '/r/v.js',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRERoute = ApiRERouteImport.update({
+  id: '/_api/r/e',
+  path: '/r/e',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOgInitDotpngRoute = ApiOgInitDotpngRouteImport.update({
   id: '/_api/og/init.png',
@@ -2171,6 +2197,15 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute =
         PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute =
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport.update(
+    {
+      id: '/replication',
+      path: '/replication',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRoute =
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport.update(
     {
@@ -2461,6 +2496,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
@@ -2508,6 +2544,8 @@ export interface FileRoutesByFullPath {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
+  '/r/e': typeof ApiRERoute
+  '/r/v.js': typeof ApiRVDotjsRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -2524,6 +2562,7 @@ export interface FileRoutesByFullPath {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -2743,6 +2782,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
@@ -2793,6 +2833,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -2837,6 +2878,8 @@ export interface FileRoutesByTo {
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
+  '/r/e': typeof ApiRERoute
+  '/r/v.js': typeof ApiRVDotjsRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -2853,6 +2896,7 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3034,6 +3078,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings/compute': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsComputeRoute
@@ -3088,6 +3133,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
@@ -3135,6 +3181,8 @@ export interface FileRoutesById {
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
+  '/_api/r/e': typeof ApiRERoute
+  '/_api/r/v.js': typeof ApiRVDotjsRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
@@ -3151,6 +3199,7 @@ export interface FileRoutesById {
   '/_public/account/sessions': typeof PublicAccountSessionsRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3370,6 +3419,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/domains/': typeof PublicProjectsProjectIdSitesSiteIdDomainsIndexRoute
   '/_public/projects/$projectId/sites/$siteId/settings/': typeof PublicProjectsProjectIdSitesSiteIdSettingsIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteWithChildren
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
@@ -3422,6 +3472,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/access'
     | '/discord'
     | '/docs'
     | '/generator'
@@ -3469,6 +3520,8 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
+    | '/r/e'
+    | '/r/v.js'
     | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -3485,6 +3538,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -3704,6 +3758,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/domains/'
     | '/projects/$projectId/sites/$siteId/settings/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -3754,6 +3809,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/access'
     | '/discord'
     | '/hello'
     | '/join'
@@ -3798,6 +3854,8 @@ export interface FileRouteTypes {
     | '/generator/diagram'
     | '/og/image.png'
     | '/og/init.png'
+    | '/r/e'
+    | '/r/v.js'
     | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
@@ -3814,6 +3872,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -3995,6 +4054,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/deployments'
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/settings'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
@@ -4048,6 +4108,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/access'
     | '/discord'
     | '/docs'
     | '/generator'
@@ -4095,6 +4156,8 @@ export interface FileRouteTypes {
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
+    | '/_api/r/e'
+    | '/_api/r/v.js'
     | '/_auth/auth/magic-url'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
@@ -4111,6 +4174,7 @@ export interface FileRouteTypes {
     | '/_public/account/sessions'
     | '/_public/debug/error-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/verify-email-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4330,6 +4394,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/domains/'
     | '/_public/projects/$projectId/sites/$siteId/settings/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
+    | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/specification'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -4385,6 +4450,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AccessRoute: typeof AccessRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   GeneratorRoute: typeof GeneratorRouteWithChildren
@@ -4396,6 +4462,8 @@ export interface RootRouteChildren {
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
+  ApiRERoute: typeof ApiRERoute
+  ApiRVDotjsRoute: typeof ApiRVDotjsRoute
   ApiInitTicketIdOgDotpngRoute: typeof ApiInitTicketIdOgDotpngRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
@@ -4422,6 +4490,13 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof DiscordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -4802,6 +4877,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/verify-email-preview': {
+      id: '/_public/debug/verify-email-preview'
+      path: '/debug/verify-email-preview'
+      fullPath: '/debug/verify-email-preview'
+      preLoaderRoute: typeof PublicDebugVerifyEmailPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
@@ -4913,6 +4995,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/magic-url'
       preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_api/r/v.js': {
+      id: '/_api/r/v.js'
+      path: '/r/v.js'
+      fullPath: '/r/v.js'
+      preLoaderRoute: typeof ApiRVDotjsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/r/e': {
+      id: '/_api/r/e'
+      path: '/r/e'
+      fullPath: '/r/e'
+      preLoaderRoute: typeof ApiRERouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_api/og/init.png': {
       id: '/_api/og/init.png'
@@ -6517,6 +6613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
     }
+    '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication': {
+      id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
+      path: '/replication'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/settings/replication'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRoute
+    }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
       path: '/$collectionId'
@@ -7291,6 +7394,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsRouteWithChildr
   )
 
 interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren {
+  PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute
   PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsIndexRoute
@@ -7298,6 +7402,8 @@ interface PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren 
 
 const PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren: PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsRouteChildren =
   {
+    PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute:
+      PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsReplicationRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute:
       PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSecurityRoute,
     PublicProjectsProjectIdDatabasesDbKindDatabaseIdSettingsSpecificationRoute:
@@ -8222,6 +8328,7 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -8237,6 +8344,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }
@@ -8301,6 +8409,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AccessRoute: AccessRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   GeneratorRoute: GeneratorRouteWithChildren,
@@ -8312,6 +8421,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
+  ApiRERoute: ApiRERoute,
+  ApiRVDotjsRoute: ApiRVDotjsRoute,
   ApiInitTicketIdOgDotpngRoute: ApiInitTicketIdOgDotpngRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,

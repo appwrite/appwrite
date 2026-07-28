@@ -3,7 +3,7 @@
  * DB type → name → specifications → dedicated options → backup policies → create.
  */
 
-import { useState, useMemo, useEffect, type Dispatch, type SetStateAction } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Table as TableIcon, Braces, Layers } from 'lucide-react'
 import {
@@ -15,6 +15,8 @@ import { CreateDatabaseDedicatedOptions } from '../_components/CreateDatabaseDed
 import {
   BACKUP_POLICY_PRESETS,
   CreateDatabaseBackupPolicies,
+  backupPolicyNameForSchedule,
+  isGenericBackupPolicyName,
   type BackupPolicyPresetId,
 } from '../_components/CreateDatabaseBackupPolicies'
 import {
@@ -24,6 +26,11 @@ import {
 } from './CreateDatabaseSetupProgress'
 import { sdk } from '@/lib/appwrite/sdk'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import {
+  getBackupPoliciesPlanLimit,
+  getBackupPoliciesRemainingSlots,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
 import { ID, BackupServices, type Models } from '@appwrite.io/console'
 import { DatabaseType } from '@/lib/databases/database-type'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -40,6 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -47,11 +60,19 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
+  dedicatedDatabaseSourceFromDatabaseType,
+  dedicatedDatabaseSourceFromEngine,
+  fetchBackupPolicies,
+  fetchDedicatedBackupPolicies,
   refetchProjectDatabaseLists,
   seedCreatedDatabaseCaches,
+  waitForCreatedDatabaseHaReady,
+  waitForCreatedDatabaseLifecycleReady,
+  waitForCreatedDatabasePitrReady,
   waitForCreatedDatabaseWorkspaceReady,
   useOrganizationPlan,
   useProject,
+  type DedicatedDatabaseSource,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -65,6 +86,7 @@ import {
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
   getDefaultEnabledSpecId,
   hasLockedDatabaseSpecifications,
+  isServerlessDatabaseSpecId,
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
@@ -187,21 +209,17 @@ function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
   return t === 'Postgres' ? 'postgres' : 'mysql'
 }
 
-const SETUP_STEP_MIN_MS = 700
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-async function advanceSetupPhase(
-  setSetupProgress: Dispatch<SetStateAction<DatabaseSetupProgressState | null>>,
-  phase: DatabaseSetupPhase,
-  minDurationMs = SETUP_STEP_MIN_MS,
-): Promise<void> {
-  setSetupProgress((prev) => (prev ? { ...prev, phase } : prev))
-  await sleep(minDurationMs)
+function specificationsSourceForWizardType(
+  dbType: DatabaseTypeOption | null,
+): DedicatedDatabaseSource | null {
+  if (!dbType) return null
+  if (dbType === 'Postgres') {
+    return dedicatedDatabaseSourceFromEngine('postgresql')
+  }
+  if (dbType === 'MySQL') {
+    return dedicatedDatabaseSourceFromEngine('mysql')
+  }
+  return dedicatedDatabaseSourceFromDatabaseType(wizardBackend(dbType))
 }
 
 export function CreateDatabaseWizardView() {
@@ -217,8 +235,20 @@ export function CreateDatabaseWizardView() {
   const supportsDedicatedDatabaseCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
 
+  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
+  const specificationsSource = useMemo(
+    () => specificationsSourceForWizardType(dbType),
+    [dbType],
+  )
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useQuery(databaseSpecificationsQueryOptions(pid))
+    useQuery({
+      ...databaseSpecificationsQueryOptions(
+        pid,
+        specificationsSource ??
+          dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb),
+      ),
+      enabled: !!pid && !!specificationsSource,
+    })
   const apiSpecOptions = useMemo(
     () => mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
     [specificationsData?.specifications],
@@ -231,8 +261,6 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
-
-  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
@@ -247,6 +275,8 @@ export function CreateDatabaseWizardView() {
   const [setupProgress, setSetupProgress] =
     useState<DatabaseSetupProgressState | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  // Sync guard: setState alone can miss a double-click before re-render.
+  const createInFlightRef = useRef(false)
 
   const isTablesDB = dbType === 'TablesDB'
   const isDocumentsDB = dbType === 'DocumentsDB'
@@ -421,8 +451,9 @@ export function CreateDatabaseWizardView() {
   const planBackupsEnabled = features.databaseBackups
     ? organizationPlan?.backupsEnabled
     : undefined
+  // Same convention as databases/functions/buckets/firewall: 0 = unlimited.
   const backupPoliciesLimit = features.databaseBackups
-    ? (organizationPlan?.backupPolicies ?? 0)
+    ? getBackupPoliciesPlanLimit(organizationPlan)
     : 0
   const showBackupPoliciesSection = Boolean(features.databaseBackups)
   const backupPoliciesSummaryLabel =
@@ -431,6 +462,23 @@ export function CreateDatabaseWizardView() {
           .map((id) => t(BACKUP_POLICY_PRESETS[id].label))
           .join(', ')
       : null
+
+  // Keep selection within plan caps (e.g. Pro = 1 → daily only).
+  useEffect(() => {
+    if (!features.databaseBackups) return
+    if (!supportsAdvancedBackupPolicies(backupPoliciesLimit)) {
+      setSelectedBackupPresets((prev) => {
+        const next = prev.filter((id) => id !== 'hourly')
+        if (next.length === prev.length) return prev
+        return next.length > 0 ? next : prev.includes('daily') ? ['daily'] : next
+      })
+    }
+    if (backupPoliciesLimit <= 0) return
+    setSelectedBackupPresets((prev) => {
+      if (prev.length <= backupPoliciesLimit) return prev
+      return prev.slice(0, backupPoliciesLimit)
+    })
+  }, [backupPoliciesLimit, features.databaseBackups])
 
   const createBackupPoliciesForDatabase = async (
     database: Models.Database | Models.DedicatedDatabase,
@@ -444,50 +492,127 @@ export function CreateDatabaseWizardView() {
     }
 
     const projectSdk = sdk.forProject(pid)
-    const policies = selectedBackupPresets.map((presetId) => {
+    const isNative = isNativeDatabaseType(dbType)
+    const engineService = isNative
+      ? dedicatedEngineService(projectSdk, nativeDatabaseEngine(dbType))
+      : null
+
+    const existing = isNative
+      ? await fetchDedicatedBackupPolicies(
+          pid,
+          database.$id,
+          nativeDatabaseEngine(dbType),
+        ).catch(() => ({
+          policies: [] as Models.BackupPolicy[],
+          total: 0,
+        }))
+      : await fetchBackupPolicies(pid, database.$id).catch(() => ({
+          policies: [] as Models.BackupPolicy[],
+          total: 0,
+        }))
+
+    // Platform may auto-create a policy named "Default". Rename it to the
+    // matching preset (e.g. Daily backup) before creating additional ones.
+    for (const policy of existing.policies) {
+      if (!isGenericBackupPolicyName(policy.name)) continue
+      const meaningfulName =
+        backupPolicyNameForSchedule(policy.schedule) ??
+        (selectedBackupPresets.includes('daily')
+          ? BACKUP_POLICY_PRESETS.daily.name
+          : selectedBackupPresets.includes('hourly')
+            ? BACKUP_POLICY_PRESETS.hourly.name
+            : null)
+      if (!meaningfulName) continue
+      try {
+        if (engineService) {
+          await engineService.updateBackupPolicy({
+            databaseId: database.$id,
+            policyId: policy.$id,
+            name: meaningfulName,
+          })
+        } else {
+          await projectSdk.backups.updatePolicy({
+            policyId: policy.$id,
+            name: meaningfulName,
+          })
+        }
+        policy.name = meaningfulName
+      } catch {
+        // Non-blocking: still try to create any missing presets below.
+      }
+    }
+
+    const existingSchedules = new Set(
+      existing.policies
+        .map((policy) => policy.schedule?.trim())
+        .filter((schedule): schedule is string => Boolean(schedule)),
+    )
+
+    const remainingSlots =
+      getBackupPoliciesRemainingSlots(
+        existing.policies.length,
+        backupPoliciesLimit,
+      ) ?? selectedBackupPresets.length
+
+    if (remainingSlots === 0) {
+      return
+    }
+
+    const presetsToCreate = selectedBackupPresets
+      .filter((presetId) => {
+        const schedule = BACKUP_POLICY_PRESETS[presetId].schedule
+        return !existingSchedules.has(schedule)
+      })
+      .slice(0, remainingSlots)
+
+    if (presetsToCreate.length === 0) {
+      return
+    }
+
+    // Create one-by-one so a plan limit on the second policy does not race
+    // the first create (Promise.all used to surface a false failure toast).
+    for (const presetId of presetsToCreate) {
       const preset = BACKUP_POLICY_PRESETS[presetId]
-      return {
+      const policy = {
         policyId: ID.unique(),
         name: preset.name,
         schedule: preset.schedule,
         retention: preset.retention,
         enabled: true as const,
       }
-    })
 
-    if (isNativeDatabaseType(dbType)) {
-      const engineService = dedicatedEngineService(
-        projectSdk,
-        nativeDatabaseEngine(dbType),
-      )
-      await Promise.all(
-        policies.map((policy) =>
-          engineService.createBackupPolicy({
+      try {
+        if (engineService) {
+          await engineService.createBackupPolicy({
             databaseId: database.$id,
             policyId: policy.policyId,
             name: policy.name,
             schedule: policy.schedule,
             retention: policy.retention,
             enabled: policy.enabled,
-          }),
-        ),
-      )
-      return
+          })
+        } else {
+          await projectSdk.backups.createPolicy({
+            policyId: policy.policyId,
+            services: [BackupServices.Databases],
+            retention: policy.retention,
+            schedule: policy.schedule,
+            name: policy.name,
+            resourceId: database.$id,
+            enabled: policy.enabled,
+          })
+        }
+      } catch (error) {
+        const message = getErrorMessage(error).toLowerCase()
+        const isLimitError =
+          message.includes('limit') && message.includes('polic')
+        // First policy may have succeeded; ignore limit noise for extras.
+        if (isLimitError) {
+          return
+        }
+        throw error
+      }
     }
-
-    await Promise.all(
-      policies.map((policy) =>
-        projectSdk.backups.createPolicy({
-          policyId: policy.policyId,
-          services: [BackupServices.Databases],
-          retention: policy.retention,
-          schedule: policy.schedule,
-          name: policy.name,
-          resourceId: database.$id,
-          enabled: policy.enabled,
-        }),
-      ),
-    )
   }
 
   const handleDbTypeSelect = (option: DbTypeChoice) => {
@@ -548,10 +673,13 @@ export function CreateDatabaseWizardView() {
         specification: specId ?? undefined,
         region: project?.region,
         haReplicaCount,
-        pitrEnabled,
       })
     },
   })
+
+  const setSetupPhase = (phase: DatabaseSetupPhase) => {
+    setSetupProgress((prev) => (prev ? { ...prev, phase } : prev))
+  }
 
   const finishDatabaseCreation = async (
     database: Models.Database | Models.DedicatedDatabase,
@@ -606,6 +734,8 @@ export function CreateDatabaseWizardView() {
   }
 
   const handleCreateDatabase = async () => {
+    if (createInFlightRef.current) return
+
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = t('Name is required')
     if (isNativeDatabaseType(dbType)) {
@@ -633,7 +763,8 @@ export function CreateDatabaseWizardView() {
     const trimmedName = name.trim()
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
-    const showPitrStep = pitrEnabled
+    // Product APIs have no PITR mutation; never enable/wait via engine for product IDs.
+    const showPitrStep = pitrEnabled && isNativeDatabaseType(dbType)
     const shouldCreateBackupPolicies =
       features.databaseBackups &&
       planBackupsEnabled === true &&
@@ -647,12 +778,15 @@ export function CreateDatabaseWizardView() {
       has_custom_id: Boolean(databaseId?.trim()),
     })
 
+    createInFlightRef.current = true
     setSetupProgress({
       phase: 'creating',
       databaseName: trimmedName,
       showProvisioningStep,
       showHaStep,
       showPitrStep,
+      showWorkspaceStep: true,
+      showBackupsStep: shouldCreateBackupPolicies,
     })
     setIsCreating(true)
 
@@ -669,22 +803,63 @@ export function CreateDatabaseWizardView() {
             backend: wizardBackend(dbType!),
           }
 
-      const workspaceReadyPromise = waitForCreatedDatabaseWorkspaceReady(
+      if (showProvisioningStep) {
+        setSetupPhase('provisioning')
+        const lifecycleReady = await waitForCreatedDatabaseLifecycleReady(
+          pid,
+          database.$id,
+          workspaceKind,
+        )
+        if (!lifecycleReady) {
+          throw new Error(
+            'Database provisioning failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      if (showHaStep) {
+        setSetupPhase('configuring-ha')
+        const haReady = await waitForCreatedDatabaseHaReady(
+          pid,
+          database.$id,
+          workspaceKind,
+          haReplicaCount,
+        )
+        if (!haReady) {
+          throw new Error(
+            'High availability setup failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      if (showPitrStep) {
+        setSetupPhase('enabling-pitr')
+        const pitrReady = await waitForCreatedDatabasePitrReady(
+          pid,
+          database.$id,
+          workspaceKind,
+        )
+        if (!pitrReady) {
+          throw new Error(
+            'Point-in-time recovery setup failed or timed out. Try again in a moment.',
+          )
+        }
+      }
+
+      setSetupPhase('preparing-workspace')
+      const workspaceReady = await waitForCreatedDatabaseWorkspaceReady(
         pid,
         database.$id,
         workspaceKind,
       )
+      if (!workspaceReady) {
+        throw new Error(
+          'Database workspace is not ready yet. Try again in a moment.',
+        )
+      }
 
-      if (showProvisioningStep) {
-        await advanceSetupPhase(setSetupProgress, 'provisioning')
-      }
-      if (showHaStep) {
-        await advanceSetupPhase(setSetupProgress, 'configuring-ha')
-      }
-      if (showPitrStep) {
-        await advanceSetupPhase(setSetupProgress, 'enabling-backups')
-      }
       if (shouldCreateBackupPolicies) {
+        setSetupPhase('enabling-backups')
         try {
           await createBackupPoliciesForDatabase(database)
         } catch (policyError) {
@@ -695,9 +870,7 @@ export function CreateDatabaseWizardView() {
         }
       }
 
-      await workspaceReadyPromise
-
-      await advanceSetupPhase(setSetupProgress, 'complete')
+      setSetupPhase('complete')
       await finishDatabaseCreation(database)
     } catch (error) {
       setSetupProgress(null)
@@ -717,6 +890,7 @@ export function CreateDatabaseWizardView() {
           : getErrorMessage(error) || fallback
       toast.error(t(message))
     } finally {
+      createInFlightRef.current = false
       setIsCreating(false)
     }
   }
@@ -1060,6 +1234,26 @@ export function CreateDatabaseWizardView() {
                               >
                                 {t('Upgrade')}
                               </Badge>
+                            ) : isServerlessDatabaseSpecId(spec.id) ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                                      {t(spec.price)}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-[240px]"
+                                  >
+                                    <p className="text-[12px]">
+                                      {t(
+                                        'Billed for disk storage and database operations.',
+                                      )}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             ) : (
                               <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
                                 {spec.price}

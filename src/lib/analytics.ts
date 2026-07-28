@@ -1,16 +1,32 @@
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
+import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
+import {
+  PLAUSIBLE_PROXY_EVENT_PATH,
+  PLAUSIBLE_PROXY_SCRIPT_PATH,
+} from '@/lib/plausible-proxy'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import {
+  getPlanNameFromTier,
+  type CanonicalPlanId,
+} from '@/lib/utils/plan-filter'
 
-export const PLAUSIBLE_SCRIPT_SRC = getRuntimeConfig().plausibleScriptSrc
+/** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
+export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
+  getRuntimeConfig().plausibleScriptSrc
 
-export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_SCRIPT_SRC)
+export const ANALYTICS_ENABLED = Boolean(PLAUSIBLE_UPSTREAM_SCRIPT_SRC)
+
+/** First-party script path loaded in the browser (proxied; see plausible-proxy). */
+export const PLAUSIBLE_SCRIPT_SRC = ANALYTICS_ENABLED
+  ? PLAUSIBLE_PROXY_SCRIPT_PATH
+  : ''
 
 function isAnalyticsAllowed() {
   return ANALYTICS_ENABLED && canTrackAnalytics()
 }
 
 export const PLAUSIBLE_INIT_SCRIPT = `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-plausible.init({ autoCapturePageviews: false })`
+plausible.init({ autoCapturePageviews: false, endpoint: ${JSON.stringify(PLAUSIBLE_PROXY_EVENT_PATH)} })`
 
 export type AnalyticsEventName =
   | 'Button Clicked'
@@ -38,6 +54,32 @@ export type AnalyticsEventName =
 export type AnalyticsPropValue = string | number | boolean | null | undefined
 export type AnalyticsProps = Record<string, AnalyticsPropValue>
 
+/** Login state for Plausible custom properties. */
+export type AnalyticsAuth = 'user' | 'guest'
+
+/**
+ * Coarse product surface for Plausible custom properties.
+ * Derived from the sanitized route template, not the raw pathname.
+ */
+export type AnalyticsSurface =
+  | 'marketing'
+  | 'console'
+  | 'docs'
+  | 'account'
+  | 'auth'
+
+/**
+ * Billing plan bucket for Plausible custom properties.
+ * Uses canonical console plan ids; guests (and unknown org) use `none`.
+ */
+export type AnalyticsPlan = CanonicalPlanId | 'none'
+
+export type AnalyticsSessionProps = {
+  auth: AnalyticsAuth
+  plan: AnalyticsPlan
+  lang: SupportedLanguage
+}
+
 type PlausibleOptions = {
   url?: string
   u?: string
@@ -51,6 +93,42 @@ declare global {
       options?: PlausibleOptions,
     ) => void
   }
+}
+
+const DEFAULT_SESSION_PROPS: AnalyticsSessionProps = {
+  auth: 'guest',
+  plan: 'none',
+  lang: 'en',
+}
+
+let sessionProps: AnalyticsSessionProps = { ...DEFAULT_SESSION_PROPS }
+
+/**
+ * Sync auth/plan/lang from React (account + active org plan + i18n).
+ * Call during render so pageviews/events in the same commit see fresh values.
+ */
+export function setAnalyticsSessionProps(
+  next: Partial<AnalyticsSessionProps>,
+) {
+  sessionProps = {
+    ...sessionProps,
+    ...next,
+  }
+}
+
+export function getAnalyticsSessionProps(): AnalyticsSessionProps {
+  return {
+    ...sessionProps,
+    // Prefer live language in case it changed outside the sync component.
+    lang: getActiveLanguage(),
+  }
+}
+
+export function getAnalyticsPlanFromBillingId(
+  planId: string | null | undefined,
+): AnalyticsPlan {
+  if (!planId) return 'none'
+  return getPlanNameFromTier(planId)
 }
 
 function normalizeAnalyticsProps(props: AnalyticsProps = {}) {
@@ -81,14 +159,65 @@ export function getAnalyticsArea(routePath: string) {
   return parts[0] ?? 'root'
 }
 
+/**
+ * Map a sanitized route template to a coarse Plausible `surface` property.
+ */
+export function getAnalyticsSurface(routePath: string): AnalyticsSurface {
+  const root = routePath.split('/').filter(Boolean)[0] ?? ''
+
+  if (root === 'docs') return 'docs'
+  if (root === 'account') return 'account'
+
+  if (
+    root === 'sign-in' ||
+    root === 'sign-up' ||
+    root === 'join' ||
+    root === 'verify-email' ||
+    root === 'auth' ||
+    root === 'oauth2' ||
+    root === 'reset' ||
+    root === 'card'
+  ) {
+    return 'auth'
+  }
+
+  if (
+    root === 'projects' ||
+    root === 'organizations' ||
+    root === 'upgrade' ||
+    root === 'generator'
+  ) {
+    return 'console'
+  }
+
+  return 'marketing'
+}
+
 export function getAnalyticsRouteUrl(routePath: string) {
   if (typeof window === 'undefined') return routePath
   return `${window.location.origin}${routePath}`
 }
 
+function getGlobalAnalyticsProps(routePath?: string): AnalyticsProps {
+  const session = getAnalyticsSessionProps()
+  return {
+    auth: session.auth,
+    plan: session.plan,
+    lang: session.lang,
+    ...(routePath ? { surface: getAnalyticsSurface(routePath) } : {}),
+  }
+}
+
 export function trackPageView(routePath: string) {
   if (!isAnalyticsAllowed() || typeof window === 'undefined') return
-  window.plausible?.('pageview', { url: getAnalyticsRouteUrl(routePath) })
+  window.plausible?.('pageview', {
+    url: getAnalyticsRouteUrl(routePath),
+    props: normalizeAnalyticsProps({
+      route: routePath,
+      area: getAnalyticsArea(routePath),
+      ...getGlobalAnalyticsProps(routePath),
+    }),
+  })
 }
 
 export function trackEvent(
@@ -107,6 +236,8 @@ export function trackEvent(
         ? { route: routePath, area: getAnalyticsArea(routePath) }
         : {}),
       ...props,
+      // Session dimensions win so callers cannot accidentally override them.
+      ...getGlobalAnalyticsProps(routePath),
     }),
   })
 }

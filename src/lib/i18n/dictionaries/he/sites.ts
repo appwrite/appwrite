@@ -30,8 +30,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Unnamed Site': 'אתר ללא שם',
   Never: 'אף פעם',
   'No sites yet': 'אין אתרים עדיין',
-  'Create your first site to get started':
-    'צרו את האתר הראשון שלכם כדי להתחיל',
+  'Create your first site to get started': 'צרו את האתר הראשון שלכם כדי להתחיל',
   Deployed: 'נפרס',
   preview: 'תצוגה מקדימה',
   'Preview not available': 'תצוגה מקדימה אינה זמינה',
@@ -74,13 +73,15 @@ export const heSitesDictionary: Record<string, string> = {
   Source: 'מקור',
   'Global CDN': 'CDN גלובלי',
   'Content Delivery Network': 'רשת אספקת תוכן (CDN)',
-  "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.":
     'ה-CDN של Appwrite מספק כיסוי גלובלי עם יותר מ-120 נקודות נוכחות ברחבי העולם, ומפחית זמני תגובה באמצעות מטמון קצה ואופטימיזציית תוכן. כל התוכן מועבר באמצעות TLS לחיבורים מאובטחים ומוצפנים.', // pragma: allowlist secret
   'Learn more →': 'למדו עוד ←',
   Connected: 'מחובר',
   'DDoS protection': 'הגנת DDoS',
   'DDoS Mitigation': 'מיגון DDoS',
-  "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.":
     'הרשת של Appwrite כוללת מיגון DDoS מובנה להגנה מפני מתקפות מניעת שירות מבוזרות, המבטיח גישה רציפה לאתרים שלכם וזמינות גבוהה גם בעומסי תנועה גבוהים.', // pragma: allowlist secret
   Active: 'פעיל',
   Domains: 'דומיינים',
@@ -106,7 +107,8 @@ export const heSitesDictionary: Record<string, string> = {
   Duration: 'משך',
   Manual: 'ידני',
   by: 'מאת',
-  'Build must be ready before activating': 'הבנייה חייבת להיות מוכנה לפני ההפעלה',
+  'Build must be ready before activating':
+    'הבנייה חייבת להיות מוכנה לפני ההפעלה',
   Activate: 'הפעלה',
   'The active deployment cannot be deleted from the list':
     'לא ניתן למחוק את הפריסה הפעילה מהרשימה',
@@ -202,8 +204,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Connect a repository to enable automatic deployments':
     'חברו repo כדי לאפשר פריסות אוטומטיות',
   'Connect repository': 'חיבור repo',
-  'Select a GitHub installation and repository to connect to this site. You can connect an existing repository or create a new site from a template.':
-    'בחרו התקנת GitHub ו-repo לחיבור לאתר הזה. אפשר לחבר repo קיים או ליצור אתר חדש מתבנית.',
+  'Select a Git installation and repository to connect to this site. You can connect an existing repository or create a new site from a template.':
+    'בחרו התקנת Git ו-repo לחיבור לאתר הזה. אפשר לחבר repo קיים או ליצור אתר חדש מתבנית.',
   Connect: 'חיבור',
   'Last updated': 'עודכן לאחרונה',
   'Open repository in new tab': 'פתיחת ה-repo בכרטיסייה חדשה',
@@ -324,7 +326,8 @@ export const heSitesDictionary: Record<string, string> = {
 
   // Settings: silent mode card
   'Silent mode': 'מצב שקט',
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.': // pragma: allowlist secret
+  // pragma: allowlist secret
+  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
     'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
   'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
 
@@ -337,7 +340,8 @@ export const heSitesDictionary: Record<string, string> = {
   // Overview extras
   'Loading site...': 'טוען אתר...',
   'Recent deployments': 'פריסות אחרונות',
-  'Deployments will appear here when available': 'פריסות יופיעו כאן כשיהיו זמינות',
+  'Deployments will appear here when available':
+    'פריסות יופיעו כאן כשיהיו זמינות',
 
   // Start command label
   '(optional)': '(אופציונלי)',
@@ -402,15 +406,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Import repositories for automatic deployments':
     'ייבאו repos לפריסות אוטומטיות',
   'Connect GitHub': 'חיבור GitHub',
+  'Connect GitLab': 'חיבור GitLab',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
   'Search...': 'חיפוש...',
   'No repositories found': 'לא נמצאו repos',
   'No repositories available': 'אין repos זמינים',
   "Can't find a repository?": 'לא מוצאים repo?',
-  'If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.':
-    'אם בחרתם repos ספציפיים במהלך ההגדרה, ייתכן שתצטרכו לעדכן את הרשאות ה-GitHub שלכם כדי לכלול repos נוספים.',
+  'If you selected specific repositories during setup, you may need to update your permissions to include additional ones.':
+    'אם בחרתם repos ספציפיים במהלך ההגדרה, ייתכן שתצטרכו לעדכן את ההרשאות שלכם כדי לכלול repos נוספים.',
   'Update GitHub permissions': 'עדכון הרשאות GitHub',
+  'Update GitLab permissions': 'עדכון הרשאות GitLab',
   'Clone template': 'שכפול תבנית',
   'Want to deploy without connecting a repository or using a template?':
     'רוצים לפרוס בלי לחבר repo או להשתמש בתבנית?',
@@ -431,16 +437,15 @@ export const heSitesDictionary: Record<string, string> = {
   'Upload file': 'העלאת קובץ',
   'Upload a .tar.gz file containing your site source code':
     'העלו קובץ .tar.gz המכיל את קוד המקור של האתר שלכם',
-  'Drop your file here or click to browse':
-    'גררו את הקובץ לכאן או לחצו לעיון',
+  'Drop your file here or click to browse': 'גררו את הקובץ לכאן או לחצו לעיון',
   'Only .tar.gz files up to 100MB': 'רק קובצי .tar.gz עד 100MB',
   'Site name': 'שם האתר',
   'Site ID': 'מזהה אתר',
   'My awesome site': 'האתר המדהים שלי',
   'Auto-generated': 'נוצר אוטומטית',
-  'Your site will be accessible at this URL':
-    'האתר שלכם יהיה נגיש בכתובת הזו',
-  'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.': // pragma: allowlist secret
+  'Your site will be accessible at this URL': 'האתר שלכם יהיה נגיש בכתובת הזו',
+  // pragma: allowlist secret
+  'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.':
     'רוצים להשתמש בדומיין משלכם? לאחר הפריסה תוכלו לחבר דומיין מותאם אישית באמצעות רשומת CNAME או לתת ל-Appwrite לנהל את ה-DNS שלכם.', // pragma: allowlist secret
 
   // Create wizard: quick deploy and repository config
@@ -452,6 +457,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Repository information is missing from the URL.':
     'פרטי ה-repo חסרים בכתובת ה-URL.',
   'GitHub Repository': 'GitHub repo',
+  'GitLab Repository': 'GitLab repo',
   'View on GitHub': 'צפו ב-GitHub',
   'View repository': 'צפייה ב-repo',
   'Detecting framework...': 'מזהה framework...',

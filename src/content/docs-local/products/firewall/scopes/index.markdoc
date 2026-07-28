@@ -1,0 +1,61 @@
+---
+layout: article
+title: Resource scopes
+description: Learn how Appwrite Firewall scopes rules to the project API, a Function, or a Site, and where each scope is enforced.
+---
+
+Every Firewall rule has a **resource type** that limits which traffic the rule can match. Scopes keep API-wide policies separate from policies for a single function or site.
+
+# Scope types {% #scope-types %}
+
+| Resource type | Applies to | Resource ID |
+|---------------|------------|-------------|
+| **API** | Project Appwrite API traffic (`/v1/...`) | Not required (stored empty) |
+| **Functions** | Public/edge traffic for one function | Function ID required |
+| **Sites** | Public/edge traffic for one site | Site ID required |
+
+# Where rules are enforced {% #where-rules-are-enforced %}
+
+- **API** rules are enforced on requests to your project's Appwrite API. This is the scope to use for Auth, Databases, Storage, and other `/v1` services.
+- **Functions** and **Sites** rules are stored on the project and applied to that function's or site's **public traffic** on the Appwrite Network edge.
+- Function and site rules do **not** block Console or Appwrite **management API** calls used to create, update, or deploy those resources. A deny rule on a function will not stop `GET /v1/functions/{id}` from a valid API key or the Console.
+
+{% info title="Pick the right scope" %}
+To protect SDK and client calls into Appwrite services, use **API**. To protect a deployed function URL or site hostname, use **Functions** or **Sites** with that resource selected.
+{% /info %}
+
+# When to use API {% #when-to-use-api %}
+
+Use **API** for project-wide API controls:
+
+- Block abusive client IPs across Auth, Databases, Storage, and other API services
+- Rate limit a shared path prefix such as `/v1`
+- Deny traffic from specific countries for the whole project API
+
+# When to use Functions {% #when-to-use-functions %}
+
+Use **Functions** when only one function's public traffic should be protected or exempted:
+
+- Rate limit a public webhook function
+- Deny non-`POST` methods on an HTTP-triggered function endpoint
+- Bypass Firewall checks for a trusted caller IP on that function only
+
+Select the function in the create wizard. The rule appears under the **Functions** tab, grouped by that function.
+
+# When to use Sites {% #when-to-use-sites %}
+
+Use **Sites** for a single deployed web app's public traffic:
+
+- Redirect a deprecated path on one site
+- Deny admin paths on a marketing site
+- Rate limit form submission paths for one site
+
+Select the site in the create wizard. The rule appears under the **Sites** tab.
+
+# Tabs in the Console {% #tabs-in-the-console %}
+
+The Firewall page filters the list by scope tab. Creating a rule from a tab preselects that resource type. You can change the type in the create wizard or later when [updating](/docs/products/firewall/update) the rule.
+
+{% arrow_link href="/docs/products/firewall/create" %}
+Create a rule
+{% /arrow_link %}

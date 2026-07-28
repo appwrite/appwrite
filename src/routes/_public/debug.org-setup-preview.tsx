@@ -64,7 +64,7 @@ function OrgSetupPreviewPage() {
         footer={
           <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <p className="text-[12px] text-muted-foreground">
-              Debug preview — adjust the setup progress stage below.
+              Debug preview - adjust the setup progress stage below.
             </p>
             <div className="flex flex-wrap gap-2">
               {PHASE_OPTIONS.map((option) => (

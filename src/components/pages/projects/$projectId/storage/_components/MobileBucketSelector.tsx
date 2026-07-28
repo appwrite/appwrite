@@ -16,6 +16,7 @@ import {
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -194,6 +195,7 @@ export function MobileBucketSelector() {
                 disabled={createDisabled}
                 onClick={() => setCreateOpen(true)}
                 aria-label={t('Create bucket')}
+                {...analyticsAttrs('create-bucket')}
               >
                 <Plus className="h-4 w-4" />
               </Button>

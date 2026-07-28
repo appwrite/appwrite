@@ -77,6 +77,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 /**
@@ -1373,10 +1374,17 @@ export function ChangePlanWizardFullscreen() {
             variant="outline"
             onClick={handleCancel}
             disabled={isSubmitting}
+            {...analyticsAttrs('upgrade-cancel')}
           >
             {t('Cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={isButtonDisabled}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isButtonDisabled}
+            {...analyticsAttrs(
+              isCreateMode ? 'upgrade-create-org' : 'upgrade-submit',
+            )}
+          >
             {submitLabel}
           </Button>
         </>

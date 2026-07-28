@@ -53,6 +53,7 @@ import {
   resetInitialLoaderShellGate,
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 const TEAM_PROJECTS_PREFETCH_STALE_MS = 5 * 60 * 1000
 
@@ -624,6 +625,7 @@ export function ProjectSelector({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
+              {...analyticsAttrs('project-switcher')}
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent/80 cursor-pointer',
                 className,
@@ -684,6 +686,7 @@ export function ProjectSelector({
     return (
       <>
         <button
+          {...analyticsAttrs('project-switcher')}
           onClick={() => setOpen(true)}
           className={cn(
             'flex w-full items-center gap-2 overflow-visible rounded-md border border-border bg-background px-2.5 py-2 text-start transition-colors hover:bg-accent cursor-pointer',
@@ -787,6 +790,7 @@ export function ProjectSelector({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
+            {...analyticsAttrs('project-switcher')}
             className={cn(
               'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-start transition-colors hover:bg-accent cursor-pointer',
               className,
@@ -1056,6 +1060,7 @@ function ProjectSelectorContent({
           <div className="border-t border-border p-1.5">
             <button
               type="button"
+              {...analyticsAttrs('create-organization')}
               onClick={onCreateOrganization}
               className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
@@ -1177,6 +1182,8 @@ function ProjectSelectorContent({
         {/* Create Project - fixed at bottom */}
         <div className="border-t border-border p-1.5">
           <button
+            type="button"
+            {...analyticsAttrs('create-project')}
             onClick={onCreateProject}
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -1374,6 +1381,7 @@ function MobileProjectSelectorContent({
           <div className="border-t border-border p-2">
             <button
               type="button"
+              {...analyticsAttrs('create-organization')}
               onClick={onCreateOrganization}
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
@@ -1506,6 +1514,8 @@ function MobileProjectSelectorContent({
           {/* Create Project */}
           <div className="border-t border-border p-2">
             <button
+              type="button"
+              {...analyticsAttrs('create-project')}
               onClick={onCreateProject}
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >

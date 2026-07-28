@@ -23,7 +23,7 @@ function getFinaleLightsStrength(frame: number): number {
   )
 }
 
-/** Homepage hero soft lights — boosted motion for 1920×1080 video. */
+/** Homepage hero soft lights - boosted motion for 1920×1080 video. */
 const HERO_LIGHTS = {
   pink: {
     gradient:

@@ -16,6 +16,8 @@ export type UsageFiltersContextValue = {
   usageLogRetentionDays: number
   dateRange: DateRange | undefined
   chartInterval: UsageChartInterval
+  /** Persist a new chart date range (picker or chart brush selection). */
+  onDateRangeChange: (dateRange: DateRange | undefined) => void
   filterMap: FilterMap
   /** Filters applied to usage.listEvents calls for the active category. */
   eventFilterQueries: UsageFilterQueries

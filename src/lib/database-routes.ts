@@ -237,13 +237,12 @@ export function isNativeDedicatedDatabase(
 }
 
 export function needsDedicatedProductTypeLookup(
-  db: DedicatedDatabaseLinkInput,
+  _db: DedicatedDatabaseLinkInput,
 ): boolean {
-  if (isProductOwnedDedicatedDatabase(db)) return false
-  if (isNativeDedicatedDatabase(db) && isPostgresDedicatedEngine(db.engine)) {
-    return false
-  }
-  return dedicatedApiToRouteKind(db.api) === null
+  // Never probe documentsDB / vectorsDB / tablesDB by dedicated ID.
+  // Product rows carry `api`; native rows use `engine`. Missing `api` must not
+  // trigger GET /documentsdb/{id} + /vectorsdb/{id} for TablesDB databases.
+  return false
 }
 
 export function isPostgresDedicatedEngine(

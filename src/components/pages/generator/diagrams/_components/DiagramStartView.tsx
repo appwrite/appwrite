@@ -69,7 +69,7 @@ export function DiagramStartView({
         />
       }
       templates={
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {DIAGRAM_TEMPLATE_CATALOG.map((template) => (
             <DiagramTemplatePreviewCard
               key={template.id}

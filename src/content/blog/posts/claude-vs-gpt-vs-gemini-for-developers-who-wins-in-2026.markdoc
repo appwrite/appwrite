@@ -43,9 +43,9 @@ SWE-bench measures how well a model can autonomously fix real GitHub issues in o
 
 Here's where the latest flagship models land:
 
-- **Claude Opus 4.7** — 64.3%
-- **GPT-5.5** — 58.6%
-- **Gemini 3.1 Pro** — 54.2%
+- **Claude Opus 4.7** - 64.3%
+- **GPT-5.5** - 58.6%
+- **Gemini 3.1 Pro** - 54.2%
 
 Claude leads by a meaningful margin, GPT sits in the middle, and Gemini trails Claude by about ten points. That ordering holds up in day-to-day use too, at least on the kind of multi-file debugging and refactoring tasks SWE-bench is designed to simulate. Where things get more interesting is the work that doesn't show up in a benchmark at all.
 

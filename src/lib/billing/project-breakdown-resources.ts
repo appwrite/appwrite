@@ -16,6 +16,7 @@ export type BillingProjectResourceCategory =
   | 'compute'
   | 'avatars'
   | 'realtime'
+  | 'addons'
 
 export type BillingProjectResourceMapping = {
   name: string
@@ -51,6 +52,7 @@ export type BillingProjectResourceCategoryGroup = {
 
 export const BILLING_PROJECT_RESOURCE_CATEGORY_ORDER: BillingProjectResourceCategory[] =
   [
+    'addons',
     'network',
     'storage',
     'auth',
@@ -65,6 +67,7 @@ export const BILLING_PROJECT_RESOURCE_CATEGORY_LABELS: Record<
   BillingProjectResourceCategory,
   string
 > = {
+  addons: 'Addons',
   network: 'Network',
   storage: 'Storage',
   auth: 'Auth',
@@ -92,6 +95,8 @@ export const DEDICATED_DB_BILLING_METRIC_IDS = [
   'dedicatedDbStorage',
   'dedicatedDbBandwidth',
   'dedicatedDbHaReplica',
+  // Cloud aggregations currently emit `dedicatedDbReplica.*` (not HaReplica).
+  'dedicatedDbReplica',
   'dedicatedDbCrossRegionReplica',
   'dedicatedDbCrossRegion',
   'dedicatedDbPitr',
@@ -145,6 +150,14 @@ const DEDICATED_DB_PROJECT_RESOURCES: Record<
     name: 'HA replicas',
     format: 'number',
     planKey: 'dedicatedDbHaReplica',
+    category: 'dedicated-databases',
+    showLimit: false,
+    showOnlyWhenUsed: true,
+  },
+  dedicatedDbReplica: {
+    name: 'Replicas',
+    format: 'number',
+    planKey: 'dedicatedDbReplica',
     category: 'dedicated-databases',
     showLimit: false,
     showOnlyWhenUsed: true,
@@ -325,8 +338,8 @@ function resolveDedicatedDbSpecLabel(
     fromLookup?.cpu && fromLookup?.memory
       ? `${fromLookup.cpu} · ${fromLookup.memory}`
       : fromStaticSpec &&
-          fromStaticSpec.cpu !== '—' &&
-          fromStaticSpec.memory !== '—'
+          fromStaticSpec.cpu !== '-' &&
+          fromStaticSpec.memory !== '-'
         ? `${fromStaticSpec.cpu} · ${fromStaticSpec.memory}`
         : null
 
@@ -402,6 +415,7 @@ const DEDICATED_DB_BILLING_METRIC_SHORT_LABELS: Record<
   dedicatedDbStorage: 'Storage',
   dedicatedDbBandwidth: 'Bandwidth',
   dedicatedDbHaReplica: 'HA replicas',
+  dedicatedDbReplica: 'Replicas',
   dedicatedDbCrossRegionReplica: 'Cross-region replicas',
   dedicatedDbCrossRegion: 'Cross-region transfer',
   dedicatedDbPitr: 'Point-in-time recovery',
@@ -461,6 +475,7 @@ export function formatDedicatedDbBillingUsageLabel(
     case 'dedicatedDbExtensions':
       return usage === 1 ? '1 instance' : `${usage.toLocaleString()} instances`
     case 'dedicatedDbHaReplica':
+    case 'dedicatedDbReplica':
     case 'dedicatedDbCrossRegionReplica':
       return usage === 1 ? '1 replica' : `${usage.toLocaleString()} replicas`
     case 'dedicatedDbCrossRegion':
@@ -495,6 +510,8 @@ export function getDedicatedDbBillingUsageDescription(
       return 'Number of billable database extensions.'
     case 'dedicatedDbHaReplica':
       return 'Number of high availability replicas provisioned.'
+    case 'dedicatedDbReplica':
+      return 'Number of replicas provisioned.'
     case 'dedicatedDbCrossRegionReplica':
       return 'Number of cross-region replicas provisioned.'
     case 'dedicatedDbCrossRegion':

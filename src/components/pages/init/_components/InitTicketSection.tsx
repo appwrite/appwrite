@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
 import { buildInitTicketShareUrl } from '@/lib/init/init-ticket-share'
@@ -59,7 +60,6 @@ import {
 interface InitTicketSectionProps {
   event: InitDisplayEvent
   account?: Models.User | null
-  accountReady?: boolean
 }
 
 function buildFallbackShareUrl(): string {
@@ -134,7 +134,11 @@ function ShareActions({
         className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}
       >
         <Button className={primaryButtonClass} asChild>
-          <Link to="/sign-up" search={{ redirect: '/init' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/init' }}
+            {...analyticsAttrs('init-claim-ticket')}
+          >
             <Ticket className={iconSizeClass} />
             Claim your ticket
           </Link>
@@ -152,7 +156,11 @@ function ShareActions({
     <div className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}>
       {!isAuthenticated ? (
         <Button className={primaryButtonClass} asChild>
-          <Link to="/sign-up" search={{ redirect: '/init' }}>
+          <Link
+            to="/sign-up"
+            search={{ redirect: '/init' }}
+            {...analyticsAttrs('init-claim-ticket')}
+          >
             <Ticket className={iconSizeClass} />
             Claim your ticket
           </Link>
@@ -238,7 +246,6 @@ function ShareActions({
 export function InitTicketSection({
   event,
   account,
-  accountReady = true,
 }: InitTicketSectionProps) {
   const isAuthenticated = Boolean(account)
   const themeUsesDarkImage = useInitThemeUsesDarkImage()
@@ -465,9 +472,7 @@ export function InitTicketSection({
           widthPx={INIT_TICKET_COLLAPSED_WIDTH_PX}
           pointerEventsNone
         >
-          {accountReady ? (
-            <InitTicketCard {...ticketCardProps} previewOnly />
-          ) : null}
+          <InitTicketCard {...ticketCardProps} previewOnly />
         </InitTicketScaledFrame>
         <div className="min-w-0 flex-1 space-y-2 text-start">
           <h2 className="text-[14px] font-semibold leading-tight tracking-tight text-foreground sm:text-[15px]">
@@ -495,13 +500,11 @@ export function InitTicketSection({
             className="w-full"
             overflowVisible
           >
-            {accountReady ? (
-              <InitTicketCard
-                ref={ticketCardRef}
-                captureMode={isCapturingVideo}
-                {...ticketCardProps}
-              />
-            ) : null}
+            <InitTicketCard
+              ref={ticketCardRef}
+              captureMode={isCapturingVideo}
+              {...ticketCardProps}
+            />
           </InitTicketScaledFrame>
         </InitTicketVideoCaptureStage>
 

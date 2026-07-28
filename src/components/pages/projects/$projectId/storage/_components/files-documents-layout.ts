@@ -96,7 +96,7 @@ export const STORAGE_FILES_TABLE_HEADER_TH_CLASS = cn(
 )
 
 /**
- * File inspector toolbar — same height/inset rules as table header (no pane `border-t`).
+ * File inspector toolbar - same height/inset rules as table header (no pane `border-t`).
  */
 export const STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS = cn(
   'box-border flex shrink-0 items-center gap-2 px-3 py-0',
@@ -125,7 +125,7 @@ export const STORAGE_FILES_SPLIT_HEADER_ROW_H_CLASS =
   STORAGE_FILES_PREVIEW_HEADER_ROW_CLASS
 
 /**
- * Row grid styles — keep in sync with `tablesdb/Spreadsheet.tsx`
+ * Row grid styles - keep in sync with `tablesdb/Spreadsheet.tsx`
  * (`stickyTheadClass`, `headerCellBorderClass`, `bodyCellBorderClass`).
  */
 export const STORAGE_SPREADSHEET_STICKY_THEAD_CLASS =
@@ -137,17 +137,17 @@ export const STORAGE_SPREADSHEET_HEADER_CELL_BORDER =
 export const STORAGE_SPREADSHEET_BODY_CELL_BORDER =
   'border-b border-e border-border'
 
-/** Sticky checkbox/actions cells — fixed surface; row hover/selection must not tint these. */
+/** Sticky checkbox/actions cells - fixed surface; row hover/selection must not tint these. */
 export const STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS = 'bg-background'
 
 export const STORAGE_SPREADSHEET_TABLE_LAYER_CLASS =
   'relative inline-block min-w-full align-top'
 
-/** Sticky checkbox `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
+/** Sticky checkbox `th` - single shadow utility (do not stack multiple `shadow-[...]`). */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW =
   SPREADSHEET_STICKY_START_HEADER_SHADOW
 
-/** Sticky actions `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
+/** Sticky actions `th` - single shadow utility (do not stack multiple `shadow-[...]`). */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW =
   SPREADSHEET_STICKY_END_HEADER_SHADOW
 

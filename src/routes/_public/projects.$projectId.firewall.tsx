@@ -13,6 +13,7 @@ import {
   resolveUsageChartIntervalForRange,
 } from '@/lib/usage/chart-interval'
 import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
@@ -50,23 +51,36 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
       dateRange,
       plan,
     )
+    const logRetentionHours = getUsageLogRetentionHoursFromPlan(plan)
 
     await Promise.all([
+      // Default rules tab (API) + unfiltered total for plan limit checks.
+      queryClient.ensureQueryData(
+        firewallRulesQueryOptions(
+          projectId,
+          0,
+          DEFAULT_PAGE_SIZE,
+          undefined,
+          'api',
+        ),
+      ),
       queryClient.ensureQueryData(
         firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
       ),
-      queryClient
-        .ensureQueryData(
-          firewallTrafficOverviewQueryOptions(
-            projectId,
-            dateRange,
-            chartInterval,
-          ),
-        )
-        .catch(() => {
-          // Usage metrics are optional; keep the rules list usable if they fail.
-        }),
     ])
+
+    // Usage is non-critical: prefetch in background so a slow usage API does not
+    // block the rules list or navigation.
+    void queryClient
+      .prefetchQuery(
+        firewallTrafficOverviewQueryOptions(
+          projectId,
+          dateRange,
+          chartInterval,
+          logRetentionHours,
+        ),
+      )
+      .catch(() => undefined)
   },
   component: FirewallLayout,
 })

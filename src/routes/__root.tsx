@@ -33,9 +33,13 @@ import {
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
+import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
+import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
+import { RootShellCatchBoundary } from '@/components/global/providers/RootShellCatchBoundary'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
+import { ErrorComponent } from '@/components/error/Component'
 import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
 import {
   FullscreenLoader,
@@ -43,6 +47,11 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  WebsiteAccessGate,
+  WEBSITE_ACCESS_BOOT_SCRIPT,
+} from '@/components/global/auth/WebsiteAccessGate'
+import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
@@ -53,11 +62,6 @@ import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { useLocation, useMatches } from '@tanstack/react-router'
-import {
-  getAnalyticsRoutePath,
-  trackPageView,
-} from '@/lib/analytics'
-import { canTrackAnalytics, subscribeCookieConsent } from '@/lib/cookie-consent/consent-state'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -170,6 +174,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       currentUser: null,
     }
   },
+  // Explicit root error UI; reporting goes through router defaultOnCatch
+  // (route onCatch typing omits errorInfo, so we do not override it here).
+  errorComponent: ({ error, info, reset }) => (
+    <ErrorComponent error={error} info={info} reset={reset} />
+  ),
   head: () => ({
     meta: [
       {
@@ -287,28 +296,6 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-function PlausibleRouteTracker() {
-  const location = useLocation()
-  const matches = useMatches()
-  const leafRoute = matches[matches.length - 1]
-  const [consentTick, setConsentTick] = useState(0)
-
-  useEffect(() => {
-    return subscribeCookieConsent(() => {
-      setConsentTick((tick) => tick + 1)
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!canTrackAnalytics() || typeof window === 'undefined') return
-
-    const routePath = getAnalyticsRoutePath(leafRoute?.routeId, location.pathname)
-    trackPageView(routePath)
-  }, [consentTick, leafRoute?.routeId, location.pathname])
-
-  return null
-}
-
 function ContextualDocumentTitle() {
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -421,76 +408,87 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
+        <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
+        {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
+            auto-recover before the app module graph (and router listeners) load. */}
+        <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
-        <PlausibleRouteTracker />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
           <I18nProvider>
-            <PageDirectionProvider>
-              <CookieConsentProvider>
-                <NavigationHistoryProvider>
-                  <RecentResourcesProvider>
-                    {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-                    {!skipStaticLoader ? (
-                      <FullscreenLoader
-                        isVisible={clientMounted ? isLoaderVisible : true}
-                        statusBanner={clientMounted ? statusBanner : undefined}
-                      />
-                    ) : null}
-                    <SentryContextProvider>
-                      <DebugModeProvider>
-                        <ConsoleRightPaneProvider>
-                          {features.aiAssistant ? (
-                            <AIChatProvider>
-                              <DocsPreviewProvider>
-                                <PromoBannerProvider>
-                                  <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                      <MarketingSiteLayoutGate>
-                                        {children}
-                                      </MarketingSiteLayoutGate>
+            <WebsiteAccessGate>
+              <AnalyticsSessionPropsSync />
+              <PageDirectionProvider>
+                <CookieConsentProvider>
+                  <NavigationHistoryProvider>
+                    <RecentResourcesProvider>
+                      {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
+                      {!skipStaticLoader ? (
+                        <FullscreenLoader
+                          isVisible={clientMounted ? isLoaderVisible : true}
+                          statusBanner={clientMounted ? statusBanner : undefined}
+                        />
+                      ) : null}
+                      <SentryContextProvider>
+                        <RootShellCatchBoundary>
+                          <DebugModeProvider>
+                            <ConsoleRightPaneProvider>
+                              {features.aiAssistant ? (
+                                <AIChatProvider>
+                                  <DocsPreviewProvider>
+                                    <PromoBannerProvider>
+                                      <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                        <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                          <MarketingSiteLayoutGate>
+                                            {children}
+                                          </MarketingSiteLayoutGate>
+                                        </div>
+                                        <ConsoleRightPane />
+                                      </div>
+                                      <ClientOnly>
+                                        <DebugMenu />
+                                      </ClientOnly>
+                                    </PromoBannerProvider>
+                                  </DocsPreviewProvider>
+                                </AIChatProvider>
+                              ) : (
+                                <DocsPreviewProvider>
+                                  <PromoBannerProvider>
+                                    <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                        <MarketingSiteLayoutGate>
+                                          {children}
+                                        </MarketingSiteLayoutGate>
+                                      </div>
+                                      <ConsoleRightPane />
                                     </div>
-                                    <ConsoleRightPane />
-                                  </div>
-                                  <ClientOnly>
-                                    <DebugMenu />
-                                  </ClientOnly>
-                                </PromoBannerProvider>
-                              </DocsPreviewProvider>
-                            </AIChatProvider>
-                          ) : (
-                            <DocsPreviewProvider>
-                              <PromoBannerProvider>
-                                <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                    <MarketingSiteLayoutGate>
-                                      {children}
-                                    </MarketingSiteLayoutGate>
-                                  </div>
-                                  <ConsoleRightPane />
-                                </div>
-                                <ClientOnly>
-                                  <DebugMenu />
-                                </ClientOnly>
-                              </PromoBannerProvider>
-                            </DocsPreviewProvider>
-                          )}
-                        </ConsoleRightPaneProvider>
-                      </DebugModeProvider>
-                    </SentryContextProvider>
-                    <ClientOnly>
-                      <Toaster />
-                    </ClientOnly>
-                    <ClientOnly>
-                      {!isProjectRoute(location.pathname) && (
-                        <GlobalUploadProgress />
-                      )}
-                    </ClientOnly>
-                  </RecentResourcesProvider>
-                </NavigationHistoryProvider>
-              </CookieConsentProvider>
-            </PageDirectionProvider>
+                                    <ClientOnly>
+                                      <DebugMenu />
+                                    </ClientOnly>
+                                  </PromoBannerProvider>
+                                </DocsPreviewProvider>
+                              )}
+                              <ClientOnly>
+                                <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                            </ConsoleRightPaneProvider>
+                          </DebugModeProvider>
+                        </RootShellCatchBoundary>
+                      </SentryContextProvider>
+                      <ClientOnly>
+                        <Toaster />
+                      </ClientOnly>
+                      <ClientOnly>
+                        {!isProjectRoute(location.pathname) && (
+                          <GlobalUploadProgress />
+                        )}
+                      </ClientOnly>
+                    </RecentResourcesProvider>
+                  </NavigationHistoryProvider>
+                </CookieConsentProvider>
+              </PageDirectionProvider>
+            </WebsiteAccessGate>
           </I18nProvider>
         </ClientThemeProvider>
         <Scripts />

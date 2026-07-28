@@ -76,6 +76,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'バックアップ ID をクリップボードにコピーしました',
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
+  'backup policies': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -210,14 +211,27 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
     'データベースの継続的バックアップを設定しています。',
+  'Configuring continuous recovery for your database.':
+    'データベースの継続的リカバリを設定しています。',
   'Configuring high availability': '高可用性を設定中',
+  'Creating backup policies for your database.':
+    'データベースのバックアップポリシーを作成しています。',
   'Enabling point-in-time recovery': 'ポイントインタイムリカバリを有効化中',
+  'Opening your database.': 'データベースを開いています。',
+  'Preparing workspace': 'ワークスペースを準備中',
   'Preparing your database workspace.': 'データベースワークスペースを準備中です。',
   'Provisioning compute': 'コンピュートをプロビジョニング中',
+  'Setting up backups': 'バックアップを設定中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
   'Setting up your database': 'データベースをセットアップ中',
   'Setting up your database resource.': 'データベースリソースをセットアップしています。',
+  'High availability setup failed or timed out. Try again in a moment.':
+    '高可用性のセットアップに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
+  'Point-in-time recovery setup failed or timed out. Try again in a moment.':
+    'ポイントインタイムリカバリのセットアップに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
+  'Database workspace is not ready yet. Try again in a moment.':
+    'データベースワークスペースの準備がまだ完了していません。しばらくしてから再試行してください。',
   'Create database or table': 'データベースまたはテーブルの作成',
   'Create Index': 'インデックスの作成',
   'Create index': 'インデックスの作成',
@@ -292,7 +306,11 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current': '現在',
   'Current database': '現在のデータベース',
   'Current session states from pg_stat_activity.': 'pg_stat_activity からの現在のセッション状態。',
-  'Current tier: Serverless. Dedicated tiers are coming soon.': '現在のティア: Serverless。専用ティアは近日公開予定です。',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
+    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。移行時は切り替えのあいだ、短時間の読み取り専用ウィンドウがあります。',
+  'Migration to dedicated compute started': '専用コンピュートへの移行を開始しました',
+  'Compute and connection limits for this database.':
+    'このデータベースのコンピュートと接続数の上限です。',
   'Custom Policies': 'カスタムポリシー',
   'Custom Policy': 'カスタムポリシー',
   'Custom dimension': 'カスタム次元',
@@ -476,6 +494,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to create backup': 'バックアップの作成に失敗しました',
   'Failed to create backup policy': 'バックアップポリシーの作成に失敗しました',
   'Failed to create database': 'データベースの作成に失敗しました',
+  'Database provisioning failed or timed out. Try again in a moment.':
+    'データベースのプロビジョニングに失敗したか、タイムアウトしました。しばらくしてから再試行してください。',
   'Failed to create schema': 'スキーマの作成に失敗しました',
   'Failed to create table': 'テーブルの作成に失敗しました',
   'Failed to delete backup': 'バックアップの削除に失敗しました',
@@ -1374,6 +1394,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Autovacuum': 'Autovacuum',
   'Parallel': '並列',
   'Replication': 'レプリケーション',
+  'Replication is available on dedicated databases':
+    'レプリケーションは専用データベースで利用できます',
+  'Upgrade this database to a dedicated specification to configure read replicas and failover.':
+    '読み取りレプリカとフェイルオーバーを設定するには、このデータベースを専用スペックにアップグレードしてください。',
   'Background': 'バックグラウンド',
   'Fulltext': '全文',
   'Complete': '完了',

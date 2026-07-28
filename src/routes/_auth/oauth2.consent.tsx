@@ -71,7 +71,7 @@ function parseMaxAge(raw: string | null): number | undefined {
 /**
  * The SDK types `resource` as a single string, but its client flattens arrays
  * into the indexed repeated params (`resource[0]`, `resource[1]`) the server
- * expects for RFC 8707 resource lists — the reference console relies on the
+ * expects for RFC 8707 resource lists - the reference console relies on the
  * same behavior. Contain the unavoidable cast in this one documented place.
  */
 function toResourceParam(resources: string[]): string | undefined {
@@ -80,8 +80,8 @@ function toResourceParam(resources: string[]): string | undefined {
 }
 
 // The authorize-request fields shared verbatim between createPAR (pre-login
-// push) and authorize (authenticated direct path). Read from URLSearchParams —
-// not the router's parsed search — because `resource` may legally repeat and
+// push) and authorize (authenticated direct path). Read from URLSearchParams -
+// not the router's parsed search - because `resource` may legally repeat and
 // the values must pass through untouched.
 function readAuthorizeParams(params: URLSearchParams) {
   return {
@@ -190,7 +190,7 @@ function OAuth2ConsentPage() {
       resumeUrl: string | null,
     ) {
       if (result.redirectUrl) {
-        // Already consented — go straight back to the client.
+        // Already consented - go straight back to the client.
         window.location.href = result.redirectUrl
         // A native deep link can't navigate the tab away, so show the
         // success outcome (with an "Open app" retry) instead of a blank page.
@@ -213,7 +213,7 @@ function OAuth2ConsentPage() {
           rememberAccountSwitchUrl(result.grantId, resumeUrl)
         }
         if (fromRequestUri) {
-          // The handle is now consumed — rewrite to the grant URL so
+          // The handle is now consumed - rewrite to the grant URL so
           // reloads resume via getGrant instead of a dead request_uri.
           navigate({
             to: '/oauth2/consent',
@@ -297,7 +297,7 @@ function OAuth2ConsentPage() {
       if (cancelled) return
 
       if (!loggedInAccount) {
-        // Carry only a short request_uri through login — the full consent URL
+        // Carry only a short request_uri through login - the full consent URL
         // travels inside the OAuth provider's `state` during GitHub sign-in
         // and can exceed its size limits.
         try {
@@ -312,7 +312,7 @@ function OAuth2ConsentPage() {
           )
         } catch (e: unknown) {
           if (cancelled) return
-          // A malformed request fails identically after login — surface it
+          // A malformed request fails identically after login - surface it
           // now instead of bouncing the user through sign-in first.
           if (
             e instanceof AppwriteException &&
@@ -321,7 +321,7 @@ function OAuth2ConsentPage() {
             fail(e, OAuth2ErrorMessage.AUTHORIZE_FAILED)
             return
           }
-          // PAR unavailable (older server) — fall back to the legacy
+          // PAR unavailable (older server) - fall back to the legacy
           // full-URL redirect through login.
           goSignIn()
         }

@@ -93,7 +93,7 @@ const CLIENT_DIRECTORY = './dist/client'
 const SERVER_ENTRY_POINT = './dist/server/server.js'
 
 // Public runtime config, read once from the process env (constant per process)
-// and stamped into every HTML response in place of the build-time placeholder —
+// and stamped into every HTML response in place of the build-time placeholder -
 // see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
 const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
 const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
@@ -468,9 +468,11 @@ async function initializeStaticRoutes(
           // build-time config frozen into window.__APP_CONFIG__).
           routes[route] = async (req: Request) => {
             if (metadata.type.includes('text/html')) {
+              // Never cache HTML: it embeds hashed asset URLs. Caching across
+              // deploys leaves tabs on a shell that 404s deleted /assets/*.js.
               return htmlResponse(req, await Bun.file(filepath).text(), {
                 'Content-Type': metadata.type,
-                'Cache-Control': 'public, max-age=3600',
+                'Cache-Control': 'no-store',
               })
             }
             const fileOnDemand = Bun.file(filepath)
@@ -506,7 +508,8 @@ async function initializeStaticRoutes(
       routes[urlPath] = async (req: Request) =>
         htmlResponse(req, await Bun.file(filepath).text(), {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
+          // Same as SSR HTML: hashed script URLs must not outlive a deploy.
+          'Cache-Control': 'no-store',
         })
 
       skipped.push({
@@ -758,7 +761,7 @@ async function initializeServer() {
           }
 
           // Incomplete strip-only redirects may land on /project-{region}-{id}/...
-          // without the /console prefix — rewrite those before the SPA.
+          // without the /console prefix - rewrite those before the SPA.
           if (isLegacyConsolePath(url.pathname)) {
             return redirectLegacyConsolePath(req)
           }

@@ -7,7 +7,7 @@ type FeatureScreenshotPlaceholderProps = {
   width?: number
 }
 
-/** Browser frame placeholder — empty content until a screenshot is added. */
+/** Browser frame placeholder - empty content until a screenshot is added. */
 export function FeatureScreenshotPlaceholder({
   pageTitle,
   imageSrc,

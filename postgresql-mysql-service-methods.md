@@ -14,96 +14,96 @@ Parameter descriptions come from the Console SDK type definitions. Path placehol
 
 ### PostgreSQL
 
-- [**Databases**](#postgresql-resource) — GET `/v1/postgresql`, POST `/v1/postgresql`
+- [**Databases**](#postgresql-resource) - GET `/v1/postgresql`, POST `/v1/postgresql`
   - [list](#postgresql-list) · [create](#postgresql-create)
-- [**Specifications**](#postgresql-specifications-resource) — GET `/v1/postgresql/specifications`
+- [**Specifications**](#postgresql-specifications-resource) - GET `/v1/postgresql/specifications`
   - [listSpecifications](#postgresql-specifications-listspecifications)
-- [**Database**](#postgresql-databaseid-resource) — GET `/v1/postgresql/{databaseId}`, PATCH `/v1/postgresql/{databaseId}`, DELETE `/v1/postgresql/{databaseId}`
+- [**Database**](#postgresql-databaseid-resource) - GET `/v1/postgresql/{databaseId}`, PATCH `/v1/postgresql/{databaseId}`, DELETE `/v1/postgresql/{databaseId}`
   - [get](#postgresql-databaseid-get) · [update](#postgresql-databaseid-update) · [delete](#postgresql-databaseid-delete)
-- [**Backups**](#postgresql-databaseid-backups-resource) — GET `/v1/postgresql/{databaseId}/backups`, POST `/v1/postgresql/{databaseId}/backups`
+- [**Backups**](#postgresql-databaseid-backups-resource) - GET `/v1/postgresql/{databaseId}/backups`, POST `/v1/postgresql/{databaseId}/backups`
   - [listBackups](#postgresql-databaseid-backups-listbackups) · [createBackup](#postgresql-databaseid-backups-createbackup)
-- [**Backup policies**](#postgresql-databaseid-backups-policies-resource) — GET `/v1/postgresql/{databaseId}/backups/policies`, POST `/v1/postgresql/{databaseId}/backups/policies`
+- [**Backup policies**](#postgresql-databaseid-backups-policies-resource) - GET `/v1/postgresql/{databaseId}/backups/policies`, POST `/v1/postgresql/{databaseId}/backups/policies`
   - [listBackupPolicies](#postgresql-databaseid-backups-policies-listbackuppolicies) · [createBackupPolicy](#postgresql-databaseid-backups-policies-createbackuppolicy)
-- [**Backup storage**](#postgresql-databaseid-backups-storage-resource) — PUT `/v1/postgresql/{databaseId}/backups/storage`
+- [**Backup storage**](#postgresql-databaseid-backups-storage-resource) - PUT `/v1/postgresql/{databaseId}/backups/storage`
   - [updateBackupStorage](#postgresql-databaseid-backups-storage-updatebackupstorage)
-- [**Backup**](#postgresql-databaseid-backups-backupid-resource) — GET `/v1/postgresql/{databaseId}/backups/{backupId}`, DELETE `/v1/postgresql/{databaseId}/backups/{backupId}`
+- [**Backup**](#postgresql-databaseid-backups-backupid-resource) - GET `/v1/postgresql/{databaseId}/backups/{backupId}`, DELETE `/v1/postgresql/{databaseId}/backups/{backupId}`
   - [getBackup](#postgresql-databaseid-backups-backupid-getbackup) · [deleteBackup](#postgresql-databaseid-backups-backupid-deletebackup)
-- [**Branches**](#postgresql-databaseid-branches-resource) — GET `/v1/postgresql/{databaseId}/branches`, POST `/v1/postgresql/{databaseId}/branches`
+- [**Branches**](#postgresql-databaseid-branches-resource) - GET `/v1/postgresql/{databaseId}/branches`, POST `/v1/postgresql/{databaseId}/branches`
   - [listBranches](#postgresql-databaseid-branches-listbranches) · [createBranch](#postgresql-databaseid-branches-createbranch)
-- [**Branch**](#postgresql-databaseid-branches-branchid-resource) — DELETE `/v1/postgresql/{databaseId}/branches/{branchId}`
+- [**Branch**](#postgresql-databaseid-branches-branchid-resource) - DELETE `/v1/postgresql/{databaseId}/branches/{branchId}`
   - [deleteBranch](#postgresql-databaseid-branches-branchid-deletebranch)
-- [**Credentials**](#postgresql-databaseid-credentials-resource) — GET `/v1/postgresql/{databaseId}/credentials`, PATCH `/v1/postgresql/{databaseId}/credentials`
+- [**Credentials**](#postgresql-databaseid-credentials-resource) - GET `/v1/postgresql/{databaseId}/credentials`, PATCH `/v1/postgresql/{databaseId}/credentials`
   - [getCredentials](#postgresql-databaseid-credentials-getcredentials) · [updateCredentials](#postgresql-databaseid-credentials-updatecredentials)
-- [**SQL executions**](#postgresql-databaseid-executions-resource) — POST `/v1/postgresql/{databaseId}/executions`
+- [**SQL executions**](#postgresql-databaseid-executions-resource) - POST `/v1/postgresql/{databaseId}/executions`
   - [createExecution](#postgresql-databaseid-executions-createexecution)
-- [**Extensions**](#postgresql-databaseid-extensions-resource) — GET `/v1/postgresql/{databaseId}/extensions`, POST `/v1/postgresql/{databaseId}/extensions`
+- [**Extensions**](#postgresql-databaseid-extensions-resource) - GET `/v1/postgresql/{databaseId}/extensions`, POST `/v1/postgresql/{databaseId}/extensions`
   - [listExtensions](#postgresql-databaseid-extensions-listextensions) · [createExtension](#postgresql-databaseid-extensions-createextension)
-- [**Extension**](#postgresql-databaseid-extensions-extensionname-resource) — DELETE `/v1/postgresql/{databaseId}/extensions/{extensionName}`
+- [**Extension**](#postgresql-databaseid-extensions-extensionname-resource) - DELETE `/v1/postgresql/{databaseId}/extensions/{extensionName}`
   - [deleteExtension](#postgresql-databaseid-extensions-extensionname-deleteextension)
-- [**Failovers**](#postgresql-databaseid-failovers-resource) — POST `/v1/postgresql/{databaseId}/failovers`
+- [**Failovers**](#postgresql-databaseid-failovers-resource) - POST `/v1/postgresql/{databaseId}/failovers`
   - [createFailover](#postgresql-databaseid-failovers-createfailover)
-- [**Maintenance window**](#postgresql-databaseid-maintenance-resource) — PATCH `/v1/postgresql/{databaseId}/maintenance`
+- [**Maintenance window**](#postgresql-databaseid-maintenance-resource) - PATCH `/v1/postgresql/{databaseId}/maintenance`
   - [updateMaintenanceWindow](#postgresql-databaseid-maintenance-updatemaintenancewindow)
-- [**Migrations**](#postgresql-databaseid-migrations-resource) — POST `/v1/postgresql/{databaseId}/migrations`
+- [**Migrations**](#postgresql-databaseid-migrations-resource) - POST `/v1/postgresql/{databaseId}/migrations`
   - [createMigration](#postgresql-databaseid-migrations-createmigration)
-- [**PITR windows**](#postgresql-databaseid-pitr-resource) — GET `/v1/postgresql/{databaseId}/pitr`
+- [**PITR windows**](#postgresql-databaseid-pitr-resource) - GET `/v1/postgresql/{databaseId}/pitr`
   - [getPitrWindows](#postgresql-databaseid-pitr-getpitrwindows)
-- [**Connection pooler**](#postgresql-databaseid-pooler-resource) — GET `/v1/postgresql/{databaseId}/pooler`, PATCH `/v1/postgresql/{databaseId}/pooler`
+- [**Connection pooler**](#postgresql-databaseid-pooler-resource) - GET `/v1/postgresql/{databaseId}/pooler`, PATCH `/v1/postgresql/{databaseId}/pooler`
   - [getPooler](#postgresql-databaseid-pooler-getpooler) · [updatePooler](#postgresql-databaseid-pooler-updatepooler)
-- [**High availability replicas**](#postgresql-databaseid-replicas-resource) — GET `/v1/postgresql/{databaseId}/replicas`
+- [**High availability replicas**](#postgresql-databaseid-replicas-resource) - GET `/v1/postgresql/{databaseId}/replicas`
   - [getReplicas](#postgresql-databaseid-replicas-getreplicas)
-- [**Restorations**](#postgresql-databaseid-restorations-resource) — GET `/v1/postgresql/{databaseId}/restorations`, POST `/v1/postgresql/{databaseId}/restorations`
+- [**Restorations**](#postgresql-databaseid-restorations-resource) - GET `/v1/postgresql/{databaseId}/restorations`, POST `/v1/postgresql/{databaseId}/restorations`
   - [listRestorations](#postgresql-databaseid-restorations-listrestorations) · [createRestoration](#postgresql-databaseid-restorations-createrestoration)
-- [**Restoration**](#postgresql-databaseid-restorations-restorationid-resource) — GET `/v1/postgresql/{databaseId}/restorations/{restorationId}`
+- [**Restoration**](#postgresql-databaseid-restorations-restorationid-resource) - GET `/v1/postgresql/{databaseId}/restorations/{restorationId}`
   - [getRestoration](#postgresql-databaseid-restorations-restorationid-getrestoration)
-- [**Status**](#postgresql-databaseid-status-resource) — GET `/v1/postgresql/{databaseId}/status`
+- [**Status**](#postgresql-databaseid-status-resource) - GET `/v1/postgresql/{databaseId}/status`
   - [getStatus](#postgresql-databaseid-status-getstatus)
-- [**Upgrades**](#postgresql-databaseid-upgrades-resource) — POST `/v1/postgresql/{databaseId}/upgrades`
+- [**Upgrades**](#postgresql-databaseid-upgrades-resource) - POST `/v1/postgresql/{databaseId}/upgrades`
   - [createUpgrade](#postgresql-databaseid-upgrades-createupgrade)
 
 ### MySQL
 
-- [**Databases**](#mysql-resource) — GET `/v1/mysql`, POST `/v1/mysql`
+- [**Databases**](#mysql-resource) - GET `/v1/mysql`, POST `/v1/mysql`
   - [list](#mysql-list) · [create](#mysql-create)
-- [**Specifications**](#mysql-specifications-resource) — GET `/v1/mysql/specifications`
+- [**Specifications**](#mysql-specifications-resource) - GET `/v1/mysql/specifications`
   - [listSpecifications](#mysql-specifications-listspecifications)
-- [**Database**](#mysql-databaseid-resource) — GET `/v1/mysql/{databaseId}`, PATCH `/v1/mysql/{databaseId}`, DELETE `/v1/mysql/{databaseId}`
+- [**Database**](#mysql-databaseid-resource) - GET `/v1/mysql/{databaseId}`, PATCH `/v1/mysql/{databaseId}`, DELETE `/v1/mysql/{databaseId}`
   - [get](#mysql-databaseid-get) · [update](#mysql-databaseid-update) · [delete](#mysql-databaseid-delete)
-- [**Backups**](#mysql-databaseid-backups-resource) — GET `/v1/mysql/{databaseId}/backups`, POST `/v1/mysql/{databaseId}/backups`
+- [**Backups**](#mysql-databaseid-backups-resource) - GET `/v1/mysql/{databaseId}/backups`, POST `/v1/mysql/{databaseId}/backups`
   - [listBackups](#mysql-databaseid-backups-listbackups) · [createBackup](#mysql-databaseid-backups-createbackup)
-- [**Backup policies**](#mysql-databaseid-backups-policies-resource) — GET `/v1/mysql/{databaseId}/backups/policies`, POST `/v1/mysql/{databaseId}/backups/policies`
+- [**Backup policies**](#mysql-databaseid-backups-policies-resource) - GET `/v1/mysql/{databaseId}/backups/policies`, POST `/v1/mysql/{databaseId}/backups/policies`
   - [listBackupPolicies](#mysql-databaseid-backups-policies-listbackuppolicies) · [createBackupPolicy](#mysql-databaseid-backups-policies-createbackuppolicy)
-- [**Backup storage**](#mysql-databaseid-backups-storage-resource) — PUT `/v1/mysql/{databaseId}/backups/storage`
+- [**Backup storage**](#mysql-databaseid-backups-storage-resource) - PUT `/v1/mysql/{databaseId}/backups/storage`
   - [updateBackupStorage](#mysql-databaseid-backups-storage-updatebackupstorage)
-- [**Backup**](#mysql-databaseid-backups-backupid-resource) — GET `/v1/mysql/{databaseId}/backups/{backupId}`, DELETE `/v1/mysql/{databaseId}/backups/{backupId}`
+- [**Backup**](#mysql-databaseid-backups-backupid-resource) - GET `/v1/mysql/{databaseId}/backups/{backupId}`, DELETE `/v1/mysql/{databaseId}/backups/{backupId}`
   - [getBackup](#mysql-databaseid-backups-backupid-getbackup) · [deleteBackup](#mysql-databaseid-backups-backupid-deletebackup)
-- [**Branches**](#mysql-databaseid-branches-resource) — GET `/v1/mysql/{databaseId}/branches`, POST `/v1/mysql/{databaseId}/branches`
+- [**Branches**](#mysql-databaseid-branches-resource) - GET `/v1/mysql/{databaseId}/branches`, POST `/v1/mysql/{databaseId}/branches`
   - [listBranches](#mysql-databaseid-branches-listbranches) · [createBranch](#mysql-databaseid-branches-createbranch)
-- [**Branch**](#mysql-databaseid-branches-branchid-resource) — DELETE `/v1/mysql/{databaseId}/branches/{branchId}`
+- [**Branch**](#mysql-databaseid-branches-branchid-resource) - DELETE `/v1/mysql/{databaseId}/branches/{branchId}`
   - [deleteBranch](#mysql-databaseid-branches-branchid-deletebranch)
-- [**Credentials**](#mysql-databaseid-credentials-resource) — GET `/v1/mysql/{databaseId}/credentials`, PATCH `/v1/mysql/{databaseId}/credentials`
+- [**Credentials**](#mysql-databaseid-credentials-resource) - GET `/v1/mysql/{databaseId}/credentials`, PATCH `/v1/mysql/{databaseId}/credentials`
   - [getCredentials](#mysql-databaseid-credentials-getcredentials) · [updateCredentials](#mysql-databaseid-credentials-updatecredentials)
-- [**SQL executions**](#mysql-databaseid-executions-resource) — POST `/v1/mysql/{databaseId}/executions`
+- [**SQL executions**](#mysql-databaseid-executions-resource) - POST `/v1/mysql/{databaseId}/executions`
   - [createExecution](#mysql-databaseid-executions-createexecution)
-- [**Failovers**](#mysql-databaseid-failovers-resource) — POST `/v1/mysql/{databaseId}/failovers`
+- [**Failovers**](#mysql-databaseid-failovers-resource) - POST `/v1/mysql/{databaseId}/failovers`
   - [createFailover](#mysql-databaseid-failovers-createfailover)
-- [**Maintenance window**](#mysql-databaseid-maintenance-resource) — PATCH `/v1/mysql/{databaseId}/maintenance`
+- [**Maintenance window**](#mysql-databaseid-maintenance-resource) - PATCH `/v1/mysql/{databaseId}/maintenance`
   - [updateMaintenanceWindow](#mysql-databaseid-maintenance-updatemaintenancewindow)
-- [**Migrations**](#mysql-databaseid-migrations-resource) — POST `/v1/mysql/{databaseId}/migrations`
+- [**Migrations**](#mysql-databaseid-migrations-resource) - POST `/v1/mysql/{databaseId}/migrations`
   - [createMigration](#mysql-databaseid-migrations-createmigration)
-- [**PITR windows**](#mysql-databaseid-pitr-resource) — GET `/v1/mysql/{databaseId}/pitr`
+- [**PITR windows**](#mysql-databaseid-pitr-resource) - GET `/v1/mysql/{databaseId}/pitr`
   - [getPitrWindows](#mysql-databaseid-pitr-getpitrwindows)
-- [**Connection pooler**](#mysql-databaseid-pooler-resource) — GET `/v1/mysql/{databaseId}/pooler`, PATCH `/v1/mysql/{databaseId}/pooler`
+- [**Connection pooler**](#mysql-databaseid-pooler-resource) - GET `/v1/mysql/{databaseId}/pooler`, PATCH `/v1/mysql/{databaseId}/pooler`
   - [getPooler](#mysql-databaseid-pooler-getpooler) · [updatePooler](#mysql-databaseid-pooler-updatepooler)
-- [**High availability replicas**](#mysql-databaseid-replicas-resource) — GET `/v1/mysql/{databaseId}/replicas`
+- [**High availability replicas**](#mysql-databaseid-replicas-resource) - GET `/v1/mysql/{databaseId}/replicas`
   - [getReplicas](#mysql-databaseid-replicas-getreplicas)
-- [**Restorations**](#mysql-databaseid-restorations-resource) — GET `/v1/mysql/{databaseId}/restorations`, POST `/v1/mysql/{databaseId}/restorations`
+- [**Restorations**](#mysql-databaseid-restorations-resource) - GET `/v1/mysql/{databaseId}/restorations`, POST `/v1/mysql/{databaseId}/restorations`
   - [listRestorations](#mysql-databaseid-restorations-listrestorations) · [createRestoration](#mysql-databaseid-restorations-createrestoration)
-- [**Restoration**](#mysql-databaseid-restorations-restorationid-resource) — GET `/v1/mysql/{databaseId}/restorations/{restorationId}`
+- [**Restoration**](#mysql-databaseid-restorations-restorationid-resource) - GET `/v1/mysql/{databaseId}/restorations/{restorationId}`
   - [getRestoration](#mysql-databaseid-restorations-restorationid-getrestoration)
-- [**Status**](#mysql-databaseid-status-resource) — GET `/v1/mysql/{databaseId}/status`
+- [**Status**](#mysql-databaseid-status-resource) - GET `/v1/mysql/{databaseId}/status`
   - [getStatus](#mysql-databaseid-status-getstatus)
-- [**Upgrades**](#mysql-databaseid-upgrades-resource) — POST `/v1/mysql/{databaseId}/upgrades`
+- [**Upgrades**](#mysql-databaseid-upgrades-resource) - POST `/v1/mysql/{databaseId}/upgrades`
   - [createUpgrade](#mysql-databaseid-upgrades-createupgrade)
 
 ---
@@ -811,7 +811,7 @@ REST resource: `/v1/postgresql/{…}/executions`
 
 #### `createExecution`
 
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header - that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values - the API does not interpolate raw strings.
 
 - **HTTP:** `POST`
 - **Path:** `/v1/postgresql/{databaseId}/executions`
@@ -2020,7 +2020,7 @@ REST resource: `/v1/mysql/{…}/executions`
 
 #### `createExecution`
 
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header - that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values - the API does not interpolate raw strings.
 
 - **HTTP:** `POST`
 - **Path:** `/v1/mysql/{databaseId}/executions`
@@ -2445,6 +2445,6 @@ sdk.forProject(projectId).mysql.createUpgrade({
 
 MySQL does not expose extension management:
 
-- [`listExtensions`](#postgresql-databaseid-extensions-listextensions) — GET `/v1/postgresql/{databaseId}/extensions`
-- [`createExtension`](#postgresql-databaseid-extensions-createextension) — POST `/v1/postgresql/{databaseId}/extensions`
-- [`deleteExtension`](#postgresql-databaseid-extensions-extensionname-deleteextension) — DELETE `/v1/postgresql/{databaseId}/extensions/{extensionName}`
+- [`listExtensions`](#postgresql-databaseid-extensions-listextensions) - GET `/v1/postgresql/{databaseId}/extensions`
+- [`createExtension`](#postgresql-databaseid-extensions-createextension) - POST `/v1/postgresql/{databaseId}/extensions`
+- [`deleteExtension`](#postgresql-databaseid-extensions-extensionname-deleteextension) - DELETE `/v1/postgresql/{databaseId}/extensions/{extensionName}`

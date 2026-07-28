@@ -8,7 +8,8 @@ import { DatabaseSettingsLoading } from './DatabaseSettingsLoading'
 import { useDatabaseSettingsPage } from './useDatabaseSettingsPage'
 
 export function View() {
-  const { projectId, database, isLoading } = useDatabaseSettingsPage()
+  const { projectId, databaseId, dbKind, database, canWrite, isLoading } =
+    useDatabaseSettingsPage()
   useScrollToCard()
 
   if (isLoading) return <DatabaseSettingsLoading />
@@ -28,9 +29,18 @@ export function View() {
           'price',
           'serverless',
           'connections',
+          'compute',
         ],
       },
-      node: <DatabaseSpecificationCard projectId={projectId} />,
+      node: (
+        <DatabaseSpecificationCard
+          projectId={projectId}
+          databaseId={databaseId}
+          dbKind={dbKind}
+          database={database}
+          canWrite={canWrite}
+        />
+      ),
     },
   ]
 

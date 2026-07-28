@@ -11,6 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  analyticsAttrs,
+  type AnalyticsActionId,
+} from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -37,6 +41,7 @@ type MarketingApplicationFormProps = {
   successTitle?: string
   successDescription?: string
   defaultValues?: Record<string, string>
+  submitAnalyticsAction?: AnalyticsActionId
 }
 
 export function MarketingApplicationForm({
@@ -47,6 +52,7 @@ export function MarketingApplicationForm({
   successTitle = 'Thank you for your submission',
   successDescription = 'Our team will review your application and get back to you soon.',
   defaultValues,
+  submitAnalyticsAction,
 }: MarketingApplicationFormProps) {
   const t = useT()
   const [values, setValues] = useState<Record<string, string>>(() => defaultValues ?? {})
@@ -188,7 +194,15 @@ export function MarketingApplicationForm({
           </a>{' '}
           {t('apply.')}
         </p>
-        <Button type="submit" variant="brandCta" disabled={submitting} className="shrink-0">
+        <Button
+          type="submit"
+          variant="brandCta"
+          disabled={submitting}
+          className="shrink-0"
+          {...(submitAnalyticsAction
+            ? analyticsAttrs(submitAnalyticsAction)
+            : {})}
+        >
           {t(submitLabel)}
         </Button>
       </div>

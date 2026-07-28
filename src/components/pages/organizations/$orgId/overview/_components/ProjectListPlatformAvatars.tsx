@@ -11,33 +11,39 @@ import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-/** Fixed row height for org project list table (matches size-8 avatars + vertical rhythm). */
+/** Fixed row height for org project list table (matches platform tiles + vertical rhythm). */
 export const PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS = 'h-14 py-0 align-middle'
 
-export const PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS = 'size-8'
+export const PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS = 'size-7'
+
+/** Table cells: match tile height without clamping the row of icons to a square. */
+const tableRowAlignClassName = 'h-7'
 
 const MAX_VISIBLE_PLATFORMS = 4
 
-const avatarClassName = cn(
-  'grid shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground ring-1 ring-background',
+const tileClassName = cn(
+  'grid shrink-0 place-items-center overflow-hidden rounded-md border border-border/80 bg-muted/50 text-muted-foreground',
+  'transition-colors duration-150',
   PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
 )
 
-const emptyAvatarClassName = cn(
-  avatarClassName,
-  'border-dashed border-muted-foreground/35 bg-transparent transition-colors hover:border-muted-foreground/50 hover:bg-muted/40',
+const emptyTileClassName = cn(
+  tileClassName,
+  'border-dashed border-muted-foreground/30 bg-transparent text-muted-foreground/60',
+  'hover:border-muted-foreground/45 hover:bg-muted/40 hover:text-muted-foreground',
 )
 
-function ProjectListPlatformAvatarIcon({ platform }: { platform: string }) {
+function ProjectListPlatformTileIcon({ platform }: { platform: string }) {
   return (
     <PlatformIcon
       platform={platform}
       size="sm"
       className={cn(
-        '!size-4 shrink-0',
+        '!size-3.5 shrink-0',
+        // Compact list tiles: drop framework corner badges and force a single glyph size.
         '[&>div.absolute]:hidden',
-        '[&>div]:flex [&>div]:!size-4 [&>div]:items-center [&>div]:justify-center',
-        '[&_svg]:block [&_svg]:!size-4',
+        '[&>div]:flex [&>div]:!size-3.5 [&>div]:items-center [&>div]:justify-center',
+        '[&_svg]:block [&_svg]:!size-3.5',
       )}
     />
   )
@@ -77,7 +83,7 @@ type ProjectListPlatformAvatarsProps = {
   variant?: 'card' | 'table'
 }
 
-function PlatformAvatarsLoading({
+function PlatformTilesLoading({
   className,
   variant = 'card',
 }: {
@@ -88,29 +94,27 @@ function PlatformAvatarsLoading({
   if (variant === 'table') {
     return (
       <div
-        className={cn('flex items-center', PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS, className)}
+        className={cn('flex items-center', tableRowAlignClassName, className)}
         aria-label={t('Loading platforms')}
         aria-busy
       >
-        <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} aria-hidden />
+        <div
+          className={cn(tileClassName, 'animate-pulse bg-border/50')}
+          aria-hidden
+        />
       </div>
     )
   }
 
   return (
     <ul
-      className={cn('inline-flex items-center ps-0', className)}
+      className={cn('inline-flex items-center gap-1 ps-0', className)}
       aria-label={t('Loading platforms')}
       aria-busy
     >
       {Array.from({ length: 3 }).map((_, index) => (
-        <li
-          key={index}
-          className={cn('relative shrink-0', index > 0 && '-ms-2')}
-          style={{ zIndex: index + 1 }}
-          aria-hidden
-        >
-          <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} />
+        <li key={index} className="shrink-0" aria-hidden>
+          <div className={cn(tileClassName, 'animate-pulse bg-border/50')} />
         </li>
       ))}
     </ul>
@@ -127,7 +131,7 @@ export function ProjectListPlatformAvatars({
 }: ProjectListPlatformAvatarsProps) {
   const t = useT()
   if (isLoading) {
-    return <PlatformAvatarsLoading className={className} variant={variant} />
+    return <PlatformTilesLoading className={className} variant={variant} />
   }
 
   if (unavailable) {
@@ -135,7 +139,7 @@ export function ProjectListPlatformAvatars({
       <div
         className={cn(
           'inline-flex items-center text-[12px] font-medium text-muted-foreground',
-          variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+          variant === 'table' && tableRowAlignClassName,
           className,
         )}
         aria-label={t('N/A')}
@@ -151,7 +155,7 @@ export function ProjectListPlatformAvatars({
       <div
         className={cn(
           'inline-flex items-center',
-          variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+          variant === 'table' && tableRowAlignClassName,
           className,
         )}
       >
@@ -160,14 +164,11 @@ export function ProjectListPlatformAvatars({
             <Link
               to="/projects/$projectId/apps"
               params={{ projectId }}
-              className={cn(emptyAvatarClassName, 'pointer-events-auto')}
+              className={cn(emptyTileClassName, 'pointer-events-auto')}
               aria-label={t('Add platform')}
               onClick={(event) => event.stopPropagation()}
             >
-              <Plus
-                className="size-4 text-muted-foreground/55"
-                strokeWidth={2}
-              />
+              <Plus className="size-3.5" strokeWidth={2} />
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-[12px]">
@@ -184,22 +185,24 @@ export function ProjectListPlatformAvatars({
   return (
     <ul
       className={cn(
-        'inline-flex items-center ps-0',
-        variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+        'inline-flex items-center gap-1 ps-0',
+        variant === 'table' && tableRowAlignClassName,
         className,
       )}
       aria-label={stackItems.map((item) => item.label).join(', ')}
     >
-      {visibleItems.map((item, index) => (
-        <li
-          key={item.type}
-          className={cn('relative shrink-0', index > 0 && '-ms-2')}
-          style={{ zIndex: index + 1 }}
-        >
+      {visibleItems.map((item) => (
+        <li key={item.type} className="shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={avatarClassName} aria-label={item.label}>
-                <ProjectListPlatformAvatarIcon platform={item.type} />
+              <div
+                className={cn(
+                  tileClassName,
+                  'hover:border-border hover:bg-muted hover:text-foreground',
+                )}
+                aria-label={item.label}
+              >
+                <ProjectListPlatformTileIcon platform={item.type} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-[12px]">
@@ -209,14 +212,11 @@ export function ProjectListPlatformAvatars({
         </li>
       ))}
       {overflowCount > 0 ? (
-        <li
-          className="relative shrink-0 -ms-2"
-          style={{ zIndex: visibleItems.length + 1 }}
-        >
+        <li className="shrink-0">
           <div
             className={cn(
-              avatarClassName,
-              'text-[10px] font-medium tabular-nums text-muted-foreground',
+              tileClassName,
+              'text-[10px] font-semibold tabular-nums tracking-tight text-muted-foreground',
             )}
             aria-label={`${overflowCount} ${t('more platforms')}`}
           >

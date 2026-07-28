@@ -4,6 +4,7 @@ import {
   type AnalyticsProps,
   getSafeInternalPathParts,
 } from '@/lib/analytics'
+import { getAnalyticsActionEventName } from '@/lib/analytics-actions'
 import { useAnalytics } from './use-analytics'
 
 const CLICK_SELECTOR = [
@@ -19,8 +20,6 @@ const CLICK_SELECTOR = [
   '[role="switch"]',
   '[role="checkbox"]',
 ].join(',')
-
-const MAX_DYNAMIC_EVENT_LABEL_LENGTH = 80
 
 const CHANGE_SELECTOR = [
   'select',
@@ -76,93 +75,23 @@ function getBaseClickEventName(element: HTMLElement): AnalyticsEventName {
   return 'Button Clicked'
 }
 
-function normalizeEventDescriptor(value: string | null | undefined) {
-  if (!value) return undefined
-  const normalized = value.replace(/\s+/g, ' ').trim()
-  if (!normalized || normalized.length > MAX_DYNAMIC_EVENT_LABEL_LENGTH) {
-    return undefined
-  }
-  return normalized
-}
-
-function getElementText(element: HTMLElement) {
-  if (element instanceof HTMLInputElement) {
-    return normalizeEventDescriptor(element.value)
-  }
-  return normalizeEventDescriptor(element.textContent)
-}
-
-function getReferencedText(element: HTMLElement, attribute: string) {
-  const ids = element.getAttribute(attribute)?.split(/\s+/).filter(Boolean)
-  if (!ids?.length) return undefined
-
-  for (const id of ids) {
-    const text = normalizeEventDescriptor(
-      document.getElementById(id)?.textContent,
-    )
-    if (text) return text
-  }
-
-  return undefined
-}
-
-function getTooltipText(element: HTMLElement) {
-  return (
-    normalizeEventDescriptor(element.getAttribute('title')) ??
-    getReferencedText(element, 'aria-describedby')
-  )
-}
-
-function getIconName(element: HTMLElement) {
-  const icon = element.querySelector<SVGElement>('svg')
-  if (!icon) return undefined
-
-  const accessibleIconName =
-    normalizeEventDescriptor(icon.getAttribute('aria-label')) ??
-    normalizeEventDescriptor(icon.querySelector('title')?.textContent)
-  if (accessibleIconName) return accessibleIconName
-
-  const lucideClass = Array.from(icon.classList).find((className) =>
-    className.startsWith('lucide-'),
-  )
-  if (!lucideClass) return undefined
-
-  return normalizeEventDescriptor(
-    lucideClass
-      .replace(/^lucide-/, '')
-      .split('-')
-      .filter(Boolean)
-      .join(' '),
-  )
-}
-
-function toEventTitle(value: string) {
-  return value
-    .split(' ')
-    .map((word) => {
-      if (word.length <= 1) return word.toUpperCase()
-      if (word === word.toUpperCase() && /[A-Z]/.test(word)) return word
-      return `${word[0]?.toUpperCase() ?? ''}${word.slice(1).toLowerCase()}`
-    })
-    .join(' ')
-}
-
-function getElementDescriptor(element: HTMLElement) {
-  return (
-    normalizeEventDescriptor(element.getAttribute('aria-label')) ??
-    getReferencedText(element, 'aria-labelledby') ??
-    getElementText(element) ??
-    getTooltipText(element) ??
-    getIconName(element)
-  )
-}
-
+/**
+ * Prefer curated `data-analytics` actions (see `ANALYTICS_ACTIONS`).
+ * Never derive names from visible text, aria-labels, or tooltips: those often
+ * include resource names and create unbounded Plausible cardinality.
+ */
 function getDynamicEventName(
   element: HTMLElement,
   fallback: AnalyticsEventName,
 ) {
-  const descriptor = getElementDescriptor(element)
-  return descriptor ? `${toEventTitle(descriptor)} ${fallback}` : fallback
+  const actionHost = element.closest<HTMLElement>('[data-analytics]')
+  const actionId = actionHost?.getAttribute('data-analytics')
+  if (actionId) {
+    const catalogName = getAnalyticsActionEventName(actionId)
+    if (catalogName) return catalogName
+  }
+
+  return fallback
 }
 
 function getLinkProps(element: HTMLAnchorElement): AnalyticsProps {

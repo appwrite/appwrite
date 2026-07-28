@@ -16,6 +16,7 @@ import {
 } from '@/lib/database-specs'
 import { postgresNav } from '@/lib/postgres-database-routes'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   usePostgresDatabase,
   useProject,
@@ -119,7 +120,7 @@ export function PostgresSpecificationCard({
     databaseId,
   )
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useDatabaseSpecifications(projectId)
+  useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
 
   const specs = useMemo(
     () =>
@@ -148,14 +149,14 @@ export function PostgresSpecificationCard({
     currentSpec?.label ?? database?.specification?.trim() ?? 'Compute tier'
   const cpuLabel =
     currentSpec?.cpu ??
-    (database?.cpu ? formatDedicatedSpecCpu(database.cpu) : '—')
+    (database?.cpu ? formatDedicatedSpecCpu(database.cpu) : '-')
   const memoryLabel =
     currentSpec?.memory ??
-    (database?.memory ? formatDedicatedSpecMemory(database.memory) : '—')
+    (database?.memory ? formatDedicatedSpecMemory(database.memory) : '-')
   const storageLabel =
     database?.storage && database.storage > 0
       ? formatDedicatedSpecStorage(database.storage)
-      : (currentSpec?.storage ?? '—')
+      : (currentSpec?.storage ?? '-')
 
   const isLoading =
     (databaseLoading && !database) ||

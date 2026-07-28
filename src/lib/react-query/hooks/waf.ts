@@ -27,6 +27,8 @@ import type {
 } from '@/lib/firewall/conditions'
 import type { DateRange } from 'react-day-picker'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
+import { fetchProjectFunctionsByIds } from './functions'
+import { fetchProjectSitesByIds } from './sites'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -74,6 +76,7 @@ export async function fetchFirewallRules(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  resourceType?: FirewallResourceType,
 ) {
   if (!projectId) {
     return { rules: [] as Models.WafRule[], total: 0 }
@@ -85,6 +88,10 @@ export async function fetchFirewallRules(
     Query.offset(page * limit),
   ]
 
+  if (resourceType) {
+    queries.unshift(Query.equal('resourceType', resourceType))
+  }
+
   const response = await sdk.forProject(projectId).waf.listRules({
     queries,
     search: search?.trim() || undefined,
@@ -95,6 +102,54 @@ export async function fetchFirewallRules(
     rules: response.rules || [],
     total: response.total || 0,
   }
+}
+
+/** Map of resource ID → display name from functions/sites list calls. */
+export type FirewallResourceNameMap = Record<string, string>
+
+function normalizeFirewallResourceIds(resourceIds: string[]): string[] {
+  return [
+    ...new Set(
+      resourceIds.filter((id) => typeof id === 'string' && id.trim()),
+    ),
+  ].sort()
+}
+
+/**
+ * Resolve function/site names for firewall rule grouping.
+ * Makes one list call per resource type (functions + sites) in parallel with
+ * the relevant IDs. Skips a side when that ID list is empty.
+ */
+export async function fetchFirewallResourceNames(
+  projectId: string,
+  idsByType: {
+    functions?: string[]
+    sites?: string[]
+  },
+): Promise<FirewallResourceNameMap> {
+  const functionIds = normalizeFirewallResourceIds(idsByType.functions ?? [])
+  const siteIds = normalizeFirewallResourceIds(idsByType.sites ?? [])
+  if (!projectId || (functionIds.length === 0 && siteIds.length === 0)) {
+    return {}
+  }
+
+  const [functionsResult, sitesResult] = await Promise.all([
+    functionIds.length > 0
+      ? fetchProjectFunctionsByIds(projectId, functionIds)
+      : Promise.resolve({ functions: [] as Models.Function[] }),
+    siteIds.length > 0
+      ? fetchProjectSitesByIds(projectId, siteIds)
+      : Promise.resolve({ sites: [] as Models.Site[] }),
+  ])
+
+  const names: FirewallResourceNameMap = {}
+  for (const fn of functionsResult.functions) {
+    names[fn.$id] = fn.name
+  }
+  for (const site of sitesResult.sites) {
+    names[site.$id] = site.name
+  }
+  return names
 }
 
 export async function fetchFirewallRule(
@@ -112,6 +167,7 @@ export function firewallRulesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  resourceType?: FirewallResourceType,
 ) {
   const normalizedSearch = search?.trim() || undefined
   return queryOptions({
@@ -122,9 +178,16 @@ export function firewallRulesQueryOptions(
       page,
       limit,
       normalizedSearch,
+      resourceType ?? null,
     ],
     queryFn: () =>
-      fetchFirewallRules(projectId!, page, limit, normalizedSearch),
+      fetchFirewallRules(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch,
+        resourceType,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -142,9 +205,10 @@ export function useFirewallRules(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  resourceType?: FirewallResourceType,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    firewallRulesQueryOptions(projectId, page, limit, search),
+    firewallRulesQueryOptions(projectId, page, limit, search, resourceType),
   )
 
   return {
@@ -154,6 +218,52 @@ export function useFirewallRules(
     isFetching,
     error,
     refetch,
+  }
+}
+
+export function firewallResourceNamesQueryOptions(
+  projectId: string | null | undefined,
+  resourceType: Extract<FirewallResourceType, 'functions' | 'sites'> | null,
+  resourceIds: string[],
+) {
+  const ids = normalizeFirewallResourceIds(resourceIds)
+  return queryOptions({
+    queryKey: [
+      'firewall-resource-names',
+      'project',
+      projectId,
+      resourceType,
+      ids,
+    ],
+    queryFn: () =>
+      fetchFirewallResourceNames(projectId!, {
+        functions: resourceType === 'functions' ? ids : undefined,
+        sites: resourceType === 'sites' ? ids : undefined,
+      }),
+    enabled: !!projectId && !!resourceType && ids.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useFirewallResourceNames(
+  projectId: string | null | undefined,
+  resourceType: Extract<FirewallResourceType, 'functions' | 'sites'> | null,
+  resourceIds: string[],
+) {
+  const { data, isLoading, isFetching } = useQuery(
+    firewallResourceNamesQueryOptions(projectId, resourceType, resourceIds),
+  )
+
+  return {
+    names: (data ?? {}) as FirewallResourceNameMap,
+    isLoading,
+    isFetching,
   }
 }
 
@@ -306,6 +416,7 @@ export function firewallRuleImpactQueryOptions(
   resourceId?: string,
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
+  logRetentionHours?: number,
 ) {
   const normalizedResourceId = resourceId?.trim() || undefined
   const conditionSnapshots = buildFirewallUsageConditionSnapshots(conditions)
@@ -323,6 +434,7 @@ export function firewallRuleImpactQueryOptions(
       from ?? '',
       to ?? '',
       chartInterval ?? '',
+      logRetentionHours ?? null,
     ] as const,
     queryFn: ({ queryKey }) => {
       const [
@@ -335,6 +447,7 @@ export function firewallRuleImpactQueryOptions(
         impactFrom,
         impactTo,
         impactChartInterval,
+        impactLogRetentionHours,
       ] = queryKey
 
       return fetchFirewallRuleImpact(String(impactProjectId), {
@@ -352,6 +465,10 @@ export function firewallRuleImpactQueryOptions(
         chartInterval: impactChartInterval
           ? (impactChartInterval as UsageChartInterval)
           : undefined,
+        logRetentionHours:
+          typeof impactLogRetentionHours === 'number'
+            ? impactLogRetentionHours
+            : undefined,
       })
     },
     enabled: !!projectId,
@@ -371,6 +488,7 @@ export function useFirewallRuleImpact(
   resourceId?: string,
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
+  logRetentionHours?: number,
 ) {
   const { data, isLoading, isFetching, error } = useQuery(
     firewallRuleImpactQueryOptions(
@@ -380,6 +498,7 @@ export function useFirewallRuleImpact(
       resourceId,
       dateRange,
       chartInterval,
+      logRetentionHours,
     ),
   )
 

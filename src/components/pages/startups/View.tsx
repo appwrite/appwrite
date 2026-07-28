@@ -13,6 +13,7 @@ import {
 } from '@/components/pages/marketing/MarketingSections'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { submitStartupsApplication } from '@/lib/marketing/growth-forms'
@@ -57,7 +58,13 @@ export function View() {
           />
         }
       >
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
+        <Button
+          variant="brandCta"
+          size="lg"
+          className="h-10 text-[14px]"
+          onClick={scrollToForm}
+          {...analyticsAttrs('startups-apply-now')}
+        >
           {t('Apply now')}
         </Button>
       </MarketingHeroSection>
@@ -214,6 +221,7 @@ export function View() {
               <MarketingApplicationForm
                 fields={STARTUPS_FORM_FIELDS}
                 submitLabel={t('Get Started')}
+                submitAnalyticsAction="startups-form-submit"
                 onSubmit={async (values) => {
                   await submitStartupsApplication({
                     personName: values.personName ?? '',

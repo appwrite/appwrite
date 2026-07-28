@@ -39,20 +39,20 @@ Anthropic published a benchmark table comparing Fable 5 and Mythos 5 against Cla
 | Benchmark                                                      | Claude Mythos 5 / Fable 5 | Claude Mythos Preview | Claude Opus 4.8 | GPT-5.5 | Gemini 3.1 Pro |
 | -------------------------------------------------------------- | ------------------------- | --------------------- | --------------- | ------- | -------------- |
 | Agentic coding (SWE-Bench Pro)                                 | 80.3%                     | 77.8%                 | 69.2%           | 58.6%   | 54.2%          |
-| Agentic coding (FrontierCode Diamond, xhigh)                   | 29.3%                     | —                     | 13.4%           | 5.7%    | —              |
-| Knowledge work (GDPval-AA)                                     | 1932                      | —                     | 1890            | 1769    | 1314           |
-| Knowledge work vision (GDPpdf, no tools)                       | 29.8%                     | —                     | 22.5%           | 24.9%   | 16.7%          |
-| Spatial reasoning (Blueprint-Bench 2)                          | 38.6%                     | —                     | 14.5%           | 36.2%   | 26.5%          |
-| Tool use (AutomationBench)                                     | 17.4%                     | —                     | 15.5%           | 12.9%   | 9.6%           |
+| Agentic coding (FrontierCode Diamond, xhigh)                   | 29.3%                     | -                     | 13.4%           | 5.7%    | -              |
+| Knowledge work (GDPval-AA)                                     | 1932                      | -                     | 1890            | 1769    | 1314           |
+| Knowledge work vision (GDPpdf, no tools)                       | 29.8%                     | -                     | 22.5%           | 24.9%   | 16.7%          |
+| Spatial reasoning (Blueprint-Bench 2)                          | 38.6%                     | -                     | 14.5%           | 36.2%   | 26.5%          |
+| Tool use (AutomationBench)                                     | 17.4%                     | -                     | 15.5%           | 12.9%   | 9.6%           |
 | Computer use (OSWorld-Verified)                                | 85.0%                     | 85.4%                 | 83.4%           | 78.7%   | 76.2%          |
-| Legal (Legal Agent Benchmark)                                  | 13.3%                     | —                     | 10.4%           | 2.1%    | 0.0%           |
+| Legal (Legal Agent Benchmark)                                  | 13.3%                     | -                     | 10.4%           | 2.1%    | 0.0%           |
 | Multidisciplinary reasoning (Humanity's Last Exam, no tools)   | 59.0%\*                   | 56.8%                 | 49.8%           | 41.4%   | 44.4%          |
 | Multidisciplinary reasoning (Humanity's Last Exam, with tools) | 64.5%\*                   | 64.7%                 | 57.9%           | 52.2%   | 51.4%          |
-| Biology (BioMysteryBench, hard)                                | 46.1%\*                   | 29.6%                 | 40.0%           | —       | —              |
-| Biology (BioMysteryBench, human solved)                        | 83.9%\*                   | 82.6%                 | 80.4%           | —       | —              |
-| Agentic coding (Terminal-Bench 2.1)                            | 88.0%\*                   | —                     | 82.7%           | 83.4%   | 70.7%          |
-| Cybersecurity (ExploitBench CapT%)                             | 78.0%\*                   | 69.0%                 | 40.0%           | 34.0%   | —              |
-| Health (HealthBench Professional)                              | 66.0%\*                   | 64.7%                 | 56.9%           | 51.8%   | —              |
+| Biology (BioMysteryBench, hard)                                | 46.1%\*                   | 29.6%                 | 40.0%           | -       | -              |
+| Biology (BioMysteryBench, human solved)                        | 83.9%\*                   | 82.6%                 | 80.4%           | -       | -              |
+| Agentic coding (Terminal-Bench 2.1)                            | 88.0%\*                   | -                     | 82.7%           | 83.4%   | 70.7%          |
+| Cybersecurity (ExploitBench CapT%)                             | 78.0%\*                   | 69.0%                 | 40.0%           | 34.0%   | -              |
+| Health (HealthBench Professional)                              | 66.0%\*                   | 64.7%                 | 56.9%           | 51.8%   | -              |
 
 *Source:* [Anthropic's official Claude Fable 5 and Claude Mythos 5 announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5)*.*
 

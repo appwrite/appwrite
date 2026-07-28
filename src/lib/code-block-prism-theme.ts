@@ -20,7 +20,7 @@ const PRISM_BACKGROUND_KEYS = [
   'backdropFilter',
 ] as const
 
-/** Tailwind classes applied to every CodeBlock <pre> (prism-code) — no inner frame. */
+/** Tailwind classes applied to every CodeBlock <pre> (prism-code) - no inner frame. */
 export const CODE_BLOCK_PRISM_SURFACE_CLASS =
   'border-0 outline-none ring-0 shadow-none !bg-transparent [background:transparent!important] [background-color:transparent!important] [&_.token-line]:!bg-transparent [&_.token-line]:[background:transparent!important] [&_code]:!bg-transparent'
 
@@ -51,7 +51,7 @@ export function buildCodeBlockPrismTheme(
   }
 }
 
-/** Fully transparent editor surface — no Prism gray, no alpha tint. */
+/** Fully transparent editor surface - no Prism gray, no alpha tint. */
 export const CODE_BLOCK_EDITOR_SURFACE_STYLE: CSSProperties = {
   background: 'transparent',
   backgroundColor: 'transparent',

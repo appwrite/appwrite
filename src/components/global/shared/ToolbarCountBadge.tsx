@@ -15,7 +15,7 @@ export interface ToolbarCountBadgeProps {
 
 /**
  * Small count pill for toolbar controls (e.g. Filters trigger vs tab labels).
- * `corner` — absolute overlay on a `relative` parent (primary). `inline` — pill in the row (see `inlineTone`).
+ * `corner` - absolute overlay on a `relative` parent (primary). `inline` - pill in the row (see `inlineTone`).
  */
 export function ToolbarCountBadge({
   count,

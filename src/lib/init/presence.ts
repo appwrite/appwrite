@@ -11,7 +11,7 @@ export const INIT_PRESENCE_HEARTBEAT_MS = 30_000
 /** Presence TTL sent on each upsert (must exceed heartbeat interval). */
 export const INIT_PRESENCE_TTL_SECONDS = 90
 
-/** Bumped when presence ID scheme changes — clears stale localStorage keys. */
+/** Bumped when presence ID scheme changes - clears stale localStorage keys. */
 const LEGACY_PRESENCE_ID_STORAGE_PREFIX = 'console.init.presenceId.'
 
 export const INIT_PRESENCE_STATUS_ONLINE = 'online'
@@ -460,7 +460,7 @@ export async function listInitPresences(
     mode === 'online' ? buildInitOnlineStatus(eventId) : buildInitAwayStatus(eventId)
   const matchesMode = mode === 'online' ? isInitOnlineStatus : isInitAwayStatus
 
-  // Query scoped status only. Do not OR with global `online`/`away` — that pulls in
+  // Query scoped status only. Do not OR with global `online`/`away` - that pulls in
   // unrelated console presences, exhausts the limit, and drops Init users inconsistently.
   const result = await sdk.forConsole.presences.list({
     queries: [

@@ -174,7 +174,7 @@ export function TablesDbRowsColumnsPopover({
   const [suppressTooltip, setSuppressTooltip] = useState(false)
 
   const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectTableColumns(projectId, databaseId, tableId)
+    useProjectTableColumns(projectId, databaseId, 'tablesdb', tableId)
 
   const { persistAttrKeys, isPersisting } = useTablesDbRowsListColumns(
     databaseId,

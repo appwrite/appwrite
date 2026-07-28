@@ -51,7 +51,7 @@ const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   userAgent: UserRound,
 }
 
-/** Examples only. Never use bare `/` — it looks like a real value when the field is empty. */
+/** Examples only. Never use bare `/` - it looks like a real value when the field is empty. */
 const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
   api: 'e.g. /v1/account',
   functions: 'e.g. /api',
@@ -106,7 +106,7 @@ function ConditionValueInput({
   const countryItems = useMemo(
     () =>
       (countriesData?.countries ?? []).map((country) => {
-        const code = country.code.toLowerCase()
+        const code = country.code.toUpperCase()
         return {
           value: code,
           label: country.name,
@@ -147,7 +147,7 @@ function ConditionValueInput({
           <Input
             value={value}
             disabled={disabled}
-            placeholder={t('e.g. us')}
+            placeholder={t('e.g. US')}
             className="h-9 w-full font-mono text-[13px]"
             onChange={(e) => onChange(e.target.value)}
           />
@@ -155,7 +155,7 @@ function ConditionValueInput({
       }
       return (
         <SearchableSelect
-          value={value.toLowerCase()}
+          value={value.toUpperCase()}
           onValueChange={onChange}
           items={countryItems}
           placeholder={t('Select a country')}

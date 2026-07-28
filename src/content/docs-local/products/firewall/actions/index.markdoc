@@ -1,0 +1,75 @@
+---
+layout: article
+title: Actions
+description: "Learn Firewall actions in Appwrite: deny, bypass, rate limit, and redirect, including status codes and rate-limit behavior."
+---
+
+When a request matches a rule's [conditions](/docs/products/firewall/conditions), Appwrite applies the rule **action**. Only one action runs per request: evaluation stops at the first matching enabled rule (see [Priority](/docs/products/firewall/priority)).
+
+There is no separate **Allow** action. Use **Bypass** to allowlist traffic that should skip later deny or rate limit rules.
+
+# Available actions {% #available-actions %}
+
+| Action | Client outcome | Usage metric |
+|--------|----------------|--------------|
+| **Deny** | `403` with an access-denied error | `waf.requests.denied` |
+| **Bypass** | Request continues; later Firewall rules are skipped | None (not counted as denied) |
+| **Rate limit** | Under quota: continue and stop further rules. Over quota: `429` with `Retry-After` | `waf.requests.rateLimited` (only when throttled) |
+| **Redirect** | HTTP redirect (`300`–`399`) to the configured location | `waf.requests.redirected` |
+
+Matched responses also include observability headers such as `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action`.
+
+{% info title="Challenge" %}
+Challenge rules cannot be created from the Console or public create API today. Traffic overview can still show a **Challenged** series if challenge handling is active on the platform. For self-serve policies, use deny, bypass, rate limit, or redirect.
+{% /info %}
+
+# Deny {% #deny %}
+
+Deny rejects matching requests before they reach your application logic. Use it to block abusive IPs, lock down sensitive paths, or reject traffic from specific countries.
+
+Denied requests appear in [traffic overview](/docs/products/firewall/monitor) under the denied series.
+
+# Bypass {% #bypass %}
+
+Bypass allows the request and **stops** Firewall evaluation. Later rules (including deny and rate limit) do not run for that request.
+
+Typical uses:
+
+- Allowlist a trusted office IP before a broader deny rule
+- Exempt health-check user agents or monitoring paths from rate limits
+
+Place bypass rules at a **lower priority number** (evaluated earlier) than the deny or rate limit rules they should override.
+
+# Rate limit {% #rate-limit %}
+
+Rate limit throttles matching requests that exceed a quota. The quota is counted **per client IP, per rule, per project**.
+
+| Setting | Purpose | Limits |
+|---------|---------|--------|
+| **Request limit** | Maximum matching requests allowed in the interval | `1` to `1000000` (Console default `100`) |
+| **Interval (seconds)** | Sliding window length for the quota | `1` to `86400` (Console default `60`) |
+
+Example: limit `100` with interval `60` allows up to 100 matching requests per minute from each client IP for that rule.
+
+Important behaviors:
+
+- A request that **matches** a rate limit rule and is **under** the quota is allowed, and **later rules are still skipped** (same stop-on-match behavior as bypass).
+- A request **over** the quota receives `429` and a `Retry-After` header.
+- If the rate limiter backend fails, Appwrite **fails open** (allows the request) so a limiter outage does not block traffic.
+
+Rate-limited (throttled) requests appear under the rate-limited series in traffic overview.
+
+# Redirect {% #redirect %}
+
+Redirect sends matching clients to another URL without running later Firewall rules.
+
+| Setting | Purpose |
+|---------|---------|
+| **Redirect location** | Absolute or path location (for example `https://example.com` or `/maintenance`). Default `/`. |
+| **Status code** | HTTP redirect status from `300` to `399` (default `302`) |
+
+Use redirects for maintenance pages, deprecated endpoints, or moving traffic off a path without denying it.
+
+{% arrow_link href="/docs/products/firewall/create" %}
+Create a rule
+{% /arrow_link %}

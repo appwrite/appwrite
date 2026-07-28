@@ -24,6 +24,7 @@ import {
   getCoverGenerationDisplayName,
   resolveCoverEditorDocumentName,
   resolveCoverGenerationPersistName,
+  type SavedCoverGeneration,
 } from '@/lib/cover-generator/cover-generation-prefs'
 import { DEFAULT_COVER_THEME_ID } from '@/lib/cover-generator/themes'
 import { createDefaultCoverData } from '@/lib/cover-generator/parse-params'
@@ -35,7 +36,13 @@ import {
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
 import { useCoverGenerations } from '@/lib/react-query/hooks/cover-generations'
+import {
+  deleteCoverGenerationDraft,
+  getCoverGenerationDraft,
+  setCoverGenerationDraft,
+} from '@/lib/generator/generation-drafts'
 import { useRouteGenerationEditor } from '@/lib/generator/use-route-generation-editor'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 
 const RESIZE_HANDLE_CLASS = cn(
@@ -90,9 +97,28 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
 
   const loadSavedCoverGeneration = useCallback((generation: SavedCoverGeneration) => {
     loadCoverRef.current(generation.data)
+    documentNameRef.current = generation.name
   }, [])
 
   const getCoverGenerationId = useCallback((generation: SavedCoverGeneration) => generation.id, [])
+
+  const resolveDraft = useCallback(
+    (id: string) => getCoverGenerationDraft(id),
+    [],
+  )
+
+  const discardDraftIfUnsaved = useCallback(
+    (generationId: string | null | undefined) => {
+      if (!generationId) return
+      // Keep the draft if it was promoted to a saved generation; otherwise drop it.
+      if (generations.some((item) => item.id === generationId)) {
+        deleteCoverGenerationDraft(generationId)
+        return
+      }
+      deleteCoverGenerationDraft(generationId)
+    },
+    [generations],
+  )
 
   const {
     phase,
@@ -108,8 +134,12 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
     generations,
     getGenerationId: getCoverGenerationId,
     loadGeneration: loadSavedCoverGeneration,
+    resolveDraft,
     migrateLegacyIfNeeded,
     onEnterEditor: () => setLeftPanelOpen(false),
+    onLeaveEditor: (generationId) => {
+      discardDraftIfUnsaved(generationId)
+    },
     notFoundMessage: 'Cover not found',
   })
 
@@ -118,15 +148,23 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
       const generationId = activeGenerationIdRef.current
       if (!generationId) return
 
+      const draft = getCoverGenerationDraft(generationId)
       void saveGeneration({
         id: generationId,
-        name: resolveCoverGenerationPersistName(coverData, documentNameRef.current),
+        name: resolveCoverGenerationPersistName(
+          coverData,
+          documentNameRef.current || draft?.name || '',
+        ),
         updatedAt: Date.now(),
         templateId: coverData.template,
         data: coverData,
-      }).catch(() => {
-        toast.error('Could not save cover')
       })
+        .then(() => {
+          deleteCoverGenerationDraft(generationId)
+        })
+        .catch((error) => {
+          toast.error(getErrorMessage(error, 'Could not save cover'))
+        })
     },
     [saveGeneration],
   )
@@ -144,6 +182,7 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
     loadCover,
     flushPersist,
     cancelPersistDebounce,
+    isDirty,
   } = useCoverGeneratorState({
     generationId: activeGenerationId,
     onDocumentPersist: persistActiveGeneration,
@@ -154,7 +193,8 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
   const activeGeneration = useMemo(
     () =>
       activeGenerationId
-        ? generations.find((item) => item.id === activeGenerationId)
+        ? generations.find((item) => item.id === activeGenerationId) ??
+          getCoverGenerationDraft(activeGenerationId)
         : undefined,
     [activeGenerationId, generations],
   )
@@ -200,9 +240,22 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
   }, [exportData])
 
   const handleBackToStart = useCallback(() => {
-    backToStart(flushPersist)
+    const generationId = activeGenerationIdRef.current
+    backToStart(() => {
+      flushPersist()
+      if (!isDirty()) {
+        discardDraftIfUnsaved(generationId)
+      }
+    })
     setLeftPanelOpen(false)
-  }, [backToStart, flushPersist, setLeftPanelOpen])
+  }, [
+    activeGenerationIdRef,
+    backToStart,
+    discardDraftIfUnsaved,
+    flushPersist,
+    isDirty,
+    setLeftPanelOpen,
+  ])
 
   const handleBackToStartRef = useRef(handleBackToStart)
   handleBackToStartRef.current = handleBackToStart
@@ -232,29 +285,23 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
   }, [exportData, phase, setCoverExportData])
 
   const openEditor = useCallback(
-    async (generationId: string, coverData: CoverRenderData) => {
-      try {
-        await saveGeneration({
-          id: generationId,
-          name: getCoverGenerationDisplayName(coverData),
-          updatedAt: Date.now(),
-          templateId: coverData.template,
-          data: coverData,
-        })
-      } catch {
-        toast.error('Could not save cover')
-        return
-      }
-
+    (generationId: string, coverData: CoverRenderData) => {
+      setCoverGenerationDraft({
+        id: generationId,
+        name: getCoverGenerationDisplayName(coverData),
+        updatedAt: Date.now(),
+        templateId: coverData.template,
+        data: coverData,
+      })
       openEditorRoute(generationId)
     },
-    [openEditorRoute, saveGeneration],
+    [openEditorRoute],
   )
 
   const handleSelectTemplate = useCallback(
     (templateId: CoverTemplateId) => {
       const coverData = createDefaultCoverData(templateId, DEFAULT_COVER_THEME_ID)
-      void openEditor(crypto.randomUUID(), coverData)
+      openEditor(crypto.randomUUID(), coverData)
     },
     [openEditor],
   )
@@ -309,11 +356,24 @@ export function CoverView({ generationId: routeGenerationId }: CoverViewProps = 
       documentNameRef.current = trimmed
       cancelPersistDebounce()
       setData((current) => applyCoverGenerationName(current, trimmed))
-      await handleRenameGeneration(activeGenerationId, trimmed)
+
+      const draft = getCoverGenerationDraft(activeGenerationId)
+      if (draft) {
+        setCoverGenerationDraft({
+          ...draft,
+          name: trimmed,
+          updatedAt: Date.now(),
+        })
+      }
+
+      if (generations.some((item) => item.id === activeGenerationId)) {
+        await handleRenameGeneration(activeGenerationId, trimmed)
+      }
     },
     [
       activeGenerationId,
       cancelPersistDebounce,
+      generations,
       handleRenameGeneration,
       maxNameLength,
       setData,

@@ -99,7 +99,7 @@ The developers who actually ship 10x faster are the ones who do two things at on
 
 A short checklist for developers picking up the workflow now:
 
-* **Know which assistant does what well.** Modern AI assistants are easy to pick up — the bigger win is knowing when to reach for which one. Use Claude Code or Cursor for in-editor work across a codebase, Codex for hand-off tasks where you want a pull request back, Copilot for fast autocomplete, and an app generator like v0 or Bolt when you are starting from zero.
+* **Know which assistant does what well.** Modern AI assistants are easy to pick up - the bigger win is knowing when to reach for which one. Use Claude Code or Cursor for in-editor work across a codebase, Codex for hand-off tasks where you want a pull request back, Copilot for fast autocomplete, and an app generator like v0 or Bolt when you are starting from zero.
 * **Write specs before you prompt.** A two sentence spec produces a two sentence implementation. A clear description of the feature, the constraints, and the edge cases produces something you can actually ship.
 * **Read what the AI writes.** Especially anything that touches auth, payments, or user data. Trust comes from reading the diff, not from skipping it.
 * **Use real infrastructure for real concerns.** Generate UI, glue code, and feature logic. Pick a backend platform for auth, database, storage, and functions.

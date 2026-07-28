@@ -5,8 +5,14 @@ import {
   getDocsAudienceHomeHref,
   type DocsAudience,
 } from '@/lib/docs/navigation'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+
+const AUDIENCE_ANALYTICS = {
+  developers: 'docs-audience-developers',
+  partners: 'docs-audience-partners',
+} as const
 
 type DocsAudienceSwitcherProps = {
   pathname: string
@@ -57,6 +63,7 @@ export function DocsAudienceSwitcher({
         <ToggleGroupItem
           key={option.value}
           value={option.value}
+          {...analyticsAttrs(AUDIENCE_ANALYTICS[option.value])}
           className={cn(
             'min-w-0 flex-1 px-2 text-[12px] font-medium',
             isMobile && 'text-[13px]',

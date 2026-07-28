@@ -357,6 +357,9 @@ function SiteLayoutContent() {
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
           isRefreshing={siteLogsListRefreshing}
           createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
+          createAnalyticsAction={
+            activeTab === 'domains' ? 'create-site-domain' : undefined
+          }
           onCreate={
             activeTab === 'domains'
               ? () =>

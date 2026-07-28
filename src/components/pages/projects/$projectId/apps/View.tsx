@@ -111,6 +111,7 @@ export function View({ initialData }: ViewProps = {}) {
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         createLabel={t('Add app')}
+        createAnalyticsAction="add-platform"
         onCreate={() => goToAddAppWizard()}
         createDisabled={noCreatePermission}
         createDisabledTooltip={

@@ -141,7 +141,7 @@ export function SitesProductVisual() {
                   buildSeconds === null && 'opacity-50',
                 )}
               >
-                {buildSeconds === null ? '—' : `${buildSeconds}s`}
+                {buildSeconds === null ? '-' : `${buildSeconds}s`}
               </span>
               <CheckCircle2
                 className={cn(

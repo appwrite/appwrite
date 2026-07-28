@@ -14,6 +14,7 @@ import {
   resolvePostAuthOrganizationId,
 } from '@/lib/ensure-personal-org'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
+import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
 import { searchParamsFromRouterLocation } from '@/lib/table-filters'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import {
@@ -56,6 +57,10 @@ export const Route = createFileRoute('/_public/')({
       if (hasGitHubIdentity) {
         setLastLoginMethod('github')
       }
+    }
+
+    if (requiresConsoleEmailVerification(account)) {
+      throw redirect({ to: '/verify-email', replace: true })
     }
 
     try {

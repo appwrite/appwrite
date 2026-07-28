@@ -6,7 +6,7 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
-  USAGE_API_MAX_LIMIT,
+  resolveUsageListOrder,
 } from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import {
@@ -41,6 +41,11 @@ interface ListUsageGaugeGroupsParams {
   /** Cluster node: 0 = primary, 1+ = replicas. */
   ordinal?: number
   teamId?: string
+  /**
+   * Max rows from listGauges. Flat top-N breakdowns should pass the UI limit
+   * with value-desc ordering; charts omit this and use USAGE_API_MAX_LIMIT.
+   */
+  limit?: number
 }
 
 async function listUsageGaugeGroupsByMetric(
@@ -52,7 +57,7 @@ async function listUsageGaugeGroupsByMetric(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  // Prefer Utopia queries for filters — top-level resourceId is not in the SDK.
+  // Prefer Utopia queries for filters - top-level resourceId is not in the SDK.
   const queries = [
     ...(buildUsageResourceFilterQueries({
       queries: params.queries,
@@ -66,6 +71,11 @@ async function listUsageGaugeGroupsByMetric(
     queries.push(Query.equal('teamId', teamId))
   }
 
+  const { orderBy, orderDir, limit } = resolveUsageListOrder({
+    interval: params.interval,
+    hasDimensions: (params.dimensions?.length ?? 0) > 0,
+    limit: params.limit,
+  })
   const request: {
     metrics: string[]
     interval?: string
@@ -73,16 +83,16 @@ async function listUsageGaugeGroupsByMetric(
     endAt: string
     dimensions?: string[]
     queries?: string[]
+    orderBy?: string
     orderDir?: string
     limit?: number
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
-    orderDir: 'asc',
-    // Without an explicit limit, the API default truncates long 1h series
-    // (oldest buckets only when orderDir is asc), leaving the chart zero-filled.
-    limit: USAGE_API_MAX_LIMIT,
+    orderBy,
+    orderDir,
+    limit,
   }
 
   if (params.interval) {
@@ -250,6 +260,7 @@ export async function fetchUsageGaugeBreakdown(
     startAt: startAt.toISOString(),
     endAt: endAt.toISOString(),
     queries,
+    limit: breakdownLimit,
   })
 
   return mapGaugeBreakdownGroups(

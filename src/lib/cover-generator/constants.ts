@@ -65,6 +65,8 @@ export const COVER_TEMPLATE_IDS = [
   'code-snippet',
   'milestone-split',
   'milestone-centered',
+  'version-number',
+  'version-title',
 ] as const
 
 export type CoverTemplateId = (typeof COVER_TEMPLATE_IDS)[number]

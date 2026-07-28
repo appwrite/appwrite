@@ -359,6 +359,9 @@ export function View({
             : undefined
         }
         createLabel={activeTab === 'subscribers' ? t('Add subscriber') : undefined}
+        createAnalyticsAction={
+          activeTab === 'subscribers' ? 'add-subscriber' : undefined
+        }
         onCreate={
           activeTab === 'subscribers'
             ? () => setAddTargetsOpen(true)

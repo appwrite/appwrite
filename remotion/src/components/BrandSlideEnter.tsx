@@ -12,7 +12,7 @@ type BrandSlideEnterProps = {
   delay?: number
 }
 
-/** Subtle marketing-style enter — opacity + small Y, no blur. */
+/** Subtle marketing-style enter - opacity + small Y, no blur. */
 export function BrandSlideEnter({ children, delay = 0 }: BrandSlideEnterProps) {
   const frame = useCurrentFrame()
   const { fps } = useVideoConfig()

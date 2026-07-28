@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { docsContentPaddingX } from '@/lib/docs/docs-container'
 import { DOCS_FRAMEWORK_STRIP } from '@/lib/docs/framework-strip'
 import { DocsRouteLink } from './DocsRouteLink'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export function DocsHeroSection() {
   return (
@@ -36,7 +37,7 @@ export function DocsHeroSection() {
             className="h-7 rounded-full px-3 text-[12px]"
             asChild
           >
-            <DocsRouteLink href="/docs/tooling/mcp">
+            <DocsRouteLink href="/docs/tooling/mcp" {...analyticsAttrs('docs-mcp-cta')}>
               <McpIcon className="size-3.5 text-muted-foreground" />
               <span className="text-[var(--brand-cta)]">New</span>
               MCP servers for AI agents
@@ -56,13 +57,21 @@ export function DocsHeroSection() {
 
         <div className="mt-8 flex flex-wrap items-center justify-start gap-2 @[480px]:mt-10">
           <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-            <DocsRouteLink href="/docs/quick-starts">
+            <DocsRouteLink
+              href="/docs/quick-starts"
+              {...analyticsAttrs('docs-get-started')}
+            >
               Get started
               <ArrowRight className="ms-1.5 size-4" />
             </DocsRouteLink>
           </Button>
           <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-            <DocsRouteLink href="/docs/references">API references</DocsRouteLink>
+            <DocsRouteLink
+              href="/docs/references"
+              {...analyticsAttrs('docs-api-references')}
+            >
+              API references
+            </DocsRouteLink>
           </Button>
         </div>
 
@@ -90,7 +99,10 @@ export function DocsHeroSection() {
           </div>
           <div className="mt-8 flex justify-start @[480px]:mt-10">
             <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
-              <DocsRouteLink href="/docs/quick-starts">
+              <DocsRouteLink
+                href="/docs/quick-starts"
+                {...analyticsAttrs('docs-all-quick-starts')}
+              >
                 All quick start guides
                 <ArrowRight className="ms-1.5 size-4" />
               </DocsRouteLink>

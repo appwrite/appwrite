@@ -170,6 +170,9 @@ export function View() {
           activeTab === 'members' ? setMembersSearchValue : undefined
         }
         createLabel={activeTab === 'members' ? t('Add member') : undefined}
+        createAnalyticsAction={
+          activeTab === 'members' ? 'add-team-member' : undefined
+        }
         onCreate={
           activeTab === 'members'
             ? () => setCreateMembershipDialogOpen(true)

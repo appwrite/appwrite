@@ -17,6 +17,7 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
+  showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
@@ -30,6 +31,10 @@ export const DEBUG_OVERRIDE_KEYS = {
   disableOverviewComputeChart: 'debug:disableOverviewComputeChart',
   /** When true, onboarding product sections are unlocked without completing Connect. */
   unlockOnboardingLocks: 'debug:unlockOnboardingLocks',
+  /** When true, Get started progress panel previews the 100% complete advocacy state. */
+  previewOnboardingComplete: 'debug:previewOnboardingComplete',
+  /** When true, force-show the community support fullscreen wizard. */
+  previewCommunitySupportWizard: 'debug:previewCommunitySupportWizard',
   /** Page text direction for RTL layout testing. Default ltr. */
   pageDirection: 'debug:pageDirection',
   /** App copy language preference used by the i18n provider. */
@@ -75,6 +80,11 @@ export type DebugOverrides = {
    */
   showFunctionsLocalEditor: boolean
   /**
+   * When true, show the DEV construction bar at the top of the header stack.
+   * Default true, or VITE_CONSTRUCTION when set.
+   */
+  showConstruction: boolean
+  /**
    * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
    * 7 = 7+ days after event, org promo banner hidden).
    * Null uses the real calendar date.
@@ -98,6 +108,10 @@ export type DebugOverrides = {
   disableOverviewComputeChart: boolean
   /** When true, skip the Connect gate on the Get started onboarding page. */
   unlockOnboardingLocks: boolean
+  /** When true, force Get started progress to 100% to preview advocacy copy + Star CTA. */
+  previewOnboardingComplete: boolean
+  /** When true, force-show the community support fullscreen wizard. */
+  previewCommunitySupportWizard: boolean
   /** Document direction for RTL layout testing in debug mode. */
   pageDirection: PageDirectionOverride
   /** App language preference from debug menu. */
@@ -115,6 +129,21 @@ function readBooleanFromStorage(key: string, defaultValue = false) {
   const raw = storage.getItem(key)
   if (raw === null) return defaultValue
   return raw === 'true'
+}
+
+/**
+ * Default for the Vite DEV construction bar when localStorage has no override.
+ * Set `VITE_CONSTRUCTION=false` (or 0/off/no) to hide it for agent browsers.
+ * Unset defaults to on.
+ */
+export function getShowConstructionDefault(): boolean {
+  const raw = String(import.meta.env.VITE_CONSTRUCTION ?? '')
+    .trim()
+    .toLowerCase()
+  if (!raw) return true
+  if (['0', 'false', 'off', 'no'].includes(raw)) return false
+  if (['1', 'true', 'on', 'yes'].includes(raw)) return true
+  return true
 }
 
 function readStringFromStorage<T extends string>(
@@ -174,6 +203,10 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
+    showConstruction: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showConstruction,
+      getShowConstructionDefault(),
+    ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
     ),
@@ -220,6 +253,14 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     unlockOnboardingLocks: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.unlockOnboardingLocks,
+      false,
+    ),
+    previewOnboardingComplete: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.previewOnboardingComplete,
+      false,
+    ),
+    previewCommunitySupportWizard: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.previewCommunitySupportWizard,
       false,
     ),
     pageDirection: readStringFromStorage(
@@ -284,6 +325,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
+  'showConstruction',
   'disableUsageBreakdownQueries',
   'disableOverviewBandwidthChart',
   'disableOverviewRequestsChart',
@@ -291,6 +333,8 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'disableOverviewExecutionsChart',
   'disableOverviewComputeChart',
   'unlockOnboardingLocks',
+  'previewOnboardingComplete',
+  'previewCommunitySupportWizard',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type FeatureFlagsMenuDebugKey =
@@ -306,6 +350,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
+  showConstruction: getShowConstructionDefault(),
   disableUsageBreakdownQueries: false,
   disableOverviewBandwidthChart: false,
   disableOverviewRequestsChart: false,
@@ -313,6 +358,8 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   disableOverviewExecutionsChart: false,
   disableOverviewComputeChart: false,
   unlockOnboardingLocks: false,
+  previewOnboardingComplete: false,
+  previewCommunitySupportWizard: false,
 }
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */

@@ -107,7 +107,8 @@ export function TableContextMenu({
   }, [dbKind, showSecuritySettings])
 
   const deleteTableMutation = useMutation({
-    mutationFn: () => deleteProjectTable(projectId, databaseId, table.$id),
+    mutationFn: () =>
+      deleteProjectTable(projectId, databaseId, dbKind, table.$id),
     onSuccess: async () => {
       setDeleteDialogOpen(false)
       await queryClient.refetchQueries({
@@ -174,7 +175,7 @@ export function TableContextMenu({
 
   const handleCopyAsJson = async () => {
     await copyResourceAsJson(
-      () => fetchProjectTable(projectId, databaseId, table.$id),
+      () => fetchProjectTable(projectId, databaseId, dbKind, table.$id),
       { fallback: table },
     )
   }

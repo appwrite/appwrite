@@ -104,6 +104,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   web: 'js.svg',
   javascript: 'js.svg',
   js: 'js.svg',
+  typescript: 'ts.svg',
+  ts: 'ts.svg',
 
   bun: 'bun.svg',
   java: 'java.svg',

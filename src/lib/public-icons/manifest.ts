@@ -140,6 +140,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'textmagic.svg',
   'tiktok.svg',
   'tradeshift.svg',
+  'ts.svg',
   'tumbir.svg',
   'twilio.svg',
   'twitch.svg',

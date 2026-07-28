@@ -25,13 +25,14 @@ import {
 } from '@/components/ui/table'
 import {
   postgresDatabaseQueryOptions,
-  useCreatePostgresDatabaseFailover,
-  usePostgresDatabaseReplicas,
+  useCreateDedicatedDatabaseFailover,
+  useDedicatedDatabaseReplicas,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
+import type { DedicatedReplicationSource } from '@/lib/databases/dedicated-replication'
 
 function isPrimaryRole(role: string) {
   return role.trim().toLowerCase() === 'primary'
@@ -148,7 +149,8 @@ function formatLagSeconds(
   lagSeconds: number | null | undefined,
   t: ReturnType<typeof useT>,
 ) {
-  if (isPrimaryRole(role)) return t('N/A')
+  // Primary is the source of truth; lag only applies to replicas.
+  if (isPrimaryRole(role)) return '-'
   if (lagSeconds == null || !Number.isFinite(lagSeconds)) return t('N/A')
   return t('{seconds}s lag').replace('{seconds}', String(lagSeconds))
 }
@@ -167,18 +169,29 @@ export function PostgresDatabasePrimaryCard({
   databaseId,
   database,
   canWrite,
+  replicationSource,
+  haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
+  const source: DedicatedReplicationSource = replicationSource ?? {
+    type: 'engine',
+    engine: haEngine || database.engine || 'postgresql',
+  }
   const haEnabled = (database.replicas ?? 0) > 0
   const pollReplicas = database.status !== 'ready'
-  const { replicas, members, isLoading } = usePostgresDatabaseReplicas(
+  const { replicas, members, isLoading } = useDedicatedDatabaseReplicas(
     projectId,
     databaseId,
+    source,
     haEnabled,
     pollReplicas ? 5000 : false,
   )
-  const failoverMutation = useCreatePostgresDatabaseFailover(projectId, databaseId)
+  const failoverMutation = useCreateDedicatedDatabaseFailover(
+    projectId,
+    databaseId,
+    source,
+  )
   const [selectedReplicaId, setSelectedReplicaId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
 

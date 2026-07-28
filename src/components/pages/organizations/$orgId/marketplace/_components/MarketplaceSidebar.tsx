@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 type MarketplaceSidebarProps = {
   navGroups: MarketplaceNavGroup[]
@@ -173,6 +174,9 @@ function SidebarLinks({
             type="button"
             className={className}
             onClick={() => onLinkAction?.(link)}
+            {...(link.action === 'add-app'
+              ? analyticsAttrs('create-marketplace-app')
+              : {})}
           >
             <Icon className="h-4 w-4 shrink-0" />
             {t(link.label)}

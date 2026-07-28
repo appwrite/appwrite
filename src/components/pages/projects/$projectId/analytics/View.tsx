@@ -372,6 +372,7 @@ export function View() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         createLabel={t('Add Website')}
+        createAnalyticsAction="add-website"
         onCreate={() => {}}
         showFilters
         fullWidthBorder

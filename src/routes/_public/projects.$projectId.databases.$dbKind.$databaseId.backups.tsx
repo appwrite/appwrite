@@ -49,7 +49,14 @@ export const Route = createFileRoute(
       databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
     )
     await queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        0,
+        TABLES_PER_PAGE,
+        undefined,
+      ),
     )
 
     await Promise.all([

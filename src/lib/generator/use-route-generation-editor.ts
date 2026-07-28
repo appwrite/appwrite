@@ -11,9 +11,11 @@ type UseRouteGenerationEditorOptions<TGeneration> = {
   generations: TGeneration[]
   getGenerationId: (generation: TGeneration) => string
   loadGeneration: (generation: TGeneration) => void
+  /** Unsaved drafts opened from a template (not yet written to prefs). */
+  resolveDraft?: (id: string) => TGeneration | undefined
   migrateLegacyIfNeeded: () => Promise<TGeneration[] | unknown>
   onEnterEditor?: () => void
-  onLeaveEditor?: () => void
+  onLeaveEditor?: (generationId: string) => void
   notFoundMessage: string
 }
 
@@ -24,6 +26,7 @@ export function useRouteGenerationEditor<TGeneration>({
   generations,
   getGenerationId,
   loadGeneration,
+  resolveDraft,
   migrateLegacyIfNeeded,
   onEnterEditor,
   onLeaveEditor,
@@ -41,12 +44,14 @@ export function useRouteGenerationEditor<TGeneration>({
   const generationsRef = useRef(generations)
   const getGenerationIdRef = useRef(getGenerationId)
   const loadGenerationRef = useRef(loadGeneration)
+  const resolveDraftRef = useRef(resolveDraft)
   const migrateLegacyIfNeededRef = useRef(migrateLegacyIfNeeded)
   const onEnterEditorRef = useRef(onEnterEditor)
   const onLeaveEditorRef = useRef(onLeaveEditor)
   generationsRef.current = generations
   getGenerationIdRef.current = getGenerationId
   loadGenerationRef.current = loadGeneration
+  resolveDraftRef.current = resolveDraft
   migrateLegacyIfNeededRef.current = migrateLegacyIfNeeded
   onEnterEditorRef.current = onEnterEditor
   onLeaveEditorRef.current = onLeaveEditor
@@ -54,7 +59,8 @@ export function useRouteGenerationEditor<TGeneration>({
   const phase: GeneratorEditorPhase = routeGenerationId ? 'editor' : 'start'
 
   const routeGenerationReady = routeGenerationId
-    ? generations.some((item) => getGenerationId(item) === routeGenerationId)
+    ? generations.some((item) => getGenerationId(item) === routeGenerationId) ||
+      Boolean(resolveDraft?.(routeGenerationId))
     : false
 
   useEffect(() => {
@@ -68,7 +74,7 @@ export function useRouteGenerationEditor<TGeneration>({
       }
       setIsRouteSyncing(false)
       if (previousRouteId) {
-        onLeaveEditorRef.current?.()
+        onLeaveEditorRef.current?.(previousRouteId)
       }
       return
     }
@@ -81,6 +87,9 @@ export function useRouteGenerationEditor<TGeneration>({
     setIsRouteSyncing(true)
 
     void (async () => {
+      // Resolve drafts synchronously first. Template opens store a draft before
+      // navigating, and the editor route remounts a new view instance.
+      const draft = resolveDraftRef.current?.(routeGenerationId)
       let list = generationsRef.current
       try {
         const migrated = await migrateLegacyIfNeededRef.current()
@@ -93,9 +102,12 @@ export function useRouteGenerationEditor<TGeneration>({
 
       if (cancelled) return
 
-      const generation = list.find(
-        (item) => getGenerationIdRef.current(item) === routeGenerationId,
-      )
+      const generation =
+        list.find(
+          (item) => getGenerationIdRef.current(item) === routeGenerationId,
+        ) ??
+        draft ??
+        resolveDraftRef.current?.(routeGenerationId)
       if (!generation) {
         if (loadedRouteIdRef.current === routeGenerationId) {
           return

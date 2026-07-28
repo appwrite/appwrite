@@ -184,7 +184,6 @@ type RestorationDatabaseMapping = {
   oldId?: string
   newId?: string
   newName?: string
-  newSpecification?: string
 }
 
 export type RestoredDatabaseTarget = {

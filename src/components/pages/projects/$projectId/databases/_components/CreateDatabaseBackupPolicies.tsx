@@ -6,6 +6,11 @@ import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import {
+  getBackupPoliciesPlanLimit,
+  isBackupPoliciesAtPlanLimit,
+  supportsAdvancedBackupPolicies,
+} from '@/lib/databases/backup-policy-plan-limits'
 
 export type BackupPolicyPresetId = 'hourly' | 'daily'
 
@@ -35,6 +40,33 @@ export const BACKUP_POLICY_PRESETS: Record<
   },
 }
 
+/** Platform auto-created policies often use a generic label like "Default". */
+export function isGenericBackupPolicyName(
+  name: string | null | undefined,
+): boolean {
+  const normalized = (name ?? '').trim().toLowerCase()
+  return normalized === '' || normalized === 'default'
+}
+
+/** Resolve a preset policy name from a cron schedule. */
+export function backupPolicyNameForSchedule(
+  schedule: string | null | undefined,
+): string | null {
+  const normalized = schedule?.trim()
+  if (!normalized) return null
+  for (const preset of Object.values(BACKUP_POLICY_PRESETS)) {
+    if (preset.schedule === normalized) return preset.name
+  }
+  // Daily cron variants (minute hour * * *) that are not hourly.
+  if (/^\d+\s+\d+\s+\*\s+\*\s+\*$/.test(normalized)) {
+    return BACKUP_POLICY_PRESETS.daily.name
+  }
+  if (normalized === '0 * * * *') {
+    return BACKUP_POLICY_PRESETS.hourly.name
+  }
+  return null
+}
+
 type CreateDatabaseBackupPoliciesProps = {
   /**
    * Organization plan `backupsEnabled`. When false and the console profile
@@ -42,7 +74,10 @@ type CreateDatabaseBackupPoliciesProps = {
    * plan is still loading. Ignored when the profile disables `databaseBackups`.
    */
   planBackupsEnabled?: boolean
-  /** Plan policy cap. Pro (1) only gets daily; 0 or >1 also get hourly. */
+  /**
+   * Plan `backupPolicies` cap. Same convention as databases/functions/buckets:
+   * `0` = unlimited; `> 0` = hard cap. Pro (`1`) is daily-only.
+   */
   backupPoliciesLimit?: number
   selectedPresets: BackupPolicyPresetId[]
   onSelectedPresetsChange: (presets: BackupPolicyPresetId[]) => void
@@ -66,13 +101,19 @@ export function CreateDatabaseBackupPolicies({
 
   const canSelect = planBackupsEnabled === true
   const showUpgradeWarning = planBackupsEnabled === false
+  const limit = getBackupPoliciesPlanLimit({ backupPolicies: backupPoliciesLimit })
   const supportsHourly =
-    canSelect && (backupPoliciesLimit === 0 || backupPoliciesLimit > 1)
+    canSelect && supportsAdvancedBackupPolicies(limit)
+  const atSelectionLimit = isBackupPoliciesAtPlanLimit(
+    selectedPresets.length,
+    limit,
+  )
 
   const togglePreset = (preset: BackupPolicyPresetId, checked: boolean) => {
     if (!canSelect) return
     if (checked) {
       if (selectedPresets.includes(preset)) return
+      if (atSelectionLimit) return
       onSelectedPresetsChange([...selectedPresets, preset])
       return
     }
@@ -140,7 +181,7 @@ export function CreateDatabaseBackupPolicies({
 
             {canSelect &&
               !supportsHourly &&
-              backupPoliciesLimit === 1 && (
+              limit === 1 && (
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
                   {t(
                     'Your plan only supports the daily preset policy. Upgrade to create custom policies.',

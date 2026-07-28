@@ -10,6 +10,20 @@ export const FIREWALL_RESOURCE_TYPES = [
 export type FirewallResourceType =
   (typeof FIREWALL_RESOURCE_TYPES)[number]['value']
 
+export function isFirewallResourceType(
+  value: unknown,
+): value is FirewallResourceType {
+  return (
+    value === 'api' || value === 'functions' || value === 'sites'
+  )
+}
+
+export function parseFirewallResourceTypeSearch(
+  value: unknown,
+): FirewallResourceType | undefined {
+  return isFirewallResourceType(value) ? value : undefined
+}
+
 /** Condition attributes shown in the rule builder. */
 export const FIREWALL_CONDITION_ATTRIBUTES = [
   { value: 'ip', label: 'IP address' },
@@ -29,7 +43,7 @@ export type FirewallConditionAttribute =
  */
 export const FIREWALL_CONDITION_OPERATORS = [
   { value: 'equal', label: 'Equals' },
-  { value: 'notEqual', label: 'Does not equal' },
+  { value: 'notEqual', label: 'Not equal' },
   { value: 'contains', label: 'Contains' },
   { value: 'notContains', label: 'Does not contain' },
   { value: 'startsWith', label: 'Starts with' },
@@ -47,7 +61,7 @@ export type FirewallConditionOperatorDef = {
   noValue?: boolean
 }
 
-/** Operators that filter on the value being absent — no value input is shown. */
+/** Operators that filter on the value being absent - no value input is shown. */
 const NO_VALUE_OPERATORS = new Set<FirewallConditionOperator>([
   'isNull',
   'isNotNull',
@@ -180,7 +194,7 @@ function buildQueryString(draft: FirewallConditionDraft): string | null {
 
   const raw = draft.value.trim()
   if (!raw) return null
-  const value = draft.attribute === 'country' ? raw.toLowerCase() : raw
+  const value = draft.attribute === 'country' ? raw.toUpperCase() : raw
 
   switch (draft.operator) {
     case 'equal':
@@ -295,7 +309,7 @@ export function draftsFromParsedConditions(
 
     const rawValue = item.values[0] ?? ''
     const value =
-      attribute === 'country' ? rawValue.toLowerCase() : rawValue
+      attribute === 'country' ? rawValue.toUpperCase() : rawValue
 
     return {
       id: `cond_${Math.random().toString(36).slice(2, 10)}`,

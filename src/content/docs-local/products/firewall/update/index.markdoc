@@ -1,0 +1,50 @@
+---
+layout: article
+title: Update a rule
+description: Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.
+---
+
+You can update Firewall rules from the rules list without recreating them. Changes apply to new requests after save. Historical metrics are not rewritten.
+
+# Open update {% #open-update %}
+
+1. Open **Firewall** in your project.
+2. Select the **API**, **Functions**, or **Sites** tab that contains the rule.
+3. Open the rule's actions menu and choose **Update**, or use the update action from the rule context menu.
+
+# What you can change {% #what-you-can-change %}
+
+| Field | Notes |
+|-------|-------|
+| Name and description | Labels only; no traffic impact |
+| Resource type and resource ID | Move the rule between API, Functions, and Sites (pick a function or site when required) |
+| Conditions | Rebuilt with the same condition builder as create; at least one complete condition required |
+| Rate limit settings | Limit and interval when the rule action is rate limit |
+| Redirect settings | Location and status code (`300`–`399`) when the rule action is redirect |
+| Priority | `-100000` to `100000`; lower numbers evaluated first |
+| Enabled | Disable to pause without deleting |
+
+The **action type** (deny, bypass, rate limit, redirect) is set at create time and cannot be changed on update. To switch actions, [create a new rule](/docs/products/firewall/create) and [delete](/docs/products/firewall/delete) the old one.
+
+# Safe updates {% #safe-updates %}
+
+When tightening a deny or rate limit:
+
+1. Review the impact preview if shown while editing conditions.
+2. Consider lowering match breadth (narrower path or exact IP) before increasing severity. CIDR ranges are not supported.
+3. Prefer **disable** temporarily if you need to stop a rule during an incident, then fix conditions and re-enable.
+
+When adding an allowlist:
+
+1. Create or update a **bypass** rule with the trusted IP or path.
+2. Give it a **lower priority number** than the deny or rate limit it should override. See [Priority](/docs/products/firewall/priority).
+
+Remember that a matching **rate limit** under quota also stops later rules, same as bypass.
+
+# Save {% #save %}
+
+Confirm the update in the drawer. On success, the list reflects the new values. If update fails, the previous rule configuration remains active.
+
+{% arrow_link href="/docs/products/firewall/monitor" %}
+Monitor traffic
+{% /arrow_link %}

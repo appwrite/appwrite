@@ -1,6 +1,6 @@
 # TablesDB API specifications
 
-Reference extracted from `@appwrite.io/console` v15.2.0 and `@appwrite.io/specs` (latest console OpenAPI).
+Reference extracted from `@appwrite.io/console` v15.3.0 and `@appwrite.io/specs` (latest console OpenAPI).
 
 All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.
 
@@ -20,6 +20,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createDatetimeColumn`](#tablesdb-createdatetimecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/datetime` | `Promise<Models.ColumnDatetime>` |
 | [`createEmailColumn`](#tablesdb-createemailcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/email` | `Promise<Models.ColumnEmail>` |
 | [`createEnumColumn`](#tablesdb-createenumcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/enum` | `Promise<Models.ColumnEnum>` |
+| [`createFailover`](#tablesdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
 | [`createFloatColumn`](#tablesdb-createfloatcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/float` | `Promise<Models.ColumnFloat>` |
 | [`createIndex`](#tablesdb-createindex) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndex>` |
 | [`createIntegerColumn`](#tablesdb-createintegercolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/integer` | `Promise<Models.ColumnInteger>` |
@@ -27,7 +28,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createLineColumn`](#tablesdb-createlinecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/line` | `Promise<Models.ColumnLine>` |
 | [`createLongtextColumn`](#tablesdb-createlongtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/longtext` | `Promise<Models.ColumnLongtext>` |
 | [`createMediumtextColumn`](#tablesdb-createmediumtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/mediumtext` | `Promise<Models.ColumnMediumtext>` |
-| [`createMigration`](#tablesdb-createmigration) | — | — | `Promise<Models.DatabaseMigration>` |
+| [`createMigration`](#tablesdb-createmigration) | - | - | `Promise<Models.DatabaseMigration>` |
 | [`createOperations`](#tablesdb-createoperations) | POST | `/v1/tablesdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createPointColumn`](#tablesdb-createpointcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/point` | `Promise<Models.ColumnPoint>` |
 | [`createPolygonColumn`](#tablesdb-createpolygoncolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/polygon` | `Promise<Models.ColumnPolygon>` |
@@ -40,25 +41,25 @@ Base path prefix: `/v1/tablesdb`
 | [`delete`](#tablesdb-delete) | DELETE | `/v1/tablesdb/{databaseId}` | `Promise<{}>` |
 | [`deleteColumn`](#tablesdb-deletecolumn) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<{}>` |
 | [`deleteIndex`](#tablesdb-deleteindex) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<{}>` |
-| [`deleteMigration`](#tablesdb-deletemigration) | — | — | `Promise<{}>` |
+| [`deleteMigration`](#tablesdb-deletemigration) | - | - | `Promise<{}>` |
 | [`deleteRow`](#tablesdb-deleterow) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}` | `Promise<{}>` |
 | [`deleteTable`](#tablesdb-deletetable) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<{}>` |
 | [`deleteTransaction`](#tablesdb-deletetransaction) | DELETE | `/v1/tablesdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#tablesdb-get) | GET | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getColumn`](#tablesdb-getcolumn) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<Models.ColumnBoolean | Models.ColumnInteger | Models.ColumnFloat | Models.ColumnEmail | Models.ColumnEnum | Models.ColumnUrl | Models.ColumnIp | Models.ColumnDatetime | Models.ColumnRelationship | Models.ColumnString>` |
 | [`getIndex`](#tablesdb-getindex) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<Models.ColumnIndex>` |
-| [`getMigration`](#tablesdb-getmigration) | — | — | `Promise<Models.DatabaseMigration>` |
+| [`getMigration`](#tablesdb-getmigration) | - | - | `Promise<Models.DatabaseMigration>` |
+| [`getReplicas`](#tablesdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#tablesdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
 | [`getTable`](#tablesdb-gettable) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<Models.Table>` |
-| [`getTableUsage`](#tablesdb-gettableusage) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/usage` | `Promise<Models.UsageTable>` |
 | [`getTransaction`](#tablesdb-gettransaction) | GET | `/v1/tablesdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
-| [`getUsage`](#tablesdb-getusage) | GET | `/v1/tablesdb/{databaseId}/usage` | `Promise<Models.UsageDatabase>` |
 | [`list`](#tablesdb-list) | GET | `/v1/tablesdb` | `Promise<Models.DatabaseList>` |
 | [`listColumns`](#tablesdb-listcolumns) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns` | `Promise<Models.ColumnList>` |
 | [`listIndexes`](#tablesdb-listindexes) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndexList>` |
-| [`listMigrations`](#tablesdb-listmigrations) | — | — | `Promise<Models.DatabaseMigrationList>` |
+| [`listMigrations`](#tablesdb-listmigrations) | - | - | `Promise<Models.DatabaseMigrationList>` |
+| [`listSpecifications`](#tablesdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTables`](#tablesdb-listtables) | GET | `/v1/tablesdb/{databaseId}/tables` | `Promise<Models.TableList>` |
 | [`listTransactions`](#tablesdb-listtransactions) | GET | `/v1/tablesdb/transactions` | `Promise<Models.TransactionList>` |
-| [`listUsage`](#tablesdb-listusage) | GET | `/v1/tablesdb/usage` | `Promise<Models.UsageDatabases>` |
 | [`update`](#tablesdb-update) | PUT | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateBigIntColumn`](#tablesdb-updatebigintcolumn) | PATCH | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/bigint/{key}` | `Promise<Models.ColumnBigint>` |
 | [`updateBooleanColumn`](#tablesdb-updatebooleancolumn) | PATCH | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/boolean/{key}` | `Promise<Models.ColumnBoolean>` |
@@ -106,6 +107,7 @@ Create a new Database.
 | `name` | `string` | Yes | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
 | `specification` | `string` | No | Database specification. Defaults to `serverless`, which creates the database on the shared pool. Any other value provisions a dedicated database on that specification. |
+| `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Requires a dedicated `specification`; must be 0 for a serverless database. High availability is enabled when greater than 0. |
 
 **SDK signature**
 
@@ -115,6 +117,7 @@ sdk.forProject(projectId).tablesDB.create({
   name: string;
   enabled?: boolean;
   specification?: string;
+  replicas?: number;
 })
 ```
 
@@ -302,62 +305,6 @@ sdk.forProject(projectId).tablesDB.updateTransaction({
 })
 ```
 
-<a id="tablesdb-usage-resource"></a>
-
-### Usage
-
-REST resource: `/v1/tablesdb/usage/…`
-
-<a id="tablesdb-getusage"></a>
-
-#### `getUsage`
-
-Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/tablesdb/{databaseId}/usage`
-- **Returns:** `Promise<Models.UsageDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getUsage({
-  databaseId: string;
-  range?: UsageRange;
-})
-```
-
-<a id="tablesdb-listusage"></a>
-
-#### `listUsage`
-
-List usage metrics and statistics for all databases in the project. You can view the total number of databases, tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/tablesdb/usage`
-- **Returns:** `Promise<Models.UsageDatabases>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.listUsage({
-  range?: UsageRange;
-})
-```
-
 <a id="tablesdb-databaseid-resource"></a>
 
 ### Database Id
@@ -429,6 +376,7 @@ Update a database by its unique ID.
 | `databaseId` | `string` | Yes | Database ID. |
 | `name` | `string` | No | Database name. Max length: 128 chars. |
 | `enabled` | `boolean` | No | Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled. |
+| `replicas` | `number` | No | Number of high availability replicas (0-5) for the dedicated database backing this database. Only valid when the database is backed by a dedicated specification. High availability is enabled when greater than 0. |
 
 **SDK signature**
 
@@ -437,6 +385,7 @@ sdk.forProject(projectId).tablesDB.update({
   databaseId: string;
   name?: string;
   enabled?: boolean;
+  replicas?: number;
 })
 ```
 
@@ -1314,34 +1263,6 @@ sdk.forProject(projectId).tablesDB.getTable({
 })
 ```
 
-<a id="tablesdb-gettableusage"></a>
-
-#### `getTableUsage`
-
-Get usage metrics and statistics for a table. Returning the total number of rows. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/tablesdb/{databaseId}/tables/{tableId}/usage`
-- **Returns:** `Promise<Models.UsageTable>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `tableId` | `string` | Yes | Table ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getTableUsage({
-  databaseId: string;
-  tableId: string;
-  range?: UsageRange;
-})
-```
-
 <a id="tablesdb-listcolumns"></a>
 
 #### `listColumns`
@@ -2060,6 +1981,48 @@ sdk.forProject(projectId).tablesDB.updateVarcharColumn({
 })
 ```
 
+<a id="tablesdb-listspecifications"></a>
+
+#### `listSpecifications`
+
+List the dedicated database specifications available on the current plan. Each specification reports its resource limits, pricing, and whether it is enabled for the organization.
+
+- **Returns:** `Promise<Models.DedicatedDatabaseSpecificationList>`
+
+**Parameters**
+
+_No request parameters._
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.listSpecifications()
+```
+
+<a id="tablesdb-createfailover"></a>
+
+#### `createFailover`
+
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.createFailover({
+  databaseId: string;
+  targetReplicaId?: string;
+})
+```
+
 <a id="tablesdb-listmigrations"></a>
 
 #### `listMigrations`
@@ -2151,5 +2114,49 @@ Abort an in-flight TablesDB dedicated migration. Only allowed before cutover; on
 sdk.forProject(projectId).tablesDB.deleteMigration({
   databaseId: string;
   migrationId: string;
+})
+```
+
+<a id="tablesdb-getreplicas"></a>
+
+#### `getReplicas`
+
+Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
+
+- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getReplicas({
+  databaseId: string;
+})
+```
+
+<a id="tablesdb-getstatus"></a>
+
+#### `getStatus`
+
+Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
+
+- **Returns:** `Promise<Models.DatabaseStatus>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getStatus({
+  databaseId: string;
 })
 ```

@@ -1076,8 +1076,9 @@ export function useDeletePostgresDatabase(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
+    // Delete must stay available when the database is failed/locked so users
+    // can clean up resources that never became ready.
     mutationFn: (databaseId: string) => {
-      requireOperationalDatabase(queryClient, projectId!, databaseId)
       return deletePostgresDatabase(projectId!, databaseId)
     },
     onSuccess: async (_data, databaseId) => {
@@ -2762,24 +2763,17 @@ export function usePostgresSavedQueries(
 
   const addTeamMutation = useMutation({
     mutationFn: async ({ name, sql }: { name: string; sql: string }) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !databaseId || !teamId) {
+      if (!databaseId || !teamId) {
         throw new Error('Team or database not available')
       }
       const trimmedSql = sql.trim()
       if (trimmedSql.length > MAX_SAVED_POSTGRES_QUERY_SQL_CHARS) {
         throw new Error('Query is too large to save')
       }
-      const current = parsePostgresSavedQueries(
-        currentTeam.prefs as Record<string, unknown>,
-        databaseId,
-      )
-      const next = buildNextPostgresSavedQueriesList(current, name, sql)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parsePostgresSavedQueries(freshPrefs, databaseId)
+        const next = buildNextPostgresSavedQueriesList(current, name, sql)
+        return buildPostgresSavedQueriesPrefs(databaseId, next)
       })
     },
     onMutate: async ({ name, sql }) => {
@@ -2850,20 +2844,15 @@ export function usePostgresSavedQueries(
 
   const deleteTeamMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentTeam = queryClient.getQueryData<{
-        prefs?: Record<string, unknown>
-      }>(['team', 'console', teamId])
-      if (!currentTeam || !databaseId || !teamId) {
+      if (!databaseId || !teamId) {
         throw new Error('Team or database not available')
       }
-      const current = parsePostgresSavedQueries(
-        currentTeam.prefs as Record<string, unknown>,
-        databaseId,
-      )
-      const next = current.filter((query) => query.id !== id)
-      await updateTeamPrefs.mutateAsync({
-        ...(currentTeam.prefs as Record<string, unknown>),
-        ...buildPostgresSavedQueriesPrefs(databaseId, next),
+      await updateTeamPrefs.mutateAsync((freshPrefs) => {
+        const current = parsePostgresSavedQueries(freshPrefs, databaseId)
+        return buildPostgresSavedQueriesPrefs(
+          databaseId,
+          current.filter((query) => query.id !== id),
+        )
       })
     },
     onSuccess: () => {

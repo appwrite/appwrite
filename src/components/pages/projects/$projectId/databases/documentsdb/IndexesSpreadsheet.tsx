@@ -173,6 +173,7 @@ export function IndexesSpreadsheet({
   } = useProjectCollectionIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     collectionId,
     indexesFilterQueries,
     indexesPageIndexed,
@@ -196,6 +197,7 @@ export function IndexesSpreadsheet({
   const { columns: schemaAttributes } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     collectionId,
   )
 
@@ -203,6 +205,7 @@ export function IndexesSpreadsheet({
     projectId,
     databaseId,
     collectionId,
+    DB_KIND,
     0,
     50,
   )
@@ -239,6 +242,7 @@ export function IndexesSpreadsheet({
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         collectionId,
         apiData,
       )
@@ -262,6 +266,7 @@ export function IndexesSpreadsheet({
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         collectionId,
         indexKey,
       )

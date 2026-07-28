@@ -232,7 +232,7 @@ const subscription = await realtime.subscribe(
     response => console.log(response),
 );
 
-// Switch to a different row — no reconnect required.
+// Switch to a different row - no reconnect required.
 await subscription.update({
     channels: [Channel.tablesdb('<DATABASE_ID>').table('<TABLE_ID>').row('<NEW_ROW_ID>')],
 });
@@ -255,7 +255,7 @@ subscription.stream.listen((response) {
     print(response);
 });
 
-// Switch to a different row — no reconnect required.
+// Switch to a different row - no reconnect required.
 await subscription.update(
     channels: [Channel.tablesdb('<DATABASE_ID>').table('<TABLE_ID>').row('<NEW_ROW_ID>')],
 );
@@ -277,7 +277,7 @@ let subscription = realtime.subscribe(channels: [
     print(String(describing: response))
 }
 
-// Switch to a different row — no reconnect required.
+// Switch to a different row - no reconnect required.
 try await subscription.update(RealtimeSubscriptionUpdate(
     channels: [Channel.tablesdb("<DATABASE_ID>").table("<TABLE_ID>").row("<NEW_ROW_ID>")]
 ))
@@ -301,7 +301,7 @@ val subscription = realtime.subscribe(
     print(it.toString())
 }
 
-// Switch to a different row — no reconnect required.
+// Switch to a different row - no reconnect required.
 subscription.update(RealtimeSubscriptionUpdate(
     channels = listOf(Channel.tablesdb("<DATABASE_ID>").table("<TABLE_ID>").row("<NEW_ROW_ID>")),
 ))
@@ -331,7 +331,7 @@ RealtimeSubscription subscription = realtime.subscribe(
     }
 );
 
-// Switch to a different row — no reconnect required.
+// Switch to a different row - no reconnect required.
 subscription.update(new RealtimeSubscriptionUpdate(
     Arrays.asList("tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.<NEW_ROW_ID>"),
     null

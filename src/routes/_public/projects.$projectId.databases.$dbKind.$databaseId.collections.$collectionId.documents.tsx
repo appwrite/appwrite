@@ -71,7 +71,14 @@ export const Route = createFileRoute(
 
     // Fetch tables list (needed for redirect logic) - blocks navigation
     const tablesPromise = queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        0,
+        TABLES_PER_PAGE,
+        undefined,
+      ),
     )
 
     // If collectionId is '-', fetch first table and redirect to it if one exists
@@ -80,6 +87,7 @@ export const Route = createFileRoute(
         tablesQueryOptions(
           projectId,
           databaseId,
+          dbKind as DatabaseRouteKind,
           0,
           ROWS_DEFAULT_PAGE_SIZE,
           undefined,
@@ -148,12 +156,14 @@ export const Route = createFileRoute(
             projectId,
             databaseId,
             collectionId,
+            dbKind as DatabaseRouteKind,
             page - 1,
             limit,
             search ?? undefined,
             'desc',
             '$createdAt',
             filterQueries,
+            undefined,
           ),
         ),
 
@@ -164,12 +174,22 @@ export const Route = createFileRoute(
 
         // Columns - blocks navigation until ready
         queryClient.ensureQueryData(
-          tableColumnsQueryOptions(projectId, databaseId, collectionId),
+          tableColumnsQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+            collectionId,
+          ),
         ),
 
         // Table details - blocks navigation until ready
         queryClient.ensureQueryData(
-          tableQueryOptions(projectId, databaseId, collectionId),
+          tableQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+            collectionId,
+          ),
         ),
 
         // Organization plan - CRITICAL for limit checking
@@ -182,7 +202,12 @@ export const Route = createFileRoute(
         // Prefetch indexes (optional data, not critical for rows tab) - doesn't block
         queryClient
           .prefetchQuery(
-            tableIndexesQueryOptions(projectId, databaseId, collectionId),
+            tableIndexesQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              collectionId,
+            ),
           )
           .catch(() => {
             // Don't block on optional data errors
@@ -192,7 +217,12 @@ export const Route = createFileRoute(
         databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
       )
       const collection = queryClient.getQueryData<{ name?: string }>(
-        tableQueryOptions(projectId, databaseId, collectionId).queryKey,
+        tableQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          collectionId,
+        ).queryKey,
       )
       return { database, collection }
     } else {

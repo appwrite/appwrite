@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 
 export interface CreateDeploymentDropdownProps {
   onSelectGit: () => void
@@ -45,6 +46,7 @@ export function CreateDeploymentDropdown({
       size="sm"
       disabled={disabled}
       className={`h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ''}`}
+      {...analyticsAttrs('create-deployment')}
     >
       <Plus className="h-4 w-4" />
       {t('Create deployment')}

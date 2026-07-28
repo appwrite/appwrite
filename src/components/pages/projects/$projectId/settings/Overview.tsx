@@ -76,8 +76,11 @@ import {
   patchProjectProtocolsInCache,
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
+import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
+import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -200,6 +203,7 @@ export function ProjectSettingsOverview({
   const t = useT()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
+  const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
   useScrollToCard()
   const queryClient = useQueryClient()
@@ -373,7 +377,14 @@ export function ProjectSettingsOverview({
           `${t('Name must be between 1 and')} ${PROJECT_NAME_MAX_LENGTH} ${t('characters')}`,
         )
       }
-      await updateConsoleProject({ projectId, name: trimmedName })
+      if (!project?.teamId) {
+        throw new Error(t('Organization not found for this project'))
+      }
+      await updateConsoleProject({
+        projectId,
+        name: trimmedName,
+        organizationId: project.teamId,
+      })
     },
     onSuccess: async () => {
       toast.success(t('Project name has been updated'))
@@ -555,6 +566,11 @@ export function ProjectSettingsOverview({
   // Mutation to transfer project
   const transferProjectMutation = useMutation({
     mutationFn: async (teamId: string) => {
+      if (!getActiveProfileFeatures().multiTenancy) {
+        throw new Error(
+          'This console profile does not support transferring between organizations',
+        )
+      }
       await sdk.forConsole.projects.updateTeam({ projectId, teamId })
     },
     onSuccess: async (_, teamId) => {
@@ -726,15 +742,27 @@ export function ProjectSettingsOverview({
       }))
   }, [allOrganizations, project])
 
-  // Get GitHub authorization URL
-  const getGitHubAuthUrl = (mode: 'create' | 'update' = 'create') => {
-    const endpoint = projectEndpoint
+  // Build a VCS provider authorization URL (github, gitlab, ...)
+  const getVcsAuthUrl = (
+    provider: VcsProviderId = 'github',
+    mode: 'create' | 'update' = 'create',
+  ) => {
     const alertType =
       mode === 'create' ? 'installation-created' : 'installation-updated'
     const successUrl = `${window.location.origin}/projects/${projectId}/settings?alert=${alertType}`
     const failureUrl = `${window.location.origin}/projects/${projectId}/settings`
-    return `${endpoint}/vcs/github/authorize?project=${projectId}&success=${encodeURIComponent(successUrl)}&failure=${encodeURIComponent(failureUrl)}&mode=admin`
+    return buildVcsAuthUrl({
+      endpoint: projectEndpoint,
+      provider,
+      projectId,
+      successUrl,
+      failureUrl,
+    })
   }
+
+  // Backwards-compatible GitHub-specific helper.
+  const getGitHubAuthUrl = (mode: 'create' | 'update' = 'create') =>
+    getVcsAuthUrl('github', mode)
 
   if (projectLoading) {
     return (
@@ -1062,22 +1090,27 @@ export function ProjectSettingsOverview({
             limit={installationsLimit}
             onPageChange={setInstallationsPage}
             getGitHubAuthUrl={getGitHubAuthUrl}
+            getVcsAuthUrl={getVcsAuthUrl}
             isSelfHosted={false} // TODO: Get from organization plan
             isVcsEnabled={true} // TODO: Get from project settings
           />
 
-          {/* MCP Server Section */}
-          <MCPSection projectName={project.name} />
+          <PremiumGeoDBCard projectId={projectId} />
 
-          {/* Change Organization Section */}
-          <ChangeOrganizationSection
-            project={project}
-            organizations={organizations}
-            organizationsLoading={organizationsLoading}
-            selectedOrgId={selectedOrgId}
-            onOrgChange={setSelectedOrgId}
-            onTransfer={transferProjectMutation}
-          />
+          {/* MCP Server Section */}
+          <MCPSection projectId={projectId} projectName={project.name} />
+
+          {/* Change Organization Section (cloud multi-tenancy only) */}
+          {supportsMultiTenancy && (
+            <ChangeOrganizationSection
+              project={project}
+              organizations={organizations}
+              organizationsLoading={organizationsLoading}
+              selectedOrgId={selectedOrgId}
+              onOrgChange={setSelectedOrgId}
+              onTransfer={transferProjectMutation}
+            />
+          )}
 
           {/* Delete Project Section */}
           <DeleteProjectSection
