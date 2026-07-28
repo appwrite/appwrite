@@ -3,6 +3,7 @@ layout: post
 title: "Exploring AI and vibe coding: Insights from the Appwrite developer community"
 description: Survey insights on how developers are using AI, vibe coding tools, and the Appwrite MCP server.
 date: 2025-08-25
+lastUpdated: 2026-06-29
 cover: /images/blog/ai-vibe-coding-insights/cover.avif
 timeToRead: 10
 author: laura-du-ry
@@ -13,7 +14,7 @@ faqs:
   - question: "Which AI coding tools do developers use most?"
     answer: "Survey responses from the Appwrite community show ChatGPT, GitHub Copilot, Claude, and Cursor as the most-used tools, with Warp AI CLI gaining traction in the terminal. Most developers combine two or three of these depending on the task: in-editor completions, longer reasoning, and quick one-off questions."
   - question: "How can I use AI to build with Appwrite?"
-    answer: "Use the [Appwrite MCP server](/docs/tooling/mcp/api) to give AI assistants direct access to your project. They can create collections, manage users, deploy functions, and run queries through natural language. The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles this together for Claude users."
+    answer: "Use the [Appwrite MCP server](/docs/tooling/mcp/api) to give AI assistants direct access to your project. They can create tables, manage users, deploy functions, and run queries through natural language. The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles this together for Claude users."
   - question: "Should I worry about security when vibe coding?"
     answer: "Yes. Vibe-coded apps often skip auth, permissions, and rate limiting because the AI does not bring them up by default. Read the [backend checklist for vibe-coded apps](/blog/post/backend-checklist-vibe-coded-apps) before you ship, and keep API keys server-side in an [Appwrite Function](/docs/products/functions) rather than the browser."
   - question: "Is vibe coding suitable for production apps?"
@@ -97,7 +98,7 @@ This gap doesn’t necessarily mean senior developers aren’t interested, it ma
 
 Many developers are already pairing AI tools with Appwrite for backend tasks like databases, authentication, and hosting. In fact, **Appwrite was the most‑mentioned backend in the survey**, ahead of other options like Supabase.
 
-The **Appwrite MCP server** builds on this by letting AI assistants interact directly with Appwrite,  creating collections, managing functions, and running queries through natural language. 
+The **Appwrite MCP server** builds on this by letting AI assistants interact directly with Appwrite, creating tables, managing functions, and running queries through natural language.
 
 > As one developer noted, *“Appwrite MCP connecting with AI tools could be a game‑changer for building full‑stack apps faster.”*
 > 

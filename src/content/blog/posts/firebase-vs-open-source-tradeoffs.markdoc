@@ -3,6 +3,7 @@ layout: post
 title: "Firebase vs open source: the trade-offs developers miss"
 description: "An honest look at the trade-offs developers make when choosing Firebase: vendor lock-in, pricing at scale, and data ownership versus open-source alternatives."
 date: 2026-03-20
+lastUpdated: 2026-06-29
 cover: /images/blog/firebase-vs-open-source-tradeoffs/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -17,9 +18,9 @@ faqs:
   - question: "Can I self-host Firebase?"
     answer: "No. Firebase is a fully managed, cloud-only platform. For teams that need on-premise deployment, strict data residency, or operation in regulated industries, that is a hard constraint. Open-source alternatives such as Appwrite can be self-hosted on any Docker-compatible infrastructure."
   - question: "How does Appwrite compare to Firebase on pricing?"
-    answer: "Appwrite Cloud pricing is based on compute and storage rather than per-document operations, and self-hosted Appwrite has only the cost of the underlying infrastructure. Neither model produces per-query billing surprises that come from frequent real-time listeners or denormalized read patterns."
+    answer: "Appwrite Cloud pricing is based on compute and storage rather than per-row operations, and self-hosted Appwrite has only the cost of the underlying infrastructure. Neither model produces per-query billing surprises that come from frequent real-time listeners or denormalized read patterns."
   - question: "Does Appwrite cover the same surface area as Firebase?"
-    answer: "Yes, broadly. Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a document database with real-time subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, plus integrated hosting for static and SSR frontends."
+    answer: "Yes, broadly. Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a database with real-time row subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, plus integrated hosting for static and SSR frontends."
   - question: "What license is Appwrite released under?"
     answer: "Appwrite is open source under the BSD 3-Clause license. That license imposes no restrictions on commercial use and does not require you to open-source your application code, which makes it usable in commercial and proprietary projects."
 ---
@@ -87,9 +88,9 @@ Appwrite is an open-source developer infrastructure platform for building web, m
 Appwrite directly addresses each of the Firebase trade-offs outlined above:
 
 - **Lock-in**: Appwrite uses standard REST APIs and open-source SDKs. Its BSD 3-Clause license and self-hosting support mean you're never dependent on a single vendor's pricing or product decisions.
-- **Pricing**: Appwrite Cloud pricing is based on compute and storage, not per-document operations. Self-hosted Appwrite has only infrastructure costs. Neither model produces per-query billing surprises.
+- **Pricing**: Appwrite Cloud pricing is based on compute and storage, not per-row operations. Self-hosted Appwrite has only infrastructure costs. Neither model produces per-query billing surprises.
 - **Data ownership**: Self-hosted Appwrite stores data in your own infrastructure. Even on Appwrite Cloud, the data model is standard and exportable. There is no Google-owned infrastructure between you and your data.
-- **Feature breadth**: Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a document database with real-time subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, covering the same surface area as Firebase's main services.
+- **Feature breadth**: Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a database with real-time row subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, covering the same surface area as Firebase's main services.
 - **Self-hosting**: Appwrite can be deployed on any Docker-compatible infrastructure, including your own servers, your cloud account, or an on-premise environment. This is a hard requirement for many enterprise and compliance use cases that Firebase simply cannot satisfy.
 
 # Resources

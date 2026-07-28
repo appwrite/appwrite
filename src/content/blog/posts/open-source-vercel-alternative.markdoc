@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite Sites vs Vercel: Choosing the right web hosting platform"
 description: Looking for an open-source hosting solution? Read this blog to compare Appwrite Sites and Vercel and understand which platform fits your project's needs.
 date: 2025-05-19
+lastUpdated: 2026-06-29
 cover: /images/blog/oss-vercel-cover.avif
 timeToRead: 10
 author: ebenezer-don
@@ -40,7 +41,7 @@ One of the biggest differences between Appwrite Sites and Vercel is how they fit
 
 **Vercel** focuses primarily on frontend deployment. It excels at handling static assets and serverless-rendered content, especially from Next.js. It also supports other frontend frameworks like Astro, SvelteKit, Nuxt, and Remix, although it's deeply optimized for Next.js and includes native support for features like ISR (Incremental Static Regeneration) and Edge Middleware.
 
-**Appwrite Sites**, on the other hand, is part of a **complete development platform**. You're not just deploying your frontend. You're deploying it in the same environment that already knows about your database collections, users, sessions, cloud functions, storage buckets, and APIs. That means the same platform handles everything from user auth to file uploads to server-side logic, and your frontend can interact with it all without any manual configuration.
+**Appwrite Sites**, on the other hand, is part of a **complete development platform**. You're not just deploying your frontend. You're deploying it in the same environment that already knows about your database tables, users, sessions, cloud functions, storage buckets, and APIs. That means the same platform handles everything from user auth to file uploads to server-side logic, and your frontend can interact with it all without any manual configuration.
 
 This level of integration also means less risk of misconfiguration when connecting your services. Your environment variables, domain rules, CORS policies, and secrets are all managed within one project scope, reducing the friction between your frontend and backend.
 
@@ -142,7 +143,7 @@ Both platforms offer strong environment variable support, with scope control and
 
 These built-in variables make it much easier to integrate your front end with the rest of your Appwrite services. You don't have to manually pass your API endpoint or project ID because it's already available.
 
-Appwrite also provides a **dynamic API key automatically**, scoped and injected for both the build process and runtime (for SSR). This makes it easier to create or configure collections at build time, or securely perform server-to-server operations during SSR. If you were deploying on Vercel, you’d need to manually generate an Appwrite API key, store it as a secret, and rotate it regularly to maintain security.
+Appwrite also provides a **dynamic API key automatically**, scoped and injected for both the build process and runtime (for SSR). This makes it easier to create or configure tables at build time, or securely perform server-to-server operations during SSR. If you were deploying on Vercel, you’d need to manually generate an Appwrite API key, store it as a secret, and rotate it regularly to maintain security.
 
 # Domains, CORS, and routing
 

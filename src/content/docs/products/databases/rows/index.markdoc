@@ -900,12 +900,12 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-const promise = tablesDB.updateRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    '<ROW_ID>',
-    { title: 'Updated Title' }
-);
+const promise = tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Updated Title' }
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -1020,12 +1020,12 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-const promise = tablesDB.upsertRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    ID.unique(),
-    {}
-);
+const promise = tablesDB.upsertRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {}
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -1336,7 +1336,7 @@ if let jsonString = jsonString,
 {% /tabs %}
 
 {% info title="Generate types automatically" %}
-You can automatically generate model definitions for your tables using the [Appwrite CLI](/docs/products/databases/type-generation). Run `appwrite types collection` to generate types based on your database schema.
+You can automatically generate model definitions for your tables using the [Appwrite CLI](/docs/products/databases/type-generation). Run `appwrite types` to generate types based on your database schema.
 {% /info %}
 
 # Permissions {% #permissions %}
@@ -1630,4 +1630,3 @@ Perform create, update, and delete operations on multiple rows simultaneously.
 Set custom creation and update timestamps when migrating data or backdating records.
 {% /cards_item %}
 {% /cards %}
-

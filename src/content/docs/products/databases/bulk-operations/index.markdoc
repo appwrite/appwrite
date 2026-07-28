@@ -56,10 +56,10 @@ const client = new sdk.Client()
 
 const tablesDB = new sdk.TablesDB(client);
 
-const result = await tablesDB.createRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const result = await tablesDB.createRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rows: [
         {
             $id: sdk.ID.unique(),
             name: 'Row 1'
@@ -69,7 +69,7 @@ const result = await tablesDB.createRows(
             name: 'Row 2'
         }
     ]
-);
+});
 ```
 
 ```server-python
@@ -155,16 +155,16 @@ const client = new sdk.Client()
 
 const tablesDB = new sdk.TablesDB(client);
 
-const result = await tablesDB.updateRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    {
+const result = await tablesDB.updateRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    data: {
         status: 'published'
     },
-    [
+    queries: [
         sdk.Query.equal('status', 'draft')
     ]
-);
+});
 ```
 
 ```server-python
@@ -242,10 +242,10 @@ const client = new sdk.Client()
 
 const tablesDB = new sdk.TablesDB(client);
 
-const result = await tablesDB.upsertRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const result = await tablesDB.upsertRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rows: [
         {
             $id: sdk.ID.unique(),
             name: 'New Row 1'
@@ -255,7 +255,7 @@ const result = await tablesDB.upsertRows(
             name: 'New Row 2'
         }
     ]
-);
+});
 ```
 
 ```server-python
@@ -342,13 +342,13 @@ const client = new sdk.Client()
 
 const tablesDB = new sdk.TablesDB(client);
 
-const result = await tablesDB.deleteRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const result = await tablesDB.deleteRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         sdk.Query.equal('status', 'archived')
     ]
-);
+});
 ```
 
 ```server-python

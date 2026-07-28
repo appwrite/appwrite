@@ -78,11 +78,11 @@ export function useIdeas() {
     // Fetch the 10 most recent ideas from the database
     const fetch = async (): Promise<void> => {
         try {
-            const response = await tablesDB.listRows(
+            const response = await tablesDB.listRows({
                 databaseId,
                 tableId,
-                [Query.orderDesc('$createdAt'), Query.limit(queryLimit)]
-            );
+                queries: [Query.orderDesc('$createdAt'), Query.limit(queryLimit)]
+            });
             setCurrent(response.rows as Idea[]);
         } catch (error) {
             console.error('Error fetching ideas:', error);
@@ -94,17 +94,17 @@ export function useIdeas() {
     // Add new idea to the database
     const add = async (idea: Omit<Idea, '$id' | '$createdAt' | '$updatedAt' | '$permissions'>): Promise<void> => {
         try {
-            const response = await tablesDB.createRow(
+            const response = await tablesDB.createRow({
                 databaseId,
                 tableId,
-                ID.unique(),
-                idea,
-                [
+                rowId: ID.unique(),
+                data: idea,
+                permissions: [
                     Permission.read('any'),
                     Permission.update(`user:${idea.userId}`),
                     Permission.delete(`user:${idea.userId}`)
                 ]
-            );
+            });
             setCurrent(prev => [response as Idea, ...prev].slice(0, queryLimit));
         } catch (error) {
             console.error('Error adding idea:', error);
@@ -113,7 +113,11 @@ export function useIdeas() {
 
     const remove = async (id: string): Promise<void> => {
         try {
-            await tablesDB.deleteRow(databaseId, tableId, id);
+            await tablesDB.deleteRow({
+                databaseId,
+                tableId,
+                rowId: id
+            });
             await fetch(); // Refetch ideas to ensure we have 10 items
         } catch (error) {
             console.error('Error removing idea:', error);

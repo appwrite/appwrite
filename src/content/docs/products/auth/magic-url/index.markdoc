@@ -20,11 +20,11 @@ const client = new Client()
 
 const account = new Account(client);
 
-const token = await account.createMagicURLToken(
-    ID.unique(),
-    'email@example.com',
-    'https://example.com/verify'
-);
+const token = await account.createMagicURLToken({
+    userId: ID.unique(),
+    email: 'email@example.com',
+    url: 'https://example.com/verify'
+});
 ```
 
 ```graphql

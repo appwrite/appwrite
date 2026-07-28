@@ -58,11 +58,11 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2')                  // Your secret API key
 ;
 
-const topic = messaging.createTopic(
-        '<TOPIC_ID>',     // topicId
-        '<NAME>',         // name
-        '<ROLES>'         // permission roles for who can subscribe
-    );
+const topic = messaging.createTopic({
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>',
+    subscribe: ['<ROLE>']
+});
 
 ```
 ```deno
@@ -80,15 +80,10 @@ client
 ;
 
 const topic = messaging.createTopic({
-        topicId: '<TOPIC_ID>',
-        name: '<NAME>',
-        subscribe: '<ROLES>' // permission roles for who can subscribe
-    });
-const topic = messaging.createTopic(
-        '<TOPIC_ID>',     // topicId
-        '<NAME>',         // name
-        '<ROLES>'         // permission roles for who can subscribe
-    );
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>',
+    subscribe: ['<ROLE>']
+});
 ```
 ```php
 <?php
@@ -353,11 +348,11 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const subscriber = await messaging.createSubscriber(
-    '<TOPIC_ID>',         // topicId
-    '<SUBSCRIBER_ID>',    // subscriberId
-    '<TARGET_ID>'         // targetId
-);
+const subscriber = await messaging.createSubscriber({
+    topicId: '<TOPIC_ID>',
+    subscriberId: '<SUBSCRIBER_ID>',
+    targetId: '<TARGET_ID>'
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";

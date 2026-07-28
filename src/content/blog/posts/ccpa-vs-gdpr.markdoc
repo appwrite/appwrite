@@ -3,6 +3,7 @@ layout: post
 title: "CCPA vs GDPR: Understanding the differences and implications"
 description: Learn more about the difference between CCPA and GDPR and what you need to keep in mind when building your applications.
 date: 2024-09-19
+lastUpdated: 2026-06-29
 cover: /images/blog/ccpa-gdpr.avif
 timeToRead: 8
 author: jake-barnby
@@ -18,7 +19,7 @@ faqs:
   - question: "Does Appwrite help with GDPR and CCPA compliance?"
     answer: "Appwrite is GDPR and CCPA compliant as a platform and gives you the building blocks you need, including controlled permissions, encryption in transit and at rest, and APIs for deleting user data. The application layer is still your responsibility, including consent flows and user-facing data export. See the [Appwrite GDPR](/docs/advanced/security/gdpr) and CCPA pages for specifics."
   - question: "How do I handle a data deletion request as a developer?"
-    answer: "Have a documented process to identify all places where the user's data exists, then delete or anonymize it within the time window the law requires (30 days for CCPA, one month for GDPR, both extendable in limited cases). In Appwrite, that usually means deleting documents in [Appwrite Databases](/docs/products/databases), removing storage files, and revoking auth sessions for that user."
+    answer: "Have a documented process to identify all places where the user's data exists, then delete or anonymize it within the time window the law requires (30 days for CCPA, one month for GDPR, both extendable in limited cases). In Appwrite, that usually means deleting rows in [Appwrite Databases](/docs/products/databases), removing storage files, and revoking auth sessions for that user."
   - question: "What are the penalties for non-compliance with GDPR and CCPA?"
     answer: "GDPR fines can reach up to 4 percent of global annual revenue or 20 million euros, whichever is higher. CCPA fines are smaller per incident (up to 7,500 dollars for intentional violations) but they add up quickly across many users. Either way, the reputational damage usually costs more than the fine."
 ---

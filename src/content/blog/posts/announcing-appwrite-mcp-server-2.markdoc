@@ -70,6 +70,8 @@ The full catalog of Appwrite operations stays internal to the server. When the m
 
 If you are already using the Appwrite MCP server, remove all service flags from the list of arguments from your existing configuration. Using `uvx` automatically fetches the latest version.
 
+A special thanks to [Abid Abdulgafoor](https://www.linkedin.com/in/abidabdulgafoor/) from our community, who suggested the two-tool architecture that shaped this release.
+
 # Resources
 
 - [MCP server documentation](/docs/tooling/ai/mcp-servers/api)

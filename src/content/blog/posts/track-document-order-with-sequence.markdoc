@@ -1,32 +1,33 @@
 ---
 layout: post
-title: Using $sequence to track document order in Appwrite
-description: Learn how to use Appwrite's $sequence attribute to track document order in your database.
+title: Using $sequence to track row order in Appwrite
+description: Learn how to use Appwrite's $sequence column to track row order in your database.
 date: 2025-07-16
+lastUpdated: 2026-06-29
 cover: /images/blog/track-document-order-with-sequence/cover.avif
 timeToRead: 6
 author: ebenezer-don
 category: tutorial
 faqs:
-  - question: "What is the $sequence attribute in Appwrite?"
-    answer: "$sequence is a system attribute that Appwrite assigns to every document on creation. It is a unique, auto-incrementing integer scoped to the collection, so the first document gets 1, the second gets 2, and so on. It is read only and cannot be modified or reused."
-  - question: "Why not just use a timestamp to order documents?"
-    answer: "Timestamps can collide when documents are created within the same millisecond, which leads to unstable sort order. $sequence is monotonically increasing and unique, so it gives you a deterministic order even under high concurrency."
+  - question: "What is the $sequence column in Appwrite?"
+    answer: "$sequence is a system column that Appwrite assigns to every row on creation. It is a unique, auto-incrementing integer scoped to the table, so the first row gets 1, the second gets 2, and so on. It is read only and cannot be modified or reused."
+  - question: "Why not just use a timestamp to order rows?"
+    answer: "Timestamps can collide when rows are created within the same millisecond, which leads to unstable sort order. $sequence is monotonically increasing and unique, so it gives you a deterministic order even under high concurrency."
   - question: "Can I sort and paginate by $sequence in Appwrite?"
     answer: "Yes. $sequence works with the standard Query API, so you can use Query.orderAsc('$sequence') or Query.orderDesc('$sequence') and combine it with cursor pagination. See the [Appwrite Databases docs](/docs/products/databases) for the full query reference."
   - question: "Do I have to create $sequence manually?"
-    answer: "No. Appwrite assigns it automatically when the document is created, alongside other system attributes like $id and $createdAt. You should not define a sequence attribute yourself in your collection schema."
+    answer: "No. Appwrite assigns it automatically when the row is created, alongside other system columns like $id and $createdAt. You should not define a sequence column yourself in your table schema."
   - question: "Is $sequence safe to expose in URLs or UI?"
     answer: "Yes for things like ticket numbers, order numbers, or invoice numbers where a predictable counter is the desired behavior. Avoid using it where you need unguessable IDs (for example, share links), because the value is enumerable. Use $id for those cases."
-  - question: "Does $sequence reset if I delete documents?"
-    answer: "No. The counter is monotonic and does not reuse values, so deleting document 42 does not free up the sequence number 42. The next inserted document still gets the next unused integer."
+  - question: "Does $sequence reset if I delete rows?"
+    answer: "No. The counter is monotonic and does not reuse values, so deleting row 42 does not free up the sequence number 42. The next inserted row still gets the next unused integer."
 ---
 
 Some systems need to reflect the order in which actions happen. A ticketing system, for example, should assign "Ticket #41" before "Ticket #42". But in a user interface, it often makes sense to display the latest tickets first, so "Ticket #42" may appear above #41.
 
-Relying on timestamps to get this right is often not enough. Two documents can be created almost simultaneously, and the sort order might vary. What is needed is a consistent, backend-assigned number that increases with each insert and cannot be modified or skipped.
+Relying on timestamps to get this right is often not enough. Two rows can be created almost simultaneously, and the sort order might vary. What is needed is a consistent, backend-assigned number that increases with each insert and cannot be modified or skipped.
 
-Appwrite's new `$sequence` attribute provides exactly this. Every time a document is added to a collection, the system assigns it a unique, auto-incrementing integer. This value reflects the insert history of the collection and can be used for sorting, display, filtering, and pagination.
+Appwrite's `$sequence` column provides exactly this. Every time a row is added to a table, the system assigns it a unique, auto-incrementing integer. This value reflects the insert history of the table and can be used for sorting, display, filtering, and pagination.
 
 In this tutorial, we will build a simple web-based support ticket tracker using plain HTML and JavaScript. Each submitted ticket will be stored in Appwrite with a title and description, and each will receive a `$sequence` number automatically. We will use that number to display and order the tickets.
 
@@ -38,35 +39,35 @@ Start by opening the [Appwrite console](https://cloud.appwrite.io/). If you do n
 
 Give it a name like **Support Tracker**. After creation, note the **Project ID**, as you will need it later in your frontend code.
 
-## Create a database and collection
+## Create a database and table
 
 Inside your project:
 
 - Go to the **Database** section
 - Create a new database named "Support DB"
-- Inside that database, create a new collection named "Tickets"
+- Inside that database, create a new table named "Tickets"
 
-## Add document attributes
+## Add row columns
 
-In the **Tickets** collection, define the following attributes:
+In the **Tickets** table, define the following columns:
 
-- `title` - type: `string`, required: `yes`, size: 256
-- `body` - type: `string`, required: `yes`, size: 1000
+- `title` - type: `text`, required: `yes`, size: 256
+- `body` - type: `text`, required: `yes`, size: 1000
 
-Appwrite will automatically include system attributes such as `$id` and `$sequence`. You do not need to create `$sequence` manually.
+Appwrite will automatically include system columns such as `$id` and `$sequence`. You do not need to create `$sequence` manually.
 
-Confirm the schema once all attributes are added.
+Confirm the schema once all columns are added.
 
 ## Set permissions for testing
 
-For now, allow anyone to create and read documents:
+For now, allow anyone to create and read rows:
 
-- In the collection's **Settings**, under **Permissions**
+- In the table's **Settings**, under **Permissions**
 - Add `role:any` to **Create** and **Read**
 
 You can change this later when adding [authentication](https://appwrite.io/docs/products/auth).
 
-Also take note of your **Database ID** and **Collection ID**. You will use them in your frontend.
+Also take note of your **Database ID** and **Table ID**. You will use them in your frontend.
 
 ## Configure web platform
 
@@ -226,16 +227,16 @@ client
   .setEndpoint('<YOUR_APPWRITE_ENDPOINT>')
   .setProject('<YOUR_APPWRITE_PROJECT_ID>')
 
-const databases = new Appwrite.Databases(client)
+const tablesDB = new Appwrite.TablesDB(client)
 
 const databaseId = '<YOUR_DATABASE_ID>'
-const collectionId = '<YOUR_COLLECTION_ID>'
+const tableId = '<YOUR_TABLE_ID>'
 
 ```
 
 Replace the placeholders with your actual values from the Appwrite console.
 
-This code sets up the SDK so that you can call `databases.createDocument()` and `databases.listDocuments()` in the rest of the script.
+This code sets up the SDK so that you can call `tablesDB.createRow()` and `tablesDB.listRows()` in the rest of the script.
 
 {% /section %}
 
@@ -255,10 +256,10 @@ form.addEventListener('submit', async (e) => {
   if (!title || !body) return
 
   try {
-    await databases.createDocument({
+    await tablesDB.createRow({
       databaseId,
-      collectionId,
-      documentId: ID.unique(),
+      tableId,
+      rowId: ID.unique(),
       data: {
         title,
         body,
@@ -274,7 +275,7 @@ form.addEventListener('submit', async (e) => {
 
 ```
 
-This code creates a new document in your collection when the form is submitted. It uses `'unique()'` to generate a unique ID. After submission, the form is reset and the list of tickets is reloaded to show the new entry.
+This code creates a new row in your table when the form is submitted. It uses `'unique()'` to generate a unique ID. After submission, the form is reset and the list of tickets is reloaded to show the new entry.
 
 {% /section %}
 
@@ -285,9 +286,9 @@ Now add a function that retrieves tickets and shows them in order, newest first:
 ```javascript
 async function loadTickets() {
   try {
-    const response = await databases.listDocuments({
+    const response = await tablesDB.listRows({
       databaseId,
-      collectionId,
+      tableId,
       queries: [
         Appwrite.Query.orderDesc('$sequence'),
       ]
@@ -298,16 +299,16 @@ async function loadTickets() {
 
     ticketList.innerHTML = ''
 
-    if (response.documents.length === 0) {
+    if (response.rows.length === 0) {
       emptyState.style.display = 'block'
       ticketCount.textContent = '0 tickets'
     } else {
       emptyState.style.display = 'none'
-      ticketCount.textContent = `${response.documents.length} ticket${
-        response.documents.length === 1 ? '' : 's'
+      ticketCount.textContent = `${response.rows.length} ticket${
+        response.rows.length === 1 ? '' : 's'
       }`
 
-      response.documents.forEach((ticket, index) => {
+      response.rows.forEach((ticket, index) => {
         const ticketElement = document.createElement('div')
         ticketElement.className = 'card u-padding-24'
         ticketElement.innerHTML = `
@@ -347,16 +348,16 @@ You now have a working support ticket tracker that looks like this:
 
 ![Support tracker demo](/images/blog/track-document-order-with-sequence/support-tracker-demo.avif)
 
-- Each submitted ticket is stored as a document in Appwrite
-- Every document receives a `$sequence` number, guaranteed to be unique and increasing
+- Each submitted ticket is stored as a row in Appwrite
+- Every row receives a `$sequence` number, guaranteed to be unique and increasing
 - The interface displays each ticket using that number
 - The ticket list is reliably sorted by creation order
 
-There was no need to write any logic to generate numbers, track counters, or manage collisions. Appwrite's `$sequence` attribute handled the sequence internally, which was great for our use case.
+There was no need to write any logic to generate numbers, track counters, or manage collisions. Appwrite's `$sequence` column handled the sequence internally, which was great for our use case.
 
 ## Conclusion
 
-This tutorial introduced the auto-incrementing `$sequence` attribute and demonstrated how to use it in a small, working app. It offers a solution to a common need: preserving the order of inserts in a predictable, integer-based way.
+This tutorial introduced the auto-incrementing `$sequence` column and demonstrated how to use it in a small, working app. It offers a solution to a common need: preserving the order of inserts in a predictable, integer-based way.
 
 Because the value is assigned by your database, `$sequence` remains stable even as your application grows. You can filter by it, paginate through it, or display it directly in user interfaces. And since it is read-only and immutable, we avoid the risk of errors that often come with custom counters or timestamp sorting.
 
@@ -368,6 +369,6 @@ Looking forward to seeing what you build with this!
 
 ## Resources
 
-- [Appwrite Database Documentation](/docs/products/databases)
+- [Appwrite Databases documentation](/docs/products/databases)
 - [Pink Design System](https://pink.appwrite.io/)
-- [Secure sensitive database fields with encrypted string attributes](https://appwrite.io/blog/post/encrypted-attributes-for-sensitive-fields)
+- [Secure sensitive database fields with encrypted columns](https://appwrite.io/blog/post/encrypted-attributes-for-sensitive-fields)

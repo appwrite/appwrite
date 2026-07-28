@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Timestamp Overrides: Accurate timelines for production workloads"
 description: Move historical data into Appwrite without losing context or disrupting chronological accuracy.
 date: 2025-08-13
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-timestamp-overrides/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -10,11 +11,11 @@ category: announcement
 featured: false
 faqs:
   - question: "What are timestamp overrides in Appwrite Databases?"
-    answer: "Timestamp overrides let you set `$createdAt` and `$updatedAt` manually when creating or importing documents instead of having Appwrite auto-stamp the current time. This is useful for migrating historical data, preserving original event order, and maintaining accurate audit trails."
+    answer: "Timestamp overrides let you set `$createdAt` and `$updatedAt` manually when creating or importing rows instead of having Appwrite auto-stamp the current time. This is useful for migrating historical data, preserving original event order, and maintaining accurate audit trails."
   - question: "Why do I need to override timestamps in Appwrite?"
     answer: "When you import data from another system, automatic timestamps make every record look brand new, which breaks analytics, feeds, and user-facing timelines. Overrides keep the original event time so a user's join date or an order's placement time stays accurate after the migration."
   - question: "How do I set a custom $createdAt value in Appwrite?"
-    answer: "Include `$createdAt` (and/or `$updatedAt`) as fields in your document payload when calling a privileged API. The value must be a valid ISO-8601 string like `2023-10-05T14:48:00Z`. Omit the fields and Appwrite stamps them automatically as usual."
+    answer: "Include `$createdAt` (and/or `$updatedAt`) as fields in your row payload when calling a privileged API. The value must be a valid ISO-8601 string like `2023-10-05T14:48:00Z`. Omit the fields and Appwrite stamps them automatically as usual."
   - question: "Can I set custom timestamps from a client SDK?"
     answer: "No. Timestamp overrides require an API key or Console access via the CSV Import wizard for security reasons. Allowing arbitrary client-set timestamps would let users forge audit trails, so the feature is restricted to privileged callers."
   - question: "What is ISO-8601 and why does Appwrite require it?"
@@ -26,11 +27,11 @@ In many data workflows, imported records automatically take on the time they are
 
 Whether it is maintaining accurate audit trails, reliable analytics, proper chronological order, or a customer’s “joined on” date, every detail matters.
 
-That’s why we’re introducing **Timestamp Overrides**. A simple but powerful way to set `$createdAt` and `$updatedAt` manually when importing or creating documents, so your history stays accurate without extra steps. This means your data looks exactly how it should from day one, with no extra scripts or workarounds.
+That’s why we’re introducing **Timestamp Overrides**. A simple but powerful way to set `$createdAt` and `$updatedAt` manually when importing or creating rows, so your history stays accurate without extra steps. This means your data looks exactly how it should from day one, with no extra scripts or workarounds.
 
 # Preserve timestamps without extra workarounds
 
-Appwrite has always managed timestamps automatically, setting `$createdAt` and `$updatedAt` to the current time whenever a document is created or updated. That’s perfect for most workflows, like building new apps or adding fresh data, because it’s accurate, automatic, and requires zero extra effort.
+Appwrite has always managed timestamps automatically, setting `$createdAt` and `$updatedAt` to the current time whenever a row is created or updated. That’s perfect for most workflows, like building new apps or adding fresh data, because it’s accurate, automatic, and requires zero extra effort.
 
 Migrations and bulk imports, however, require a different approach. When you import existing data, automatic timestamps overwrite the original ones, making every record look new and breaking analytics, feeds, and user-facing timelines. 
 
@@ -52,10 +53,10 @@ This change isn’t just about convenience. It unlocks a few tangible benefits f
 Before you go ahead and start using this feature, here are a few important points about how Timestamp Overrides work:
 
 - **Privileged-only:** This feature requires an API key or Console access via CSV Import. It isn’t available through client-side SDK calls for security reasons.
-- **Opt-in per document:** If you leave `$createdAt` or `$updatedAt` out of your payload, Appwrite will auto-stamp them as usual.
+- **Opt-in per row:** If you leave `$createdAt` or `$updatedAt` out of your payload, Appwrite will auto-stamp them as usual.
 - **Validation:** Both fields must be valid ISO-8601 strings (e.g., `2023-10-05T14:48:00Z`). Invalid values are rejected.
 - **Partial override:** You can set one field and let Appwrite handle the other; for example, preserve `$createdAt` but allow `$updatedAt` to update automatically.
-- **SDK usage:** Include the fields inside the document data itself; no new API parameters or endpoints are required.
+- **SDK usage:** Include the fields inside the row data itself; no new API parameters or endpoints are required.
 
 # Built for enterprise‑grade data integrity
 
@@ -70,6 +71,6 @@ Whether importing a few thousand records or years of historical data, this featu
 It’s available now on **Cloud**, and will be coming to **Self-Hosted** in the next release.
 
 # More resources 
-- [Read the documentation to learn more](/docs/products/databases/documents#custom-timestamps)
+- [Read the documentation to learn more](/docs/products/databases/rows#custom-timestamps)
 - [Announcing CSV Import: Bring in large datasets to Appwrite with ease](/blog/post/announcing-csv-imports)
 - [Announcing Bulk API: Handle heavy data workloads with ease](/blog/post/announcing-bulk-api)

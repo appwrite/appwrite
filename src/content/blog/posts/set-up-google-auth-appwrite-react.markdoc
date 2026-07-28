@@ -3,6 +3,7 @@ layout: post
 title: How to set up Google authentication in React with Appwrite
 description: Learn how to set up Google authentication in a React application using Appwrite.
 date: 2024-07-19
+lastUpdated: 2026-06-29
 cover: /images/blog/set-up-google-auth-appwrite-react/cover.avif
 timeToRead: 9
 author: ebenezer-don
@@ -146,7 +147,9 @@ export const loginWithGoogle = async () => {
 
 export const logoutUser = async () => {
   try {
-    await account.deleteSession('current')
+    await account.deleteSession({
+        sessionId: 'current'
+    })
   } catch (error) {
     console.error(error)
   }

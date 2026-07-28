@@ -30,24 +30,24 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 // Page 1
-const page1 = await tablesDB.listRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const page1 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         Query.limit(25),
         Query.offset(0)
     ]
-);
+});
 
 // Page 2
-const page2 = await tablesDB.listRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const page2 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         Query.limit(25),
         Query.offset(25)
     ]
-);
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -166,25 +166,25 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 // Page 1
-const page1 = await tablesDB.listRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const page1 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         Query.limit(25),
     ]
-);
+});
 
 const lastId = page1.rows[page1.rows.length - 1].$id;
 
 // Page 2
-const page2 = await tablesDB.listRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+const page2 = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         Query.limit(25),
         Query.cursorAfter(lastId),
     ]
-);
+});
 ```
 
 ```client-flutter

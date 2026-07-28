@@ -3,6 +3,7 @@ layout: post
 title: "How to leverage Appwrite Dynamic Keys for enhanced security"
 description: Learn how to use dynamic API keys to protect your projects.
 date: 2024-08-21
+lastUpdated: 2026-06-29
 cover: /images/blog/how-to-leverage-dynamic-api-keys-for-better-security/cover.avif
 timeToRead: 5
 author: ebenezer-don
@@ -94,7 +95,7 @@ const client = new Client()
 
 In the above example, the environment variable `APPWRITE_FUNCTION_API_ENDPOINT` is used for the endpoint, and the API key is obtained from `req.headers['x-appwrite-key']`.
 
-**4. Deploying and testing the function:** [Deploy your function](https://appwrite.io/docs/products/functions/functions) through the Appwrite console or the Appwrite CLI. Test the function by calling its endpoint and verifying that it performs the intended operations, such as creating a new document in the database.
+**4. Deploying and testing the function:** [Deploy your function](https://appwrite.io/docs/products/functions/functions) through the Appwrite console or the Appwrite CLI. Test the function by calling its endpoint and verifying that it performs the intended operations, such as creating a new row in the database.
 
 ## Using dynamic API keys in local functions
 

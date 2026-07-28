@@ -3,33 +3,34 @@ layout: post
 title: How to plan and execute database migration successfully with the new Appwrite CLI
 description: Learn how to use the new Appwrite CLI to migrate your databases.
 date: 2024-08-26
+lastUpdated: 2026-06-29
 cover: /images/blog/how-to-migrate-database-with-cli/cover.avif
 timeToRead: 5
 author: ebenezer-don
 category: product
 faqs:
   - question: "What does `appwrite.config.json` do in the Appwrite CLI?"
-    answer: "`appwrite.config.json` is the source of truth for your project's collections, functions, and other resources. You commit it to Git, edit it like any other config, and use `appwrite push` to apply changes. This lets you track schema history, code-review migrations, and replicate projects across environments."
+    answer: "`appwrite.config.json` is the source of truth for your project's tables, functions, and other resources. You commit it to Git, edit it like any other config, and use `appwrite push` to apply changes. This lets you track schema history, code-review migrations, and replicate projects across environments."
   - question: "How do I pull my existing database schema into the CLI?"
-    answer: "Run `appwrite pull collections --all` to download the current schema from your Appwrite project into `appwrite.config.json`. This gives you a baseline you can version, modify, and push back. It's the recommended first step before making schema changes."
+    answer: "Run `appwrite pull tables --all` to download the current schema from your Appwrite project into `appwrite.config.json`. This gives you a baseline you can version, modify, and push back. It's the recommended first step before making schema changes."
   - question: "How does GitOps work with [Appwrite Databases](/docs/products/databases)?"
-    answer: "You keep `appwrite.config.json` in a Git repo, treat schema changes as PRs, and run `appwrite push collections` from CI to apply approved changes. This gives you review, rollback (via Git history), and consistent deploys across staging and production without manual console clicks."
-  - question: "Can I rename a collection or attribute safely?"
-    answer: "Renaming an attribute is essentially a delete and create, so any existing data on the old name will not move automatically. For schema changes that need data migration, plan a two-step approach: add the new field, backfill data with a script or function, then remove the old field once everything is migrated."
+    answer: "You keep `appwrite.config.json` in a Git repo, treat schema changes as PRs, and run `appwrite push tables` from CI to apply approved changes. This gives you review, rollback (via Git history), and consistent deploys across staging and production without manual console clicks."
+  - question: "Can I rename a table or column safely?"
+    answer: "Renaming a column is essentially a delete and create, so any existing data on the old name will not move automatically. For schema changes that need data migration, plan a two-step approach: add the new field, backfill data with a script or function, then remove the old field once everything is migrated."
   - question: "How do I replicate a project to a new environment?"
-    answer: "Copy `appwrite.config.json` to the new project, switch the CLI's project context (`appwrite client --projectId <id>`), and run `appwrite push collections`. This creates the same schema in the target project without manual setup, which is useful for staging, demo, or per-customer environments."
+    answer: "Copy `appwrite.config.json` to the new project, switch the CLI's project context (`appwrite client --projectId <id>`), and run `appwrite push tables`. This creates the same schema in the target project without manual setup, which is useful for staging, demo, or per-customer environments."
   - question: "What happens if `appwrite push` fails partway through?"
-    answer: "The CLI applies changes attribute by attribute, so a failure can leave you in a partial state. Check the error output, fix the underlying issue (often a constraint conflict or invalid type), and rerun the push. Avoid running migrations directly against production without first testing them in a staging project."
+    answer: "The CLI applies changes column by column, so a failure can leave you in a partial state. Check the error output, fix the underlying issue (often a constraint conflict or invalid type), and rerun the push. Avoid running migrations directly against production without first testing them in a staging project."
 ---
 Database migration is a critical task in the lifecycle of any application. It involves making schema changes while ensuring that data remains intact, often to accommodate new features, improve performance, or ensure scalability. With the release of the new Appwrite CLI, the process of planning and executing database migrations has become significantly easier. The new CLI features allow you to manage your database schemas more efficiently, ensuring smooth transitions and minimal downtime.
 
 # The new Appwrite CLI
 
-The new Appwrite CLI introduces several enhancements to improve the developer experience in managing database schemas. One of the standout features is the ability to use your `appwrite.config.json` file as the source of truth for your database collections' schema. This approach brings numerous benefits, including better change tracking, seamless migrations using GitOps, and simplified project replication. Let's explore these advantages in more detail:
+The new Appwrite CLI introduces several enhancements to improve the developer experience in managing database schemas. One of the standout features is the ability to use your `appwrite.config.json` file as the source of truth for your database tables' schema. This approach brings numerous benefits, including better change tracking, seamless migrations using GitOps, and simplified project replication. Let's explore these advantages in more detail:
 
 **1. Tracking changes**
 
-By using `appwrite.config.json` as the source for your collections schema, you can easily track changes over time. This file can be version-controlled with Git, allowing you to see a detailed history of modifications and collaborate effectively with your team.
+By using `appwrite.config.json` as the source for your tables schema, you can easily track changes over time. This file can be version-controlled with Git, allowing you to see a detailed history of modifications and collaborate effectively with your team.
 
 **2. Migrating database changes with GitOps**
 
@@ -48,35 +49,35 @@ Let's walk through the process of planning and executing a database migration us
 If you already have a database setup, start by pulling the current configuration into your `appwrite.config.json` file. This step ensures that you have the latest schema as a baseline.
 
 ```bash
-appwrite pull collections --all
+appwrite pull tables --all
 
 ```
 
-## Step 2: Creating and pushing collections
+## Step 2: Creating and pushing tables
 
-If you are starting from scratch, you can initialize a new collection and push it to Appwrite.
+If you are starting from scratch, you can initialize a new table and push it to Appwrite.
 
-1. Create a new collection:
+1. Create a new table:
     
     ```bash
-    appwrite init collection
+    appwrite init tables
     ```
     
-2. Push the collection to Appwrite:
+2. Push the table to Appwrite:
     
     ```bash
-    appwrite push collections
+    appwrite push tables
     ```
     
 
-## Step 3: Modifying collections
+## Step 3: Modifying tables
 
-To make changes to your collections, edit the `appwrite.config.json` file. For instance, you might want to change an attribute's type or add a new attribute. Here’s an example:
+To make changes to your tables, edit the `appwrite.config.json` file. For instance, you might want to change a column's type or add a new column. Here’s an example:
 
-### Original attributes
+### Original columns
 
 ```json
-"attributes": [
+"columns": [
   {
     "key": "a",
     "type": "integer",
@@ -90,19 +91,17 @@ To make changes to your collections, edit the `appwrite.config.json` file. For
 ]
 ```
 
-### Modified attributes
+### Modified columns
 
 ```json
-"attributes": [
+"columns": [
   {
     "key": "a",
-    "type": "string",
+    "type": "text",
     "status": "available",
     "error": "",
     "required": false,
     "array": false,
-    "min": 1,
-    "max": 100,
     "default": null},
   {
     "key": "phone",
@@ -122,7 +121,7 @@ To make changes to your collections, edit the `appwrite.config.json` file. For
 After making the necessary changes, push the updated schema to Appwrite:
 
 ```bash
-appwrite push collections
+appwrite push tables
 
 ```
 

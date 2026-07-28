@@ -3,6 +3,7 @@ layout: post
 title: Messaging explained
 description: Learn about Appwrite Messaging and how it works under the hood
 date: 2024-07-08
+lastUpdated: 2026-06-29
 cover: /images/blog/messaging-explained/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -17,7 +18,7 @@ faqs:
   - question: "Can I schedule messages with Appwrite Messaging?"
     answer: "Yes, when you create a message you can include a scheduled at timestamp. An internal scheduler checks for due messages every minute and queues them for delivery. This works for emails, SMS, and push notifications across topics and direct targets."
   - question: "How does Appwrite send messages under the hood?"
-    answer: "When you call the API, Appwrite validates the input, creates a message document, and creates a schedule document for delivery timing. A worker picks up due messages, resolves topic targets, selects the right provider for each target, and dispatches the message. Failures are logged so you can debug delivery issues from the Console."
+    answer: "When you call the API, Appwrite validates the input, creates a message record, and creates a schedule record for delivery timing. A worker picks up due messages, resolves topic targets, selects the right provider for each target, and dispatches the message. Failures are logged so you can debug delivery issues from the Console."
   - question: "What are common use cases for Appwrite Messaging?"
     answer: "Common use cases include transactional notifications (payment receipts, password resets), marketing campaigns through topics, real time alerts to drive engagement, and custom security flows like OTP delivery. Combining Messaging with [Appwrite Functions](/docs/products/functions) lets you trigger messages from app events without managing extra infrastructure."
 ---
@@ -76,18 +77,16 @@ const client = new sdk.Client()
     .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
 
 const messaging = new sdk.Messaging(client);
-.
-.
-.
-const message = await messaging.createSms(
-    sdk.ID.unique(),
-    'Hello from Appwrite Messaging!',
-    [smsTopic], // topic to send SMS to
-    [],
-    [],
-    false,
-    ''
-);
+
+const message = await messaging.createSms({
+    messageId: sdk.ID.unique(),
+    content: 'Hello from Appwrite Messaging!',
+    topics: [smsTopic],
+    users: [],
+    targets: [],
+    draft: false,
+    scheduledAt: ''
+});
 ```
 
 You can also watch the [product tour](https://www.youtube.com/watch?v=QdDgPeuBZ1I) on YouTube to get a full overview of Messaging from the Console.
@@ -100,10 +99,10 @@ Here's a step-by-step breakdown of how Appwrite Messaging works:
 
 1. Validate input on API request
     - The process starts when the Appwrite API is called to create a message, which validates the input.
-2. Create message document
-    - A document containing details about the message, including recipients and content, is created on the internal database.
-3. Create schedule document
-    - A schedule document is created on the internal database, specifying when the message should be sent. This document is necessary for the message scheduler.
+2. Create message record
+    - A record containing details about the message, including recipients and content, is created in the internal database.
+3. Create schedule record
+    - A schedule record is created in the internal database, specifying when the message should be sent. This record is necessary for the message scheduler.
 4. Queue the message via the message scheduler
     - Every minute, the scheduler checks the internal database for scheduled messages.
     - For each scheduled message, it checks if the message should be sent at that time.

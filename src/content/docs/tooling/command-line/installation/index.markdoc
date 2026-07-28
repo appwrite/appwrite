@@ -206,7 +206,7 @@ The CLI resolves resource paths relative to the file that defines the resource. 
 
 The single-file format continues to work. You can split any supported resource arrays over time and keep other arrays in the root config.
 
-Supported include keys are `functions`, `sites`, `databases`, `collections`, `tablesDB`, `tables`, `topics`, `teams`, `buckets`, `webhooks`, and `messages`.
+Supported include keys are `functions`, `sites`, `databases`, `tablesDB`, `tables`, `topics`, `teams`, `buckets`, `webhooks`, and `messages`.
 
 Include paths must be local JSON files inside your project. They must be relative paths, end in `.json`, and cannot use parent-directory segments, absolute paths, URLs, URL-like schemes, null bytes, or JSON pointer fragments.
 

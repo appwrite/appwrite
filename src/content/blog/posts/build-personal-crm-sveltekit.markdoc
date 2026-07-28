@@ -7,7 +7,7 @@ cover: /images/blog/build-personal-crm-sveltekit/cover.avif
 timeToRead: 10
 author: aditya-oberai
 category: tutorial
-lastUpdated: 2025-10-14
+lastUpdated: 2026-06-29
 faqs:
   - question: "What's the best tech stack for building a simple CRM or contact manager?"
     answer: "If you're aiming for speed and control, a lightweight frontend like SvelteKit paired with a platform such as Appwrite is best. You get ready-to-use APIs for data, auth, and storage (no need to manage servers) and can still customize everything when needed."
@@ -16,7 +16,7 @@ faqs:
   - question: "What's the easiest way to sync frontend state with backend data?"
     answer: "If you're using frameworks like SvelteKit or React, pair them with APIs that support real-time updates or bulk operations. Appwrite's Realtime and Bulk APIs make syncing large data changes smooth, so the UI always reflects the latest backend state without page reloads."
   - question: "How can I handle bulk data updates efficiently in web apps?"
-    answer: "Instead of looping over every record, use batch APIs (like Appwrite's upsertDocuments()). It minimizes network requests, prevents throttling, and speeds up updates in spreadsheet-style apps."
+    answer: "Instead of looping over every record, use batch APIs (like Appwrite's upsertRows()). It minimizes network requests, prevents throttling, and speeds up updates in spreadsheet-style apps."
   - question: "What's the simplest way to deploy a full-stack web app?"
     answer: "If you're using Appwrite, you can deploy both the backend and frontend in one place with Appwrite Sites. Otherwise, host your frontend on Vercel or Netlify, and connect it to an API from Appwrite, Firebase, or your own Node.js backend."
 ---
@@ -31,15 +31,15 @@ In this blog, we'll build a lightweight personal CRM using **SvelteKit** for the
 
 First, [create an Appwrite Cloud account](https://cloud.appwrite.io/) if you haven't already. Once your project is ready, go to the **Settings** page and copy your project ID and API endpoint for further usage.
 
-Head to the **Overview** page from the left sidebar, select the **API keys** tab under the **Integrations** section, and click on the **Create API key** button. Select the `documents.write` and `documents.read` scopes under the **Databases** dropdown, create the key, and copy it for further usage.
+Head to the **Overview** page from the left sidebar, select the **API keys** tab under the **Integrations** section, and click on the **Create API key** button. Select the `rows.write` and `rows.read` scopes under the **Databases** dropdown, create the key, and copy it for further usage.
 
-Next, go to the **Databases** page from the left sidebar, create a new database with the ID `crm`, and then a collection with the ID `contacts` (save both IDs for further usage).
+Next, go to the **Databases** page from the left sidebar, create a new database with the ID `crm`, and then a table with the ID `contacts` (save both IDs for further usage).
 
-Next, head to the **Attributes** tab and add the following:
+Next, head to the **Columns** tab and add the following:
 
 | Key | Type | Size | Required |
 | --- | --- | --- | --- |
-| name | String | 255 | Yes |
+| name | Text |  | Yes |
 | email | Email |  | Yes |
 | phone | Integer | 25 | No |
 | notes | Integer | 2000 | No |
@@ -86,14 +86,14 @@ APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
 APPWRITE_PROJECT_ID=<PROJECT_ID>
 APPWRITE_API_KEY=<API_KEY>
 APPWRITE_DATABASE_ID=crm
-APPWRITE_COLLECTION_ID=contacts
+APPWRITE_TABLE_ID=contacts
 ```
 
 Next, in the `src/lib` subdirectory, create a file `appwrite.js` and add the following code:
 
  ```js
 // src/lib/appwrite.js
-import { Client, Databases, ID } from 'node-appwrite';
+import { Client, TablesDB, ID } from 'node-appwrite';
 import { env } from '$env/dynamic/private';
 
 const client = new Client()
@@ -101,73 +101,73 @@ const client = new Client()
 	.setProject(env.APPWRITE_PROJECT_ID)
 	.setKey(env.APPWRITE_API_KEY);
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 const databaseId = env.APPWRITE_DATABASE_ID;
-const collectionId = env.APPWRITE_COLLECTION_ID;
+const tableId = env.APPWRITE_TABLE_ID;
 
 // Add or update contacts
-async function upsertDocuments(contacts) {
+async function upsertRows(contacts) {
 	try {
-		const documents = contacts.map((contact) => ({
+		const rows = contacts.map((contact) => ({
 			$id: contact.$id || ID.unique(),
 			name: contact.name,
 			email: contact.email,
 			phone: contact.phone,
 			notes: contact.notes
 		}));
-		return await databases.upsertDocuments(databaseId, collectionId, documents);
+		return await tablesDB.upsertRows({ databaseId, tableId, rows });
 	} catch (error) {
-		console.error('Error upserting documents:', error);
-		throw new Error('Failed to upsert documents');
+		console.error('Error upserting rows:', error);
+		throw new Error('Failed to upsert rows');
 	}
 }
 
 // Delete a single contact
-async function deleteDocument(id) {
+async function deleteRow(id) {
 	try {
-		return await databases.deleteDocument({
+		return await tablesDB.deleteRow({
 			databaseId,
-			collectionId,
-			documentId: id
+			tableId,
+			rowId: id
 		});
 	} catch (error) {
-		console.error('Error deleting document:', error);
-		throw new Error('Failed to delete document');
+		console.error('Error deleting row:', error);
+		throw new Error('Failed to delete row');
 	}
 }
 
 // Delete all contacts
-async function deleteDocuments() {
+async function deleteRows() {
 	try {
-		return await databases.deleteDocuments({
+		return await tablesDB.deleteRows({
 			databaseId,
-			collectionId,
+			tableId,
 		});
 	} catch (error) {
-		console.error('Error deleting documents:', error);
-		throw new Error('Failed to delete documents');
+		console.error('Error deleting rows:', error);
+		throw new Error('Failed to delete rows');
 	}
 }
 
 // List contacts
-async function listDocuments() {
+async function listRows() {
 	try {
-		return await databases.listDocuments({
+		return await tablesDB.listRows({
 			databaseId,
-			collectionId
+			tableId
 		});
 	} catch (error) {
-		console.error('Error fetching documents:', error);
-		throw new Error('Failed to fetch documents');
+		console.error('Error fetching rows:', error);
+		throw new Error('Failed to fetch rows');
 	}
 }
 
 export const db = {
-	upsertDocuments,
-	deleteDocument,
-	deleteDocuments,
-	listDocuments
+	upsertRows,
+	deleteRow,
+	deleteRows,
+	listRows
 };
 ```
 
@@ -192,8 +192,8 @@ import { env } from '$env/dynamic/private';
 // GET - List all contacts
 export async function GET() {
 	try {
-		const response = await db.listDocuments();
-		return json(response.documents);
+		const response = await db.listRows();
+		return json(response.rows);
 	} catch (error) {
 		console.error('Error fetching contacts:', error);
 		return json({ error: 'Failed to fetch contacts' }, { status: 500 });
@@ -205,7 +205,7 @@ export async function POST({ request }) {
 	try {
 		const { contacts } = await request.json();
 
-		const response = await db.upsertDocuments(contacts);
+		const response = await db.upsertRows(contacts);
 		return json(response);
 	} catch (error) {
 		console.error('Error upserting contacts:', error);
@@ -220,11 +220,11 @@ export async function DELETE({ request }) {
 
 		let response;
 		if (id) {
-			// Single contact ID provided - delete a single document
-			response = await db.deleteDocument(id);
+			// Single contact ID provided - delete a single row
+			response = await db.deleteRow(id);
 		} else {
-			// No ID provided - delete all documents
-			response = await db.deleteDocuments();
+			// No ID provided - delete all rows
+			response = await db.deleteRows();
 		}
 		return json(response);
 	} catch (error) {

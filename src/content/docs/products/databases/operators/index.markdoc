@@ -204,10 +204,10 @@ client = Client()
 tablesDB = TablesDB(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'letters': Operator.arrayAppend(['c']) }
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'letters': Operator.arrayAppend(['c']) }
 )
 ```
 ```server-dotnet
@@ -246,10 +246,10 @@ client
 tablesDB = TablesDB.new(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'letters' => Operator.arrayAppend(['c']) }
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'letters' => Operator.arrayAppend(['c']) }
 )
 ```
 ```server-java
@@ -1331,10 +1331,10 @@ client = Client()
 tablesDB = TablesDB(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'upvotes': Operator.increment(1) }
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'upvotes': Operator.increment(1) }
 )
 ```
 ```server-dotnet
@@ -1373,10 +1373,10 @@ client
 tablesDB = TablesDB.new(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'upvotes' => Operator.increment(1) }
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'upvotes' => Operator.increment(1) }
 )
 ```
 ```server-java
@@ -1618,10 +1618,10 @@ client = Client()
 tablesDB = TablesDB(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'books': Operator.arrayAppend(['The Great Gatsby']) }
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'books': Operator.arrayAppend(['The Great Gatsby']) }
 )
 ```
 ```server-dotnet
@@ -1660,10 +1660,10 @@ client
 tablesDB = TablesDB.new(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'books' => Operator.arrayAppend(['The Great Gatsby']) }
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'books' => Operator.arrayAppend(['The Great Gatsby']) }
 )
 ```
 ```server-java
@@ -1905,10 +1905,10 @@ client = Client()
 tablesDB = TablesDB(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'scheduledDeletion': Operator.dateAddDays(30) }
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'scheduledDeletion': Operator.dateAddDays(30) }
 )
 ```
 ```server-dotnet
@@ -1947,10 +1947,10 @@ client
 tablesDB = TablesDB.new(client)
 
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  { 'scheduledDeletion' => Operator.dateAddDays(30) }
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'scheduledDeletion' => Operator.dateAddDays(30) }
 )
 ```
 ```server-java
@@ -2042,7 +2042,10 @@ await tablesDB.updateRow({
 });
 
 // Commit the transaction
-await tablesDB.updateTransaction(tx.$id, 'commit');
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
 ```
 ```server-nodejs
 const sdk = require('node-appwrite');
@@ -2071,7 +2074,10 @@ await tablesDB.updateRow({
 });
 
 // Commit the transaction
-await tablesDB.updateTransaction(tx.$id, 'commit');
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -2270,18 +2276,18 @@ tx = tablesDB.create_transaction()
 
 # Update row with operators inside the transaction
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  {
-    'upvotes': Operator.increment(1),
-    'lastModified': Operator.dateSetNow()
-  },
-  transaction_id=tx.id
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={
+        'upvotes': Operator.increment(1),
+        'lastModified': Operator.dateSetNow()
+    },
+    transaction_id=tx.id
 )
 
 # Commit the transaction
-tablesDB.update_transaction(tx.id, 'commit')
+tablesDB.update_transaction(transaction_id=tx.id, commit=True)
 ```
 ```server-dotnet
 using Appwrite;
@@ -2332,18 +2338,18 @@ tx = tablesDB.create_transaction
 
 # Update row with operators inside the transaction
 result = tablesDB.update_row(
-  '<DATABASE_ID>',
-  '<TABLE_ID>',
-  '<ROW_ID>',
-  {
-    'upvotes' => Operator.increment(1),
-    'lastModified' => Operator.dateSetNow()
-  },
-  transaction_id: tx['$id']
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: {
+        'upvotes' => Operator.increment(1),
+        'lastModified' => Operator.dateSetNow()
+    },
+    transaction_id: tx['$id']
 )
 
 # Commit the transaction
-tablesDB.update_transaction(tx['$id'], 'commit')
+tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
 ```
 ```server-java
 import io.appwrite.Client;
@@ -2481,7 +2487,10 @@ await tablesDB.createOperations({
 });
 
 // Commit the transaction
-await tablesDB.updateTransaction(tx.$id, 'commit');
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
 ```
 ```server-nodejs
 const sdk = require('node-appwrite');
@@ -2524,7 +2533,10 @@ await tablesDB.createOperations({
 });
 
 // Commit the transaction
-await tablesDB.updateTransaction(tx.$id, 'commit');
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -2818,7 +2830,7 @@ tablesDB.create_operations(
 )
 
 # Commit the transaction
-tablesDB.update_transaction(tx.id, 'commit')
+tablesDB.update_transaction(transaction_id=tx.id, commit=True)
 ```
 ```server-dotnet
 using Appwrite;
@@ -2914,7 +2926,7 @@ tablesDB.create_operations(
 )
 
 # Commit the transaction
-tablesDB.update_transaction(tx['$id'], 'commit')
+tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
 ```
 ```server-java
 import io.appwrite.Client;

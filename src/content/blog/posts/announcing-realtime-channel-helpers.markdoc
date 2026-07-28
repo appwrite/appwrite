@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Realtime Channel helpers: Type-safe subscriptions made simple"
 description: Build realtime subscriptions faster with a fluent, chainable API that reduces errors and improves code clarity.
 date: 2026-02-13
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-realtime-channel-helpers/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -10,7 +11,7 @@ category: announcement
 featured: false
 faqs:
   - question: "What are Realtime channel helpers in Appwrite?"
-    answer: "Channel helpers are a fluent, type-safe API for building Appwrite Realtime channel strings without manual concatenation. Instead of writing strings like `databases.<id>.tables.<id>.rows.<id>`, you chain methods on the `Channel` class and the SDK builds the correct string with IDE autocomplete and compile-time checks."
+    answer: "Channel helpers are a fluent, type-safe API for building Appwrite Realtime channel strings without manual concatenation. Instead of writing strings like `tablesdb.<id>.tables.<id>.rows.<id>`, you chain methods on the `Channel` class and the SDK builds the correct string with IDE autocomplete and compile-time checks."
   - question: "How does Appwrite Realtime work?"
     answer: "[Appwrite Realtime](/docs/apis/realtime) opens a single WebSocket connection per client and streams events for every channel that client subscribes to. When data changes in your project, Appwrite emits an event and pushes it to every subscribed client over that connection, so you do not need to poll."
   - question: "Which channels does Appwrite Realtime support?"
@@ -23,7 +24,7 @@ faqs:
     answer: "Chain `.update()` (or `.create()`, `.delete()`) on the channel helper to filter by event type. For example, `Channel.tablesdb('db').table('t').row().update()` only delivers events when an existing row is updated, not when one is created or deleted."
 ---
 
-If you've built realtime features in your apps, you've likely written channel strings by hand: concatenating IDs, formatting wildcards, and hoping you didn't introduce a typo that would silently break your subscription. While writing channel strings like `databases.*.tables.*.rows.*` works, it's error-prone and harder to maintain as your application grows.
+If you've built realtime features in your apps, you've likely written channel strings by hand: concatenating IDs, formatting wildcards, and hoping you didn't introduce a typo that would silently break your subscription. While writing channel strings like `tablesdb.*.tables.*.rows.*` works, it's error-prone and harder to maintain as your application grows.
 
 To make realtime subscriptions clearer and safer, Appwrite is introducing **Channel helpers**: a type-safe, fluent API for building realtime channel subscriptions.
 
@@ -57,7 +58,7 @@ const subscription = await realtime.subscribe(
 );
 ```
 
-Instead of writing `databases.<DATABASE_ID>.tables.<TABLE_ID>.rows.<ROW_ID>`, the helper builds the correct string for you while providing autocomplete and validation every step of the way.
+Instead of writing `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.<ROW_ID>`, the helper builds the correct string for you while providing autocomplete and validation every step of the way.
 
 # Flexible and composable
 

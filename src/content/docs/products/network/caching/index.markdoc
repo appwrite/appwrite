@@ -8,29 +8,29 @@ Appwrite employs a multi-layered caching approach to enhance the performance of 
 
 # Region-level {% #region-level %}
 
-At the region level, Appwrite provides smart in-memory caching for various resources:  
+At the region level, Appwrite provides smart in-memory caching for various resources:
 
-- **Documents**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention.  
-- **Storage files**: Frequently accessed files are cached in memory to reduce disk reads and improve performance.  
-- **Image transformations**: Processed images (e.g., resized or converted) are cached in memory for faster repeated requests, reducing processing overhead.  
+- **Rows**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention.
+- **Storage files**: Frequently accessed files are cached in memory to reduce disk reads and improve performance.
+- **Image transformations**: Processed images (e.g., resized or converted) are cached in memory for faster repeated requests, reducing processing overhead.
 
 Region-level caching is tightly integrated with Appwrite's APIs, optimizing performance while preserving data integrity.
 
 # Edge-level {% #edge-level %}
 
-At the edge, Appwrite employs smart caching for specific use cases:  
+At the edge, Appwrite employs smart caching for specific use cases:
 
-- **Compute builds**: Caches build artifacts for faster deployments and reduced latency during function executions.  
-- **Cold starts**: Pre-loads frequently accessed resources, reducing latency for new requests and improving application responsiveness.  
+- **Compute builds**: Caches build artifacts for faster deployments and reduced latency during function executions.
+- **Cold starts**: Pre-loads frequently accessed resources, reducing latency for new requests and improving application responsiveness.
 
 Edge-level caching complements region-level caching, ensuring optimal performance for globally distributed applications.
 
 # Private caching {% #cdn-caching %}
 Appwrite's CDN layer includes **private caching**, a caching strategy designed to handle the dynamic and permission-sensitive nature of Appwrite's APIs and resources securely.
 
-**What is private caching?**  
+**What is private caching?**
 
-In the HTTP context, private caching allows responses to be cached but ensures they are only served to the specific user or client that requested them. This is achieved using HTTP headers that control caching behavior. For example:  
+In the HTTP context, private caching allows responses to be cached but ensures they are only served to the specific user or client that requested them. This is achieved using HTTP headers that control caching behavior. For example:
 
 - `Cache-Control: private, max-age=3600`  
   Indicates that the response can be cached, but only in a private cache (e.g., the user's browser).  

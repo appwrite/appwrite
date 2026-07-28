@@ -3,6 +3,7 @@ layout: post
 title: "June product update: Public roadmap | The Appwriter | Messaging"
 description: "Check out everything new that happened in June, including public roadmap, the Appwriter release and the new Messaging page."
 date: 2024-07-04
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-june/product-update-june-2024.avif
 timeToRead: 5
 author: dennis-ivy
@@ -79,7 +80,7 @@ Big shoutout to [Manjunath0408](https://github.com/Manjunath0408) and [Darshan](
 - Improved Console loading bar
 - [Throw an error if invalid domain is added to a function](https://github.com/appwrite/console/pull/1115) by [Manjunath0408](https://github.com/Manjunath0408)
 - [Fix for inconsistent build logs](https://github.com/appwrite/appwrite/issues/6237) by [Darshan](https://github.com/ItzNotABug)
-- [Fix for migration of collections, attributes and indexes of Databases](https://github.com/appwrite/appwrite/issues/8044)
+- [Fix for Databases migration](https://github.com/appwrite/appwrite/issues/8044)
 
 # Open source community recognitions
 

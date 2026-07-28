@@ -5,7 +5,7 @@ description: Bypass Appwrite rate limits and CORS errors in your development env
 ---
 
 {% info title="Deprecation notice" %}
-Dev keys are going to be deprecated on September 1, 2026. We recommend planning your migration away from dev keys ahead of time.
+The creation of new dev keys is paused, and dev keys will be deprecated on September 1, 2026. Appwrite's login rate limit has changed so that a successful login now resets it, which means you no longer need a dev key to test authentication flows during development. We recommend planning your migration away from dev keys ahead of time. [Learn more in the changelog](/changelog/entry/2026-07-22).
 {% /info %}
 
 Dev keys are secrets used by Appwrite [Client SDKs](/docs/sdks#client) to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits:

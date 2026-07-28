@@ -3,6 +3,7 @@ layout: post
 title: The top 3 Claude features you are probably not using
 description: Discover the top 3 Claude features most developers overlook. Learn how to use them to improve prompts, streamline workflows, and get better results from Claude.
 date: 2026-04-27
+lastUpdated: 2026-06-29
 cover: /images/blog/the-top-3-claude-features-you-are-probably-not-using/cover.avif
 timeToRead: 5
 author: aishwari
@@ -127,7 +128,7 @@ Extended thinking, Projects, and prompt caching address different layers of the 
 
 For extended thinking and prompt caching, the [Anthropic documentation](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking) has complete implementation details and model-specific notes worth reading before you ship anything to production.
 
-If you want to go further and connect Claude directly to a live backend, the [Appwrite MCP server](/docs/tooling/mcp) lets Claude interact with your Appwrite project through natural language in Claude Code or Claude Desktop. You can create users, query collections, manage files, and trigger functions without writing a single line of glue code. It's a practical way to bring agentic workflows into a real application stack.
+If you want to go further and connect Claude directly to a live backend, the [Appwrite MCP server](/docs/tooling/mcp) lets Claude interact with your Appwrite project through natural language in Claude Code or Claude Desktop. You can create users, query tables, manage files, and trigger functions without writing a single line of glue code. It's a practical way to bring agentic workflows into a real application stack.
 
 # More resources
 

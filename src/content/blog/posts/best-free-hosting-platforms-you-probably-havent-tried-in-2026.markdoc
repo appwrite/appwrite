@@ -218,7 +218,7 @@ Zeabur deploys apps from Git or templates with one click. It handles databases, 
 
 **Best for:** Anyone who wants Railway's UX without Railway's pricing model.
 
-**Watch out for:** The free plan is genuinely limited - most useful features (monitoring, backups, agent, longer log retention) sit behind the $5/month Dev plan. Smaller ecosystem and fewer integrations than mainstream options. Paid GCP regions start at $20/month.
+**Watch out for:** The free plan is genuinely limited — most useful features (monitoring, backups, agent, longer log retention) sit behind the $5/month Dev plan. Smaller ecosystem and fewer integrations than mainstream options. Paid GCP regions start at $20/month.
 
 # Free hosting platforms compared at a glance
 

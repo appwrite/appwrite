@@ -100,7 +100,7 @@ client = Client()
 
 tablesDB = TablesDB(client)
 
-result = tablesDB.create('<DATABASE_ID>', '<NAME>')
+result = tablesDB.create(database_id='<DATABASE_ID>', name='<NAME>')
 ```
 ```ruby
 require 'Appwrite'

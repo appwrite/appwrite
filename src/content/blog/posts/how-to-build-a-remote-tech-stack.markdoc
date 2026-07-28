@@ -3,6 +3,7 @@ layout: post
 title: "How to build a tech stack for a remote startup"
 description: 10 tools you need in your remote tech stack.
 date: 2024-07-16
+lastUpdated: 2026-06-29
 cover: /images/blog/how-to-build-remote-tech-stack/cover.avif
 timeToRead: 5
 author: snezhanna
@@ -150,7 +151,7 @@ Some Github Team pros:
 
 ![Appwrite](/images/blog/how-to-build-remote-tech-stack/8.avif)
 
-We couldn't end this list without mentioning [Appwrite](https://appwrite.io/). When asked, "Do you use Appwrite to build Appwrite?" the answer is a yes. The team is building Appwrite with the exact same API we let developers use to develop their apps. Our entire backend, including user authentication, databases, and collections, is powered by Appwrite's easy-to-implement APIs.
+We couldn't end this list without mentioning [Appwrite](https://appwrite.io/). When asked, "Do you use Appwrite to build Appwrite?" the answer is a yes. The team is building Appwrite with the exact same API we let developers use to develop their apps. Our entire backend, including user authentication, databases, and tables, is powered by Appwrite's easy-to-implement APIs.
 
 Appwrite enables you to build a robust backend in half the time and with fewer human resources. By handling complex and time-consuming tasks like authentication and database management, Appwrite lets you focus on the unique features that set your product apart. This also applies to the Appwrite team as we work to improve our products. 
 

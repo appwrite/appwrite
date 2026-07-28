@@ -3,6 +3,7 @@ layout: post
 title: Building the giveaway app for Init Discord sessions
 description: How we used Appwrite and SvelteKit to develop a custom roulette-style giveaway web application.
 date: 2024-03-06
+lastUpdated: 2026-06-29
 cover: /images/blog/building-init-giveaway-app/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -15,9 +16,9 @@ faqs:
   - question: "How do I prevent duplicate giveaway entries in Appwrite?"
     answer: "Create a unique index on the field that should not repeat, for example a Discord username or email. Once the index is in place, a second insert with the same value will fail with a 409, which you can catch in the UI and show as a friendly message. This is how the Init app stops one user from entering twice in a day."
   - question: "How does the realtime wheel update work?"
-    answer: "The frontend subscribes to the Appwrite Databases realtime channel for the giveaway collection. When a new document is created, the SDK fires an event and the wheel re-renders with the new entry. There is no polling involved, the connection is held open by Appwrite. See [Appwrite Databases](/docs/products/databases) for details on realtime."
+    answer: "The frontend subscribes to the Appwrite Databases realtime channel for the giveaway table. When a new row is created, the SDK fires an event and the wheel re-renders with the new entry. There is no polling involved, the connection is held open by Appwrite. See [Appwrite Databases](/docs/products/databases) for details on realtime."
   - question: "Can I build my own giveaway or raffle app on Appwrite?"
-    answer: "Yes. You only need a collection for entries, an OAuth provider for sign-in, and a frontend to pick winners. The whole thing fits inside a small SvelteKit, Next.js, or React app and can run on Appwrite Cloud's free tier for small events."
+    answer: "Yes. You only need a table for entries, an OAuth provider for sign-in, and a frontend to pick winners. The whole thing fits inside a small SvelteKit, Next.js, or React app and can run on Appwrite Cloud's free tier for small events."
   - question: "Is the source code for the Init giveaway app available?"
     answer: "Appwrite has shared similar community apps as open source in the past. Check the Appwrite GitHub organization and the Init recap posts for repository links. Treat the article as a blueprint you can recreate in any stack that has an Appwrite SDK."
 ---
@@ -34,13 +35,13 @@ The giveaway app has two major features:
 
 - **Giveaway registration**
 
-The giveaway registration requires users to log in to the app with their Discord account. As soon as a user logs in with Discord, the app adds their Discord username and email address to an Appwrite collection.
+The giveaway registration requires users to log in to the app with their Discord account. As soon as a user logs in with Discord, the app adds their Discord username and email address to an Appwrite table.
 
 ![Sign In With Discord](/images/blog/building-init-giveaway-app/signin.avif)
 
 - **Winner selection**
 
-The data added to the Appwrite collection is loaded in a wheel that is also updated in real time in case new registrations are added. The wheel can then be spun like a roulette wheel to find a randomly selected winner.
+The data added to the Appwrite table is loaded in a wheel that is also updated in real time in case new registrations are added. The wheel can then be spun like a roulette wheel to find a randomly selected winner.
 
 ![Spin The Wheel](/images/blog/building-init-giveaway-app/winner.avif)
 
@@ -60,22 +61,22 @@ Implementing Discord OAuth required us to first set up an application on the [Di
 
 ### Appwrite Database
 
-We created a **database** and a **collection** for each day of the giveaway in our Appwrite project. Each collection had the same steps to set up.
+We created a **database** and a **table** for each day of the giveaway in our Appwrite project. Each table had the same steps to set up.
 
-Each collection contained two **attributes**:
+Each table contained two **columns**:
 
 | Key         | Type        | Size        | Required    |
 | ----------- | ----------- | ----------- | ----------- |
-| discordName | String      | 255         | Yes         |
+| discordName | Varchar   | 255         | Yes         |
 | email       | Email       | -           | Yes         |
 
 To ensure that one user could only be added once for a day’s giveaway, we created an **index** of the `unique` type.
 
-| Key         | Type        | Attribute   | Order       |
+| Key         | Type        | Column   | Order       |
 | ----------- | ----------- | ----------- | ----------- |
 | names       | unique      | discordName | ASC         |
 
-Lastly, we added **collection-level permissions** to allow anyone to read data (since the giveaway page was meant to be publicly accessible) and only authenticated users to add data (their Discord username and email address) to the collection.
+Lastly, we added **table-level permissions** to allow anyone to read data (since the giveaway page was meant to be publicly accessible) and only authenticated users to add data (their Discord username and email address) to the table.
 
 | Role   | Create | Read   | Update | Delete |
 | ------ | ------ | ------ | ------ | ------ |
@@ -107,7 +108,7 @@ export const APPWRITE_PROJECT = '<PROJECT_ID>';
 
 export const DATABASE_NAME = '<DATABASE_ID>';
 
-export const COLLECTION_NAME = '<COLLECTION_ID>';
+export const TABLE_NAME = '<TABLE_ID>';
 ```
 
 After the constants were added, we could now set up the Appwrite SDK.
@@ -115,7 +116,7 @@ After the constants were added, we could now set up the Appwrite SDK.
 ```js
 // ./src/lib/appwrite.js
 
-import { Account, Client, Databases, OAuthProvider } from 'appwrite';
+import { Account, Client, TablesDB, OAuthProvider } from 'appwrite';
 import { APPWRITE_ENDPOINT, APPWRITE_PROJECT } from './constants';
 
 export const client = new Client();
@@ -124,7 +125,7 @@ client.setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
 
 export const account = new Account(client);
 
-export const database = new Databases(client);
+export const tablesDB = new TablesDB(client);
 
 export { OAuthProvider };
 ```
@@ -157,7 +158,7 @@ export const user = {
 
 The `login` function was called through a button click on the index page of our application to start the authentication process.
 
-```js
+```svelte
 // .src/routes/+page.svelte
 
 <script>
@@ -191,20 +192,20 @@ The `login` function was called through a button click on the index page of our 
 
 ### Adding data to Appwrite Database
 
-To add or get information from the database, we created a database library in the project.  The `add` function adds the Discord username and email to our collection. The `list` function gets the list of all documents in our collection and returns it after reformatting for our roulette wheel for the giveaway.
+To add or get information from the database, we created a database library in the project. The `add` function adds the Discord username and email to our table. The `list` function gets the list of all rows in our table and returns it after reformatting for our roulette wheel for the giveaway.
 
 ```js
 // ./src/lib/database.js
 
 import { Query, ID } from 'appwrite';
-import { database } from './appwrite';
-import { COLLECTION_NAME, DATABASE_NAME } from './constants';
+import { tablesDB } from './appwrite';
+import { TABLE_NAME, DATABASE_NAME } from './constants';
 
 export const db = {
 	list: async () => {
-		let entries = await database.listDocuments({
+		let entries = await tablesDB.listRows({
 			databaseId: DATABASE_NAME,
-			collectionId: COLLECTION_NAME,
+			tableId: TABLE_NAME,
 			queries: [
 				Query.limit(500),
 				Query.select(['discordName'])
@@ -213,7 +214,7 @@ export const db = {
 
 		var options = [];
 
-		entries.documents.forEach((entry) => {
+		entries.rows.forEach((entry) => {
 			options.push({ label: entry.discordName });
 		});
 
@@ -222,10 +223,10 @@ export const db = {
 
 	add: async (discordName, email) => {
 		try {
-			await database.createDocument({
+			await tablesDB.createRow({
 				databaseId: DATABASE_NAME,
-				collectionId: COLLECTION_NAME,
-				documentId: ID.unique(),
+				tableId: TABLE_NAME,
+				rowId: ID.unique(),
 				data: {
 					discordName: discordName,
 					email: email
@@ -241,7 +242,7 @@ export const db = {
 
 We integrated the `add` function directly into the `success` endpoint for our OAuth process so that the user’s information could be added to the database as soon as we had a successful login. We use Svelte’s `onMount` function to achieve this as soon as our page is rendered in the DOM.
 
-```js
+```svelte
 // .src/routes/success/+page.svelte
 
 <script>
@@ -273,7 +274,7 @@ We integrated the `add` function directly into the `success` endpoint for our OA
 
 ### Creating our giveaway roulette
 
-To create our giveaway roulette, we used an NPM package [`spin-wheel`](https://www.npmjs.com/package/spin-wheel). To set this up, we first used a `load` function to get the list of Discord usernames that were already available in the collection before the giveaway page was rendered.
+To create our giveaway roulette, we used an NPM package [`spin-wheel`](https://www.npmjs.com/package/spin-wheel). To set this up, we first used a `load` function to get the list of Discord usernames that were already available in the table before the giveaway page was rendered.
 
 ```js
 // .src/routes/giveaway/+page.js
@@ -292,7 +293,7 @@ export async function load() {
 
 Using the load function would ensure that this list would be available on our page as soon as it gets rendered. We used this list with the `spin-wheel` package to generate a roulette wheel. As a bonus, we also integrated Appwrite Realtime to add new Discord usernames to our list and regenerate the wheel with the updated data. We let the winner selection remain mathematically random and used the `spin-wheel` package to spin the roulette wheel and show us the winner. The wheel spinning function also required us to install an additional NPM package `easing-utils` to select the easing function defining the rate of change in the rotation speed of the wheel.
 
-```js
+```svelte
 // .src/routes/giveaway/+page.svelte
 
 <script>
@@ -303,7 +304,7 @@ Using the load function would ensure that this list would be available on our pa
 	import InitHeading from '../../components/InitHeading.svelte';
 	import * as easing from 'easing-utils';
 	import { client } from '$lib/appwrite';
-	import { DATABASE_NAME, COLLECTION_NAME } from '$lib/constants';
+	import { DATABASE_NAME, TABLE_NAME } from '$lib/constants';
 
 	export let data;
 
@@ -366,10 +367,10 @@ Using the load function would ensure that this list would be available on our pa
 		wheel.lineColor = '#3d3d3f';
 	}
 
-	// Uses Appwrite Realtime to get newly created documents and regenerate the wheel
+	// Uses Appwrite Realtime to get newly created rows and regenerate the wheel
 	function subscribe() {
 		return client.subscribe(
-			`databases.${DATABASE_NAME}.collections.${COLLECTION_NAME}.documents`,
+				`tablesdb.${DATABASE_NAME}.tables.${TABLE_NAME}.rows`,
 			(response) => {
 				console.log(response);
 				props.items.push({ label: response.payload.discordName });

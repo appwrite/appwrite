@@ -16,7 +16,7 @@ Self-hosted Appwrite requires manual backup procedures to protect your data.
 
 Your Appwrite installation has several components that need backing up:
 
-1. **Database** - User data, documents, and configuration
+1. **Database** - User data, rows, and configuration
 2. **Storage volumes** - Uploaded files and function code
 3. **Environment variables** - Configuration in `.env`
 4. **System snapshots** - Complete server state (alternative approach)

@@ -169,8 +169,8 @@ Before we can save our detection result to the Appwrite Database, we need to cre
 Navigate to the Appwrite Console and click on **Database** in the left sidebar, then click on the **Create database** button, you can call this database anything you like, for this example we'll call it `AI`.
 Once you've created the database, click on the **Create table** button and create a new table, once again you can call it anything you want but for this example we'll call it `Image Labels`.
 
-Add two string columns to our table, `image` and `labels`. The `image` column will store the ID of the image we're detecting objects in and the `labels` column will store the detection result.
-Both of these columns should be `required` with `image` having the size of `256` and `labels` having the size of around `4096`.
+Add two text columns to our table, `image` and `labels`. The `image` column will store the ID of the image we're detecting objects in and the `labels` column will store the detection result.
+Both of these columns should be `required`.
 
 {% only_dark %}
 ![Object detection database](/images/docs/ai/tutorials/object-detection/dark/database.avif)
@@ -187,9 +187,8 @@ With the image classified, we can now save the result to the Appwrite Database.
 To begin with we're going to add a new function to the `appwrite.js` file we created earlier which will create these records in the database.
 
 ```js
-async createImageLabels(databaseId, tableId, imageId, labels)
-{
-  await this.tablesDB.createRow({
+async function createImageLabels(databaseId, tableId, imageId, labels) {
+  await tablesDB.createRow({
     databaseId,
     tableId,
     rowId: ID.unique(),

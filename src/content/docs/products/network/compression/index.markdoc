@@ -80,21 +80,21 @@ client
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
-const result = storage.getFilePreview(
-    'photos',           // bucket ID
-    'sunset.png',       // file ID
-    1800,               // width, will be resized using this value.
-    0,                  // height, ignored when 0
-    'center',           // crop center
-    '90',               // slight compression
-    5,                  // border width
-    'CDCA30',           // border color
-    15,                 // border radius
-    1,                  // full opacity
-    0,                  // no rotation
-    'FFFFFF',           // background color
-    'webp'              // output jpg format
-);
+const result = storage.getFilePreview({
+    bucketId: 'photos',
+    fileId: 'sunset.png',
+    width: 1800,
+    height: 0,
+    gravity: 'center',
+    quality: '90',
+    borderWidth: 5,
+    borderColor: 'CDCA30',
+    borderRadius: 15,
+    opacity: 1,
+    rotation: 0,
+    background: 'FFFFFF',
+    output: 'webp'
+});
 
 console.log(result.href);
 ```

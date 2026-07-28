@@ -3,6 +3,7 @@ layout: post
 title: "How to build internal tools quickly: Admin panels"
 description: A practical guide to building admin panels and operations dashboards quickly using Appwrite as the backend, without sacrificing security or reliability.
 date: 2026-03-18
+lastUpdated: 2026-06-29
 cover: /images/blog/build-internal-tools-quickly/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -104,7 +105,7 @@ For teams that want an even faster path to a functional admin interface, tools l
 Internal tools are often less secure than customer-facing applications, because the assumption is that only trusted people use them. This assumption is worth questioning:
 
 - **Each user should have their own login.** Shared credentials make it impossible to audit who did what.
-- **Role-based access is not optional.** A support agent doesn't need the ability to delete database collections. Apply least-privilege to internal tool access.
+- **Role-based access is not optional.** A support agent doesn't need the ability to delete database tables. Apply least-privilege to internal tool access.
 - **API keys used by the admin panel should have limited scope.** Don't use a master API key for admin panel requests if a more limited key works.
 - **Log significant actions.** When someone deletes a record, resets a user's password, or triggers a backend action from the admin panel, that should appear in an audit log.
 

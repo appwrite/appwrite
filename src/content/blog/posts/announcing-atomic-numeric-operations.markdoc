@@ -1,8 +1,9 @@
 ---
 layout: post
 title: "Announcing Atomic numeric operations: Safe, server-side increments and decrements"
-description: Safely update numeric fields like counters, stock levels, or credits without fetching or rewriting the document.
+description: Safely update numeric columns like counters, stock levels, or credits without fetching or rewriting the row.
 date: 2025-08-04
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-atomic-numeric-operations/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -10,33 +11,33 @@ category: announcement
 featured: false
 faqs:
   - question: "What are atomic numeric operations in Appwrite?"
-    answer: "Atomic numeric operations let you increment or decrement a numeric field on a document directly on the server using `incrementDocumentAttribute` and `decrementDocumentAttribute`. Each delta is applied in a single write under concurrency control, so concurrent updates do not overwrite each other."
+    answer: "Atomic numeric operations let you increment or decrement a numeric column on a row directly on the server using `incrementRowColumn` and `decrementRowColumn`. Each delta is applied in a single write under concurrency control, so concurrent updates do not overwrite each other."
   - question: "Why are atomic increments safer than read-modify-write?"
     answer: "With a read-modify-write loop, two clients can read the same value, both add 1, and both write back the same new value. One increment is lost. Atomic operations send only the delta to the server, where the database applies the change in one locked step, eliminating the race condition."
   - question: "Where would I use atomic numeric operations?"
     answer: "Anywhere you mutate a number that multiple clients can touch at once: likes and follower counts, API quotas, stock levels, game scores, retry counters, and rate limits. The feature is especially valuable in real-time and high-concurrency scenarios."
   - question: "Can I set min and max bounds on the value?"
     answer: "Yes. Each operation accepts optional `min` and `max` constraints. If the resulting value would fall outside the bounds, the update is rejected instead of silently clamping. This is useful for rules like \"stock cannot go below zero\" or \"credits cannot exceed a cap\"."
-  - question: "Do atomic operations respect document permissions?"
-    answer: "Yes. The same [Appwrite permissions](/docs/products/databases) that gate `updateDocument` apply to increments and decrements. If a user is not allowed to write to the document, the atomic operation also fails. No special role is added by using the new method."
+  - question: "Do atomic operations respect row permissions?"
+    answer: "Yes. The same [Appwrite permissions](/docs/products/databases) that gate `updateRow` apply to increments and decrements. If a user is not allowed to write to the row, the atomic operation also fails. No special role is added by using the new method."
   - question: "Are atomic operations available on both Cloud and self-hosted Appwrite?"
     answer: "Yes. Atomic numeric operations work the same on Appwrite Cloud and self-hosted installations. You can call them from any [Appwrite SDK](/docs/sdks) that has been updated to expose the new methods."
 ---
 
 In high-concurrency systems like social apps, games, and usage-tracked services, even updating a single number such as a like, retry count, or quota, can lead to consistency issues. When multiple clients try to update the same value simultaneously, it’s easy to end up with conflicting writes, lost updates, or inaccurate data. 
 
-Most setups require you to fetch the document, change the number on the client, and then write it back. This process is slow, error-prone, and wastes bandwidth, especially when you're only trying to change a single field.
+Most setups require you to fetch the row, change the number on the client, and then write it back. This process is slow, error-prone, and wastes bandwidth, especially when you're only trying to change a single column.
 
 To change this, we introduce **Atomic numeric operations** in Appwrite.
 
-A new feature that lets you increment or decrement numeric fields directly on the server, without fetching the full document. It’s fast, safe, bandwidth-efficient, and concurrency-friendly.
+A new feature that lets you increment or decrement numeric columns directly on the server, without fetching the full row. It’s fast, safe, bandwidth-efficient, and concurrency-friendly.
 
 # Race-free numeric updates
 
 
-Before this feature, updating a number meant fetching the entire document, modifying it on the client, and writing it back, a process prone to race conditions, unnecessary bandwidth use, and extra logic to handle edge cases.
+Before this feature, updating a number meant fetching the entire row, modifying it on the client, and writing it back, a process prone to race conditions, unnecessary bandwidth use, and extra logic to handle edge cases.
 
-With **Atomic numeric operations,** you simply send a delta (like `+1` or `-3`), and Appwrite applies the update atomically on the server. No full document reads, no conflicts, no custom logic. Just consistent, permission-aware updates that work reliably under load.
+With **Atomic numeric operations,** you simply send a delta (like `+1` or `-3`), and Appwrite applies the update atomically on the server. No full row reads, no conflicts, no custom logic. Just consistent, permission-aware updates that work reliably under load.
 
 # Built for real-time, multi-user systems
 
@@ -54,63 +55,63 @@ Use it for:
 
 # Performing an atomic operation
 
-Use the `incrementDocumentAttribute` and `decrementDocumentAttribute` methods to perform atomic numeric operations. The server will apply these changes atomically under concurrency control.
+Use the `incrementRowColumn` and `decrementRowColumn` methods to perform atomic numeric operations. The server will apply these changes atomically under concurrency control.
 
 ## Increment a field {% #increment-field %}
 
 ```client-web
-import { Client, Databases } from "appwrite";
+import { Client, TablesDB } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
-const result = await databases.incrementDocumentAttribute(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    '<DOCUMENT_ID>',
-    'likes', // attribute
-    1 // value
-);
+const result = await tablesDB.incrementRowColumn({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    column: 'likes',
+    value: 1
+});
 ```
 
 ## Decrement a field {% #decrement-field %}
 
 ```client-web
-import { Client, Databases } from "appwrite";
+import { Client, TablesDB } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
-const result = await databases.decrementDocumentAttribute(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    '<DOCUMENT_ID>',
-    'credits', // attribute
-    5 // value
-);
+const result = await tablesDB.decrementRowColumn({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    column: 'credits',
+    value: 5
+});
 ```
 
 # Immediate benefits
 
 This feature solves a common problem with a clean, built-in approach. You don’t need to write custom logic to handle concurrency, retries, or limits. It’s a simple API call that replaces a lot of complex edge-case handling. And it just works.
 
-- **Atomic by default:** Every delta is applied in a single server-side write. The document is locked during the update, so there’s no room for race conditions or overlapping writes, even under heavy concurrency.
+- **Atomic by default:** Every delta is applied in a single server-side write. The row is locked during the update, so there’s no room for race conditions or overlapping writes, even under heavy concurrency.
 
 - **Supports both increments and decrements:** You're not limited to just adding `+1`. You can apply any positive or negative delta, whether you're increasing API credits or reducing stock levels after a purchase.
 
 - **Built-in constraints:** You can define optional `min` and `max` bounds on the value. If the update would push the value outside that range, it’s rejected. Great for enforcing limits like “stock can’t go below zero” or “credits can't exceed a cap.”
 
-- **Respects permissions:** This works just like any other Appwrite document update. If the user doesn’t have permission to modify the document, the update doesn’t go through. No exceptions.
+- **Respects permissions:** This works just like any other Appwrite row update. If the user doesn’t have permission to modify the row, the update doesn’t go through. No exceptions.
 
 Atomic numeric operations are live for both **Appwrite Cloud** and **Self-Hosted** environments.
 
-This is a core building block for modern, concurrent-safe applications and it’s now built into Appwrite’s document system.
+This is a core building block for modern, concurrent-safe applications and it’s now built into Appwrite’s row update flow.
 
 # More resources
 

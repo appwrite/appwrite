@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing the Projects API: Configure your project with Server SDKs"
 description: Every project setting, from auth methods and OAuth providers to SMTP and labels, can now be configured programmatically through the Appwrite Server SDKs.
-date: 2026-07-01
+date: 2026-07-22
 cover: /images/blog/announcing-projects-api/cover.avif
 timeToRead: 5
 author: matej-baco
@@ -32,11 +32,12 @@ This is part of a wider effort to make everything in Appwrite accessible through
 
 # Why this matters
 
-A project's configuration is the foundation every other resource sits on. Which auth methods are enabled, which platforms can connect, how email is delivered: these decisions shape how your app behaves. Managing them from code opens up workflows that were previously manual:
+A project's configuration is the foundation every other resource sits on. Which auth methods are enabled, which platforms can connect, how email is delivered: these decisions shape how your app behaves. This matters most for partners: agencies, consultancies, and platforms that manage Appwrite projects on behalf of their clients, where every new client means another project to set up and keep consistent. Managing configuration from code opens up workflows that were previously manual:
 
 - **Reproducible environments** where development, staging, and production projects are configured from the same script
 - **Project provisioning** that sets up auth, platforms, and policies for a new project in one run
 - **Multi-tenant platforms** that configure a project per customer without Console access
+- **Partner workflows**, where agencies, consultancies, and other teams that build for clients provision and manage projects at scale without clicking through the Console for each one
 - **Configuration in version control**, so changes to a project are reviewed and tracked like any other code
 
 # What you can configure
@@ -529,13 +530,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Every setting maps to a method on the `Project` service, available across all Server SDKs with the matching object or named parameters.
 
-# Full SDK support
-
-The Projects API is available across all Appwrite Server SDKs, including Node.js, Python, PHP, Ruby, .NET, Dart, Kotlin, Java, Swift, Go, and Rust, as well as the Appwrite CLI. Complete code examples for every operation and language are in the [Projects API documentation](/docs/partners/project).
-
 # Get started
 
-The Projects API is available on **Appwrite Cloud** today.
+The Projects API is available on **Appwrite Cloud** today, across all Appwrite Server SDKs, including Node.js, Python, PHP, Ruby, .NET, Dart, Kotlin, Java, Swift, Go, and Rust, as well as the Appwrite CLI.
 
 1. Create an [API key](/docs/partners/project/api-keys) with the scopes for the settings you want to manage.
 2. Initialize a Server SDK with your API key.
@@ -544,9 +541,4 @@ The Projects API is available on **Appwrite Cloud** today.
 # Resources
 
 - [Projects API documentation](/docs/partners/project)
-- [Auth methods](/docs/partners/project/auth-methods)
-- [OAuth providers](/docs/partners/project/oauth)
-- [API keys](/docs/partners/project/api-keys)
-- [Platforms](/docs/partners/project/platforms)
-- [SMTP](/docs/partners/project/smtp)
-- [Email templates](/docs/partners/project/email-templates)
+- [Appwrite Discord community](https://appwrite.io/discord)

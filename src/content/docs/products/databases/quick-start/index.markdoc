@@ -13,7 +13,7 @@ Optionally, add a custom database ID.
 {% section #create-table step=2 title="Create table" %}
 Create a table and name it `My books`. Optionally, add a custom table ID.
 
-Navigate to **Columns** and create columns by clicking **Create column** and select **String**.
+Navigate to **Columns** and create columns by clicking **Create column** and select **Text**.
 Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, `title` and `100`.
 
 Navigate to **Settings** > **Permissions** and add a new role **Any**.
@@ -325,7 +325,7 @@ try {
 {% /multicode %}
 
 {% info title="Automatic type generation" %}
-You can automatically generate type definitions for your tables using the [Appwrite CLI type generation](/docs/products/databases/type-generation) feature. Run `appwrite types collection` to generate models for your collections.
+You can automatically generate type definitions for your tables using the [Appwrite CLI type generation](/docs/products/databases/type-generation) feature. Run `appwrite types` to generate models for your tables.
 {% /info %}
 
 ### Model methods

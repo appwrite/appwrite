@@ -121,7 +121,9 @@ QR codes are commonly used for two-factor authentication (2FA). When setting up 
 {% multicode %}
 ```client-web
 // After creating an MFA authenticator
-const authenticator = await account.createMfaAuthenticator('totp');
+const authenticator = await account.createMfaAuthenticator({
+    type: 'totp'
+});
 const qrCode = avatars.getQR({
     text: authenticator.uri,
     size: 400,

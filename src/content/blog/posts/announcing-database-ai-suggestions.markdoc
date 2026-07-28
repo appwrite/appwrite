@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Database AI suggestions: from table name to schema in one click"
 description: We’re introducing new AI features into Appwrite Databases that generate complete schemas and indexes from just a table name.
 date: 2025-11-28
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-database-ai-suggestions/cover.avif
 timeToRead: 5
 author: darshan-pandya
@@ -18,11 +19,11 @@ faqs:
   - question: "Will AI suggestions overwrite an existing table's schema?"
     answer: "No, Database AI suggestions are only offered when you're creating a new table. Existing tables stay untouched. If you want to evolve a schema, you can add columns and indexes manually or use [Appwrite's migration APIs](/docs/products/databases)."
   - question: "Why use AI suggestions instead of designing the schema by hand?"
-    answer: "Schemas designed by hand often miss timestamps, soft-delete fields, or indexes that you only realize you need later. AI suggestions bake those best practices in from the start, reduce naming inconsistencies across collections, and turn a slow setup step into a few seconds of review."
+    answer: "Schemas designed by hand often miss timestamps, soft-delete fields, or indexes that you only realize you need later. AI suggestions bake those best practices in from the start, reduce naming inconsistencies across tables, and turn a slow setup step into a few seconds of review."
   - question: "Is Database AI Suggestions available on self-hosted Appwrite?"
     answer: "Database AI Suggestions launched first on [Appwrite Cloud](/docs/products/databases). Check the Appwrite changelog for self-hosted availability, since features that depend on AI services are typically rolled out to Cloud before being available in self-hosted releases."
 ---
-In many development workflows, setting up a database schema is one of the first and often one of the slowest steps. Starting with a blank schema, juggling naming conventions, remembering which fields need indexes, or ensuring every collection follows best practices can quickly become a chore.
+In many development workflows, setting up a database schema is one of the first and often one of the slowest steps. Starting with a blank schema, juggling naming conventions, remembering which fields need indexes, or ensuring every table follows best practices can quickly become a chore.
 
 Whether spinning up a new project, designing an operational table for a feature, or standardizing schemas across multiple services, the setup should be fast, consistent, and reliable.
 
@@ -51,7 +52,7 @@ This UI update complements Database AI Suggestions by making the schema design a
 Resulting in benefits such as:
 
 - **Faster setup:** Go from table name to sensible schema in seconds.
-- **Consistency:** Keep field names and types aligned across collections.
+- **Consistency:** Keep field names and types aligned across tables.
 - **Best practices baked in:** Get timestamps, soft-delete fields, enums, and indexes without having to remember them.
 - **Fewer errors:** Avoid schema issues that cause analytics problems or require migrations later.
 

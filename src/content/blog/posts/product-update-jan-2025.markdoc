@@ -3,7 +3,7 @@ layout: post
 title: "Product update January 2025: Partners program, Scale plan and more"
 description: Get a full recap of products, features and programs we released in January.
 date: 2025-02-06
-lastUpdated: 2026-05-22
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-jan-2025/cover-image.avif
 timeToRead: 10
 author: dennis-ivy
@@ -77,7 +77,7 @@ Push Notifications just got a major upgrade this month. Now, you can run backgro
 
 ## Billing improvements, UI fixes, and performance updates
 
-We believe little things make big things happen. That’s why we rolled out small yet impactful updates, including a clearer billing system, UI improvements, and fixes for collections and mobile experiences, all aimed at improving your overall Appwrite experience.
+We believe little things make big things happen. That’s why we rolled out small yet impactful updates, including a clearer billing system, UI improvements, and fixes for tables and mobile experiences, all aimed at improving your overall Appwrite experience.
 
 [Go to changelog](https://appwrite.io/changelog/entry/2025-01-03)
 

@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite for hackathons: Build fast, ship faster"
 description: Learn how Appwrite helps hackathon teams go from idea to working prototype in hours, not days.
 date: 2026-03-30
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-for-hackathons-build-fast-ship-faster/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -85,7 +86,7 @@ Appwrite provides structured databases with built-in APIs and permissions, allow
 
 Appwrite provides scalable databases with built-in APIs and permissions. Developers benefit from type safety when working with database tables and rows through generic methods, and can specify custom model types for full type safety when interacting with databases. The Appwrite API layer is designed to be extremely fast by leveraging in-memory caching.
 
-Instead of managing database servers and writing API layers manually, developers can create collections, store application data, and define access rules directly through the Appwrite dashboard or APIs.
+Instead of managing database servers and writing API layers manually, developers can create tables, store application data, and define access rules directly through the Appwrite dashboard or APIs.
 
 ## File storage
 

@@ -8,7 +8,7 @@ timeToRead: 12
 date: 2024-10-09
 author: aditya-oberai
 category: product
-lastUpdated: 2026-05-04
+lastUpdated: 2026-06-29
 faqs:
   - question: "What is backend as a service (BaaS)?"
     answer: "BaaS is a model where a vendor runs common backend primitives (authentication, databases, file storage, APIs, and often serverless functions), and you integrate through SDKs and HTTP APIs instead of provisioning and operating that infrastructure yourself."
@@ -27,7 +27,7 @@ faqs:
 Typical BaaS bundles expose these capabilities through HTTP APIs and SDKs:
 
 - **Auth:** accounts, sessions, OAuth, MFA, password recovery, and sometimes SAML/SCIM on enterprise tiers.
-- **Database:** managed logical data store with per-row/collection permissions: SQL (Postgres) or document/NoSQL APIs depending on vendor.
+- **Database:** managed logical data store with per-row or resource-level permissions: SQL (Postgres) or NoSQL APIs depending on vendor.
 - **Storage:** object/file storage with signed URLs, access rules, and often image transforms.
 - **Functions:** event-driven or HTTP-invoked compute for business logic and integrations.
 - **APIs:** REST and/or GraphQL surfaces generated or maintained by the platform, plus realtime channels where offered.

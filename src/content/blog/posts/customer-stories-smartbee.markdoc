@@ -3,6 +3,7 @@ layout: post
 title: "Smartbee: Revolutionizing coal mine monitoring"
 description: Learn how Smartbee leveraged Appwrite to build a performant and robust system to monitor and aggregate gas level data in real-time for 7 coal mines in Columbia.
 date: 2023-12-02
+lastUpdated: 2026-06-29
 cover: /images/blog/smartbee.avif
 timeToRead: 5
 author: aditya-oberai
@@ -13,7 +14,7 @@ faqs:
   - question: "How does Smartbee use Appwrite?"
     answer: "Each mine runs a local self-hosted Appwrite instance that collects sensor data into [Appwrite Databases](/docs/products/databases), generates CSV reports with [Appwrite Functions](/docs/products/functions), and stores them in [Appwrite Storage](/docs/products/storage). A central Appwrite instance aggregates data from all mines for reporting."
   - question: "Can Appwrite handle IoT workloads?"
-    answer: "Yes. Smartbee writes around 35 million sensor documents to Appwrite Databases per month across 70 sensors, with 4 million Function executions for synchronization and report generation. The combination of [Databases](/docs/products/databases), [Functions](/docs/products/functions), and [Storage](/docs/products/storage) covers most IoT data pipelines."
+    answer: "Yes. Smartbee writes around 35 million sensor rows to Appwrite Databases per month across 70 sensors, with 4 million Function executions for synchronization and report generation. The combination of [Databases](/docs/products/databases), [Functions](/docs/products/functions), and [Storage](/docs/products/storage) covers most IoT data pipelines."
   - question: "Can I self-host Appwrite for offline or edge environments?"
     answer: "Yes. Appwrite is open source and self-hostable. Smartbee runs Appwrite locally inside each coal mine because internet connectivity is unreliable underground. Local data is synced to a central Appwrite server when connectivity is available, using [Appwrite Functions](/docs/products/functions)."
   - question: "How do I sync data between two Appwrite instances?"
@@ -50,8 +51,8 @@ Amid this process, Sergio came across Appwrite. Appwrite’s high count of GitHu
 Keeping Appwrite at the center of his solution, Smartbee began working on the platform. Their gas monitoring platform would have the following rungs in the ladder:
 
 1. **Gas monitoring sensors:** Each sensor is an IoT device that constantly monitors and transmits gas levels of Oxygen, Methane, and Carbon Monoxide in the mines
-2. **Local coal mine servers:** Each local mine server accepts the data stream from the sensors in a Python container. This data is stored in a local Appwrite instance in a database collection. The local Appwrite instance also has a storage bucket where CSV reports are generated and updated for daily, weekly, and monthly data using a Python-based Appwrite function. The local server also transmits information every 10 seconds (with a check added for internet availability) to a remote server that constantly aggregates all the data and reports using a Python-based Appwrite function. This server is accessed by the team of each coal mine.
-3. **Remote aggregation server:** The remote Appwrite instance constantly aggregates information from all local coal mine servers. This server is accessible to teams of all the coal mines Smartbee supports (each team only has permission to access their data). The remote server can also restore data from the database collection to the local coal mine server using a Python-based Appwrite function.
+2. **Local coal mine servers:** Each local mine server accepts the data stream from the sensors in a Python container. This data is stored in a local Appwrite instance in a database table. The local Appwrite instance also has a storage bucket where CSV reports are generated and updated for daily, weekly, and monthly data using a Python-based Appwrite function. The local server also transmits information every 10 seconds (with a check added for internet availability) to a remote server that constantly aggregates all the data and reports using a Python-based Appwrite function. This server is accessed by the team of each coal mine.
+3. **Remote aggregation server:** The remote Appwrite instance constantly aggregates information from all local coal mine servers. This server is accessible to teams of all the coal mines Smartbee supports (each team only has permission to access their data). The remote server can also restore data from the database table to the local coal mine server using a Python-based Appwrite function.
 4. **Client application:** The client application is built with Flutter and allows the teams of all the coal mines to view and manage data from their coal mines. Flutter was specifically selected because of its cross-platform nature and high support from the Appwrite team. Smartbee is currently transitioning this application to a SvelteKit web application so it can also be used through the browser.
 
 # The power of an entire team
@@ -62,7 +63,7 @@ Using an Appwrite-based stack enabled several benefits for the Smartbee team:
 
 In the initial MVP that Smartbee built, they faced several performance issues due to their custom Flask-based solution. The solution could barely manage the load from sensors in 2 coal mines. Since transitioning to an Appwrite-based stack, Smartbee is able to process a substantially higher amount of data:
 
-1. **Database:** 35 million documents are added from a total of 70 sensors each month
+1. **Database:** 35 million rows are added from a total of 70 sensors each month
 2. **Bandwidth:** 500GB of bandwidth is transmitted between the IoT sensors, local coal mine servers, and the remote server each month
 3. **Function execution:** 4 million function executions to synchronize data and generate and update the CSV reports each month
 

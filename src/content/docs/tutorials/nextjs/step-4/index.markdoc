@@ -55,7 +55,9 @@ export function useAuth() {
     };
 
     const logout = async (): Promise<void> => {
-        await account.deleteSession('current');
+        await account.deleteSession({
+            sessionId: 'current'
+        });
         setCurrent(null);
         router.push('/');
     };

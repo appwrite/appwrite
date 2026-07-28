@@ -3,6 +3,7 @@ layout: post
 title: "You're probably using Next.js wrong"
 description: Next.js isn't just React with extra steps. Learn when server-side rendering actually matters and how to use it properly with Appwrite.
 date: 2026-01-22
+lastUpdated: 2026-06-29
 cover: /images/blog/using-nextjs-wrong/cover.avif
 timeToRead: 8
 author: atharva
@@ -169,8 +170,10 @@ export default function LoginPage() {
     "use server";
     const { account } = await createAdminClient();
     const session = await account.createEmailPasswordSession(
-      formData.get("email") as string,
-      formData.get("password") as string
+      {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string
+    }
     );
 
     (await cookies()).set("session", session.secret, {

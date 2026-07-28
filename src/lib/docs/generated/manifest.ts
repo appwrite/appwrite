@@ -959,7 +959,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Object detection with Hugging Face",
     "description": "Build object recognition powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/ai/tutorials/speech-recognition",
@@ -1100,171 +1100,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn how to implement multi-tenancy in your applications using Appwrite Teams.",
     "layout": "article",
     "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/oauth-server",
-    "title": "OAuth2 server",
-    "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/auth/oauth-server/authorization",
-    "title": "Authorization",
-    "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/auth/oauth-server/clients",
-    "title": "Clients",
-    "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-1",
-    "title": "Protect your API with custom scopes",
-    "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 1,
-    "category": "OAuth2 server",
-    "framework": "TanStack Start"
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-2",
-    "title": "Define the scopes",
-    "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-3",
-    "title": "Request the scopes",
-    "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-4",
-    "title": "Validate access tokens",
-    "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 4
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-5",
-    "title": "Protect the API route",
-    "description": "Serve tasks only to tokens that carry tasks.read.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-6",
-    "title": "Call the API from Vantage",
-    "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-7",
-    "title": "Run the flow",
-    "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 7
-  },
-  {
-    "slug": "products/auth/oauth-server/device-flow",
-    "title": "Device flow",
-    "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/auth/oauth-server/quick-start",
-    "title": "OAuth2 server quick start",
-    "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/auth/oauth-server/scopes",
-    "title": "Scopes",
-    "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-1",
-    "title": "Sign in with your product",
-    "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 1,
-    "category": "OAuth2 server",
-    "framework": "TanStack Start"
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-2",
-    "title": "Enable the OAuth2 server",
-    "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 2
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-3",
-    "title": "Create the apps",
-    "description": "Scaffold the two TanStack Start apps and wire up their environment.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-4",
-    "title": "Add Sign in with your product",
-    "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-5",
-    "title": "Build the consent screen",
-    "description": "Host the consent screen where your users sign in and approve access.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 5
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-6",
-    "title": "Exchange the code for tokens",
-    "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-7",
-    "title": "Run the flow",
-    "description": "Start both apps and sign in with your product end to end.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 7
-  },
-  {
-    "slug": "products/auth/oauth-server/tokens",
-    "title": "Tokens",
-    "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
-    "layout": "article",
-    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/oauth2",
@@ -1647,7 +1482,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/databases/timestamp-overrides",
     "title": "Timestamp overrides",
-    "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
+    "description": "Set custom $createdAt and $updatedAt timestamps for your rows when using server SDKs.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -1992,7 +1827,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Providers",
     "description": "Learn the different providers that you can use to send messages with Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/messaging/resend",
+    "title": "Resend",
+    "description": "Send emails to your Appwrite users using Resend and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/messaging/send-email-messages",

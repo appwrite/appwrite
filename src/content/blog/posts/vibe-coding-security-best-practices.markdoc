@@ -3,6 +3,7 @@ layout: post
 title: 20 security best practices for vibe coding
 description: Vibe coding is becoming popular, but it's not always safe. Follow these best practices to secure your apps when using AI-generated code.
 date: 2025-04-01
+lastUpdated: 2026-06-29
 cover: /images/blog/vibe-coding-security-best-practices/cover.avif
 timeToRead: 15
 author: ebenezer-don
@@ -84,7 +85,7 @@ app.get('/search', async (req, res) => {
 })
 ```
 
-Using an **ORM** like Prisma, Sequelize, or TypeORM can further reduce risks by abstracting query handling. Alternatively, [Appwrite's Database API](https://appwrite.io/docs/references/1.6.x/client-web/databases) provides built-in query filtering, eliminating the need to construct raw SQL queries.
+Using an **ORM** like Prisma, Sequelize, or TypeORM can further reduce risks by abstracting query handling. Alternatively, [Appwrite's TablesDB API](https://appwrite.io/docs/references/cloud/client-web/tablesDB) provides built-in query filtering, eliminating the need to construct raw SQL queries.
 
 Beyond SQL injection, user inputs should be validated for **length, type, and format**. Use libraries like **Zod (TypeScript)** or **Joi (JavaScript)** to enforce strict validation rules before processing any user data. Sanitization is equally important. Removing or escaping dangerous characters in user inputs prevents attacks like XSS and command injection.
 
@@ -169,7 +170,7 @@ To prevent this, implement **role-based access control (RBAC)** to restrict acce
 
 Every function that modifies or deletes data should enforce strict authorization rules. Always verify user roles and enforce **least privilege access**, ensuring users only have permissions necessary for their role.
 
-If using Appwrite, ensure that your database collections are [configured with the correct permissions](https://appwrite.io/docs/products/databases/permissions) and that you are using the correct roles to restrict access.
+If using Appwrite, ensure that your database tables are [configured with the correct permissions](https://appwrite.io/docs/products/databases/permissions) and that you are using the correct roles to restrict access.
 
 # 7. Secure all communications with HTTPS
 

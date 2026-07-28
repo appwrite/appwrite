@@ -256,9 +256,9 @@ client = Client()
 tablesDB = TablesDB(client)
 
 result = tablesDB.list_rows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
         Query.equal('title', ['Avatar', 'Lord of the Rings']),
         Query.greater_than('year', 1999)
     ]
@@ -337,7 +337,7 @@ By default, rows return only their own fields:
 
 {% multicode %}
 ```client-web
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -345,7 +345,7 @@ const doc = await tablesDB.getRow({
 });
 ```
 ```client-flutter
-final doc = await tablesDB.getRow(
+final row = await tablesDB.getRow(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -353,19 +353,23 @@ final doc = await tablesDB.getRow(
 );
 ```
 ```server-python
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["name", "age"])]
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["name", "age"])]
 )
 ```
 ```server-ruby
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["name", "age"])]
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["name", "age"])]
 )
 ```
 ```server-nodejs
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -373,13 +377,13 @@ const doc = await tablesDB.getRow({
 });
 ```
 ```server-php
-$doc = $tablesDB->getRow(
+$row = $tablesDB->getRow(
     '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
     [Query::select(["name", "age"])]
 );
 ```
 ```server-rust
-let doc = tables_db.get_row(
+let row = tables_db.get_row(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     "<ROW_ID>",
@@ -388,7 +392,7 @@ let doc = tables_db.get_row(
 ).await?;
 ```
 ```client-apple
-let doc = try await tablesDB.getRow(
+let row = try await tablesDB.getRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
@@ -407,7 +411,7 @@ Use the `*` wildcard to load all fields from related rows:
 
 {% multicode %}
 ```client-web
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -415,7 +419,7 @@ const doc = await tablesDB.getRow({
 });
 ```
 ```client-flutter
-final doc = await tablesDB.getRow(
+final row = await tablesDB.getRow(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -423,19 +427,23 @@ final doc = await tablesDB.getRow(
 );
 ```
 ```server-python
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["*", "reviews.*"])]
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["*", "reviews.*"])]
 )
 ```
 ```server-ruby
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["*", "reviews.*"])]
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["*", "reviews.*"])]
 )
 ```
 ```server-nodejs
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -443,13 +451,13 @@ const doc = await tablesDB.getRow({
 });
 ```
 ```server-php
-$doc = $tablesDB->getRow(
+$row = $tablesDB->getRow(
     '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
     [Query::select(["*", "reviews.*"])]
 );
 ```
 ```server-rust
-let doc = tables_db.get_row(
+let row = tables_db.get_row(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     "<ROW_ID>",
@@ -458,7 +466,7 @@ let doc = tables_db.get_row(
 ).await?;
 ```
 ```client-apple
-let doc = try await tablesDB.getRow(
+let row = try await tablesDB.getRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
@@ -478,7 +486,7 @@ For precise control, select only specific fields from related rows:
 
 {% multicode %}
 ```client-web
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -486,7 +494,7 @@ const doc = await tablesDB.getRow({
 });
 ```
 ```client-flutter
-final doc = await tablesDB.getRow(
+final row = await tablesDB.getRow(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -494,19 +502,23 @@ final doc = await tablesDB.getRow(
 );
 ```
 ```server-python
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["name", "age", "reviews.author", "reviews.rating"])]
 )
 ```
 ```server-ruby
-doc = tablesDB.get_row(
-    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
-    [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
 )
 ```
 ```server-nodejs
-const doc = await tablesDB.getRow({
+const row = await tablesDB.getRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
@@ -515,13 +527,13 @@ const doc = await tablesDB.getRow({
 // Result: { name: "John", age: 30, reviews: [{ author: "...", rating: 5 }] }
 ```
 ```server-php
-$doc = $tablesDB->getRow(
+$row = $tablesDB->getRow(
     '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
     [Query::select(["name", "age", "reviews.author", "reviews.rating"])]
 );
 ```
 ```server-rust
-let doc = tables_db.get_row(
+let row = tables_db.get_row(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     "<ROW_ID>",
@@ -530,7 +542,7 @@ let doc = tables_db.get_row(
 ).await?;
 ```
 ```client-apple
-let doc = try await tablesDB.getRow(
+let row = try await tablesDB.getRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
@@ -985,11 +997,11 @@ Query::is_not_null("name").to_string()
 ```
 {% /multicode %}
 
-## String operations {% #string-operations %}
+## Text operations {% #text-operations %}
 
 ### Starts with {% #starts-with %}
 
-Returns rows if a string column starts with a substring.
+Returns rows if a text column starts with a substring.
 
 {% multicode %}
 ```client-web
@@ -1026,7 +1038,7 @@ Query::starts_with("name", "Once upon a time").to_string()
 
 ### Not starts with {% #not-starts-with %}
 
-Returns rows if a string column does not start with a substring.
+Returns rows if a text column does not start with a substring.
 
 {% multicode %}
 ```client-web
@@ -1072,7 +1084,7 @@ Query::not_starts_with("name", "Once upon a time").to_string()
 
 ### Ends with {% #ends-with %}
 
-Returns rows if a string column ends with a substring.
+Returns rows if a text column ends with a substring.
 
 {% multicode %}
 ```client-web
@@ -1109,7 +1121,7 @@ Query::ends_with("name", "happily ever after.").to_string()
 
 ### Not ends with {% #not-ends-with %}
 
-Returns rows if a string column does not end with a substring.
+Returns rows if a text column does not end with a substring.
 
 {% multicode %}
 ```client-web
@@ -1155,62 +1167,62 @@ Query::not_ends_with("name", "happily ever after.").to_string()
 
 ### Contains {% #contains %}
 
-Returns rows if the array column contains the specified elements or if a string column contains the specified substring. Also supported for spatial types.
+Returns rows if the array column contains the specified elements or if a text column contains the specified substring. Also supported for spatial types.
 
 {% multicode %}
 ```client-web
 // For arrays
 Query.contains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.contains("name", "Tom")
 ```
 ```client-flutter
 // For arrays
 Query.contains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.contains("name", "Tom")
 ```
 ```server-python
 # For arrays
 Query.contains("ingredients", ['apple', 'banana'])
 
-# For strings
+# For text columns
 Query.contains("name", "Tom")
 ```
 ```server-ruby
 # For arrays
 Query.contains("ingredients", ['apple', 'banana'])
 
-# For strings
+# For text columns
 Query.contains("name", "Tom")
 ```
 ```server-deno
 // For arrays
 Query.contains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.contains("name", "Tom")
 ```
 ```server-php
 // For arrays
 Query::contains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query::contains("name", "Tom")
 ```
 ```client-apple
 // For arrays
 Query.contains("ingredients", value: ["apple", "banana"])
 
-// For strings
+// For text columns
 Query.contains("name", value: "Tom")
 ```server-go
 // For arrays
 query.Contains("ingredients", []string{"apple", "banana"})
 
-// For strings
+// For text columns
 query.Contains("name", "Tom")
 ```
 ```server-rust
@@ -1220,14 +1232,14 @@ Query::contains("ingredients", Value::Array(vec![
     Value::String("banana".to_string()),
 ])).to_string()
 
-// For strings
+// For text columns
 Query::contains("name", "Tom").to_string()
 ```
 ```http
 # For arrays
 {"method":"contains","column":"ingredients","values":["apple","banana"]}
 
-# For strings
+# For text columns
 {"method":"contains","column":"name","values":["Tom"]}
 ```
 {% /multicode %}
@@ -1235,7 +1247,7 @@ Query::contains("name", "Tom").to_string()
 ### Not contains {% #not-contains %}
 
 Returns rows if the array column does not contain the specified
-elements, or if a string column does not contain the specified
+elements, or if a text column does not contain the specified
 substring. Also supported for spatial types.
 
 {% multicode %}
@@ -1243,111 +1255,111 @@ substring. Also supported for spatial types.
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```client-flutter
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```client-react-native
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```client-apple
 // For arrays
 Query.notContains("ingredients", value: ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", value: "Tom")
 ```
 ```client-android-kotlin
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```client-android-java
 // For arrays
 Query.notContains("ingredients", Arrays.asList("apple", "banana"))
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```server-python
 # For arrays
 Query.not_contains("ingredients", ['apple', 'banana'])
 
-# For strings
+# For text columns
 Query.not_contains("name", "Tom")
 ```
 ```server-ruby
 # For arrays
 Query.not_contains("ingredients", ['apple', 'banana'])
 
-# For strings
+# For text columns
 Query.not_contains("name", "Tom")
 ```
 ```server-deno
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```server-nodejs
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```server-php
 // For arrays
 Query::notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query::notContains("name", "Tom")
 ```
 ```server-dotnet
 // For arrays
 Query.NotContains("ingredients", new List<string> { "apple", "banana" })
 
-// For strings
+// For text columns
 Query.NotContains("name", "Tom")
 ```
 ```server-go
 // For arrays
 query.NotContains("ingredients", []string{"apple", "banana"})
 
-// For strings
+// For text columns
 query.NotContains("name", "Tom")
 ```server-dart
 // For arrays
 Query.notContains("ingredients", ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```server-swift
 // For arrays
 Query.notContains("ingredients", value: ['apple', 'banana'])
 
-// For strings
+// For text columns
 Query.notContains("name", value: "Tom")
 ```
 ```server-kotlin
 // For arrays
 Query.notContains("ingredients", listOf("apple", "banana"))
 
-// For strings
+// For text columns
 Query.notContains("name", "Tom")
 ```
 ```server-rust
@@ -1357,24 +1369,24 @@ Query::not_contains("ingredients", Value::Array(vec![
     Value::String("banana".to_string()),
 ])).to_string()
 
-// For strings
+// For text columns
 Query::not_contains("name", "Tom").to_string()
 ```
 ```http
 # For arrays
 {"method":"notContains","column":"ingredients","values":["apple","banana"]}
 
-# For strings
+# For text columns
 {"method":"notContains","column":"name","values":["Tom"]}
 ```
 {% /multicode %}
 
 ### Search {% #search %}
 
-Searches string columns for provided keywords. Requires a [full-text index](/docs/products/databases/tables#indexes) on queried columns. The search string must be at least **3 characters** to perform a search.
+Searches text columns for provided keywords. Requires a [full-text index](/docs/products/databases/tables#indexes) on queried columns. The search string must be at least **3 characters** to perform a search.
 
 {% info title="Searching values with hyphens" %}
-The hyphen (`-`) is treated as a stop character by the underlying search engine. To search for exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.search(attribute, '"SWT-2621-44"')`.
+The hyphen (`-`) is treated as a stop character by the underlying search engine. To search for exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.search(column, '"SWT-2621-44"')`.
 {% /info %}
 
 {% multicode %}
@@ -1412,12 +1424,12 @@ Query::search("text", "key words").to_string()
 
 ### Not search {% #not-search %}
 
-Returns rows if a string column does not match the full-text search
+Returns rows if a text column does not match the full-text search
 query. Requires a [full-text index](/docs/products/databases/tables#indexes)
 on queried columns. The search string must be at least **3 characters** to perform a search.
 
 {% info title="Searching values with hyphens" %}
-The hyphen (`-`) is treated as a stop character by the underlying search engine. To exclude exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.notSearch(attribute, '"SWT-2621-44"')`.
+The hyphen (`-`) is treated as a stop character by the underlying search engine. To exclude exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.notSearch(column, '"SWT-2621-44"')`.
 {% /info %}
 
 {% multicode %}
@@ -1621,7 +1633,7 @@ Query::orderDesc("column")
 Query.orderDesc("column")
 ```
 ```server-go
-query.OrderDesc("attribute")
+query.OrderDesc("column")
 ```
 ```server-rust
 Query::order_desc("column").to_string()
@@ -1658,7 +1670,7 @@ Query::orderAsc("column")
 Query.orderAsc("column")
 ```
 ```server-go
-query.OrderAsc("attribute")
+query.OrderAsc("column")
 ```
 ```server-rust
 Query::order_asc("column").to_string()
@@ -3072,4 +3084,3 @@ let rows = tables_db.list_rows(
 
 This example demonstrates how to combine `OR` and `AND` operations. The query uses `Query.or()` to match either condition: books under $20 OR magazines under $10.
 Each condition within the OR is composed of two AND conditions - one for the category and one for the price threshold. The database will return rows that match either of these combined conditions.
-

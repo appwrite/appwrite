@@ -3,6 +3,7 @@ layout: post
 title: Pioneering asset management solutions for the circular economy with UNDO
 description: Learn how UNDO has leveraged Appwrite to transform logistics and supply chain management for circular businesses, supporting 5 businesses with over 9000 articles within 6 months of its inception.
 date: 2024-07-09
+lastUpdated: 2026-06-29
 cover: /images/blog/case-study-undo/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -63,7 +64,7 @@ Currently, UNDO self-hosts Appwrite at all the customers’ on-premises compute,
 - Google OAuth via **Appwrite Authentication** is used for user registration and management
 - Multiple **Appwrite Databases** help bifurcate data and environments (as per customer requests)
 - **Appwrite Storage** is used to upload pictures of QR codes from the scan feature on mobile devices
-- **Appwrite Functions** are used to analyze the QR code scans and make updates to database collections
+- **Appwrite Functions** are used to analyze the QR code scans and make updates to database tables
 - **Appwrite Realtime** helps get updates based on scanner interactions with the products’ QR codes
 - **Appwrite Messaging** is used to communicate about anomalies to stakeholders with admin privileges.
 

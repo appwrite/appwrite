@@ -3,6 +3,7 @@ layout: post
 title: "25 startup ideas you can build with vibe coding"
 description: "25 concrete startup ideas a solo founder can build with vibe coding tools like Cursor, Claude Code, and Lovable, plus the backend primitives each one needs."
 date: 2026-05-11
+lastUpdated: 2026-06-29
 cover: /images/blog/25-startup-ideas-you-can-build-with-vibe-coding/cover.avif
 timeToRead: 12
 author: aditya-oberai
@@ -150,7 +151,7 @@ A backend that ships all seven under one model is the difference between a weeke
 [Appwrite Cloud](https://cloud.appwrite.io) is shaped for this exact list.
 
 - [Auth](/docs/products/auth) handles email and password, OAuth, magic URL, email and phone OTP, MFA, sessions, and [Teams](/docs/products/auth/teams) for the multi-user ideas.
-- [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, queries, transactions, and per-document permissions.
+- [Databases](/docs/products/databases) cover tables, typed columns, rows, relationships, queries, transactions, and row-level permissions.
 - [Storage](/docs/products/storage) gives you buckets with size and MIME limits, antivirus, encryption, image transformations, and signed URLs.
 - [Functions](/docs/products/functions) cover server-side logic in Node, Python, Go, PHP, Dart, Ruby, Deno, Rust, and more, with execution logs, env vars, CRON triggers, and event triggers.
 - [Sites](/docs/products/sites) hosts the frontend with custom domains, env vars, rollbacks, and build logs.

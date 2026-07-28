@@ -145,4 +145,4 @@ CSV imports run as background tasks. The Console displays a floating progress ba
 
 - [Appwrite CLI](/docs/command-line)
 - [Database Permissions](/docs/products/databases/permissions)
-- [Database API Reference](/docs/references/cloud/client-web/databases)
+- [TablesDB API Reference](/docs/references/cloud/client-web/tablesDB)

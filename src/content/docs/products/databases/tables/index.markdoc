@@ -1568,7 +1568,7 @@ You can choose between the following types.
 
 | Column    | Description                                                      |
 |--------------|------------------------------------------------------------------|
-| `varchar`    | String column. Fully indexable if size < 768. Maximum 16,383 characters. |
+| `varchar`    | Short text column. Fully indexable if size < 768. Maximum 16,383 characters. |
 | `text`       | Text column. Prefix indexing only. Maximum 16,383 characters. |
 | `mediumtext` | Text column. Prefix indexing only. Maximum 4,194,303 characters. |
 | `longtext`   | Text column. Prefix indexing only. Maximum 1,073,741,823 characters. |

@@ -7,16 +7,16 @@ timeToRead: 6
 date: 2024-09-02
 author: damodar-lohani
 category: tutorial
-lastUpdated: 2025-10-14
+lastUpdated: 2026-06-29
 faqs:
   - question: "What is Appwrite Realtime, and how does it work?"
-    answer: "Appwrite Realtime lets your app respond instantly to changes, like new database entries or deleted documents, without needing manual refreshes. You simply subscribe to events (e.g., document creation, updates, or deletions), and Appwrite automatically pushes updates to your app via a WebSocket connection."
+    answer: "Appwrite Realtime lets your app respond instantly to changes, like new database entries or deleted rows, without needing manual refreshes. You simply subscribe to events (e.g., row creation, updates, or deletions), and Appwrite automatically pushes updates to your app via a WebSocket connection."
   - question: "How does Realtime improve Flutter app performance?"
     answer: "Realtime keeps your app's state instantly in sync with the backend. Instead of constantly polling APIs for updates, your app reacts to live events, reducing unnecessary requests and improving responsiveness. It's perfect for features like chats, dashboards, or collaborative tools."
   - question: "Can I use Appwrite Realtime without a database?"
     answer: "Yes. While databases are a common use case, Realtime can also subscribe to other Appwrite services, like authentication sessions, storage changes, or function executions. You can listen to almost any event happening inside your Appwrite project."
   - question: "Is Realtime secure?"
-    answer: "Yes. Appwrite Realtime enforces the same permissions and roles as other Appwrite services. Users only receive updates for documents or data they are allowed to access, ensuring security and privacy even in live data streams."
+    answer: "Yes. Appwrite Realtime enforces the same permissions and roles as other Appwrite services. Users only receive updates for rows or data they are allowed to access, ensuring security and privacy even in live data streams."
   - question: "Can I use Appwrite Realtime with other frameworks or just Flutter?"
     answer: "Realtime works across all SDKs that Appwrite supports, including Web, Android, and iOS. Flutter is just one example. The same logic applies universally: subscribe to channels and react to incoming data."
 ---
@@ -39,24 +39,23 @@ On the databases page, click on the **Create database** button.
 
 In the dialog that pops up, enter a name and database ID, and click **Create to create the database and show the database page**. Make sure to note down the database ID next to the database name as we will need that later in our code.
 
-Once on the database page, click on the **Create collection** button.
+Once on the database page, click on the **Create table** button.
 
-![Create collection](/images/blog/appwrite-realtime-with-flutter/2.avif)
+![Create table](/images/blog/appwrite-realtime-with-flutter/2.avif)
 
-In the dialog that pops up, set the collection name to **Items** and click on the **Create** button to create the collection, and you will be redirected to the new collection's page.
+In the dialog that pops up, set the table name to **Items** and click on the **Create** button to create the table, and you will be redirected to the new table's page.
 
-Switch to the Attributes tab and create the following attribute. Also note down the **Collection ID** from the top of the page next to the collection name.
+Switch to the Columns tab and create the following column. Also note down the **Table ID** from the top of the page next to the table name.
 
-- Type: String
-- Attribute Key: name
-- Size: 25
+- Type: Text
+- Column Key: name
 - Default: null
 - Required: true
 - Array: false
 
- ![Create String](/images/blog/appwrite-realtime-with-flutter/3.avif)
+ ![Create text column](/images/blog/appwrite-realtime-with-flutter/3.avif)
     
-Switch to the Settings tab and scroll down to **Permissions** to configure the permissions for the collection. Add the **Any** role and check create, read, update, and delete so that anyone can read and write.
+Switch to the Settings tab and scroll down to **Permissions** to configure the permissions for the table. Add the **Any** role and check create, read, update, and delete so that anyone can read and write.
 
 ![Set permissions](/images/blog/appwrite-realtime-with-flutter/4.avif)
 
@@ -96,7 +95,7 @@ By registering a new platform, you are allowing your app to communicate with the
 
 # Home page
 
-We will start by creating a simple stateful widget that will list all the items from our items collection and allow adding new items and deleting existing items. Our home page will also connect to Appwrite's Realtime service and display changes in the collection of items by updating the UI as they happen. So, let's create our **HomePage** widget. Modify the code in **lib/main.dart** as follows:
+We will start by creating a simple stateful widget that will list all the items from our items table and allow adding new items and deleting existing items. Our home page will also connect to Appwrite's Realtime service and display changes in the table of items by updating the UI as they happen. So, let's create our **HomePage** widget. Modify the code in **lib/main.dart** as follows:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -184,7 +183,7 @@ class _HomePageState extends State<HomePage> {
 
 ```
 
-In the **initState** function of the HomePage, we will create and initialize our Appwrite client, as well as subscribe to real-time changes in documents in our **items** collection.
+In the **initState** function of the HomePage, we will create and initialize our Appwrite client, as well as subscribe to real-time changes in rows in our **items** table.
 
 ```dart
   RealtimeSubscription? subscription;
@@ -206,33 +205,33 @@ dispose(){
 }
 ```
 
-Now, let us set up different variables and functions to load the initial data, listen to changes in the collection documents, and update the UI to reflect the changes in real time.
+Now, let us set up different variables and functions to load the initial data, listen to changes in the table rows, and update the UI to reflect the changes in real time.
 
-First, initialize our database ID and items collection ID and set up a function to load initial data when the application first starts. For that, we will also set up an Appwrite database service.
+First, initialize our database ID and items table ID and set up a function to load initial data when the application first starts. For that, we will also set up an Appwrite TablesDB service.
 
 ```dart
   final database = 'default'; // your database id
-  final itemsCollection = 'items'; // your collection id
-  late final Databases databases;
+  final itemsTable = 'items'; // your table id
+  late final TablesDB tablesDB;
 
   @override
   initState() {
     super.initState();
     client = Client().setProject('delete'); // your project id
-    databases = Databases(client);
+    tablesDB = TablesDB(client);
     loadItems();
     subscribe();
   }
 
   loadItems() async {
     try {
-      final res = await databases.listDocuments(
+      final res = await tablesDB.listRows(
         databaseId: database,
-        collectionId: itemsCollection,
+        tableId: itemsTable,
       );
       setState(() {
         items =
-            List<Map<String, dynamic>>.from(res.documents.map((e) => e.data));
+            List<Map<String, dynamic>>.from(res.rows.map((e) => e.data));
       });
     } on AppwriteException catch (e) {
       print(e.message);
@@ -240,14 +239,14 @@ First, initialize our database ID and items collection ID and set up a function 
   }
 ```
 
-Now, we will set up our subscribe function, which will listen to changes to documents in our items collection.
+Now, we will set up our subscribe function, which will listen to changes to rows in our items table.
 
 ```dart
   void subscribe() {
     final realtime = Realtime(client);
 
     subscription = realtime.subscribe([
-      'documents' // subscribe to all documents in every database and collection
+      Channel.tablesdb(database).table(itemsTable).row().toString()
     ]);
 
     // listen to changes
@@ -269,15 +268,15 @@ Now, we will set up our subscribe function, which will listen to changes to docu
   }
 ```
 
-Finally, let's modify our `_addItem` function to add items to Appwrite's database and see how the view updates in real time.
+Finally, let's modify our `_addItem` function to add items to Appwrite's table and see how the view updates in real time.
 
 ```dart
   void _addItem(String name) async {
     try {
-      await databases.createDocument(
+      await tablesDB.createRow(
         databaseId: database,
-        collectionId: itemsCollection,
-        documentId: ID.unique(),
+        tableId: itemsTable,
+        rowId: ID.unique(),
         data: {'name': name},
       );
     } on AppwriteException catch (e) {
@@ -294,10 +293,10 @@ Let us also modify our `ListTile` widget to add a delete button that will allo
               trailing: IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
-                  await databases.deleteDocument(
+                  await tablesDB.deleteRow(
                     databaseId: database,
-                    collectionId: itemsCollection,
-                    documentId: item['\$id'],
+                    tableId: itemsTable,
+                    rowId: item['\$id'],
                   );
                 },
               ),
@@ -342,27 +341,27 @@ class _HomePageState extends State<HomePage> {
   RealtimeSubscription? subscription;
   late final Client client;
   final database = 'default'; // your database id
-  final itemsCollection = 'items'; // your collection id
-  late final Databases databases;
+  final itemsTable = 'items'; // your table id
+  late final TablesDB tablesDB;
 
   @override
   initState() {
     super.initState();
     client = Client().setProject('delete'); // your project id
-    databases = Databases(client);
+    tablesDB = TablesDB(client);
     loadItems();
     subscribe();
   }
 
   loadItems() async {
     try {
-      final res = await databases.listDocuments(
+      final res = await tablesDB.listRows(
         databaseId: database,
-        collectionId: itemsCollection,
+        tableId: itemsTable,
       );
       setState(() {
         items =
-            List<Map<String, dynamic>>.from(res.documents.map((e) => e.data));
+            List<Map<String, dynamic>>.from(res.rows.map((e) => e.data));
       });
     } on AppwriteException catch (e) {
       print(e.message);
@@ -373,7 +372,7 @@ class _HomePageState extends State<HomePage> {
     final realtime = Realtime(client);
 
     subscription = realtime.subscribe([
-      'documents' // subscribe to all documents in every database and collection
+      Channel.tablesdb(database).table(itemsTable).row().toString()
     ]);
 
     // listen to changes
@@ -412,10 +411,10 @@ class _HomePageState extends State<HomePage> {
               trailing: IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
-                  await databases.deleteDocument(
+                  await tablesDB.deleteRow(
                     databaseId: database,
-                    collectionId: itemsCollection,
-                    documentId: item['\$id'],
+                    tableId: itemsTable,
+                    rowId: item['\$id'],
                   );
                 },
               ),
@@ -459,10 +458,10 @@ class _HomePageState extends State<HomePage> {
 
   void _addItem(String name) async {
     try {
-      await databases.createDocument(
+      await tablesDB.createRow(
         databaseId: database,
-        collectionId: itemsCollection,
-        documentId: ID.unique(),
+        tableId: itemsTable,
+        rowId: ID.unique(),
         data: {'name': name},
       );
     } on AppwriteException catch (e) {

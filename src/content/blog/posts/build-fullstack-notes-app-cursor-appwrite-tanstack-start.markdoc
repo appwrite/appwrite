@@ -3,6 +3,7 @@ layout: post
 title: Build a fullstack Notes app with Cursor, Appwrite, and TanStack Start
 description: Learn how to build a modern fullstack notes application using Cursor AI, Appwrite for backend, and TanStack Start for the frontend.
 date: 2025-11-05
+lastUpdated: 2026-06-29
 cover: /images/blog/build-fullstack-notes-app-cursor-appwrite-tanstack-start/cover.avif
 timeToRead: 15
 author: tessa
@@ -53,7 +54,7 @@ The **Appwrite MCP server** gives Cursor access to your Appwrite project so it c
 ## 1. Create an API Key in Appwrite Cloud
 * Log in to [Appwrite Cloud](https://cloud.appwrite.io).
 * Create a **new API key** with the following scopes:
-  - `databases.read` and `databases.write` (or `tables.read` and `tables.write`)
+  - `tables.read`, `tables.write`, `rows.read`, and `rows.write`
   - `users.read` and `users.write`
 * Copy the key.
 
@@ -260,12 +261,18 @@ export async function login(email: string, password: string) {
   await deleteAllSessions();
 
   try {
-    await account.createEmailPasswordSession(email, password);
+    await account.createEmailPasswordSession({
+        email: email,
+        password: password
+    });
   } catch (err: any) {
     const msg = err?.message?.toLowerCase() ?? '';
     if (msg.includes('session') && msg.includes('active')) {
       await deleteAllSessions();
-      await account.createEmailPasswordSession(email, password);
+      await account.createEmailPasswordSession({
+          email: email,
+          password: password
+      });
     } else {
       throw err;
     }
@@ -275,7 +282,12 @@ export async function login(email: string, password: string) {
 }
 
 export async function signup(email: string, password: string, name?: string) {
-  await account.create(ID.unique(), email, password, name);
+  await account.create({
+    userId: ID.unique(),
+    email,
+    password,
+    name
+  });
   return await login(email, password);
 }
 

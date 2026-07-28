@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Messaging: Push, Email and SMS"
 description: You can now send emails, SMS and push notifications with Appwrite’s easy-to-use APIs.
 date: 2024-02-26
+lastUpdated: 2026-06-29
 cover: /images/blog/messaging-announcement.avif
 timeToRead: 6
 author: eldad-fux
@@ -16,7 +17,7 @@ faqs:
   - question: "What is the difference between topics, users, and targets in Messaging?"
     answer: "A target is a specific destination (an email address, phone number, or device push token). A user holds all the targets associated with a single Appwrite account. A topic is a named group of targets that you can publish a message to in one call. Newsletters typically use topics, alerts use users, and location-specific notifications use individual targets."
   - question: "Can I send a message from an Appwrite Function?"
-    answer: "Yes. You can call any Messaging method from a server SDK inside an [Appwrite Function](/docs/products/functions). Combine this with event triggers (for example, on user creation or document update) to send automated welcome emails, login alerts, order confirmations, and other transactional messages."
+    answer: "Yes. You can call any Messaging method from a server SDK inside an [Appwrite Function](/docs/products/functions). Combine this with event triggers (for example, on user creation or row update) to send automated welcome emails, login alerts, order confirmations, and other transactional messages."
   - question: "Can I schedule messages for later?"
     answer: "Yes. Each Messaging API call accepts a scheduled send time, and you can also pick a date in the Appwrite Console when drafting a message. This is useful for appointment reminders, time-zoned promos, and announcements that should land at a specific moment."
   - question: "Does Messaging work the same on Appwrite Cloud and self-hosted?"

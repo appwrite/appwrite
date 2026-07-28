@@ -3,6 +3,7 @@ layout: post
 title: Appwrite 1.5 is now available on Cloud
 description: This release was highly anticipated by the community, and we're very happy to finally share the great news.
 date: 2024-04-29
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-1.5-now-available-on-cloud/cloud15.avif
 timeToRead: 8
 author: eldad-fux
@@ -217,9 +218,9 @@ New Database operators `contains` and `or`, providing greater control and flexib
 The contains operator is a great addition to the existing text search operators such as startsWith & endsWith, and can be used in combination with these two.
 
 ```js
-db.listDocuments({
+tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
+    tableId: '<TABLE_ID>',
     queries: [
         Query.contains('content', ['happy', 'love'])
     ]
@@ -229,9 +230,9 @@ db.listDocuments({
 To use the OR operator pass Query.or([...]) to the queries array and provide at least two queries within the nested array.
 
 ```js
-db.listDocuments({
+tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
+    tableId: '<TABLE_ID>',
     queries: [
         Query.or([
             Query.contains('name','ivy'),

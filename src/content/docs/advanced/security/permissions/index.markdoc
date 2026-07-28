@@ -68,7 +68,7 @@ The following examples are using the [Appwrite Web SDK](https://github.com/appwr
 In the following example, we are creating a row that can be read by anyone, edited by writers or admins, and deleted by administrators or a user with the user ID `user:5c1f88b42259e`.
 
 ```client-web
-import { Client, TablesDB, Permission, Role } from "appwrite";
+import { Client, ID, TablesDB, Permission, Role } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -76,18 +76,19 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-let promise = tablesDB.createRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    {'actorName': 'Chris Evans', 'height': 183},
-    [
+let promise = tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {'actorName': 'Chris Evans', 'height': 183},
+    permissions: [
         Permission.read(Role.any()),                  // Anyone can view this row
         Permission.update(Role.team("writers")),      // Writers can update this row
         Permission.update(Role.team("admin")),        // Admins can update this row
         Permission.delete(Role.user("5c1f88b42259e")), // User 5c1f88b42259e can delete this row
         Permission.delete(Role.team("admin"))          // Admins can delete this row
     ]
-);
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -101,7 +102,7 @@ promise.then(function (response) {
 In the following example, we are creating a row that can be read by members of the team with ID `5c1f88b87435e` and can only be edited or deleted by members of the same team that possess the team role `owner`.
 
 ```client-web
-import { Client, TablesDB, Permission, Role } from "appwrite";
+import { Client, ID, TablesDB, Permission, Role } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -109,16 +110,17 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-let promise = tablesDB.createRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    {'actorName': 'Chris Evans', 'height': 183},
-    [
+let promise = tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {'actorName': 'Chris Evans', 'height': 183},
+    permissions: [
         Permission.read(Role.team("5c1f88b87435e")),             // Only users of team 5c1f88b87435e can read the row
         Permission.update(Role.team("5c1f88b87435e", "owner")), // Only users of team 5c1f88b87435e with the role owner can update the row
         Permission.delete(Role.team("5c1f88b87435e", "owner"))  // Only users of team 5c1f88b87435e with the role owner can delete the row
     ]
-);
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -147,7 +149,7 @@ When creating rows in your application, set row-level permissions to restrict ac
 
 {% multicode %}
 ```client-web
-import { Client, TablesDB, Permission, Role } from "appwrite";
+import { Client, ID, TablesDB, Permission, Role } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
@@ -155,16 +157,17 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-let promise = tablesDB.createRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    { 'title': 'My Private Row' },
-    [
+let promise = tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: { 'title': 'My Private Row' },
+    permissions: [
         Permission.read(Role.user('<USER_ID>')),    // Only this user can read
         Permission.update(Role.user('<USER_ID>')),  // Only this user can update
         Permission.delete(Role.user('<USER_ID>'))   // Only this user can delete
     ]
-);
+});
 
 promise.then(function (response) {
     console.log(response);

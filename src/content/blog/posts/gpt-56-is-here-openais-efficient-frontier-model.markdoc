@@ -83,9 +83,9 @@ GPT-5.6 Sol is OpenAI's best coding model yet. On the [Artificial Analysis](http
 
 Early customer signal is strong, and it comes from teams building real coding products.
 
-> "GPT-5.6 is one of the strongest models we've tested on CursorBench, delivering solid results in early evals. It's an exciting step forward for developers for persistence, intelligence and overall efficiency." - Oskar Schulz, President at [Cursor](https://cursor.com/)
+> "GPT-5.6 is one of the strongest models we've tested on CursorBench, delivering solid results in early evals. It's an exciting step forward for developers for persistence, intelligence and overall efficiency." — Oskar Schulz, President at [Cursor](https://cursor.com/)
 
-> "GPT-5.6 is notably efficient on the long, complex workflows behind building production-grade apps. As one of the models now used by Lovable, it delivers for users with roughly 25% fewer steps and 35–48% fewer tool calls than the prior model, while improving project success and reducing stuck runs by 15%." - Fabian Hedin, Co-Founder at [Lovable](https://lovable.dev/)
+> "GPT-5.6 is notably efficient on the long, complex workflows behind building production-grade apps. As one of the models now used by Lovable, it delivers for users with roughly 25% fewer steps and 35–48% fewer tool calls than the prior model, while improving project success and reducing stuck runs by 15%." — Fabian Hedin, Co-Founder at [Lovable](https://lovable.dev/)
 
 Those numbers point at the same thing: fewer wasted steps between a prompt and a working result, which is where a lot of the cost and latency in agent workflows actually lives.
 

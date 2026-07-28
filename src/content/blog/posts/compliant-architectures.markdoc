@@ -3,6 +3,7 @@ layout: post
 title: "Designing compliant architectures without slowing your team"
 description: How to build compliance into your backend architecture from the start without creating bottlenecks or blocking your team from shipping faster.
 date: 2026-03-16
+lastUpdated: 2026-06-29
 cover: /images/blog/compliant-architectures/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -17,7 +18,7 @@ faqs:
   - question: "How can teams stay fast while building for compliance?"
     answer: "Use infrastructure-as-code so controls are versioned and reviewable, automate compliance checks (secrets scanning, dependency vulnerabilities, static analysis) in CI/CD, choose backend services that handle authentication, password policies, session management, and audit logging by default, and document architecture decisions while they are fresh."
   - question: "What compliance-relevant features does Appwrite provide out of the box?"
-    answer: "Appwrite ships with a granular permission system at the collection, document, bucket, and file level, event logging for resource access and modifications, encryption at rest and in transit by default, and the ability to deploy in a specific region or fully self-hosted. These features map directly to common HIPAA, GDPR, and SOC 2 controls."
+    answer: "Appwrite ships with a granular permission system at the table, row, bucket, and file level, event logging for resource access and modifications, encryption at rest and in transit by default, and the ability to deploy in a specific region or fully self-hosted. These features map directly to common HIPAA, GDPR, and SOC 2 controls."
   - question: "Does self-hosting Appwrite help with data residency requirements?"
     answer: "Yes. Because Appwrite is open source and self-hostable, the entire backend can run inside your own infrastructure or a specific cloud region. That keeps regulated data inside a controlled boundary and removes a class of third-party data handling concerns that often complicate GDPR and HIPAA reviews."
 ---
@@ -78,7 +79,7 @@ Appwrite is an open-source developer infrastructure platform for building web, m
 
 Appwrite addresses several compliance-by-design concerns at the platform level, reducing what your team needs to build and maintain:
 
-- **Access control**: Appwrite's permission system lets you define read, create, update, and delete permissions per resource (at the collection, document, bucket, or file level), making least-privilege access something you configure rather than build.
+- **Access control**: Appwrite's permission system lets you define read, create, update, and delete permissions per resource (at the table, row, bucket, or file level), making least-privilege access something you configure rather than build.
 - **Audit logging**: Appwrite maintains event logs for resource access and modifications, providing the visibility that compliance frameworks like HIPAA and SOC 2 require.
 - **Encryption**: Data is encrypted at rest and in transit by default, meeting the baseline encryption requirements of most compliance frameworks.
 - **Data residency**: Appwrite can be deployed within a specific cloud region or on-premise, putting data location entirely under your control.

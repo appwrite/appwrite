@@ -3,7 +3,7 @@ layout: post
 title: "August product update: Cloud GA, new TablesDB UI & Sites Hackathon"
 description: Get a full recap of products, features and programs we released in the month of August.
 date: 2025-09-03
-lastUpdated: 2026-05-22
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-august-2025/cover.avif
 timeToRead: 6
 author: dennis-ivy
@@ -113,7 +113,7 @@ You can now:
 
 This new database feature optimizes your app’s performance and saves you time.
 
-You can safely update numeric fields (likes, retries, stock, or scores) directly on the server, without conflicts or race conditions. No need to fetch the full document just for a single increment/decrement operation.
+You can safely update numeric fields (likes, retries, stock, or scores) directly on the server, without conflicts or race conditions. No need to fetch the full row just for a single increment/decrement operation.
 
 [Learn more](/blog/post/announcing-atomic-numeric-operations)
 

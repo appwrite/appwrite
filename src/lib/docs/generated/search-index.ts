@@ -39,7 +39,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/billing/database-reads-and-writes",
     "title": "Database Reads and Writes",
     "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
-    "excerpt": "Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or . **Write Operations**: Any action that modifies data in your database, including: - Creating rows with .…",
+    "excerpt": "Appwrite provides powerful database capabilities through TablesDB, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or . **Write Operations**: Any action that modifies data in your database, including: - Creating rows with . - Updating…",
     "breadcrumbs": [
       "Billing",
       "Add ons",
@@ -303,7 +303,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/dev-keys",
     "title": "Dev keys",
     "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "excerpt": "Dev keys are going to be deprecated on September 1, 2026. We recommend planning your migration away from dev keys ahead of time. Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly…",
+    "excerpt": "The creation of new dev keys is paused, and dev keys will be deprecated on September 1, 2026. Appwrite's login rate limit has changed so that a successful login now resets it, which means you no longer need a dev key to test authentication flows during development. We recommend planning your migration away from dev keys ahead of time. Learn more in the changelog. Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They…",
     "breadcrumbs": [
       "Security",
       "Access control",
@@ -644,7 +644,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/production/backups",
     "title": "Backups",
     "description": "Learn how to set up and manage backups for your self-hosted Appwrite instance to ensure data safety and disaster recovery.",
-    "excerpt": "Appwrite Cloud offers automated Backups as a Service with scheduling and one-click restore. For self-hosted instances, you'll need to implement manual backup procedures as outlined on this page. Self-hosted Appwrite requires manual backup procedures to protect your data. What to back up Your Appwrite installation has several components that need backing up: 1. **Database** - User data, documents, and configuration 2. **Storage volumes** - Uploaded files and function code 3. **Environment variables** - Configuration in 4. **System snapshots** - Complete…",
+    "excerpt": "Appwrite Cloud offers automated Backups as a Service with scheduling and one-click restore. For self-hosted instances, you'll need to implement manual backup procedures as outlined on this page. Self-hosted Appwrite requires manual backup procedures to protect your data. What to back up Your Appwrite installation has several components that need backing up: 1. **Database** - User data, rows, and configuration 2. **Storage volumes** - Uploaded files and function code 3. **Environment variables** - Configuration in 4. **System snapshots** - Complete…",
     "breadcrumbs": [
       "Self-hosting",
       "Production",
@@ -1726,250 +1726,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/auth/oauth-server",
-    "title": "OAuth2 server",
-    "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
-    "excerpt": "Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (OIDC provider). When you enable the OAuth2 server, third-party apps register as clients, send your users to a consent screen you host, and receive tokens your project issues. Your project becomes an identity provider that any standards-compliant OAuth or OIDC library can integrate with: the same way apps offer \"Sign in with Google\" or \"Sign in with GitHub\", integrators can offer **Sign in with your product**. How…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/authorization",
-    "title": "Authorization",
-    "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
-    "excerpt": "Authorization is the step where a user allows a client to act on their behalf. Appwrite's OAuth2 server uses the authorization code flow. Public clients protect the flow with PKCE. Confidential clients authenticate with a client secret and can also use PKCE when your project requires it. The authorization code flow 1. The client sends the user to the **authorization endpoint** with its client ID, a registered redirect URI, , and the scopes it wants. 2. Appwrite checks whether the…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "Authorization"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/clients",
-    "title": "Clients",
-    "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
-    "excerpt": "A **client** is a third-party app that authenticates users through your project's OAuth2 server. Each client registers the redirect URIs it is allowed to return to and the post-logout redirect URIs it can end sessions at, sets its type, and chooses whether the device flow is enabled. Its other attributes serve two surfaces: branding like the name, logo, and tagline can appear on your consent screen, while attributes like tags, images, and the privacy policy URL are for your project's…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "Clients"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-1",
-    "title": "Protect your API with custom scopes",
-    "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
-    "excerpt": "The Sign in with your product guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need custom scopes: permissions you define, users approve, and your API enforces. This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard. What you will build…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Protect your API with custom scopes"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-2",
-    "title": "Define the scopes",
-    "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
-    "excerpt": "Scopes have to be defined on the OAuth2 server before a client can request them. Requesting a scope you have not defined fails the authorization request with . Add the scopes In the Console, open **Auth**, select the **OAuth2 server** tab, and find the **Scopes** field on the **Integration** card. Add two scopes and click **Update**: - grants read access to the user's tasks. - grants permission to create and update tasks. The , , , and scopes stay locked…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Define the scopes"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-3",
-    "title": "Request the scopes",
-    "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
-    "excerpt": "A client receives a scope by asking for it during authorization. Vantage requests both task scopes, and TaskFlow's consent screen lets the user decide which of them to grant. Add the scopes to the request In the consumer, extend the scope list in : already passes as the parameter, so nothing else changes on the consumer. The OAuth2 server carries the requested scopes into the grant and shows them to the user. Label the scopes on the consent screen TaskFlow's…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Request the scopes"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-4",
-    "title": "Validate access tokens",
-    "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
-    "excerpt": "TaskFlow's API is about to accept access tokens from the outside world, so it first needs a way to tell a token it issued from one somebody made up. Access tokens from your OAuth2 server are RS256-signed JWTs, and the matching public keys are published at your project's JWKS endpoint. That means TaskFlow can verify tokens locally, with no call back to the OAuth2 server on each request. Install jose jose handles the JWT verification and the JWKS fetching. Install…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Validate access tokens"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-5",
-    "title": "Protect the API route",
-    "description": "Serve tasks only to tokens that carry tasks.read.",
-    "excerpt": "With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule. The task data Create with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side: The guarded route Create . TanStack Start serves the and handlers at : Each handler applies the same two checks, in order: 1. **Authentication**: is the token real?…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Protect the API route"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-6",
-    "title": "Call the API from Vantage",
-    "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
-    "excerpt": "Vantage already holds the access token in its session after the token exchange. Reading tasks is one authenticated fetch away, and a small composer will exercise the write path. Point Vantage at the API Add TaskFlow's API base to : The API client Create . Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest: does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Call the API from Vantage"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/custom-scopes/step-7",
-    "title": "Run the flow",
-    "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
-    "excerpt": "Everything is wired up. Run the flow twice: once granting only read access, and once granting the write too. The same button on the dashboard behaves differently each time, and the only thing that changed is what the user agreed to. Start both apps In two terminals: Grant read, withhold write Open and click **Sign in with TaskFlow**. On the consent screen, switch **Create and update your tasks** off and authorize. The OAuth2 server narrows the grant to what was…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "custom scopes",
-      "Run the flow"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/device-flow",
-    "title": "Device flow",
-    "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
-    "excerpt": "The device authorization grant (RFC 8628) lets a client request access even when it cannot open a browser or accept a callback. A TV app, command-line tool, or hardware device shows the user a code, and the user completes authorization on a phone or computer. This flow involves two applications: - The **device client** is the third-party application requesting access. It communicates with Appwrite over HTTP. - The **verification page** belongs to your project. You build this page with an…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "Device flow"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/quick-start",
-    "title": "OAuth2 server quick start",
-    "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
-    "excerpt": "This guide turns your project into an OAuth2 provider and runs one sign-in through it. By the end you will have an enabled server, a registered client, and an access token issued by your project. The examples follow two apps, the same pair the tutorials build out in full: - **TaskFlow** (): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens. - **Vantage** (): the third-party **consumer**, called…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "OAuth2 server quick start"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/scopes",
-    "title": "Scopes",
-    "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
-    "excerpt": "Scopes are the permissions a client asks for during authorization. The user sees the requested scopes on the consent screen and approves or declines them. The access token the server issues carries the scopes that were granted. Built-in scopes Four OpenID Connect scopes are always available and cannot be removed: | Scope | Grants access to | | --- | --- | | | The user's subject identifier. Required for OpenID Connect and to receive an ID token. | |…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "Scopes"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-1",
-    "title": "Sign in with your product",
-    "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
-    "excerpt": "Once your project's OAuth2 server is enabled, other apps can offer \"Sign in with your product\". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Sign in with your product"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-2",
-    "title": "Enable the OAuth2 server",
-    "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
-    "excerpt": "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , and are always included, which…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Enable the OAuth2 server"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-3",
-    "title": "Create the apps",
-    "description": "Scaffold the two TanStack Start apps and wire up their environment.",
-    "excerpt": "Both sides are TanStack Start apps. Scaffold them in a single folder. Scaffold the projects Create the consumer (Vantage) and the provider (TaskFlow): This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up. Give each a fixed port so the redirect URIs stay stable. In each app's , set the dev script: Configure the environment The apps read the OAuth values from environment variables. Add a to each. Vantage needs the…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Create the apps"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-4",
-    "title": "Add Sign in with your product",
-    "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
-    "excerpt": "Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Import at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side. The start route Clicking the button navigates to . Its…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Add Sign in with your product"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-5",
-    "title": "Build the consent screen",
-    "description": "Host the consent screen where your users sign in and approve access.",
-    "excerpt": "The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session. Types for the consent card Create . It holds only client-safe values, so the browser can import it: The server helpers Create . Every function here calls the OAuth2 server on behalf…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Build the consent screen"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-6",
-    "title": "Exchange the code for tokens",
-    "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
-    "excerpt": "The OAuth2 server redirects back to Vantage's redirect URI with a and the . Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in. Add the token functions Extend with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server. Handle the callback Create . Its loader runs on the server: it checks the against the session, exchanges…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Exchange the code for tokens"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-7",
-    "title": "Run the flow",
-    "description": "Start both apps and sign in with your product end to end.",
-    "excerpt": "Everything is in place. Run both apps and sign in. Start both apps In two terminals: Vantage is at and TaskFlow's consent screen at . Sign in Open and click **Sign in with TaskFlow**. You will: 1. Land on TaskFlow's consent screen and sign in with a TaskFlow user. 2. See exactly what Vantage is requesting, and approve it. 3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard. That round trip is a complete…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "sign in with your product",
-      "Run the flow"
-    ]
-  },
-  {
-    "slug": "products/auth/oauth-server/tokens",
-    "title": "Tokens",
-    "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
-    "excerpt": "When a client redeems an authorization code, the OAuth2 server issues an access token and refresh token. It also issues an ID token when the scope was granted. This page covers what each token does and how clients and resource servers validate, refresh, introspect, revoke, and end sessions. The three tokens - **Access token.** A signed JWT that a client presents to a resource server when it calls an API on the user's behalf. It contains the authorization information the…",
-    "breadcrumbs": [
-      "Auth",
-      "OAuth2 server",
-      "Tokens"
-    ]
-  },
-  {
     "slug": "products/auth/oauth2",
     "title": "OAuth 2 login",
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
@@ -2523,7 +2279,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/quick-start",
     "title": "Start with Databases",
     "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.",
-    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **String**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
+    "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **Text**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
     "breadcrumbs": [
       "Databases",
       "Getting started",
@@ -2566,8 +2322,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/databases/timestamp-overrides",
     "title": "Timestamp overrides",
-    "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
-    "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
+    "description": "Set custom $createdAt and $updatedAt timestamps for your rows when using server SDKs.",
+    "excerpt": "When creating or updating rows, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These columns can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a row's timestamps by…",
     "breadcrumbs": [
       "Databases",
       "Guides",
@@ -3113,10 +2869,20 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/messaging/resend",
+    "title": "Resend",
+    "description": "Send emails to your Appwrite users using Resend and Appwrite Messaging.",
+    "excerpt": "Resend lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Resend as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **Resend** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
+    "breadcrumbs": [
+      "Messaging",
+      "Resend"
+    ]
+  },
+  {
     "slug": "products/messaging/send-email-messages",
     "title": "Send email messages",
     "description": "Send email messages to your users using Appwrite Messaging.",
-    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring in…",
+    "excerpt": "You can send custom email messages to your app's users using Appwrite Messaging and a connected SMTP service. This guide takes you through the implementation path of adding email messaging to your app. Add a provider Appwrite supports Mailgun, Resend, and Sendgrid as SMTP providers. You must configure one of them as a provider. To add a new provider navigate to **Messaging** > **Providers** > **Add provider** > **Email** and follow the wizard. You can find more details about configuring…",
     "breadcrumbs": [
       "Messaging",
       "Guides",
@@ -3259,7 +3025,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/network/caching",
     "title": "Caching",
     "description": "Learn how Appwrite uses smart caching strategies at the region, edge, and CDN levels to optimize performance and protect dynamic APIs, with advanced options for enterprise customers.",
-    "excerpt": "Appwrite employs a multi-layered caching approach to enhance the performance of your applications. By utilizing caching at the **region**, **edge**, and **CDN** levels, Appwrite ensures faster response times, optimized resource usage, and efficient handling of dynamic workloads. Region-level At the region level, Appwrite provides smart in-memory caching for various resources: - **Documents**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention. - **Storage files**: Frequently accessed files are cached in memory…",
+    "excerpt": "Appwrite employs a multi-layered caching approach to enhance the performance of your applications. By utilizing caching at the **region**, **edge**, and **CDN** levels, Appwrite ensures faster response times, optimized resource usage, and efficient handling of dynamic workloads. Region-level At the region level, Appwrite provides smart in-memory caching for various resources: - **Rows**: Frequently accessed rows are cached in memory and automatically purged when updated, ensuring data consistency without manual intervention. - **Storage files**: Frequently accessed files are cached in memory…",
     "breadcrumbs": [
       "Network",
       "Features",

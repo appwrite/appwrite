@@ -5,6 +5,7 @@ description: Explore Agentic AI vs Generative AI with clear examples and key dif
 cover: /images/blog/agentic-ai-vs-generative-ai/cover.avif
 timeToRead: 10
 date: 2025-10-23
+lastUpdated: 2026-06-29
 author: veeresh-mulge
 callToAction: true
 unlisted: true
@@ -17,7 +18,7 @@ faqs:
   - question: "What role does MCP play in agentic AI?"
     answer: "[Model Context Protocol](/blog/post/what-is-mcp) (MCP) is a standard that lets agents connect to external tools, APIs, and data sources in a consistent way. Without MCP, every tool needs a custom integration. With it, an agent can use the same wire protocol to talk to GitHub, Appwrite, Stripe, and your internal services."
   - question: "How do I expose an Appwrite project to an AI agent?"
-    answer: "Use the [Appwrite MCP server](/docs/tooling/mcp/api). It exposes Appwrite Auth, Databases, Storage, and Functions as tools an MCP-compatible agent can call. The agent can then create users, query collections, upload files, or trigger functions as part of its plan."
+    answer: "Use the [Appwrite MCP server](/docs/tooling/mcp/api). It exposes Appwrite Auth, Databases, Storage, and Functions as tools an MCP-compatible agent can call. The agent can then create users, query tables, upload files, or trigger functions as part of its plan."
   - question: "Do I need agentic AI for my product, or is generative AI enough?"
     answer: "If your use case is summarization, content drafting, or chat, generative AI is usually enough. Reach for agentic systems when your task requires multiple steps, calling external systems, or adapting based on intermediate results, e.g., a research assistant, a code-writing agent, or an ops automation tool."
   - question: "Are agentic AI systems reliable enough for production?"

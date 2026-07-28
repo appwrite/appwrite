@@ -3,6 +3,7 @@ layout: post
 title: "When 'custom backend' stops being worth it for small teams"
 description: The real costs of maintaining a custom backend and how to decide when switching to a managed backend platform makes more business sense for your team.
 date: 2026-03-18
+lastUpdated: 2026-06-29
 cover: /images/blog/when-custom-backend-stops-being-worth-it/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -60,7 +61,7 @@ The problem is that most small teams don't meet these criteria. They have a cust
 The fear of migrating away from a custom backend often outweighs the reality. Modern backend platforms support:
 
 - **Gradual migration.** You don't have to swap everything at once. Authentication can move first, then storage, then databases. Each service you migrate reduces your maintenance burden.
-- **Data export and import.** Appwrite's databases are standard JSON/document stores. Exporting your existing data and importing it is straightforward for most data models.
+- **Data export and import.** Appwrite databases accept JSON inputs that are mapped to the table schema. Exporting your existing data and importing it is straightforward for most data models.
 - **API compatibility.** Most backend platforms provide REST and SDK-based APIs that your existing front-end can call with modest changes.
 
 # Appwrite as your managed backend

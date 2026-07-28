@@ -184,16 +184,16 @@ const client = new Client()
 
 const tablesDB = new TablesDB(client);
 
-tablesDB.createRelationshipColumn(
-    "marvel",    // Database ID
-    "movies",    // Table ID
-    "reviews",   // Related table ID
-    "oneToMany", // Relationship type
-    true,        // Is two-way
-    "reviews",   // Column key
-    "movie",     // Two-way column key
-    "cascade"    // On delete action
-);
+tablesDB.createRelationshipColumn({
+    databaseId: "marvel",
+    tableId: "movies",
+    relatedTableId: "reviews",
+    type: "oneToMany",
+    twoWay: true,
+    key: "reviews",
+    twoWayKey: "movie",
+    onDelete: "cascade"
+});
 ```
 
 

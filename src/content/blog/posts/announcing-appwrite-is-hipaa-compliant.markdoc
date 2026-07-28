@@ -3,6 +3,7 @@ layout: post
 title: Appwrite is now HIPAA compliant
 description: This is another step towards building a platform for developers from all industries.
 date: 2024-04-11
+lastUpdated: 2026-06-29
 cover: /images/blog/hipaa.avif
 timeToRead: 4
 author: may-ender
@@ -13,7 +14,7 @@ faqs:
   - question: "What does Appwrite Cloud being HIPAA compliant mean for me?"
     answer: "Appwrite Cloud has the technical and organizational safeguards in place (encryption, access controls, audit logging, backups, MFA on internal access) to act as a HIPAA-compliant backend. You can build healthcare apps on Appwrite without having to run that infrastructure yourself."
   - question: "Do I still have to make my own app HIPAA compliant?"
-    answer: "Yes. Appwrite covers the platform layer, but you remain responsible for how your application collects, displays, and shares PHI. That includes things like configuring permissions correctly, restricting who can read sensitive collections, training your staff, and obtaining consent where required."
+    answer: "Yes. Appwrite covers the platform layer, but you remain responsible for how your application collects, displays, and shares PHI. That includes things like configuring permissions correctly, restricting who can read sensitive tables, training your staff, and obtaining consent where required."
   - question: "Can I get a Business Associate Agreement (BAA) with Appwrite?"
     answer: "BAAs are required for any service that processes PHI on your behalf. If you are building a HIPAA-regulated app on Appwrite Cloud, contact Appwrite via the [contact form](/contact-us) to discuss a BAA before going live with PHI."
   - question: "Is self-hosted Appwrite HIPAA compliant?"

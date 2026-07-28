@@ -3,6 +3,7 @@ layout: post
 title: Fixing OAuth2 authentication issues in Appwrite
 description: Learn how to fix OAuth2 and third-party cookie issues in Appwrite.
 date: 2025-02-18
+lastUpdated: 2026-06-29
 cover: /images/blog/fixing-oauth2-issues-in-appwrite-cloud/cover.avif
 timeToRead: 5
 author: ebenezer-don
@@ -79,9 +80,11 @@ const signInWithGoogle = () => {
 
   // Instead of createOAuth2Session, use createOAuth2Token
   account.createOAuth2Token(
-    'google', // or any other provider
-    `${baseUrl}/auth/callback`, // your callback URL
-    `${baseUrl}/auth`, // failure URL
+    {
+      provider: 'google',
+      success: `${baseUrl}/auth/callback`,
+      failure: `${baseUrl}/auth`
+  },
   )
 }
 

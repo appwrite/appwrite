@@ -513,24 +513,24 @@ For complex updates that include both atomic operations and regular field change
 {% multicode %}
 ```client-web
 // First, increment the likes atomically
-const likeResult = await tablesDB.incrementRowColumn(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    '<ROW_ID>',
-    'likes', // column
-    1 // value
-);
+const likeResult = await tablesDB.incrementRowColumn({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    column: 'likes',
+    value: 1
+});
 
 // Then, update other fields
-const updateResult = await tablesDB.updateRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    '<ROW_ID>',
-    {
+const updateResult = await tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: {
         lastLikedBy: userId,
         lastLikedAt: new Date().toISOString()
     }
-);
+});
 ```
 ```client-flutter
 // First, increment the likes atomically
@@ -597,24 +597,24 @@ val updateResult = tablesDB.updateRow(
 ```
 ```server-nodejs
 // First, increment the likes atomically
-const likeResult = await tablesDB.incrementRowColumn(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    '<ROW_ID>',
-    'likes', // column
-    1 // value
-);
+const likeResult = await tablesDB.incrementRowColumn({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    column: 'likes',
+    value: 1
+});
 
 // Then, update other fields
-const updateResult = await tablesDB.updateRow(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    '<ROW_ID>',
-    {
+const updateResult = await tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: {
         lastLikedBy: userId,
         lastLikedAt: new Date().toISOString()
     }
-);
+});
 ```
 ```server-python
 # First, increment the likes atomically

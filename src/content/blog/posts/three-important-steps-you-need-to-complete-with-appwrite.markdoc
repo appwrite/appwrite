@@ -3,19 +3,20 @@ layout: post
 title: Three important steps you need to complete before setting up your first Appwrite project
 description: Are you getting errors when setting up your first project in Appwrite? Take a look at these steps.
 date: 2024-02-15
+lastUpdated: 2026-06-29
 cover: /images/blog/three-important-steps-you-need-to-complete-with-appwrite/3-important-steps.avif
 timeToRead: 3
 author: dennis-ivy
 category: product
 faqs:
   - question: "What are the three steps to complete before using a new Appwrite project?"
-    answer: "Add a platform (or generate an API key with scopes for server SDKs), add a hostname if you are using the Web SDK, and set proper permissions on your database collections and storage buckets. Skipping any of these usually leads to errors when making your first request."
+    answer: "Add a platform (or generate an API key with scopes for server SDKs), add a hostname if you are using the Web SDK, and set proper permissions on your database tables and storage buckets. Skipping any of these usually leads to errors when making your first request."
   - question: "Why do I need to add a platform in Appwrite?"
     answer: "Platforms tell Appwrite which clients are allowed to connect to your project. You add a platform from the project overview to register a Web, Flutter, Android, Apple, or server SDK. Without it, your requests are rejected for security."
   - question: "Why am I getting a CORS error when calling Appwrite from my web app?"
     answer: "Most CORS errors happen because you have not added the right hostname to your web platform settings in Appwrite. Add the exact origin you are connecting from (including localhost during development) to fix the error. There is a deeper walkthrough in the [CORS error post](/blog/post/cors-error)."
   - question: "How do permissions work in Appwrite?"
-    answer: "Permissions control who can read or write data in [Databases](/docs/products/databases) collections and [Storage](/docs/products/storage) buckets. You set them at the collection, bucket, or document level. Without the right permissions, even authenticated users see errors or empty data."
+    answer: "Permissions control who can read or write data in [Databases](/docs/products/databases) tables and [Storage](/docs/products/storage) buckets. You set them at the table, row, bucket, or file level. Without the right permissions, even authenticated users see errors or empty data."
   - question: "What is the difference between client and server SDKs in Appwrite?"
     answer: "Client SDKs run in your app and act on behalf of end users, so they use sessions and respect permissions. Server SDKs run in trusted environments and use API keys with explicit scopes. Pick the SDK that matches where your code runs and what level of access it needs."
   - question: "What scopes should I give my Appwrite API key?"
@@ -42,7 +43,7 @@ When using the Web SDK, you’ll need to set a hostname. This just tells Appwrit
 
 # 3 - Permissions
 
-Before you can read and write data from an Appwrite database collection or storage bucket, you’ll need to ensure you have the proper permissions set. This can be set from the “Settings” tab under the “Permissions” section inside a collection or storage bucket.
+Before you can read and write data from an Appwrite database table or storage bucket, you’ll need to ensure you have the proper permissions set. This can be set from the “Settings” tab under the “Permissions” section inside a table or storage bucket.
 
 ![Permissions overview](/images/blog/three-important-steps-you-need-to-complete-with-appwrite/permissions.avif)
 

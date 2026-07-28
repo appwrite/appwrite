@@ -3,6 +3,7 @@ layout: post
 title: "Choosing the right database for AI applications: When to use MongoDB"
 description: Choose the right database for AI workloads. Learn when MongoDB fits dynamic, high-write AI data and how Appwrite lets you build on it without managing backend infrastructure.
 date: 2026-04-03
+lastUpdated: 2026-06-29
 cover: /images/blog/choosing-the-right-database-for-ai-applications-when-to-use-mongodb/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -16,7 +17,7 @@ faqs:
   - question: "Does Appwrite support MongoDB?"
     answer: "Appwrite Databases now offers MongoDB as a database engine alongside its relational option. You get the same SDK, permissions, and realtime experience, with a document-shaped backend underneath. See [Appwrite Databases](/docs/products/databases) for details on how to choose an engine for a new database."
   - question: "Do I need to manage MongoDB infrastructure to use it with Appwrite?"
-    answer: "No. When you select MongoDB as the engine in [Appwrite Databases](/docs/products/databases), Appwrite handles the underlying infrastructure, scaling, and backups. You interact with collections and documents through the same Appwrite SDK, so there is no separate connection string or driver to manage."
+    answer: "No. When you select MongoDB as the engine in [Appwrite Databases](/docs/products/databases), Appwrite handles the underlying infrastructure, scaling, and backups. You interact with tables and rows through the same Appwrite SDK, so there is no separate connection string or driver to manage."
   - question: "Can MongoDB store vector embeddings for RAG?"
     answer: "Yes. MongoDB Atlas supports vector search with HNSW indexes, which means you can store embeddings alongside the original documents and query them with cosine or euclidean similarity. Storing vectors next to source data avoids the round-trip of a separate vector database for many retrieval-augmented generation workloads."
   - question: "How does schema flexibility help an AI product iterate faster?"

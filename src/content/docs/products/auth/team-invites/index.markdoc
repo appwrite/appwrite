@@ -28,14 +28,12 @@ const client = new Client()
 const teams = new Teams(client);
 
 // Create membership with email invite
-const membership = await teams.createMembership(
-    '<TEAM_ID>',
-    ['developer'],     // roles
-    'user@example.com', // email
-    undefined,         // userId (optional)
-    undefined,         // phone (optional)
-    'https://yourapp.com/accept-invite' // url - redirect after email click
-);
+const membership = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: ['developer'],
+    email: 'user@example.com',
+    url: 'https://yourapp.com/accept-invite'
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -110,12 +108,12 @@ const client = new Client()
 const teams = new Teams(client);
 
 // Accept the invitation using the membership ID and secret
-const response = await teams.updateMembershipStatus(
-    '<TEAM_ID>',
-    '<MEMBERSHIP_ID>',
-    '<USER_ID>',
-    '<SECRET>'
-);
+const response = await teams.updateMembershipStatus({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -193,12 +191,12 @@ const client = new sdk.Client()
 const teams = new sdk.Teams(client);
 
 // Create membership directly with userId
-const membership = await teams.createMembership(
-    '<TEAM_ID>',
-    ['developer'],
-    '<USER_ID>',
-    'John Doe'  // optional name
-);
+const membership = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: ['developer'],
+    userId: '<USER_ID>',
+    name: 'John Doe' // optional
+});
 ```
 ```server-python
 from appwrite.client import Client
@@ -457,7 +455,7 @@ teams_list = teams.list()
 
 // Iterate through teams to find memberships
 for team in teams_list['teams']:
-    response = teams.list_memberships(team['$id'])
+    response = teams.list_memberships(team_id=team['$id'])
 
     // Find membership for specific user
     user_membership = next(
@@ -583,10 +581,10 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-await teams.deleteMembership(
-    '<TEAM_ID>',
-    '<MEMBERSHIP_ID>'
-);
+await teams.deleteMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -652,11 +650,11 @@ const client = new Client()
 const teams = new Teams(client)
 
 // Update member roles
-await teams.updateMembership(
-    '<TEAM_ID>',
-    '<MEMBERSHIP_ID>',
-    ['admin', 'developer']
-)
+await teams.updateMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    roles: ['admin', 'developer']
+})
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart'

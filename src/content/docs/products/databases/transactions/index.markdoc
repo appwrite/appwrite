@@ -660,8 +660,8 @@ Use the `createOperations` method to stage multiple operations across databases 
   {
     "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
     "databaseId": "<DATABASE_ID>",
-    "tableId|collectionId": "<TABLE_ID|COLLECTION_ID>",
-    "rowId|documentId": "<ROW_ID|DOCUMENT_ID>",
+    "tableId": "<TABLE_ID>",
+    "rowId": "<ROW_ID>",
     "data": {}
   }
 ]

@@ -3,6 +3,7 @@ layout: post
 title: "Introducing the new Appwrite CLI"
 description: The new Appwrite CLI allows you to test your functions locally, easily migrate databases and more.
 date: 2024-08-20
+lastUpdated: 2026-06-29
 cover: /images/blog/day1-cover.avif
 timeToRead: 5
 author: binyamin-yawitz
@@ -14,7 +15,7 @@ faqs:
   - question: "How do I test an Appwrite Function locally?"
     answer: "Install Docker, run `appwrite run` against your function, and the CLI will spin up the runtime container on your machine. You can iterate without redeploying after every change. See [Appwrite Functions](/docs/products/functions)."
   - question: "Does the CLI overwrite my database when I push?"
-    answer: "No. The new push command syncs changes in a non destructive way, which is a big improvement over the previous CLI behaviour where deploying collections wiped existing data."
+    answer: "No. The new push command syncs changes in a non destructive way, which is a big improvement over the previous CLI behaviour where deploying tables wiped existing data."
   - question: "Can I use the Appwrite CLI in CI/CD?"
     answer: "Yes. Headless login lets you authenticate non interactively using an API key, so the CLI works inside GitHub Actions, GitLab CI, or any other automation system without prompting for input."
   - question: "What is `appwrite.config.json`?"
@@ -22,15 +23,15 @@ faqs:
   - question: "Can I work with multiple Appwrite accounts from one CLI?"
     answer: "Yes. Running `appwrite login` again adds a second account, and you can switch between them as needed. This is useful when you have separate accounts for personal projects and work."
 ---
-We're excited to announce the new Appwrite CLI. This iteration focuses on local development and an enhanced CI/CD experience. Now, you can test changes to your functions locally, and easily apply changes to your Appwrite collection.
+We're excited to announce the new Appwrite CLI. This iteration focuses on local development and an enhanced CI/CD experience. Now, you can test changes to your functions locally, and easily apply changes to your Appwrite table.
 
 Let’s dive into the updates to the new Appwrite CLI and how it will improve your building experience.
 
 # Understanding past limitations
 
-Appwrite developers use the current generation of Appwrite CLI to initialize functions and collections and deploy those resources.
+Appwrite developers use the current generation of Appwrite CLI to initialize functions and tables and deploy those resources.
 
-When deploying collections, the only option is to override and delete all the collection's existing data, which is not the use case for most scenarios.
+When deploying tables, the only option is to override and delete all the table's existing data, which is not the use case for most scenarios.
 
 The only way to test an Appwrite function is to continue deploying the function changes to the Appwrite instance, which can be aggravating for small changes.
 
@@ -102,7 +103,7 @@ Appwrite CLI is now in listening mode. Try changing your code and seeing how the
 
 GitOps is a common way of tracking and migrating database changes. The latest Appwrite CLI generation includes a few features to help you migrate your database changes easily.
 
-When running `appwrite push collection`, the CLI will compare your local `appwrite.config.json` collection definition against the currently deployed remote collection and will present you with a detailed table awaiting your decision, for example:
+When running `appwrite push table`, the CLI will compare your local `appwrite.config.json` table definition against the currently deployed remote table and will present you with a detailed table awaiting your decision, for example:
 
 ```
 Key       │ Action     │ Reason
@@ -113,24 +114,24 @@ time      │ adding     │ Field isn't available on the remote server
 ──────────┼────────────┼─────────────────────────────────────────────
 timezone  │ recreating │ size changed from 256 to 255
 
-ℹ Info: Attribute deletion will cause loss of data
-ℹ Info: Attribute recreation will cause loss of data
+ℹ Info: Column deletion will cause loss of data
+ℹ Info: Column recreation will cause loss of data
 ? Would you like to apply these changes? Type "YES" to confirm.
 ```
 
-In this example, we can see that because we've renamed the attribute `times` to `time,` it will get deleted and read. We must also recreate the `timezone` attribute because we've changed its size from 256 to 255.
+In this example, we can see that because we've renamed the column `times` to `time,` it will get deleted and re-added. We must also recreate the `timezone` column because we've changed its size from 256 to 255.
 
 To help with the decision, you can notice two warnings: deleting or recreating a field will cause data loss.
 
-It's important to know that the data loss will affect only the recreated/deleted attribute and not the whole collection.
+It's important to know that the data loss will affect only the recreated/deleted column and not the whole table.
 
-As you can read in the next section, when pushing collections in CI/CD pipelines, you'll need to add the `--force` flag.
+As you can read in the next section, when pushing tables in CI/CD pipelines, you'll need to add the `--force` flag.
 
 # CI/CD
 
 Adapting CI/CD pipelines ensures robust deployments. To support this, we have rewritten many parts of our CLI to fully accommodate non-interactive actions for all deployment-related commands.
 
-You can add the `--force` flag to any command that may ask you questions, such as `appwrite push collections,` to pre-answer all of them with `YES.` Additionally, you can use the `--all` flag to push/pull all services' available resources.
+You can add the `--force` flag to any command that may ask you questions, such as `appwrite push tables,` to pre-answer all of them with `YES.` Additionally, you can use the `--all` flag to push/pull all services' available resources.
 
 Till this generation, Appwrite CLI supported non-interactive login for API-key-based authorization only, as follows:
 

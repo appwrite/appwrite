@@ -3,6 +3,7 @@ layout: post
 title: A technical deep dive into image classification
 description: Learn all about image classification and how to integrate it into your Appwrite project using TensorFlow
 date: 2024-08-06
+lastUpdated: 2026-06-29
 cover: /images/blog/image-classification.avif
 timeToRead: 9
 author: bradley-schofield
@@ -222,7 +223,7 @@ def main(context):
         return context.res.json({"ok": False, "error": err.message}, 400)
 
     file_id = body["$id"]
-    file_bytes = storage.get_file_download(bucketId, file_id)
+    file_bytes = storage.get_file_download(bucket_id=bucketId, file_id=file_id)
     
     # Preprocess the image
     img = preprocess_image(file_bytes)

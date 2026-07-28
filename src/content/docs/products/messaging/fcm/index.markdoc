@@ -138,12 +138,12 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateFCMProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        {}                                       // serviceAccountJSON (optional)
-    );
+const provider = await messaging.updateFCMProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    serviceAccountJSON: {}
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -159,12 +159,12 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateFCMProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        {}                                       // serviceAccountJSON (optional)
-    );
+const provider = await messaging.updateFCMProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    serviceAccountJSON: {}
+});
 ```
 ```php
 <?php
