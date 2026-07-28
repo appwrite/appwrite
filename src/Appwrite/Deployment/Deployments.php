@@ -152,7 +152,20 @@ readonly class Deployments
             return $deployment;
         }
 
-        $this->deactivateOthers($resource, $deployment);
+        // Claiming activation takes it away from the other pending deployments,
+        // so a cancel landing while we do it would leave nothing able to go
+        // live. Hand the claim back to exactly the deployments it was taken
+        // from, and stop before submitting a job for a canceled deployment.
+        $deactivated = $this->deactivateOthers($resource, $deployment);
+        if ($deactivated !== [] && $this->status($deployment->getId()) === 'canceled') {
+            foreach ($deactivated as $other) {
+                $this->dbForProject->updateDocument('deployments', $other, new Document([
+                    'activate' => true,
+                ]));
+            }
+
+            return $this->dbForProject->getDocument('deployments', $deployment->getId());
+        }
 
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
@@ -187,11 +200,14 @@ readonly class Deployments
     /**
      * Deactivates any other active deployment for $resource before this one
      * goes live, called once the deployment is queued for building.
+     *
+     * @return array<string> The ids it deactivated, so the caller can hand the
+     *                       claim back if this deployment never gets to build.
      */
-    protected function deactivateOthers(Document $resource, Document $deployment): void
+    protected function deactivateOthers(Document $resource, Document $deployment): array
     {
         if (!$deployment->getAttribute('activate', false)) {
-            return;
+            return [];
         }
 
         $others = $this->dbForProject->find('deployments', [
@@ -201,11 +217,20 @@ readonly class Deployments
             Query::notEqual('$id', $deployment->getId()),
         ]);
 
+        $deactivated = [];
         foreach ($others as $other) {
             $this->dbForProject->updateDocument('deployments', $other->getId(), new Document([
                 'activate' => false,
             ]));
+            $deactivated[] = $other->getId();
         }
+
+        return $deactivated;
+    }
+
+    private function status(string $deploymentId): string
+    {
+        return $this->dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status', '');
     }
 
     /**
