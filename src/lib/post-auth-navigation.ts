@@ -127,7 +127,7 @@ export async function prefetchPostAuthDestination(
     }
   }
 
-  let orgId = await resolvePostAuthOrganizationId(account)
+  let orgId = await resolvePostAuthOrganizationId(account, queryClient)
   try {
     await prefetchOrganizationOverviewData(queryClient, orgId)
   } catch (error) {

@@ -46,22 +46,70 @@ export function getFirewallActionDescription(action: string): string {
   }
 }
 
-/** Solid dot colors aligned with `RuleActionBadge` status variants. */
+/**
+ * Single source of truth for firewall action colors. Each action must look
+ * the same everywhere it appears: traffic chart series, chart legends,
+ * action dropdown dots, and rule badges. Chart colors are the Tailwind 500
+ * hex of the same hue used by the dot and badge classes.
+ */
+type FirewallActionColors = {
+  /** Concrete color for chart strokes, gradients, and inline-styled legend dots. */
+  chart: string
+  /** Solid dot class for dropdown items and menus. */
+  dot: string
+  /** Tinted badge classes (background + text), matching the status badge design. */
+  badge: string
+}
+
+const FIREWALL_ACTION_COLORS: Record<string, FirewallActionColors> = {
+  [WafRuleAction.Deny]: {
+    chart: '#ef4444', // red-500
+    dot: 'bg-red-500',
+    badge: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  },
+  [WafRuleAction.Bypass]: {
+    chart: '#3b82f6', // blue-500
+    dot: 'bg-blue-500',
+    badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  },
+  [WafRuleAction.Challenge]: {
+    chart: '#8b5cf6', // violet-500
+    dot: 'bg-violet-500',
+    badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  },
+  [WafRuleAction.RateLimit]: {
+    chart: '#f59e0b', // amber-500
+    dot: 'bg-amber-500',
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  },
+  [WafRuleAction.Redirect]: {
+    chart: '#64748b', // slate-500
+    dot: 'bg-slate-500',
+    badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+  },
+}
+
+const FIREWALL_ACTION_COLORS_FALLBACK: FirewallActionColors = {
+  chart: 'var(--muted-foreground)',
+  dot: 'bg-muted-foreground',
+  badge: 'bg-muted text-foreground/80 dark:text-muted-foreground',
+}
+
+/** "Passed" traffic is not a WAF action but shares the chart with them (emerald-500). */
+export const FIREWALL_PASSED_CHART_COLOR = '#10b981'
+
+export function getFirewallActionChartColor(action: string): string {
+  return (FIREWALL_ACTION_COLORS[action] ?? FIREWALL_ACTION_COLORS_FALLBACK)
+    .chart
+}
+
 export function getFirewallActionDotClass(action: string): string {
-  switch (action) {
-    case WafRuleAction.Deny:
-      return 'bg-red-500'
-    case WafRuleAction.Bypass:
-      return 'bg-blue-500'
-    case WafRuleAction.RateLimit:
-      return 'bg-amber-500'
-    case WafRuleAction.Redirect:
-      return 'bg-slate-500'
-    case WafRuleAction.Challenge:
-      return 'bg-amber-500'
-    default:
-      return 'bg-muted-foreground'
-  }
+  return (FIREWALL_ACTION_COLORS[action] ?? FIREWALL_ACTION_COLORS_FALLBACK).dot
+}
+
+export function getFirewallActionBadgeClass(action: string): string {
+  return (FIREWALL_ACTION_COLORS[action] ?? FIREWALL_ACTION_COLORS_FALLBACK)
+    .badge
 }
 
 export function isRateLimitRule(

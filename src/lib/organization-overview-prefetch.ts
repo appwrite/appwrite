@@ -38,21 +38,22 @@ export async function prefetchOrganizationOverviewData(
   const projectsLimit = options?.projectsLimit ?? GRID_DEFAULT_PAGE_SIZE
   const search = options?.search ?? ''
 
-  await queryClient.ensureQueryData(organizationsQueryOptions())
-  await queryClient.ensureQueryData(organizationQueryOptions(orgId))
-
+  // Failed-invoice banner data is non-critical: fetch in the background so it
+  // never delays first paint (its query is marked skipInitialLoader).
   if (features.billing) {
-    await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
-    await prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId)
+    void prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId).catch(
+      () => {},
+    )
   }
 
-  await queryClient.ensureQueryData(consoleTeamQueryOptions(orgId))
-  const team = queryClient.getQueryData(
-    consoleTeamQueryOptions(orgId).queryKey,
-  ) as { prefs?: Record<string, unknown> } | null | undefined
-  const pinnedIds = parsePinnedProjectIds(team?.prefs)
-
+  // Everything except the projects lists is independent: fetch in parallel.
+  const teamPromise = queryClient.ensureQueryData(
+    consoleTeamQueryOptions(orgId),
+  )
   const parallel: Promise<unknown>[] = [
+    queryClient.ensureQueryData(organizationsQueryOptions()),
+    queryClient.ensureQueryData(organizationQueryOptions(orgId)),
+    teamPromise,
     queryClient.ensureQueryData(
       organizationMembershipsQueryOptions(
         orgId,
@@ -61,16 +62,13 @@ export async function prefetchOrganizationOverviewData(
         '',
       ),
     ),
-    queryClient.ensureQueryData(
-      activeProjectsQueryOptions(
-        orgId,
-        projectsPage,
-        projectsLimit,
-        search,
-        pinnedIds,
-      ),
-    ),
   ]
+
+  if (features.billing) {
+    parallel.push(
+      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+    )
+  }
 
   if (features.orgRoles) {
     parallel.push(
@@ -80,13 +78,34 @@ export async function prefetchOrganizationOverviewData(
     )
   }
 
-  if (pinnedIds.length > 0) {
-    parallel.push(
-      queryClient.ensureQueryData(pinnedProjectsQueryOptions(orgId, pinnedIds)),
-    )
-  }
-
   await Promise.all(parallel)
+
+  // Projects query keys depend on pinned IDs from team prefs, so these two
+  // must wait for the team document (second and final round trip).
+  const team = (await teamPromise) as
+    | { prefs?: Record<string, unknown> }
+    | null
+    | undefined
+  const pinnedIds = parsePinnedProjectIds(team?.prefs)
+
+  await Promise.all([
+    queryClient.ensureQueryData(
+      activeProjectsQueryOptions(
+        orgId,
+        projectsPage,
+        projectsLimit,
+        search,
+        pinnedIds,
+      ),
+    ),
+    ...(pinnedIds.length > 0
+      ? [
+          queryClient.ensureQueryData(
+            pinnedProjectsQueryOptions(orgId, pinnedIds),
+          ),
+        ]
+      : []),
+  ])
 }
 
 /** Extract org id from `/organizations/:orgId` paths for post-auth prefetch. */

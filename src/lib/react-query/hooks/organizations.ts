@@ -435,6 +435,11 @@ export function organizationFailedInvoicePresenceQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    // Banner-only data fetched in the background during initial load; must not
+    // hold the fullscreen loader open (see use-initial-loader).
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
