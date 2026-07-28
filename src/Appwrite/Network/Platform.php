@@ -28,6 +28,15 @@ class Platform
     public const SCHEME_TAURI = 'tauri';
 
     /**
+     * Hostnames that address the client's own machine. Always allowed, so local
+     * development works without registering a platform. IPv6 is bracketed to
+     * match what parse_url() returns for a host.
+     *
+     * @var array<string>
+     */
+    public const array LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];
+
+    /**
      * @var array<string, string> Map scheme types to user-friendly platform names.
      */
     private static array $names = [

@@ -156,6 +156,54 @@ final class HTTPTest extends Scope
         $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
     }
 
+    public function testCorsLoopback()
+    {
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        /**
+         * Test for SUCCESS
+         *
+         * Loopback origins are allowed without a registered platform.
+         */
+        $origins = [
+            'http://localhost',
+            'http://localhost:3000',
+            'http://127.0.0.1',
+            'https://127.0.0.1:5173',
+            'http://[::1]',
+            'http://[::1]:3000',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was not allowed');
+        }
+
+        /**
+         * Test for FAILURE
+         *
+         * Hostnames that only look like loopback must not be allowed.
+         */
+        $origins = [
+            'http://127.0.0.1.example.com',
+            'http://localhost.example.com',
+            'http://128.0.0.1',
+            'http://[2001:db8::1]',
+            // Only the exact loopback spellings are hardcoded
+            'http://127.0.0.2',
+            'http://[0:0:0:0:0:0:0:1]',
+        ];
+
+        foreach ($origins as $origin) {
+            $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+                'origin' => $origin,
+            ]);
+            $this->assertNull($response['headers']['access-control-allow-origin'] ?? null, 'Origin ' . $origin . ' was unexpectedly allowed');
+        }
+    }
+
     public function testPreflight()
     {
 

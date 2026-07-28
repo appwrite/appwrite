@@ -2228,6 +2228,131 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(412, $response['headers']['status-code']);
     }
 
+    public function testCreateOAuth2AccountSessionLoopback(): void
+    {
+        $this->setupAccountWithSession();
+
+        $provider = 'mock';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         *
+         * Loopback redirects are allowed without a registered platform.
+         */
+        $hosts = [
+            'localhost',
+            'localhost:3000',
+            '127.0.0.1',
+            '127.0.0.1:5173',
+            '[::1]',
+            '[::1]:3000',
+        ];
+
+        foreach ($hosts as $host) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'success' => 'http://' . $host . '/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://' . $host . '/v1/mock/tests/general/oauth2/failure',
+            ], followRedirects: false);
+
+            $this->assertEquals(301, $response['headers']['status-code'], 'Host ' . $host . ' was not allowed');
+            $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
+        }
+
+        /**
+         * Test for FAILURE
+         *
+         * Hostnames that only look like loopback must not be allowed.
+         */
+        $hosts = [
+            '127.0.0.1.example.com',
+            'localhost.example.com',
+            '128.0.0.1',
+            '[2001:db8::1]',
+            // Only the exact loopback spellings are hardcoded
+            '127.0.0.2',
+            '[0:0:0:0:0:0:0:1]',
+        ];
+
+        foreach ($hosts as $host) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'success' => 'http://' . $host . '/v1/mock/tests/general/oauth2/success',
+                'failure' => 'http://' . $host . '/v1/mock/tests/general/oauth2/failure',
+            ], followRedirects: false);
+
+            $this->assertEquals(400, $response['headers']['status-code'], 'Host ' . $host . ' was unexpectedly allowed');
+        }
+
+        /**
+         * Walk the whole token flow to prove the loopback success URL survives
+         * the provider round trip and the callback validation.
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://127.0.0.1',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://127.0.0.1/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://127.0.0.1/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://127.0.0.1/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
+
+        $oauthParams = [];
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $oauthParams);
+
+        $this->assertNotEmpty($oauthParams['secret']);
+        $this->assertNotEmpty($oauthParams['userId']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://127.0.0.1',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $oauthParams['userId'],
+            'secret' => $oauthParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+    }
+
     public function testOAuth2TokenSessionProviderAccessToken(): void
     {
         // Just ensure we have a session set up
@@ -3979,6 +4104,89 @@ final class AccountCustomClientTest extends Scope
         });
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
+    }
+
+    public function testCreateMagicUrlLoopback(): void
+    {
+        /**
+         * Test for SUCCESS
+         *
+         * Loopback redirect URLs are allowed without a registered platform.
+         */
+        $hosts = [
+            'localhost',
+            'localhost:3000',
+            '127.0.0.1',
+            '127.0.0.1:5173',
+            '[::1]',
+            '[::1]:3000',
+        ];
+
+        $email = 'magic-loopback-' . uniqid() . '-' . \time() . '@appwrite.io';
+
+        foreach ($hosts as $host) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'userId' => ID::unique(),
+                'email' => $email,
+                'url' => 'http://' . $host . '/magiclogin',
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code'], 'Host ' . $host . ' was not allowed');
+        }
+
+        /**
+         * The emailed link must keep pointing at the loopback host.
+         */
+        $email = 'magic-loopback-' . uniqid() . '-' . \time() . '@appwrite.io';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'url' => 'http://127.0.0.1:5173/magiclogin',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsString('http://127.0.0.1:5173/magiclogin?', (string) $lastEmail['text']);
+
+        /**
+         * Test for FAILURE
+         *
+         * Hostnames that only look like loopback must not be allowed.
+         */
+        $hosts = [
+            '127.0.0.1.example.com',
+            'localhost.example.com',
+            '128.0.0.1',
+            '[2001:db8::1]',
+            // Only the exact loopback spellings are hardcoded
+            '127.0.0.2',
+            '[0:0:0:0:0:0:0:1]',
+        ];
+
+        foreach ($hosts as $host) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'userId' => ID::unique(),
+                'email' => 'magic-loopback-' . uniqid() . '-' . \time() . '@appwrite.io',
+                'url' => 'http://' . $host . '/magiclogin',
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code'], 'Host ' . $host . ' was unexpectedly allowed');
+        }
     }
 
     public function testCreateSessionWithMagicUrl(): void

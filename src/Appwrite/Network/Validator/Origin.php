@@ -72,6 +72,11 @@ class Origin extends Validator
             Platform::SCHEME_TAURI,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
+            /* Loopback clients are always allowed, so local development needs no platform */
+            if (in_array($this->host, Platform::LOOPBACK_HOSTNAMES, true)) {
+                return true;
+            }
+
             $validator = new Hostname($this->allowedHostnames);
             return $validator->isValid($this->host);
         }
