@@ -284,13 +284,13 @@ Http::post('/v1/users')
     ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
     ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $plaintext = new Plaintext();
 
         $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan);
@@ -321,13 +321,13 @@ Http::post('/v1/users/bcrypt')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $bcrypt = new Bcrypt();
         $bcrypt->setCost(8); // Default cost
 
@@ -360,13 +360,13 @@ Http::post('/v1/users/md5')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using MD5.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $md5 = new MD5();
 
         $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -398,13 +398,13 @@ Http::post('/v1/users/argon2')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $argon2 = new Argon2();
 
         $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -437,13 +437,13 @@ Http::post('/v1/users/sha')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true, enum: new Enum(name: 'PasswordHash'))
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
@@ -478,13 +478,13 @@ Http::post('/v1/users/phpass')
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $phpass = new PHPass();
 
         $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -521,13 +521,13 @@ Http::post('/v1/users/scrypt')
     ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.')
     ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.')
     ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scrypt = new Scrypt();
         $scrypt
             ->setSalt($passwordSalt)
@@ -568,13 +568,13 @@ Http::post('/v1/users/scrypt-modified')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
     ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scryptModified = new ScryptModified();
         $scryptModified
             ->setSalt($passwordSalt)
