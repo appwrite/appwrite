@@ -105,8 +105,16 @@ export function RuleImpactPreview({
     // Re-run when the serialized condition values change, not only array identity.
   }, [conditions, conditionsKey])
 
+  const unestimableConditions = useMemo(
+    () => countUnestimableFirewallConditions(debouncedConditions),
+    [debouncedConditions],
+  )
+  // Usage data cannot represent these conditions, so any estimate would
+  // overstate matched traffic. Skip the fetch and show "Preview unavailable".
+  const previewUnavailable = unestimableConditions > 0
+
   const { impact, isLoading, isFetching } = useFirewallRuleImpact(
-    projectId,
+    previewUnavailable ? null : projectId,
     debouncedConditions,
     resourceType,
     resourceId,
@@ -115,8 +123,12 @@ export function RuleImpactPreview({
     usageLogRetentionHours,
   )
 
-  const series = useMemo(() => impact?.series ?? [], [impact?.series])
-  const dateRange = impact?.dateRange
+  // Disabled queries keep previous data; never show stale numbers as a preview.
+  const series = useMemo(
+    () => (previewUnavailable ? [] : (impact?.series ?? [])),
+    [previewUnavailable, impact?.series],
+  )
+  const dateRange = previewUnavailable ? undefined : impact?.dateRange
   const summary = {
     matched: impact?.matched ?? 0,
     rate: impact?.rate ?? 0,
@@ -124,11 +136,7 @@ export function RuleImpactPreview({
 
   const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
     .length
-  const unestimableConditions = useMemo(
-    () => countUnestimableFirewallConditions(debouncedConditions),
-    [debouncedConditions],
-  )
-  const showSubtleLoading = isFetching && !isLoading
+  const showSubtleLoading = !previewUnavailable && isFetching && !isLoading
 
   return (
     <div className="space-y-4">
@@ -193,7 +201,7 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Matched requests')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {isLoading && !impact
+                {previewUnavailable || (isLoading && !impact)
                   ? '-'
                   : summary.matched.toLocaleString()}
               </p>
@@ -204,22 +212,18 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Share of traffic')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {isLoading && !impact
+                {previewUnavailable || (isLoading && !impact)
                   ? '-'
                   : `${(summary.rate * 100).toFixed(1)}%`}
               </p>
             </div>
           </div>
 
-          {unestimableConditions > 0 ? (
+          {previewUnavailable ? (
             <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
-              {unestimableConditions === 1
-                ? t(
-                    '1 condition has no usage data (headers, query parameters, continent, state, and "does not contain") and is not reflected here - actual matched traffic may be lower than shown.',
-                  )
-                : t(
-                    '{count} conditions have no usage data (headers, query parameters, continent, state, and "does not contain") and are not reflected here - actual matched traffic may be lower than shown.',
-                  ).replace('{count}', String(unestimableConditions))}
+              {t(
+                'Preview unavailable: header, query parameter, continent, state, and "does not contain" conditions have no usage data to estimate from. The rule will still enforce them.',
+              )}
             </p>
           ) : null}
         </div>
@@ -235,7 +239,11 @@ export function RuleImpactPreview({
             dateRange={dateRange}
             chartInterval={chartInterval}
             emptyLabel={
-              isLoading ? t('Loading...') : t('No traffic data for this period')
+              previewUnavailable
+                ? t('Preview unavailable')
+                : isLoading
+                  ? t('Loading...')
+                  : t('No traffic data for this period')
             }
           />
         </div>
