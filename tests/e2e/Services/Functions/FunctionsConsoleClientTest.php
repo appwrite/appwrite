@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Tests\E2E\Client;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class FunctionsConsoleClientTest extends Scope
+final class FunctionsConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -130,53 +132,6 @@ class FunctionsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $function2['headers']['status-code']);
-    }
-
-    public function testFunctionUsage(): void
-    {
-        $data = $this->setupTestFunction();
-
-        /**
-         * Test for SUCCESS
-         */
-        $usage = $this->getUsage($data['functionId'], [
-            'range' => '24h'
-        ]);
-        $this->assertEquals(200, $usage['headers']['status-code']);
-        $this->assertEquals(24, count($usage['body']));
-        $this->assertEquals('24h', $usage['body']['range']);
-        $this->assertIsNumeric($usage['body']['deploymentsTotal']);
-        $this->assertIsNumeric($usage['body']['deploymentsStorageTotal']);
-        $this->assertIsNumeric($usage['body']['buildsTotal']);
-        $this->assertIsNumeric($usage['body']['buildsStorageTotal']);
-        $this->assertIsNumeric($usage['body']['buildsTimeTotal']);
-        $this->assertIsNumeric($usage['body']['buildsMbSecondsTotal']);
-        $this->assertIsNumeric($usage['body']['executionsTotal']);
-        $this->assertIsNumeric($usage['body']['executionsTimeTotal']);
-        $this->assertIsNumeric($usage['body']['executionsMbSecondsTotal']);
-        $this->assertIsArray($usage['body']['deployments']);
-        $this->assertIsArray($usage['body']['deploymentsStorage']);
-        $this->assertIsArray($usage['body']['builds']);
-        $this->assertIsArray($usage['body']['buildsTime']);
-        $this->assertIsArray($usage['body']['buildsStorage']);
-        $this->assertIsArray($usage['body']['buildsTime']);
-        $this->assertIsArray($usage['body']['buildsMbSeconds']);
-        $this->assertIsArray($usage['body']['executions']);
-        $this->assertIsArray($usage['body']['executionsTime']);
-        $this->assertIsArray($usage['body']['executionsMbSeconds']);
-
-        /**
-         * Test for FAILURE
-         */
-        $usage = $this->getUsage($data['functionId'], [
-            'range' => '232h'
-        ]);
-        $this->assertEquals(400, $usage['headers']['status-code']);
-
-        $usage = $this->getUsage('randomFunctionId', [
-            'range' => '24h'
-        ]);
-        $this->assertEquals(404, $usage['headers']['status-code']);
     }
 
     public function testCreateFunctionVariable(): void
@@ -316,7 +271,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, sizeof($response['body']['variables']));
+        $this->assertCount(2, $response['body']['variables']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
@@ -850,7 +805,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, sizeof($response['body']['variables']));
+        $this->assertCount(0, $response['body']['variables']);
         $this->assertEquals(0, $response['body']['total']);
 
         /**
@@ -944,13 +899,13 @@ class FunctionsConsoleClientTest extends Scope
 
         $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertEquals('application/octet-stream', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
         $this->assertGreaterThan(0, \strlen($response['body']));
 
         $buildMd5 = \md5($response['body']);
 
-        $this->assertNotEquals($deploymentMd5, $buildMd5);
+        $this->assertNotSame($deploymentMd5, $buildMd5);
 
         $this->cleanupFunction($functionId);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Exception;
@@ -13,7 +15,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabaseServerTest extends Scope
+final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -1157,9 +1159,9 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateFloatAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateFloatAttribute']['required']);
-        $this->assertEquals(100.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['min']);
-        $this->assertEquals(1000000.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['max']);
-        $this->assertEquals(2500.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['default']);
+        $this->assertEqualsWithDelta(100.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['min'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(1000000.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['max'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(2500.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['default'], PHP_FLOAT_EPSILON);
         $this->assertEquals(200, $attribute['headers']['status-code']);
     }
 
@@ -2207,7 +2209,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($document['body']['data']);
         $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
-        $this->assertStringContainsString('New Document Name', $document['data']);
+        $this->assertStringContainsString('New Document Name', (string) $document['data']);
     }
 
     //    /**

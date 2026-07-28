@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Tokens;
 
 use CURLFile;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-class TokensCustomServerTest extends Scope
+final class TokensCustomServerTest extends Scope
 {
     use TokensBase;
     use ProjectCustom;
@@ -125,7 +127,7 @@ class TokensCustomServerTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Success case: No expire date
         $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
@@ -151,7 +153,7 @@ class TokensCustomServerTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', (string) $token['body']['message']);
 
         // Success case: Finite expiry
         $expiry = date('Y-m-d', strtotime("tomorrow"));

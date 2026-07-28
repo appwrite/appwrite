@@ -6,9 +6,8 @@ When bumping a patch version (e.g., `1.9.0` -> `1.9.1`), follow this checklist.
 
 ### Bump console image
 
-Update the console Docker image tag in both files:
-- [ ] `docker-compose.yml` -- update `image: appwrite/console:X.Y.Z`
-- [ ] `app/views/install/compose.phtml` -- update `image: <?php echo $organization; ?>/console:X.Y.Z`
+Update the console Docker image tag:
+- [ ] `docker-compose.yml` -- update `image: appwrite/new:X.Y.Z` (the `appwrite-console` service)
 
 ### Bump Appwrite version
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
@@ -9,7 +11,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 
-class MessagingChannelsTest extends TestCase
+final class MessagingChannelsTest extends TestCase
 {
     /**
      * Configures how many Connections the Test should Mock.
@@ -202,7 +204,7 @@ class MessagingChannelsTest extends TestCase
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiverId);
+                $this->assertStringEndsWith((string) $index, (string) $receiverId);
             }
         }
     }
@@ -238,7 +240,7 @@ class MessagingChannelsTest extends TestCase
                     /**
                      * Making sure the right clients receive the event.
                      */
-                    $this->assertStringEndsWith($index, $receiverId);
+                    $this->assertStringEndsWith((string) $index, (string) $receiverId);
                 }
             }
         }
@@ -272,7 +274,7 @@ class MessagingChannelsTest extends TestCase
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith((string) $index, (string) $receiver);
             }
         }
     }
@@ -307,7 +309,7 @@ class MessagingChannelsTest extends TestCase
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith((string) $index, (string) $receiver);
             }
 
             $role = empty($index % 2)
@@ -340,7 +342,7 @@ class MessagingChannelsTest extends TestCase
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith((string) $index, (string) $receiver);
             }
         }
     }

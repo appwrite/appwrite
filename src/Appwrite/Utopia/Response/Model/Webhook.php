@@ -65,9 +65,10 @@ class Webhook extends Model
             ])
             ->addRule('authPassword', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
-                'example' => 'password',
+                'example' => 'webhook-password',
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,

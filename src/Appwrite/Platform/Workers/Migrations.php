@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Migration;
-use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -35,8 +34,6 @@ use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
-use Utopia\Migration\Resources\Database\Row as ResourceRow;
-use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
@@ -49,6 +46,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
@@ -191,29 +189,64 @@ class Migrations extends Action
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
-        $resourceId = $migration->getAttribute('resourceId');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
         $projectDB = null;
         $useAppwriteApiSource = false;
-        if ($source === SourceAppwrite::getName() && empty($credentials['projectId'])) {
+        $isAppwriteSource = $source === SourceAppwrite::getName();
+        $isAppwriteToAppwrite = $isAppwriteSource
+            && $destination === DestinationAppwrite::getName();
+
+        if ($isAppwriteSource && empty($credentials['projectId'])) {
             throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_ID_REQUIRED);
         }
 
-        if (! empty($credentials['projectId'])) {
+        if ($isAppwriteSource) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
-            if ($this->sourceProject->isEmpty()) {
-                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
+
+            // Trust DB fast path only when the source URL targets this cluster's host
+            // (env-configured or this project's verified custom API domain).
+            $sourceHost = parse_url($credentials['endpoint'] ?? '', PHP_URL_HOST);
+            $publicDomain = parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
+            $internalHost = parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
+
+            $allowedHosts = array_filter([
+                $publicDomain,
+                $publicDomain !== '' ? '*.' . $publicDomain : null,
+                $internalHost,
+            ]);
+
+            if (is_string($sourceHost) && !$this->sourceProject->isEmpty()) {
+                $rule = $this->dbForPlatform->findOne('rules', [
+                    Query::equal('domain', [$sourceHost]),
+                    Query::equal('type', ['api']),
+                    Query::equal('status', [RULE_STATUS_VERIFIED]),
+                    Query::equal('projectInternalId', [$this->sourceProject->getSequence()]),
+                ]);
+                if (!$rule->isEmpty()) {
+                    $allowedHosts[] = $sourceHost;
+                }
             }
+
+            $isLocalEndpoint = is_string($sourceHost)
+                && !empty($allowedHosts)
+                && (new Hostname($allowedHosts))->isValid($sourceHost);
 
             $sourceRegion = $this->sourceProject->getAttribute('region', 'default');
             $destinationRegion = $this->project->getAttribute('region', 'default');
-            $useAppwriteApiSource = $source === SourceAppwrite::getName()
-                && $destination === DestinationAppwrite::getName()
-                && $sourceRegion !== $destinationRegion;
-            if (! $useAppwriteApiSource) {
+
+            $isLocalSource = !$this->sourceProject->isEmpty()
+                && $isLocalEndpoint
+                && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
+
+            if ($isLocalSource) {
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+            } elseif ($isAppwriteToAppwrite) {
+                $useAppwriteApiSource = true;
+            } else {
+                throw new Exception(Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND);
             }
         }
         $getDatabasesDB = fn (Document $database): Database =>
@@ -254,18 +287,20 @@ class Migrations extends Action
                 $projectDB,
                 $queries
             ),
-            CSV::getName() => new CSV(
-                $resourceId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
-                $getDatabasesDB
+            CSV::getName() => CSV::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
+                getDatabasesDB: $getDatabasesDB,
             ),
-            JSON::getName() => new JSON(
-                $resourceId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
+            JSON::getName() => JSON::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
@@ -284,6 +319,7 @@ class Migrations extends Action
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -298,23 +334,25 @@ class Migrations extends Action
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
             ),
-            DestinationCSV::getName() => new DestinationCSV(
-                $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
-                $options['bucketId'],
-                $options['filename'],
-                $options['columns'],
-                $options['delimiter'],
-                $options['enclosure'],
-                $options['escape'],
-                $options['header'],
+            DestinationCSV::getName() => DestinationCSV::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'],
+                filename: $migration->getId(),
+                allowedColumns: $options['columns'],
+                delimiter: $options['delimiter'],
+                enclosure: $options['enclosure'],
+                escape: $options['escape'],
+                includeHeaders: $options['header'],
             ),
-            DestinationJSON::getName() => new DestinationJSON(
-                $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
-                $options['bucketId'] ?? 'default',
-                $options['filename'],
-                $options['columns'] ?? [],
+            DestinationJSON::getName() => DestinationJSON::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'] ?? 'default',
+                filename: $migration->getId(),
+                allowedColumns: $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
         };
@@ -389,18 +427,20 @@ class Migrations extends Action
             'targets.write',
             'webhooks.read',
             'webhooks.write',
+            'rules.read',
+            'rules.write',
             'project.read',
             'project.write',
             'keys.read',
             'keys.write',
             'platforms.read',
             'platforms.write',
-            'oauth2.read',
-            'oauth2.write',
             'mocks.read',
             'mocks.write',
             'project.policies.read',
             'project.policies.write',
+            'project.oauth2.read',
+            'project.oauth2.write',
             'templates.read',
             'templates.write',
         ];
@@ -454,17 +494,16 @@ class Migrations extends Action
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
-        $aggregatedResources = [];
         $caughtError = null;
 
-        $host = System::getEnv('_APP_MIGRATION_HOST');
-        if (empty($host)) {
-            throw new \Exception('_APP_MIGRATION_HOST is not set');
-        }
-
-        $endpoint = 'http://' . $host . '/v1';
-
         try {
+            $host = System::getEnv('_APP_MIGRATION_HOST');
+            if (empty($host)) {
+                throw new \Exception('_APP_MIGRATION_HOST is not set');
+            }
+
+            $endpoint = 'http://' . $host . '/v1';
+
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
@@ -497,46 +536,20 @@ class Migrations extends Action
                 $migration->setAttribute('stage', 'migrating');
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $transfer->run(
+                $context = $this->resolveResourceContext($migration);
+                $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
-                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
+                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
-
-                        if (!empty($resources)) {
-                            /**
-                             * @var Resource $resource
-                            */
-                            $resource = $resources[0];
-                            $count = count($resources);
-                            $databaseId = null;
-                            $tableId = null;
-                            switch ($resource->getName()) {
-                                case ResourceTable::getName():
-                                    /** @var ResourceTable $resource */
-                                    $databaseId = $resource->getDatabase()->getSequence();
-                                    break;
-                                case ResourceRow::getName():
-                                    /** @var ResourceRow $resource */
-                                    $table = $resource->getTable();
-                                    $databaseId = $table->getDatabase()->getSequence();
-                                    $tableId = $table->getSequence();
-                                    break;
-                                default:
-                                    break;
-                            }
-                            $aggregatedResources[] = [
-                                'name' => $resource->getName(),
-                                'count' => $count,
-                                'databaseId' => $databaseId,
-                                'tableId' => $tableId
-                            ];
-
-                        }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $migration->getAttribute('resourceId'),
-                    $migration->getAttribute('resourceType')
+                    resourceId: $context['resourceId'],
+                    resourceInternalId: $context['resourceInternalId'],
+                    resourceType: $context['resourceType'],
+                    parentResourceId: $context['parentResourceId'],
+                    parentResourceInternalId: $context['parentResourceInternalId'],
+                    parentResourceType: $context['parentResourceType'],
                 );
 
                 $destination->shutdown();
@@ -550,6 +563,14 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
                 return;
+            }
+
+            $destination->success();
+            $source->success();
+
+            $destinationType = $migration->getAttribute('destination');
+            if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
+                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
             $migration->setAttribute('status', 'completed');
@@ -577,11 +598,21 @@ class Migrations extends Action
             }
 
             if ($publish) {
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                $extras = [
                     'migrationId' => $migration->getId(),
                     'source' => $migration->getAttribute('source') ?? '',
                     'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+                ];
+
+                // Include source identifiers for Appwrite sources to make Sentry events
+                // self-debuggable. Never include the apiKey or any other secret.
+                if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                    $credentials = $migration->getAttribute('credentials', []) ?? [];
+                    $extras['sourceProjectId'] = $credentials['projectId'] ?? '';
+                    $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
+                }
+
+                $this->reportError($th, $migration, $extras);
             }
         } finally {
             try {
@@ -630,25 +661,6 @@ class Migrations extends Action
                     $destination?->error();
                 }
 
-                if ($migration->getAttribute('status', '') === 'completed') {
-                    foreach ($aggregatedResources as $resource) {
-                        $this->processMigrationResourceStats(
-                            $resource,
-                            $usage,
-                            $project,
-                            $publisherForUsage,
-                            $migration->getAttribute('source'),
-                            $authorization,
-                            $migration->getAttribute('resourceId')
-                        );
-                    }
-                    $destination?->success();
-                    $source?->success();
-                }
-                $destination_type = $migration->getAttribute('destination');
-                if ($destination_type === DestinationCSV::getName() || $destination_type === DestinationJSON::getName()) {
-                    $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
-                }
             } finally {
                 $source?->cleanup();
                 $destination?->cleanup();
@@ -667,6 +679,45 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
+    }
+
+    /** @return array{0: string, 1: string} */
+    protected function resolveResourceIds(Document $migration): array
+    {
+        $context = $this->resolveResourceContext($migration);
+
+        if ($context['parentResourceId'] !== '') {
+            return [$context['parentResourceId'], $context['resourceId']];
+        }
+
+        return [$context['resourceId'], ''];
+    }
+
+    /**
+     * @return array{resourceId: string, resourceInternalId: string, resourceType: string, parentResourceId: string, parentResourceInternalId: string, parentResourceType: string}
+     */
+    protected function resolveResourceContext(Document $migration): array
+    {
+        $context = [
+            'resourceId' => (string) $migration->getAttribute('resourceId', ''),
+            'resourceInternalId' => (string) $migration->getAttribute('resourceInternalId', ''),
+            'resourceType' => (string) $migration->getAttribute('resourceType', ''),
+            'parentResourceId' => (string) $migration->getAttribute('parentResourceId', ''),
+            'parentResourceInternalId' => (string) $migration->getAttribute('parentResourceInternalId', ''),
+            'parentResourceType' => (string) $migration->getAttribute('parentResourceType', ''),
+        ];
+
+        if (
+            $context['parentResourceId'] === ''
+            && \array_key_exists($context['resourceType'], Resource::DATABASE_TYPE_RESOURCE_MAP)
+            && \str_contains($context['resourceId'], ':')
+        ) {
+            [$context['parentResourceId'], $context['resourceId']] = \explode(':', $context['resourceId'], 2);
+            $context['parentResourceType'] = $context['resourceType'];
+            $context['resourceType'] = Resource::TYPE_COLLECTION;
+        }
+
+        return $context;
     }
 
     /**
@@ -691,14 +742,7 @@ class Migrations extends Action
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
-        $userInternalId = $options['userInternalId'] ?? '';
-        $user = $this->dbForPlatform->findOne('users', [
-            Query::equal('$sequence', [$userInternalId])
-        ]);
-
-        if ($user->isEmpty()) {
-            throw new \Exception('User ' . $userInternalId . ' not found');
-        }
+        $user = $this->resolveExportUser($migration);
 
         $bucket = $this->dbForPlatform->getDocument('buckets', $bucketId);
         if ($bucket->isEmpty()) {
@@ -706,7 +750,7 @@ class Migrations extends Action
         }
 
         $extension = $migration->getAttribute('destination') === DestinationJSON::getName() ? '.json' : '.csv';
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . $extension);
+        $path = $this->deviceForFiles->getPath($bucketId . '/' . $migration->getId() . $extension);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
@@ -730,7 +774,8 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errors);
                 $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $this->sendExportEmail(
+                $this->notifyExport(
+                    migration: $migration,
                     success: false,
                     project: $project,
                     user: $user,
@@ -745,11 +790,14 @@ class Migrations extends Action
             }
         }
 
+        $permissions = [];
+        if (!$user->isEmpty()) {
+            $permissions[] = Permission::read(Role::user($user->getId()));
+        }
+
         $this->dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), new Document([
             '$id' => $fileId,
-            '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-            ],
+            '$permissions' => $permissions,
             'bucketId' => $bucket->getId(),
             'bucketInternalId' => $bucket->getSequence(),
             'name' => $filename,
@@ -793,7 +841,8 @@ class Migrations extends Action
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-        $this->sendExportEmail(
+        $this->notifyExport(
+            migration: $migration,
             success: true,
             project: $project,
             user: $user,
@@ -803,6 +852,95 @@ class Migrations extends Action
             exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
             downloadUrl: $downloadUrl
         );
+    }
+
+    protected function resolveExportUser(Document $migration): Document
+    {
+        $userInternalId = $migration->getAttribute('options', [])['userInternalId'] ?? null;
+        if (\is_string($userInternalId) && \ctype_digit($userInternalId)) {
+            $userInternalId = (int) $userInternalId;
+        }
+
+        if ($userInternalId === null || $userInternalId === '') {
+            Console::warning('Finalizing export without a user permission for migration ' . $migration->getId() . ': no initiating user.');
+            return new Document([]);
+        }
+
+        $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
+        if (!$valid) {
+            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
+            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            $this->reportError($error, $migration);
+            return new Document([]);
+        }
+
+        $user = $this->dbForPlatform->findOne('users', [
+            Query::equal('$sequence', [$userInternalId])
+        ]);
+
+        if ($user->isEmpty()) {
+            $error = new \RuntimeException('Initiating user not found for export migration.');
+            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            $this->reportError($error, $migration);
+        }
+
+        return $user;
+    }
+
+    protected function notifyExport(
+        Document $migration,
+        bool $success,
+        Document $project,
+        Document $user,
+        array $options,
+        MailPublisher $publisherForMails,
+        array $platform,
+        string $exportType = 'CSV',
+        string $downloadUrl = '',
+        float $sizeMB = 0.0,
+    ): void {
+        try {
+            $this->sendExportEmail(
+                success: $success,
+                project: $project,
+                user: $user,
+                options: $options,
+                publisherForMails: $publisherForMails,
+                platform: $platform,
+                exportType: $exportType,
+                downloadUrl: $downloadUrl,
+                sizeMB: $sizeMB,
+            );
+        } catch (\Throwable $error) {
+            Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
+            $this->reportError($error, $migration);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $extras
+     */
+    protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
+    {
+        if (!\is_callable($this->logError)) {
+            return;
+        }
+
+        try {
+            ($this->logError)(
+                $error,
+                'appwrite-worker',
+                'appwrite-queue-' . self::getName(),
+                [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source', ''),
+                    'destination' => $migration->getAttribute('destination', ''),
+                    ...$extras,
+                ]
+            );
+        } catch (\Throwable $loggingError) {
+            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+        }
     }
 
     /**
@@ -899,6 +1037,7 @@ class Migrations extends Action
             recipient: $user->getAttribute('email'),
             name: $user->getAttribute('name', $user->getAttribute('email')),
             subject: $subject,
+            template: MAIL_TEMPLATE_DATA_EXPORT,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $emailBody,
             preview: $preview,
@@ -908,21 +1047,6 @@ class Migrations extends Action
         ));
 
         Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
-    }
-
-    /**
-     * Sanitize a filename to make it filesystem-safe
-     *
-     * @param string $filename
-     * @return string
-     */
-    protected function sanitizeFilename(string $filename): string
-    {
-        // Replace problematic characters with underscores
-        $sanitized = \preg_replace('/[:\/<>"|*?]/', '_', $filename);
-        $sanitized = \preg_replace('/[^\x20-\x7E]/', '_', $sanitized);
-        $sanitized = \trim($sanitized);
-        return empty($sanitized) ? 'export' : $sanitized;
     }
 
     /**
@@ -950,64 +1074,5 @@ class Migrations extends Action
         }
 
         return $errors;
-    }
-
-    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $resourceId)
-    {
-        $resourceName = $resources['name'];
-        $count = $resources['count'];
-        $databaseInternalId = $resources['databaseId'];
-        $tableInternalId = $resources['tableId'];
-
-        if ($source === CSV::getName()) {
-            [$databaseId, $tableId] = explode(':', $resourceId);
-            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
-            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
-            $databaseInternalId = (int) $database->getSequence();
-            $tableInternalId = (int) $table->getSequence();
-        }
-
-        switch ($resourceName) {
-            case ResourceDatabase::getName():
-                $usage->addMetric(METRIC_DATABASES, $count);
-                break;
-
-            case ResourceTable::getName():
-                $usage
-                    ->addMetric(METRIC_COLLECTIONS, $count)
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
-                        $count
-                    );
-                break;
-
-            case ResourceRow::getName():
-                $usage
-                    ->addMetric(
-                        str_replace(
-                            ['{databaseInternalId}','{collectionInternalId}'],
-                            [$databaseInternalId, $tableInternalId],
-                            METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
-                        ),
-                        $count
-                    )
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
-                        $count
-                    )
-                    ->addMetric(METRIC_DOCUMENTS, $count);
-                break;
-
-            default:
-                break;
-        }
-
-        $message = new UsageMessage(
-            project: $projectDocument,
-            metrics: $usage->getMetrics(),
-            reduce: $usage->getReduce()
-        );
-        $publisherForUsage->enqueue($message);
-        $usage->reset();
     }
 }

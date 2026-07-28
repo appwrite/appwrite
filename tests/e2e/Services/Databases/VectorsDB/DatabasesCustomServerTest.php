@@ -14,7 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabasesCustomServerTest extends Scope
+final class DatabasesCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
@@ -582,7 +582,7 @@ class DatabasesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'model' => 'embeddinggemma',
+                'model' => 'nomic-embed-text',
                 'texts' => [
                     'hello world',
                     'second sentence',
@@ -616,7 +616,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'model' => 'embeddinggemma',
+            'model' => 'nomic-embed-text',
             'texts' => [
                 'valid text',
                 123, // invalid, not a string

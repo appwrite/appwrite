@@ -3,9 +3,10 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document as DatabaseDocument;
 
-class Presence extends Any
+class Presence extends Model
 {
     public function getName(): string
     {
@@ -19,9 +20,6 @@ class Presence extends Any
 
     public function __construct()
     {
-        // Expose user-defined extras under "metadata" instead of the SDK default "data"
-        $this->setAdditionalPropertiesKey('metadata');
-
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
@@ -73,9 +71,14 @@ class Presence extends Any
                 'required' => false,
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('metadata', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Presence metadata.',
+                'required' => false,
+                'default' => null,
+                'example' => ['key' => 'value'],
             ]);
-        // User-defined extras flow through Any's generic mapping, surfaced under
-        // the "metadata" key declared via setAdditionalPropertiesKey() above.
     }
 
     public function filter(DatabaseDocument $document): DatabaseDocument

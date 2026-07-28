@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -20,6 +20,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
 {
@@ -41,6 +42,7 @@ class Create extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -64,8 +66,9 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->inject('publisherForBuilds')
+            ->inject('deployments')
             ->inject('deviceForSites')
+            ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -80,8 +83,9 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        BuildPublisher $publisherForBuilds,
+        Backend $deployments,
         Device $deviceForSites,
+        VcsFactory $vcsFactory,
         Authorization $authorization,
         array $platform
     ) {
@@ -96,15 +100,27 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // Remote-source deployments (templates / VCS) on the jobs-service
+        // backend never store a source tarball — the build sidecar fetches
+        // it — so a duplicate re-fetches the same source from the
+        // coordinates persisted on the deployment.
         $path = $deployment->getAttribute('sourcePath');
-        if (empty($path) || !$deviceForSites->exists($path)) {
+        $hasSource = !empty($path) && $deviceForSites->exists($path);
+        $installationId = $deployment->getAttribute('installationId', '');
+        $owner = $deployment->getAttribute('providerRepositoryOwner', '');
+        $repository = $deployment->getAttribute('providerRepositoryName', '');
+
+        if (!$hasSource && ($owner === '' || $repository === '')) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $deploymentId = ID::unique();
 
-        $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-        $deviceForSites->transfer($path, $destination, $deviceForSites);
+        $destination = '';
+        if ($hasSource) {
+            $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+            $deviceForSites->transfer($path, $destination, $deviceForSites);
+        }
 
         $commands = [];
 
@@ -115,12 +131,16 @@ class Create extends Action
             $commands[] = $site->getAttribute('buildCommand', '');
         }
 
+        // Cloning the source deployment's attributes onto the new one, with
+        // its own $id and no $sequence, tells the service to create it fresh
+        // rather than update the deployment being duplicated. A re-fetched
+        // source starts unsized; its stat artifact reports the size.
         $deployment->removeAttribute('$sequence');
-
-        $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
+        $deployment->setAttributes([
             '$id' => $deploymentId,
             'sourcePath' => $destination,
-            'totalSize' => $deployment->getAttribute('sourceSize', 0),
+            'sourceSize' => $hasSource ? $deployment->getAttribute('sourceSize', 0) : 0,
+            'totalSize' => $hasSource ? $deployment->getAttribute('sourceSize', 0) : 0,
             'buildCommands' => \implode(' && ', $commands),
             'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
@@ -132,23 +152,44 @@ class Create extends Action
             'buildEndedAt' => null,
             'buildDuration' => 0,
             'buildSize' => 0,
-            'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-            'type' => $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual'
-        ]));
+            'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual',
+            // Not inherited: a redeploy always goes live, and the source's own
+            // flag is unset by deactivateOthers() once anything newer builds.
+            'activate' => true,
+        ]);
 
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
-        ]));
+        if ($hasSource) {
+            $deployment = $deployments->createFromUpload($site, $deployment);
+        } elseif ($installationId !== '') {
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+            if ($installation->isEmpty()) {
+                throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+            }
+
+            $vcs = $vcsFactory->fromInstallation($installation);
+
+            $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
+            $deployment = $deployments->createFromUrl(
+                $site,
+                $deployment,
+                $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $deployment->getAttribute('providerRootDirectory', ''),
+            );
+        } else {
+            // Public template repo: providerBranch holds the resolved ref,
+            // fetched commit-style since a branch-type clone breaks on tags.
+            $deployment = $deployments->createFromRef(
+                $site,
+                $deployment,
+                $owner,
+                $repository,
+                GitHub::CLONE_TYPE_COMMIT,
+                $deployment->getAttribute('providerBranch', ''),
+                $deployment->getAttribute('providerRootDirectory', ''),
+            );
+        }
 
         // Preview deployments for sites
         $sitesDomain = $platform['sitesDomain'];
@@ -166,8 +207,8 @@ class Create extends Action
                 'domain' => $domain,
                 'type' => 'deployment',
                 'trigger' => 'deployment',
-                'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
                 'deploymentResourceType' => 'site',
                 'deploymentResourceId' => $site->getId(),
                 'deploymentResourceInternalId' => $site->getSequence(),
@@ -177,14 +218,6 @@ class Create extends Action
                 'region' => $project->getAttribute('region')
             ]))
         );
-
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $site,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            platform: $platform,
-        ));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

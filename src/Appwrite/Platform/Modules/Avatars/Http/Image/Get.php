@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Image;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -44,6 +45,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-image.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -69,10 +71,19 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+        $host = \parse_url($url, PHP_URL_HOST) ?? '';
 
-        if (!$domain->isKnown()) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
+        if (!$isIpLiteral) {
+            $domain = new Domain($host);
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+            }
+        }
+
+        $hostnameValidator = new PublicHostname();
+        if (!$hostnameValidator->isValid($host)) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $hostnameValidator->getDescription());
         }
 
         $client = new Client();

@@ -44,6 +44,7 @@ class Get extends Action
             ->desc('Get file for view')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('sdk', new Method(
                 namespace: 'storage',
@@ -58,7 +59,8 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::ANY,
-                type: MethodType::LOCATION
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -136,7 +138,7 @@ class Get extends Action
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();

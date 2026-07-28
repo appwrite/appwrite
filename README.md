@@ -166,6 +166,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
 |                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
 |                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
+|                       | [Quick start for Go](https://appwrite.io/docs/quick-starts/go)                     |
+|                       | [Quick start for Rust](https://appwrite.io/docs/quick-starts/rust)                 |
 
 ### SDKs
 
@@ -181,15 +183,16 @@ Below is a list of currently supported platforms and languages. If you would lik
 
 #### Server
 
-- :white_check_mark: &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node)
-- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
-- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
-- :white_check_mark: &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno)
-- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
+- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node)
 - :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python)
-- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
-- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
+- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
+- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
 - :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
+- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 

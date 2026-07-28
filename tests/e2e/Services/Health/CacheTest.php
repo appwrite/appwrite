@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class CacheTest extends HealthBase
+final class CacheTest extends HealthBase
 {
     public function testCacheSuccess(): void
     {

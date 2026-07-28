@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
 
-class OriginTest extends TestCase
+final class OriginTest extends TestCase
 {
     public function testValues(): void
     {
@@ -47,38 +49,38 @@ class OriginTest extends TestCase
         $this->assertEquals(false, $validator->isValid('appwrite-callback-456://'));
 
         $this->assertEquals(false, $validator->isValid('appwrite-ios://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new iOS platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new iOS platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('appwrite-android://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Android platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Android platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('appwrite-macos://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new macOS platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new macOS platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('appwrite-linux://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Linux platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Linux platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('appwrite-windows://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('chrome-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Chrome Extension) platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Web (Chrome Extension) platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('moz-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Firefox Extension) platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Web (Firefox Extension) platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('safari-web-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Safari Extension) platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Web (Safari Extension) platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('ms-browser-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Edge Extension) platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (com.company.appname) as a new Web (Edge Extension) platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(true, $validator->isValid('tauri://localhost'));
         $this->assertEquals(false, $validator->isValid('tauri://example.com'));
-        $this->assertEquals('Invalid Origin. Register your new client (example.com) as a new Web (Tauri) platform on your project console dashboard', $validator->getDescription());
+        $this->assertSame('Invalid Origin. Register your new client (example.com) as a new Web (Tauri) platform on your project console dashboard', $validator->getDescription());
 
         $this->assertEquals(false, $validator->isValid('random-scheme://localhost'));
-        $this->assertEquals('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
+        $this->assertSame('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
     }
 
     public function testGetAllowedHostnames(): void
@@ -88,7 +90,7 @@ class OriginTest extends TestCase
             allowedSchemes: ['exp']
         );
 
-        $this->assertEquals(['appwrite.io', 'localhost'], $validator->getAllowedHostnames());
+        $this->assertSame(['appwrite.io', 'localhost'], $validator->getAllowedHostnames());
     }
 
     public function testGetAllowedSchemes(): void
@@ -98,7 +100,7 @@ class OriginTest extends TestCase
             allowedSchemes: ['exp', 'appwrite-callback-123']
         );
 
-        $this->assertEquals(['exp', 'appwrite-callback-123'], $validator->getAllowedSchemes());
+        $this->assertSame(['exp', 'appwrite-callback-123'], $validator->getAllowedSchemes());
     }
 
     public function testSetAllowedHostnames(): void
@@ -114,7 +116,7 @@ class OriginTest extends TestCase
         $result = $validator->setAllowedHostnames(['example.com']);
 
         $this->assertSame($validator, $result);
-        $this->assertEquals(['example.com'], $validator->getAllowedHostnames());
+        $this->assertSame(['example.com'], $validator->getAllowedHostnames());
         $this->assertEquals(true, $validator->isValid('https://example.com'));
         $this->assertEquals(false, $validator->isValid('https://appwrite.io'));
     }
@@ -132,7 +134,7 @@ class OriginTest extends TestCase
         $result = $validator->setAllowedSchemes(['appwrite-callback-456']);
 
         $this->assertSame($validator, $result);
-        $this->assertEquals(['appwrite-callback-456'], $validator->getAllowedSchemes());
+        $this->assertSame(['appwrite-callback-456'], $validator->getAllowedSchemes());
         $this->assertEquals(true, $validator->isValid('appwrite-callback-456://'));
         $this->assertEquals(false, $validator->isValid('exp://'));
     }

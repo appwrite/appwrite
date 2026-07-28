@@ -35,6 +35,7 @@ class Delete extends CollectionDelete
             ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
             ->label('audits.event', 'collection.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'collections',

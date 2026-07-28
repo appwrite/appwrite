@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Exception;
@@ -14,7 +16,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class DatabaseServerTest extends Scope
+final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
@@ -1370,9 +1372,9 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($column['body']['data']);
         $this->assertIsArray($column['body']['data']['tablesDBUpdateFloatColumn']);
         $this->assertFalse($column['body']['data']['tablesDBUpdateFloatColumn']['required']);
-        $this->assertEquals(100.0, $column['body']['data']['tablesDBUpdateFloatColumn']['min']);
-        $this->assertEquals(1000000.0, $column['body']['data']['tablesDBUpdateFloatColumn']['max']);
-        $this->assertEquals(2500.0, $column['body']['data']['tablesDBUpdateFloatColumn']['default']);
+        $this->assertEqualsWithDelta(100.0, $column['body']['data']['tablesDBUpdateFloatColumn']['min'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(1000000.0, $column['body']['data']['tablesDBUpdateFloatColumn']['max'], PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(2500.0, $column['body']['data']['tablesDBUpdateFloatColumn']['default'], PHP_FLOAT_EPSILON);
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
@@ -2390,7 +2392,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($row['body']['data']);
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
-        $this->assertStringContainsString('New Row Name', $row['data']);
+        $this->assertStringContainsString('New Row Name', (string) $row['data']);
     }
 
     //    /**

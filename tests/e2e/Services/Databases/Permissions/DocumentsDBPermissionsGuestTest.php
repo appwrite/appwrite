@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Databases\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -13,7 +15,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 
-class DocumentsDBPermissionsGuestTest extends Scope
+final class DocumentsDBPermissionsGuestTest extends Scope
 {
     use DatabasesPermissionsBase;
     use ProjectCustom;
@@ -92,16 +94,14 @@ class DocumentsDBPermissionsGuestTest extends Scope
         ];
     }
 
-    public static function permissionsProvider(): array
+    public static function permissionsProvider(): \Iterator
     {
-        return [
-            [[Permission::read(Role::any())]],
-            [[Permission::read(Role::users())]],
-            [[Permission::update(Role::any()), Permission::delete(Role::any())]],
-            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
-            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
-            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]],
-        ];
+        yield [[Permission::read(Role::any())]];
+        yield [[Permission::read(Role::users())]];
+        yield [[Permission::update(Role::any()), Permission::delete(Role::any())]];
+        yield [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]];
+        yield [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]];
+        yield [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]];
     }
 
     #[DataProvider('permissionsProvider')]

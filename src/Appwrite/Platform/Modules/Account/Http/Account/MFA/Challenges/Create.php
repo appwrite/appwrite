@@ -10,6 +10,7 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -19,8 +20,6 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
@@ -29,7 +28,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
-use Utopia\Platform\Action;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -94,7 +94,7 @@ class Create extends Action
             ])
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
+            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -195,15 +195,9 @@ class Create extends Action
                     providerType: MESSAGE_TYPE_SMS,
                 ));
 
-                $helper = PhoneNumberUtil::getInstance();
-                try {
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (!empty($countryCode)) {
-                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                } catch (NumberParseException $e) {
-                    // Ignore invalid phone number for country code stats
+                $countryCode = CallingCode::fromPhoneNumber($phone);
+                if (!empty($countryCode)) {
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
@@ -335,6 +329,7 @@ class Create extends Action
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,
+                    template: MAIL_TEMPLATE_MFA_CHALLENGE,
                     bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,

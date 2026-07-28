@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
@@ -56,7 +57,11 @@ class Create extends Action
                         model: UtopiaResponse::MODEL_TRANSACTION,
                     )
                 ],
-                contentType: ContentType::JSON
+                contentType: ContentType::JSON,
+                deprecated: new Deprecated(
+                    since: '1.8.0',
+                    replaceWith: 'tablesDB.createOperations',
+                )
             ))
             ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
@@ -117,7 +122,7 @@ class Create extends Action
             }
 
             $database = $databases[$operation['databaseId']] ??= $authorization->skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));
-            if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
                 throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$operation['databaseId']]);
             }
 

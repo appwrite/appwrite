@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -53,7 +54,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('protocolId', '', new WhiteList(array_keys(Config::getParam('protocols')), true), 'Protocol name. Can be one of: ' . \implode(', ', array_keys(Config::getParam('protocols'))))
+            ->param('protocolId', '', new WhiteList(array_keys(Config::getParam('protocols')), true), 'Protocol name. Can be one of: ' . \implode(', ', array_keys(Config::getParam('protocols'))), enum: new Enum(name: 'ProjectProtocolId'))
             ->param('enabled', null, new Boolean(), 'Protocol status.')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -78,6 +79,7 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'apis' => $protocols,
         ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('protocolId', $protocolId);
 

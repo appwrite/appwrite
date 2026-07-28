@@ -44,6 +44,7 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
             ->label('audits.event', 'attribute.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -76,7 +77,7 @@ class Delete extends Action
     public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

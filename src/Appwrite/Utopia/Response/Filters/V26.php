@@ -51,6 +51,7 @@ class V26 extends Filter
         $content['authDisposableEmails'] = $auths->getAttribute('disposableEmails', false);
         $content['authCanonicalEmails'] = $auths->getAttribute('canonicalEmails', false);
         $content['authFreeEmails'] = $auths->getAttribute('freeEmails', false);
+        $content['authCorporateEmails'] = $auths->getAttribute('corporateEmails', false);
         $content['authMockNumbers'] = $auths->getAttribute('mockNumbers', []);
         $content['authSessionAlerts'] = $auths->getAttribute('sessionAlerts', false);
         $content['authMembershipsUserName'] = $auths->getAttribute('membershipsUserName', false);
@@ -58,6 +59,7 @@ class V26 extends Filter
         $content['authMembershipsMfa'] = $auths->getAttribute('membershipsMfa', false);
         $content['authMembershipsUserId'] = $auths->getAttribute('membershipsUserId', false);
         $content['authMembershipsUserPhone'] = $auths->getAttribute('membershipsUserPhone', false);
+        $content['authMembershipsUserAccessedAt'] = $auths->getAttribute('membershipsUserAccessedAt', false);
         $content['authInvalidateSessions'] = $auths->getAttribute('invalidateSessions', false);
 
         $content['description'] = $raw->getAttribute('description', '');

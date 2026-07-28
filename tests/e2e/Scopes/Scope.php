@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Scopes;
 
 use Appwrite\Tests\Async;
@@ -428,7 +430,7 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    abstract public function getHeaders(bool $devKey = true): array;
+    abstract public function getHeaders(): array;
 
     /**
      * @return array

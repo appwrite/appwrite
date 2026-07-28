@@ -3,13 +3,14 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Firebase\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Firebase;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -45,7 +46,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'FirebaseMigrationResource'))
             ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
             ->inject('response')
             ->callback($this->action(...));

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use CURLFile;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
-class AbuseTest extends Scope
+final class AbuseTest extends Scope
 {
     use ProjectCustom;
     use SideNone;

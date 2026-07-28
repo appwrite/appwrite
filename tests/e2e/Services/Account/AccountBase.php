@@ -43,11 +43,11 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['accessedAt']);
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
-        $this->assertArrayNotHasKey('emailCanonical', $response['body']);
-        $this->assertArrayNotHasKey('emailIsFree', $response['body']);
-        $this->assertArrayNotHasKey('emailIsDisposable', $response['body']);
-        $this->assertArrayNotHasKey('emailIsCorporate', $response['body']);
-        $this->assertArrayNotHasKey('emailIsCanonical', $response['body']);
+        $this->assertEquals($email, $response['body']['emailCanonical']);
+        $this->assertIsBool($response['body']['emailIsFree']);
+        $this->assertIsBool($response['body']['emailIsDisposable']);
+        $this->assertIsBool($response['body']['emailIsCorporate']);
+        $this->assertIsBool($response['body']['emailIsCanonical']);
 
         /**
          * Test for FAILURE
@@ -93,7 +93,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? '',
         ]), [
             'userId' => ID::unique(),
             'email' => '',
@@ -107,7 +106,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => 'shortpass@appwrite.io',
@@ -125,7 +123,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => 'longpass@appwrite.io',
@@ -302,7 +299,6 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-dev-key' => $this->getProject()['devKey'] ?? ''
         ]), [
             'userId' => ID::unique(),
             'email' => $email,

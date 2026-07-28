@@ -72,6 +72,7 @@ class Update extends Action
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
             ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

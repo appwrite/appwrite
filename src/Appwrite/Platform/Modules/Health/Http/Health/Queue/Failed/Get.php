@@ -12,18 +12,16 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+use Utopia\Platform\Enum;
 use Utopia\System\System;
 use Utopia\Validator\Integer;
 use Utopia\Validator\WhiteList;
@@ -43,20 +41,6 @@ class Get extends Base
             ->desc('Get number of failed queue jobs')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'queue',
-                name: 'getFailedJobs',
-                description: '/docs/references/health/get-failed-queue-jobs.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_QUEUE,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->param('name', '', new WhiteList([
                 System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME),
                 System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME),
@@ -71,7 +55,8 @@ class Get extends Base
                 System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME),
                 System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
                 System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME),
-            ]), 'The name of the queue')
+                System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME),
+            ]), 'The name of the queue', enum: new Enum(name: 'HealthQueueName'))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('response')
             ->inject('publisherForDatabase')
@@ -87,6 +72,7 @@ class Get extends Base
             ->inject('publisherForMessaging')
             ->inject('publisherForMigrations')
             ->inject('publisherForScreenshots')
+            ->inject('publisherForNotifications')
             ->callback($this->action(...));
     }
 
@@ -107,6 +93,7 @@ class Get extends Base
         MessagingPublisher $publisherForMessaging,
         MigrationPublisher $publisherForMigrations,
         Screenshot $publisherForScreenshots,
+        NotificationPublisher $publisherForNotifications,
     ): void {
         $threshold = (int) $threshold;
 
@@ -124,6 +111,7 @@ class Get extends Base
             System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $publisherForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $publisherForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $publisherForMigrations,
+            System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME) => $publisherForNotifications,
             default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown queue name: ' . $name),
         };
         $failed = $queue->getSize(failed: true);

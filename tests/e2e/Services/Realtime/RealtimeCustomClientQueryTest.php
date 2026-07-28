@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Scopes\ProjectCustom;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Query;
 
-class RealtimeCustomClientQueryTest extends Scope
+final class RealtimeCustomClientQueryTest extends Scope
 {
     use FunctionsBase;
     use RealtimeBase;
@@ -36,8 +38,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('contains', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('contains', (string) $response['data']['message']);
 
         // Test 2: Invalid query method in nested AND query
         $client = $this->getWebsocket(['documents'], [
@@ -52,8 +54,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('search', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('search', (string) $response['data']['message']);
 
         // Test 3: Invalid query method in nested OR query
         $client = $this->getWebsocket(['documents'], [
@@ -68,8 +70,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('between', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('between', (string) $response['data']['message']);
 
         // Test 4: Deeply nested invalid query (AND -> OR -> invalid)
         $client = $this->getWebsocket(['documents'], [
@@ -87,8 +89,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('startsWith', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('startsWith', (string) $response['data']['message']);
 
         // Test 5: Multiple invalid 'queries' in nested structure
         $client = $this->getWebsocket(['documents'], [
@@ -106,7 +108,7 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
         // Should catch the first invalid method encountered
         $this->assertTrue(
             str_contains($response['data']['message'], 'contains') ||

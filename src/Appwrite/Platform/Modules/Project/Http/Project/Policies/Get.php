@@ -8,6 +8,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -22,6 +23,9 @@ class Get extends Action
 
     public function __construct()
     {
+        $policies = $this->getPolicies();
+        $policyIds = \array_keys($policies);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/policies/:policyId')
@@ -39,31 +43,11 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: [
-                            Response::MODEL_POLICY_PASSWORD_DICTIONARY,
-                            Response::MODEL_POLICY_PASSWORD_HISTORY,
-                            Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
-                            Response::MODEL_POLICY_SESSION_ALERT,
-                            Response::MODEL_POLICY_SESSION_DURATION,
-                            Response::MODEL_POLICY_SESSION_INVALIDATION,
-                            Response::MODEL_POLICY_SESSION_LIMIT,
-                            Response::MODEL_POLICY_USER_LIMIT,
-                            Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
-                        ],
+                        model: \array_values($policies),
                     )
                 ]
             ))
-            ->param('policyId', '', new WhiteList([
-                'password-dictionary',
-                'password-history',
-                'password-personal-data',
-                'session-alert',
-                'session-duration',
-                'session-invalidation',
-                'session-limit',
-                'user-limit',
-                'membership-privacy',
-            ], true), 'Policy ID. Can be one of: password-dictionary, password-history, password-personal-data, session-alert, session-duration, session-invalidation, session-limit, user-limit, membership-privacy.')
+            ->param('policyId', '', new WhiteList($policyIds, true), 'Policy ID. Can be one of: ' . \implode(', ', $policyIds) . '.', enum: new Enum(name: 'ProjectPolicyId'))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));
@@ -74,9 +58,44 @@ class Get extends Action
         Response $response,
         Document $project,
     ): void {
+        $resolved = $this->resolvePolicy($policyId, $project);
+
+        if ($resolved === null) {
+            throw new \LogicException('Unknown policy ID: ' . $policyId);
+        }
+
+        [$policy, $model] = $resolved;
+
+        $response->dynamic($policy, $model);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getPolicies(): array
+    {
+        return [
+            'password-dictionary' => Response::MODEL_POLICY_PASSWORD_DICTIONARY,
+            'password-history' => Response::MODEL_POLICY_PASSWORD_HISTORY,
+            'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
+            'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
+            'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
+            'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
+            'session-limit' => Response::MODEL_POLICY_SESSION_LIMIT,
+            'user-limit' => Response::MODEL_POLICY_USER_LIMIT,
+            'membership-privacy' => Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
+        ];
+    }
+
+    /**
+     * @return ?array<mixed>
+     */
+    protected function resolvePolicy(string $policyId, Document $project): ?array
+    {
         $auths = $project->getAttribute('auths', []);
 
-        [$policy, $model] = match ($policyId) {
+        return match ($policyId) {
             'password-dictionary' => [
                 new Document([
                     '$id' => 'password-dictionary',
@@ -90,6 +109,18 @@ class Get extends Action
                     'total' => $auths['passwordHistory'] ?? 0,
                 ]),
                 Response::MODEL_POLICY_PASSWORD_HISTORY,
+            ],
+            'password-strength' => [
+                new Document(\array_merge([
+                    'min' => 8,
+                    'uppercase' => false,
+                    'lowercase' => false,
+                    'number' => false,
+                    'symbols' => false,
+                ], $auths['passwordStrength'] ?? [], [
+                    '$id' => 'password-strength',
+                ])),
+                Response::MODEL_POLICY_PASSWORD_STRENGTH,
             ],
             'password-personal-data' => [
                 new Document([
@@ -141,12 +172,11 @@ class Get extends Action
                     'userPhone' => $auths['membershipsUserPhone'] ?? false,
                     'userName' => $auths['membershipsUserName'] ?? false,
                     'userMFA' => $auths['membershipsMfa'] ?? false,
+                    'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
                 ]),
                 Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
             ],
-            default => throw new \LogicException('Unknown policy ID: ' . $policyId),
+            default => null,
         };
-
-        $response->dynamic($policy, $model);
     }
 }

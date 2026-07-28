@@ -776,6 +776,45 @@ trait DatabasesBase
         $this->assertEquals($this->getDatabaseType(), $database['body']['type']);
     }
 
+    public function testDatabaseStatus(): void
+    {
+        if ($this->getSide() === 'client') {
+            // Databases are created and read with a server API key.
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         * A newly created database defaults to the "ready" status.
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Status Database',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertArrayHasKey('status', $database['body']);
+        $this->assertEquals('ready', $database['body']['status']);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * The status is persisted and returned on read.
+         */
+        $response = $this->client->call(Client::METHOD_GET, $this->getApiBasePath() . '/' . $databaseId, $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('status', $response['body']);
+        $this->assertEquals('ready', $response['body']['status']);
+    }
+
     public function testCreateCollection(): void
     {
         $data = $this->setupDatabase();
@@ -3691,6 +3730,76 @@ trait DatabasesBase
             $this->assertTrue(array_key_exists('$sequence', $response['body']));
             $this->assertFalse(array_key_exists('$tenant', $response['body']));
         }
+    }
+
+    public function testGetDocumentCacheEmpty(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // Dedicated collection so the inserted document cannot change the
+        // document counts asserted by the shared movies-collection tests.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'CacheEmpty',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $containerId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->createAttribute($databaseId, $containerId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAttribute($databaseId, $containerId, 'title');
+        }
+
+        $documentId = ID::unique();
+
+        // Read a document that does not exist yet -> negatively caches the miss.
+        $missing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+
+        // Create that same id. This must purge the cached "not found".
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'title' => 'Cached Empty',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertEquals($documentId, $created['body']['$id']);
+
+        // The freshly created document must be visible right away. Without cache
+        // invalidation on create this would still return 404 from the marker.
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($documentId, $fetched['body']['$id']);
+        $this->assertEquals('Cached Empty', $fetched['body']['title']);
     }
 
     public function testGetDocumentWithQueries(): void

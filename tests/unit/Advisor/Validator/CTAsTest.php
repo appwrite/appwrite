@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Advisor\Validator;
 
 use Appwrite\Advisor\Validator\CTAs;
 use PHPUnit\Framework\TestCase;
 
-class CTAsTest extends TestCase
+final class CTAsTest extends TestCase
 {
     public function testRejectsNonArray(): void
     {

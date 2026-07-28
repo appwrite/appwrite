@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Presences;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
@@ -14,7 +16,7 @@ use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
-class PresenceRealtimeClientTest extends Scope
+final class PresenceRealtimeClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -385,7 +387,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $missingStatus = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('Payload is not valid. Status is required', $missingStatus['data']['message'] ?? '');
+            $this->assertStringContainsString('Payload is not valid. Status is required', (string) ($missingStatus['data']['message'] ?? ''));
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
@@ -401,7 +403,7 @@ class PresenceRealtimeClientTest extends Scope
                 ],
             ]));
             $invalidPermissions = $this->receiveErrorMessage($client);
-            $this->assertStringContainsString('permissions: Permissions must be an array of strings', $invalidPermissions['data']['message'] ?? '');
+            $this->assertStringContainsString('permissions: Permissions must be an array of strings', (string) ($invalidPermissions['data']['message'] ?? ''));
             $this->assertQuietFor(
                 $client,
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'

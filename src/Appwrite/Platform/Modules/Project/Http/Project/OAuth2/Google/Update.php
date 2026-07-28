@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -89,7 +90,7 @@ class Update extends Base
             ->setHttpPath('/v1/project/oauth2/' . $providerId)
             ->desc('Update project OAuth2 ' . $providerLabel)
             ->groups(['api', 'project'])
-            ->label('scope', 'oauth2.write')
+            ->label('scope', 'project.oauth2.write')
             ->label('event', 'oauth2.[providerId].update')
             ->label('audits.event', 'project.oauth2.[providerId].update')
             ->label('audits.resource', 'project.oauth2/{response.$id}')
@@ -108,7 +109,7 @@ class Update extends Base
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3)), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true)
+            ->param('prompt', null, new Nullable(new ArrayList(new WhiteList(['none', 'consent', 'select_account'], true), 3)), 'Array of Google OAuth2 prompt values. If "none" is included, it must be the only element. "none" means: don\'t display any authentication or consent screens. Must not be specified with other values. "consent" means: prompt the user for consent. "select_account" means: prompt the user to select an account.', optional: true, enum: new Enum(name: 'ProjectOAuth2GooglePrompt'))
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')

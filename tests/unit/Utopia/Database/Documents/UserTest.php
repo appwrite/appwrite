@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Utopia\Database\Documents\User;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
-class UserTest extends TestCase
+final class UserTest extends TestCase
 {
     private $authorization;
 
@@ -90,9 +92,9 @@ class UserTest extends TestCase
         ]);
 
         $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
-        $this->assertEquals($user1->sessionVerify('false-secret', $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify($secret, $proofForToken), false);
-        $this->assertEquals($user2->sessionVerify('false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
+        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
     }
 
     public function testTokenVerify(): void
@@ -162,11 +164,11 @@ class UserTest extends TestCase
 
         $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), $tokens1[0]);
         $this->assertEquals($user1->tokenVerify(null, $secret, $proofForToken), $tokens1[0]);
-        $this->assertEquals($user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken), false);
-        $this->assertEquals($user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken), false);
+        $this->assertEquals(false, $user1->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user2->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken));
+        $this->assertEquals(false, $user3->tokenVerify(TOKEN_TYPE_RECOVERY, 'false-secret', $proofForToken));
     }
 
     public function testIsPrivilegedUser(): void

@@ -40,8 +40,9 @@ class Resolvers
             );
         }
 
+        // Response headers follow PSR-7: keys are lowercased and values are lists.
         $headers = $from->getHeaders();
-        $fallbackCookies = $headers['X-Fallback-Cookies'] ?? null;
+        $fallbackCookies = $headers['x-fallback-cookies'] ?? null;
         if ($fallbackCookies === null) {
             return;
         }
@@ -71,13 +72,15 @@ class Resolvers
      *
      * @param Http $utopia
      * @param ?Route $route
+     * @param string $method
      * @return callable
      */
     public static function api(
         Http $utopia,
         ?Route $route,
+        string $method,
     ): callable {
-        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $args) {
+        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $method, $args) {
             $utopia = $utopia->context()->get('utopia:graphql');
             $request = $utopia->context()->get('request');
             $response = $utopia->context()->get('response');
@@ -88,7 +91,7 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($route, $args): void {
+                prepareRequest: static function (Request $request) use ($route, $method, $args): void {
                     $path = $route->getPath();
                     foreach ($args as $key => $value) {
                         if (\str_contains($path, '/:' . $key)) {
@@ -96,10 +99,10 @@ class Resolvers
                         }
                     }
 
-                    $request->setMethod($route->getMethod());
+                    $request->setMethod($method);
                     $request->setURI($path);
 
-                    switch ($route->getMethod()) {
+                    switch ($method) {
                         case 'GET':
                             $request->setQueryString($args);
                             break;
@@ -347,7 +350,7 @@ class Resolvers
             $request->addHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
-            if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
+            if (\str_starts_with($request->getHeaderLine('content-type'), 'application/json')) {
                 $request->removeHeader('content-type');
             }
 

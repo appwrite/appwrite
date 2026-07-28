@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-class AccountCustomServerTest extends Scope
+final class AccountCustomServerTest extends Scope
 {
     use AccountBase;
     use ProjectCustom;
@@ -289,7 +291,7 @@ class AccountCustomServerTest extends Scope
             $this->getHeaders(),
         ));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
 
         $this->assertNotEmpty($response['body']['accessedAt']);
@@ -375,7 +377,7 @@ class AccountCustomServerTest extends Scope
             ]
         ));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));

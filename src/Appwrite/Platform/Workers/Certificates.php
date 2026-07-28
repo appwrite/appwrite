@@ -572,6 +572,7 @@ class Certificates extends Action
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,
+            template: MAIL_TEMPLATE_CERTIFICATE_FAILED,
             bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
             body: $body,
             preview: $preview,

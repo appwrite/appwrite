@@ -54,10 +54,11 @@ class Action extends PlatformAction
             return $dbForPlatform->getDocument('rules', $rule->getId());
         });
 
-        if (
-            $existingRule->isEmpty() ||
-            $existingRule->getAttribute('domain', '') !== $rule->getAttribute('domain', '')
-        ) {
+        if ($existingRule->isEmpty()) {
+            return true;
+        }
+
+        if ($existingRule->getAttribute('domain', '') !== $rule->getAttribute('domain', '')) {
             return false;
         }
 

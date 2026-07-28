@@ -11,6 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
@@ -46,8 +47,8 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Email template type. Can be one of: ' . \implode(', ', Config::getParam('locale-templates')['email'] ?? []))
-            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'])
+            ->param('templateId', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? [], true), 'Email template type. Can be one of: ' . \implode(', ', Config::getParam('locale-templates')['email'] ?? []), enum: new Enum(name: 'ProjectEmailTemplateId'))
+            ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale. If left empty, the fallback locale (en) will be used.', optional: true, injections: ['localeCodes'], enum: new Enum(name: 'ProjectEmailTemplateLocale'))
             ->inject('response')
             ->callback($this->action(...));
     }

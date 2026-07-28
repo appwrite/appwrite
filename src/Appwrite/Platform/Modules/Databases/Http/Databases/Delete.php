@@ -15,7 +15,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action;
 
 class Delete extends Action
 {
@@ -36,6 +35,7 @@ class Delete extends Action
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', [
                 new Method(
                     namespace: 'databases',
@@ -68,7 +68,7 @@ class Delete extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Installer\Runtime;
 
 use Appwrite\Platform\Installer\Runtime\Config;
@@ -7,7 +9,7 @@ use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use PHPUnit\Framework\TestCase;
 
-class StateTest extends TestCase
+final class StateTest extends TestCase
 {
     protected ?State $state = null;
     private string $tempDir;
@@ -63,67 +65,67 @@ class StateTest extends TestCase
 
     public function testSanitizeInstallIdWithValidId(): void
     {
-        $this->assertEquals('abc123', $this->state->sanitizeInstallId('abc123'));
+        $this->assertSame('abc123', $this->state->sanitizeInstallId('abc123'));
     }
 
     public function testSanitizeInstallIdWithSpecialChars(): void
     {
-        $this->assertEquals('abc123', $this->state->sanitizeInstallId('abc!@#123'));
+        $this->assertSame('abc123', $this->state->sanitizeInstallId('abc!@#123'));
     }
 
     public function testSanitizeInstallIdWithHyphensAndUnderscores(): void
     {
-        $this->assertEquals('abc-123_def', $this->state->sanitizeInstallId('abc-123_def'));
+        $this->assertSame('abc-123_def', $this->state->sanitizeInstallId('abc-123_def'));
     }
 
     public function testSanitizeInstallIdTruncatesTo64Chars(): void
     {
         $long = str_repeat('a', 100);
-        $this->assertEquals(64, strlen($this->state->sanitizeInstallId($long)));
+        $this->assertSame(64, strlen($this->state->sanitizeInstallId($long)));
     }
 
     public function testSanitizeInstallIdWithEmptyString(): void
     {
-        $this->assertEquals('', $this->state->sanitizeInstallId(''));
+        $this->assertSame('', $this->state->sanitizeInstallId(''));
     }
 
     public function testSanitizeInstallIdWithNonString(): void
     {
-        $this->assertEquals('', $this->state->sanitizeInstallId(123));
-        $this->assertEquals('', $this->state->sanitizeInstallId(null));
+        $this->assertSame('', $this->state->sanitizeInstallId(123));
+        $this->assertSame('', $this->state->sanitizeInstallId(null));
     }
 
     public function testHashSensitiveValueProducesConsistentHash(): void
     {
         $hash1 = $this->state->hashSensitiveValue('secret');
         $hash2 = $this->state->hashSensitiveValue('secret');
-        $this->assertEquals($hash1, $hash2);
+        $this->assertSame($hash1, $hash2);
     }
 
     public function testHashSensitiveValueDifferentInputsDifferentHashes(): void
     {
         $hash1 = $this->state->hashSensitiveValue('secret1');
         $hash2 = $this->state->hashSensitiveValue('secret2');
-        $this->assertNotEquals($hash1, $hash2);
+        $this->assertNotSame($hash1, $hash2);
     }
 
     public function testHashSensitiveValueTrimsWhitespace(): void
     {
         $hash1 = $this->state->hashSensitiveValue('secret');
         $hash2 = $this->state->hashSensitiveValue('  secret  ');
-        $this->assertEquals($hash1, $hash2);
+        $this->assertSame($hash1, $hash2);
     }
 
     public function testHashSensitiveValueEmptyStringReturnsEmpty(): void
     {
-        $this->assertEquals('', $this->state->hashSensitiveValue(''));
-        $this->assertEquals('', $this->state->hashSensitiveValue('   '));
+        $this->assertSame('', $this->state->hashSensitiveValue(''));
+        $this->assertSame('', $this->state->hashSensitiveValue('   '));
     }
 
     public function testHashSensitiveValueReturnsSha256(): void
     {
         $hash = $this->state->hashSensitiveValue('test');
-        $this->assertEquals(64, strlen($hash)); // SHA-256 produces 64 hex chars
+        $this->assertSame(64, strlen($hash)); // SHA-256 produces 64 hex chars
         $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $hash);
     }
 
@@ -433,37 +435,37 @@ class StateTest extends TestCase
 
     public function testSanitizeInstallIdWithOnlySpecialChars(): void
     {
-        $this->assertEquals('', $this->state->sanitizeInstallId('!@#$%^&*()'));
+        $this->assertSame('', $this->state->sanitizeInstallId('!@#$%^&*()'));
     }
 
     public function testSanitizeInstallIdWithUnicode(): void
     {
         // Unicode letters are stripped byte-by-byte, only ASCII alphanum + hyphen + underscore kept
         // 'é' is 2 bytes (0xC3 0xA9), both stripped => 'héllo' becomes 'hllo'
-        $this->assertEquals('hllo', $this->state->sanitizeInstallId('héllo'));
+        $this->assertSame('hllo', $this->state->sanitizeInstallId('héllo'));
     }
 
     public function testSanitizeInstallIdWithExactly64Chars(): void
     {
         $exact = str_repeat('b', 64);
-        $this->assertEquals($exact, $this->state->sanitizeInstallId($exact));
-        $this->assertEquals(64, strlen($this->state->sanitizeInstallId($exact)));
+        $this->assertSame($exact, $this->state->sanitizeInstallId($exact));
+        $this->assertSame(64, strlen($this->state->sanitizeInstallId($exact)));
     }
 
     public function testSanitizeInstallIdWithBooleanInput(): void
     {
-        $this->assertEquals('', $this->state->sanitizeInstallId(true));
-        $this->assertEquals('', $this->state->sanitizeInstallId(false));
+        $this->assertSame('', $this->state->sanitizeInstallId(true));
+        $this->assertSame('', $this->state->sanitizeInstallId(false));
     }
 
     public function testSanitizeInstallIdWithArrayInput(): void
     {
-        $this->assertEquals('', $this->state->sanitizeInstallId([]));
+        $this->assertSame('', $this->state->sanitizeInstallId([]));
     }
 
     public function testSanitizeInstallIdPreservesCase(): void
     {
-        $this->assertEquals('AbCdEf', $this->state->sanitizeInstallId('AbCdEf'));
+        $this->assertSame('AbCdEf', $this->state->sanitizeInstallId('AbCdEf'));
     }
 
     public function testIsValidPortBoundaryValues(): void
@@ -748,7 +750,7 @@ class StateTest extends TestCase
         @unlink(Server::INSTALLER_LOCK_FILE);
         $installId = 'lock-test-' . uniqid();
         $result = $this->state->reserveGlobalLock($installId);
-        $this->assertEquals('ok', $result);
+        $this->assertSame('ok', $result);
     }
 
     public function testReserveGlobalLockSameIdCanRelock(): void
@@ -757,11 +759,11 @@ class StateTest extends TestCase
         $installId = 'lock-relock-' . uniqid();
 
         $result1 = $this->state->reserveGlobalLock($installId);
-        $this->assertEquals('ok', $result1);
+        $this->assertSame('ok', $result1);
 
         // Same ID can re-reserve
         $result2 = $this->state->reserveGlobalLock($installId);
-        $this->assertEquals('ok', $result2);
+        $this->assertSame('ok', $result2);
     }
 
     public function testReserveGlobalLockDifferentIdBlocked(): void
@@ -771,11 +773,11 @@ class StateTest extends TestCase
         $installId2 = 'lock-id2-' . uniqid();
 
         $result1 = $this->state->reserveGlobalLock($installId1);
-        $this->assertEquals('ok', $result1);
+        $this->assertSame('ok', $result1);
 
         // Different ID should be blocked
         $result2 = $this->state->reserveGlobalLock($installId2);
-        $this->assertEquals('locked', $result2);
+        $this->assertSame('locked', $result2);
     }
 
     public function testReserveGlobalLockAfterCompleted(): void
@@ -789,7 +791,7 @@ class StateTest extends TestCase
 
         // After completion, a new install should be able to lock
         $result = $this->state->reserveGlobalLock($installId2);
-        $this->assertEquals('ok', $result);
+        $this->assertSame('ok', $result);
     }
 
     public function testReserveGlobalLockAfterError(): void
@@ -803,7 +805,7 @@ class StateTest extends TestCase
 
         // After error, a new install should be able to lock
         $result = $this->state->reserveGlobalLock($installId2);
-        $this->assertEquals('ok', $result);
+        $this->assertSame('ok', $result);
     }
 
     public function testReserveGlobalLockExpiredLockAllowsNew(): void
@@ -820,7 +822,7 @@ class StateTest extends TestCase
 
         $newId = 'lock-after-expired-' . uniqid();
         $result = $this->state->reserveGlobalLock($newId);
-        $this->assertEquals('ok', $result);
+        $this->assertSame('ok', $result);
     }
 
     public function testUpdateGlobalLockUpdatesOwnLock(): void
@@ -988,7 +990,7 @@ class StateTest extends TestCase
         // Newlines are not stripped by trim but surrounding whitespace is
         $hash1 = $this->state->hashSensitiveValue("line1\nline2");
         $hash2 = $this->state->hashSensitiveValue("line1\nline2");
-        $this->assertEquals($hash1, $hash2);
+        $this->assertSame($hash1, $hash2);
         $this->assertNotEmpty($hash1);
     }
 
@@ -996,7 +998,7 @@ class StateTest extends TestCase
     {
         // A newline is not whitespace that trim() removes? Actually trim() removes \n
         // "\n" trimmed becomes "" => should return ''
-        $this->assertEquals('', $this->state->hashSensitiveValue("\n"));
+        $this->assertSame('', $this->state->hashSensitiveValue("\n"));
     }
 
     public function testIsValidEmailAddressWithUnicodeLocal(): void
@@ -1098,7 +1100,7 @@ class StateTest extends TestCase
 
         // 1. Reserve lock
         $lockResult = $this->state->reserveGlobalLock($installId);
-        $this->assertEquals('ok', $lockResult);
+        $this->assertSame('ok', $lockResult);
 
         // 2. Write progress through multiple steps
         $this->state->writeProgressFile($installId, [
@@ -1143,6 +1145,6 @@ class StateTest extends TestCase
         $newId = 'lifecycle-new-' . uniqid();
         $this->trackProgressFile($newId);
         $newResult = $this->state->reserveGlobalLock($newId);
-        $this->assertEquals('ok', $newResult);
+        $this->assertSame('ok', $newResult);
     }
 }
