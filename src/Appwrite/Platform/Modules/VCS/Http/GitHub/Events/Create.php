@@ -15,6 +15,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -122,6 +123,13 @@ class Create extends Action
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if (!$project->isEmpty()) {
+                    $projectRegion = $project->getAttribute('region', '');
+                    $currentRegion = System::getEnv('_APP_REGION', 'default');
+                    if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+                        Console::warning("Skipping project {$projectId}: not accessible in region {$currentRegion} (project region: {$projectRegion})");
+                        continue;
+                    }
+
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
