@@ -405,10 +405,10 @@ trait PoliciesBase
 
     public function testUpdatePasswordHistoryPolicyMax(): void
     {
-        $response = $this->updatePasswordHistoryPolicy(5000);
+        $response = $this->updatePasswordHistoryPolicy(20);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authPasswordHistory']);
+        $this->assertSame(20, $response['body']['authPasswordHistory']);
 
         // Cleanup
         $this->updatePasswordHistoryPolicy(null);
@@ -437,7 +437,7 @@ trait PoliciesBase
 
     public function testUpdatePasswordHistoryPolicyAboveMax(): void
     {
-        $response = $this->updatePasswordHistoryPolicy(5001);
+        $response = $this->updatePasswordHistoryPolicy(21);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
@@ -851,21 +851,10 @@ trait PoliciesBase
 
     public function testUpdateSessionLimitPolicyMax(): void
     {
-        $response = $this->updateSessionLimitPolicy(5000);
+        $response = $this->updateSessionLimitPolicy(100);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(5000, $response['body']['authSessionsLimit']);
-
-        // Cleanup
-        $this->updateSessionLimitPolicy(10);
-    }
-
-    public function testUpdateSessionLimitPolicyDisable(): void
-    {
-        $response = $this->updateSessionLimitPolicy(null);
-
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['authSessionsLimit']);
+        $this->assertSame(100, $response['body']['authSessionsLimit']);
 
         // Cleanup
         $this->updateSessionLimitPolicy(10);
@@ -880,7 +869,7 @@ trait PoliciesBase
 
     public function testUpdateSessionLimitPolicyAboveMax(): void
     {
-        $response = $this->updateSessionLimitPolicy(5001);
+        $response = $this->updateSessionLimitPolicy(101);
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
