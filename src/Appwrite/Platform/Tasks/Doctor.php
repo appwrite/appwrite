@@ -220,10 +220,7 @@ class Doctor extends Action
             }
         }
 
-        // Never send a live message from doctor. Older compose files used `doctor` as the
-        // container healthcheck (~every 5s), which flooded SMTP with "Test SMTP Connection"
-        // mail to demo@example.com (#12760). Probe TCP reachability only; operators can use
-        // POST /v1/project/smtp/tests for an intentional end-to-end send.
+        // Probe SMTP reachability only; do not send a live message.
         try {
             $smtpHost = System::getEnv('_APP_SMTP_HOST', '');
             $smtpPort = (int) System::getEnv('_APP_SMTP_PORT', '25');
