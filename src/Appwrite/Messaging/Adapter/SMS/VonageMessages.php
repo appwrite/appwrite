@@ -77,7 +77,7 @@ class VonageMessages extends SMSAdapter
             $response->setDeliveredTo(1);
             $response->addResult($message->getTo()[0]);
         } else {
-            $body = $result['response'] ?? [];
+            $body = \json_decode($result['response'] ?? '', true) ?? [];
             $errorTitle  = $body['title']       ?? $body['error-text'] ?? 'Unknown error';
             $errorDetail = $body['detail']      ?? '';
             $error = $errorDetail !== '' ? "{$errorTitle}: {$errorDetail}" : $errorTitle;
