@@ -38,7 +38,7 @@
     "i18n:audit:ja": "bun run scripts/i18n-audit-ja.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@5fef78a",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@b652964",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

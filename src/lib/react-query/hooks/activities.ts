@@ -89,11 +89,9 @@ export async function fetchProjectActivities({
   // Use the Activities service so `X-Appwrite-Project` is set from the project
   // client config. Raw `client.call` only sends `this.headers` (admin mode) and
   // omits the project header, which makes the API treat the request as console.
-  const response = (await projectSdk.activities.listEvents({
-    // SDK types declare `queries: string`, but runtime accepts `string[]` like
-    // other list endpoints (`queries[]=...`).
-    queries: queries as unknown as string,
-  })) as Models.ActivityEventList
+  const response = await projectSdk.activities.listEvents({
+    queries,
+  })
 
   const events = response.events ?? []
 

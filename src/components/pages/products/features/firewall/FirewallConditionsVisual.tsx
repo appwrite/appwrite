@@ -4,7 +4,7 @@ import { useT } from '@/lib/i18n/translate'
 
 const EXAMPLE_CONDITIONS = [
   { id: '1', label: 'IP address', operator: 'Equals', value: '203.0.113.10' },
-  { id: '2', label: 'Request path', operator: 'Starts with', value: '/v1/account' },
+  { id: '2', label: 'Path', operator: 'Starts with', value: '/v1/account' },
   { id: '3', label: 'Country', operator: 'Not equal', value: 'Unresolved' },
 ] as const
 

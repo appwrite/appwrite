@@ -35,9 +35,14 @@ export function DatabaseMonitorMobileNav({
     () => dedicatedDatabases.find((item) => item.$id === databaseId),
     [dedicatedDatabases, databaseId],
   )
+  // Same fallback as DatabaseMonitorView: product DBs with dedicated compute
+  // may be missing from the engine list, so use the product model's spec too.
+  const productSpecId =
+    (database as { specification?: string | null } | null)?.specification ??
+    null
   const specId = getEffectiveDatabaseSpecIdForMonitoring(
     databaseType,
-    dedicated?.specification?.trim() || null,
+    dedicated?.specification?.trim() || productSpecId?.trim() || null,
   )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
 

@@ -176,13 +176,21 @@ export function DatabaseMonitorView({
     () => dedicatedDatabases.find((item) => item.$id === databaseId),
     [dedicatedDatabases, databaseId],
   )
-  const apiSpecId = dedicated?.specification?.trim() || null
+  // Product DBs with dedicated compute may be missing from the engine list;
+  // fall back to the specification on the product database model itself.
+  const productSpecId =
+    (database as { specification?: string | null } | null)?.specification ??
+    null
+  const apiSpecId =
+    dedicated?.specification?.trim() || productSpecId?.trim() || null
   const specId = getEffectiveDatabaseSpecIdForMonitoring(
     databaseType,
     apiSpecId,
   )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
-  const replicaCount = dedicated?.replicas ?? 0
+  const productReplicas =
+    (database as { replicas?: number | null } | null)?.replicas ?? null
+  const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
 
   useEffect(() => {

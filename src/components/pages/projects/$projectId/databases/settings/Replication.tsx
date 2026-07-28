@@ -103,9 +103,6 @@ export function View() {
 
   const replicationSource = dedicatedReplicationSourceFromRouteKind(dbKind)
   const haEngine = dedicated?.engine || engineHints[0] || 'postgresql'
-  // Product update APIs accept replicas but not syncMode; sync mode is
-  // engine-native only (and product-owned DBs cannot be PATCHed via engines).
-  const showSyncMode = replicationSource.type === 'engine'
   const cardProps = {
     projectId,
     databaseId,
@@ -143,18 +140,14 @@ export function View() {
           } satisfies SettingsCardItem,
         ]
       : []),
-    ...(showSyncMode
-      ? [
-          {
-            id: 'sync-mode',
-            search: {
-              title: 'Sync mode',
-              keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
-            },
-            node: <PostgresDatabaseSyncModeCard {...cardProps} />,
-          } satisfies SettingsCardItem,
-        ]
-      : []),
+    {
+      id: 'sync-mode',
+      search: {
+        title: 'Sync mode',
+        keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
+      },
+      node: <PostgresDatabaseSyncModeCard {...cardProps} />,
+    },
   ]
 
   return <SettingsCardsList cards={cards} />

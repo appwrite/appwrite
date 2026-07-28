@@ -456,7 +456,7 @@ export function PostgresDatabaseSyncModeCard({
 
   const handleSyncModeUpdate = () => {
     updateMutation.mutate(
-      { syncMode },
+      { syncMode, name: database.name },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>

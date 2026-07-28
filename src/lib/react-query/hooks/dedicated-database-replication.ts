@@ -181,7 +181,7 @@ export type UpdateDedicatedDatabaseHaInput = {
  * Product-owned DBs (tablesDB / documentsDB / vectorsDB) must be updated via
  * the product SDK. Engine services reject mutations on product-owned IDs
  * ("reached only through their product APIs"). Product `update` accepts
- * `replicas` only; `syncMode` is engine-native.
+ * `replicas` and `syncMode`.
  */
 export async function updateDedicatedDatabaseHa(
   projectId: string,
@@ -193,24 +193,28 @@ export async function updateDedicatedDatabaseHa(
     sdk.forProject(projectId),
     source,
   )
+  // Product and engine `update` overloads differ (e.g. required `name` on
+  // documentsDB/vectorsDB). Narrow to the shared HA patch surface.
+  const updateHa = service.update.bind(service) as (params: {
+    databaseId: string
+    name?: string
+    replicas?: number
+    syncMode?: string
+  }) => Promise<Models.DedicatedDatabase>
 
   if (source.type === 'product') {
-    if (input.syncMode != null && input.replicas == null) {
-      throw new Error(
-        'Sync mode can only be updated on native dedicated databases.',
-      )
-    }
-    return service.update({
+    return updateHa({
       databaseId,
       ...(input.name != null && input.name !== ''
         ? { name: input.name }
         : {}),
       ...(input.replicas != null ? { replicas: input.replicas } : {}),
+      ...(input.syncMode != null ? { syncMode: input.syncMode } : {}),
     })
   }
 
   const { name: _name, ...engineInput } = input
-  return service.update({
+  return updateHa({
     databaseId,
     ...engineInput,
   })

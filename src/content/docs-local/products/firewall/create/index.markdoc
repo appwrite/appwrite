@@ -39,8 +39,8 @@ Build **at least one** complete condition (attribute, operator, and value). Ever
 Examples:
 
 - IP address **Equals** `203.0.113.10` (exact IP only; no CIDR)
-- Request path **Starts with** `/v1/account`
-- HTTP method **Equals** `POST`
+- Path **Starts with** `/v1/account`
+- Method **Equals** `POST`
 - Country **Equals** `DE`
 
 See [Conditions](/docs/products/firewall/conditions) for attributes, operators, and matching details.

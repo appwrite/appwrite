@@ -13,15 +13,9 @@ import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
-function toAssistantQueries(queries: string[]): string {
-  // Assistant SDK typing currently expects `string`, while backend requires an
-  // array of query strings. Keep conversion centralized until SDK typing aligns.
-  return queries as unknown as string
-}
-
 export async function fetchAssistantConversations() {
   const response = await sdk.forConsole.assistant.listConversations({
-    queries: toAssistantQueries([Query.orderDesc('$updatedAt')]),
+    queries: [Query.orderDesc('$updatedAt')],
   })
 
   return response.conversations ?? []
@@ -36,10 +30,7 @@ export async function fetchAssistantMessages(
   }
   const response = await sdk.forConsole.assistant.listMessages({
     conversationId,
-    queries: toAssistantQueries([
-      Query.orderDesc('$createdAt'),
-      Query.limit(limit),
-    ]),
+    queries: [Query.orderDesc('$createdAt'), Query.limit(limit)],
   })
   const messages = (response.messages ?? []).slice().reverse()
   return {

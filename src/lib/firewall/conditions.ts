@@ -24,22 +24,41 @@ export function parseFirewallResourceTypeSearch(
   return isFirewallResourceType(value) ? value : undefined
 }
 
-/** Condition attributes shown in the rule builder. */
-export const FIREWALL_CONDITION_ATTRIBUTES = [
-  { value: 'ip', label: 'IP address' },
-  { value: 'host', label: 'Hostname' },
-  { value: 'path', label: 'Request path' },
-  { value: 'method', label: 'HTTP method' },
-  { value: 'headers', label: 'Request header' },
-  { value: 'query', label: 'Query parameter' },
-  { value: 'country', label: 'Country' },
-  { value: 'continent', label: 'Continent' },
-  { value: 'city', label: 'City' },
-  { value: 'state', label: 'State' },
-  { value: 'os', label: 'Operating system' },
-  { value: 'browser', label: 'Browser' },
-  { value: 'userAgent', label: 'User agent' },
+/** Condition attributes shown in the rule builder, grouped for the picker. */
+export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
+  {
+    label: 'Request',
+    attributes: [
+      { value: 'host', label: 'Hostname' },
+      { value: 'path', label: 'Path' },
+      { value: 'method', label: 'Method' },
+      { value: 'headers', label: 'Header' },
+      { value: 'query', label: 'Query parameter' },
+    ],
+  },
+  {
+    label: 'Client',
+    attributes: [
+      { value: 'ip', label: 'IP address' },
+      { value: 'os', label: 'Operating system' },
+      { value: 'browser', label: 'Browser' },
+      { value: 'userAgent', label: 'User agent' },
+    ],
+  },
+  {
+    label: 'Location',
+    attributes: [
+      { value: 'country', label: 'Country' },
+      { value: 'continent', label: 'Continent' },
+      { value: 'city', label: 'City' },
+      { value: 'state', label: 'State' },
+    ],
+  },
 ] as const
+
+/** Flat list of condition attributes (lookups, validation). */
+export const FIREWALL_CONDITION_ATTRIBUTES =
+  FIREWALL_CONDITION_ATTRIBUTE_GROUPS.flatMap((group) => group.attributes)
 
 export type FirewallConditionAttribute =
   (typeof FIREWALL_CONDITION_ATTRIBUTES)[number]['value']
@@ -72,12 +91,6 @@ export function isDynamicKeyAttribute(
   attribute: FirewallConditionAttribute,
 ): attribute is FirewallDynamicKeyAttribute {
   return attribute in DYNAMIC_KEY_PREFIXES
-}
-
-export function getDynamicKeyPrefix(
-  attribute: FirewallDynamicKeyAttribute,
-): string {
-  return DYNAMIC_KEY_PREFIXES[attribute]
 }
 
 /** Normalize a user-typed key: trim, lowercase, drop a pasted-in prefix. */
@@ -167,17 +180,6 @@ export const FIREWALL_HTTP_METHODS = [
 ] as const
 
 export type FirewallHttpMethod = (typeof FIREWALL_HTTP_METHODS)[number]
-
-/** Continents selectable for the continent condition attribute (geo codes). */
-export const FIREWALL_CONTINENTS = [
-  { value: 'AF', label: 'Africa' },
-  { value: 'AN', label: 'Antarctica' },
-  { value: 'AS', label: 'Asia' },
-  { value: 'EU', label: 'Europe' },
-  { value: 'NA', label: 'North America' },
-  { value: 'OC', label: 'Oceania' },
-  { value: 'SA', label: 'South America' },
-] as const
 
 /** Free-text attributes get the full usage `listEvents` operator set. */
 const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
