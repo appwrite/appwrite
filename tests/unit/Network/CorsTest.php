@@ -134,7 +134,7 @@ final class CorsTest extends TestCase
     public function testLoopbackOriginIsAllowed(): void
     {
         $cors = new Cors(
-            allowedHosts: ['example.com'],
+            allowedHosts: ['example.com', 'localhost'],
             allowedMethods: ['GET'],
             allowedHeaders: ['X-Test'],
             exposedHeaders: [],
@@ -158,7 +158,7 @@ final class CorsTest extends TestCase
     public function testLoopbackOriginIsEchoedExactly(): void
     {
         $cors = new Cors(
-            allowedHosts: ['example.com'],
+            allowedHosts: ['example.com', 'localhost'],
             allowedMethods: ['GET'],
             allowedHeaders: ['X-Test'],
             exposedHeaders: [],
@@ -180,7 +180,7 @@ final class CorsTest extends TestCase
     public function testLoopbackLookalikeOriginIsRejected(): void
     {
         $cors = new Cors(
-            allowedHosts: ['example.com'],
+            allowedHosts: ['example.com', 'localhost'],
             allowedMethods: ['GET'],
             allowedHeaders: ['X-Test'],
             exposedHeaders: [],
@@ -198,13 +198,42 @@ final class CorsTest extends TestCase
                 'http://127.0.0.1x.example.com',
                 'http://[::1].evil.com',
                 'http://[::1]evil.com',
-                /* Only the exact loopback spellings are hardcoded */
+                /* Only the exact alias spellings resolve to localhost */
                 'http://127.0.0.2',
                 'http://[0:0:0:0:0:0:0:1]',
                 'http://localhost.',
             ] as $origin
         ) {
             $this->assertArrayNotHasKey(Cors::HEADER_ALLOW_ORIGIN, $cors->headers($origin));
+        }
+    }
+
+    public function testLoopbackRequiresLocalhostToBeAllowed(): void
+    {
+        /**
+         * Credentialed CORS plus SameSite=None cookies means an accepted origin
+         * can read authenticated responses, so a deployment that does not trust
+         * localhost must not have any spelling of it reflected back.
+         */
+        $cors = new Cors(
+            allowedHosts: ['example.com'],
+            allowedMethods: ['GET'],
+            allowedHeaders: ['X-Test'],
+            exposedHeaders: [],
+            allowCredentials: true
+        );
+
+        foreach (
+            [
+                'http://localhost',
+                'http://localhost:3000',
+                'http://127.0.0.1',
+                'https://127.0.0.1:5173',
+                'http://[::1]',
+                'http://[::1]:3000',
+            ] as $origin
+        ) {
+            $this->assertArrayNotHasKey(Cors::HEADER_ALLOW_ORIGIN, $cors->headers($origin), 'Origin ' . $origin . ' was unexpectedly allowed');
         }
     }
 

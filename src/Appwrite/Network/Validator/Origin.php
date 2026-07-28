@@ -72,13 +72,14 @@ class Origin extends Validator
             Platform::SCHEME_TAURI,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
-            /* Loopback needs no platform, see Platform::LOOPBACK_HOSTNAMES */
-            if (in_array($this->host, Platform::LOOPBACK_HOSTNAMES, true)) {
+            $validator = new Hostname($this->allowedHostnames);
+            if ($validator->isValid($this->host)) {
                 return true;
             }
 
-            $validator = new Hostname($this->allowedHostnames);
-            return $validator->isValid($this->host);
+            /* Fall back to the alias, see Platform::LOOPBACK_ALIASES */
+            return in_array($this->host, Platform::LOOPBACK_ALIASES, true)
+                && $validator->isValid(Platform::LOOPBACK_HOSTNAME);
         }
 
         if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {

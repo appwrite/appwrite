@@ -77,12 +77,14 @@ final class Cors
             return $headers;
         }
 
-        // Match only by host. Loopback clients are always allowed so local
-        // development needs no platform registration; see
-        // Platform::LOOPBACK_HOSTNAMES for why that is safe with credentials.
-        if (!\in_array($host, Platform::LOOPBACK_HOSTNAMES, true)) {
-            $validator = new Hostname($this->allowedHosts);
-            if (!$validator->isValid($host)) {
+        // Match only by host, falling back to the alias the host spells out.
+        // See Platform::LOOPBACK_ALIASES -- responses here carry credentials.
+        $validator = new Hostname($this->allowedHosts);
+        if (!$validator->isValid($host)) {
+            $alias = \in_array($host, Platform::LOOPBACK_ALIASES, true)
+                && $validator->isValid(Platform::LOOPBACK_HOSTNAME);
+
+            if (!$alias) {
                 return $headers;
             }
         }

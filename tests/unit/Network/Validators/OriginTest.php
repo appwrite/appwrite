@@ -86,11 +86,11 @@ final class OriginTest extends TestCase
     public function testLoopback(): void
     {
         $validator = new Origin(
-            allowedHostnames: ['appwrite.io'],
+            allowedHostnames: ['appwrite.io', 'localhost'],
             allowedSchemes: ['exp']
         );
 
-        /* Loopback is allowed even though it is not in the allow list */
+        /* Allowing localhost allows its other spellings too */
         $this->assertEquals(true, $validator->isValid('http://localhost'));
         $this->assertEquals(true, $validator->isValid('http://localhost:3000'));
         $this->assertEquals(true, $validator->isValid('http://127.0.0.1'));
@@ -118,6 +118,35 @@ final class OriginTest extends TestCase
 
         /* Loopback does not bypass the scheme allow list */
         $this->assertEquals(false, $validator->isValid('random-scheme://127.0.0.1'));
+    }
+
+    public function testLoopbackRequiresLocalhostToBeAllowed(): void
+    {
+        /* A deployment that does not trust localhost trusts no spelling of it */
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(false, $validator->isValid('http://localhost'));
+        $this->assertEquals(false, $validator->isValid('http://localhost:3000'));
+        $this->assertEquals(false, $validator->isValid('http://127.0.0.1'));
+        $this->assertEquals(false, $validator->isValid('https://127.0.0.1:5173'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]:3000'));
+    }
+
+    public function testLoopbackAliasHonoursAnExplicitEntry(): void
+    {
+        /* An explicitly allowed literal still matches on its own */
+        $validator = new Origin(
+            allowedHostnames: ['127.0.0.1'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(true, $validator->isValid('http://127.0.0.1:5173'));
+        $this->assertEquals(false, $validator->isValid('http://localhost'));
+        $this->assertEquals(false, $validator->isValid('http://[::1]'));
     }
 
     public function testGetAllowedHostnames(): void
