@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Deployment;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 
-final class BackendTest extends TestCase
+final class DeploymentsTest extends TestCase
 {
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
@@ -30,7 +30,7 @@ final class BackendTest extends TestCase
 
         $this->assertSame(
             'cp .env.example .env && npm run build && npm run bundle',
-            Backend::command($resource, $deployment)
+            Deployments::command($resource, $deployment)
         );
     }
 
@@ -39,6 +39,6 @@ final class BackendTest extends TestCase
         $resource = new Document(['$collection' => 'functions']);
         $deployment = new Document(['buildCommands' => 'npm install']);
 
-        $this->assertSame('npm install', Backend::command($resource, $deployment));
+        $this->assertSame('npm install', Deployments::command($resource, $deployment));
     }
 }

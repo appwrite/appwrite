@@ -989,17 +989,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_BUILDS_BACKEND',
-                'description' => 'Backend that builds manual-upload function deployments: "executor" (default; the open-runtimes executor, via the Builds worker) or "orchestrator" (the open-runtimes jobs-service, submitted in the request flow). Other build flows always use the executor.',
-                'introduction' => '1.9.0',
-                'default' => 'executor',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by. Only used when _APP_BUILDS_BACKEND is "orchestrator".',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,

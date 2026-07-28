@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -106,7 +106,7 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Backend $deployments,
+        Deployments $deployments,
         array $plan,
         Authorization $authorization,
         callable $locks
