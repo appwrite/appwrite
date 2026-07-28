@@ -175,6 +175,24 @@ export function countUnestimableFirewallConditions(
   ).length
 }
 
+/** usage.listEvents allows up to 10 queries; leave room for resource filters. */
+export const FIREWALL_USAGE_CONDITION_QUERY_LIMIT = 8
+
+/**
+ * True when the rule has more estimable conditions than the usage query limit,
+ * in which case `buildFirewallConditionUsageQueries` would drop the excess and
+ * the estimate would describe a less restrictive rule.
+ */
+export function exceedsFirewallUsageConditionLimit(
+  conditions: FirewallConditionDraft[],
+): boolean {
+  const estimable = conditions.filter(
+    (draft) =>
+      isConditionDraftComplete(draft) && !isUnestimableFirewallCondition(draft),
+  ).length
+  return estimable > FIREWALL_USAGE_CONDITION_QUERY_LIMIT
+}
+
 /**
  * Build usage.listEvents queries from firewall conditions.
  * Only attributes supported by the usage API are included (max 10 total with resource filters).
@@ -220,8 +238,8 @@ export function buildFirewallConditionUsageQueries(
       }
     }
 
-    // usage.listEvents allows up to 10 queries; leave room for resource filters
-    if (queries.length >= 8) break
+    // Callers gate on exceedsFirewallUsageConditionLimit; this break is a backstop.
+    if (queries.length >= FIREWALL_USAGE_CONDITION_QUERY_LIMIT) break
   }
 
   return queries

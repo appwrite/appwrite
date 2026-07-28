@@ -26,6 +26,7 @@ import type {
 } from '@/lib/firewall/conditions'
 import {
   countUnestimableFirewallConditions,
+  exceedsFirewallUsageConditionLimit,
   firewallUsageConditionsKey,
 } from '@/lib/firewall/usage'
 import {
@@ -109,9 +110,14 @@ export function RuleImpactPreview({
     () => countUnestimableFirewallConditions(debouncedConditions),
     [debouncedConditions],
   )
-  // Usage data cannot represent these conditions, so any estimate would
-  // overstate matched traffic. Skip the fetch and show "Preview unavailable".
-  const previewUnavailable = unestimableConditions > 0
+  const tooManyConditions = useMemo(
+    () => exceedsFirewallUsageConditionLimit(debouncedConditions),
+    [debouncedConditions],
+  )
+  // Usage data cannot represent these rules (unsupported conditions, or more
+  // conditions than the usage API accepts), so any estimate would overstate
+  // matched traffic. Skip the fetch and show "Preview unavailable".
+  const previewUnavailable = unestimableConditions > 0 || tooManyConditions
 
   const { impact, isLoading, isFetching } = useFirewallRuleImpact(
     previewUnavailable ? null : projectId,
@@ -221,9 +227,13 @@ export function RuleImpactPreview({
 
           {previewUnavailable ? (
             <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
-              {t(
-                'Preview unavailable: header, query parameter, continent, state, and "does not contain" conditions have no usage data to estimate from. The rule will still enforce them.',
-              )}
+              {unestimableConditions > 0
+                ? t(
+                    'Preview unavailable: header, query parameter, continent, state, and "does not contain" conditions have no usage data to estimate from. The rule will still enforce them.',
+                  )
+                : t(
+                    'Preview unavailable: rules with this many conditions cannot be estimated from usage data. The rule will still enforce all conditions.',
+                  )}
             </p>
           ) : null}
         </div>
