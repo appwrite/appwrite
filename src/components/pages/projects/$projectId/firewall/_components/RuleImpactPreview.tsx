@@ -24,7 +24,10 @@ import type {
   FirewallConditionDraft,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
-import { firewallUsageConditionsKey } from '@/lib/firewall/usage'
+import {
+  countUnestimableFirewallConditions,
+  firewallUsageConditionsKey,
+} from '@/lib/firewall/usage'
 import {
   getFirewallActionLabel,
   type FirewallCreatableAction,
@@ -121,6 +124,10 @@ export function RuleImpactPreview({
 
   const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
     .length
+  const unestimableConditions = useMemo(
+    () => countUnestimableFirewallConditions(debouncedConditions),
+    [debouncedConditions],
+  )
   const showSubtleLoading = isFetching && !isLoading
 
   return (
@@ -203,6 +210,18 @@ export function RuleImpactPreview({
               </p>
             </div>
           </div>
+
+          {unestimableConditions > 0 ? (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
+              {unestimableConditions === 1
+                ? t(
+                    '1 condition has no usage data (headers, query parameters, continent, state, and "does not contain") and is not reflected here - actual matched traffic may be lower than shown.',
+                  )
+                : t(
+                    '{count} conditions have no usage data (headers, query parameters, continent, state, and "does not contain") and are not reflected here - actual matched traffic may be lower than shown.',
+                  ).replace('{count}', String(unestimableConditions))}
+            </p>
+          ) : null}
         </div>
 
         <div

@@ -4,6 +4,7 @@ import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   FIREWALL_CONDITION_OPERATORS,
+  isConditionDraftComplete,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
   type FirewallConditionAttribute,
@@ -142,6 +143,38 @@ export function draftsFromUsageFilterMap(
   })
 }
 
+/** Operators with no usage.listEvents equivalent (skipped in estimation). */
+const UNESTIMABLE_OPERATORS = new Set<FirewallConditionOperator>([
+  'notContains',
+])
+
+/**
+ * True when a condition cannot be represented as a usage filter (attribute or
+ * operator has no usage equivalent) and is skipped by
+ * `buildFirewallConditionUsageQueries` - making the estimate an upper bound.
+ */
+export function isUnestimableFirewallCondition(
+  draft: FirewallConditionDraft,
+): boolean {
+  return (
+    toUsageAttribute(draft.attribute) == null ||
+    UNESTIMABLE_OPERATORS.has(draft.operator)
+  )
+}
+
+/**
+ * Number of complete conditions the affected-traffic estimate cannot include.
+ * Callers should tell the user the estimate overcounts when this is > 0.
+ */
+export function countUnestimableFirewallConditions(
+  conditions: FirewallConditionDraft[],
+): number {
+  return conditions.filter(
+    (draft) =>
+      isConditionDraftComplete(draft) && isUnestimableFirewallCondition(draft),
+  ).length
+}
+
 /**
  * Build usage.listEvents queries from firewall conditions.
  * Only attributes supported by the usage API are included (max 10 total with resource filters).
@@ -155,6 +188,7 @@ export function buildFirewallConditionUsageQueries(
   for (const draft of conditions) {
     const attribute = toUsageAttribute(draft.attribute)
     if (!attribute) continue
+    if (UNESTIMABLE_OPERATORS.has(draft.operator)) continue
 
     if (isNoValueOperator(draft.operator)) {
       queries.push(
