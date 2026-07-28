@@ -14,8 +14,6 @@ use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Logger;
-use Utopia\Messaging\Adapter\Email as EmailAdapter;
-use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -222,20 +220,26 @@ class Doctor extends Action
             }
         }
 
+        // Never send a live message from doctor. Older compose files used `doctor` as the
+        // container healthcheck (~every 5s), which flooded SMTP with "Test SMTP Connection"
+        // mail to demo@example.com (#12760). Probe TCP reachability only; operators can use
+        // POST /v1/project/smtp/tests for an intentional end-to-end send.
         try {
-            /** @var EmailAdapter $smtp */
-            $smtp = $register->get('smtp');
+            $smtpHost = System::getEnv('_APP_SMTP_HOST', '');
+            $smtpPort = (int) System::getEnv('_APP_SMTP_PORT', '25');
 
-            $emailMessage = new EmailMessage(
-                to: ['demo@example.com'],
-                subject: 'Test SMTP Connection',
-                content: 'Hello World',
-                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
-                fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-            );
+            if ($smtpHost === '') {
+                Console::log('⚪ ' . str_pad("SMTP", 50, '.') . 'not configured');
+            } else {
+                $connection = @\fsockopen($smtpHost, $smtpPort > 0 ? $smtpPort : 25, $errno, $errstr, 3);
 
-            $smtp->send($emailMessage);
-            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                if ($connection !== false) {
+                    \fclose($connection);
+                    Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                } else {
+                    Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+                }
+            }
         } catch (\Throwable) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
