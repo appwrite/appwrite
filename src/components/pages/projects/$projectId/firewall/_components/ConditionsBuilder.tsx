@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -50,7 +51,12 @@ import {
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
-import { useCountries } from '@/lib/react-query/hooks'
+import { useCountries, useProjectAddons } from '@/lib/react-query/hooks'
+import {
+  ADDON_KEY_PREMIUM_GEO_DB,
+  findActiveOrPendingAddon,
+} from '@/lib/billing/addons'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { ReactNode } from 'react'
@@ -375,6 +381,20 @@ export function ConditionsBuilder({
     action != null && (onActionChange != null || actionReadOnly)
   const pathPlaceholder = PATH_PLACEHOLDERS[resourceType] ?? 'e.g. /v1/account'
 
+  // Premium geo attributes (city / state) are only selectable when the project
+  // has the Premium Geo DB addon active - the API rejects them otherwise.
+  // Profiles without billing (self-hosted) have no addon gating.
+  const { features } = useConsoleProfile()
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string | undefined
+  const { addons } = useProjectAddons(
+    features.billing ? (projectId ?? null) : null,
+  )
+  const premiumGeoEnabled =
+    !features.billing ||
+    findActiveOrPendingAddon(addons, ADDON_KEY_PREMIUM_GEO_DB)?.status ===
+      'active'
+
   const updateAt = (index: number, patch: Partial<FirewallConditionDraft>) => {
     // Functional update so rapid typing never applies against a stale conditions array.
     onChange((prev) =>
@@ -474,18 +494,29 @@ export function ConditionsBuilder({
                             </span>
                           </SelectTrigger>
                           <SelectContent>
-                            {FIREWALL_CONDITION_ATTRIBUTES.map((attr) => (
-                              <SelectItem key={attr.value} value={attr.value}>
-                                <span className="flex items-center gap-2">
-                                  {t(attr.label)}
-                                  {isPremiumAttribute(attr.value) ? (
-                                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                      {t('Premium')}
-                                    </span>
-                                  ) : null}
-                                </span>
-                              </SelectItem>
-                            ))}
+                            {FIREWALL_CONDITION_ATTRIBUTES.map((attr) => {
+                              const premiumLocked =
+                                isPremiumAttribute(attr.value) &&
+                                !premiumGeoEnabled
+                              return (
+                                <SelectItem
+                                  key={attr.value}
+                                  value={attr.value}
+                                  disabled={premiumLocked}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    {t(attr.label)}
+                                    {isPremiumAttribute(attr.value) ? (
+                                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        {premiumLocked
+                                          ? t('Premium Geo DB required')
+                                          : t('Premium')}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                </SelectItem>
+                              )
+                            })}
                           </SelectContent>
                         </Select>
 
