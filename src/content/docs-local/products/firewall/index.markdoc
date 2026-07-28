@@ -1,10 +1,10 @@
 ---
 layout: article
 title: Firewall
-description: Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, rate limit, redirect, or bypass matching traffic from the Console.
+description: Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, challenge, rate limit, redirect, or bypass matching traffic from the Console.
 ---
 
-Appwrite **Firewall** is project-level traffic control on Appwrite Cloud. You define rules that match requests by IP, path, HTTP method, country, or user agent, then apply an action before traffic reaches your [API](/docs/apis/rest), [Functions](/docs/products/functions), or [Sites](/docs/products/sites).
+Appwrite **Firewall** is project-level traffic control on Appwrite Cloud. You define rules that match requests by attributes such as IP address, hostname, path, HTTP method, headers, query parameters, user agent, or location, then apply an action before traffic reaches your [API](/docs/apis/rest), [Functions](/docs/products/functions), or [Sites](/docs/products/sites).
 
 Rules live on each project under **Firewall**. You can scope them to the project API or to a specific function or site, preview how many recent requests would match, and monitor request volume alongside denied, rate-limited, redirected, and challenged outcomes.
 
@@ -18,7 +18,7 @@ Each Firewall rule combines four ideas:
 
 1. **Resource scope**: Which traffic the rule considers. Choose the project **API**, a specific **Function**, or a specific **Site**. See [Resource scopes](/docs/products/firewall/scopes).
 2. **Conditions**: Filters on request attributes (for example IP equals a value, path starts with `/v1/account`, country equals `US`). All conditions on a rule must match (AND). At least one condition is required.
-3. **Action**: What happens when conditions match: **Deny**, **Bypass**, **Rate limit**, or **Redirect**.
+3. **Action**: What happens when conditions match: **Deny**, **Bypass**, **Challenge**, **Rate limit**, or **Redirect**.
 4. **Priority**: Lower numbers are evaluated first (range `-100000` to `100000`). The first matching enabled rule decides the outcome for that request and stops evaluation.
 
 Disabled rules stay in your project and still count toward plan limits, but they are not evaluated.
@@ -46,10 +46,10 @@ Core ideas behind Firewall rules, matching, and evaluation.
 What a rule contains, enabled state, plan limits, and how rules appear in the Console.
 {% /cards_item %}
 {% cards_item href="/docs/products/firewall/actions" title="Actions" %}
-Deny, bypass, rate limit, and redirect, including status codes and rate-limit keys.
+Deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit keys.
 {% /cards_item %}
 {% cards_item href="/docs/products/firewall/conditions" title="Conditions" %}
-Attributes, operators, AND matching, and path, IP, and country details.
+Request, client, and location attributes, operators, AND matching, and CIDR and geo details.
 {% /cards_item %}
 {% cards_item href="/docs/products/firewall/scopes" title="Resource scopes" %}
 API, Functions, and Sites scopes and where each is enforced.

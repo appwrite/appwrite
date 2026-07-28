@@ -465,7 +465,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
-    "slug": "apis/(overview)",
+    "slug": "apis",
     "title": "APIs",
     "description": "Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.",
     "layout": "article",
@@ -1470,7 +1470,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 6
   },
   {
-    "slug": "products/databases/(overview)",
+    "slug": "products/databases",
     "title": "Databases",
     "description": "Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.",
     "layout": "article",
@@ -2543,23 +2543,23 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "products/firewall",
     "title": "Firewall",
-    "description": "Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, rate limit, redirect, or bypass matching traffic from the Console.",
+    "description": "Protect project APIs, Functions, and Sites with Appwrite Firewall. Create rules to deny, challenge, rate limit, redirect, or bypass matching traffic from the Console.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
   {
     "slug": "products/firewall/actions",
     "title": "Actions",
-    "description": "Learn Firewall actions in Appwrite: deny, bypass, rate limit, and redirect, including status codes and rate-limit behavior.",
+    "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
   {
     "slug": "products/firewall/conditions",
     "title": "Conditions",
-    "description": "Learn how Firewall conditions match requests by IP, path, method, country, and user agent in Appwrite.",
+    "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/firewall/create",

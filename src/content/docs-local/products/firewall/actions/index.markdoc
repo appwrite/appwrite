@@ -1,7 +1,7 @@
 ---
 layout: article
 title: Actions
-description: "Learn Firewall actions in Appwrite: deny, bypass, rate limit, and redirect, including status codes and rate-limit behavior."
+description: "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior."
 ---
 
 When a request matches a rule's [conditions](/docs/products/firewall/conditions), Appwrite applies the rule **action**. Only one action runs per request: evaluation stops at the first matching enabled rule (see [Priority](/docs/products/firewall/priority)).
@@ -14,14 +14,11 @@ There is no separate **Allow** action. Use **Bypass** to allowlist traffic that 
 |--------|----------------|--------------|
 | **Deny** | `403` with an access-denied error | `waf.requests.denied` |
 | **Bypass** | Request continues; later Firewall rules are skipped | None (not counted as denied) |
+| **Challenge** | Client must pass a challenge before the request continues | `waf.requests.challenged` |
 | **Rate limit** | Under quota: continue and stop further rules. Over quota: `429` with `Retry-After` | `waf.requests.rateLimited` (only when throttled) |
 | **Redirect** | HTTP redirect (`300`–`399`) to the configured location | `waf.requests.redirected` |
 
 Matched responses also include observability headers such as `X-Appwrite-WAF-Rule` and `X-Appwrite-WAF-Action`.
-
-{% info title="Challenge" %}
-Challenge rules cannot be created from the Console or public create API today. Traffic overview can still show a **Challenged** series if challenge handling is active on the platform. For self-serve policies, use deny, bypass, rate limit, or redirect.
-{% /info %}
 
 # Deny {% #deny %}
 
@@ -39,6 +36,19 @@ Typical uses:
 - Exempt health-check user agents or monitoring paths from rate limits
 
 Place bypass rules at a **lower priority number** (evaluated earlier) than the deny or rate limit rules they should override.
+
+# Challenge {% #challenge %}
+
+Challenge verifies matching requests before allowing them through. Clients that pass the challenge continue to your application; clients that fail do not.
+
+Use challenge instead of deny when you want to filter out automated traffic without hard-blocking legitimate users, for example on sign-in, sign-up, or other abuse-prone paths.
+
+Behavior:
+
+- The Console creates challenge rules with the platform default challenge type. The API also accepts an optional `challengeType` parameter.
+- Like other actions, a matching challenge rule stops further rule evaluation for that request.
+
+Challenged requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
 
 # Rate limit {% #rate-limit %}
 

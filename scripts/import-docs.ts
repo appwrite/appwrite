@@ -4,7 +4,7 @@
  * Run: bun run import:docs
  */
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { convertImagesToAvif } from './lib/convert-images-to-avif.ts'
 import { copyContentImagesFromWebsite } from './lib/copy-content-images.ts'
@@ -42,7 +42,13 @@ async function copyMarkdocFiles(dir: string, destRoot: string): Promise<string[]
 
     if (entry.name !== '+page.markdoc') continue
 
+    // SvelteKit route groups like (overview) don't appear in URLs; strip them
+    // so e.g. products/databases/(overview)/+page.markdoc becomes the
+    // products/databases index page.
     const relDir = relative(DOCS_SRC, dir)
+      .split(sep)
+      .filter((segment) => !/^\(.+\)$/.test(segment))
+      .join(sep)
     const destDir = join(destRoot, relDir)
     await mkdir(destDir, { recursive: true })
     const destPath = join(destDir, 'index.markdoc')

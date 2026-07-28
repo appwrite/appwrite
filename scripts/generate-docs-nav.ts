@@ -294,7 +294,13 @@ async function main() {
   const sections: SectionConfig[] = []
 
   for (const filePath of layoutFiles) {
-    const rel = relative(WEBSITE_DOCS, dirname(filePath)).replace(/\\/g, '/')
+    // Strip SvelteKit route groups like (overview): they don't appear in URLs,
+    // so their layout applies to the parent path (e.g. products/databases).
+    const rel = relative(WEBSITE_DOCS, dirname(filePath))
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter((segment) => !/^\(.+\)$/.test(segment))
+      .join('/')
     if (rel === '.' || rel === 'references/[version]' || rel.includes('[')) continue
 
     const content = await readFile(filePath, 'utf8')
