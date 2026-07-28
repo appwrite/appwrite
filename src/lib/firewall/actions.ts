@@ -4,6 +4,7 @@ import { WafRuleAction, type Models } from '@appwrite.io/console'
 export const FIREWALL_CREATABLE_ACTIONS = [
   WafRuleAction.Deny,
   WafRuleAction.Bypass,
+  WafRuleAction.Challenge,
   WafRuleAction.RateLimit,
   WafRuleAction.Redirect,
 ] as const
@@ -57,7 +58,7 @@ export function getFirewallActionDotClass(action: string): string {
     case WafRuleAction.Redirect:
       return 'bg-slate-500'
     case WafRuleAction.Challenge:
-      return 'bg-blue-500'
+      return 'bg-amber-500'
     default:
       return 'bg-muted-foreground'
   }

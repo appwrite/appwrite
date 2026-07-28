@@ -21,9 +21,11 @@ export function RuleActionBadge({
         ? 'processing'
         : action === WafRuleAction.RateLimit
           ? 'warning'
-          : action === WafRuleAction.Redirect
-            ? 'info'
-            : 'info'
+          : action === WafRuleAction.Challenge
+            ? 'warning'
+            : action === WafRuleAction.Redirect
+              ? 'info'
+              : 'info'
 
   return (
     <Badge variant={variant} className={cn('text-[10px] shrink-0', className)}>

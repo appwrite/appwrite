@@ -45,6 +45,7 @@ export type CreateFirewallRuleInput = {
   interval?: number
   location?: string
   statusCode?: number
+  challengeType?: string
 }
 
 export type UpdateFirewallRuleInput = {
@@ -61,6 +62,7 @@ export type UpdateFirewallRuleInput = {
   interval?: number
   location?: string
   statusCode?: number
+  challengeType?: string
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -287,6 +289,12 @@ async function createFirewallRule(
       return waf.createBypassRule(base)
     case WafRuleAction.Deny:
       return waf.createDenyRule(base)
+    case WafRuleAction.Challenge:
+      // challengeType is optional; omit to let the API apply its default.
+      return waf.createChallengeRule({
+        ...base,
+        challengeType: input.challengeType?.trim() || undefined,
+      })
     case WafRuleAction.RateLimit:
       return waf.createRateLimitRule({
         ...base,
@@ -325,6 +333,11 @@ async function updateFirewallRule(
       return waf.updateBypassRule(base)
     case WafRuleAction.Deny:
       return waf.updateDenyRule(base)
+    case WafRuleAction.Challenge:
+      return waf.updateChallengeRule({
+        ...base,
+        challengeType: input.challengeType,
+      })
     case WafRuleAction.RateLimit:
       return waf.updateRateLimitRule({
         ...base,
