@@ -33,6 +33,8 @@ const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string | null> = {
 /**
  * Map a draft condition attribute to a usage.listEvents filter attribute.
  * `userAgent` is approximated with `clientName` (usage has no userAgent field).
+ * Attributes usage cannot filter on (continent / state / headers / query)
+ * return null and are skipped in affected-traffic estimation.
  */
 function toUsageAttribute(attribute: string): string | null {
   switch (attribute) {
@@ -40,7 +42,13 @@ function toUsageAttribute(attribute: string): string | null {
     case 'path':
     case 'method':
     case 'country':
+    case 'city':
       return attribute
+    case 'host':
+      return 'hostname'
+    case 'os':
+      return 'osName'
+    case 'browser':
     case 'userAgent':
       return 'clientName'
     default:
@@ -50,8 +58,8 @@ function toUsageAttribute(attribute: string): string | null {
 
 /**
  * Usage filter attributes that exist 1:1 as firewall condition attributes.
- * `userAgent` is a firewall-only attribute (usage uses `clientName` instead),
- * so it is intentionally excluded from this reverse mapping.
+ * `userAgent` is a firewall-only attribute (usage uses `clientName` instead,
+ * which reverse-maps to `browser` here), so it is intentionally excluded.
  */
 function toFirewallConditionAttribute(
   attribute: string,
@@ -61,7 +69,14 @@ function toFirewallConditionAttribute(
     case 'path':
     case 'method':
     case 'country':
+    case 'city':
       return attribute
+    case 'hostname':
+      return 'host'
+    case 'osName':
+      return 'os'
+    case 'clientName':
+      return 'browser'
     default:
       return null
   }

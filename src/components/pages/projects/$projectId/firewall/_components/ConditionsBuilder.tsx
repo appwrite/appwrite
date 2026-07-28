@@ -10,22 +10,34 @@ import {
 } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
+  AppWindow,
+  Building2,
   Fingerprint,
+  Globe,
   Globe2,
+  MapPin,
+  Monitor,
   Plus,
   Route,
+  SearchCode,
   Send,
+  Server,
+  Tags,
   Trash2,
   UserRound,
   type LucideIcon,
 } from 'lucide-react'
 import {
   FIREWALL_CONDITION_ATTRIBUTES,
+  FIREWALL_CONTINENTS,
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
+  getDynamicKeyPrefix,
   getOperatorsForAttribute,
+  isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isPremiumAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -45,9 +57,17 @@ import type { ReactNode } from 'react'
 
 const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   ip: Fingerprint,
+  host: Server,
   path: Route,
   method: Send,
+  headers: Tags,
+  query: SearchCode,
   country: Globe2,
+  continent: Globe,
+  city: Building2,
+  state: MapPin,
+  os: Monitor,
+  browser: AppWindow,
   userAgent: UserRound,
 }
 
@@ -82,6 +102,40 @@ function RailLabel({ children }: { children: ReactNode }) {
     <span className="relative z-10 bg-card px-1.5 text-[13px] font-semibold leading-none text-foreground">
       {children}
     </span>
+  )
+}
+
+/**
+ * Key input for headers / query conditions. The API prefix (`headers.` /
+ * `query.`) is shown as a fixed adornment and added automatically on submit.
+ */
+function ConditionKeyInput({
+  attribute,
+  value,
+  disabled,
+  onChange,
+}: {
+  attribute: 'headers' | 'query'
+  value: string
+  disabled?: boolean
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  return (
+    <div className="flex h-9 w-full items-center overflow-hidden rounded-md border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring">
+      <span className="flex h-full shrink-0 items-center border-e border-input bg-muted/40 px-2.5 font-mono text-[13px] text-muted-foreground">
+        {getDynamicKeyPrefix(attribute)}
+      </span>
+      <Input
+        value={value}
+        disabled={disabled}
+        placeholder={
+          attribute === 'headers' ? t('e.g. x-custom-header') : t('e.g. token')
+        }
+        className="h-full w-full rounded-none border-0 font-mono text-[13px] shadow-none focus-visible:ring-0"
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
   )
 }
 
@@ -167,6 +221,38 @@ function ConditionValueInput({
         />
       )
 
+    case 'continent':
+      // Text-match operators need a free-text value, same as country.
+      if (isTextMatchOperator(operator)) {
+        return (
+          <Input
+            value={value}
+            disabled={disabled}
+            placeholder={t('e.g. EU')}
+            className="h-9 w-full font-mono text-[13px]"
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )
+      }
+      return (
+        <Select
+          value={value || undefined}
+          disabled={disabled}
+          onValueChange={onChange}
+        >
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue placeholder={t('Select a continent')} />
+          </SelectTrigger>
+          <SelectContent>
+            {FIREWALL_CONTINENTS.map((continent) => (
+              <SelectItem key={continent.value} value={continent.value}>
+                {t(continent.label)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )
+
     case 'path':
       return (
         <Input
@@ -179,11 +265,71 @@ function ConditionValueInput({
       )
 
     case 'ip':
+      // CIDR blocks only match on equal / not equal server-side.
       return (
         <Input
           value={value}
           disabled={disabled}
-          placeholder="203.0.113.10"
+          placeholder={
+            isTextMatchOperator(operator)
+              ? '203.0.113.10'
+              : '203.0.113.10 or 203.0.113.0/24'
+          }
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'host':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. api.example.com')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'city':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. London')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'state':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. California')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'os':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. Windows')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'browser':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. Chrome')}
           className="h-9 w-full font-mono text-[13px]"
           onChange={(e) => onChange(e.target.value)}
         />
@@ -255,8 +401,9 @@ export function ConditionsBuilder({
           ...condition,
           attribute,
           operator: nextOperator,
-          // Clear value when switching attribute; method/country need discrete picks.
+          // Clear value/key when switching attribute; method/country need discrete picks.
           value: '',
+          key: '',
         }
       }),
     )
@@ -329,7 +476,14 @@ export function ConditionsBuilder({
                           <SelectContent>
                             {FIREWALL_CONDITION_ATTRIBUTES.map((attr) => (
                               <SelectItem key={attr.value} value={attr.value}>
-                                {t(attr.label)}
+                                <span className="flex items-center gap-2">
+                                  {t(attr.label)}
+                                  {isPremiumAttribute(attr.value) ? (
+                                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                      {t('Premium')}
+                                    </span>
+                                  ) : null}
+                                </span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -356,6 +510,17 @@ export function ConditionsBuilder({
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {isDynamicKeyAttribute(condition.attribute) ? (
+                        <ConditionKeyInput
+                          attribute={condition.attribute}
+                          value={condition.key ?? ''}
+                          disabled={disabled}
+                          onChange={(nextKey) =>
+                            updateAt(index, { key: nextKey })
+                          }
+                        />
+                      ) : null}
 
                       {isNoValueOperator(condition.operator) ? null : (
                         <ConditionValueInput
