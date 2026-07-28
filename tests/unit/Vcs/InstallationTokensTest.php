@@ -11,12 +11,17 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 
 final class InstallationTokensTest extends TestCase
 {
     protected function db(): Database
     {
-        return $this->createStub(Database::class);
+        $db = $this->createStub(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+
+        return $db;
     }
 
     public function testUnexpiredTokenIsNotRefreshed(): void
@@ -83,16 +88,9 @@ final class InstallationTokensTest extends TestCase
             }))
             ->willReturnArgument(2);
 
-        $installation = new Document([
-            '$id' => 'installation1',
-            'personalAccessToken' => 'stale-token',
-            'personalRefreshToken' => 'stale-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
-        ]);
-
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
@@ -139,78 +137,116 @@ final class InstallationTokensTest extends TestCase
 
     public function testFailedRefreshThrows(): void
     {
-        $installation = new Document([
-            '$id' => 'installation1',
-            'personalAccessToken' => 'stale-token',
-            'personalRefreshToken' => 'stale-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
-        ]);
-
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+        (new InstallationTokens())->refresh($this->expired(), $this->db(), $oauth2);
     }
 
-    public function testFailedRefreshReturnsCurrentInstallationWhenAnotherRequestRefreshed(): void
+    public function testRotatedTokenIsPersistedWhenVerificationFails(): void
     {
         $db = $this->createMock(Database::class);
-        $current = new Document([
-            '$id' => 'installation1',
-            'personalAccessToken' => 'already-refreshed-token',
-            'personalRefreshToken' => 'already-refreshed-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
 
+        // The provider rotated the family, so the new pair has to land even though the call after it failed.
         $db->expects($this->once())
-            ->method('getDocument')
-            ->with('installations', 'installation1')
-            ->willReturn($current);
-        $db->expects($this->never())->method('updateDocument');
-
-        $installation = new Document([
-            '$id' => 'installation1',
-            'personalAccessToken' => 'stale-token',
-            'personalRefreshToken' => 'stale-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
-        ]);
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
+                return true;
+            }))
+            ->willReturnArgument(2);
 
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
-        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
-
-        $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
+        try {
+            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+            $this->fail('Expected an Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
+        }
     }
 
-    public function testRefreshExceptionReturnsCurrentInstallationWhenAnotherRequestRefreshed(): void
+    public function testTokenRefreshedByLockHolderIsReused(): void
     {
         $db = $this->createMock(Database::class);
-        $current = new Document([
-            '$id' => 'installation1',
-            'personalAccessToken' => 'already-refreshed-token',
-            'personalRefreshToken' => 'already-refreshed-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
-        ]);
+        $db->method('getAuthorization')->willReturn(new Authorization());
 
         $db->expects($this->once())
             ->method('getDocument')
             ->with('installations', 'installation1')
-            ->willReturn($current);
+            ->willReturn(new Document([
+                '$id' => 'installation1',
+                'personalAccessToken' => 'already-refreshed-token',
+                'personalRefreshToken' => 'already-refreshed-refresh',
+                'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+            ]));
         $db->expects($this->never())->method('updateDocument');
 
-        $installation = new Document([
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(0, $oauth2->refreshCalls);
+    }
+
+    public function testRefreshIsSerializedByLock(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+        $db->method('updateDocument')->willReturnArgument(2);
+
+        $db->expects($this->once())
+            ->method('createDocument')
+            ->with('vcsCommentLocks', $this->callback(function (Document $lock) {
+                $this->assertSame('installation-installation1', $lock->getId());
+                return true;
+            }))
+            ->willReturnArgument(1);
+
+        $db->expects($this->once())
+            ->method('deleteDocument')
+            ->with('vcsCommentLocks', 'installation-installation1')
+            ->willReturn(true);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
+    public function testLockIsReleasedWhenRefreshFails(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+        $db->method('createDocument')->willReturnArgument(1);
+
+        $db->expects($this->once())
+            ->method('deleteDocument')
+            ->with('vcsCommentLocks', 'installation-installation1')
+            ->willReturn(true);
+
+        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+    }
+
+    protected function expired(): Document
+    {
+        return new Document([
             '$id' => 'installation1',
             'personalAccessToken' => 'stale-token',
             'personalRefreshToken' => 'stale-refresh',
             'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
-
-        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
-
-        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
-
-        $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
     }
 
     protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false)
