@@ -384,6 +384,67 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
+      prefix: "apis",
+      parent: {
+        href: "/docs",
+        label: "APIs",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/apis",
+            },
+          ],
+        },
+        {
+          label: "Protocols",
+          items: [
+            {
+              label: "REST",
+              href: "/docs/apis/rest",
+            },
+            {
+              label: "GraphQL",
+              href: "/docs/apis/graphql",
+            },
+            {
+              label: "Realtime",
+              href: "/docs/apis/realtime",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Events",
+              href: "/docs/apis/events",
+            },
+            {
+              label: "Webhooks",
+              href: "/docs/apis/webhooks",
+            },
+            {
+              label: "Response codes",
+              href: "/docs/apis/response-codes",
+            },
+          ],
+        },
+        {
+          label: "Policies",
+          items: [
+            {
+              label: "Release policy",
+              href: "/docs/apis/release-policy",
+            },
+          ],
+        },
+      ],
+    },
+    {
       prefix: "apis/realtime",
       parent: {
         href: "/docs/apis",
@@ -859,6 +920,66 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
+      prefix: "products/auth/oauth-server",
+      parent: {
+        href: "/docs/products/auth",
+        label: "OAuth2 server",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/auth/oauth-server",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/auth/oauth-server/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Clients",
+              href: "/docs/products/auth/oauth-server/clients",
+            },
+            {
+              label: "Authorization",
+              href: "/docs/products/auth/oauth-server/authorization",
+            },
+            {
+              label: "Tokens",
+              href: "/docs/products/auth/oauth-server/tokens",
+            },
+            {
+              label: "Scopes",
+              href: "/docs/products/auth/oauth-server/scopes",
+            },
+            {
+              label: "Device flow",
+              href: "/docs/products/auth/oauth-server/device-flow",
+            },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
+            {
+              label: "Sign in with your product",
+              href: "/docs/products/auth/oauth-server/sign-in-with-your-product/step-1",
+            },
+            {
+              label: "Custom scopes",
+              href: "/docs/products/auth/oauth-server/custom-scopes/step-1",
+            },
+          ],
+        },
+      ],
+    },
+    {
       prefix: "products/avatars",
       parent: {
         href: "/docs",
@@ -927,7 +1048,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
-      prefix: "products/databases/(overview)",
+      prefix: "products/databases",
       parent: {
         href: "/docs",
         label: "Databases",

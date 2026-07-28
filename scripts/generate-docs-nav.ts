@@ -3,7 +3,7 @@
  * Run: bun run generate:docs-nav
  */
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
 
@@ -118,6 +118,19 @@ function cleanNavigation(groups: NavGroup[]): NavGroup[] {
     .filter((group) => group.items.length > 0)
 }
 
+/**
+ * Nav data sources, in priority order for a given directory:
+ * 1. +layout.svelte / +layout@*.svelte (e.g. oauth-server uses a layout reset)
+ * 2. Route-local Sidebar.svelte shared by sibling layouts (e.g. docs/apis)
+ */
+function isNavSourceFile(name: string): boolean {
+  return /^\+layout(@.+)?\.svelte$/.test(name) || name === 'Sidebar.svelte'
+}
+
+function isLayoutFile(path: string): boolean {
+  return basename(path).startsWith('+layout')
+}
+
 async function walkLayoutFiles(dir: string): Promise<string[]> {
   const files: string[] = []
   const entries = await readdir(dir, { withFileTypes: true })
@@ -129,7 +142,7 @@ async function walkLayoutFiles(dir: string): Promise<string[]> {
       files.push(...(await walkLayoutFiles(fullPath)))
       continue
     }
-    if (entry.name === '+layout.svelte') files.push(fullPath)
+    if (isNavSourceFile(entry.name)) files.push(fullPath)
   }
 
   return files
@@ -290,8 +303,11 @@ function toTsValue(value: unknown, indent = 0): string {
 }
 
 async function main() {
-  const layoutFiles = await walkLayoutFiles(WEBSITE_DOCS)
-  const sections: SectionConfig[] = []
+  // Layouts take priority over route-local Sidebar.svelte files for the same prefix.
+  const layoutFiles = (await walkLayoutFiles(WEBSITE_DOCS)).sort(
+    (a, b) => Number(isLayoutFile(b)) - Number(isLayoutFile(a)),
+  )
+  const sectionsByPrefix = new Map<string, SectionConfig>()
 
   for (const filePath of layoutFiles) {
     // Strip SvelteKit route groups like (overview): they don't appear in URLs,
@@ -301,18 +317,21 @@ async function main() {
       .split('/')
       .filter((segment) => !/^\(.+\)$/.test(segment))
       .join('/')
-    if (rel === '.' || rel === 'references/[version]' || rel.includes('[')) continue
+    if (rel === '.' || rel === '' || rel.includes('[')) continue
+    if (sectionsByPrefix.has(rel)) continue
 
     const content = await readFile(filePath, 'utf8')
     const parsed = parseLayoutFile(content)
     if (!parsed) continue
 
-    sections.push({
-      prefix: rel === '.' ? '' : rel,
+    sectionsByPrefix.set(rel, {
+      prefix: rel,
       parent: parsed.parent,
       navigation: parsed.navigation,
     })
   }
+
+  const sections: SectionConfig[] = Array.from(sectionsByPrefix.values())
 
   const quickStarts = await parseQuickStartsNav()
   if (quickStarts) sections.push(quickStarts)
