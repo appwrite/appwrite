@@ -290,7 +290,7 @@ Http::post('/v1/users')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $plaintext = new Plaintext();
 
         $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks, $plan);
@@ -327,7 +327,7 @@ Http::post('/v1/users/bcrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $bcrypt = new Bcrypt();
         $bcrypt->setCost(8); // Default cost
 
@@ -366,7 +366,7 @@ Http::post('/v1/users/md5')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $md5 = new MD5();
 
         $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -404,7 +404,7 @@ Http::post('/v1/users/argon2')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $argon2 = new Argon2();
 
         $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -443,7 +443,7 @@ Http::post('/v1/users/sha')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
@@ -484,7 +484,7 @@ Http::post('/v1/users/phpass')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $phpass = new PHPass();
 
         $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
@@ -527,7 +527,7 @@ Http::post('/v1/users/scrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scrypt = new Scrypt();
         $scrypt
             ->setSalt($passwordSalt)
@@ -574,7 +574,7 @@ Http::post('/v1/users/scrypt-modified')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ??string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scryptModified = new ScryptModified();
         $scryptModified
             ->setSalt($passwordSalt)
