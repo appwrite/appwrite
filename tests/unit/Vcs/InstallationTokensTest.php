@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Extend\Exception;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -116,7 +115,7 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame($identity->getAttribute('providerAccessTokenExpiry'), $result->getAttribute('personalAccessTokenExpiry'));
     }
 
-    public function testMissingRefreshTokenThrowsClearError(): void
+    public function testMissingRefreshTokenKeepsExistingToken(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
@@ -127,17 +126,30 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        try {
-            (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
-            $this->fail('Expected an Exception');
-        } catch (Exception $e) {
-            $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
-        }
+        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
 
+        $this->assertSame('stale-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testFailedRefreshThrows(): void
+    public function testFailedRefreshKeepsExistingToken(): void
+    {
+        $installation = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+
+        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+
+        $this->assertSame('stale-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
+    public function testFailedVerificationKeepsExistingToken(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
@@ -148,9 +160,9 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+
+        $this->assertSame('stale-token', $result->getAttribute('personalAccessToken'));
     }
 
     public function testFailedRefreshReturnsCurrentInstallationWhenAnotherRequestRefreshed(): void

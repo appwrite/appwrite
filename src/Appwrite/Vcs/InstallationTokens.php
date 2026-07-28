@@ -3,7 +3,6 @@
 namespace Appwrite\Vcs;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -41,8 +40,11 @@ class InstallationTokens
             return $installation;
         }
 
+        // Not every provider uses this token. GitHub mints an installation token from the App
+        // credentials and ignores it entirely, so a refresh it never needed must not block the
+        // call. GitLab and Gitea do use it, and surface a real 401 from the provider call itself.
         if (empty($refreshToken)) {
-            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'This installation has no refresh token on file. Please reconnect it.');
+            return $installation;
         }
 
         try {
@@ -53,7 +55,7 @@ class InstallationTokens
                 return $current;
             }
 
-            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
+            return $installation;
         }
 
         $accessToken = $oauth2->getAccessToken('');
@@ -66,7 +68,7 @@ class InstallationTokens
                 return $current;
             }
 
-            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
+            return $installation;
         }
 
         $installation = $installation
