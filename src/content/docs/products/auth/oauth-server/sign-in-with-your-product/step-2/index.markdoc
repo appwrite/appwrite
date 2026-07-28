@@ -1,0 +1,55 @@
+---
+layout: tutorial
+title: Enable the OAuth2 server
+description: Turn on the OAuth2 server on your Appwrite project and register the client app.
+step: 2
+---
+
+Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client.
+
+# Enable the server {% #enable %}
+
+{% only_dark %}
+![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-settings.avif)
+{% /only_dark %}
+{% only_light %}
+![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/oauth2-server-settings.avif)
+{% /only_light %}
+
+In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**.
+
+Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is `http://localhost:4000/oauth/consent`. This is where the OAuth2 server sends users to sign in and approve.
+
+Leave the scopes at their defaults. `openid`, `profile`, and `email` are always included, which is all Vantage needs. See [Scopes](/docs/products/auth/oauth-server/scopes) to add your own later.
+
+# Register the client {% #register-client %}
+
+{% only_dark %}
+![Creating the Vantage client in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-create-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Creating the Vantage client in the Appwrite Console](/images/docs/oauth-server/oauth2-server-create-app.avif)
+{% /only_light %}
+
+Open the **Apps** sub-tab and create a client for Vantage:
+
+- **Name**: `Vantage`. This appears on the consent screen.
+- **Client type**: `Confidential`. Vantage has a server that can hold a secret.
+- **Redirect URIs**: `http://localhost:4100/oauth/callback`. The OAuth2 server only returns codes to registered URIs.
+
+When you create the client, copy the **client secret**. It is shown once. You will also need the **client ID** from the clients list.
+
+{% only_dark %}
+![The client secret shown once on creation](/images/docs/oauth-server/dark/oauth2-server-secret-created.avif)
+{% /only_dark %}
+{% only_light %}
+![The client secret shown once on creation](/images/docs/oauth-server/oauth2-server-secret-created.avif)
+{% /only_light %}
+
+{% info title="Keep these three values" %}
+You now have everything the apps need to talk to the OAuth2 server: the **client ID**, the **client secret**, and your **project ID**. Keep them handy for the next step.
+{% /info %}
+
+For the full set of client options and the SDK equivalents, see [Clients](/docs/products/auth/oauth-server/clients).
+
+Continue to scaffold the two apps.

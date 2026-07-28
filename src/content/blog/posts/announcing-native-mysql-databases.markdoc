@@ -1,0 +1,80 @@
+---
+layout: post
+title: "Announcing native MySQL databases: Bring your MySQL workloads to Appwrite"
+description: Provision a managed MySQL 8.4 instance inside your Appwrite project and keep using the drivers, ORMs, and tools your applications already depend on.
+date: 2026-07-09
+cover: /images/blog/announcing-native-mysql-databases/cover.png
+timeToRead: 5
+author: atharva
+category: announcement
+featured: false
+callToAction: true
+draft: true
+faqs:
+  - question: "What is a native MySQL database in Appwrite?"
+    answer: "It is a managed MySQL instance running on dedicated compute inside your Appwrite project. Appwrite provisions the engine with its own hostname, credentials, and TLS, and you connect with the mysql client or any MySQL driver. Appwrite manages the infrastructure; your code talks to MySQL directly."
+  - question: "Do the Appwrite SDKs manage data in a native MySQL database?"
+    answer: "No. Native databases are accessed with standard MySQL clients, drivers, and ORMs, not the Appwrite SDKs. If you want SDK-driven data APIs with built-in permissions, use an Appwrite database such as TablesDB, DocumentsDB, or VectorsDB instead."
+  - question: "Which MySQL versions are available?"
+    answer: "MySQL 8.4 is the default, with 8.0 also supported. Version upgrades run online with logical replication and a traffic cutover, so moving between supported versions does not require a dump and restore."
+  - question: "Can I move an existing MySQL application to Appwrite?"
+    answer: "Yes, that is the primary use case. Because the database is a standard MySQL engine, existing applications built on frameworks like Laravel, Django, Rails, or Spring Boot connect with a changed connection string and no code rewrite."
+  - question: "What infrastructure features are included?"
+    answer: "Scheduled backups and point-in-time recovery based on binary log archiving, database branches, high availability with up to five replicas and automatic failover, online compute resizing, storage autoscaling, IP allowlists, a ProxySQL-based connection pooler, and maintenance windows."
+  - question: "How is the MySQL offering different from the PostgreSQL one?"
+    answer: "The platform features are the same: identical compute specifications and pricing, backups, PITR, branches, high availability, scaling, and network controls. The engine-specific difference is extensions, which are a PostgreSQL concept and do not apply to MySQL."
+---
+
+MySQL runs an enormous share of the software already in production. Most teams considering a backend platform are not starting from zero; they have a Laravel application, a Django service, or a decade-old schema that works, and the real question is where it should live.
+
+Today we are announcing **native MySQL databases** in Appwrite, so the answer can be: inside the same project as the rest of your backend.
+
+# Create your first database
+
+Provisioning happens in the Console:
+
+1. In your project, go to **Databases** and click **Create database**.
+2. Under **Choose database type**, select **MySQL** from the **Native databases** group.
+
+![Choosing MySQL in the create database flow](/images/docs/products/databases/mysql/dark/create-database-type.avif)
+
+3. Under **Specifications**, pick the tier that fits your workload, and optionally configure read replicas and point-in-time recovery.
+
+![Selecting a specification](/images/docs/products/databases/mysql/dark/create-database-specs.avif)
+
+4. Review the summary and click **Create database**.
+
+The database provisions in minutes and reports `ready` when you can connect.
+
+# Connect your existing application
+
+A native MySQL database is a standard MySQL 8.4 engine (8.0 is also supported) with its own hostname, credentials, and TLS. Connecting is exactly what you expect:
+
+```bash
+mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin -p -D <database>
+```
+
+Change the connection string in your existing application and it runs. We verified the common paths end to end and published [integration guides](/docs/products/databases/mysql/integrations/laravel) for Laravel, Django, Rails, Spring Boot, EF Core, GORM, Prisma, Drizzle, and more, each with the MySQL-specific configuration spelled out.
+
+Because this is the engine itself, the Appwrite SDKs are not part of the data path. Reads and writes go through your drivers and ORMs, the way they already do. If you want SDK-driven data APIs with document permissions instead, that is what [Appwrite Databases](/docs/products/databases) are for. Native databases and Appwrite databases live side by side in the same project, so you can use both.
+
+# Managed operations
+
+Provisioning MySQL is straightforward; operating it over time is where the cost accumulates. The managed layer covers that operational work:
+
+- **[Backups and PITR.](/docs/products/databases/mysql/backups)** Scheduled and manual backups, plus continuous binary log archiving that restores to any point in the retention window, such as the second before a bad migration.
+- **[High availability.](/docs/products/databases/mysql/high-availability)** Up to five replicas with a choice of replication mode and automatic failover behind a stable hostname.
+- **[Branches.](/docs/products/databases/mysql/branches)** Instant, isolated copies of the database for previews and CI, created from a storage snapshot.
+- **[Scaling.](/docs/products/databases/mysql/scaling)** Online resizes across eight compute tiers and storage autoscaling with a configurable threshold.
+- **[Connection pooling.](/docs/products/databases/mysql/connection-pooling)** A ProxySQL-based pooler absorbs connection churn from serverless and per-request runtimes.
+- **[Network security.](/docs/products/databases/mysql/network-security)** TLS on by default and IP allowlists enforced before authentication.
+
+Compute specifications and pricing are identical to the PostgreSQL offering, starting at **$10 per month**, with the full table in the [documentation](/docs/products/databases/mysql#specifications).
+
+# Get started
+
+Native MySQL databases are available on Appwrite Cloud today on dedicated infrastructure.
+
+- [MySQL documentation](/docs/products/databases/mysql)
+- [Quick start](/docs/products/databases/mysql/quick-start)
+

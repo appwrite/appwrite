@@ -1,0 +1,1241 @@
+---
+layout: article
+title: Database permissions
+description: Control access to your VectorsDB data with permissions. Learn how to set collection level and document level access rules.
+---
+
+Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents.
+Permissions exist at two levels, collection level and document level permissions.
+
+In Appwrite, permissions are **granted**, meaning a user has no access by default and receives access when granted.
+A user with access granted at either collection level or document level will be able to access a document.
+Users **don't need access at both levels** to access documents.
+
+Permissions are evaluated when documents are accessed through a [Client SDK](/docs/sdks#client). [Server SDKs](/docs/sdks#server) authenticated with an [API key](/docs/advanced/platform/api-keys) bypass permissions, so the examples below use a Server SDK to set and read back the permissions that a client would then be evaluated against.
+
+# Collection level {% #collection-level %}
+Collection level permissions apply to every document in the collection.
+If a user has read, create, update, or delete permissions at the collection level, the user can access **all documents** inside the collection.
+
+Configure collection level permissions by navigating to **Your collection** > **Security** > **Permissions**, or pass a `permissions` array when you create or update the collection.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: sdk.ID.unique(),
+    name: 'documents',
+    dimension: 4,
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.create(sdk.Role.users()),
+        sdk.Permission.update(sdk.Role.users()),
+        sdk.Permission.delete(sdk.Role.users())
+    ],
+    documentSecurity: true // optional
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: sdk.ID.unique(),
+    name: 'documents',
+    dimension: 4,
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.create(sdk.Role.users()),
+        sdk.Permission.update(sdk.Role.users()),
+        sdk.Permission.delete(sdk.Role.users())
+    ],
+    documentSecurity: true // optional
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\ID;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->createCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: ID::unique(),
+    name: 'documents',
+    dimension: 4,
+    permissions: [
+        Permission::read(Role::any()),
+        Permission::create(Role::users()),
+        Permission::update(Role::users()),
+        Permission::delete(Role::users())
+    ],
+    documentSecurity: true // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.id import ID
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create_collection(
+    database_id = '<DATABASE_ID>',
+    collection_id = ID.unique(),
+    name = 'documents',
+    dimension = 4,
+    permissions = [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ],
+    document_security = True # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.create_collection(
+    database_id: '<DATABASE_ID>',
+    collection_id: ID.unique(),
+    name: 'documents',
+    dimension: 4,
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ],
+    document_security: true # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Collection result = await vectorsDB.CreateCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: ID.Unique(),
+    name: "documents",
+    dimension: 4,
+    permissions: new List<string> {
+        Permission.Read(Role.Any()),
+        Permission.Create(Role.Users()),
+        Permission.Update(Role.Users()),
+        Permission.Delete(Role.Users())
+    },
+    documentSecurity: true // optional
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Collection result = await vectorsDB.createCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: ID.unique(),
+    name: 'documents',
+    dimension: 4,
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ], // (optional)
+    documentSecurity: true, // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.createCollection(
+    databaseId = "<DATABASE_ID>",
+    collectionId = ID.unique(),
+    name = "documents",
+    dimension = 4,
+    permissions = listOf(
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ), // optional
+    documentSecurity = true, // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.createCollection(
+    "<DATABASE_ID>",
+    ID.unique(),
+    "documents",
+    4,
+    List.of(
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ),
+    true,
+    true,
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let collection = try await vectorsDB.createCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: ID.unique(),
+    name: "documents",
+    dimension: 4,
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users())
+    ],
+    documentSecurity: true // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_collection(
+        "<DATABASE_ID>",
+        ID::unique(),
+        "documents",
+        4,
+        Some(vec![
+            Permission::read(Role::any()).to_string(),
+            Permission::create(Role::users(None)).to_string(),
+            Permission::update(Role::users(None)).to_string(),
+            Permission::delete(Role::users(None)).to_string(),
+        ]),
+        Some(true), // documentSecurity (optional)
+        None, // enabled (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create-collection \
+    --database-id "<DATABASE_ID>" \
+    --collection-id "<COLLECTION_ID>" \
+    --name "documents" \
+    --dimension 4 \
+    --permissions 'read("any")' 'create("users")' 'update("users")' 'delete("users")' \
+    --document-security true
+```
+{% /multicode %}
+
+To change a collection's permissions later, pass a new `permissions` array to `updateCollection`. The `name` is required when updating.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.updateCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: 'documents',
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.create(sdk.Role.users())
+    ],
+    documentSecurity: false // optional
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.updateCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: 'documents',
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.create(sdk.Role.users())
+    ],
+    documentSecurity: false // optional
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->updateCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: 'documents',
+    permissions: [
+        Permission::read(Role::any()),
+        Permission::create(Role::users())
+    ],
+    documentSecurity: false // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.update_collection(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    name = 'documents',
+    permissions = [
+        Permission.read(Role.any()),
+        Permission.create(Role.users())
+    ],
+    document_security = False # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.update_collection(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    name: 'documents',
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users())
+    ],
+    document_security: false # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Collection result = await vectorsDB.UpdateCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "documents",
+    permissions: new List<string> {
+        Permission.Read(Role.Any()),
+        Permission.Create(Role.Users())
+    },
+    documentSecurity: false // optional
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Collection result = await vectorsDB.updateCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: 'documents',
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users())
+    ], // (optional)
+    documentSecurity: false, // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.updateCollection(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    name = "documents",
+    permissions = listOf(
+        Permission.read(Role.any()),
+        Permission.create(Role.users())
+    ), // optional
+    documentSecurity = false, // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.updateCollection(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "documents",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let collection = try await vectorsDB.updateCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "documents",
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.create(Role.users())
+    ],
+    documentSecurity: false // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.update_collection(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "documents",
+        None, // dimension (optional)
+        Some(vec![
+            Permission::read(Role::any()).to_string(),
+            Permission::create(Role::users(None)).to_string(),
+        ]),
+        Some(false), // documentSecurity (optional)
+        None, // enabled (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db update-collection \
+    --database-id "<DATABASE_ID>" \
+    --collection-id "<COLLECTION_ID>" \
+    --name "documents" \
+    --permissions 'read("any")' 'create("users")' \
+    --document-security false
+```
+{% /multicode %}
+
+[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+
+# Document level {% #document-level %}
+Document level permissions grant access to individual documents.
+If a user has read, update, or delete permissions at the document level, the user can access the **individual document**.
+
+Document level permissions are only applied if `documentSecurity` is enabled on the collection. Enable it in the Console by navigating to **Your collection** > **Security** > **Document security**, or by setting `documentSecurity` to `true` when you create or update the collection, as shown above.
+
+Set permissions on an individual document by passing a `permissions` array to `createDocument`. Use `Role.user('<USER_ID>')` to scope access to a specific user.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: sdk.ID.unique(),
+    data: {
+        embeddings: [0.12, 0.84, 0.33, 0.57],
+        metadata: { title: 'Hamlet' }
+    },
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.update(sdk.Role.user('<USER_ID>')),
+        sdk.Permission.delete(sdk.Role.user('<USER_ID>'))
+    ]
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: sdk.ID.unique(),
+    data: {
+        embeddings: [0.12, 0.84, 0.33, 0.57],
+        metadata: { title: 'Hamlet' }
+    },
+    permissions: [
+        sdk.Permission.read(sdk.Role.any()),
+        sdk.Permission.update(sdk.Role.user('<USER_ID>')),
+        sdk.Permission.delete(sdk.Role.user('<USER_ID>'))
+    ]
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\ID;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID::unique(),
+    data: [
+        'embeddings' => [0.12, 0.84, 0.33, 0.57],
+        'metadata' => ['title' => 'Hamlet']
+    ],
+    permissions: [
+        Permission::read(Role::any()),
+        Permission::update(Role::user('<USER_ID>')),
+        Permission::delete(Role::user('<USER_ID>'))
+    ]
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.id import ID
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = ID.unique(),
+    data = {
+        "embeddings": [0.12, 0.84, 0.33, 0.57],
+        "metadata": { "title": "Hamlet" }
+    },
+    permissions = [
+        Permission.read(Role.any()),
+        Permission.update(Role.user('<USER_ID>')),
+        Permission.delete(Role.user('<USER_ID>'))
+    ]
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.create_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: ID.unique(),
+    data: {
+        "embeddings" => [0.12, 0.84, 0.33, 0.57],
+        "metadata" => { "title" => "Hamlet" }
+    },
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.update(Role.user('<USER_ID>')),
+        Permission.delete(Role.user('<USER_ID>'))
+    ]
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Document result = await vectorsDB.CreateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: ID.Unique(),
+    data: new Dictionary<string, object> {
+        { "embeddings", new List<double> { 0.12, 0.84, 0.33, 0.57 } },
+        { "metadata", new Dictionary<string, object> { { "title", "Hamlet" } } }
+    },
+    permissions: new List<string> {
+        Permission.Read(Role.Any()),
+        Permission.Update(Role.User("<USER_ID>")),
+        Permission.Delete(Role.User("<USER_ID>"))
+    }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Document result = await vectorsDB.createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID.unique(),
+    data: {
+        "embeddings": [0.12, 0.84, 0.33, 0.57],
+        "metadata": { "title": "Hamlet" }
+    },
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.update(Role.user('<USER_ID>')),
+        Permission.delete(Role.user('<USER_ID>'))
+    ], // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.createDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = ID.unique(),
+    data = mapOf(
+        "embeddings" to listOf(0.12, 0.84, 0.33, 0.57),
+        "metadata" to mapOf("title" to "Hamlet")
+    ),
+    permissions = listOf(
+        Permission.read(Role.any()),
+        Permission.update(Role.user("<USER_ID>")),
+        Permission.delete(Role.user("<USER_ID>"))
+    ), // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+import java.util.Map;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.createDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    ID.unique(),
+    Map.of(
+        "embeddings", List.of(0.12, 0.84, 0.33, 0.57),
+        "metadata", Map.of("title", "Hamlet")
+    ),
+    List.of(
+        Permission.read(Role.any()),
+        Permission.update(Role.user("<USER_ID>")),
+        Permission.delete(Role.user("<USER_ID>"))
+    ),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let document = try await vectorsDB.createDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: ID.unique(),
+    data: [
+        "embeddings": [0.12, 0.84, 0.33, 0.57],
+        "metadata": ["title": "Hamlet"]
+    ],
+    permissions: [
+        Permission.read(Role.any()),
+        Permission.update(Role.user("<USER_ID>")),
+        Permission.delete(Role.user("<USER_ID>"))
+    ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        ID::unique(),
+        json!({
+            "embeddings": [0.12, 0.84, 0.33, 0.57],
+            "metadata": { "title": "Hamlet" }
+        }),
+        Some(vec![
+            Permission::read(Role::any()).to_string(),
+            Permission::update(Role::user("<USER_ID>", None)).to_string(),
+            Permission::delete(Role::user("<USER_ID>", None)).to_string(),
+        ]),
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create-document \
+    --database-id "<DATABASE_ID>" \
+    --collection-id "<COLLECTION_ID>" \
+    --document-id 'unique()' \
+    --data '{ "embeddings": [0.12, 0.84, 0.33, 0.57], "metadata": { "title": "Hamlet" } }' \
+    --permissions 'read("any")' 'update("user:<USER_ID>")' 'delete("user:<USER_ID>")'
+```
+{% /multicode %}
+
+To change a document's permissions later, pass a new `permissions` array to `updateDocument`. Only the fields you pass are changed, so you can update permissions without touching the vector or metadata.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    permissions: [
+        sdk.Permission.read(sdk.Role.users())
+    ]
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    permissions: [
+        sdk.Permission.read(sdk.Role.users())
+    ]
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    permissions: [
+        Permission::read(Role::users())
+    ]
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.update_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    permissions = [
+        Permission.read(Role.users())
+    ]
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.update_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: '<DOCUMENT_ID>',
+    permissions: [
+        Permission.read(Role.users())
+    ]
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Document result = await vectorsDB.UpdateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    permissions: new List<string> {
+        Permission.Read(Role.Users())
+    }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Document result = await vectorsDB.updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    permissions: [
+        Permission.read(Role.users())
+    ], // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.updateDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    permissions = listOf(
+        Permission.read(Role.users())
+    ), // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.Permission;
+import io.appwrite.Role;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.updateDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    null,
+    List.of(
+        Permission.read(Role.users())
+    ),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let document = try await vectorsDB.updateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    permissions: [
+        Permission.read(Role.users())
+    ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.update_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        None, // data (optional)
+        Some(vec![
+            Permission::read(Role::users(None)).to_string(),
+        ]),
+        None, // transactionId (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db update-document \
+    --database-id "<DATABASE_ID>" \
+    --collection-id "<COLLECTION_ID>" \
+    --document-id "<DOCUMENT_ID>" \
+    --permissions 'read("users")'
+```
+{% /multicode %}
+
+[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+
+# Common use cases {% #common-use-cases %}
+
+For examples of how to implement common permission patterns, including creating private documents that are only accessible to their creators, see the [permissions examples](/docs/advanced/platform/permissions#examples) in our platform documentation.

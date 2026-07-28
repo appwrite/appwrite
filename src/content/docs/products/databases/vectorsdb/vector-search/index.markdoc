@@ -1,0 +1,556 @@
+---
+layout: article
+title: Vector search
+description: Run similarity search over your documents with Appwrite VectorsDB. Create an HNSW index on the embeddings field and rank documents by cosine, dot product, or Euclidean distance.
+---
+Vector search finds the documents whose `embeddings` are closest to a query vector.
+Instead of matching exact values, it ranks documents by similarity, so you can build features like semantic search, recommendations, and retrieval for AI applications.
+
+There are two steps: create an [index](/docs/products/databases/vectorsdb/collections) on the `embeddings` field so searches are fast, then pass a vector query to `listDocuments` to get documents ranked by similarity.
+
+# Create an index {% #create-an-index %}
+Before you search, create an HNSW index on the `embeddings` field with `createIndex`. HNSW (Hierarchical Navigable Small World) is an approximate nearest neighbor index that keeps similarity search fast as your collection grows.
+
+The index `type` decides how similarity is measured. Use the `VectorsDBIndexType` enum to pick one:
+
+| Index type | Enum | Use when |
+| --- | --- | --- |
+| `hnsw_cosine` | `VectorsDBIndexType.HnswCosine` | You care about the direction of the vectors, not their magnitude. A common default for text embeddings. |
+| `hnsw_dot` | `VectorsDBIndexType.HnswDot` | You want the dot product, which factors in both direction and magnitude. |
+| `hnsw_euclidean` | `VectorsDBIndexType.HnswEuclidean` | You want the straight-line distance between vectors. |
+
+Match the index type to the search query you plan to run. A `hnsw_cosine` index serves `Query.vectorCosine` searches, `hnsw_dot` serves `Query.vectorDot`, and `hnsw_euclidean` serves `Query.vectorEuclidean`.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'embeddings_index',
+    type: sdk.VectorsDBIndexType.HnswCosine,
+    attributes: ['embeddings']
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'embeddings_index',
+    type: sdk.VectorsDBIndexType.HnswCosine,
+    attributes: ['embeddings']
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Enums\VectorsDBIndexType;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->createIndex(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'embeddings_index',
+    type: VectorsDBIndexType::HNSWCOSINE(),
+    attributes: ['embeddings']
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.enums import VectorsDBIndexType
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create_index(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    key = 'embeddings_index',
+    type = VectorsDBIndexType.HNSW_COSINE,
+    attributes = ['embeddings']
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.create_index(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    key: 'embeddings_index',
+    type: VectorsDBIndexType::HNSW_COSINE,
+    attributes: ['embeddings']
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Index result = await vectorsDB.CreateIndex(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    key: "embeddings_index",
+    type: VectorsDBIndexType.HnswCosine,
+    attributes: new List<string> { "embeddings" }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Index result = await vectorsDB.createIndex(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'embeddings_index',
+    type: VectorsDBIndexType.hnswCosine,
+    attributes: ['embeddings'],
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.enums.VectorsDBIndexType
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val result = vectorsDB.createIndex(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    key = "embeddings_index",
+    type = VectorsDBIndexType.HNSW_COSINE,
+    attributes = listOf("embeddings"),
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.enums.VectorsDBIndexType;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.createIndex(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "embeddings_index",
+    VectorsDBIndexType.HNSW_COSINE,
+    List.of("embeddings"),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let index = try await vectorsDB.createIndex(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    key: "embeddings_index",
+    type: .hnswCosine,
+    attributes: ["embeddings"]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::enums::VectorsDBIndexType;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_index(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "embeddings_index",
+        VectorsDBIndexType::HnswCosine,
+        vec!["embeddings"],
+        None, // orders (optional)
+        None, // lengths (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create-index \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key 'embeddings_index' \
+    --type 'hnsw_cosine' \
+    --attributes 'embeddings'
+```
+{% /multicode %}
+
+The index is built in the background. New documents are added to the index as you create them, so you can keep writing while it builds.
+
+# Run a similarity search {% #run-a-similarity-search %}
+To search, pass a vector query to `listDocuments`. Build the query with one of the `Query` vector methods, passing the field name `embeddings` and the query vector. The response returns documents ranked from most to least similar.
+
+| Query method | Use with index type |
+| --- | --- |
+| `Query.vectorCosine('embeddings', vector)` | `hnsw_cosine` |
+| `Query.vectorDot('embeddings', vector)` | `hnsw_dot` |
+| `Query.vectorEuclidean('embeddings', vector)` | `hnsw_euclidean` |
+
+The query vector must have the same `dimension` as the collection. You can combine the vector query with other queries, such as `Query.limit()` to cap how many results you get back.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Query;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query::vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query::limit(3)
+    ]
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.list_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    queries = [
+        Query.vector_cosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.list_documents(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    queries: [
+        Query.vector_cosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+using Appwrite.Queries;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+DocumentList result = await vectorsDB.ListDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: new List<string> {
+        Query.VectorCosine("embeddings", new List<object> { 0.11, 0.21, 0.30, 0.40 }),
+        Query.Limit(3)
+    }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+DocumentList result = await vectorsDB.listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ],
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val result = vectorsDB.listDocuments(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    queries = listOf(
+        Query.vectorCosine("embeddings", listOf(0.11, 0.21, 0.30, 0.40)),
+        Query.limit(3)
+    ),
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.Query;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.listDocuments(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    List.of(
+        Query.vectorCosine("embeddings", List.of(0.11, 0.21, 0.30, 0.40)),
+        Query.limit(3)
+    ),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let result = try await vectorsDB.listDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: [
+        Query.vectorCosine("embeddings", [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::query::Query;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.list_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::vector_cosine("embeddings", json!([0.11, 0.21, 0.30, 0.40])).to_string(),
+            Query::limit(3).to_string(),
+        ]),
+        None, // transaction_id
+        None, // total
+        None, // ttl
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' '{"method":"limit","values":[3]}'
+```
+{% /multicode %}
+
+To rank by dot product or Euclidean distance instead, swap `vectorCosine` for `vectorDot` or `vectorEuclidean`, and make sure your index uses the matching type.
+
+{% info title="One vector query per request" %}
+A single `listDocuments` call accepts at most one vector query. You can still add non-vector queries such as `Query.limit()` to the same request, but combining two vector queries in one call is not supported.
+{% /info %}
+
+{% info title="Vector search currently works with low dimensions only" %}
+Vector queries are sent on a `GET` request, and each query string is capped at 4096 characters. A serialized query vector grows with its dimension, so once a vector reaches a few hundred dimensions it pushes the query past that limit and the request is rejected with a `400 general_argument_invalid` error: *"Value must be a valid string and at least 1 chars and no longer than 4096 chars"*. The exact cutoff depends on the precision of the numbers in your vector, but in practice it falls somewhere around 200 to 270 dimensions.
+
+This means vector search through the SDK currently works for low-dimensional vectors only. The built-in [embedding models](/docs/products/databases/vectorsdb/embeddings) produce 384- and 768-dimensional vectors, which exceed this limit, so you cannot yet search over those embeddings directly. Keep your search vectors small enough to stay under the 4096-character limit.
+{% /info %}
+
+# Next steps {% #next-steps %}
+Vector search ranks documents by similarity. To filter those results by the data stored alongside each vector, combine search with metadata queries.
+
+{% arrow_link href="/docs/products/databases/vectorsdb/queries" %}
+Learn about querying metadata
+{% /arrow_link %}

@@ -1,0 +1,235 @@
+---
+layout: article
+title: Monitoring
+description: Watch compute, connections, storage, and workload metrics live, inspect active connections, and check database health on your PostgreSQL database.
+---
+
+Every native database ships with built-in observability: live metrics in the Console, an active-connections inspector, and programmatic health checks. There is nothing to install; metrics collection runs next to the database.
+
+# Monitor tab {% #monitor %}
+
+{% only_dark %}
+![Database monitor tab](/images/docs/products/databases/postgresql/dark/monitor.avif)
+{% /only_dark %}
+{% only_light %}
+![Database monitor tab](/images/docs/products/databases/postgresql/monitor.avif)
+{% /only_light %}
+
+Open your database and select the **Monitor** tab. The view is organized into sections:
+
+- **Overview**: key health indicators at a glance, including connection usage against your limit, storage used, cache hit ratio, uptime, and commit/rollback counts
+- **Compute**: CPU and memory usage over time
+- **Connections**: connection counts by state and by application
+- **Storage**: disk usage and growth
+- **Workload**: query throughput and activity
+
+Use the date range picker to zoom into an incident window, and **Refresh metrics** to pull the latest samples.
+
+A healthy OLTP database typically shows a cache hit ratio above 99%. A sustained lower ratio means the working set does not fit in memory, which is usually solved by moving up a [specification](/docs/products/databases/postgresql/scaling).
+
+# Active connections {% #connections %}
+
+{% only_dark %}
+![Active connections tab](/images/docs/products/databases/postgresql/dark/connections.avif)
+{% /only_dark %}
+{% only_light %}
+![Active connections tab](/images/docs/products/databases/postgresql/connections.avif)
+{% /only_light %}
+
+The **Connections** tab lists live connections from PostgreSQL's `pg_stat_activity`, with the connection state, duration, client, application name, and current query for each.
+
+You can filter by state (**Active**, **Idle**, **Idle in transaction**, **Long-running**), and act on problem connections directly: cancel a running query, terminate a connection, or terminate all idle-in-transaction sessions at once. Idle-in-transaction sessions hold locks and block vacuum, so terminating them is often the fastest way to unblock a stuck workload.
+
+# Database health {% #status %}
+
+Poll the database status for live health information: readiness, uptime, connection counts, replica state, and storage volumes. Use it from deploy pipelines to wait for the database, or from your own monitoring:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const status = await postgresql.getStatus({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const status = await postgresql.getStatus({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$status = $postgresql->getStatus(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+status = postgresql.get_status(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+status = postgresql.get_status(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var status = await postgresql.GetStatus(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final status = await postgresql.getStatus(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val status = postgresql.getStatus(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let status = try await postgresql.getStatus(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.GetStatus("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let status = postgresql.get_status("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/status
+```
+{% /multicode %}
+
+For the database lifecycle state (`ready`, `scaling`, `restoring`, and friends), read the `status` field of the database object itself; see [lifecycle states](/docs/products/databases/postgresql/maintenance#states).
+
+# Explain a query {% #explain %}
+
+The Console's **SQL editor** tab has an **Explain** button that shows the execution plan for the query in the editor, without leaving the browser. Use it to check whether a slow query uses your indexes before reaching for `EXPLAIN ANALYZE` in `psql`.

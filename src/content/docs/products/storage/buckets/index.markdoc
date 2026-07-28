@@ -23,7 +23,7 @@ You can create a bucket by heading to the **Storage** page and clicking **Create
 {% /tabsitem %}
 
 {% tabsitem #server-sdk title="Server SDK" %}
-You can also create tables programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/partners/project/api-keys).
+You can also create buckets programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/security/api-keys).
 
 {% multicode %}
 
@@ -295,6 +295,13 @@ By default, Appwrite doesn't grants permissions to any users when a new bucket i
 This means users can't create new files or read, update, and delete existing files.
 
 [Learn about configuring permissions](/docs/products/storage/permissions).
+
+# Folders {% #folders %}
+Files in a bucket can be organized into virtual folders.
+Each file carries a folder path, like `photos/2026`, that you set when uploading it.
+Folders are derived from these paths, so there is nothing to create or manage separately: a folder appears when the first file is uploaded into it and disappears when the last file inside it is deleted.
+
+[Learn about working with folders](/docs/products/storage/folders).
 
 # Encryption {% #encryption %}
 Appwrite provides added security settings for your buckets. Enable encryption under your bucket's **Settings** > **Security settings**.

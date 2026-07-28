@@ -1,0 +1,182 @@
+---
+layout: article
+title: Transactions
+description: Group PostgreSQL statements into atomic transactions. Covers COMMIT, ROLLBACK, savepoints, isolation levels, locking, and deadlocks.
+---
+
+A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state.
+
+Two distinct things go wrong without that:
+
+- **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist.
+- **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update silently vanishes.
+
+Transactions address both, which is why they exist: statements apply atomically, and the database isolates transactions from each other's unfinished work.
+
+# How a transaction works {% #how-it-works %}
+
+Think of a transaction as a private draft of the database that only your connection can see:
+
+- `BEGIN` opens the draft. From here, your changes apply to the draft, not the shared database.
+- Reads inside the transaction see the draft, so your own changes look real to you. Everyone else still sees the database as it was.
+- `COMMIT` publishes the whole draft at once. Other connections go from seeing none of your changes to seeing all of them; there is no in-between state.
+- `ROLLBACK` throws the draft away, and the database is as if the transaction never started.
+- If your connection drops mid-transaction, the database rolls the draft back automatically.
+
+Everything else on this page, isolation levels, locks, deadlocks, is about what happens when several connections work on their drafts at the same time.
+
+# Setup {% #setup %}
+
+The examples below move money between two accounts, an operation where a half-applied change must be impossible. Create and seed the table first:
+
+```sql
+CREATE TABLE accounts (
+    id      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    owner   text NOT NULL,
+    balance numeric(10, 2) NOT NULL CHECK (balance >= 0)
+);
+
+INSERT INTO accounts (owner, balance) VALUES ('ada', 100.00), ('grace', 50.00);
+```
+
+# Commit and roll back {% #basics %}
+
+Outside an explicit transaction, every statement commits on its own. `BEGIN` opens a transaction so several statements commit together:
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 30 WHERE owner = 'ada';
+UPDATE accounts SET balance = balance + 30 WHERE owner = 'grace';
+COMMIT;
+```
+
+If the connection drops between the two updates, or anything fails, the whole transaction rolls back and the money never left Ada's account. You can also abandon a transaction deliberately:
+
+```sql
+BEGIN;
+DELETE FROM accounts;   -- oops
+SELECT count(*) FROM accounts;   -- returns 0 inside this transaction
+ROLLBACK;
+SELECT count(*) FROM accounts;   -- returns 2, nothing happened
+```
+
+Inside the transaction the delete looks real, but only to that connection. `ROLLBACK` discards it. This makes `BEGIN` an effective safety net for hand-run maintenance SQL.
+
+The ACID properties describe what transactions guarantee: **atomicity** (all or nothing), **consistency** (constraints hold before and after), **isolation** (concurrent transactions don't see each other's partial work), and **durability** (committed data survives a crash).
+
+# Errors abort the transaction {% #errors %}
+
+If a statement fails inside a transaction, PostgreSQL aborts the whole transaction. Further statements are rejected until you `ROLLBACK`:
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 200 WHERE owner = 'ada';
+```
+
+```text
+ERROR:  new row for relation "accounts" violates check constraint "accounts_balance_check"
+```
+
+The transaction is now in an aborted state. Even a statement that has nothing wrong with it is refused:
+
+```sql
+SELECT 1;
+```
+
+```text
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+```
+
+The only way out is to end the transaction:
+
+```sql
+ROLLBACK;
+```
+
+The failed update tripped the balance check, and from that point PostgreSQL refuses everything, even a harmless `SELECT 1`, until the transaction ends. `ROLLBACK` clears the aborted state and discards the transaction's work; the connection is then ready for a fresh transaction. To recover from a failure without losing the statements that already succeeded, use a savepoint.
+
+# Savepoints {% #savepoints %}
+
+A savepoint marks a spot you can roll back to without abandoning the whole transaction:
+
+```sql
+BEGIN;
+UPDATE accounts SET balance = balance - 10 WHERE owner = 'ada';
+
+SAVEPOINT before_bonus;
+UPDATE accounts SET balance = balance - 200 WHERE owner = 'ada';  -- fails
+ROLLBACK TO SAVEPOINT before_bonus;
+
+UPDATE accounts SET balance = balance + 10 WHERE owner = 'grace';
+COMMIT;
+```
+
+The failed update is undone, but the first update and everything after the rollback still commit. Drivers and ORMs use savepoints to implement nested transactions.
+
+# Isolation levels {% #isolation %}
+
+Isolation levels trade strictness for concurrency. They answer one question: what may this transaction see of other transactions' concurrent work?
+
+| Level | Prevents | Behavior in PostgreSQL |
+| --- | --- | --- |
+| `READ COMMITTED` | Dirty reads | Default. Each statement sees data committed before that statement began |
+| `REPEATABLE READ` | + non-repeatable reads, phantom reads | The whole transaction sees one snapshot, taken at its first query |
+| `SERIALIZABLE` | + serialization anomalies | Transactions behave as if run one at a time; conflicts abort with an error |
+
+PostgreSQL accepts `READ UNCOMMITTED` syntax and reports it back, but behaves as `READ COMMITTED`; dirty reads are never possible. Set the level per transaction:
+
+```sql
+BEGIN;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SELECT sum(balance) FROM accounts;
+-- every query in this transaction sees the same snapshot
+COMMIT;
+```
+
+Under the default `READ COMMITTED`, two reads inside one transaction can return different results if another transaction commits in between. That's usually fine for OLTP work. Use `REPEATABLE READ` for multi-query reports that must be internally consistent, and `SERIALIZABLE` when correctness depends on invariants across rows. Serializable transactions can abort with serialization failures (error code `40001`), so the application must be prepared to retry them.
+
+# Row locking {% #locking %}
+
+Writers automatically lock the rows they modify until commit; a second transaction updating the same row waits. When you read a value in order to update it, that implicit protection isn't enough, because two transactions can read the same balance concurrently and both write results based on stale data. `SELECT ... FOR UPDATE` locks rows on read:
+
+```sql
+BEGIN;
+SELECT balance FROM accounts WHERE owner = 'ada' FOR UPDATE;
+-- other transactions now wait to read-for-update or modify this row
+UPDATE accounts SET balance = balance - 30 WHERE owner = 'ada';
+COMMIT;
+```
+
+For queue-like workloads where workers grab rows, add `SKIP LOCKED` so each worker takes the next unclaimed row instead of waiting. The claim only holds while the transaction is open, so the grab and the work's final update must share one transaction:
+
+```sql
+BEGIN;
+SELECT id FROM accounts ORDER BY id LIMIT 1 FOR UPDATE SKIP LOCKED;
+-- process the claimed row, then mark it done in the same transaction
+COMMIT;
+```
+
+A concurrent worker running the same statement while the first transaction is open skips the claimed row and returns the next one.
+
+# Deadlocks {% #deadlocks %}
+
+A deadlock occurs when two transactions each hold a lock the other needs. Session A locks Ada's row and wants Grace's; session B holds Grace's and wants Ada's. Neither can proceed, so PostgreSQL detects the cycle after a second and kills one:
+
+```text
+ERROR:  deadlock detected
+DETAIL:  Process 2412 waits for ShareLock on transaction 870; blocked by process 2421.
+Process 2421 waits for ShareLock on transaction 869; blocked by process 2412.
+HINT:  See server log for query details.
+CONTEXT:  while updating tuple (0,6) in relation "accounts"
+```
+
+The aborted transaction rolls back; the survivor continues. Two habits prevent most deadlocks:
+
+- Lock rows in a consistent order across your codebase, for example always by ascending `id`.
+- Keep transactions short. Don't hold one open across network calls or user input.
+
+The application should treat a deadlock like a serialization failure: retry the aborted transaction.
+
+# Transactions and pooling {% #pooling %}
+
+Transaction state lives on the connection, which matters when connecting through a pooler in transaction mode: session-level settings such as `SET default_transaction_isolation` won't stick between statements, and every multi-statement unit must be wrapped in an explicit `BEGIN`/`COMMIT` so it lands on one server connection. See [Connection pooling](/docs/products/databases/postgresql/connection-pooling) for how this applies to your Appwrite database.

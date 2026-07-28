@@ -1,0 +1,642 @@
+---
+layout: article
+title: Maintenance
+description: Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your MySQL database.
+---
+
+Appwrite manages the infrastructure around your database: security patches, engine upgrades, and instance health. This page covers the controls you have over when and how that maintenance happens.
+
+# Maintenance window {% #window %}
+
+Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it through the API by picking a day and start hour (UTC):
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.updateMaintenance({
+    databaseId: '<DATABASE_ID>',
+    day: 'sun',
+    hourUtc: 3,
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.updateMaintenance({
+    databaseId: '<DATABASE_ID>',
+    day: 'sun',
+    hourUtc: 3,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->updateMaintenance(
+    databaseId: '<DATABASE_ID>',
+    day: 'sun',
+    hourUtc: 3,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update_maintenance(
+    database_id='<DATABASE_ID>',
+    day='sun',
+    hour_utc=3,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update_maintenance(
+    database_id: '<DATABASE_ID>',
+    day: 'sun',
+    hour_utc: 3,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.UpdateMaintenance(
+    databaseId: "<DATABASE_ID>",
+    day: "sun",
+    hourUtc: 3
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.updateMaintenance(
+    databaseId: '<DATABASE_ID>',
+    day: 'sun',
+    hourUtc: 3,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.updateMaintenance(
+    databaseId = "<DATABASE_ID>",
+    day = "sun",
+    hourUtc = 3,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.updateMaintenance(
+    databaseId: "<DATABASE_ID>",
+    day: "sun",
+    hourUtc: 3
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.UpdateMaintenance("<DATABASE_ID>", "sun", 3)
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update_maintenance("<DATABASE_ID>", "sun", 3).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "day": "sun",
+      "hourUtc": 3
+  }' \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/maintenance
+```
+{% /multicode %}
+
+`day` accepts `sun` through `sat`, and `hourUtc` accepts `0` to `23`.
+
+# Engine version upgrades {% #upgrades %}
+
+You can upgrade the MySQL version online, such as from 8.0 to 8.4. A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up, with no read or write outage. The target version must be newer than the database's current version:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createUpgrade({
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '8.4',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createUpgrade({
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '8.4',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->createUpgrade(
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '8.4',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.create_upgrade(
+    database_id='<DATABASE_ID>',
+    target_version='8.4',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.create_upgrade(
+    database_id: '<DATABASE_ID>',
+    target_version: '8.4',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.CreateUpgrade(
+    databaseId: "<DATABASE_ID>",
+    targetVersion: "8.4"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.createUpgrade(
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '8.4',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.createUpgrade(
+    databaseId = "<DATABASE_ID>",
+    targetVersion = "8.4",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.createUpgrade(
+    databaseId: "<DATABASE_ID>",
+    targetVersion: "8.4"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.CreateUpgrade("<DATABASE_ID>", "8.4")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.create_upgrade("<DATABASE_ID>", "8.4").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "targetVersion": "8.4"
+  }' \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/upgrades
+```
+{% /multicode %}
+
+# Pause and resume {% #pause-resume %}
+
+A paused database stops its compute but keeps its storage, configuration, and credentials. Pause a database you are not using to stop paying for compute; resume it when you need it again. From the API, update the status:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    status: 'paused',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    status: 'paused',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->update(
+    databaseId: '<DATABASE_ID>',
+    status: 'paused',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update(
+    database_id='<DATABASE_ID>',
+    status='paused',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update(
+    database_id: '<DATABASE_ID>',
+    status: 'paused',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.Update(
+    databaseId: "<DATABASE_ID>",
+    status: "paused"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.update(
+    databaseId: '<DATABASE_ID>',
+    status: 'paused',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.update(
+    databaseId = "<DATABASE_ID>",
+    status = "paused",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.update(
+    databaseId: "<DATABASE_ID>",
+    status: "paused"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        mysql.WithUpdateStatus("paused"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update("<DATABASE_ID>", None, Some("paused"), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "status": "paused"
+  }' \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+{% /multicode %}
+
+Set `status` back to `ready` to resume. Both transitions are asynchronous: the request returns immediately and the database moves through `pausing` or `resuming` before settling. A database in the `failed` state can also be recovered by setting its status to `ready`.
+
+# Lifecycle states {% #states %}
+
+| Status         | Meaning                                                         |
+|----------------|------------------------------------------------------------------|
+| `provisioning` | Being created                                                   |
+| `ready`        | Online and accepting connections                                |
+| `scaling`      | A configuration or specification change is being applied        |
+| `pausing`      | Transitioning to paused                                         |
+| `paused`       | Compute stopped, storage retained                               |
+| `resuming`     | Transitioning back to ready                                     |
+| `restoring`    | A backup or point-in-time restore is in progress                |
+| `failed`       | An infrastructure error occurred; the database can be resumed   |
+
+# Deleting a database {% #delete %}
+
+Delete a database programmatically or from the databases list in the Console. Deletion stops billing and invalidates the credentials immediately. Deleting a database also deletes its backups, so export anything you need first.

@@ -1,0 +1,217 @@
+---
+layout: article
+title: GORM
+description: Use GORM with an Appwrite native MySQL database in Go. Build the MySQL DSN, open a connection, size the database/sql pool, and run migrations with AutoMigrate or golang-migrate.
+---
+
+A native MySQL database is a standard MySQL engine, so [GORM](https://gorm.io/) talks to it through the regular MySQL driver. Build a go-sql-driver DSN from the credentials returned by Appwrite, hand it to `gorm.io/driver/mysql`, and use models, `AutoMigrate`, and the query API as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the hostname, password, and generated database name. The primary user is `admin`.
+{% /info %}
+
+# Build the DSN {% #dsn %}
+
+Keep the password out of source and read the connection details from the environment:
+
+```env
+DB_HOST="db-<hash>.<region>.appwrite.center"
+DB_PORT="3306"
+DB_NAME="<database>"
+DB_PASSWORD="<password>"
+DB_TLS="true"
+```
+
+GORM's MySQL driver uses [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) DSNs. The wire format is `admin:<password>@tcp(db-<hash>.<region>.appwrite.center:3306)/<database>?parseTime=true&tls=true`. Use `mysql.Config` to format the DSN so passwords and database names are escaped correctly:
+
+```go
+cfg := mysqlcfg.Config{
+    User:      "admin",
+    Passwd:    os.Getenv("DB_PASSWORD"),
+    Net:       "tcp",
+    Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
+    DBName:    os.Getenv("DB_NAME"),
+    ParseTime: true,
+    TLSConfig: os.Getenv("DB_TLS"),
+}
+
+dsn := cfg.FormatDSN()
+```
+
+`parseTime=true` lets the driver scan MySQL `DATE`, `DATETIME`, and `TIMESTAMP` values into Go `time.Time` values. Keep `DB_TLS=true` for Appwrite Cloud connections. Local development environments that terminate no TLS can set `DB_TLS=false`.
+
+For mTLS, see the [Network security](/docs/products/databases/mysql/network-security) page.
+
+# Open a connection {% #open %}
+
+Pass the DSN to `mysql.Open`, then call `gorm.Open`:
+
+```go
+package main
+
+import (
+    "fmt"
+    "net"
+    "os"
+    "time"
+
+    mysqlcfg "github.com/go-sql-driver/mysql"
+    gormmysql "gorm.io/driver/mysql"
+    "gorm.io/gorm"
+)
+
+type User struct {
+    ID        uint      `gorm:"primaryKey"`
+    Email     string    `gorm:"size:255;not null;uniqueIndex"`
+    CreatedAt time.Time
+}
+
+func (User) TableName() string {
+    return "gorm_users"
+}
+
+func main() {
+    cfg := mysqlcfg.Config{
+        User:      "admin",
+        Passwd:    os.Getenv("DB_PASSWORD"),
+        Net:       "tcp",
+        Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
+        DBName:    os.Getenv("DB_NAME"),
+        ParseTime: true,
+        TLSConfig: os.Getenv("DB_TLS"),
+    }
+
+    db, err := gorm.Open(gormmysql.Open(cfg.FormatDSN()), &gorm.Config{})
+    if err != nil {
+        panic(err)
+    }
+
+    if err := db.AutoMigrate(&User{}); err != nil {
+        panic(err)
+    }
+
+    user := User{Email: fmt.Sprintf("ada+%d@example.com", time.Now().UnixNano())}
+    if err := db.Create(&user).Error; err != nil {
+        panic(err)
+    }
+
+    var saved User
+    if err := db.First(&saved, "email = ?", user.Email).Error; err != nil {
+        panic(err)
+    }
+
+    fmt.Println(saved.ID, saved.Email)
+}
+```
+
+Connect to the direct engine port (`3306`) for a long-running server and cap the underlying pool yourself, see [pool sizing](#pool) below. If you route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) on port `6033`, enable `InterpolateParams` in the driver config so placeholder values are sent as one text query in transaction mode:
+
+```go
+cfg := mysqlcfg.Config{
+    User:              "admin",
+    Passwd:            os.Getenv("DB_PASSWORD"),
+    Net:               "tcp",
+    Addr:              net.JoinHostPort(os.Getenv("DB_HOST"), "6033"),
+    DBName:            os.Getenv("DB_NAME"),
+    ParseTime:         true,
+    TLSConfig:         os.Getenv("DB_TLS"),
+    InterpolateParams: true,
+}
+
+db, err := gorm.Open(gormmysql.Open(cfg.FormatDSN()), &gorm.Config{})
+```
+
+# Define a model and migrate {% #model %}
+
+Declare your models as Go structs and let GORM create the tables with `AutoMigrate`:
+
+```go
+type User struct {
+    ID        uint      `gorm:"primaryKey"`
+    Email     string    `gorm:"size:255;not null;uniqueIndex"`
+    CreatedAt time.Time
+}
+
+func (User) TableName() string {
+    return "gorm_users"
+}
+
+if err := db.AutoMigrate(&User{}); err != nil {
+    panic(err)
+}
+```
+
+`AutoMigrate` creates the table if it's missing and adds any missing columns and indexes. It does not drop columns or change existing column types, so it's convenient in development but not a substitute for versioned migrations in production. Run schema changes against the direct engine port because DDL needs a session-level connection. The primary `admin` user owns the generated database and can run schema changes.
+
+For versioned migrations, [golang-migrate](https://github.com/golang-migrate/migrate) runs ordered up/down files. Point it at the direct engine port:
+
+```bash
+migrate -path ./migrations \
+  -database "mysql://admin:$DB_PASSWORD@tcp($DB_HOST:$DB_PORT)/$DB_NAME?tls=$DB_TLS&x-migrations-table=gorm_schema_migrations" \
+  up
+```
+
+# Size the connection pool {% #pool %}
+
+GORM manages a `database/sql` pool under the hood. A long-running Go server holds that pool for its whole lifetime, so connect to the direct engine port and cap the pool against the engine's connection limit. Reach the underlying `*sql.DB` with `db.DB()`:
+
+```go
+sqlDB, err := db.DB()
+if err != nil {
+    panic(err)
+}
+
+sqlDB.SetMaxOpenConns(25)
+sqlDB.SetMaxIdleConns(25)
+sqlDB.SetConnMaxLifetime(time.Hour)
+```
+
+Keep the sum of `SetMaxOpenConns` across every instance below the specification's `maxConnections`. If you run many instances or a serverless runtime that opens a fresh pool per cold start, route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) and keep each instance's pool small. The pooler multiplexes them onto a smaller set of backend connections.
+
+# Run SQL with GORM {% #sql %}
+
+Use GORM's raw SQL helpers when you need a query that is clearer as SQL than as model operations. MySQL uses `?` placeholders:
+
+```go
+type Result struct {
+    Email string
+}
+
+var result Result
+if err := db.Raw(
+    "SELECT email FROM gorm_users WHERE email = ? LIMIT 1",
+    user.Email,
+).Scan(&result).Error; err != nil {
+    panic(err)
+}
+```
+
+The same connection rules apply: use the direct port for migrations and session-level features, and use the pooler for high fan-out runtime queries when your database specification includes it.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export the branch host, password, and database name into the environment your tests read.
+3. Run `migrate ... up` or `AutoMigrate`, then run your test suite against the branch's direct port.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS and network controls for native MySQL databases.
+{% /cards_item %}
+{% /cards %}

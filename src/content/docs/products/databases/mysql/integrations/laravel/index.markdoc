@@ -1,0 +1,217 @@
+---
+layout: article
+title: Laravel
+description: Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.
+---
+
+A native MySQL database is a standard MySQL engine, so [Laravel](https://laravel.com/docs) works against it with no Appwrite-specific configuration. Point the `mysql` connection in `config/database.php` at the credentials from the [Connections](/docs/products/databases/mysql/connections) page, then use Eloquent, the query builder, migrations, and queues as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL databases](/docs/products/databases/mysql) to create one. To retrieve credentials, call [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) and use the returned hostname, port, username, password, and database name. The primary username is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Configure the connection {% #connection %}
+
+Laravel reads database credentials from `.env`. Fetch them with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then set the matching connection. Never commit `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=3306
+DB_DATABASE=<database>
+DB_USERNAME=admin
+DB_PASSWORD=<password>
+DB_CHARSET=utf8mb4
+DB_COLLATION=utf8mb4_unicode_ci
+```
+
+The scaffolded `config/database.php` wires these variables into the `mysql` connection:
+
+```php
+'mysql' => [
+    'driver' => 'mysql',
+    'url' => env('DB_URL'),
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '3306'),
+    'database' => env('DB_DATABASE', 'laravel'),
+    'username' => env('DB_USERNAME', 'root'),
+    'password' => env('DB_PASSWORD', ''),
+    'unix_socket' => env('DB_SOCKET', ''),
+    'charset' => env('DB_CHARSET', 'utf8mb4'),
+    'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'strict' => true,
+    'engine' => null,
+    'options' => extension_loaded('pdo_mysql') ? array_filter([
+        Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+    ]) : [],
+],
+```
+
+Laravel imports `Pdo\Mysql` at the top of this file in new projects. Appwrite Cloud requires TLS on the public hostname. If your PHP runtime needs an explicit CA bundle for MySQL TLS verification, set `MYSQL_ATTR_SSL_CA` to a trusted root store path and keep the `options` entry in the `mysql` connection:
+
+```php
+'options' => extension_loaded('pdo_mysql') ? array_filter([
+    Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+]) : [],
+```
+
+# Run migrations {% #migrate %}
+
+Define your schema with a migration:
+
+```php
+Schema::create('posts', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->text('body');
+    $table->timestamps();
+});
+```
+
+Apply migrations from your machine or a deploy step:
+
+```bash
+php artisan migrate
+
+# non-interactive, for CI and production deploys
+php artisan migrate --force
+```
+
+Run `migrate` against the **direct** MySQL port (`3306`), not the pooler. Migrations issue DDL and schema inspection queries that should use a stable backend connection. The primary `admin` user owns the database and can run schema changes.
+
+# Query with Eloquent {% #query %}
+
+Once the schema is migrated, use Eloquent models and the query builder as usual:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    protected $fillable = [
+        'title',
+        'body',
+    ];
+}
+```
+
+Create and query posts through the model:
+
+```php
+use App\Models\Post;
+
+$post = Post::create([
+    'title' => 'Hello from a native MySQL database',
+    'body' => 'Stored in a native MySQL database.',
+]);
+
+$recent = Post::query()
+    ->orderByDesc('created_at')
+    ->limit(10)
+    ->get();
+```
+
+Nothing about the native MySQL database changes how Eloquent, relationships, transactions, or the query builder behave. It is a standard MySQL server behind a TLS connection.
+
+# Pool connections from serverless {% #pooling %}
+
+The right port depends on how your app runs.
+
+A **long-running** PHP process, traditional PHP-FPM with persistent connections, [Laravel Octane](https://laravel.com/docs/octane), or a queue worker, holds its own backend connection for its lifetime. Point these at the **direct** MySQL port (`3306`), or at the [connection pooler](/docs/products/databases/mysql/connection-pooling) in **session mode**. Don't put a long-lived process behind the transaction-mode pooler.
+
+A **serverless** or per-request deployment (Vercel, AWS Lambda, Cloud Run) opens a fresh connection on every invocation and can fan out into more backend connections than the engine allows. Route runtime traffic through the pooler's **transaction-mode** port (`6033`) on the same hostname, and keep a named direct connection for migrations and other schema operations:
+
+```env
+# Runtime: pooled, transaction mode
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=6033
+DB_DATABASE=<database>
+DB_USERNAME=admin
+DB_PASSWORD=<password>
+DB_CHARSET=utf8mb4
+DB_COLLATION=utf8mb4_unicode_ci
+
+# Migrations and schema operations: direct MySQL port
+DB_DIRECT_HOST=db-<hash>.<region>.appwrite.center
+DB_DIRECT_PORT=3306
+DB_DIRECT_DATABASE=<database>
+DB_DIRECT_USERNAME=admin
+DB_DIRECT_PASSWORD=<password>
+```
+
+Add a second MySQL connection in `config/database.php` for direct schema work:
+
+```php
+'mysql_direct' => [
+    'driver' => 'mysql',
+    'url' => env('DB_DIRECT_URL'),
+    'host' => env('DB_DIRECT_HOST', env('DB_HOST', '127.0.0.1')),
+    'port' => env('DB_DIRECT_PORT', env('DB_PORT', '3306')),
+    'database' => env('DB_DIRECT_DATABASE', env('DB_DATABASE', 'laravel')),
+    'username' => env('DB_DIRECT_USERNAME', env('DB_USERNAME', 'root')),
+    'password' => env('DB_DIRECT_PASSWORD', env('DB_PASSWORD', '')),
+    'unix_socket' => env('DB_SOCKET', ''),
+    'charset' => env('DB_CHARSET', 'utf8mb4'),
+    'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'strict' => true,
+    'engine' => null,
+    'options' => extension_loaded('pdo_mysql') ? array_filter([
+        Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+    ]) : [],
+],
+```
+
+Run schema commands against that connection:
+
+```bash
+php artisan migrate --database=mysql_direct --force
+```
+
+For manual schema work, call `DB::connection('mysql_direct')`. The transaction-mode pooler does not keep session state across transactions, so user variables, temporary tables, and server-side prepared statements should use the direct port or **session mode**. See the [pooler](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
+
+# Queues and Horizon {% #queues %}
+
+A queue worker is a long-running process. `php artisan queue:work` boots once and processes jobs for its whole lifetime, holding a persistent database connection the entire time. The same applies to every worker that [Laravel Horizon](https://laravel.com/docs/horizon) supervises. Treat workers like any other long-lived process:
+
+- Connect them to the **direct** MySQL port (`3306`) or the **session-mode** pooler, never the transaction-mode pooler.
+- Restart workers periodically with `--max-time` or `--max-jobs` so a fresh process reclaims memory and reopens its connection. Supervisor or Horizon restarts them automatically.
+
+```bash
+php artisan queue:work --max-time=3600 --max-jobs=500
+```
+
+Each worker counts as one backend connection, so size your worker pool (and Horizon's `maxProcesses`) against the connection budget of your [specification](/docs/products/databases/mysql). Horizon itself requires Redis for the queue backend; only your application's data connection touches the native MySQL database.
+
+# Use a branch for previews and CI {% #branches %}
+
+MySQL [branches](/docs/products/databases/mysql/branches) are instant, isolated copies of a database with their own hostname. Create them from the API for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Export them as the `DB_*` variables for the job.
+3. Run `php artisan migrate --force` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations and tests run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

@@ -1,0 +1,265 @@
+---
+layout: post
+title: "Announcing the Appwrite OAuth2 server: Turn your project into an identity provider"
+description: Your Appwrite project can now act as an OAuth 2.1 and OpenID Connect provider, so other apps can offer Sign in with your product and request scoped access to your APIs.
+date: 2026-07-15
+cover: /images/blog/announcing-oauth2-server/cover.png
+timeToRead: 6
+author: matej-baco
+category: announcement
+featured: false
+callToAction: true
+draft: true
+faqs:
+  - question: "What is the Appwrite OAuth2 server?"
+    answer: "The OAuth2 server lets your Appwrite project act as an OAuth 2.1 and OpenID Connect provider. Third-party apps register as clients, send your users through an authorization flow you control, and receive tokens they can use to sign users in or call your APIs with scoped access."
+  - question: "How is the OAuth2 server different from Appwrite's OAuth providers?"
+    answer: "OAuth providers let your users sign in to your app with Google, GitHub, and other identity providers. The OAuth2 server is the other direction: your project becomes the identity provider, and other apps integrate with you the same way you would integrate with Google."
+  - question: "Which OAuth standards does the Appwrite OAuth2 server support?"
+    answer: "The server implements OAuth 2.1 with PKCE, OpenID Connect Core, discovery metadata, token introspection and revocation, the device authorization flow, pushed authorization requests, dynamic client registration, JWT access tokens, and rich authorization requests."
+  - question: "Can users register OAuth2 clients without the Appwrite Console?"
+    answer: "Yes. The apps service is available in the Client SDKs, so any signed-in user on your project can register and manage their own clients. This lets you build a self-serve developer portal on top of your project, and the standard dynamic client registration endpoint is also supported."
+  - question: "Can I define custom scopes for my own APIs?"
+    answer: "Yes. Alongside the built-in openid, profile, and email scopes, you can define scopes like tasks.read for your own APIs. Your resource server verifies the access token and checks the granted scopes before serving a request."
+  - question: "Is the OAuth2 server available on self-hosted Appwrite?"
+    answer: "The OAuth2 server is available on Appwrite Cloud. Every project includes it, and you can enable it from the Auth section of the Console."
+---
+
+If you have ever added **Sign in with Google** or **Sign in with GitHub** to an app, you have been on the consuming side of OAuth. Being on the other side, the side that issues the tokens, has always been much harder. Building an authorization server means implementing authorize and token endpoints, PKCE, consent, token rotation, client management, and a stack of specifications that are easy to get subtly wrong.
+
+That work is now part of your Appwrite project. With the **OAuth2 server**, your project can act as an **OAuth 2.1 and OpenID Connect provider**. Third-party developers register their apps as clients, your users approve what those apps can access, and your project issues the tokens. Integrators can offer **Sign in with your product** and request scoped access to your APIs, using the same standard flows they already know from Google or GitHub.
+
+# What your project provides
+
+Once enabled, your project exposes the full set of endpoints an OAuth or OIDC integration expects: authorization, token, userinfo, introspection, revocation, logout, device authorization, pushed authorization requests, and dynamic client registration. All of them are described by a discovery document, so most integrators point their OAuth library at one URL and never read your endpoint list:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/.well-known/openid-configuration
+```
+
+Two design decisions matter more than the endpoint list.
+
+First, **you own the consent screen**. The OAuth2 server handles the protocol, but the page where users review and approve a request is a page you host, built with your components and your branding. Users approving access to their data never leave your product's design language.
+
+Second, **client registration is an API, not a Console form**. The `apps` service is available in the Client SDKs, so any signed-in user on your project can register an app. That is what makes a self-serve developer portal possible: integrators create their clients, manage their secrets, and rotate credentials inside your product, while the Console remains your admin view.
+
+# Enable the server in the Console
+
+The OAuth2 server lives in the **Auth** section of the Console, under the **OAuth2 server** tab. Turn it on, set the authorization URL to the page that will host your consent screen, and add any custom scopes your APIs support. The `openid`, `profile`, and `email` scopes are always included.
+
+Once enabled, the Console shows your project's discovery URL, and opening it in a browser confirms the server is live.
+
+![The OIDC discovery URL in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-discovery.avif)
+
+# Register a client
+
+The rest of this post follows two apps:
+
+- **TaskFlow**: your product, a task manager built on Appwrite, acting as the OAuth2 provider.
+- **Vantage**: a third-party analytics dashboard that wants to offer **Sign in with TaskFlow**.
+
+Vantage registers as a client with a name and a redirect URI, the URL where users return to Vantage with an authorization code after approving access. You can create the client in the **Apps** sub-tab of the Console, or let integrators like Vantage register their own from code:
+
+{% multicode %}
+```client-web
+import { Client, Apps, ID } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.create({
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Apps apps = Apps(client);
+
+App app = await apps.create(
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let apps = Apps(client)
+
+let app = try await apps.create(
+    appId: ID.unique(),
+    name: "Vantage",
+    redirectUris: ["https://vantage.localhost/auth/redirect"]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.Apps
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val apps = Apps(client)
+
+val app = apps.create(
+    appId = ID.unique(),
+    name = "Vantage",
+    redirectUris = listOf("https://vantage.localhost/auth/redirect")
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Apps;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Apps apps = new Apps(client);
+
+apps.create(
+    ID.unique(), // appId
+    "Vantage", // name
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
+    null, // description (optional)
+    null, // clientUri (optional)
+    null, // logoUri (optional)
+    null, // privacyPolicyUrl (optional)
+    null, // termsUrl (optional)
+    null, // contacts (optional)
+    null, // tagline (optional)
+    null, // tags (optional)
+    null, // images (optional)
+    null, // supportUrl (optional)
+    null, // dataDeletionUrl (optional)
+    null, // postLogoutRedirectUris (optional)
+    null, // enabled (optional)
+    null, // type (optional)
+    null, // deviceFlow (optional)
+    null, // teamId (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Apps, ID } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.create({
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+});
+```
+{% /multicode %}
+
+Clients come in two types:
+
+- **Confidential** clients run on a server, hold a client secret, and authenticate the token exchange with it.
+- **Public** clients, such as mobile and single-page apps, cannot keep a secret and use PKCE instead.
+
+Beyond the basics, each client carries consent screen branding, post-logout redirect URIs, and an optional device flow, and clients can be transferred to teams so a whole organization manages them together.
+
+# Run a sign-in
+
+The default flow is the standard authorization code flow. When a user clicks **Sign in with TaskFlow**, Vantage sends their browser to TaskFlow's authorization endpoint with its client ID, redirect URI, and requested scopes:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize
+    ?client_id=<CLIENT_ID>
+    &redirect_uri=https://vantage.localhost/auth/redirect
+    &response_type=code
+    &scope=openid profile email
+    &state=<STATE>
+```
+
+Appwrite validates the request and redirects the user to TaskFlow's consent screen with a grant ID. The page shows what Vantage is asking for, and when the user approves, Appwrite sends them back to Vantage with an authorization code. Vantage's server then exchanges the code for tokens:
+
+{% multicode %}
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "<CODE>",
+    "redirect_uri": "https://vantage.localhost/auth/redirect",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
+    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+  }'
+```
+```hurl
+POST https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token
+Content-Type: application/json
+{
+    "grant_type": "authorization_code",
+    "code": "<CODE>",
+    "redirect_uri": "https://vantage.localhost/auth/redirect",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
+    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+}
+```
+{% /multicode %}
+
+The response contains a JWT access token, a refresh token with rotation, and an OIDC ID token. A call to the userinfo endpoint with the access token returns the user's profile, which is everything Vantage needs to sign the user in on its side.
+
+# Protect your own APIs with custom scopes
+
+Sign-in is the starting point. The larger opportunity is scoped access to your APIs. TaskFlow defines scopes like `tasks.read` or `tasks.write` on the server, Vantage requests them during authorization, and users see exactly what they are granting on the consent screen before Vantage can read a single task.
+
+Access tokens are signed JWTs that carry the granted scopes, so your API verifies a request with your project's public keys from the JWKS endpoint and checks the scope before serving it. No call back to Appwrite is needed on the hot path. For fine-grained cases that scopes cannot express, such as an app requesting access to one specific resource, the server also supports rich authorization requests (RFC 9396).
+
+# Standards support
+
+Every flow follows the corresponding specification, so off-the-shelf OAuth and OIDC libraries work without custom adapters:
+
+| Standard | What it covers |
+| --- | --- |
+| OAuth 2.1 with PKCE | Authorization code flow with proof key for code exchange |
+| OpenID Connect Core | ID tokens, userinfo, and RP-initiated logout |
+| RFC 8414 | Discovery metadata for automatic client configuration |
+| RFC 7662 and RFC 7009 | Token introspection and revocation |
+| RFC 8628 | Device authorization flow for TVs and CLIs |
+| RFC 9126 | Pushed authorization requests |
+| RFC 7591 | Dynamic client registration |
+| RFC 9068 | JWT access tokens |
+| RFC 9396 | Rich authorization requests |
+
+# Get started
+
+The OAuth2 server is available on Appwrite Cloud. Enable it from the **Auth** section of your project, register a client, and run your first sign-in in a few minutes with the quick start.
+
+- [OAuth2 server documentation](/docs/products/auth/oauth-server)
+- [Quick start: run your first authorization flow](/docs/products/auth/oauth-server/quick-start)
+- [Tutorial: add Sign in with your product to an app](/docs/products/auth/oauth-server/sign-in-with-your-product/step-1)
+- [Tutorial: protect an API with custom scopes](/docs/products/auth/oauth-server/custom-scopes/step-1)

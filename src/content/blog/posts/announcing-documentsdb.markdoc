@@ -1,0 +1,328 @@
+---
+layout: post
+title: "Announcing DocumentsDB: Documents that evolve with your product"
+description: Store flexible JSON documents, query them with the Appwrite SDKs, and let your data model evolve with your product instead of ahead of it.
+date: 2026-07-09
+cover: /images/blog/announcing-documentsdb/cover.png
+timeToRead: 5
+author: atharva
+category: announcement
+featured: false
+callToAction: true
+draft: true
+faqs:
+  - question: "What is Appwrite DocumentsDB?"
+    answer: "DocumentsDB is an Appwrite database for schemaless documents. Collections hold flexible JSON, so you can add or change fields as your application grows without defining columns or running schema migrations. You work with it through the Appwrite SDKs and APIs, with the same permissions, queries, and pagination used across Appwrite Databases."
+  - question: "How is DocumentsDB different from TablesDB?"
+    answer: "TablesDB is relational: you define typed columns and indexes up front, and every row follows that schema. DocumentsDB is schemaless: every document is JSON and its shape can vary between documents in the same collection. Choose TablesDB when your data is structured and consistent, and DocumentsDB when it changes shape often or arrives in unpredictable forms."
+  - question: "Does DocumentsDB support transactions and bulk operations?"
+    answer: "Yes. DocumentsDB shares the platform capabilities used across Appwrite Databases, including transactions, bulk operations, atomic numeric operations for counters, pagination, and ordering. Permissions work at the document level, so client applications can read and write data safely."
+  - question: "Can I import existing data into DocumentsDB?"
+    answer: "Yes, DocumentsDB supports JSON imports and exports. You can bring existing documents in from a JSON file and export collections back out, which makes migrations into and out of Appwrite straightforward."
+  - question: "How is a DocumentsDB database provisioned?"
+    answer: "You create a database, choose DocumentsDB as the type, and select a compute specification that fits your workload. From there you can back it up and scale it as usage grows, all from the same project as the rest of your Appwrite backend."
+  - question: "Is DocumentsDB available on Appwrite Cloud?"
+    answer: "Yes, DocumentsDB is available on Appwrite Cloud as a database type in the create database flow, with a compute specification you choose per database."
+---
+
+Most application data does not arrive with a fixed shape. Early products change weekly, integrations return payloads you do not control, and user-generated content rarely fits the columns you designed three months ago. Forcing all of that through a rigid schema turns every product change into a migration.
+
+That is why we are announcing **DocumentsDB**, an Appwrite database built for schemaless documents.
+
+# Create your first database
+
+In your project, go to **Databases**, click **Create database**, and choose **DocumentsDB** as the type. Pick a compute specification, and the database is ready to hold collections in minutes.
+
+![Creating a DocumentsDB database](/images/docs/databases/documentsdb/dark/create-database.avif)
+
+# Schemaless collections
+
+A DocumentsDB collection holds documents as JSON. There are no columns to define and no schema to migrate. Two documents in the same collection can have different fields, and adding a new field is as simple as writing it.
+
+You still get the full capabilities of an Appwrite database: document-level permissions, queries, ordering, and pagination, through the same SDK patterns as the rest of Appwrite Databases.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: sdk.ID.unique(),
+    data: { title: 'Hamlet', year: 1601 },
+    permissions: [sdk.Permission.read(sdk.Role.any())] // optional
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: sdk.ID.unique(),
+    data: { title: 'Hamlet', year: 1601 },
+    permissions: [sdk.Permission.read(sdk.Role.any())] // optional
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\DocumentsDB;
+use Appwrite\ID;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$documentsDB = new DocumentsDB($client);
+
+$result = $documentsDB->createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID::unique(),
+    data: ['title' => 'Hamlet', 'year' => 1601],
+    permissions: [Permission::read(Role::any())] // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+from appwrite.id import ID
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.create_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = ID.unique(),
+    data = { "title": "Hamlet", "year": 1601 },
+    permissions = [Permission.read(Role.any())] # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB.new(client)
+
+result = documents_db.create_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: ID.unique(),
+    data: { "title" => "Hamlet", "year" => 1601 },
+    permissions: [Permission.read(Role.any())] # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+Document result = await documentsDB.CreateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: ID.Unique(),
+    data: new { title = "Hamlet", year = 1601 },
+    permissions: new List<string> { Permission.Read(Role.Any()) } // optional
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+DocumentsDB documentsDB = DocumentsDB(client);
+
+Document result = await documentsDB.createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID.unique(),
+    data: { "title": "Hamlet", "year": 1601 },
+    permissions: [Permission.read(Role.any())], // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.DocumentsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val documentsDB = DocumentsDB(client)
+
+val response = documentsDB.createDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = ID.unique(),
+    data = mapOf("title" to "Hamlet", "year" to 1601),
+    permissions = listOf(Permission.read(Role.any())), // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.DocumentsDB;
+import java.util.Map;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+documentsDB.createDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    ID.unique(),
+    Map.of("title", "Hamlet", "year", 1601),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let documentsDB = DocumentsDB(client)
+
+let document = try await documentsDB.createDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: ID.unique(),
+    data: ["title": "Hamlet", "year": 1601],
+    permissions: [Permission.read(Role.any())] // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::DocumentsDB;
+use appwrite::id::ID;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let result = documents_db.create_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        ID::unique(),
+        serde_json::json!({ "title": "Hamlet", "year": 1601 }),
+        Some(vec![Permission::read(Role::any()).to_string()]), // optional
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite documents-db create-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id 'unique()' \
+    --data '{ "title": "Hamlet", "year": 1601 }'
+```
+{% /multicode %}
+
+# Platform capabilities included
+
+DocumentsDB is a first-class member of Appwrite Databases, so the capabilities that make application data manageable come built in:
+
+- **[Transactions](/docs/products/databases/documentsdb/transactions)** group writes so related changes succeed or fail together.
+- **[Bulk operations](/docs/products/databases/documentsdb/bulk-operations)** create, update, or delete many documents in one request.
+- **[Atomic numeric operations](/docs/products/databases/documentsdb/atomic-numeric-operations)** increment and decrement counters safely on the server, with no read-modify-write races.
+- **[JSON imports](/docs/products/databases/documentsdb/json-imports) and [exports](/docs/products/databases/documentsdb/json-exports)** move existing data in and out without custom scripts.
+- **[Backups](/docs/products/databases/documentsdb/backups)** protect your data with scheduled and manual snapshots.
+
+Because permissions are enforced at the document level, you can serve data directly to client applications without building an API layer in between.
+
+# Compute specifications
+
+When you create a DocumentsDB database, you select a compute specification that fits your workload, and the database is provisioned for your project with its own resources. As usage grows, backups and scaling are handled from the same place you manage the rest of your Appwrite project.
+
+# When to use DocumentsDB
+
+DocumentsDB fits workloads where the shape of the data is the moving part:
+
+- Product catalogs where every category carries different attributes
+- Event and activity payloads from third-party integrations
+- User-generated content with optional and evolving fields
+- Prototypes that need persistence before the data model settles
+
+If your data is structured and consistent, [TablesDB](/docs/products/databases/tablesdb) with its typed columns and indexes remains the right choice. The two share the same platform, so mixing them within one project is normal.
+
+# Get started
+
+DocumentsDB is available on Appwrite Cloud today. Create a database, choose DocumentsDB as the type, and you can write your first document within minutes.
+
+- [DocumentsDB documentation](/docs/products/databases/documentsdb)
+- [Quick start](/docs/products/databases/documentsdb/quick-start)
+

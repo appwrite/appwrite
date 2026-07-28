@@ -1,0 +1,541 @@
+---
+layout: article
+title: Connections
+description: Connect to your PostgreSQL database with psql or any standard driver. Retrieve connection details and rotate the primary password.
+---
+
+A native PostgreSQL database exposes a PostgreSQL endpoint over TLS. You connect to it the same way you would connect to any PostgreSQL server: with `psql`, any driver in any language, or any ORM.
+
+# Get connection details in the Console {% #console %}
+
+{% only_dark %}
+![Database credentials dialog](/images/docs/products/databases/postgresql/dark/credentials.avif)
+{% /only_dark %}
+{% only_light %}
+![Database credentials dialog](/images/docs/products/databases/postgresql/credentials.avif)
+{% /only_light %}
+
+The fastest way to connect is through the Appwrite Console:
+
+1. In your project, go to **Databases** and select your PostgreSQL database.
+2. Click **Credentials** to open the credentials dialog.
+3. Copy the individual values from the **Details** tab, or switch to the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab for a ready-made snippet.
+4. Paste it into `psql`, your ORM, or your database client.
+
+Use the API flow below when you need to fetch connection details from automation or inject them into your deployment pipeline.
+
+# Get connection details with the API {% #credentials %}
+
+The connection details are returned on the database object itself. Fetch the database with an API key that has the `databases.read` scope:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const database = await postgresql.get({
+    databaseId: '<DATABASE_ID>',
+});
+
+console.log(database.connectionString);
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const database = await postgresql.get({
+    databaseId: '<DATABASE_ID>',
+});
+
+console.log(database.connectionString);
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$database = $postgresql->get(databaseId: '<DATABASE_ID>');
+
+echo $database['connectionString'];
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+database = postgresql.get(database_id='<DATABASE_ID>')
+
+print(database.connection_string)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+database = postgresql.get(database_id: '<DATABASE_ID>')
+
+puts database.connection_string
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var database = await postgresql.Get(databaseId: "<DATABASE_ID>");
+
+Console.WriteLine(database.ConnectionString);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final database = await postgresql.get(
+    databaseId: '<DATABASE_ID>',
+);
+
+print(database.connectionString);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val database = postgresql.get(
+    databaseId = "<DATABASE_ID>",
+)
+
+println(database.connectionString)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let database = try await postgresql.get(
+    databaseId: "<DATABASE_ID>"
+)
+
+print(database.connectionString)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    postgresql := appwrite.NewPostgresql(client)
+
+    database, err := postgresql.Get("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(database.ConnectionString)
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let database = postgresql.get("<DATABASE_ID>").await?;
+
+    println!("{}", database.connection_string);
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>
+```
+{% /multicode %}
+
+The response includes the connection fields alongside the database configuration:
+
+```json
+{
+  "$id": "<DATABASE_ID>",
+  "name": "main",
+  "engine": "postgresql",
+  "version": "18",
+  "status": "ready",
+  "hostname": "db-<hash>.<region>.appwrite.center",
+  "connectionPort": 5432,
+  "connectionUser": "admin",
+  "connectionPassword": "<password>",
+  "connectionString": "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+}
+```
+
+The primary user is `admin` and the database name is generated per database.
+
+# Connect with psql {% #psql %}
+
+Pass the connection string, or the individual values, to `psql`. The Console credentials dialog also has a **psql** tab with the command ready to copy.
+
+```bash
+psql "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+```
+
+Or with individual flags:
+
+```bash
+psql -h db-<hash>.<region>.appwrite.center -p 5432 -U admin -d <database>
+```
+
+# Rotate the primary password {% #rotate %}
+
+If your password is compromised, or your security policy requires regular rotation, you can issue a new password for the primary user. The change is applied atomically in the engine, and the response carries the new connection details. Existing sessions stay alive until they disconnect, then have to authenticate with the new password. The API key needs the `databases.write` scope.
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const database = await postgresql.updateCredentials({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const database = await postgresql.updateCredentials({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$database = $postgresql->updateCredentials(databaseId: '<DATABASE_ID>');
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+database = postgresql.update_credentials(database_id='<DATABASE_ID>')
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+database = postgresql.update_credentials(database_id: '<DATABASE_ID>')
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var database = await postgresql.UpdateCredentials(databaseId: "<DATABASE_ID>");
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final database = await postgresql.updateCredentials(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val database = postgresql.updateCredentials(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let database = try await postgresql.updateCredentials(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    postgresql := appwrite.NewPostgresql(client)
+
+    _, err := postgresql.UpdateCredentials("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let database = postgresql.update_credentials("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/credentials
+```
+{% /multicode %}
+
+# Database roles {% #roles %}
+
+{% only_dark %}
+![Database roles tab](/images/docs/products/databases/postgresql/dark/roles-tab.avif)
+{% /only_dark %}
+{% only_light %}
+![Database roles tab](/images/docs/products/databases/postgresql/roles-tab.avif)
+{% /only_light %}
+
+The primary `admin` role owns the default database. For applications that need narrower access, such as a read-only reporting user or a write-only ingestion user, create additional PostgreSQL roles from the **Roles** tab of your database in the Console. The list shows each role's login, role-creation, and database-creation privileges, its connection limit, and its role memberships.
+
+Roles are standard PostgreSQL roles, so `GRANT` and `REVOKE` statements in the [SQL editor](/docs/products/databases/postgresql/quick-start#first-queries) or `psql` work on them like on any PostgreSQL server. The `postgres` superuser is managed by Appwrite and cannot be modified.
+
+# TLS {% #tls %}
+
+Connections on Appwrite Cloud are encrypted with TLS, terminated at the edge and forwarded to your database over the internal network. The connection string from the credentials dialog carries the right SSL settings for your environment, so drivers need no extra configuration.
+
+For IP allowlists and other network controls, see [network security](/docs/products/databases/postgresql/network-security).
+
+# Connecting from an application {% #drivers %}
+
+There is nothing Appwrite-specific about the driver setup. A few example snippets:
+
+{% multicode %}
+```server-nodejs
+import { Client } from 'pg';
+
+const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+});
+
+await client.connect();
+const { rows } = await client.query('SELECT now()');
+console.log(rows);
+```
+```server-python
+import os
+import psycopg
+
+with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+    with conn.cursor() as cur:
+        cur.execute('SELECT now()')
+        print(cur.fetchone())
+```
+```server-php
+<?php
+
+$pdo = new PDO(getenv('DATABASE_DSN'));
+
+$rows = $pdo->query('SELECT now()')->fetchAll();
+print_r($rows);
+```
+```server-go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+
+    "github.com/jackc/pgx/v5"
+)
+
+func main() {
+    conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+    if err != nil {
+        panic(err)
+    }
+    defer conn.Close(context.Background())
+
+    var now string
+    if err := conn.QueryRow(context.Background(), "SELECT now()").Scan(&now); err != nil {
+        panic(err)
+    }
+    fmt.Println(now)
+}
+```
+```server-rust
+use tokio_postgres::NoTls;
+
+#[tokio::main]
+async fn main() -> Result<(), tokio_postgres::Error> {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let (client, connection) = tokio_postgres::connect(&url, NoTls).await?;
+
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("connection error: {e}");
+        }
+    });
+
+    let row = client.query_one("SELECT now()::text", &[]).await?;
+    let now: &str = row.get(0);
+    println!("{now}");
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+Set `DATABASE_URL` to the connection string from the credentials dialog. Once you can run a query, you can use any tool that talks the PostgreSQL wire protocol: pgAdmin, DataGrip, your ORM of choice, your migration tool of choice. Appwrite gets out of the way.

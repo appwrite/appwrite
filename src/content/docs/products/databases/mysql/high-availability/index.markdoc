@@ -1,0 +1,631 @@
+---
+layout: article
+title: High availability
+description: Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your MySQL database.
+---
+
+A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling), and take over automatically when the primary becomes unhealthy.
+
+High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas.
+
+# How it works {% #how-it-works %}
+
+Replicas receive changes from the primary through MySQL binary log replication. Each replica is a full copy of the database on its own compute. When the primary fails, the most caught-up replica is promoted to primary and the hostname is repointed, your application keeps connecting to the same host and port.
+
+# Replication modes {% #sync-modes %}
+
+| Mode     | Behavior                                                                        | Trade-off                                        |
+|----------|----------------------------------------------------------------------------------|--------------------------------------------------|
+| `async`  | The primary commits without waiting for replicas                                | Fastest writes; a failover can lose the last moments of writes |
+| `sync`   | The primary waits for one replica to confirm each commit                        | No data loss on single failure; slightly higher write latency |
+| `quorum` | The primary waits for a majority of replicas to confirm each commit             | Strongest durability; highest write latency       |
+
+`async` is the default. For production workloads that cannot lose acknowledged writes, use `sync` with at least two replicas.
+
+# Enable high availability {% #enable %}
+
+Set the replica count and replication mode on the database through the API:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    replicas: 2,
+    syncMode: 'sync',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    replicas: 2,
+    syncMode: 'sync',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->update(
+    databaseId: '<DATABASE_ID>',
+    replicas: 2,
+    syncMode: 'sync',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update(
+    database_id='<DATABASE_ID>',
+    replicas=2,
+    sync_mode='sync',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update(
+    database_id: '<DATABASE_ID>',
+    replicas: 2,
+    sync_mode: 'sync',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.Update(
+    databaseId: "<DATABASE_ID>",
+    replicas: 2,
+    syncMode: "sync"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.update(
+    databaseId: '<DATABASE_ID>',
+    replicas: 2,
+    syncMode: 'sync',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.update(
+    databaseId = "<DATABASE_ID>",
+    replicas = 2,
+    syncMode = "sync",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.update(
+    databaseId: "<DATABASE_ID>",
+    replicas: 2,
+    syncMode: "sync"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        mysql.WithUpdateReplicas(2),
+        mysql.WithUpdateSyncMode("sync"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update("<DATABASE_ID>", None, None, None, Some(2), Some("sync"), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "replicas": 2,
+      "syncMode": "sync"
+  }' \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+{% /multicode %}
+
+Adding replicas provisions them online; the primary keeps serving traffic while each replica seeds from a snapshot and catches up. Setting `replicas` back to `0` disables HA.
+
+# Check replication status {% #status %}
+
+You can check each replica's role, health, and replication lag:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const replicas = await mysql.getReplicas({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const replicas = await mysql.getReplicas({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$replicas = $mysql->getReplicas(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+replicas = mysql.get_replicas(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+replicas = mysql.get_replicas(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var replicas = await mysql.GetReplicas(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final replicas = await mysql.getReplicas(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val replicas = mysql.getReplicas(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let replicas = try await mysql.getReplicas(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    result, err := service.GetReplicas("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let replicas = mysql.get_replicas("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/replicas
+```
+{% /multicode %}
+
+# Automatic failover {% #automatic-failover %}
+
+Appwrite continuously health-checks the primary. When it becomes unresponsive, the platform promotes the replica with the least replication lag, repoints the database hostname, and marks the old primary for replacement. Your application reconnects to the same hostname; a well-configured driver pool retries and recovers without intervention.
+
+With `async` replication, writes that had not yet reached the promoted replica are lost in a failover. Use `sync` or `quorum` if that is unacceptable.
+
+# Manual failover {% #manual-failover %}
+
+Trigger a failover yourself, for example to test your application's recovery behavior. Optionally pass `targetReplicaId` to promote a specific replica.
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createFailover({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createFailover({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->createFailover(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.create_failover(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.create_failover(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.CreateFailover(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.createFailover(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.createFailover(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.createFailover(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.CreateFailover("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.create_failover("<DATABASE_ID>", None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  https://cloud.appwrite.io/v1/mysql/<DATABASE_ID>/failovers
+```
+{% /multicode %}
+
+# Reading from replicas {% #reads %}
+
+Replicas serve read traffic when [read/write splitting](/docs/products/databases/mysql/connection-pooling#read-write-splitting) is enabled on the connection pooler. With `async` replication, a read that immediately follows a write can return stale data. Route reads that must see the latest write to the primary, or use `sync` replication.
+
+# Limits and billing {% #limits %}
+
+- Up to 5 replicas per database; the maximum depends on your plan.
+- Each replica runs on the same specification as the primary and is billed as an add-on. See [pricing](/pricing).
+- Replicas live in the same region as the primary.

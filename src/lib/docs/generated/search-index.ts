@@ -910,6 +910,72 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "partners/apps/consent",
+    "title": "Consent",
+    "description": "What users see on the Sign in with Appwrite consent screen, what they can change, and what your app receives.",
+    "excerpt": "Consent is where the user decides. Appwrite hosts the screen, renders what your app asked for, and gives the user the final say over scopes and targets. Your app never sees the screen; it sees the outcome. The consent screen The screen is built from your registration and your request: - **Your app's identity**: the name, logo, and tagline you registered. - **Permissions**: each requested scope as a plain-language line, under a one-line summary of the overall reach. - **Project…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Consent"
+    ]
+  },
+  {
+    "slug": "partners/apps/device-flow",
+    "title": "Device flow",
+    "description": "Sign in with Appwrite from TVs, CLIs, and other input-constrained devices with the OAuth2 device authorization grant.",
+    "excerpt": "Some clients cannot run the redirect flow: a TV has no browser to send the user back to, and a CLI has no redirect URI to receive a code. The device flow (RFC 8628) replaces the redirect with a short code. Your app shows the code, the user approves it from their phone or laptop, and your app picks up the tokens by polling. The flow is off by default. Turn it on with the device flow toggle on your…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Device flow"
+    ]
+  },
+  {
+    "slug": "partners/apps/quick-start",
+    "title": "Start with Sign in with Appwrite",
+    "description": "Register an app and run the full Sign in with Appwrite flow, from consent screen to your first authorized API call.",
+    "excerpt": "This guide builds Sign in with Appwrite into an app, start to finish. The running example is Horizon, a deployment dashboard: - A user clicks its sign-in button. - They approve access on the Appwrite consent screen. - Horizon reads their projects with the tokens it receives. By the end, you will have run the same journey with your own app. You need a server that can receive a redirect and keep a client secret. The examples use as the…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Start with Sign in with Appwrite"
+    ]
+  },
+  {
+    "slug": "partners/apps/registration",
+    "title": "Registration",
+    "description": "Register your app for Sign in with Appwrite through the Console.",
+    "excerpt": "Your app appears on the consent screen as a registered client: a name, a logo, and a set of credentials tied to redirect URIs. Registration happens in the Console, in your organization's Marketplace tab. Client types Every client is or , and the choice decides how it authenticates. - **Confidential** clients have a backend that keeps a secret. They authenticate token requests with the client secret, and their tokens live longer: 8 hours for access tokens and 365 days for…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Registration"
+    ]
+  },
+  {
+    "slug": "partners/apps/scopes",
+    "title": "Scopes",
+    "description": "The Sign in with Appwrite scope catalog, and how grants target the projects and organizations a user chooses.",
+    "excerpt": "A scope names an action your app wants to perform. A grant pairs scopes with the projects and organizations they apply to. Both halves matter: by itself says what, and the user's project selection on the consent screen says where. Request the smallest set that serves your app. Every scope you ask for appears on the consent screen as a permission line, and users decline requests that want too much. Identity scopes The OpenID Connect scopes cover who the user…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Scopes"
+    ]
+  },
+  {
+    "slug": "partners/apps/tokens",
+    "title": "Tokens",
+    "description": "Use, refresh, and revoke the tokens Appwrite issues to your app through Sign in with Appwrite.",
+    "excerpt": "Your app holds three tokens with different jobs: - The **access token** calls APIs. - The **refresh token** replaces expired access tokens. - The **ID token** proves who signed in. All three come from one call. After the user approves your app on the consent screen, exchange the authorization code at the token endpoint, sending your client credentials in the request body: The response carries all three tokens, along with what the user granted: Public clients Mobile apps, desktop apps,…",
+    "breadcrumbs": [
+      "Partners",
+      "Apps",
+      "Tokens"
+    ]
+  },
+  {
     "slug": "partners/architecture",
     "title": "Architecture",
     "description": "Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.",
@@ -1726,6 +1792,250 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/oauth-server",
+    "title": "OAuth2 server",
+    "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
+    "excerpt": "Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (OIDC provider). When you enable the OAuth2 server, third-party apps register as clients, send your users to a consent screen you host, and receive tokens your project issues. Your project becomes an identity provider that any standards-compliant OAuth or OIDC library can integrate with: the same way apps offer \"Sign in with Google\" or \"Sign in with GitHub\", integrators can offer **Sign in with your product**. How…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/authorization",
+    "title": "Authorization",
+    "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
+    "excerpt": "Authorization is the step where a user allows a client to act on their behalf. Appwrite's OAuth2 server uses the authorization code flow. Public clients protect the flow with PKCE. Confidential clients authenticate with a client secret and can also use PKCE when your project requires it. The authorization code flow 1. The client sends the user to the **authorization endpoint** with its client ID, a registered redirect URI, , and the scopes it wants. 2. Appwrite checks whether the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Authorization"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/clients",
+    "title": "Clients",
+    "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
+    "excerpt": "A **client** is a third-party app that authenticates users through your project's OAuth2 server. Each client registers the redirect URIs it is allowed to return to and the post-logout redirect URIs it can end sessions at, sets its type, and chooses whether the device flow is enabled. Its other attributes serve two surfaces: branding like the name, logo, and tagline can appear on your consent screen, while attributes like tags, images, and the privacy policy URL are for your project's…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Clients"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-1",
+    "title": "Protect your API with custom scopes",
+    "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
+    "excerpt": "The Sign in with your product guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need custom scopes: permissions you define, users approve, and your API enforces. This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard. What you will build…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Protect your API with custom scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-2",
+    "title": "Define the scopes",
+    "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
+    "excerpt": "Scopes have to be defined on the OAuth2 server before a client can request them. Requesting a scope you have not defined fails the authorization request with . Add the scopes In the Console, open **Auth**, select the **OAuth2 server** tab, and find the **Scopes** field on the **Integration** card. Add two scopes and click **Update**: - grants read access to the user's tasks. - grants permission to create and update tasks. The , , , and scopes stay locked…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Define the scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-3",
+    "title": "Request the scopes",
+    "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
+    "excerpt": "A client receives a scope by asking for it during authorization. Vantage requests both task scopes, and TaskFlow's consent screen lets the user decide which of them to grant. Add the scopes to the request In the consumer, extend the scope list in : already passes as the parameter, so nothing else changes on the consumer. The OAuth2 server carries the requested scopes into the grant and shows them to the user. Label the scopes on the consent screen TaskFlow's…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Request the scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-4",
+    "title": "Validate access tokens",
+    "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
+    "excerpt": "TaskFlow's API is about to accept access tokens from the outside world, so it first needs a way to tell a token it issued from one somebody made up. Access tokens from your OAuth2 server are RS256-signed JWTs, and the matching public keys are published at your project's JWKS endpoint. That means TaskFlow can verify tokens locally, with no call back to the OAuth2 server on each request. Install jose jose handles the JWT verification and the JWKS fetching. Install…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Validate access tokens"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-5",
+    "title": "Protect the API route",
+    "description": "Serve tasks only to tokens that carry tasks.read.",
+    "excerpt": "With the guard in place, TaskFlow can expose its task API. This is where the scope stops being a label and becomes a rule. The task data Create with an in-memory store, keyed by user ID. It stands in for your product's database so the tutorial stays focused on the OAuth side: The guarded route Create . TanStack Start serves the and handlers at : Each handler applies the same two checks, in order: 1. **Authentication**: is the token real?…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Protect the API route"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-6",
+    "title": "Call the API from Vantage",
+    "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
+    "excerpt": "Vantage already holds the access token in its session after the token exchange. Reading tasks is one authenticated fetch away, and a small composer will exercise the write path. Point Vantage at the API Add TaskFlow's API base to : The API client Create . Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest: does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Call the API from Vantage"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/custom-scopes/step-7",
+    "title": "Run the flow",
+    "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
+    "excerpt": "Everything is wired up. Run the flow twice: once granting only read access, and once granting the write too. The same button on the dashboard behaves differently each time, and the only thing that changed is what the user agreed to. Start both apps In two terminals: Grant read, withhold write Open and click **Sign in with TaskFlow**. On the consent screen, switch **Create and update your tasks** off and authorize. The OAuth2 server narrows the grant to what was…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "custom scopes",
+      "Run the flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/device-flow",
+    "title": "Device flow",
+    "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
+    "excerpt": "The device authorization grant (RFC 8628) lets a client request access even when it cannot open a browser or accept a callback. A TV app, command-line tool, or hardware device shows the user a code, and the user completes authorization on a phone or computer. This flow involves two applications: - The **device client** is the third-party application requesting access. It communicates with Appwrite over HTTP. - The **verification page** belongs to your project. You build this page with an…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Device flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/quick-start",
+    "title": "OAuth2 server quick start",
+    "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
+    "excerpt": "This guide turns your project into an OAuth2 provider and runs one sign-in through it. By the end you will have an enabled server, a registered client, and an access token issued by your project. The examples follow two apps, the same pair the tutorials build out in full: - **TaskFlow** (): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens. - **Vantage** (): the third-party **consumer**, called…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "OAuth2 server quick start"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/scopes",
+    "title": "Scopes",
+    "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
+    "excerpt": "Scopes are the permissions a client asks for during authorization. The user sees the requested scopes on the consent screen and approves or declines them. The access token the server issues carries the scopes that were granted. Built-in scopes Four OpenID Connect scopes are always available and cannot be removed: | Scope | Grants access to | | --- | --- | | | The user's subject identifier. Required for OpenID Connect and to receive an ID token. | |…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Scopes"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-1",
+    "title": "Sign in with your product",
+    "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
+    "excerpt": "Once your project's OAuth2 server is enabled, other apps can offer \"Sign in with your product\". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Sign in with your product"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-2",
+    "title": "Enable the OAuth2 server",
+    "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
+    "excerpt": "Before writing any code, turn TaskFlow's project into an OAuth provider and register Vantage as a client. Enable the server In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**. Set the **Authorization URL** to where TaskFlow will host its consent screen. In this tutorial that is . This is where the OAuth2 server sends users to sign in and approve. Leave the scopes at their defaults. , , and are always included, which…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Enable the OAuth2 server"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-3",
+    "title": "Create the apps",
+    "description": "Scaffold the two TanStack Start apps and wire up their environment.",
+    "excerpt": "Both sides are TanStack Start apps. Scaffold them in a single folder. Scaffold the projects Create the consumer (Vantage) and the provider (TaskFlow): This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up. Give each a fixed port so the redirect URIs stay stable. In each app's , set the dev script: Configure the environment The apps read the OAuth values from environment variables. Add a to each. Vantage needs the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Create the apps"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-4",
+    "title": "Add Sign in with your product",
+    "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
+    "excerpt": "Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow. The OAuth helper Create . It reads the config and builds the authorization URL. Import at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side. The start route Clicking the button navigates to . Its…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Add Sign in with your product"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-5",
+    "title": "Build the consent screen",
+    "description": "Host the consent screen where your users sign in and approve access.",
+    "excerpt": "The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session. Types for the consent card Create . It holds only client-safe values, so the browser can import it: The server helpers Create . Every function here calls the OAuth2 server on behalf…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Build the consent screen"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-6",
+    "title": "Exchange the code for tokens",
+    "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
+    "excerpt": "The OAuth2 server redirects back to Vantage's redirect URI with a and the . Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in. Add the token functions Extend with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server. Handle the callback Create . Its loader runs on the server: it checks the against the session, exchanges…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Exchange the code for tokens"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/sign-in-with-your-product/step-7",
+    "title": "Run the flow",
+    "description": "Start both apps and sign in with your product end to end.",
+    "excerpt": "Everything is in place. Run both apps and sign in. Start both apps In two terminals: Vantage is at and TaskFlow's consent screen at . Sign in Open and click **Sign in with TaskFlow**. You will: 1. Land on TaskFlow's consent screen and sign in with a TaskFlow user. 2. See exactly what Vantage is requesting, and approve it. 3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard. That round trip is a complete…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "sign in with your product",
+      "Run the flow"
+    ]
+  },
+  {
+    "slug": "products/auth/oauth-server/tokens",
+    "title": "Tokens",
+    "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
+    "excerpt": "When a client redeems an authorization code, the OAuth2 server issues an access token and refresh token. It also issues an ID token when the scope was granted. This page covers what each token does and how clients and resource servers validate, refresh, introspect, revoke, and end sessions. The three tokens - **Access token.** A signed JWT that a client presents to a resource server when it calls an API on the user's behalf. It contains the authorization information the…",
+    "breadcrumbs": [
+      "Auth",
+      "OAuth2 server",
+      "Tokens"
+    ]
+  },
+  {
     "slug": "products/auth/oauth2",
     "title": "OAuth 2 login",
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
@@ -1979,377 +2289,1586 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "products/databases",
+    "slug": "products/databases/(overview)",
     "title": "Databases",
-    "description": "Store and query structured data with Appwrite Databases. Databases provide performant and scalable storage for your application, business, and user data.",
-    "excerpt": "Appwrite Databases let you store and query structured data. Databases provide high-performance and scalable data storage for your key application, business, and user data. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, tables, and rows. You can also paginate, order, and query rows. For complex business logic, Appwrite supports relationships to help you model your data. Quick start",
+    "description": "Store and query your application data with Appwrite Databases. Choose between Appwrite databases with managed APIs and dedicated native databases with direct access.",
+    "excerpt": "Appwrite Databases provide performant and scalable storage for your application, business, and user data. Choose the database that fits your use case, from managed APIs with permissions and realtime to dedicated native engines you connect to directly. Databases store data. If you need to store files like images, PDFs, or videos, use Appwrite Storage. Appwrite databases Managed databases with an Appwrite API on top, including permissions, indexes, queries, and realtime. Available on shared and dedicated infrastructure. Structured, relational data with…",
     "breadcrumbs": [
       "Databases",
-      "Getting started",
-      "Overview"
+      "Databases"
     ]
   },
   {
-    "slug": "products/databases/ai-suggestions",
+    "slug": "products/databases/documentsdb",
+    "title": "DocumentsDB",
+    "description": "Store and query schemaless documents with Appwrite DocumentsDB. Collections give you flexible, JSON-style storage for your application, business, and user data.",
+    "excerpt": "Appwrite DocumentsDB lets you store and query schemaless documents. Collections hold documents as flexible JSON, so you can add fields as your data evolves without defining a schema up front. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, collections, and documents. You can also paginate, order, and query documents. Quick start",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/atomic-numeric-operations",
+    "title": "Atomic numeric operations",
+    "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
+    "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work on numeric document fields, whether the value is an integer or a floating-point number. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Atomic numeric operations"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/backups",
+    "title": "Backups",
+    "description": "Learn how to back up and restore your DocumentsDB databases, ensuring data security and seamless recovery.",
+    "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Backups"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/bulk-operations",
+    "title": "Bulk operations",
+    "description": "Perform bulk operations on documents within your collections for efficient data handling.",
+    "excerpt": "Appwrite DocumentsDB supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Bulk operations"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/collections",
+    "title": "Collections",
+    "description": "Organize documents with Appwrite DocumentsDB collections. Learn how to create collections, configure permissions, and add indexes for fast queries.",
+    "excerpt": "Appwrite uses collections as containers of documents. Collections are schemaless, so documents in the same collection can hold different fields. You shape data in your application instead of defining columns up front. Create collection You can create collections using the Appwrite Console, a Server SDK, or using the CLI. Head to the **Databases** page, open a database, and click **Create collection**. You can also create collections programmatically using a Server SDK. Appwrite Server SDKs require an API key. Permissions Appwrite…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Collections"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/databases",
+    "title": "Databases",
+    "description": "Dive deeper into Appwrite DocumentsDB and database configuration. Learn how to create and manage multiple databases for your application.",
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Create in Console The easiest way to create a database is using the Appwrite Console. Navigate to the **Databases** page and click **Create database**, choose **DocumentsDB** as the database type, and select your preferred tier. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Databases"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/documents",
+    "title": "Documents",
+    "description": "Create, read, update, and delete documents in Appwrite DocumentsDB. Learn how to work with schemaless JSON documents in your collections.",
+    "excerpt": "Each piece of data in Appwrite DocumentsDB is a document. Documents are schemaless JSON, so each document in a collection can hold its own set of fields. Create documents You must grant _create_ permissions to users at the _collection level_ before users can create documents. Learn more about permissions Use the method to add a document to a collection. Appwrite Server SDKs require an API key. List documents Use the method to read documents from a collection. Pass queries to…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Documents"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/json-exports",
+    "title": "JSON exports",
+    "description": "Export documents from a DocumentsDB collection to a JSON file. Share datasets, create custom backups, or move data to another system without writing custom scripts.",
+    "excerpt": "Appwrite's JSON Export feature allows you to export documents from a collection to a JSON file. This is especially useful for creating custom backups, sharing data with other teams, or moving datasets to another system. Export configuration Before exporting, you can configure a few options to control the contents of the output. These settings let you export exactly the data you need. Select fields You can choose which fields to include in your export. By default, every field is exported,…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "JSON exports"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/json-imports",
+    "title": "JSON imports",
+    "description": "Create documents in a DocumentsDB collection by uploading a JSON file. Seed test data, restore a dataset, or migrate from another system without writing custom scripts.",
+    "excerpt": "Appwrite's JSON Import feature allows you to create multiple documents in a collection by uploading a single JSON file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. Prepare your JSON file Your JSON file is an array of objects, where each object becomes one document in the collection. DocumentsDB is schemaless, so each object can hold its own set of fields. An example of a valid JSON file: Each object is validated…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "JSON imports"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/order",
+    "title": "Order",
+    "description": "Understand how to do data ordering in Appwrite DocumentsDB. Learn how to order and sort your database records for efficient data retrieval.",
+    "excerpt": "You can order results returned by Appwrite DocumentsDB by using an order query. For best performance, create an index on the field you plan to order by. Ordering one field When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple fields To sort based on multiple fields, simply provide multiple query methods. For better performance, create an index on the first field that you order by. In the example…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Order"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/pagination",
+    "title": "Pagination",
+    "description": "Implement pagination for large data sets in Appwrite DocumentsDB. Explore techniques for splitting and displaying data across multiple pages.",
+    "excerpt": "As your collection grows in size, you'll need to paginate the documents returned. Pagination improves performance by returning a subset of documents that match a query at a time, called a page. By default, list operations return 25 documents per page, which can be changed using the query method. There is no hard limit on the number of documents you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination divides documents into pages of documents…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Pagination"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/permissions",
+    "title": "Database permissions",
+    "description": "Control access to your DocumentsDB data with permissions. Learn how to set collection level and document level access rules.",
+    "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receives access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Database permissions"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/queries",
+    "title": "Queries",
+    "description": "Harness the power of querying with Appwrite DocumentsDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
+    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Queries"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/quick-start",
+    "title": "Start with DocumentsDB",
+    "description": "Get started with Appwrite DocumentsDB. Follow a step-by-step guide to create your first database, add a collection, and perform basic document operations.",
+    "excerpt": "Head to your Appwrite Console and click **Create database**. Name it and choose **DocumentsDB** as the database type. Optionally, add a custom database ID. Select your preferred tier, then click **Create database**. In the database, click **Create collection** and name it . Optionally, add a custom collection ID. Collections are schemaless, so there are no columns to define. Each document holds its own fields as flexible JSON. Open the collection's **Security** tab. Under **Permissions**, add a new role **Any** and…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Start with DocumentsDB"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/timestamp-overrides",
+    "title": "Timestamp overrides",
+    "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
+    "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Timestamp overrides"
+    ]
+  },
+  {
+    "slug": "products/databases/documentsdb/transactions",
+    "title": "Transactions",
+    "description": "Stage multiple database operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
+    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
+    "breadcrumbs": [
+      "Databases",
+      "DocumentsDB",
+      "Transactions"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql",
+    "title": "MySQL",
+    "description": "Run a native MySQL database provisioned for your project and connect to it directly with standard MySQL clients.",
+    "excerpt": "Appwrite native MySQL databases give you a managed MySQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. Native databases are different from Appwrite databases like TablesDB, DocumentsDB, and VectorsDB, which are accessed through Appwrite SDKs and platform APIs. A native MySQL database gives you the raw engine. You connect with the client or…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/backups",
+    "title": "Backups",
+    "description": "Scheduled backups, manual backups, restores, and point-in-time recovery for your MySQL database.",
+    "excerpt": "Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery. Automatic backups Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows. Backup policies A policy defines a schedule (cron expression) and a retention period in days.…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Backups"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/branches",
+    "title": "Branches",
+    "description": "Spin up an ephemeral, isolated copy of your MySQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
+    "excerpt": "A branch is a short-lived, isolated copy of your database. It has its own hostname and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back. There is no branch merge operation. Use a branch to validate a migration, data repair, or application change, then intentionally cut application traffic over to the validated database…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Branches"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/access-control",
+    "title": "Security and access control",
+    "description": "How MySQL privileges work, what the admin account on your database can do, and patterns for restricting access to data.",
+    "excerpt": "MySQL controls access in two layers: - An **account** is an identity that can connect. - **Privileges** decide what an account may do to each schema, table, or column. This page covers how that model works, what your Appwrite database's account can and cannot do, and the patterns that restrict access to data in practice. The privilege model A MySQL account is a user name plus a host pattern, such as . Privileges attach to accounts at four scopes: global,…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Security and access control"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/data-modeling",
+    "title": "Data modeling and normalization",
+    "description": "Design MySQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
+    "excerpt": "Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it. The problem with one big table Start with an orders table designed the way a spreadsheet would be: Every design flaw here causes a concrete failure: - Ada's email…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Data modeling and normalization"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/indexes",
+    "title": "Indexes",
+    "description": "Speed up MySQL queries with B-tree, composite, prefix, functional, and invisible indexes, and read EXPLAIN ANALYZE output.",
+    "excerpt": "An index is a sorted data structure the database maintains next to a table so it can find rows without scanning everything. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL. Setup Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to give the query optimizer a real choice…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Indexes"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/joins",
+    "title": "Joins and relationships",
+    "description": "Model relationships with foreign keys and combine MySQL tables with INNER, LEFT, RIGHT, and CROSS joins.",
+    "excerpt": "Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice. Setup The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Joins and relationships"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/queries",
+    "title": "Querying rows",
+    "description": "Read and write MySQL rows with SELECT, INSERT, UPDATE, and DELETE. Covers filtering, aggregation, pagination, and upserts.",
+    "excerpt": "Four statements do almost all the work in a relational database: - **SELECT** reads rows - **INSERT** adds new rows - **UPDATE** changes existing rows - **DELETE** removes rows SQL is declarative: a query describes the result you want, and the database's optimizer decides how to produce it, choosing between indexes, scans, and join strategies on its own. That's why the same query keeps working as data grows and indexes change. This page walks through each statement, plus the querying…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Querying rows"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/tables",
+    "title": "Tables and data types",
+    "description": "Create MySQL tables with the right column types and constraints. Covers numeric, string, date and time, JSON, ENUM, and generated columns.",
+    "excerpt": "A table is the unit of storage in a relational database, a named grid where: - each **row** is one record: one customer, one order - each **column** is one attribute every record shares: name, price, creation time - each column has a **type** that determines what values it accepts and how they compare, sort, and calculate Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Tables and data types"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/concepts/transactions",
+    "title": "Transactions",
+    "description": "Group MySQL statements into atomic transactions. Covers COMMIT, ROLLBACK, savepoints, isolation levels, locking, and deadlocks.",
+    "excerpt": "A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state. Two distinct things go wrong without that: - **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist. - **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "concepts",
+      "Transactions"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/connection-pooling",
+    "title": "Connection pooling",
+    "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
+    "excerpt": "MySQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections. The pooler runs next to your database and is reachable on port on the same hostname. Your application connects to the pooler exactly like it would connect to…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Connection pooling"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/connections",
+    "title": "Connections",
+    "description": "Connect to your MySQL database with the mysql client or any standard driver. Retrieve connection details and rotate the primary password.",
+    "excerpt": "A native MySQL database exposes a MySQL endpoint over TLS. You connect to it the same way you would connect to any MySQL server: with the client, any driver in any language, or any ORM. Get connection details with the API The connection details are returned on the database object itself. Fetch the database with an API key that has the scope: The response includes the connection fields alongside the database configuration: The primary user is and the database name…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Connections"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/high-availability",
+    "title": "High availability",
+    "description": "Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your MySQL database.",
+    "excerpt": "A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the connection pooler, and take over automatically when the primary becomes unhealthy. High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas. How it works Replicas receive changes from the primary through MySQL binary log replication. Each replica is a full…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "High availability"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/auth-js",
+    "title": "Auth.js",
+    "description": "Use an Appwrite native MySQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through the Prisma adapter.",
+    "excerpt": "Auth.js (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your database, which makes database sessions, account linking, and email sign-in possible. An Appwrite native MySQL database is a standard MySQL engine, so Auth.js works through the same ORM adapters you use with other MySQL databases. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one with the…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Auth.js"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/better-auth",
+    "title": "Better Auth",
+    "description": "Use an Appwrite native MySQL database as the database for Better Auth. Configure mysql2, run schema generation and migrations over a direct connection, and store users and sessions in MySQL.",
+    "excerpt": "Better Auth is a framework-agnostic authentication library for TypeScript that stores users, sessions, accounts, and verification records in your database. An Appwrite native MySQL database gives Better Auth a standard MySQL engine, so you can use , run the Better Auth CLI, and keep auth data in your Appwrite project. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The primary user is…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Better Auth"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/dbt",
+    "title": "dbt",
+    "description": "Run dbt Core transformations against an Appwrite native MySQL database with the community dbt-mysql adapter.",
+    "excerpt": "Use dbt Core with an Appwrite native MySQL database through the community [](https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup) adapter. Appwrite exposes standard MySQL on port , so dbt connects with the same host, username, password, and database name you use with other MySQL clients. dbt compiles your models into and statements, then runs them in dependency order to build transformed tables and views inside the MySQL database you configure. dbt Labs lists MySQL as a community adapter. The published [](https://pypi.org/project/dbt-mysql/) package is experimental and is…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "dbt"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/django",
+    "title": "Django",
+    "description": "Use Django's ORM with an Appwrite native MySQL database. Configure the DATABASES setting, run migrations against the direct MySQL port, and choose the right pooler mode for Django connections.",
+    "excerpt": "A native MySQL database is a standard MySQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the setting at the credentials from the Connections page, then use migrations, models, and the rest of Django as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one with the create-database wizard, then use [](/docs/products/databases/mysql/connections#credentials) to read the hostname, port, username, password, and generated…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Django"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/drivers",
+    "title": "Node.js drivers",
+    "description": "Connect to an Appwrite native MySQL database from Node.js with mysql2 or MariaDB Connector/Node.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.",
+    "excerpt": "A native MySQL database works with standard Node.js drivers that speak the MySQL wire protocol. The Connections page shows the smallest query. This guide covers driver pools, TLS verification, serverless connection management, and common connection errors. You'll need a native MySQL database in a state and the connection values returned by the database object: host, port, username, password, and database name. Store the password in an environment variable and keep it out of source control. Raw driver, ORM, or SQL…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Node.js drivers"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/drizzle",
+    "title": "Drizzle",
+    "description": "Use Drizzle ORM with an Appwrite native MySQL database. Configure mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine, so Drizzle ORM works against it with no Appwrite-specific configuration. Point Drizzle's mysql2 driver at the connection string from the Connections page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection string. The primary user…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Drizzle"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/ef-core",
+    "title": "EF Core",
+    "description": "Use Entity Framework Core with an Appwrite native MySQL database. Configure the MySQL provider, run migrations against the direct MySQL host, and rely on the provider's connection pool from an ASP.NET server.",
+    "excerpt": "A native MySQL database is a standard MySQL engine, so Entity Framework Core works with it through a MySQL EF Core provider. Point the provider at the connection details from the Connections page, then use , migrations, and LINQ queries as you would with any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the connection details. Install the provider Add Oracle's EF Core…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "EF Core"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/fastapi",
+    "title": "FastAPI",
+    "description": "Use FastAPI and SQLAlchemy 2.x with an Appwrite native MySQL database. Configure the async asyncmy engine, pass TLS through connect_args, inject a session per request, and run Alembic migrations against the direct database port.",
+    "excerpt": "An Appwrite native MySQL database is a standard MySQL engine, so FastAPI with SQLAlchemy and an async MySQL driver works against it with no Appwrite-specific runtime code. You point at the connection string from the connections page and use the SQLAlchemy ORM, the FastAPI dependency system, and Alembic the same way you would against any self-hosted MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and connections to…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "FastAPI"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/gorm",
+    "title": "GORM",
+    "description": "Use GORM with an Appwrite native MySQL database in Go. Build the MySQL DSN, open a connection, size the database/sql pool, and run migrations with AutoMigrate or golang-migrate.",
+    "excerpt": "A native MySQL database is a standard MySQL engine, so GORM talks to it through the regular MySQL driver. Build a go-sql-driver DSN from the credentials returned by Appwrite, hand it to , and use models, , and the query API as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See native MySQL databases to create one and Connections to retrieve the hostname, password, and generated database name. The primary…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "GORM"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/grafana",
+    "title": "Grafana",
+    "description": "Connect Grafana to an Appwrite native MySQL database as a data source and build dashboards. Configure the MySQL data source and provision it from YAML.",
+    "excerpt": "An Appwrite native MySQL database exposes a standard managed MySQL 8.4 or 8.0 engine, so Grafana connects to it through the built-in **MySQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with your database credentials, and query your tables to build dashboards and alerts. You'll need a native MySQL database in a state and its credentials. Call from the Appwrite API to read , , , , and . The primary user is…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Grafana"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/laravel",
+    "title": "Laravel",
+    "description": "Use Laravel and Eloquent with an Appwrite native MySQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
+    "excerpt": "A native MySQL database is a standard MySQL engine, so Laravel works against it with no Appwrite-specific configuration. Point the connection in at the credentials from the Connections page, then use Eloquent, the query builder, migrations, and queues as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. See MySQL databases to create one. To retrieve credentials, call [](/docs/products/databases/mysql/connections#credentials) and use the returned hostname, port, username, password, and database name. The…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Laravel"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/metabase",
+    "title": "Metabase",
+    "description": "Connect Metabase to an Appwrite native MySQL database for analytics. Configure MySQL connection details, require TLS on Cloud, and build dashboards on a session-safe connection.",
+    "excerpt": "Appwrite's native MySQL database is a standard MySQL engine, so Metabase can connect to it without an Appwrite-specific adapter. Add the database in Metabase, use the host and credentials from the Connections page, and Metabase will sync the schema so your team can build questions and dashboards. You'll need a native MySQL database in a state and its credentials. Fetch them with [](/docs/products/databases/mysql/connections#credentials). The response includes , , , , and . The primary user is , and the database…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Metabase"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/nextjs",
+    "title": "Next.js",
+    "description": "Connect a Next.js App Router application to an Appwrite native MySQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.",
+    "excerpt": "An Appwrite native MySQL database works with standard MySQL drivers and ORMs, so a Next.js App Router application can query it from server-side code. Point your driver at the connection string from the Connections page and keep all database access on the server. You'll need a native MySQL database in a state and its credentials. See MySQL to create one and Connections to retrieve the connection string. The primary user is , and Appwrite generates the database name for each…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Next.js"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/prisma",
+    "title": "Prisma",
+    "description": "Use Prisma ORM with an Appwrite native MySQL database. Configure the Prisma 7 datasource, apply schema changes through the direct connection, and instantiate Prisma Client with the MySQL driver adapter.",
+    "excerpt": "Prisma ORM works with Appwrite's native MySQL database as a standard MySQL target. Configure Prisma with the connection string from Appwrite, apply schema changes through the direct database connection, and use Prisma Client from your application code. You'll need a native MySQL database in a state and its credentials. The database object returned by the Appwrite API includes , , , and ; you can read it with or from the response when you create the database. Initialize Prisma Install…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Prisma"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/rails",
+    "title": "Rails",
+    "description": "Use Ruby on Rails and ActiveRecord with an Appwrite native MySQL database. Configure database.yml, run migrations against the direct database port, and size the ActiveRecord pool.",
+    "excerpt": "A native MySQL database is a standard MySQL engine, so Ruby on Rails works against it through ActiveRecord with no Appwrite-specific configuration. Point at the connection details from the Connections page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any MySQL server. You'll need a native MySQL database in a state and its credentials. Call from the Appwrite API to read , , , and . The primary user is , and…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Rails"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/retool",
+    "title": "Retool",
+    "description": "Connect Retool to an Appwrite native MySQL database to build internal and admin tools. Fetch connection details with the API, configure the MySQL resource with TLS, and allow Retool Cloud network access when needed.",
+    "excerpt": "An Appwrite native MySQL database exposes a standard MySQL connection, so Retool connects to it through the built-in **MySQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels. You'll need a native MySQL database in a state, an Appwrite API key with , and permission to create resources in Retool. Fetch connection details by calling , which returns , , , , and .…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Retool"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/integrations/spring-boot",
+    "title": "Spring Boot",
+    "description": "Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.",
+    "excerpt": "An Appwrite native MySQL database is a standard MySQL engine, so a Spring Boot application connects to it through MySQL Connector/J with no Appwrite-specific runtime configuration. Point at the JDBC URL from your database credentials, size the built-in HikariCP pool, and use Spring Data JPA, Hibernate, Flyway, or Liquibase as you would with any managed MySQL server. You'll need a native MySQL database in a state and its credentials. You can fetch credentials with the API by calling , which…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "integrations",
+      "Spring Boot"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/maintenance",
+    "title": "Maintenance",
+    "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your MySQL database.",
+    "excerpt": "Appwrite manages the infrastructure around your database: security patches, engine upgrades, and instance health. This page covers the controls you have over when and how that maintenance happens. Maintenance window Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it through the API by picking a day and start hour (UTC): accepts through , and accepts to . Engine version upgrades You can upgrade the MySQL version online, such as from 8.0…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Maintenance"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/monitoring",
+    "title": "Monitoring",
+    "description": "Check database health, watch lifecycle states, and inspect active connections on your native MySQL database.",
+    "excerpt": "Every native MySQL database ships with programmatic health checks, and the engine's own instrumentation is fully available to you. There is nothing to install in the database for these checks. Database health Poll the database status for live health information after the database is ready: uptime, connection counts, replica state, and storage volumes. Use it from your own monitoring: For the database lifecycle state (, , , and friends), read the field of the database object itself. Use that field…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Monitoring"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/network-security",
+    "title": "Network security",
+    "description": "TLS by default, IP allowlists, and idle timeouts for your MySQL database.",
+    "excerpt": "Every native database is reachable through a unique public hostname, secured with TLS, and protected by network controls that you configure per database. Hostname Each database gets a stable hostname in the form: The hostname does not change for the lifetime of the database, across restarts, resizes, failovers, and version upgrades. You can copy it from the database response. TLS Connections on Appwrite Cloud are encrypted with TLS, terminated at Appwrite's edge and forwarded to your database over the internal…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Network security"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/quick-start",
+    "title": "Quick start",
+    "description": "Create your first native MySQL database in the Appwrite Console, retrieve its credentials, and run your first queries with the mysql client.",
+    "excerpt": "You can create a MySQL database and run your first query in a few minutes. Create a database 1. In your project, go to **Databases**. 2. Click **Create database**. 3. Give your database a name, and optionally a custom database ID. 4. Under **Choose database type**, select **MySQL** from the **Native databases** group. 5. Under **Specifications**, select your preferred tier. 6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later. 7. Review the database summary and…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/databases/mysql/scaling",
+    "title": "Scaling",
+    "description": "Resize the compute specification of your MySQL database with zero downtime and grow storage automatically as your data grows.",
+    "excerpt": "Native databases scale in two dimensions: the compute specification (CPU, memory, and connection limit) and storage. Both can change after creation, without dump-and-restore migrations. List available specifications Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan: Change the compute specification From the API, pass the new specification ID: Resizes apply with zero downtime through a rolling cutover: a new instance is provisioned on the target specification,…",
+    "breadcrumbs": [
+      "Databases",
+      "MySQL",
+      "Scaling"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql",
+    "title": "PostgreSQL",
+    "description": "Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.",
+    "excerpt": "Appwrite native PostgreSQL databases give you a managed PostgreSQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS. Native databases are different from Appwrite databases like TablesDB, DocumentsDB, and VectorsDB, which are accessed through Appwrite SDKs and platform APIs. A native PostgreSQL database gives you the raw engine. You connect with or any PostgreSQL…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/backups",
+    "title": "Backups",
+    "description": "Scheduled backups, manual backups, restores, and point-in-time recovery for your PostgreSQL database.",
+    "excerpt": "Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery. Automatic backups Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows. Backup policies A policy defines a schedule (cron expression) and a retention period in days.…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Backups"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/branches",
+    "title": "Branches",
+    "description": "Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.",
+    "excerpt": "A branch is a short-lived, isolated copy of your database. It has its own endpoint and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back. There is no branch merge operation. Use a branch to validate a migration, data repair, or application change, then intentionally cut application traffic over to the validated database…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Branches"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/access-control",
+    "title": "Security and access control",
+    "description": "Control access to PostgreSQL with roles, GRANT and REVOKE, and row-level security policies for multi-tenant data.",
+    "excerpt": "PostgreSQL controls access in three layers: - A **role** is an identity that can connect. - **Privileges** decide what a role may do to each table. - **Row-level security** narrows that further, to which rows. Your database's primary role can create additional roles, so you can give every service and teammate exactly the access it needs instead of sharing one all-powerful login. Setup The examples below protect a documents table whose rows belong to different owners. Create and seed it…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Security and access control"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/data-modeling",
+    "title": "Data modeling and normalization",
+    "description": "Design PostgreSQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.",
+    "excerpt": "Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it. The problem with one big table Start with an orders table designed the way a spreadsheet would be: Every design flaw here causes a concrete failure: - Ada's email…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Data modeling and normalization"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/indexes",
+    "title": "Indexes",
+    "description": "Speed up PostgreSQL queries with B-tree, composite, partial, and expression indexes, and read EXPLAIN ANALYZE output.",
+    "excerpt": "An index is a lookup structure the database maintains next to a table so it can find rows without scanning everything; the default B-tree kind keeps its entries sorted. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL. Setup Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Indexes"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/joins",
+    "title": "Joins and relationships",
+    "description": "Model relationships with foreign keys and combine PostgreSQL tables with INNER, LEFT, FULL, and CROSS joins.",
+    "excerpt": "Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice. Setup The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Joins and relationships"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/queries",
+    "title": "Querying rows",
+    "description": "Read and write PostgreSQL rows with SELECT, INSERT, UPDATE, and DELETE. Covers filtering, aggregation, pagination, and upserts.",
+    "excerpt": "Four statements do almost all the work in a relational database: - **SELECT** reads rows - **INSERT** adds new rows - **UPDATE** changes existing rows - **DELETE** removes rows SQL is declarative: a query describes the result you want, and the database's planner decides how to produce it, choosing between indexes, scans, and join strategies on its own. That's why the same query keeps working as data grows and indexes change. This page walks through each statement, plus the querying…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Querying rows"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/tables",
+    "title": "Tables and data types",
+    "description": "Create PostgreSQL tables with the right column types and constraints. Covers numeric, text, date and time, JSON, and array types.",
+    "excerpt": "A table is the unit of storage in a relational database, a named grid where: - each **row** is one record: one customer, one order - each **column** is one attribute every record shares: name, price, creation time - each column has a **type** that determines what values it accepts and how they compare, sort, and calculate Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Tables and data types"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/concepts/transactions",
+    "title": "Transactions",
+    "description": "Group PostgreSQL statements into atomic transactions. Covers COMMIT, ROLLBACK, savepoints, isolation levels, locking, and deadlocks.",
+    "excerpt": "A transaction groups statements into a single all-or-nothing unit. Either every statement takes effect, or none do, and no other connection ever sees a half-finished state. Two distinct things go wrong without that: - **Partial failure**: a crash or dropped connection after the debit but before the credit leaves data in a state that was never supposed to exist. - **Interleaving**: two concurrent processes both read a balance of 100, both compute a new value, both write, and one update…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "concepts",
+      "Transactions"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/connection-pooling",
+    "title": "Connection pooling",
+    "description": "Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.",
+    "excerpt": "PostgreSQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections. The pooler runs next to your database and is reachable on port on the same hostname. Your application connects to the pooler exactly like it would connect to…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Connection pooling"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/connections",
+    "title": "Connections",
+    "description": "Connect to your PostgreSQL database with psql or any standard driver. Retrieve connection details and rotate the primary password.",
+    "excerpt": "A native PostgreSQL database exposes a PostgreSQL endpoint over TLS. You connect to it the same way you would connect to any PostgreSQL server: with , any driver in any language, or any ORM. Get connection details in the Console The fastest way to connect is through the Appwrite Console: 1. In your project, go to **Databases** and select your PostgreSQL database. 2. Click **Credentials** to open the credentials dialog. 3. Copy the individual values from the **Details** tab, or…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Connections"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/extensions",
+    "title": "Extensions",
+    "description": "Install and manage PostgreSQL extensions like PostGIS, pgvector, and pg_trgm on your database, at no extra cost.",
+    "excerpt": "PostgreSQL exposes a rich extension ecosystem: PostGIS for geospatial data, pgvector for embeddings, pg_trgm for fuzzy search, and more. Native PostgreSQL databases on Appwrite support managing extensions through the API, at no extra cost. Install an extension Pass the extension name as it appears in the extension catalog. The install runs asynchronously: the request returns immediately and a worker runs inside the database, typically within a few seconds. The database must be in the state. Requesting an extension that is…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Extensions"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/high-availability",
+    "title": "High availability",
+    "description": "Run up to five read replicas with asynchronous, synchronous, or quorum replication and automatic failover for your PostgreSQL database.",
+    "excerpt": "A single database instance is a single point of failure. High availability (HA) adds streaming replicas next to your primary: they replicate continuously, serve read traffic through the connection pooler, and take over automatically when the primary becomes unhealthy. High availability requires a specification that runs on dedicated compute; the smallest specifications run on shared capacity and do not support replicas. How it works Replicas receive changes from the primary through PostgreSQL streaming replication (WAL shipping). Each replica is a…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "High availability"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/auth-js",
+    "title": "Auth.js",
+    "description": "Use an Appwrite native PostgreSQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through a Prisma or Drizzle adapter, pooled from serverless runtimes.",
+    "excerpt": "Auth.js (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your own database instead of only in a cookie, which is what makes database sessions, account linking, and email sign-in possible. An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so any Auth.js adapter built on a PostgreSQL ORM works against it with no Appwrite-specific configuration. You'll need a native PostgreSQL database in a state and…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Auth.js"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/better-auth",
+    "title": "Better Auth",
+    "description": "Use an Appwrite native PostgreSQL database as the database for Better Auth. Point runtime traffic at the pooler, run schema generation and migrations over a direct connection, and store users and sessions in PostgreSQL.",
+    "excerpt": "Better Auth is a framework-agnostic authentication library for TypeScript that keeps its state, including users, sessions, accounts, and verification tokens, in a database you own. A native PostgreSQL database gives Better Auth a standard PostgreSQL engine, so you can use the connection string from the Connections page and run the Better Auth CLI to create the schema. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one, then open the database and…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Better Auth"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/dbt",
+    "title": "dbt",
+    "description": "Run dbt transformations against an Appwrite native PostgreSQL database. Configure profiles.yml for the direct engine port, size threads to your connection budget, and test models against a branch in CI.",
+    "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL server, so dbt works against it through the standard [](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup) adapter with no Appwrite-specific configuration. Point a target at the connection details from the Connections page and use , , and the same way you would against any self-hosted PostgreSQL warehouse. dbt compiles your models into / statements and runs them in dependency order, materializing a transformed analytics layer inside a schema you control. You'll need a native PostgreSQL database in…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "dbt"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/django",
+    "title": "Django",
+    "description": "Use Django's ORM with an Appwrite native PostgreSQL database. Configure the DATABASES setting with TLS options, run migrations on the direct PostgreSQL port, and tune persistent connections for pooling.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the setting at the credentials from the Connections page, then use migrations, models, and the rest of Django exactly as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection details. The primary user is , and the database…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Django"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/drivers",
+    "title": "Node.js drivers",
+    "description": "Connect to an Appwrite native PostgreSQL database from Node.js with node-postgres or postgres.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so any Node.js driver that speaks the PostgreSQL wire protocol can connect over TLS without an Appwrite-specific adapter. The Connections page shows the minimal snippet to run your first query. This page covers production pool configuration, certificate verification, serverless connection management, and common connection errors. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Node.js drivers"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/drizzle",
+    "title": "Drizzle",
+    "description": "Use Drizzle ORM with an Appwrite native PostgreSQL database. Configure the driver, run migrations against the direct connection, and pool runtime traffic from serverless environments.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Drizzle ORM works against it with no Appwrite-specific configuration. Point Drizzle's driver at the connection string from the Connections page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection string. The primary user is…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Drizzle"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/ef-core",
+    "title": "EF Core",
+    "description": "Use Entity Framework Core with an Appwrite native PostgreSQL database. Configure the Npgsql connection string, run migrations against the direct PostgreSQL host, and rely on the driver's built-in connection pool from an ASP.NET server.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Entity Framework Core works against it with no Appwrite-specific configuration. Point the Npgsql EF Core provider at the connection string from the Connections page and use , migrations, and the rest of the toolchain exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and Connections to retrieve the connection details. Appwrite…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "EF Core"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/fastapi",
+    "title": "FastAPI",
+    "description": "Use FastAPI and SQLAlchemy 2.x with an Appwrite native PostgreSQL database. Configure the async asyncpg engine, pass TLS through connect_args, inject a session per request, and run Alembic migrations against the direct database port.",
+    "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so FastAPI with SQLAlchemy and an async driver works against it with no Appwrite-specific configuration. You point at the connection string from the connections page and use the SQLAlchemy ORM, the FastAPI dependency system, and Alembic exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See native PostgreSQL databases to create one and connections to retrieve the connection…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "FastAPI"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/gorm",
+    "title": "GORM",
+    "description": "Use GORM with an Appwrite native PostgreSQL database in Go. Build the DSN, open a connection, size the database/sql pool against the direct connection, and run migrations with AutoMigrate or golang-migrate.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so GORM talks to it with no Appwrite-specific configuration. You build a connection string from the credentials in the Console, hand it to the GORM PostgreSQL driver, and use models, , and the query API exactly as you would against any self-hosted PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one. To retrieve the hostname, password, database name, and connection…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "GORM"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/grafana",
+    "title": "Grafana",
+    "description": "Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.",
+    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 18 or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values,…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Grafana"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/laravel",
+    "title": "Laravel",
+    "description": "Use Laravel and Eloquent with an Appwrite native PostgreSQL database. Configure the connection, run migrations against the direct port, and pool serverless traffic through the connection pooler.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Laravel works against it with no Appwrite-specific configuration. Point the connection in at the credentials from the Connections page, then use Eloquent, the query builder, migrations, and queues as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL databases to create one. To retrieve credentials, open the database in the Console, click **Credentials**, and use the **Details**, **DSN**, **.env**,…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Laravel"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/metabase",
+    "title": "Metabase",
+    "description": "Connect Metabase to an Appwrite native PostgreSQL database for analytics. Use a read-only PostgreSQL role, configure SSL, and build dashboards on a session-safe connection.",
+    "excerpt": "Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so Metabase can connect to it without an Appwrite-specific adapter. Add the database in Metabase, point it at the host from the Connections page, and Metabase will sync the schema so your team can build questions and dashboards. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Copy the individual values from the **Details** tab, or use the **DSN**,…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Metabase"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/nextjs",
+    "title": "Next.js",
+    "description": "Connect a Next.js App Router application to an Appwrite native PostgreSQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.",
+    "excerpt": "An Appwrite native PostgreSQL database works with standard PostgreSQL drivers and ORMs, so a Next.js App Router application can query it from server-side code. Point your driver at the connection string from the Connections page and keep all database access on the server. You'll need a native PostgreSQL database in a state and its credentials. See PostgreSQL to create one and Connections to retrieve the connection string. The primary user is , and Appwrite generates the database name for each…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Next.js"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/prisma",
+    "title": "Prisma",
+    "description": "Use Prisma ORM with an Appwrite native PostgreSQL database. Configure the Prisma 7 datasource, run migrations through the direct connection, and route serverless runtime traffic through the connection pooler.",
+    "excerpt": "Prisma ORM works with Appwrite's native PostgreSQL database as a standard PostgreSQL target. Configure Prisma with the connection string from Appwrite, run Prisma Migrate against the direct database connection, and use Prisma Client from your application code. You'll need a native PostgreSQL database in a state and its credentials. Open the database in the Console and click **Credentials** to copy values from the **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tabs. You can also call from the Appwrite API to…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Prisma"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/rails",
+    "title": "Rails",
+    "description": "Use Ruby on Rails and ActiveRecord with an Appwrite native PostgreSQL database. Configure database.yml, run migrations against the direct database port, and size the ActiveRecord pool.",
+    "excerpt": "A native PostgreSQL database is a standard PostgreSQL engine, so Ruby on Rails works against it through ActiveRecord with no Appwrite-specific configuration. Point at the connection details from the Connections page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Rails"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/retool",
+    "title": "Retool",
+    "description": "Connect Retool to an Appwrite native PostgreSQL database to build internal and admin tools. Retrieve credentials from the Console, configure the PostgreSQL resource with TLS, and allow Retool Cloud network access when needed.",
+    "excerpt": "An Appwrite native PostgreSQL database exposes a standard PostgreSQL connection, so Retool connects to it through the built-in **PostgreSQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels. You'll need a native PostgreSQL database in a state and permission to create resources in Retool. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Retool"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/integrations/spring-boot",
+    "title": "Spring Boot",
+    "description": "Connect a Spring Boot application to an Appwrite native PostgreSQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against PostgreSQL.",
+    "excerpt": "An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so a Spring Boot application connects to it through the PostgreSQL JDBC driver with no Appwrite-specific runtime configuration. Point at the JDBC URL from your database credentials, size the built-in HikariCP pool, and use Spring Data JPA, Hibernate, Flyway, or Liquibase as you would with any managed PostgreSQL server. You'll need a native PostgreSQL database in a state and its credentials. In the Appwrite Console, open the database and click…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "integrations",
+      "Spring Boot"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/maintenance",
+    "title": "Maintenance",
+    "description": "Maintenance windows, online engine version upgrades, pause and resume, and the lifecycle states of your PostgreSQL database.",
+    "excerpt": "Appwrite manages the infrastructure around your database: security patches, engine upgrades, and instance health. This page covers the controls you have over when and how that maintenance happens. Maintenance window Routine maintenance that can briefly affect the database runs inside a weekly window that you choose. Set it under **Settings** > **Maintenance** in the Console by picking a day and start hour (UTC), or through the API: accepts through , and accepts to . Engine version upgrades You can upgrade…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Maintenance"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/monitoring",
+    "title": "Monitoring",
+    "description": "Watch compute, connections, storage, and workload metrics live, inspect active connections, and check database health on your PostgreSQL database.",
+    "excerpt": "Every native database ships with built-in observability: live metrics in the Console, an active-connections inspector, and programmatic health checks. There is nothing to install; metrics collection runs next to the database. Monitor tab Open your database and select the **Monitor** tab. The view is organized into sections: - **Overview**: key health indicators at a glance, including connection usage against your limit, storage used, cache hit ratio, uptime, and commit/rollback counts - **Compute**: CPU and memory usage over time - **Connections**:…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Monitoring"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/network-security",
+    "title": "Network security",
+    "description": "TLS by default, IP allowlists, and idle timeouts for your PostgreSQL database.",
+    "excerpt": "Every native database is reachable through a unique public hostname, secured with TLS, and protected by network controls that you configure per database. Hostname Each database gets a stable hostname in the form: The hostname does not change for the lifetime of the database, across restarts, resizes, failovers, and version upgrades. You can copy it from the Console credentials dialog or the database response. TLS Connections on Appwrite Cloud are encrypted with TLS, terminated at Appwrite's edge and forwarded to…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Network security"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/quick-start",
+    "title": "Quick start",
+    "description": "Create your first native PostgreSQL database in the Appwrite Console, run your first queries in the SQL editor, and connect with psql.",
+    "excerpt": "You can create a PostgreSQL database and run your first query in a few minutes. Create a database 1. In your project, go to **Databases**. 2. Click **Create database**. 3. Give your database a name, and optionally a custom database ID. 4. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group. 5. Under **Specifications**, select your preferred tier. 6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later. 7. Review the database summary and…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Quick start"
+    ]
+  },
+  {
+    "slug": "products/databases/postgresql/scaling",
+    "title": "Scaling",
+    "description": "Resize the compute specification of your PostgreSQL database with zero downtime and grow storage automatically as your data grows.",
+    "excerpt": "Native databases scale in two dimensions: the compute specification (CPU, memory, and connection limit) and storage. Both can change after creation, without dump-and-restore migrations. List available specifications Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan: Change the compute specification To resize in the Console, open your database, go to **Settings** > **Compute**, and select the new tier. From the API, pass the new specification ID:…",
+    "breadcrumbs": [
+      "Databases",
+      "PostgreSQL",
+      "Scaling"
+    ]
+  },
+  {
+    "slug": "products/databases/tablesdb",
+    "title": "TablesDB",
+    "description": "Store and query structured data with Appwrite TablesDB. Tables provide performant and scalable storage for your application, business, and user data.",
+    "excerpt": "Appwrite Databases let you store and query structured data. Databases provide high-performance and scalable data storage for your key application, business, and user data. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You can organize data into databases, tables, and rows. You can also paginate, order, and query rows. For complex business logic, Appwrite supports relationships to help you model your data. Quick start",
+    "breadcrumbs": [
+      "Databases",
+      "TablesDB"
+    ]
+  },
+  {
+    "slug": "products/databases/tablesdb/ai-suggestions",
     "title": "AI suggestions",
     "description": "Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.",
     "excerpt": "AI suggestions generate columns and indexes for your tables based on the table name, existing database structure, and optional context you provide. This feature analyzes your database to recommend appropriate schema designs that follow best practices. Navigate to **Databases** in the Appwrite Console, select your database, and click **Create table**. Enter a descriptive table name. AI suggestions will use this name to generate relevant columns and indexes. In the table creation dialog, enable **AI suggestions**. Optionally, provide additional context about…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "AI suggestions"
     ]
   },
   {
-    "slug": "products/databases/atomic-numeric-operations",
+    "slug": "products/databases/tablesdb/atomic-numeric-operations",
     "title": "Atomic numeric operations",
     "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full row. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. These operations work with , , and columns. Use columns when your counters or accumulators may exceed the 32-bit integer range. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Atomic numeric operations"
     ]
   },
   {
-    "slug": "products/databases/backups",
+    "slug": "products/databases/tablesdb/backups",
     "title": "Backups",
     "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Scale and Enterprise plans allow for more…",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Enterprise plan allows for more customization and…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Backups"
     ]
   },
   {
-    "slug": "products/databases/bulk-operations",
+    "slug": "products/databases/tablesdb/bulk-operations",
     "title": "Bulk operations",
     "description": "Perform bulk operations on rows within your tables for efficient data handling.",
     "excerpt": "Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Bulk operations"
     ]
   },
   {
-    "slug": "products/databases/csv-exports",
+    "slug": "products/databases/tablesdb/csv-exports",
     "title": "CSV exports",
     "description": "Export table data to CSV files from the Console. Share clean datasets with your team without writing custom scripts.",
     "excerpt": "Appwrite's CSV Export feature allows you to export rows from a table to a CSV file. This is especially useful for reporting, sharing data with non-technical team members, creating custom backups, or handing off datasets to analytics tools. This feature is available in both Appwrite Cloud and the self-hosted version. Export configuration Before exporting, you can configure several options to control the output format and contents. These settings ensure you get exactly the data you need in the format your…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "CSV exports"
     ]
   },
   {
-    "slug": "products/databases/csv-imports",
+    "slug": "products/databases/tablesdb/csv-imports",
     "title": "CSV imports",
     "description": "Master row imports with Appwrite's CSV Import feature. Learn how to create rows within your tables by uploading a CSV file.",
     "excerpt": "Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems. This feature is available in both Appwrite Cloud and the self-hosted version. Prepare your table To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "CSV imports"
     ]
   },
   {
-    "slug": "products/databases/databases",
+    "slug": "products/databases/tablesdb/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of tables. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Databases"
     ]
   },
   {
-    "slug": "products/databases/geo-queries",
+    "slug": "products/databases/tablesdb/geo-queries",
     "title": "Geo queries",
     "description": "Query geographic data with distance, intersects, overlaps, and other location-based operations using spatial columns.",
     "excerpt": "Geo queries let you perform location-based operations on geographic data stored in your database. Find nearby locations, check if coordinates fall within boundaries, calculate distances between points, and more. Appwrite supports geo queries through spatial columns that store coordinates, shapes, and areas as first-class data types. In database terminology, these could also be known as **spatial queries**. Coordinates are specified as arrays. Distance measurements can be specified in meters or degrees. Use cases Use geo queries for location-based features: -…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Geo queries"
     ]
   },
   {
-    "slug": "products/databases/legacy/atomic-numeric-operations",
+    "slug": "products/databases/tablesdb/legacy/atomic-numeric-operations",
     "title": "Atomic numeric operations",
     "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
     "excerpt": "Atomic numeric operations allow you to safely increase or decrease numeric fields without fetching the full document. This eliminates race conditions and reduces bandwidth usage when updating any numeric values that need to be modified atomically, such as counters, scores, balances, and other fast-moving numeric data. How atomic operations work Instead of the traditional read-modify-write pattern, atomic numeric operations use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Atomic numeric operations"
     ]
   },
   {
-    "slug": "products/databases/legacy/bulk-operations",
+    "slug": "products/databases/tablesdb/legacy/bulk-operations",
     "title": "Bulk operations",
     "description": "Perform bulk operations on documents within your collections for efficient data handling.",
     "excerpt": "Appwrite Databases supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Bulk operations"
     ]
   },
   {
-    "slug": "products/databases/legacy/collections",
+    "slug": "products/databases/tablesdb/legacy/collections",
     "title": "Collections",
     "description": "Organize your data with Appwrite Collections. Explore how to create and configure collections to store and structure your data effectively.",
     "excerpt": "Appwrite uses collections as containers of documents. Each collection contains many documents identical in structure. The terms collections and documents are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create collection You can create collections using the Appwrite Console,…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Collections"
     ]
   },
   {
-    "slug": "products/databases/legacy/databases",
+    "slug": "products/databases/tablesdb/legacy/databases",
     "title": "Databases",
     "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
     "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. In future versions, different databases may be backed by a different database technology of your choosing. Create in Console The easiest way to create a database using the Appwrite Console. You can create a database by navigating to the **Databases** page and clicking **Create database**. Create using Server SDKs You can programmatically create databases using a Server SDK. Appwrite Server SDKs require an API key.",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Databases"
     ]
   },
   {
-    "slug": "products/databases/legacy/documents",
+    "slug": "products/databases/tablesdb/legacy/documents",
     "title": "Documents",
     "description": "Master document management with Appwrite Databases. Learn how to create, update, and query documents within your collections for dynamic data storage.",
     "excerpt": "Each piece of data or information in Appwrite Databases is a document. Documents have a structure defined by the parent collection. Create documents You must grant **create** permissions to users at the **collection level** before users can create documents. Learn more about permissions In most use cases, you will create documents programmatically. During testing, you might prefer to create documents in the Appwrite Console. To do so, navigate to the **Documents** tab of your collection and click the **Add document**…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Documents"
     ]
   },
   {
-    "slug": "products/databases/legacy/order",
+    "slug": "products/databases/tablesdb/legacy/order",
     "title": "Order",
     "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.\"",
     "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listDocuments endpoint, you can specify the order of the documents returned using the and query methods. Multiple columns To sort based on multiple attributes, simply provide multiple query methods. For better performance, create an index on the first attribute that you order by. In the example…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Order"
     ]
   },
   {
-    "slug": "products/databases/legacy/pagination",
+    "slug": "products/databases/tablesdb/legacy/pagination",
     "title": "Pagination",
     "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
     "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing documents into pages containing documents.…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Pagination"
     ]
   },
   {
-    "slug": "products/databases/legacy/permissions",
+    "slug": "products/databases/tablesdb/legacy/permissions",
     "title": "Database permissions",
     "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database collections",
     "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Database permissions"
     ]
   },
   {
-    "slug": "products/databases/legacy/queries",
+    "slug": "products/databases/tablesdb/legacy/queries",
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite Databases. Discover various query options, filtering, sorting, and advanced querying techniques.",
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Queries"
     ]
   },
   {
-    "slug": "products/databases/legacy/quick-start",
+    "slug": "products/databases/tablesdb/legacy/quick-start",
     "title": "Start with Databases",
     "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define collections, and perform basic data operations.",
     "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a collection and name it . Optionally, add a custom collection ID. Navigate to **Attributes** and create attributes by clicking **Create attribute** and select **String**. Attributes define the structure of your collection's documents. Enter **Attribute key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Start with Databases"
     ]
   },
   {
-    "slug": "products/databases/legacy/relationships",
+    "slug": "products/databases/tablesdb/legacy/relationships",
     "title": "Relationships",
     "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between documents for interconnected data.",
     "excerpt": "Relationships describe how documents in different collections are associated, so that related documents can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship Attributes Relationships are represented in a collection using **relationship attributes**. The relationship attribute contains the…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Relationships"
     ]
   },
   {
-    "slug": "products/databases/legacy/type-generation",
+    "slug": "products/databases/tablesdb/legacy/type-generation",
     "title": "Type generation",
     "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
     "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database collections and attributes. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each collection. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
     "breadcrumbs": [
       "Databases",
+      "TablesDB",
       "legacy",
       "Type generation"
     ]
   },
   {
-    "slug": "products/databases/offline",
+    "slug": "products/databases/tablesdb/offline",
     "title": "Offline sync",
     "description": "Enable offline synchronization of data between your apps and Appwrite Databases.",
     "excerpt": "Offline synchronization (or offline sync) is a mechanism that allows apps to store and update data locally when a user is offline (i.e., loses internet connectivity), and then synchronize that data with an Appwrite database once the user is back online. This capability is crucial for building resilient and responsive applications, especially in environments with unreliable or intermittent internet connectivity. Suppose you are driving from one city to another and lose internet connectivitity while passing through a rural area, locally-downloaded…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Offline sync"
     ]
   },
   {
-    "slug": "products/databases/operators",
+    "slug": "products/databases/tablesdb/operators",
     "title": "Operators",
     "description": "Update multiple fields atomically without fetching the full row. Perform numeric, array, string, and date updates in a single, consistent workflow.",
     "excerpt": "Database operators let you update fields directly on the server without fetching the full row. Instead of sending new values, you describe the action you want: increment, append, replace, or adjust. This eliminates race conditions and reduces bandwidth usage when updating any values that need to be modified atomically. The operation is applied atomically at the storage layer for safe, concurrent updates. - Atomic by field: Each operation is applied safely at the storage layer to prevent lost updates under…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Operators"
     ]
   },
   {
-    "slug": "products/databases/order",
+    "slug": "products/databases/tablesdb/order",
     "title": "Order",
     "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.",
     "excerpt": "You can order results returned by Appwrite Databases by using an order query. For best performance, create an index on the column you plan to order by. Ordering one column When querying using the listRows endpoint, you can specify the order of the rows returned using the and query methods. Multiple columns To sort based on multiple columns, simply provide multiple query methods. For better performance, create an index on the first column that you order by. In the example…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Order"
     ]
   },
   {
-    "slug": "products/databases/pagination",
+    "slug": "products/databases/tablesdb/pagination",
     "title": "Pagination",
     "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
     "excerpt": "As your database grows in size, you'll need to paginate results returned. Pagination improves performance by returning a subset of results that match a query at a time, called a page. By default, list operations return 25 items per page, which can be changed using the operator. There is no hard limit on the number of items you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination works by dividing rows into pages containing rows.…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Pagination"
     ]
   },
   {
-    "slug": "products/databases/permissions",
+    "slug": "products/databases/tablesdb/permissions",
     "title": "Database permissions",
     "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database tables",
     "excerpt": "Permissions define who can access rows in a table. By default **no permissions** are granted to any users, so no user can access any rows. Permissions exist at two levels, table level and row level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receive access when granted. A user with access granted at either table level or row level will be able to access a row. Users **don't need access at both levels**…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
-      "Permissions"
+      "TablesDB",
+      "Database permissions"
     ]
   },
   {
-    "slug": "products/databases/queries",
+    "slug": "products/databases/tablesdb/queries",
     "title": "Queries",
     "description": "Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
     "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported query operation. Building queries Queries are passed to an endpoint through the parameter as an array of query strings, which can be generated using the class. Each query method is logically separated via operations.…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Queries"
     ]
   },
   {
-    "slug": "products/databases/quick-start",
+    "slug": "products/databases/tablesdb/quick-start",
     "title": "Start with Databases",
     "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.",
     "excerpt": "Head to your Appwrite Console and create a database and name it . Optionally, add a custom database ID. Create a table and name it . Optionally, add a custom table ID. Navigate to **Columns** and create columns by clicking **Create column** and select **Text**. Columns define the structure of your table's rows. Enter **Column key** and **Size**. For example, and . Navigate to **Settings** > **Permissions** and add a new role **Any**. Check the **CREATE** and **READ** permissions, so…",
     "breadcrumbs": [
       "Databases",
-      "Getting started",
-      "Quick start"
+      "TablesDB",
+      "Start with Databases"
     ]
   },
   {
-    "slug": "products/databases/relationships",
+    "slug": "products/databases/tablesdb/relationships",
     "title": "Relationships",
     "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between rows for interconnected data.",
     "excerpt": "Relationships describe how rows in different tables are associated, so that related rows can be read, updated, or deleted together. Entities in real-life often associate with each other in an organic and logical way, like a person and their dog, an album and its songs, or friends in a social network. These types of association between entities can be modeled in Appwrite using relationships. Relationship columns Relationships are represented in a table using **relationship columns**. The relationship column contains the…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Relationships"
     ]
   },
   {
-    "slug": "products/databases/rows",
+    "slug": "products/databases/tablesdb/rows",
     "title": "Rows",
     "description": "Master row management with Appwrite Databases. Learn how to create, update, upsert, and query rows within your tables for dynamic data storage.",
     "excerpt": "Each piece of data or information in Appwrite Databases is a row. Rows have a structure defined by the parent table. Create rows You must grant _create_ permissions to users at the _table level_ before users can create rows. Learn more about permissions In most use cases, you will create rows programmatically. During testing, you might prefer to create rows in the Appwrite Console. To do so, navigate to the **Rows** tab of your table and click the **Add row**…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Rows"
     ]
   },
   {
-    "slug": "products/databases/tables",
+    "slug": "products/databases/tablesdb/tables",
     "title": "Tables",
     "description": "Organize your data with Appwrite Tables. Explore how to create and configure tables to store and structure your data effectively.",
     "excerpt": "Appwrite uses tables as containers of rows. Each tables contains many rows identical in structure. The terms tables and rows are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood. That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions. Create table You can create tables using the Appwrite Console,…",
     "breadcrumbs": [
       "Databases",
-      "Concepts",
+      "TablesDB",
       "Tables"
     ]
   },
   {
-    "slug": "products/databases/timestamp-overrides",
+    "slug": "products/databases/tablesdb/timestamp-overrides",
     "title": "Timestamp overrides",
     "description": "Set custom $createdAt and $updatedAt timestamps for your rows when using server SDKs.",
     "excerpt": "When creating or updating rows, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These columns can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a row's timestamps by…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Timestamp overrides"
     ]
   },
   {
-    "slug": "products/databases/transactions",
+    "slug": "products/databases/tablesdb/transactions",
     "title": "Transactions",
     "description": "Stage multiple database operations and commit them atomically. Group changes across databases and tables with ordering, isolation, and conflict detection.",
     "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and tables. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported row, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Transactions"
     ]
   },
   {
-    "slug": "products/databases/type-generation",
+    "slug": "products/databases/tablesdb/type-generation",
     "title": "Type generation",
     "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
     "excerpt": "The Appwrite CLI provides a simple way to generate types based on your Appwrite database schema. This feature is particularly useful for developers who want to ensure type safety in their applications by generating type definitions that match their database tables and columns. To generate types, the CLI reads the database schema from your project's file and generates type definitions for each table. Generating types First, ensure you have the Appwrite CLI installed and your project is initialised. Then, run…",
     "breadcrumbs": [
       "Databases",
-      "Guides",
+      "TablesDB",
       "Type generation"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb",
+    "title": "VectorsDB",
+    "description": "Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.",
+    "excerpt": "Appwrite VectorsDB lets you store vector embeddings and run similarity search over them. A collection is created with a fixed , every document holds an vector of that length plus optional , and an HNSW index keeps similarity search fast as your data grows. Databases store data, if you need to store files like images, PDFs or videos, use Appwrite Storage. You organize data into databases, collections, and documents, the same way you do across Appwrite Databases. What sets VectorsDB…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/backups",
+    "title": "Backups",
+    "description": "Learn how to back up and restore your VectorsDB databases, ensuring data security and seamless recovery.",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab and click **Create policy**, then choose a preset policy or add…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Backups"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/bulk-operations",
+    "title": "Bulk operations",
+    "description": "Perform bulk operations on documents within your collections for efficient data handling in Appwrite VectorsDB.",
+    "excerpt": "Appwrite VectorsDB supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets. Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Bulk operations"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/collections",
+    "title": "Collections",
+    "description": "Organize embeddings with Appwrite VectorsDB collections. Learn how to create collections with a fixed dimension, manage them, and configure permissions.",
+    "excerpt": "Appwrite uses collections as containers of documents. A VectorsDB collection stores embeddings, so every collection is created with a fixed ****, the length of the embedding vectors it holds. All documents in the collection must use vectors of that exact length. Unlike TablesDB, you don't define a schema for a VectorsDB collection. The schema is fixed and provisioned for you when the collection is created: | Attribute | Type | Description | |--------------|----------|-----------------------------------------------------------------------------| | | | The embedding vector. Required,…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Collections"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/csv-exports",
+    "title": "CSV exports",
+    "description": "Export VectorsDB documents to a CSV file. Share embeddings and metadata as a portable dataset without writing custom scripts.",
+    "excerpt": "Appwrite's CSV export feature lets you export documents from a VectorsDB collection to a CSV file. This is useful for reporting, sharing a dataset with your team, creating custom backups, or handing embeddings and their metadata off to other tools. Exported columns A VectorsDB collection has a fixed schema, so every export has the same shape. Each row carries the document's system fields together with the two collection attributes: | Column | Type | Description | |--------------|--------|--------------------------------------------------------------------------| | | string…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "CSV exports"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/csv-imports",
+    "title": "CSV imports",
+    "description": "Import embeddings into Appwrite VectorsDB by uploading a CSV file. Learn how to format the embeddings and metadata columns for a bulk import.",
+    "excerpt": "Appwrite's CSV Import feature allows you to create multiple documents in a collection by uploading a single CSV file. This is especially useful for loading precomputed embeddings, seeding test environments, or migrating vectors from another system. Prepare your CSV A VectorsDB collection has a fixed schema, so every CSV maps to the same two columns: | Column | Type | Description | |--------------|----------|----------------------------------------------------------------------------------| | | | The embedding vector, written as a JSON array. Required, and its length must equal…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "CSV imports"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/databases",
+    "title": "Databases",
+    "description": "Dive deeper into Appwrite VectorsDB and database configuration. Learn how to create and manage multiple vector databases for your application.",
+    "excerpt": "Databases are the largest organizational unit in Appwrite. Each database contains a group of collections. Shared and dedicated databases VectorsDB databases run on either shared or dedicated infrastructure. Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a Server SDK. Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Databases"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/documents",
+    "title": "Documents",
+    "description": "Create, read, update, and delete documents in Appwrite VectorsDB. Learn how to store embedding vectors and metadata in your collections.",
+    "excerpt": "Each piece of data in Appwrite VectorsDB is a document. A document's data follows the fixed schema provisioned by its collection: an vector and an optional object. The array is required, and its length must equal the you set when creating the collection. The field is free-form JSON, so you can attach any data you want to keep alongside each vector. If the array is longer or shorter than the collection's , the request is rejected. The examples on this…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Documents"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/embeddings",
+    "title": "Embeddings",
+    "description": "Generate text embeddings with Appwrite VectorsDB. Turn text into vector embeddings with built-in models and store them in your documents for vector search.",
+    "excerpt": "An embedding is a list of numbers that represents the meaning of a piece of text. VectorsDB can generate embeddings for you with built-in models, so you can turn text into vectors and store them in a collection without running a separate embedding service. The typical flow is two steps: generate an embedding from your text, then store that embedding in a document's field. Once stored, you can run vector search over your documents. Generate embeddings Use the method to…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Embeddings"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/order",
+    "title": "Order",
+    "description": "Order documents returned by Appwrite VectorsDB. Learn how to sort by system fields like $createdAt and $sequence, and why metadata sub-fields can't be ordered.",
+    "excerpt": "You can order the documents returned by listDocuments using the and query methods. VectorsDB orders on the system fields that Appwrite maintains on every document, such as , , , and . A VectorsDB collection has a fixed schema: an vector and a object. Because is stored as a single JSON object rather than typed columns, you can't order by a value inside it. Ordering by a nested path like is rejected with . Order by the system fields below…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Order"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/pagination",
+    "title": "Pagination",
+    "description": "Implement pagination for large data sets in Appwrite VectorsDB. Explore techniques for splitting and displaying documents across multiple pages.",
+    "excerpt": "As your collection grows in size, you'll need to paginate the documents returned. Pagination improves performance by returning a subset of documents that match a query at a time, called a page. By default, list operations return 25 documents per page, which can be changed using the query method. There is no hard limit on the number of documents you can request. However, beware that **large pages can degrade performance**. Offset pagination Offset pagination divides documents into pages of documents…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Pagination"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/permissions",
+    "title": "Database permissions",
+    "description": "Control access to your VectorsDB data with permissions. Learn how to set collection level and document level access rules.",
+    "excerpt": "Permissions define who can access documents in a collection. By default **no permissions** are granted to any users, so no user can access any documents. Permissions exist at two levels, collection level and document level permissions. In Appwrite, permissions are **granted**, meaning a user has no access by default and receives access when granted. A user with access granted at either collection level or document level will be able to access a document. Users **don't need access at both levels**…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Database permissions"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/queries",
+    "title": "Queries",
+    "description": "Filter VectorsDB documents by their metadata using the Query class. Discover comparison, string, logical, ordering, and pagination operators.",
+    "excerpt": "Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries. In VectorsDB, every document stores an vector and an optional object. The queries on this page filter documents by the fields inside that object. To rank documents by vector similarity instead, see vector search. Query class Appwrite SDKs provide a class to help you build queries. The class has methods for each type of supported…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Queries"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/quick-start",
+    "title": "Start with VectorsDB",
+    "description": "Get started with Appwrite VectorsDB. Follow a step-by-step guide to create your first database, add a collection with a fixed dimension, store embeddings with metadata, and read them back.",
+    "excerpt": "VectorsDB stores embedding vectors so you can build features like semantic search, recommendations, and retrieval for AI applications. This guide walks through creating a database, adding a collection with a fixed , storing a document with its and , and reading it back. These steps use a Server SDK, which requires an API key. Head to your Appwrite Console and click **Create database**. Name it and choose **VectorsDB** as the database type. Optionally, add a custom database ID. Select your…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Start with VectorsDB"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/timestamp-overrides",
+    "title": "Timestamp overrides",
+    "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
+    "excerpt": "When creating or updating documents, Appwrite automatically sets and timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records. To manually set and , you must use a **server SDK** with an **API key**. These attributes can be passed inside the parameter on any of the create, update, or upsert routes (single or bulk). Setting custom timestamps You can override a document's timestamps by…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Timestamp overrides"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/transactions",
+    "title": "Transactions",
+    "description": "Stage multiple VectorsDB operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.",
+    "excerpt": "Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections. How transactions work 1. Call the createTransaction method to create a transaction. This will return a transaction model, including its ID. 2. Stage operations by passing the parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the createOperations method. 3. Call the updateTransaction method to…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Transactions"
+    ]
+  },
+  {
+    "slug": "products/databases/vectorsdb/vector-search",
+    "title": "Vector search",
+    "description": "Run similarity search over your documents with Appwrite VectorsDB. Create an HNSW index on the embeddings field and rank documents by cosine, dot product, or Euclidean distance.",
+    "excerpt": "Vector search finds the documents whose are closest to a query vector. Instead of matching exact values, it ranks documents by similarity, so you can build features like semantic search, recommendations, and retrieval for AI applications. There are two steps: create an index on the field so searches are fast, then pass a vector query to to get documents ranked by similarity. Create an index Before you search, create an HNSW index on the field with . HNSW (Hierarchical Navigable…",
+    "breadcrumbs": [
+      "Databases",
+      "VectorsDB",
+      "Vector search"
     ]
   },
   {
@@ -2875,7 +4394,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "excerpt": "Resend lets you send customized email messages to your users. These emails can be sent immediately or scheduled. You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows. To add Resend as a provider, navigate to **Messaging** > **Providers** > **Add provider** > **Email**. Give your provider a name > choose **Resend** > click **Save and continue**. The provider will be saved to your project, but not enabled until you complete its configuration. In the…",
     "breadcrumbs": [
       "Messaging",
-      "Resend"
+      "Providers",
+      "Email with Resend"
     ]
   },
   {
@@ -3476,7 +4996,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/storage/buckets",
     "title": "Buckets",
     "description": "Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.",
-    "excerpt": "Storage buckets are a group of files, similar to tables in Appwrite Databases. Buckets let you limit file size and extensions, whether or not to encrypt the files, and more. Create Bucket You can create your bucket from the Appwrite Console, a Server SDK, or the CLI. You can create a bucket by heading to the **Storage** page and clicking **Create bucket**. You can also create tables programmatically using a Server SDK. Appwrite Server SDKs require an API key. You…",
+    "excerpt": "Storage buckets are a group of files, similar to tables in Appwrite Databases. Buckets let you limit file size and extensions, whether or not to encrypt the files, and more. Create Bucket You can create your bucket from the Appwrite Console, a Server SDK, or the CLI. You can create a bucket by heading to the **Storage** page and clicking **Create bucket**. You can also create buckets programmatically using a Server SDK. Appwrite Server SDKs require an API key. You…",
     "breadcrumbs": [
       "Storage",
       "Concepts",
@@ -3492,6 +5012,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Storage",
       "Concepts",
       "File tokens"
+    ]
+  },
+  {
+    "slug": "products/storage/folders",
+    "title": "Folders",
+    "description": "Organize files in Appwrite Storage buckets with virtual folders. Learn how to upload files into folders, list files by folder, and browse folders.",
+    "excerpt": "Appwrite Storage lets you organize the files inside a bucket using virtual folders. Folders work like key prefixes in S3-compatible storage services: they are derived from the paths of your files, so you never create or delete folders explicitly. How folders work A bucket doesn't store folders as records. Instead, every file has a attribute, a path like , and folders are derived from these paths: a folder exists whenever at least one file's path places the file inside it.…",
+    "breadcrumbs": [
+      "Storage",
+      "Folders"
     ]
   },
   {
@@ -3525,6 +5055,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Storage",
       "Getting started",
       "Quick start"
+    ]
+  },
+  {
+    "slug": "products/storage/s3",
+    "title": "S3 API",
+    "description": "Connect any S3-compatible client, SDK, or tool to Appwrite Storage. Configure credentials once, then manage buckets, objects, and multipart uploads over the S3 API.",
+    "excerpt": "Appwrite Storage exposes an S3-compatible API, so you can point the AWS CLI, the AWS SDKs, and third-party tools like rclone or s3cmd at your buckets and files. The API uses AWS Signature Version 4 and maps standard S3 operations onto Appwrite Storage, so most existing S3 code works after you change three settings: the endpoint, the credentials, and the region. The S3 API is available on Appwrite Cloud. It needs a project ID and an API key with the…",
+    "breadcrumbs": [
+      "Storage",
+      "S3 API"
     ]
   },
   {

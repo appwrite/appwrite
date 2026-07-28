@@ -1,0 +1,218 @@
+---
+layout: article
+title: Databases
+description: Dive deeper into Appwrite DocumentsDB and database configuration. Learn how to create and manage multiple databases for your application.
+---
+Databases are the largest organizational unit in Appwrite.
+Each database contains a group of [collections](/docs/products/databases/documentsdb/collections).
+
+# Create in Console {% #create-in-console %}
+The easiest way to create a database is using the Appwrite Console.
+Navigate to the **Databases** page and click **Create database**, choose **DocumentsDB** as the database type, and select your preferred tier.
+
+{% only_dark %}
+![Create database](/images/docs/databases/documentsdb/dark/create-database.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database](/images/docs/databases/documentsdb/create-database.avif)
+{% /only_light %}
+
+# Create using Server SDKs {% #create-using-server-sdks %}
+You can programmatically create databases using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\DocumentsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$documentsDB = new DocumentsDB($client);
+
+$result = $documentsDB->create(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.create(
+    database_id = '<DATABASE_ID>',
+    name = '<NAME>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB.new(client)
+
+result = documents_db.create(
+    database_id: '<DATABASE_ID>',
+    name: '<NAME>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+Database result = await documentsDB.Create(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+DocumentsDB documentsDB = DocumentsDB(client);
+
+Database result = await documentsDB.create(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.DocumentsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val documentsDB = DocumentsDB(client)
+
+val response = documentsDB.create(
+    databaseId = "<DATABASE_ID>",
+    name = "<NAME>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.DocumentsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+documentsDB.create(
+    "<DATABASE_ID>",
+    "<NAME>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let documentsDB = DocumentsDB(client)
+
+let database = try await documentsDB.create(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::DocumentsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let result = documents_db.create(
+        "<DATABASE_ID>",
+        "<NAME>",
+        None, // enabled (optional)
+        None, // dedicatedDatabaseId (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+

@@ -1,0 +1,113 @@
+---
+layout: article
+title: dbt
+description: Run dbt Core transformations against an Appwrite native MySQL database with the community dbt-mysql adapter.
+---
+
+Use dbt Core with an Appwrite native MySQL database through the community [`dbt-mysql`](https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup) adapter. Appwrite exposes standard MySQL on port `3306`, so dbt connects with the same host, username, password, and database name you use with other MySQL clients.
+
+dbt compiles your models into `CREATE TABLE` and `CREATE VIEW` statements, then runs them in dependency order to build transformed tables and views inside the MySQL database you configure.
+
+{% info title="Adapter support" %}
+dbt Labs lists MySQL as a community adapter. The published [`dbt-mysql`](https://pypi.org/project/dbt-mysql/) package is experimental and is not dbt-supported, so pin and test the adapter version you deploy.
+{% /info %}
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve them. The primary user is `admin`, the database name is generated for each database, and the engine listens on port `3306`.
+{% /info %}
+
+# Install the adapter {% #install %}
+
+Install dbt Core and the MySQL adapter in the Python environment where you run dbt:
+
+```bash
+python -m pip install dbt-mysql
+```
+
+# Choose where dbt builds {% #build-location %}
+
+In MySQL, dbt's `schema` setting is the MySQL database name. Set `schema` to the generated database name from your Appwrite connection details.
+
+Use a naming convention such as a `dbt_` prefix for dbt models and seeds, for example `dbt_orders` and `dbt_customer_revenue`, to keep transformed tables separate from application tables in the same database. For stricter isolation, use another native MySQL database or validate changes against a branch.
+
+# Configure profiles.yml {% #profiles %}
+
+dbt reads connection details from `~/.dbt/profiles.yml` or the directory in `DBT_PROFILES_DIR`. Configure a `mysql` target against the database host on port `3306`:
+
+```yaml
+analytics:
+  target: dev
+  outputs:
+    dev:
+      type: mysql
+      server: db-<hash>.<region>.appwrite.center
+      port: 3306
+      username: admin
+      password: "{{ env_var('APPWRITE_DB_PASSWORD') }}"
+      schema: <database>
+      threads: 4
+      charset: utf8mb4
+      collation: utf8mb4_0900_ai_ci
+```
+
+The `dbt-mysql` adapter uses `server`, `username`, `password`, and `schema`. Read the password from an environment variable with `env_var` rather than committing it. The `schema` value is the generated MySQL database name from your Appwrite connection string.
+
+# Test the connection {% #debug %}
+
+`dbt debug` validates your project files and opens a connection to confirm the credentials and host are correct:
+
+```bash
+dbt debug
+```
+
+A successful run reports `Connection test: OK connection ok`. If it fails, recheck the host, port, password, and database name.
+
+# Run transformations {% #run %}
+
+Build your models into the configured MySQL database:
+
+```bash
+dbt run
+```
+
+`dbt run` executes models only, materializing each as a table or view. Use `dbt build` to run models, tests, seeds, and snapshots together in DAG order:
+
+```bash
+dbt build
+```
+
+# Choose the right connection {% #connection %}
+
+dbt opens one database connection per thread and runs DDL during model builds. Point dbt at a connection that preserves the session for each thread:
+
+- **Direct engine port (`3306`)** is the recommended target. Each thread gets a backend session with the DDL privileges dbt needs. This is what the `profiles.yml` above uses.
+- **Session-mode pooler** can work when the pooler is available for your database specification. Connect on the pooler port (`6033`) and use `session` mode.
+
+Avoid the transaction-mode pooler for dbt. Transaction mode returns the backend connection to the pool after each transaction, which can break workflows that rely on session state. See the [connection pooling](/docs/products/databases/mysql/connection-pooling#modes) page for the mode trade-offs.
+
+# Size threads to your connection budget {% #threads %}
+
+The `threads` setting controls how many models dbt builds in parallel, and dbt opens one connection per thread. A `threads: 8` run can hold up to eight backend connections at once. dbt also respects model dependencies, so it never runs more models concurrently than your DAG allows.
+
+Pick a `threads` value that fits the connection budget for your database specification, and leave headroom for application traffic sharing the same database. Start at `4` and raise it only while connections stay within budget.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes and ports. Use session mode for dbt.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for CI and preview environments.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
+TLS behavior, certificate verification, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="https://docs.getdbt.com/docs/local/connect-data-platform/mysql-setup" %}
+dbt MySQL adapter reference
+{% /arrow_link %}

@@ -1,0 +1,223 @@
+---
+layout: article
+title: Tables and data types
+description: Create MySQL tables with the right column types and constraints. Covers numeric, string, date and time, JSON, ENUM, and generated columns.
+---
+
+A table is the unit of storage in a relational database, a named grid where:
+
+- each **row** is one record: one customer, one order
+- each **column** is one attribute every record shares: name, price, creation time
+- each column has a **type** that determines what values it accepts and how they compare, sort, and calculate
+
+Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is what lets the database enforce correctness: precise types and constraints reject bad data before it ever reaches your application.
+
+The examples on this page build up pieces of a small store schema: customers, products, and orders.
+
+# Create a table {% #create %}
+
+`CREATE TABLE` names the table and declares each column with its type and the rules it must obey:
+
+```sql
+CREATE TABLE customers (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(200) NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+This declaration packs in the most common column features:
+
+- `AUTO_INCREMENT` makes the database assign an ascending value. `SERIAL` is shorthand for `BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE`.
+- `PRIMARY KEY` uniquely identifies each row; in InnoDB it also physically orders the table (the clustered index).
+- `NOT NULL` rejects missing values, and `UNIQUE` rejects duplicates.
+- `DEFAULT CURRENT_TIMESTAMP` fills the column when an insert doesn't provide a value.
+
+Tables default to the InnoDB storage engine and `utf8mb4` character set, which is what you want: full transaction support and full Unicode, including emoji.
+
+# Numeric types {% #numeric %}
+
+| Type | Range (signed) | Use for |
+| --- | --- | --- |
+| `TINYINT` | −128 to 127 | Flags, small codes |
+| `SMALLINT` | −32,768 to 32,767 | Small counters |
+| `MEDIUMINT` | −8,388,608 to 8,388,607 | Mid-range counters |
+| `INT` | about ±2.1 billion | General whole numbers |
+| `BIGINT` | about ±9.2 quintillion | IDs, anything that may grow |
+| `DECIMAL(p, s)` | Exact, up to 65 digits | Money, quantities that must not round |
+| `FLOAT` / `DOUBLE` | Approximate floating point | Measurements, scientific data |
+
+Each integer type also has an `UNSIGNED` variant that trades negative range for double the positive range.
+
+The critical distinction is exact versus approximate:
+
+- **DECIMAL** stores decimal values exactly: 0.1 + 0.2 is 0.3.
+- **DOUBLE** stores binary approximations: the same sum comes back as 0.30000000000000004.
+
+Always use `DECIMAL` for money. A price column like `DECIMAL(10, 2)` holds up to 8 digits before the decimal point and exactly 2 after.
+
+# String types {% #strings %}
+
+| Type | Holds | Use for |
+| --- | --- | --- |
+| `VARCHAR(n)` | Up to n characters | Names, emails, most strings |
+| `TEXT` | Up to 64 KB | Long free-form text |
+| `MEDIUMTEXT` / `LONGTEXT` | Up to 16 MB / 4 GB | Documents, logs |
+| `CHAR(n)` | Exactly n characters, space-padded in storage (trailing spaces stripped on read) | Fixed-length codes only |
+| `ENUM(...)` | One value from a fixed list | Status columns |
+| `BINARY` / `VARBINARY` / `BLOB` | Raw bytes | Hashes, encrypted data |
+
+`VARCHAR` needs an explicit maximum length, and unlike some databases the limit is enforced, so pick one with headroom:
+
+```sql
+CREATE TABLE products (
+    id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name  VARCHAR(200) NOT NULL,
+    sku   VARCHAR(20) NOT NULL UNIQUE,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0)
+);
+```
+
+An `ENUM` column stores one value from a list declared in the schema and rejects everything else:
+
+```sql
+CREATE TABLE tickets (
+    id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open'
+);
+```
+
+Changing the allowed values later requires an `ALTER TABLE`. If the list changes often, a lookup table with a foreign key is more flexible.
+
+By default, string comparison in `utf8mb4` is case-insensitive and accent-insensitive (`utf8mb4_0900_ai_ci` collation), so `WHERE email = 'ADA@EXAMPLE.COM'` matches `ada@example.com`. Use a `_bin` or `_as_cs` collation on columns where case must matter.
+
+# Date and time types {% #datetime %}
+
+| Type | Stores | Use for |
+| --- | --- | --- |
+| `TIMESTAMP` | Point in time, stored as UTC | Created/updated timestamps, events |
+| `DATETIME` | Wall-clock time, no zone conversion | Scheduled local times |
+| `DATE` | Calendar date | Birthdays, due dates |
+| `TIME` | Time of day or duration | Opening hours |
+| `YEAR` | Year | Rarely needed |
+
+`TIMESTAMP` converts input to UTC on write and back to the session time zone on read, so clients in different time zones agree on the moment an event happened. Its range ends in January 2038; use `DATETIME`, which stores the literal wall-clock value with no conversion, for dates beyond that.
+
+Both accept fractional seconds up to microseconds with an explicit precision, such as `DATETIME(6)`. A common pair of bookkeeping columns:
+
+```sql
+CREATE TABLE notes (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    body       TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+`ON UPDATE CURRENT_TIMESTAMP` refreshes the column automatically whenever an update actually changes the row's data; an update that writes identical values leaves it untouched.
+
+# Boolean, UUID, and binary {% #other %}
+
+Flags, identifiers, and raw bytes each have an idiomatic home:
+
+- **BOOLEAN** is an alias for `TINYINT(1)`, with `TRUE` and `FALSE` as literals for 1 and 0; there is no separate boolean storage type.
+- **UUIDs** have no dedicated column type: generate them with `UUID()` and store them either readably in `CHAR(36)` or compactly in `BINARY(16)`, converting with `UUID_TO_BIN` and `BIN_TO_UUID`.
+- **VARBINARY** and the `BLOB` family hold raw bytes, such as hashes or encrypted data.
+
+```sql
+CREATE TABLE api_tokens (
+    token_id BINARY(16) PRIMARY KEY DEFAULT (UUID_TO_BIN(UUID())),
+    active   BOOLEAN NOT NULL DEFAULT TRUE,
+    secret   VARBINARY(255) NOT NULL
+);
+
+INSERT INTO api_tokens (secret) VALUES (0xDEADBEEF);
+
+SELECT BIN_TO_UUID(token_id) AS token_id, active FROM api_tokens;
+```
+
+# JSON columns {% #json %}
+
+Use `JSON` for schemaless data attached to structured rows. Values are validated and stored in a binary format that supports path extraction:
+
+```sql
+CREATE TABLE events (
+    id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    kind    VARCHAR(50) NOT NULL,
+    payload JSON NOT NULL
+);
+
+INSERT INTO events (kind, payload)
+VALUES ('signup', '{"plan": "pro", "referrer": "newsletter"}');
+
+SELECT payload->>'$.plan' AS plan
+FROM events
+WHERE payload->>'$.referrer' = 'newsletter';
+```
+
+`->>` extracts a value at a JSON path as unquoted text. Reach for `JSON` when attributes vary per row; keep anything you filter or join on regularly as a real column. MySQL has no array column type, so a JSON array is also the idiomatic home for small value lists, or model them as a separate table; see [Data modeling](/docs/products/databases/mysql/concepts/data-modeling).
+
+# Constraints {% #constraints %}
+
+Constraints are rules the database enforces on every write, no matter which application or migration performs it:
+
+| Constraint | Enforces |
+| --- | --- |
+| `PRIMARY KEY` | Unique, non-null row identifier |
+| `UNIQUE` | No duplicate values in a column or column group (multiple `NULL`s are allowed) |
+| `NOT NULL` | Value must be present |
+| `CHECK` | Boolean expression per row (deterministic functions only) |
+| `FOREIGN KEY` | Value must exist in the referenced table |
+
+```sql
+CREATE TABLE orders (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    status      ENUM('pending', 'paid', 'shipped', 'cancelled') NOT NULL DEFAULT 'pending',
+    total       DECIMAL(10, 2) NOT NULL CHECK (total >= 0),
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+);
+```
+
+A foreign key also controls what happens when the referenced row disappears: `ON DELETE CASCADE` removes dependent rows, `ON DELETE SET NULL` orphans them explicitly, and the default blocks the delete. Foreign keys are covered in depth in [Joins and relationships](/docs/products/databases/mysql/concepts/joins).
+
+# Generated columns {% #generated %}
+
+A generated column is one the database computes for you from the row's other columns, instead of accepting a value from the application. You declare the formula once in the schema; every write runs it automatically. This removes a whole class of bugs where a derived value, like a line total, is computed in application code and drifts out of sync with the columns it came from. Two variants exist: `VIRTUAL` computes the value on every read and stores nothing, while `STORED` computes on write and saves the result on disk like a normal column.
+
+```sql
+CREATE TABLE line_items (
+    quantity   INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    line_total DECIMAL(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+);
+
+INSERT INTO line_items (quantity, unit_price) VALUES (3, 19.99);
+
+SELECT line_total FROM line_items;
+```
+
+```text
+line_total
+59.97
+```
+
+The insert supplies only `quantity` and `unit_price`; the database fills in `line_total` as 3 × 19.99. Writing to the column directly is an error, and if a later `UPDATE` changes the quantity, the total is recomputed in the same statement, so it can never disagree with its inputs.
+
+# Change a table {% #alter %}
+
+`ALTER TABLE` evolves a schema in place:
+
+```sql
+ALTER TABLE customers ADD COLUMN phone VARCHAR(30);
+ALTER TABLE customers MODIFY COLUMN phone VARCHAR(30) NOT NULL;
+ALTER TABLE customers RENAME COLUMN phone TO phone_number;
+ALTER TABLE customers DROP COLUMN phone_number;
+```
+
+MySQL 8 performs many alterations, including adding a column, as instant metadata changes. Others, such as changing a column's type, rebuild the table, so on large tables schedule those during a quiet period.
+
+{% info title="Full type catalog" %}
+MySQL also ships spatial types (`GEOMETRY`, `POINT`, `LINESTRING`, `POLYGON`, and their `MULTI*` and `GEOMETRYCOLLECTION` variants), `SET` for multi-valued flags, and `BIT` for bit fields. Query `information_schema.COLUMNS` to see the exact type of every column in your schema.
+{% /info %}

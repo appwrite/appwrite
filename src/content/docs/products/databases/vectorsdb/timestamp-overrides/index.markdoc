@@ -1,0 +1,1302 @@
+---
+layout: article
+title: Timestamp overrides
+description: Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.
+---
+
+When creating or updating documents, Appwrite automatically sets `$createdAt` and `$updatedAt` timestamps. However, there are scenarios where you might need to set these timestamps manually, such as when migrating data from another system or backfilling historical records.
+
+{% info title="Server SDKs required" %}
+To manually set `$createdAt` and `$updatedAt`, you must use a **server SDK** with an **API key**. These attributes can be passed inside the `data` parameter on any of the create, update, or upsert routes (single or bulk).
+{% /info %}
+
+# Setting custom timestamps {% #setting-custom-timestamps %}
+
+You can override a document's timestamps by providing ISO 8601 strings (for example, `2025-08-10T12:34:56.000Z`) in the `data` payload. If these attributes are not provided, Appwrite will set them automatically.
+
+Custom timestamps work with all document operations: create, update, upsert, and their bulk variants.
+
+## Single document operations {% #single-document-operations %}
+
+When working with individual documents, you can set custom timestamps during create, update, and upsert operations.
+
+### Create with custom timestamps {% #create-custom %}
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+await vectorsDB.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: sdk.ID.unique(),
+    data: {
+        '$createdAt': new Date('2025-08-10T12:34:56.000Z').toISOString(),
+        '$updatedAt': new Date('2025-08-10T12:34:56.000Z').toISOString(),
+        embeddings: [0.12, 0.84, 0.33, 0.57],
+        metadata: { title: 'Hamlet' }
+    }
+});
+```
+```server-php
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<YOUR_PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$vectorsDB = new VectorsDB($client);
+
+$vectorsDB->createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID::unique(),
+    data: [
+        '$createdAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+        '$updatedAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+        'embeddings' => [0.12, 0.84, 0.33, 0.57],
+        'metadata' => ['title' => 'Hamlet']
+    ]
+);
+```
+```server-swift
+import Appwrite
+import Foundation
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let vectorsDB = VectorsDB(client)
+
+let isoFormatter = ISO8601DateFormatter()
+isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+let customDate = isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date()
+let createdAt = isoFormatter.string(from: customDate)
+let updatedAt = isoFormatter.string(from: customDate)
+
+do {
+    let created = try await vectorsDB.createDocument(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: "<DOCUMENT_ID>",
+        data: [
+            "$createdAt": createdAt,
+            "$updatedAt": updatedAt,
+            "embeddings": [0.12, 0.84, 0.33, 0.57],
+            "metadata": ["title": "Hamlet"]
+        ]
+    )
+    print("Created:", created)
+} catch {
+    print("Create error:", error)
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.id import ID
+from datetime import datetime, timezone
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+vectors_db = VectorsDB(client)
+
+iso = datetime(2025, 8, 10, 12, 34, 56, tzinfo=timezone.utc).isoformat()
+
+vectors_db.create_document(
+        database_id='<DATABASE_ID>',
+        collection_id='<COLLECTION_ID>',
+        document_id=ID.unique(),
+        data={
+                '$createdAt': iso,
+                '$updatedAt': iso,
+                'embeddings': [0.12, 0.84, 0.33, 0.57],
+                'metadata': { 'title': 'Hamlet' }
+        }
+)
+```
+```server-ruby
+require 'appwrite'
+require 'time'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<YOUR_PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+vectors_db = VectorsDB.new(client)
+
+custom_date = Time.parse('2025-08-10T12:34:56.000Z').iso8601
+
+vectors_db.create_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: ID.unique(),
+    data: {
+        '$createdAt' => custom_date,
+        '$updatedAt' => custom_date,
+        'embeddings' => [0.12, 0.84, 0.33, 0.57],
+        'metadata' => { 'title' => 'Hamlet' }
+    }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<YOUR_PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+string customDate = DateTimeOffset.Parse("2025-08-10T12:34:56.000Z").ToString("O");
+
+await vectorsDB.CreateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: ID.Unique(),
+    data: new Dictionary<string, object>
+    {
+        ["$createdAt"] = customDate,
+        ["$updatedAt"] = customDate,
+        ["embeddings"] = new List<double> { 0.12, 0.84, 0.33, 0.57 },
+        ["metadata"] = new Dictionary<string, object> { ["title"] = "Hamlet" }
+    }
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+String customDate = DateTime.parse('2025-08-10T12:34:56.000Z').toIso8601String();
+
+await vectorsDB.createDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: ID.unique(),
+    data: {
+        '\$createdAt': customDate,
+        '\$updatedAt': customDate,
+        'embeddings': [0.12, 0.84, 0.33, 0.57],
+        'metadata': { 'title': 'Hamlet' }
+    },
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        ID::unique(),
+        json!({
+            "$createdAt": "2025-08-10T12:34:56.000Z",
+            "$updatedAt": "2025-08-10T12:34:56.000Z",
+            "embeddings": [0.12, 0.84, 0.33, 0.57],
+            "metadata": { "title": "Hamlet" }
+        }),
+        None, // permissions (optional)
+    ).await?;
+
+    println!("Created: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+### Update with custom timestamps {% #update-custom %}
+
+When updating documents, you can also set a custom `$updatedAt` timestamp. The existing `$createdAt` is preserved unless you provide a new one:
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {
+        '$updatedAt': new Date('2025-08-10T12:34:56.000Z').toISOString(),
+        metadata: { title: 'Hamlet, revised' }
+    }
+});
+```
+```server-php
+$vectorsDB->updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: [
+        '$updatedAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+        'metadata' => ['title' => 'Hamlet, revised']
+    ]
+);
+```
+```server-python
+from datetime import datetime, timezone
+
+vectors_db.update_document(
+    database_id='<DATABASE_ID>',
+    collection_id='<COLLECTION_ID>',
+    document_id='<DOCUMENT_ID>',
+    data={
+        '$updatedAt': datetime(2025, 8, 10, 12, 34, 56, tzinfo=timezone.utc).isoformat(),
+        'metadata': { 'title': 'Hamlet, revised' }
+    }
+)
+```
+```server-swift
+import Appwrite
+import Foundation
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let vectorsDB = VectorsDB(client)
+
+let isoFormatter = ISO8601DateFormatter()
+isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+let updatedAt = isoFormatter.string(from: isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date())
+
+do {
+    let updated = try await vectorsDB.updateDocument(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: "<DOCUMENT_ID>",
+        data: [
+            "$updatedAt": updatedAt,
+            "metadata": ["title": "Hamlet, revised"]
+        ]
+    )
+    print("Updated:", updated)
+} catch {
+    print("Update error:", error)
+}
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<YOUR_PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+vectors_db = VectorsDB.new(client)
+
+custom_date = Time.parse('<CUSTOM_DATE>').iso8601
+
+vectors_db.update_document(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: '<DOCUMENT_ID>',
+  data: {
+    '$updatedAt' => custom_date,
+    'metadata' => { 'title' => 'Hamlet, revised' }
+  }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<YOUR_PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+string customDate = DateTimeOffset.Parse("<CUSTOM_DATE>").ToString("O");
+
+await vectorsDB.UpdateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    data: new Dictionary<string, object>
+    {
+        ["$updatedAt"] = customDate,
+        ["metadata"] = new Dictionary<string, object> { ["title"] = "Hamlet, revised" }
+    }
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+String customDate = DateTime.parse('<CUSTOM_DATE>').toIso8601String();
+
+await vectorsDB.updateDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: {
+    '\$updatedAt': customDate,
+    'metadata': { 'title': 'Hamlet, revised' }
+  },
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.update_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        Some(json!({
+            "$updatedAt": "2025-08-10T12:34:56.000Z",
+            "metadata": { "title": "Hamlet, revised" }
+        })),
+        None, // permissions (optional)
+        None, // transactionId (optional)
+    ).await?;
+
+    println!("Updated: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Bulk operations {% #bulk-operations %}
+
+Custom timestamps also work with bulk operations, allowing you to set different timestamps for each document in the batch:
+
+### Bulk create {% #bulk-create %}
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.createDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        {
+            '$id': sdk.ID.unique(),
+            '$createdAt': new Date('2024-01-01T00:00:00.000Z').toISOString(),
+            '$updatedAt': new Date('2024-01-01T00:00:00.000Z').toISOString(),
+            embeddings: [0.1, 0.1, 0.1, 0.1],
+            metadata: { batch: 1 }
+        },
+        {
+            '$id': sdk.ID.unique(),
+            '$createdAt': new Date('2024-02-01T00:00:00.000Z').toISOString(),
+            '$updatedAt': new Date('2024-02-01T00:00:00.000Z').toISOString(),
+            embeddings: [0.2, 0.2, 0.2, 0.2],
+            metadata: { batch: 2 }
+        }
+    ]
+});
+```
+```server-python
+vectors_db.create_documents(
+        database_id='<DATABASE_ID>',
+        collection_id='<COLLECTION_ID>',
+        documents=[
+            {
+                '$id': ID.unique(),
+                '$createdAt': datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
+                '$updatedAt': datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
+                'embeddings': [0.1, 0.1, 0.1, 0.1],
+                'metadata': { 'batch': 1 }
+            },
+            {
+                '$id': ID.unique(),
+                '$createdAt': datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat(),
+                '$updatedAt': datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat(),
+                'embeddings': [0.2, 0.2, 0.2, 0.2],
+                'metadata': { 'batch': 2 }
+            }
+        ]
+)
+```
+```server-php
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<YOUR_PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$vectorsDB = new VectorsDB($client);
+
+$vectorsDB->createDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        [
+            '$id' => ID::unique(),
+            '$createdAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            '$updatedAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            'embeddings' => [0.1, 0.1, 0.1, 0.1],
+            'metadata' => ['batch' => 1]
+        ],
+        [
+            '$id' => ID::unique(),
+            '$createdAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            '$updatedAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            'embeddings' => [0.2, 0.2, 0.2, 0.2],
+            'metadata' => ['batch' => 2]
+        ],
+    ]
+);
+```
+```server-swift
+import Appwrite
+import Foundation
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let vectorsDB = VectorsDB(client)
+
+let isoFormatter = ISO8601DateFormatter()
+isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+let first = isoFormatter.string(from: isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date())
+let second = isoFormatter.string(from: isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date())
+
+do {
+    let bulkCreated = try await vectorsDB.createDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documents: [
+            [
+                "$id": ID.unique(),
+                "$createdAt": first,
+                "$updatedAt": first,
+                "embeddings": [0.1, 0.1, 0.1, 0.1],
+                "metadata": ["batch": 1]
+            ],
+            [
+                "$id": ID.unique(),
+                "$createdAt": second,
+                "$updatedAt": second,
+                "embeddings": [0.2, 0.2, 0.2, 0.2],
+                "metadata": ["batch": 2]
+            ]
+        ]
+    )
+    print("Bulk create:", bulkCreated)
+} catch {
+    print("Bulk create error:", error)
+}
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<YOUR_PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+vectors_db = VectorsDB.new(client)
+
+first = Time.parse('<CUSTOM_DATE>').iso8601
+second = Time.parse('<CUSTOM_DATE>').iso8601
+
+vectors_db.create_documents(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  documents: [
+    {
+      '$id' => ID.unique(),
+      '$createdAt' => first,
+      '$updatedAt' => first,
+      'embeddings' => [0.1, 0.1, 0.1, 0.1],
+      'metadata' => { 'batch' => 1 }
+    },
+    {
+      '$id' => ID.unique(),
+      '$createdAt' => second,
+      '$updatedAt' => second,
+      'embeddings' => [0.2, 0.2, 0.2, 0.2],
+      'metadata' => { 'batch' => 2 }
+    }
+  ]
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<YOUR_PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+string first = DateTimeOffset.Parse("<CUSTOM_DATE>").ToString("O");
+string second = DateTimeOffset.Parse("<CUSTOM_DATE>").ToString("O");
+
+await vectorsDB.CreateDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documents: new List<object>
+    {
+        new Dictionary<string, object>
+        {
+            ["$id"] = ID.Unique(),
+            ["$createdAt"] = first,
+            ["$updatedAt"] = first,
+            ["embeddings"] = new List<double> { 0.1, 0.1, 0.1, 0.1 },
+            ["metadata"] = new Dictionary<string, object> { ["batch"] = 1 }
+        },
+        new Dictionary<string, object>
+        {
+            ["$id"] = ID.Unique(),
+            ["$createdAt"] = second,
+            ["$updatedAt"] = second,
+            ["embeddings"] = new List<double> { 0.2, 0.2, 0.2, 0.2 },
+            ["metadata"] = new Dictionary<string, object> { ["batch"] = 2 }
+        }
+    }
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+String first = DateTime.parse('<CUSTOM_DATE>').toIso8601String();
+String second = DateTime.parse('<CUSTOM_DATE>').toIso8601String();
+
+await vectorsDB.createDocuments(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    {
+      '\$id': ID.unique(),
+      '\$createdAt': first,
+      '\$updatedAt': first,
+      'embeddings': [0.1, 0.1, 0.1, 0.1],
+      'metadata': { 'batch': 1 }
+    },
+    {
+      '\$id': ID.unique(),
+      '\$createdAt': second,
+      '\$updatedAt': second,
+      'embeddings': [0.2, 0.2, 0.2, 0.2],
+      'metadata': { 'batch': 2 }
+    }
+  ],
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        vec![
+            json!({
+                "$id": ID::unique(),
+                "$createdAt": "2024-01-01T00:00:00.000Z",
+                "$updatedAt": "2024-01-01T00:00:00.000Z",
+                "embeddings": [0.1, 0.1, 0.1, 0.1],
+                "metadata": { "batch": 1 }
+            }),
+            json!({
+                "$id": ID::unique(),
+                "$createdAt": "2024-02-01T00:00:00.000Z",
+                "$updatedAt": "2024-02-01T00:00:00.000Z",
+                "embeddings": [0.2, 0.2, 0.2, 0.2],
+                "metadata": { "batch": 2 }
+            }),
+        ],
+    ).await?;
+
+    println!("Bulk create: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+### Bulk upsert {% #bulk-upsert %}
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.upsertDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        {
+            '$id': '<DOCUMENT_ID_OR_NEW_ID>',
+            '$createdAt': new Date('2024-01-01T00:00:00.000Z').toISOString(),
+            '$updatedAt': new Date('2025-01-01T00:00:00.000Z').toISOString(),
+            embeddings: [0.3, 0.3, 0.3, 0.3],
+            metadata: { source: 'sync' }
+        }
+    ]
+});
+```
+```server-python
+vectors_db.upsert_documents(
+    database_id='<DATABASE_ID>',
+    collection_id='<COLLECTION_ID>',
+    documents=[
+        {
+            '$id': '<DOCUMENT_ID_OR_NEW_ID>',
+            '$createdAt': datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
+            '$updatedAt': datetime(2025, 1, 1, tzinfo=timezone.utc).isoformat(),
+            'embeddings': [0.3, 0.3, 0.3, 0.3],
+            'metadata': { 'source': 'sync' }
+        }
+    ]
+)
+```
+```server-php
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<YOUR_PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$vectorsDB = new VectorsDB($client);
+
+$vectorsDB->upsertDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        [
+            '$id' => '<DOCUMENT_ID_OR_NEW_ID>',
+            '$createdAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            '$updatedAt' => (new DateTime('<CUSTOM_DATE>'))->format(DATE_ATOM),
+            'embeddings' => [0.3, 0.3, 0.3, 0.3],
+            'metadata' => ['source' => 'sync']
+        ],
+    ]
+);
+```
+```server-swift
+import Appwrite
+import Foundation
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let vectorsDB = VectorsDB(client)
+
+let isoFormatter = ISO8601DateFormatter()
+isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+let createdAt = isoFormatter.string(from: isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date())
+let updatedAt = isoFormatter.string(from: isoFormatter.date(from: "<CUSTOM_DATE>") ?? Date())
+
+do {
+    let bulkUpserted = try await vectorsDB.upsertDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documents: [
+            [
+                "$id": "<DOCUMENT_ID_OR_NEW_ID>",
+                "$createdAt": createdAt,
+                "$updatedAt": updatedAt,
+                "embeddings": [0.3, 0.3, 0.3, 0.3],
+                "metadata": ["source": "sync"]
+            ]
+        ]
+    )
+    print("Bulk upsert:", bulkUpserted)
+} catch {
+    print("Bulk upsert error:", error)
+}
+```
+```server-ruby
+require 'appwrite'
+require 'time'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<YOUR_PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+vectors_db = VectorsDB.new(client)
+
+custom_date = Time.parse('<CUSTOM_DATE>').iso8601
+
+vectors_db.upsert_documents(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  documents: [
+    {
+      '$id' => '<DOCUMENT_ID_OR_NEW_ID>',
+      '$createdAt' => custom_date,
+      '$updatedAt' => custom_date,
+      'embeddings' => [0.3, 0.3, 0.3, 0.3],
+      'metadata' => { 'source' => 'sync' }
+    }
+  ]
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<YOUR_PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+string createdAt = DateTimeOffset.Parse("<CUSTOM_DATE>").ToString("O");
+string updatedAt = DateTimeOffset.Parse("<CUSTOM_DATE>").ToString("O");
+
+await vectorsDB.UpsertDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documents: new List<object>
+    {
+        new Dictionary<string, object>
+        {
+            ["$id"] = "<DOCUMENT_ID_OR_NEW_ID>",
+            ["$createdAt"] = createdAt,
+            ["$updatedAt"] = updatedAt,
+            ["embeddings"] = new List<double> { 0.3, 0.3, 0.3, 0.3 },
+            ["metadata"] = new Dictionary<string, object> { ["source"] = "sync" }
+        }
+    }
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+String createdAt = DateTime.parse('<CUSTOM_DATE>').toIso8601String();
+String updatedAt = DateTime.parse('<CUSTOM_DATE>').toIso8601String();
+
+await vectorsDB.upsertDocuments(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    {
+      '\$id': '<DOCUMENT_ID_OR_NEW_ID>',
+      '\$createdAt': createdAt,
+      '\$updatedAt': updatedAt,
+      'embeddings': [0.3, 0.3, 0.3, 0.3],
+      'metadata': { 'source': 'sync' }
+    }
+  ],
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.upsert_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        vec![
+            json!({
+                "$id": "<DOCUMENT_ID_OR_NEW_ID>",
+                "$createdAt": "2024-01-01T00:00:00.000Z",
+                "$updatedAt": "2025-01-01T00:00:00.000Z",
+                "embeddings": [0.3, 0.3, 0.3, 0.3],
+                "metadata": { "source": "sync" }
+            }),
+        ],
+        None, // transactionId (optional)
+    ).await?;
+
+    println!("Bulk upsert: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Common use cases {% #use-cases %}
+
+Custom timestamps are particularly useful in several scenarios:
+
+## Data migration {% #data-migration %}
+When migrating existing vectors from another system, you can preserve the original
+creation and modification times:
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.createDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: sdk.ID.unique(),
+  data: {
+    '$createdAt': '<ORIGINAL_CREATED_AT_ISO>',
+    '$updatedAt': '<LAST_MODIFIED_ISO>',
+    embeddings: [0.12, 0.84, 0.33, 0.57],
+    metadata: { title: 'Imported post' }
+  }
+});
+```
+```server-php
+$vectorsDB->createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: ID::unique(),
+  data: [
+    '$createdAt' => '<ORIGINAL_CREATED_AT_ISO>',
+    '$updatedAt' => '<LAST_MODIFIED_ISO>',
+    'embeddings' => [0.12, 0.84, 0.33, 0.57],
+    'metadata' => ['title' => 'Imported post']
+  ]
+);
+```
+```server-swift
+let _ = try await vectorsDB.createDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: ID.unique(),
+  data: [
+    "$createdAt": "<ORIGINAL_CREATED_AT_ISO>",
+    "$updatedAt": "<LAST_MODIFIED_ISO>",
+    "embeddings": [0.12, 0.84, 0.33, 0.57],
+    "metadata": ["title": "Imported post"]
+  ]
+)
+```
+```server-python
+vectors_db.create_document(
+  database_id='<DATABASE_ID>',
+  collection_id='<COLLECTION_ID>',
+  document_id=ID.unique(),
+  data={
+    '$createdAt': '<ORIGINAL_CREATED_AT_ISO>',
+    '$updatedAt': '<LAST_MODIFIED_ISO>',
+    'embeddings': [0.12, 0.84, 0.33, 0.57],
+    'metadata': { 'title': 'Imported post' }
+  }
+)
+```
+```server-ruby
+vectors_db.create_document(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: ID.unique(),
+  data: {
+    '$createdAt' => '<ORIGINAL_CREATED_AT_ISO>',
+    '$updatedAt' => '<LAST_MODIFIED_ISO>',
+    'embeddings' => [0.12, 0.84, 0.33, 0.57],
+    'metadata' => { 'title' => 'Imported post' }
+  }
+)
+```
+```server-dotnet
+await vectorsDB.CreateDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: ID.Unique(),
+  data: new Dictionary<string, object>
+  {
+    ["$createdAt"] = "<ORIGINAL_CREATED_AT_ISO>",
+    ["$updatedAt"] = "<LAST_MODIFIED_ISO>",
+    ["embeddings"] = new List<double> { 0.12, 0.84, 0.33, 0.57 },
+    ["metadata"] = new Dictionary<string, object> { ["title"] = "Imported post" }
+  }
+);
+```
+```server-dart
+await vectorsDB.createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: ID.unique(),
+  data: {
+    '\$createdAt': '<ORIGINAL_CREATED_AT_ISO>',
+    '\$updatedAt': '<LAST_MODIFIED_ISO>',
+    'embeddings': [0.12, 0.84, 0.33, 0.57],
+    'metadata': { 'title': 'Imported post' }
+  },
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        ID::unique(),
+        json!({
+            "$createdAt": "<ORIGINAL_CREATED_AT_ISO>",
+            "$updatedAt": "<LAST_MODIFIED_ISO>",
+            "embeddings": [0.12, 0.84, 0.33, 0.57],
+            "metadata": { "title": "Imported post" }
+        }),
+        None, // permissions (optional)
+    ).await?;
+
+    println!("Created: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Backdating records {% #backdating %}
+For historical data entry or when creating records that represent past events:
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.createDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: sdk.ID.unique(),
+  data: {
+    '$createdAt': '2023-12-31T23:59:59.000Z',
+    '$updatedAt': '2023-12-31T23:59:59.000Z',
+    embeddings: [0.5, 0.5, 0.5, 0.5],
+    metadata: { type: 'year-end-bonus', amount: 1000 }
+  }
+});
+```
+```server-php
+$vectorsDB->createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: ID::unique(),
+  data: [
+    '$createdAt' => '2023-12-31T23:59:59.000Z',
+    '$updatedAt' => '2023-12-31T23:59:59.000Z',
+    'embeddings' => [0.5, 0.5, 0.5, 0.5],
+    'metadata' => ['type' => 'year-end-bonus', 'amount' => 1000]
+  ]
+);
+```
+```server-swift
+let _ = try await vectorsDB.createDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: ID.unique(),
+  data: [
+    "$createdAt": "2023-12-31T23:59:59.000Z",
+    "$updatedAt": "2023-12-31T23:59:59.000Z",
+    "embeddings": [0.5, 0.5, 0.5, 0.5],
+    "metadata": ["type": "year-end-bonus", "amount": 1000]
+  ]
+)
+```
+```server-python
+vectors_db.create_document(
+  database_id='<DATABASE_ID>',
+  collection_id='<COLLECTION_ID>',
+  document_id=ID.unique(),
+  data={
+    '$createdAt': '2023-12-31T23:59:59.000Z',
+    '$updatedAt': '2023-12-31T23:59:59.000Z',
+    'embeddings': [0.5, 0.5, 0.5, 0.5],
+    'metadata': { 'type': 'year-end-bonus', 'amount': 1000 }
+  }
+)
+```
+```server-ruby
+vectors_db.create_document(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: ID.unique(),
+  data: {
+    '$createdAt' => '2023-12-31T23:59:59.000Z',
+    '$updatedAt' => '2023-12-31T23:59:59.000Z',
+    'embeddings' => [0.5, 0.5, 0.5, 0.5],
+    'metadata' => { 'type' => 'year-end-bonus', 'amount' => 1000 }
+  }
+)
+```
+```server-dotnet
+await vectorsDB.CreateDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: ID.Unique(),
+  data: new Dictionary<string, object>
+  {
+    ["$createdAt"] = "2023-12-31T23:59:59.000Z",
+    ["$updatedAt"] = "2023-12-31T23:59:59.000Z",
+    ["embeddings"] = new List<double> { 0.5, 0.5, 0.5, 0.5 },
+    ["metadata"] = new Dictionary<string, object> { ["type"] = "year-end-bonus", ["amount"] = 1000 }
+  }
+);
+```
+```server-dart
+await vectorsDB.createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: ID.unique(),
+  data: {
+    '\$createdAt': '2023-12-31T23:59:59.000Z',
+    '\$updatedAt': '2023-12-31T23:59:59.000Z',
+    'embeddings': [0.5, 0.5, 0.5, 0.5],
+    'metadata': { 'type': 'year-end-bonus', 'amount': 1000 }
+  },
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        ID::unique(),
+        json!({
+            "$createdAt": "2023-12-31T23:59:59.000Z",
+            "$updatedAt": "2023-12-31T23:59:59.000Z",
+            "embeddings": [0.5, 0.5, 0.5, 0.5],
+            "metadata": { "type": "year-end-bonus", "amount": 1000 }
+        }),
+        None, // permissions (optional)
+    ).await?;
+
+    println!("Created: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Synchronization {% #synchronization %}
+When synchronizing data between systems while maintaining timestamp consistency:
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.upsertDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID_OR_NEW_ID>',
+  data: {
+    '$updatedAt': '<EXTERNAL_LAST_MODIFIED_ISO>',
+    embeddings: [0.6, 0.6, 0.6, 0.6],
+    metadata: { profile: 'external' }
+  }
+});
+```
+```server-php
+$vectorsDB->upsertDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID_OR_NEW_ID>',
+  data: [
+    '$updatedAt' => '<EXTERNAL_LAST_MODIFIED_ISO>',
+    'embeddings' => [0.6, 0.6, 0.6, 0.6],
+    'metadata' => ['profile' => 'external']
+  ]
+);
+```
+```server-swift
+let _ = try await vectorsDB.upsertDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID_OR_NEW_ID>",
+  data: [
+    "$updatedAt": "<EXTERNAL_LAST_MODIFIED_ISO>",
+    "embeddings": [0.6, 0.6, 0.6, 0.6],
+    "metadata": ["profile": "external"]
+  ]
+)
+```
+```server-python
+vectors_db.upsert_document(
+  database_id='<DATABASE_ID>',
+  collection_id='<COLLECTION_ID>',
+  document_id='<DOCUMENT_ID_OR_NEW_ID>',
+  data={
+    '$updatedAt': '<EXTERNAL_LAST_MODIFIED_ISO>',
+    'embeddings': [0.6, 0.6, 0.6, 0.6],
+    'metadata': { 'profile': 'external' }
+  }
+)
+```
+```server-ruby
+vectors_db.upsert_document(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: '<DOCUMENT_ID_OR_NEW_ID>',
+  data: {
+    '$updatedAt' => '<EXTERNAL_LAST_MODIFIED_ISO>',
+    'embeddings' => [0.6, 0.6, 0.6, 0.6],
+    'metadata' => { 'profile' => 'external' }
+  }
+)
+```
+```server-dotnet
+await vectorsDB.UpsertDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID_OR_NEW_ID>",
+  data: new Dictionary<string, object>
+  {
+    ["$updatedAt"] = "<EXTERNAL_LAST_MODIFIED_ISO>",
+    ["embeddings"] = new List<double> { 0.6, 0.6, 0.6, 0.6 },
+    ["metadata"] = new Dictionary<string, object> { ["profile"] = "external" }
+  }
+);
+```
+```server-dart
+await vectorsDB.upsertDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID_OR_NEW_ID>',
+  data: {
+    '\$updatedAt': '<EXTERNAL_LAST_MODIFIED_ISO>',
+    'embeddings': [0.6, 0.6, 0.6, 0.6],
+    'metadata': { 'profile': 'external' }
+  },
+);
+```
+```rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.upsert_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID_OR_NEW_ID>",
+        Some(json!({
+            "$updatedAt": "<EXTERNAL_LAST_MODIFIED_ISO>",
+            "embeddings": [0.6, 0.6, 0.6, 0.6],
+            "metadata": { "profile": "external" }
+        })),
+        None, // permissions (optional)
+        None, // transactionId (optional)
+    ).await?;
+
+    println!("Upserted: {:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+
+{% info title="Timestamp format and usage" %}
+- Values must be valid ISO 8601 date-time strings (UTC recommended). Using `toISOString()` (JavaScript) or `datetime.isoformat()` (Python) is a good default.
+- You can set either or both attributes as needed. If omitted, Appwrite sets them automatically.
+{% /info %}

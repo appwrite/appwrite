@@ -1,0 +1,136 @@
+---
+layout: tutorial
+title: Call the API from Vantage
+description: Read tasks with the granted access token and add a task composer that lives or dies by its scope.
+step: 6
+---
+
+Vantage already holds the access token in its session after the [token exchange](/docs/products/auth/oauth-server/sign-in-with-your-product/step-6). Reading tasks is one authenticated fetch away, and a small composer will exercise the write path.
+
+# Point Vantage at the API {% #env %}
+
+Add TaskFlow's API base to `consumer/.env`:
+
+```sh
+# consumer/.env
+# TaskFlow's API, called with the granted access token.
+TASKFLOW_API_URL=http://localhost:4000
+```
+
+# The API client {% #client %}
+
+Create `consumer/src/lib/taskflow.ts`. Every request carries the access token as a Bearer header, and TaskFlow's guard does the rest:
+
+```ts
+// consumer/src/lib/taskflow.ts
+// Vantage's client for TaskFlow's API. Every request carries the access
+// token the user granted, and TaskFlow enforces its scopes.
+import '@tanstack/react-start/server-only'
+
+const taskflowApi = process.env.TASKFLOW_API_URL!
+
+export type TaskFlowTask = {
+  id: string
+  title: string
+  project: string
+  due: string
+  done: boolean
+}
+
+/** Read the user's tasks. Requires the tasks.read scope. */
+export async function fetchTasks(accessToken: string): Promise<TaskFlowTask[]> {
+  const res = await fetch(`${taskflowApi}/api/tasks`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) throw new Error(`tasks failed: ${res.status}`)
+  const { tasks } = await res.json()
+  return tasks
+}
+
+export type WriteResult =
+  | { created: true; task: TaskFlowTask }
+  | { created: false; status: number; error: string }
+
+/** Create a task on TaskFlow. Succeeds only when the access token
+ *  carries the tasks.write scope; otherwise TaskFlow answers with
+ *  403 insufficient_scope. */
+export async function createTask(
+  accessToken: string,
+  title: string,
+): Promise<WriteResult> {
+  const res = await fetch(`${taskflowApi}/api/tasks`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ title }),
+  })
+  if (res.ok) {
+    const { task } = await res.json()
+    return { created: true, task }
+  }
+  const body = await res.json().catch(() => ({ error: 'unknown' }))
+  return { created: false, status: res.status, error: body.error }
+}
+```
+
+`createTask` does not check any scope itself. Vantage cannot know what the user granted until it tries; the refusal comes from TaskFlow, which is the only side that can be trusted to enforce it.
+
+# Keep the granted scope {% #granted-scope %}
+
+The token response reports which scopes were granted, which matters now that the user picks them individually on the consent screen. Store it in the session in `consumer/src/routes/oauth.callback.tsx`, next to the access token:
+
+```ts
+// consumer/src/routes/oauth.callback.tsx
+await session.update({
+  accessToken: tokens.access_token,
+  grantedScope: tokens.scope,
+  user,
+  state: undefined,
+})
+```
+
+Add the matching `grantedScope?: string` field to `SessionData` in `consumer/src/lib/oauth.ts`.
+
+# Load tasks and add the composer {% #dashboard %}
+
+Replace the dashboard loader in `consumer/src/routes/dashboard.tsx` and add a server function for the write:
+
+```tsx
+// consumer/src/routes/dashboard.tsx (loader and write)
+const loadDashboard = createServerFn().handler(
+  async (): Promise<DashboardData> => {
+    const session = await vantageSession()
+    const { user, accessToken, grantedScope } = session.data
+    if (!user || !accessToken) throw redirect({ to: '/' })
+
+    // Reads the user's tasks from TaskFlow's API with the granted
+    // access token. Works because the user granted tasks.read.
+    const tasks = await fetchTasks(accessToken)
+
+    return { user, grantedScope: grantedScope ?? '', tasks }
+  },
+)
+
+const addTask = createServerFn({ method: 'POST' })
+  .validator((d: { title: string }) => d)
+  .handler(async ({ data }): Promise<WriteResult> => {
+    const session = await vantageSession()
+    const { accessToken } = session.data
+    if (!accessToken) throw redirect({ to: '/' })
+
+    // TaskFlow only accepts this if the token carries tasks.write.
+    return createTask(accessToken, data.title)
+  })
+```
+
+The component renders the granted scopes as chips, the task list, and an **Add task** composer under it. On submit it calls `addTask`; when the result is `created` it refreshes the list with `router.invalidate()`, and when it is not, it shows TaskFlow's refusal next to the composer. The full component is in the [tutorial repository](https://github.com/appwrite-community/oauth-guide-custom-scopes).
+
+# The payoff {% #payoff %}
+
+![Vantage dashboard showing live TaskFlow tasks and the task composer](/images/docs/oauth-server/scopes-guide/vantage-tasks-dashboard.avif)
+
+The dashboard shows the user's tasks, fetched live from TaskFlow's API with the granted token, with the composer ready below them. What happens when you use it depends entirely on what the user granted on the consent screen, which is exactly what the final step walks through.
+
+Continue to run the whole flow.
