@@ -2,9 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -30,8 +29,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -172,7 +169,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Backend $deployments,
+        Deployments $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -372,33 +369,33 @@ class Create extends Base
                 );
 
             } elseif (!$template->isEmpty()) {
-                // Deploy non-VCS from template
-                $deploymentId = ID::unique();
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $function->getAttribute('entrypoint', ''),
-                    'buildCommands' => $function->getAttribute('commands', ''),
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'type' => 'manual',
-                    'activate' => true,
-                ]));
+                // Deploy non-VCS from the template's public GitHub repository.
+                $templateVersion = Base::resolveTemplateRef($vcsFactory, $templateOwner, $templateRepository, Git::CLONE_TYPE_TAG, $templateVersion);
 
-                $publisherForBuilds->enqueue(new BuildMessage(
-                    project: $project,
-                    resource: $function,
-                    deployment: $deployment,
-                    type: BUILD_TYPE_DEPLOYMENT,
-                    template: $template,
-                    platform: $platform,
-                ));
+                $deployment = $deployments->createFromRef(
+                    $function,
+                    new Document([
+                        '$id' => ID::unique(),
+                        'entrypoint' => $function->getAttribute('entrypoint', ''),
+                        'buildCommands' => $function->getAttribute('commands', ''),
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'providerRepositoryName' => $templateRepository,
+                        'providerRepositoryOwner' => $templateOwner,
+                        'providerRepositoryUrl' => "https://github.com/{$templateOwner}/{$templateRepository}",
+                        'providerBranchUrl' => "https://github.com/{$templateOwner}/{$templateRepository}/blob/{$templateVersion}",
+                        // The coordinates a redeploy needs: remote-source builds
+                        // never store a tarball.
+                        'providerBranch' => $templateVersion,
+                        'providerRootDirectory' => $templateRootDirectory,
+                        'type' => 'vcs',
+                        'activate' => true,
+                    ]),
+                    $templateOwner,
+                    $templateRepository,
+                    Git::CLONE_TYPE_TAG,
+                    $templateVersion,
+                    $templateRootDirectory,
+                );
             }
 
             $functionsDomain = $platform['functionsDomain'];

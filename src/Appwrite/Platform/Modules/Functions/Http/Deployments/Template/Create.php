@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -24,7 +24,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -102,7 +101,7 @@ class Create extends Base
         Document $project,
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
-        Backend $deployments,
+        Deployments $deployments,
         Authorization $authorization,
         array $platform
     ) {
@@ -126,9 +125,7 @@ class Create extends Base
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             // VCS-connected function: the Builds worker merges the template into
-            // the user's repo, pushes it as a commit, then builds that commit —
-            // on the executor itself, or by submitting a job when
-            // _APP_BUILDS_BACKEND=orchestrator.
+            // the user's repo, pushes it as a commit, then builds that commit.
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsFunction(
@@ -160,24 +157,10 @@ class Create extends Base
 
         $deploymentId = ID::unique();
 
-        // Templates can pin a version range (e.g. "0.3.*"); codeload only
-        // takes a concrete ref, so resolve the range to the highest matching
-        // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
-        // Templates are public github.com repositories regardless of the
-        // function's own provider, so this always uses the GitHub adapter.
-        $ref = $reference;
-        if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
-            try {
-                $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
-                $ref = \end($tags) ?: $reference;
-            } catch (\Throwable) {
-                // Fall back to the raw reference; the build surfaces a bad ref.
-            }
-        }
+        $ref = Base::resolveTemplateRef($vcsFactory, $owner, $repository, $type, $reference);
 
         // Public template: pull the source straight from GitHub's public repo
-        // (codeload tarball on the jobs backend, a plain git clone on the
-        // executor); unarchive/checkout strips down to the rootDirectory.
+        // as a codeload tarball; unarchive strips down to the rootDirectory.
         $deployment = $deployments->createFromRef(
             $function,
             new Document([

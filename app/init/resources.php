@@ -77,9 +77,8 @@ $container->set('jobs', function () {
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
-    // No host on executor-only installs: keep the injection resolvable and
-    // fail at call time instead (the client is only used when
-    // _APP_BUILDS_BACKEND=orchestrator, which requires _APP_JOBS_HOST).
+    // Keep the injection resolvable without _APP_JOBS_HOST and fail at call
+    // time instead, so installs that never build stay bootable.
     $host = System::getEnv('_APP_JOBS_HOST', '');
     if ($host !== '') {
         $client = $client->withBaseUri($host);
