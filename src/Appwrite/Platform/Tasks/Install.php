@@ -15,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -848,6 +849,12 @@ class Install extends Action
     private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
     {
         if ($this->isLocalInstall()) {
+            return;
+        }
+
+        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
+        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
+        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
             return;
         }
 
