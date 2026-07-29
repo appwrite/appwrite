@@ -381,26 +381,17 @@ final class InstallationTokensTest extends TestCase
 
                 // GitHub states a refused token in a 200 body; GitLab and Gitea answer 400.
                 // A request that never completed states nothing at all.
-                switch ($this->refresh) {
-                    case 'refused':
-                        $this->tokens = ['error' => 'bad_refresh_token'];
-
-                        return $this->tokens;
-                    case 'invalidGrant':
-                        throw new OAuth2Exception('{"error":"invalid_grant"}', 400);
-                    case 'empty':
-                        $this->tokens = [];
-
-                        return $this->tokens;
-                    case 'throw':
-                        throw new \RuntimeException('connection timed out');
-                }
-
-                $this->tokens = [
-                    'access_token' => 'fresh-token',
-                    'refresh_token' => 'fresh-refresh',
-                    'expires_in' => 3600,
-                ];
+                $this->tokens = match ($this->refresh) {
+                    'refused' => ['error' => 'bad_refresh_token'],
+                    'invalidGrant' => throw new OAuth2Exception('{"error":"invalid_grant"}', 400),
+                    'empty' => [],
+                    'throw' => throw new \RuntimeException('connection timed out'),
+                    default => [
+                        'access_token' => 'fresh-token',
+                        'refresh_token' => 'fresh-refresh',
+                        'expires_in' => 3600,
+                    ],
+                };
 
                 return $this->tokens;
             }
