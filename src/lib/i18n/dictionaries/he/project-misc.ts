@@ -881,8 +881,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'השאירו את הכרטיסייה הזו פתוחה וטענו דף באתר שלכם. אירועים מופיעים בדרך כלל תוך שניות ספורות.',
   'Loading property...': 'טוען נכס...',
   'SDK coming soon': 'SDK בקרוב',
-  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, so this code will not resolve if you copy it today. Use the REST tab to start sending events now.':
-    'העזרים האלה עדיין לא פורסמו. הם יגיעו במהדורת SDK עתידית, וממשק ה-API עוד עשוי להשתנות, ולכן הקוד הזה לא יעבוד אם תעתיקו אותו היום. השתמשו בלשונית REST כדי להתחיל לשלוח אירועים עכשיו.',
+  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, including the analytics.event() call inside the emitter, which the client SDKs have not generated yet. This code will not resolve if you copy it today. Use the REST tab to start sending events now.':
+    'העזרים האלה עדיין לא פורסמו. הם יגיעו במהדורת SDK עתידית, וממשק ה-API עוד עשוי להשתנות, כולל הקריאה ל-analytics.event() בתוך ה-emitter, שערכות ה-SDK בצד הלקוח עדיין לא ייצרו. הקוד הזה לא יעבוד אם תעתיקו אותו היום. השתמשו בלשונית REST כדי להתחיל לשלוח אירועים עכשיו.',
+  'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.':
+    'ברירת המחדל היא כיבוד Do Not Track. העבירו { respectDoNotTrack: false } לאפשרויות הבנאי כדי לבטל. האירועים האוטומטיים נקראים pageview, outbound_link, file_download, scroll_depth ו-engagement_time.',
+  'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
+    'האירועים האוטומטיים נקראים screen_view, app_backgrounded ו-app_foregrounded.',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'נקודת הקצה הזו ציבורית, ולכן לא נדרש מפתח API למעקב בצד הלקוח. רק שדות הדריסה בצד השרת (userId, ip, userAgent) דורשים מפתח API עם ההרשאה analytics.write.',
   Flutter: 'Flutter',

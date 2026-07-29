@@ -542,8 +542,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このタブを開いたままサイトのページを読み込んでください。イベントは通常数秒で表示されます。',
   'Loading property...': 'プロパティを読み込んでいます...',
   'SDK coming soon': 'SDK は近日公開',
-  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, so this code will not resolve if you copy it today. Use the REST tab to start sending events now.':
-    'これらのヘルパーはまだ公開されていません。今後の SDK リリースで提供予定で、API も変更される可能性があるため、現時点でコピーしても動作しません。今すぐイベントを送信するには REST タブを使用してください。',
+  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, including the analytics.event() call inside the emitter, which the client SDKs have not generated yet. This code will not resolve if you copy it today. Use the REST tab to start sending events now.':
+    'これらのヘルパーはまだ公開されていません。今後の SDK リリースで提供予定で、emitter 内の analytics.event() の呼び出しを含め API は変更される可能性があります (クライアント SDK ではこのサービスがまだ生成されていません)。現時点でコピーしても動作しません。今すぐイベントを送信するには REST タブを使用してください。',
+  'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.':
+    'Do Not Track はデフォルトで尊重されます。無効にするにはコンストラクタのオプションに { respectDoNotTrack: false } を渡します。自動イベントの名前は pageview、outbound_link、file_download、scroll_depth、engagement_time です。',
+  'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
+    '自動イベントの名前は screen_view、app_backgrounded、app_foregrounded です。',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'このエンドポイントは公開されているため、クライアント側の計測に API キーは不要です。サーバー側の上書きフィールド (userId、ip、userAgent) のみ、analytics.write スコープを持つ API キーが必要です。',
   Flutter: 'Flutter',
