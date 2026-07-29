@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as GeneratorRouteImport } from './routes/generator'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -351,6 +353,16 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
 
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
@@ -2512,6 +2524,8 @@ export interface FileRoutesByFullPath {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2849,6 +2863,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/access': typeof AccessRoute
   '/discord': typeof DiscordRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -3153,6 +3169,8 @@ export interface FileRoutesById {
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -3494,6 +3512,8 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/generator'
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3831,6 +3851,8 @@ export interface FileRouteTypes {
   to:
     | '/access'
     | '/discord'
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -4134,6 +4156,8 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs'
     | '/generator'
+    | '/llms-full.txt'
+    | '/llms.txt'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -4478,6 +4502,8 @@ export interface RootRouteChildren {
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
   GeneratorRoute: typeof GeneratorRouteWithChildren
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   ApiHelloRoute: typeof ApiHelloRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
@@ -4497,6 +4523,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
@@ -8453,6 +8493,8 @@ const rootRouteChildren: RootRouteChildren = {
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
   GeneratorRoute: GeneratorRouteWithChildren,
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   ApiHelloRoute: ApiHelloRoute,
   DomainsContinueRoute: DomainsContinueRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,

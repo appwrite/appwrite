@@ -174,13 +174,23 @@ const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
 // Parse comma-separated exclude patterns (no defaults)
 const EXCLUDE_PATTERNS = [
   convertGlobToRegExp('*.html'),
-  convertGlobToRegExp('llms-full.txt'),
   ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
     .map((pattern: string) => convertGlobToRegExp(pattern)),
 ]
+
+/**
+ * llms exports must never be registered as static routes (neither preloaded
+ * nor on-demand); requests fall through to the TanStack route, which serves
+ * the same prebuilt file with the right Content-Type and records a
+ * server-side pageview.
+ */
+function isLlmsExportFile(relativePath: string): boolean {
+  const normalized = relativePath.split(/[/\\]/).join('/')
+  return normalized === 'llms.txt' || normalized === 'llms-full.txt'
+}
 
 // Verbose logging flag
 const VERBOSE = process.env.ASSET_PRELOAD_VERBOSE_LOGGING === 'true'
@@ -256,11 +266,7 @@ function isFileEligibleForPreloading(relativePath: string): boolean {
   const normalized = relativePath.split(/[/\\]/).join('/')
   const fileName = normalized.split('/').pop() ?? normalized
 
-  if (
-    normalized === 'llms-full.txt' ||
-    normalized.startsWith('llms-full/') ||
-    fileName.endsWith('.html')
-  ) {
+  if (fileName.endsWith('.html')) {
     return false
   }
 
@@ -406,6 +412,9 @@ async function initializeStaticRoutes(
     const glob = createCompositeGlobPattern()
     for await (const relativePath of glob.scan({ cwd: clientDirectory })) {
       if (isAccidentalThreadStaticHtml(relativePath)) {
+        continue
+      }
+      if (isLlmsExportFile(relativePath)) {
         continue
       }
 

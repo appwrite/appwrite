@@ -21,6 +21,8 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/domains/continue',
   '/llms/txt',
   '/llms-full/txt',
+  '/llms.txt',
+  '/llms-full.txt',
   '/upgrade',
   '/r/v.js',
   '/r/e',

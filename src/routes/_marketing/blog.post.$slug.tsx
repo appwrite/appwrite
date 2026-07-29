@@ -16,13 +16,14 @@ import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { BLOG_RSS_PATH } from '@/lib/seo/rss'
+import { trackServerPageview } from '@/lib/server-analytics'
 
 export const Route = createFileRoute('/_marketing/blog/post/$slug')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {
     handlers: {
-      GET: async ({ params, next }) => {
+      GET: async ({ params, request, next }) => {
         const slug = params.slug
         if (!slug.endsWith('.md')) {
           return next()
@@ -33,6 +34,8 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
         if (!markdown) {
           return new Response('Not found', { status: 404 })
         }
+
+        trackServerPageview(request)
 
         return new Response(markdown, {
           headers: {
@@ -97,6 +100,11 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
           type: 'application/rss+xml',
           title: 'Appwrite Blog',
           href: BLOG_RSS_PATH,
+        },
+        {
+          rel: 'alternate',
+          type: 'text/markdown',
+          href: `${loaderData.post.href}.md`,
         },
       ],
       scripts,

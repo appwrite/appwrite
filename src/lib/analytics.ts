@@ -139,17 +139,29 @@ function normalizeAnalyticsProps(props: AnalyticsProps = {}) {
   ) as Record<string, string | number | boolean>
 }
 
+/**
+ * Route path used for analytics. Public pages (marketing, docs, blog, ...)
+ * report the full concrete pathname so per-page traffic is visible.
+ * Console, account, and auth routes report the sanitized route template
+ * (e.g. /projects/$projectId/databases/$databaseId) so raw IDs never leave.
+ */
 export function getAnalyticsRoutePath(
   routeId: string | undefined,
   pathname: string,
 ) {
-  const routePath = routeId
+  const template = routeId
     ?.split('/')
     .filter(Boolean)
     .filter((part) => !part.startsWith('_'))
     .join('/')
 
-  return routePath ? `/${routePath}` : pathname || '/'
+  const routePath = template ? `/${template}` : pathname || '/'
+  const surface = getAnalyticsSurface(routePath)
+  if (surface === 'marketing' || surface === 'docs') {
+    return pathname || routePath
+  }
+
+  return routePath
 }
 
 export function getAnalyticsArea(routePath: string) {
@@ -160,7 +172,7 @@ export function getAnalyticsArea(routePath: string) {
 }
 
 /**
- * Map a sanitized route template to a coarse Plausible `surface` property.
+ * Map a route path to a coarse Plausible `surface` property.
  */
 export function getAnalyticsSurface(routePath: string): AnalyticsSurface {
   const root = routePath.split('/').filter(Boolean)[0] ?? ''

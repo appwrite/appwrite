@@ -1,3 +1,4 @@
+import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import { resolveChangelogAssetUrl } from './assets'
 import { parseChangelogFrontmatter } from './frontmatter'
 import type { ChangelogEntry, ChangelogEntryMeta } from './types'
@@ -42,6 +43,18 @@ export function getAllChangelogEntries(): ChangelogEntry[] {
 
 export function getChangelogEntry(slug: string): ChangelogEntry | null {
   return allChangelogEntries.find((entry) => entry.slug === slug) ?? null
+}
+
+/** Plain-markdown source (including frontmatter) for the .md export endpoint. */
+export function getChangelogMarkdownExport(slug: string): string | null {
+  if (!getChangelogEntry(slug)) return null
+
+  const modulePath = Object.keys(contentLoaders).find(
+    (path) => slugFromModulePath(path) === slug,
+  )
+  if (!modulePath) return null
+  const raw = contentLoaders[modulePath]
+  return raw ? markdocToMarkdown(raw) : null
 }
 
 export function getChangelogEntriesPage(page: number): {
