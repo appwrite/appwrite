@@ -1,5 +1,6 @@
 /**
- * Generates static docs exports for SEO and LLM crawlers (llms.txt, llms-full.txt).
+ * Generates static docs exports for SEO and LLM crawlers:
+ * curated llms.txt hub, docs/llms.txt, section indexes, discovery JSON, llms-full.txt.
  * Sitemaps are generated via generate:sitemap.
  * Run manually when docs change: bun run generate:docs-exports
  */
@@ -10,8 +11,22 @@ import { fileURLToPath } from 'node:url'
 import { parseBlogFrontmatter } from '../src/lib/blog/frontmatter'
 import { parseChangelogFrontmatter } from '../src/lib/changelog/frontmatter'
 import { DOCS_PAGES } from '../src/lib/docs/generated/manifest'
-import { buildAppwriteLlmsTxt } from '../src/lib/seo/llms'
+import {
+  buildAgentSkillsDiscoveryDocument,
+  buildAiCatalogDocument,
+  buildMcpServerCard,
+  serializeDiscoveryJson,
+} from '../src/lib/seo/agent-discovery'
+import {
+  buildAppwriteLlmsTxt,
+  buildBlogMarkdownIndex,
+  buildChangelogMarkdownIndex,
+  buildDocsLlmsTxt,
+  buildDocsMarkdownIndex,
+  buildIntegrationsMarkdownIndex,
+} from '../src/lib/seo/llms'
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
+import { getProductionRobotsTxt } from '../src/lib/seo/robots'
 import { markdocToMarkdown } from '../src/lib/seo/markdoc-to-markdown'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -130,26 +145,13 @@ async function collectIntegrationsMeta(): Promise<LlmsContentMeta[]> {
   return integrations.sort((a, b) => a.title.localeCompare(b.title))
 }
 
-async function generateLlmsTxt(): Promise<string> {
+async function collectContentMeta() {
   const [blog, changelog, integrations] = await Promise.all([
     collectBlogMeta(),
     collectChangelogMeta(),
     collectIntegrationsMeta(),
   ])
-
-  return buildAppwriteLlmsTxt(
-    {
-      docs: DOCS_PAGES.map((page) => ({
-        slug: page.slug,
-        title: page.title,
-        description: page.description,
-      })),
-      integrations,
-      blog,
-      changelog,
-    },
-    SITE_ORIGIN,
-  )
+  return { blog, changelog, integrations }
 }
 
 async function walkMarkdocFiles(dir: string): Promise<string[]> {
@@ -221,13 +223,86 @@ async function generateLlmsFullTxt(): Promise<string> {
   return sections.join('\n\n---\n\n') + '\n'
 }
 
+type ExportFile = { relativePath: string; contents: string }
+
+async function buildExportFiles(): Promise<ExportFile[]> {
+  const { blog, changelog, integrations } = await collectContentMeta()
+  const llmsFullTxt = await generateLlmsFullTxt()
+
+  return [
+    {
+      relativePath: 'llms.txt',
+      contents: buildAppwriteLlmsTxt(
+        {
+          docs: DOCS_PAGES.map((page) => ({
+            slug: page.slug,
+            title: page.title,
+            description: page.description,
+          })),
+          integrations,
+          blog,
+          changelog,
+        },
+        SITE_ORIGIN,
+      ),
+    },
+    {
+      relativePath: 'llms-full.txt',
+      contents: llmsFullTxt,
+    },
+    {
+      relativePath: 'docs/llms.txt',
+      contents: buildDocsLlmsTxt(DOCS_PAGES, SITE_ORIGIN),
+    },
+    {
+      relativePath: 'docs.md',
+      contents: buildDocsMarkdownIndex(DOCS_PAGES, SITE_ORIGIN),
+    },
+    {
+      relativePath: 'blog.md',
+      contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
+    },
+    {
+      relativePath: 'changelog.md',
+      contents: buildChangelogMarkdownIndex(changelog, SITE_ORIGIN),
+    },
+    {
+      relativePath: 'integrations.md',
+      contents: buildIntegrationsMarkdownIndex(integrations, SITE_ORIGIN),
+    },
+    {
+      relativePath: '.well-known/mcp/server-card.json',
+      contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
+    },
+    {
+      relativePath: '.well-known/ai-catalog.json',
+      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+    },
+    {
+      relativePath: '.well-known/agent-skills/index.json',
+      contents: serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+    },
+    {
+      relativePath: 'robots.txt',
+      contents: getProductionRobotsTxt(),
+    },
+  ]
+}
+
+async function writeExports(outputDir: string, files: ExportFile[]) {
+  await Promise.all(
+    files.map(async (file) => {
+      const filepath = join(outputDir, file.relativePath)
+      await mkdir(dirname(filepath), { recursive: true })
+      await writeFile(filepath, file.contents, 'utf-8')
+    }),
+  )
+}
+
 async function main() {
   await mkdir(PUBLIC_DIR, { recursive: true })
 
-  const [llmsTxt, llmsFullTxt] = await Promise.all([
-    generateLlmsTxt(),
-    generateLlmsFullTxt(),
-  ])
+  const files = await buildExportFiles()
 
   // This script runs after `vite build` (which copies public/ into dist/client),
   // so write into dist/client too; otherwise a clean build would never contain
@@ -236,14 +311,11 @@ async function main() {
   const clientDir = join(VIBES_ROOT, 'dist', 'client')
   if (existsSync(clientDir)) outputDirs.push(clientDir)
 
-  await Promise.all(
-    outputDirs.flatMap((dir) => [
-      writeFile(join(dir, 'llms.txt'), llmsTxt, 'utf-8'),
-      writeFile(join(dir, 'llms-full.txt'), llmsFullTxt, 'utf-8'),
-    ]),
-  )
+  await Promise.all(outputDirs.map((dir) => writeExports(dir, files)))
 
-  console.log('Generated llms.txt and llms-full.txt')
+  console.log(
+    `Generated ${files.map((file) => file.relativePath).join(', ')}`,
+  )
 }
 
 main().catch((err) => {

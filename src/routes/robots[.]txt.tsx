@@ -1,21 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
-import { generateLlmsTxt } from '@/lib/seo/llms-content'
+import { getProductionRobotsTxt } from '@/lib/seo/robots'
 import { trackServerPageview } from '@/lib/server-analytics'
 
-/** Canonical curated llms.txt hub (https://llmstxt.org). */
-export const Route = createFileRoute('/llms.txt')({
+/** Production robots.txt (non-indexable hosts are handled by seoIndexingMiddleware). */
+export const Route = createFileRoute('/robots.txt')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {
     handlers: {
       GET: async ({ request }) => {
-        trackServerPageview(request)
+        trackServerPageview(request, { format: 'text' })
         return respondWithPrebuiltOrRuntime(
-          'llms.txt',
-          'text/markdown; charset=utf-8',
-          () => generateLlmsTxt(),
+          'robots.txt',
+          'text/plain; charset=utf-8',
+          () => getProductionRobotsTxt(),
         )
       },
     },

@@ -16,6 +16,13 @@ dist
 # Generated static exports (built via generate:sitemap and generate:docs-exports)
 public/llms.txt
 public/llms-full.txt
+public/docs/llms.txt
+public/docs.md
+public/blog.md
+public/changelog.md
+public/integrations.md
+public/robots.txt
+public/.well-known/
 public/sitemap.xml
 public/sitemap/
 

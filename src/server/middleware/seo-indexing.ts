@@ -6,6 +6,7 @@ import {
   isSeoIndexableHost,
   NOINDEX_ROBOTS_HEADER,
 } from '@/lib/seo/indexing'
+import { trackServerPageview } from '@/lib/server-analytics'
 
 export const seoIndexingMiddleware = createMiddleware({
   type: 'request',
@@ -14,6 +15,7 @@ export const seoIndexingMiddleware = createMiddleware({
   const indexable = isSeoIndexableHost(host)
 
   if (pathname === '/robots.txt' && !indexable) {
+    trackServerPageview(request, { format: 'text' })
     throw new Response(getNonProductionRobotsTxt(), {
       status: 200,
       headers: {

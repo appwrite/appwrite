@@ -15,6 +15,7 @@ import {
 const ACCESS_COOKIE = `${WEBSITE_ACCESS_COOKIE_NAME}=1`
 
 const MARKDOWN_CONTENT_TYPE = /^text\/markdown/
+const JSON_CONTENT_TYPE = /application\/json/
 
 /** Leftover custom Markdoc tags would mean the export transform regressed. */
 const MARKDOC_TAG = /\{%\s*\/?\w+/
@@ -68,7 +69,7 @@ test.describe('markdown exports (read-only)', () => {
     })
   }
 
-  test('llms.txt index serves markdown link index', async ({ request }) => {
+  test('llms.txt hub serves curated agent index', async ({ request }) => {
     const response = await request.get('/llms.txt', {
       headers: { Cookie: ACCESS_COOKIE },
     })
@@ -78,10 +79,93 @@ test.describe('markdown exports (read-only)', () => {
 
     const body = await response.text()
     expect(body).toMatch(/^# Appwrite\n/)
-    expect(body).toContain('## Docs')
-    expect(body).toContain('## Blog')
-    // Index links point at .md variants so LLMs land on markdown pages.
+    expect(body).toContain('## MCP Server')
+    expect(body).toContain('## Skills')
+    expect(body).toContain('## Documentation')
+    expect(body).toContain('/docs/llms.txt')
+    expect(body).toContain('/blog.md')
+    // Hub stays curated; it must not dump every docs page.
+    expect(body.length).toBeLessThan(100_000)
+  })
+
+  test('docs/llms.txt serves nested docs index', async ({ request }) => {
+    const response = await request.get('/docs/llms.txt', {
+      headers: { Cookie: ACCESS_COOKIE },
+    })
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite Docs\n/)
     expect(body).toMatch(/\(https?:\/\/[^\s)]+\.md\)/)
+    expect(body.length).toBeGreaterThan(10_000)
+  })
+
+  test('section markdown indexes list content links', async ({ request }) => {
+    for (const path of ['/docs.md', '/blog.md', '/changelog.md', '/integrations.md']) {
+      const response = await request.get(path, {
+        headers: { Cookie: ACCESS_COOKIE },
+      })
+      expect(response.status(), path).toBe(200)
+      expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+      const body = await response.text()
+      expect(body, path).toMatch(/^# Appwrite /)
+      expect(body, path).toMatch(/\(https?:\/\/[^\s)]+\.md\)/)
+    }
+  })
+
+  test('well-known discovery documents serve MCP Server Card + AI Catalog', async ({
+    request,
+  }) => {
+    const mcp = await request.get('/.well-known/mcp/server-card.json', {
+      headers: { Cookie: ACCESS_COOKIE },
+    })
+    expect(mcp.status()).toBe(200)
+    expect(mcp.headers()['content-type']).toMatch(
+      /application\/(mcp-server-card\+json|json)/,
+    )
+    expect(mcp.headers()['access-control-allow-origin']).toBe('*')
+    const mcpBody = await mcp.json()
+    expect(mcpBody.$schema).toContain('server-card.schema.json')
+    expect(mcpBody.name).toBe('io.appwrite/mcp')
+    expect(mcpBody.remotes?.[0]?.url).toContain('mcp.appwrite.io')
+
+    const catalog = await request.get('/.well-known/ai-catalog.json', {
+      headers: { Cookie: ACCESS_COOKIE },
+    })
+    expect(catalog.status()).toBe(200)
+    expect(catalog.headers()['content-type']).toMatch(
+      /application\/(ai-catalog\+json|json)/,
+    )
+    const catalogBody = await catalog.json()
+    expect(catalogBody.entries?.[0]?.type).toBe(
+      'application/mcp-server-card+json',
+    )
+    expect(catalogBody.entries?.[0]?.url).toContain(
+      '/.well-known/mcp/server-card.json',
+    )
+
+    const skills = await request.get('/.well-known/agent-skills/index.json', {
+      headers: { Cookie: ACCESS_COOKIE },
+    })
+    expect(skills.status()).toBe(200)
+    expect(skills.headers()['content-type']).toMatch(JSON_CONTENT_TYPE)
+    const skillsBody = await skills.json()
+    expect(Array.isArray(skillsBody.skills)).toBe(true)
+    expect(skillsBody.skills.length).toBeGreaterThan(0)
+  })
+
+  test('robots.txt serves plain text with a tracked route', async ({ request }) => {
+    const response = await request.get('/robots.txt', {
+      headers: { Cookie: ACCESS_COOKIE },
+    })
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(/text\/plain/)
+    const body = await response.text()
+    expect(body).toContain('User-agent:')
+    expect(body).toContain('Sitemap:')
   })
 
   test('llms-full.txt serves aggregated docs markdown', async ({ request }) => {
