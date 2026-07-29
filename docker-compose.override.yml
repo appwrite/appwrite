@@ -400,10 +400,11 @@ services:
       - gateway
     environment:
       - ADMINER_DESIGN=pepa-linha
-      - ADMINER_DEFAULT_SERVER=mariadb
-      - ADMINER_DEFAULT_USERNAME=root
-      - ADMINER_DEFAULT_PASSWORD=rootsecretpassword
-      - ADMINER_DEFAULT_DB=appwrite
+      - ADMINER_DEFAULT_SERVER=${_APP_DB_HOST:-postgresql}
+      - ADMINER_DEFAULT_DRIVER=${_APP_DB_ADAPTER:-postgresql}
+      - ADMINER_DEFAULT_USERNAME=${_APP_DB_USER}
+      - ADMINER_DEFAULT_PASSWORD=${_APP_DB_PASS}
+      - ADMINER_DEFAULT_DB=${_APP_DB_SCHEMA}
     configs:
       - source: adminer-index.php
         target: /var/www/html/index.php
@@ -484,9 +485,13 @@ services:
         aliases:
           - appwrite.test
   mariadb:
+    profiles:
+      - mariadb
     ports:
       - "9510:3306"
   mongodb:
+    profiles:
+      - mongodb
     ports:
       - "9511:27017"
   postgresql:
@@ -552,7 +557,8 @@ configs:
         if(!count($$_GET)) {
           $$_POST['auth'] = [
             'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
-            'driver' => 'server', /* seems to autodetect the driver from server settings */
+            /* Adminer calls the MySQL/MariaDB driver "server". */
+            'driver' => $$_ENV['ADMINER_DEFAULT_DRIVER'] === 'postgresql' ? 'pgsql' : 'server',
             'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
             'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
             'db' => $$_ENV['ADMINER_DEFAULT_DB'],
