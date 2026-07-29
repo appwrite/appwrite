@@ -69,12 +69,24 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
 
 function AnalyticsPage() {
   const matches = useMatches()
-  // Check if we're on a child route (property detail page)
+
+  // The add wizard renders fullscreen, so it needs a flex container of its own.
+  const isAddRoute = matches.some(
+    (match) => match.routeId === '/_public/projects/$projectId/analytics/add',
+  )
+  if (isAddRoute) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <Outlet />
+      </div>
+    )
+  }
+
+  // Property detail page
   const isChildRoute = matches.some(
     (match) =>
       match.routeId === '/_public/projects/$projectId/analytics/$propertyId',
   )
-
   if (isChildRoute) {
     return <Outlet />
   }

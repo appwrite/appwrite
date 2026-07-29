@@ -317,6 +317,45 @@ export function analyticsEventsQueryOptions(
   })
 }
 
+/** How often the setup wizard asks whether the first event has landed. */
+const FIRST_EVENT_POLL_INTERVAL = 5000
+
+/**
+ * Poll a freshly created property until its first event arrives, so the setup
+ * wizard can confirm that tracking actually works. Polling stops as soon as an
+ * event is seen, and never starts unless `enabled`.
+ */
+export function useAnalyticsFirstEvent(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  enabled: boolean = true,
+) {
+  const isEnabled =
+    !!projectId && !!propertyId && enabled && isClientQueryEnabled
+
+  const { data, isFetching } = useQuery({
+    queryKey: ['analytics', 'first-event', projectId, propertyId],
+    queryFn: () =>
+      fetchAnalyticsEvents(projectId!, propertyId!, {
+        kind: 'shorthand',
+        dateRange: '24h',
+      }),
+    enabled: isEnabled,
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchInterval: (query) =>
+      (query.state.data?.total ?? 0) > 0 ? false : FIRST_EVENT_POLL_INTERVAL,
+  })
+
+  return {
+    eventReceived: (data?.total ?? 0) > 0,
+    firstEventName: data?.events?.[0]?.name,
+    isChecking: isFetching,
+  }
+}
+
 export function useAnalyticsEvents(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,

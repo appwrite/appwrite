@@ -52,16 +52,13 @@ import {
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsProperties,
   useAnalyticsPropertiesStats,
-  useCreateAnalyticsProperty,
   useDeleteAnalyticsProperty,
   useOrganizationScopes,
   useProject,
-  type CreateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
-import { CreateProperty } from './_components/CreateProperty'
 import { DeleteProperty } from './_components/DeleteProperty'
 import {
   formatDuration,
@@ -102,7 +99,6 @@ export function View() {
   const t = useT()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [createOpen, setCreateOpen] = useState(false)
   const [propertyToDelete, setPropertyToDelete] = useState<
     Models.AnalyticsProperty | undefined
   >(undefined)
@@ -133,26 +129,6 @@ export function View() {
   const createPermissionTooltip = noCreatePermission
     ? t("You don't have permission to create analytics properties.")
     : undefined
-
-  const createMutation = useCreateAnalyticsProperty(projectId)
-
-  const handleCreate = (data: CreateAnalyticsPropertyInput) => {
-    createMutation.mutate(data, {
-      onSuccess: (property) => {
-        setCreateOpen(false)
-        toast.success(t('Property created'))
-        if (projectId) {
-          navigate({
-            to: '/projects/$projectId/analytics/$propertyId',
-            params: { projectId, propertyId: property.$id },
-          })
-        }
-      },
-      onError: (createError: Error) => {
-        toast.error(createError.message || t('Failed to create property'))
-      },
-    })
-  }
 
   const deleteMutation = useDeleteAnalyticsProperty(projectId)
 
@@ -259,7 +235,8 @@ export function View() {
         onSearchChange={handleSearchChange}
         createLabel={t('Create property')}
         createAnalyticsAction="create-analytics-property"
-        onCreate={() => setCreateOpen(true)}
+        createTo="/projects/$projectId/analytics/add"
+        createParams={{ projectId: projectId as string }}
         createDisabled={noCreatePermission}
         createDisabledTooltip={createPermissionTooltip}
         showFilters
@@ -661,13 +638,6 @@ export function View() {
           emptyState('card')
         ) : null}
       </div>
-
-      <CreateProperty
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreate={handleCreate}
-        isLoading={createMutation.isPending}
-      />
 
       <DeleteProperty
         property={propertyToDelete}

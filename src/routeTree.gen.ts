@@ -171,6 +171,7 @@ import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './route
 import { Route as PublicProjectsProjectIdAuthPoliciesRouteImport } from './routes/_public/projects.$projectId.auth.policies'
 import { Route as PublicProjectsProjectIdAuthOauth2ServerRouteImport } from './routes/_public/projects.$projectId.auth.oauth2-server'
 import { Route as PublicProjectsProjectIdAppsAddRouteImport } from './routes/_public/projects.$projectId.apps.add'
+import { Route as PublicProjectsProjectIdAnalyticsAddRouteImport } from './routes/_public/projects.$projectId.analytics.add'
 import { Route as PublicProjectsProjectIdAnalyticsPropertyIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
@@ -1240,6 +1241,12 @@ const PublicProjectsProjectIdAppsAddRoute =
     id: '/add',
     path: '/add',
     getParentRoute: () => PublicProjectsProjectIdAppsRoute,
+  } as any)
+const PublicProjectsProjectIdAnalyticsAddRoute =
+  PublicProjectsProjectIdAnalyticsAddRouteImport.update({
+    id: '/add',
+    path: '/add',
+    getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
   } as any)
 const PublicProjectsProjectIdAnalyticsPropertyIdRoute =
   PublicProjectsProjectIdAnalyticsPropertyIdRouteImport.update({
@@ -2614,6 +2621,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -2930,6 +2938,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -3249,6 +3258,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  '/_public/projects/$projectId/analytics/add': typeof PublicProjectsProjectIdAnalyticsAddRoute
   '/_public/projects/$projectId/apps/add': typeof PublicProjectsProjectIdAppsAddRoute
   '/_public/projects/$projectId/auth/oauth2-server': typeof PublicProjectsProjectIdAuthOauth2ServerRouteWithChildren
   '/_public/projects/$projectId/auth/policies': typeof PublicProjectsProjectIdAuthPoliciesRouteWithChildren
@@ -3587,6 +3597,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
@@ -3903,6 +3914,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/analytics/add'
     | '/projects/$projectId/apps/add'
     | '/projects/$projectId/auth/oauth2-server'
     | '/projects/$projectId/auth/policies'
@@ -4221,6 +4233,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/projects/$projectId/analytics/$propertyId'
+    | '/_public/projects/$projectId/analytics/add'
     | '/_public/projects/$projectId/apps/add'
     | '/_public/projects/$projectId/auth/oauth2-server'
     | '/_public/projects/$projectId/auth/policies'
@@ -5591,6 +5604,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/apps/add'
       preLoaderRoute: typeof PublicProjectsProjectIdAppsAddRouteImport
       parentRoute: typeof PublicProjectsProjectIdAppsRoute
+    }
+    '/_public/projects/$projectId/analytics/add': {
+      id: '/_public/projects/$projectId/analytics/add'
+      path: '/add'
+      fullPath: '/projects/$projectId/analytics/add'
+      preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsAddRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
     }
     '/_public/projects/$projectId/analytics/$propertyId': {
       id: '/_public/projects/$projectId/analytics/$propertyId'
@@ -7136,12 +7156,15 @@ const PublicOrganizationsOrgIdRouteWithChildren =
 
 interface PublicProjectsProjectIdAnalyticsRouteChildren {
   PublicProjectsProjectIdAnalyticsPropertyIdRoute: typeof PublicProjectsProjectIdAnalyticsPropertyIdRoute
+  PublicProjectsProjectIdAnalyticsAddRoute: typeof PublicProjectsProjectIdAnalyticsAddRoute
 }
 
 const PublicProjectsProjectIdAnalyticsRouteChildren: PublicProjectsProjectIdAnalyticsRouteChildren =
   {
     PublicProjectsProjectIdAnalyticsPropertyIdRoute:
       PublicProjectsProjectIdAnalyticsPropertyIdRoute,
+    PublicProjectsProjectIdAnalyticsAddRoute:
+      PublicProjectsProjectIdAnalyticsAddRoute,
   }
 
 const PublicProjectsProjectIdAnalyticsRouteWithChildren =

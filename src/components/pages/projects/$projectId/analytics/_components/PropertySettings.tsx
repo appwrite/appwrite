@@ -17,6 +17,7 @@ import {
   type UpdateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
 import { DeleteProperty } from './DeleteProperty'
+import { IntegrationSnippets } from './IntegrationSnippets'
 
 interface PropertySettingsProps {
   projectId: string
@@ -105,6 +106,24 @@ export function PropertySettings({
   return (
     <div className="w-full px-4 py-4 sm:px-6">
       <div className="space-y-6">
+        {/* Integration */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Integration')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                'Add tracking to your site or app to start collecting events.',
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <IntegrationSnippets projectId={projectId} property={property} />
+          </div>
+        </div>
+
         {/* Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
