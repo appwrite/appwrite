@@ -80,7 +80,7 @@ export function IntegrationSnippets({
           />
           <p className="text-[12px] leading-relaxed text-amber-900 dark:text-amber-200">
             {t(
-              'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, so this code will not resolve if you copy it today. Use the REST tab to start sending events now.',
+              'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, including the analytics.event() call inside the emitter, which the client SDKs have not generated yet. This code will not resolve if you copy it today. Use the REST tab to start sending events now.',
             )}
           </p>
         </div>
@@ -97,13 +97,9 @@ export function IntegrationSnippets({
         ))}
       </div>
 
-      {active === 'rest' && (
-        <p className="text-[12px] leading-relaxed text-muted-foreground">
-          {t(
-            'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.',
-          )}
-        </p>
-      )}
+      <p className="text-[12px] leading-relaxed text-muted-foreground">
+        {t(meta.note)}
+      </p>
     </div>
   )
 }

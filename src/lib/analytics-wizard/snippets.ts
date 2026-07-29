@@ -7,6 +7,21 @@
  * must always be rendered with `unreleased: true` so the UI can warn before
  * anyone copies code that cannot resolve.
  *
+ * Both helpers take a **plain emitter function**, not a client and not a
+ * property ID, so they do not hard-couple to the generated `Analytics` class:
+ *
+ *   web:     constructor(emit: AnalyticsEventEmitter, options: AnalyticsTrackingOptions = {})
+ *   flutter: AnalyticsTracking(AnalyticsEventEmitter emit)
+ *   flutter: AnalyticsObserver(this.emit, {nameExtractor, eventName = 'screen_view'})
+ *
+ * `propertyId` appears nowhere in either template, but the ingestion endpoint
+ * requires it, so the console binds it inside the emitter closure.
+ *
+ * The emitter body calls `analytics.event(...)`, which is what both templates'
+ * docblocks document. The console SDK generates `createEvent`, and the client
+ * SDKs have not generated this service at all yet, so the method name is not
+ * confirmed. That ambiguity is covered by the unreleased warning in the UI.
+ *
  * REST is the only integration that works against the API today.
  */
 
@@ -24,6 +39,8 @@ export type AnalyticsPlatformMeta = {
   iconSlug: string
   /** True while the SDK helpers for this platform are unpublished. */
   unreleased: boolean
+  /** Footnote rendered below the snippets. */
+  note: string
 }
 
 export const ANALYTICS_PLATFORM_META: Record<
@@ -36,6 +53,7 @@ export const ANALYTICS_PLATFORM_META: Record<
     description: 'Browser apps and static sites.',
     iconSlug: 'web',
     unreleased: true,
+    note: 'Do Not Track is respected by default. Pass { respectDoNotTrack: false } to the constructor options to opt out. Automatic events are named pageview, outbound_link, file_download, scroll_depth and engagement_time.',
   },
   flutter: {
     id: 'flutter',
@@ -43,6 +61,7 @@ export const ANALYTICS_PLATFORM_META: Record<
     description: 'iOS, Android, web and desktop from one codebase.',
     iconSlug: 'flutter',
     unreleased: true,
+    note: 'Automatic events are named screen_view, app_backgrounded and app_foregrounded.',
   },
   rest: {
     id: 'rest',
@@ -50,6 +69,7 @@ export const ANALYTICS_PLATFORM_META: Record<
     description: 'Any language, straight against the HTTP API.',
     iconSlug: 'web',
     unreleased: false,
+    note: 'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.',
   },
 }
 
@@ -92,31 +112,40 @@ function webBlocks(input: SnippetInput): SnippetBlock[] {
     {
       label: 'Initialize tracking',
       language: 'typescript',
-      code: `import { Client, AnalyticsTracking } from 'appwrite'
+      code: `import { Client, Analytics, AnalyticsTracking } from 'appwrite'
 
 const client = new Client()
   .setEndpoint('${endpoint}')
   .setProject('${projectId}')
 
-const analytics = new AnalyticsTracking(client, '${trackingId}')`,
+const analytics = new Analytics(client)
+
+// AnalyticsTracking takes a plain emitter function, so bind the property here.
+const tracking = new AnalyticsTracking((name, options) =>
+  analytics.event({ propertyId: '${trackingId}', name, ...(options ?? {}) }),
+)`,
     },
     {
       label: 'Turn on automatic tracking',
       language: 'typescript',
-      code: `analytics.enableAutoPageviews()
-analytics.enableAutoScrollDepth()
-analytics.enableAutoEngagementTime()
-analytics.enableAutoOutboundTracking()
-analytics.enableAutoDownloadTracking()`,
+      code: `// Everything at once
+tracking.enableAllAutoTracking()
+
+// Or opt in one at a time
+tracking.enableAutoPageviews()
+tracking.enableAutoScrollDepth()
+tracking.enableAutoEngagementTime()
+tracking.enableAutoOutboundTracking()
+tracking.enableAutoDownloadTracking()`,
     },
     {
       label: 'Send your own events',
       language: 'typescript',
       code: `// A custom event
-analytics.track('signup_completed')
+tracking.track('signup_completed', { props: { plan: 'pro' } })
 
 // A pageview for a route your router changed manually
-analytics.pageview()`,
+tracking.pageview()`,
     },
   ]
 }
@@ -138,32 +167,38 @@ final client = Client()
     .setEndpoint('${endpoint}')
     .setProject('${projectId}');
 
-final analytics = AnalyticsTracking(client, '${trackingId}');`,
+final analytics = Analytics(client);
+
+// The tracking helpers take a plain emitter function, so bind the property here.
+void emit(String name, {Map<String, dynamic>? props}) =>
+    analytics.event(propertyId: '${trackingId}', name: name, props: props);
+
+final tracking = AnalyticsTracking(emit);`,
     },
     {
       label: 'Turn on automatic tracking',
       language: 'dart',
       code: `// Everything at once
-analytics.enableAllAutoTracking();
+tracking.enableAllAutoTracking();
 
 // Or just app lifecycle events
-analytics.enableAutoLifecycleEvents();
-// analytics.disableAutoLifecycleEvents();`,
+tracking.enableAutoLifecycleEvents();
+// tracking.disableAutoLifecycleEvents();`,
     },
     {
       label: 'Track route changes',
       language: 'dart',
       code: `MaterialApp(
-  navigatorObservers: [AnalyticsObserver(analytics)],
+  navigatorObservers: [AnalyticsObserver(emit)],
   home: const HomePage(),
 );`,
     },
     {
       label: 'Send your own events',
       language: 'dart',
-      code: `analytics.event('signup_completed', props: {'plan': 'pro'});
+      code: `tracking.event('signup_completed', props: {'plan': 'pro'});
 
-analytics.screenView('/checkout');`,
+tracking.screenView('Checkout', className: 'CheckoutPage');`,
     },
   ]
 }
