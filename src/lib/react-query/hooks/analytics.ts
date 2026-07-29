@@ -336,11 +336,27 @@ export function useRefreshAnalyticsProperty(
     setIsRefreshing(true)
     try {
       await queryClient.refetchQueries({
-        predicate: (query) =>
-          query.queryKey[0] === 'analytics' &&
-          query.queryKey.includes(projectId) &&
-          query.queryKey.includes(propertyId),
+        // `type: 'all'` also refetches queries whose panel is not currently
+        // mounted (an inactive tab), so switching tabs after a refresh shows
+        // fresh data instead of a stale cache entry.
+        type: 'all',
+        predicate: (query) => {
+          const [scope, resource] = query.queryKey
+          if (scope !== 'analytics') return false
+          // The setup wizard's first-event probe drives itself on a
+          // refetchInterval. Awaiting it here means this promise settles on the
+          // poller's schedule rather than the refresh's, which leaves the button
+          // spinning and disabled long after the data has arrived.
+          if (resource === 'first-event') return false
+          return (
+            query.queryKey.includes(projectId) &&
+            query.queryKey.includes(propertyId)
+          )
+        },
       })
+    } catch {
+      // A failed refetch surfaces through each query's own error state; the
+      // button must still return to idle rather than spin forever.
     } finally {
       setIsRefreshing(false)
     }

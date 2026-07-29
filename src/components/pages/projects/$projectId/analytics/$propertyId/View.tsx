@@ -369,6 +369,11 @@ export function View({
         activeTab={activeTab}
         onTabChange={setActiveTab}
         showFilters={false}
+        beforeRefreshButtons={
+          activeTab === 'analytics' ? (
+            <DateRangeSelect value={range} onChange={setRange} />
+          ) : undefined
+        }
         showRefresh={activeTab === 'analytics'}
         onRefresh={() => void refresh()}
         isRefreshing={isRefreshing}
@@ -379,12 +384,8 @@ export function View({
         <div className="mx-auto w-full max-w-7xl flex-1">
           {activeTab === 'analytics' && (
             <div className="px-4 py-4 sm:px-6">
-              {/* Date range */}
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[12px] font-medium text-muted-foreground">
-                  {property?.domain || t('No domain')}
-                </span>
-                <DateRangeSelect value={range} onChange={setRange} />
+              <div className="mb-3 text-[12px] font-medium text-muted-foreground">
+                {property?.domain || t('No domain')}
               </div>
 
               {statsError ? (
