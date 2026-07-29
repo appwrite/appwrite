@@ -548,6 +548,24 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Do Not Track はデフォルトで尊重されます。無効にするにはコンストラクタのオプションに { respectDoNotTrack: false } を渡します。自動イベントの名前は pageview、outbound_link、file_download、scroll_depth、engagement_time です。',
   'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
     '自動イベントの名前は screen_view、app_backgrounded、app_foregrounded です。',
+  // Analytics dimension panels
+  'Top pages': '人気のページ',
+  'Entry pages': '入口ページ',
+  'Exit pages': '出口ページ',
+  'Where visitors came from': '訪問者の流入元',
+  'Most visited paths': '最も閲覧されたパス',
+  'Where visitors are browsing from': '訪問者の閲覧地域',
+  'What visitors are browsing with': '訪問者の利用環境',
+  'Human visitors versus bots': '人間の訪問者とボットの比較',
+  'AI agents and crawlers': 'AI エージェントとクローラー',
+  Agents: 'エージェント',
+  'Named bots seen in this range, as classified by the API':
+    'この期間に検出された既知のボット (API の分類による)',
+  'No bot traffic in this range': 'この期間にボットのトラフィックはありません',
+  'No data in this range': 'この期間のデータはありません',
+  'Returning visitors were also seen in the preceding 180 days':
+    'リピート訪問者は過去 180 日間にも訪問しています',
+  'unique visitors in total': 'ユニーク訪問者の合計',
   'Event over time': 'イベントの推移',
   'Daily series for a single event. Property totals are in the summary below.':
     '単一イベントの日次データです。プロパティ全体の合計は下の概要にあります。',

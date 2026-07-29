@@ -887,6 +887,24 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'ברירת המחדל היא כיבוד Do Not Track. העבירו { respectDoNotTrack: false } לאפשרויות הבנאי כדי לבטל. האירועים האוטומטיים נקראים pageview, outbound_link, file_download, scroll_depth ו-engagement_time.',
   'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
     'האירועים האוטומטיים נקראים screen_view, app_backgrounded ו-app_foregrounded.',
+  // Analytics dimension panels
+  'Top pages': 'דפים מובילים',
+  'Entry pages': 'דפי כניסה',
+  'Exit pages': 'דפי יציאה',
+  'Where visitors came from': 'מהיכן הגיעו המבקרים',
+  'Most visited paths': 'הנתיבים הנצפים ביותר',
+  'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
+  'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
+  'AI agents and crawlers': 'סוכני AI וסורקים',
+  Agents: 'סוכנים',
+  'Named bots seen in this range, as classified by the API':
+    'בוטים מזוהים שנצפו בטווח הזה, לפי הסיווג של ה-API',
+  'No bot traffic in this range': 'אין תנועת בוטים בטווח הזה',
+  'No data in this range': 'אין נתונים בטווח הזה',
+  'Returning visitors were also seen in the preceding 180 days':
+    'מבקרים חוזרים נצפו גם ב-180 הימים שקדמו',
+  'unique visitors in total': 'מבקרים ייחודיים בסך הכל',
   'Event over time': 'אירוע לאורך זמן',
   'Daily series for a single event. Property totals are in the summary below.':
     'סדרה יומית עבור אירוע יחיד. סך הכל של הנכס מופיע בסיכום שלמטה.',
