@@ -242,5 +242,15 @@
     "emails.otpSession.clientInfo": "Za to prijavo je bila uporabljena {{agentClient}} na {{agentDevice}} {{agentOs}}. Če niste zahtevali prijave, lahko to e-pošto varno prezrete.",
     "emails.otpSession.securityPhrase": "Varnostni stavek za to e-pošto je {{phrase}}. Temu e-sporočilu lahko zaupate, če se ta stavek ujema s stavkom, ki je prikazan ob prijavi.",
     "emails.otpSession.thanks": "Hvala,",
-    "emails.otpSession.signature": "ekipa {{project}}"
+    "emails.otpSession.signature": "ekipa {{project}}",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }

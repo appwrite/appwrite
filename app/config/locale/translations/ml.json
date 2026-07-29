@@ -251,5 +251,15 @@
     "emails.certificate.footer": "നിങ്ങളുടെ മുൻപത്തെ സർട്ടിഫിക്കറ്റ് ആദ്യ പരാജയത്തിനു ശേഷം 30 ദിവസം വരെ സാധുവായിരിക്കും. ഈ കേസ് അന്വേഷിച്ചു നോക്കുന്നത് ഞങ്ങൾ ശക്തമായി ശുപാർശ ചെയ്യുന്നു, അല്ലെങ്കിൽ നിങ്ങളുടെ ഡൊമെയ്‌ൻ സാധുവായ SSL കമ്മ്യൂണിക്കേഷനില്ലാത്ത ഒരു അവസ്ഥയിലാകും.",
     "emails.certificate.thanks": "നന്ദി,",
     "emails.certificate.signature": "{{project}} ടീം",
-    "sms.verification.body": "{{secret}}"
+    "sms.verification.body": "{{secret}}",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }

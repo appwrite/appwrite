@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "這次的登入是使用{{agentClient}}在{{agentDevice}} {{agentOs}}上請求的。如果您沒有請求這次的登入，您可以放心地忽略這封電子郵件。",
     "emails.otpSession.securityPhrase": "這封電子郵件的安全口令是{{phrase}}。如果這個口令與登入時顯示的口令相匹配，您可以信任這封電子郵件。",
     "emails.otpSession.thanks": "謝謝，、",
-    "emails.otpSession.signature": "{{project}} 團隊"
+    "emails.otpSession.signature": "{{project}} 團隊",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }
