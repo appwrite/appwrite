@@ -705,7 +705,10 @@ jobs:
       pull-requests: write
       packages: read
     env:
-      COMPOSE_PROFILES: ''
+      # The before stack is a worktree at an arbitrary older SHA, so its compose file
+      # may not gate databases at all. Start the superset on both sides, otherwise the
+      # two runs measure different amounts of idle container load rather than the diff.
+      COMPOSE_PROFILES: mariadb,mongodb
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
