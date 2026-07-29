@@ -15,6 +15,7 @@ import {
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 
 export const Route = createFileRoute('/_marketing/blog/post/$slug')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -89,7 +90,15 @@ export const Route = createFileRoute('/_marketing/blog/post/$slug')({
     }
 
     return {
-      meta: getBlogPostRouteMetaTags(loaderData.post, seoOptions),
+      meta: getBlogPostRouteMetaTags(loaderData.post, authors, seoOptions),
+      links: [
+        {
+          rel: 'alternate',
+          type: 'application/rss+xml',
+          title: 'Appwrite Blog',
+          href: BLOG_RSS_PATH,
+        },
+      ],
       scripts,
     }
   },

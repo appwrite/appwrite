@@ -1090,6 +1090,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
 | Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
+| Blog/changelog covers | Min 1200px wide (Google Discover); run `bun run generate:cover-manifest` after adding covers; fix undersized with `bun run generate:content-covers`. See "Blog and changelog content (SEO / Google Discover)". |
 | User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add an entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/<lang>/*.ts` file for each supported language. English inline is the source of truth. Apply each language's glossary; keep `Appwrite …` compounds and sub-brands in Latin unless that language's block says otherwise. Run `bun run i18n:audit:<lang>` before merging dictionary changes. See "Internationalization (i18n)".                                    |
 
 ---
@@ -1580,6 +1581,35 @@ English is not translated; it IS the source. Rules for writing it:
 5. **Language block in this file**: add a **Language: X** section with glossary, voice/register, direction, Latin-script terms, and language-specific anti-calque examples (see Hebrew as the template).
 6. **Audit script**: add `scripts/i18n-audit-<lang>.ts` and `i18n:audit:<lang>` in `package.json` with regex rules for that language's forbidden terms and calques.
 7. **Translate and verify**: translate against the glossary, run the quality workflow, coverage check, and `bun run i18n:audit:<lang>` before merging.
+
+---
+
+## Blog and changelog content (SEO / Google Discover)
+
+Blog posts and changelog entries are optimized for Google Search and Google Discover. Keep these invariants when adding or editing content.
+
+### Cover images (CRITICAL - Discover requires large images)
+
+- **Minimum width: 1200px** (`MIN_COVER_IMAGE_WIDTH` in `src/lib/seo/cover-constants.ts`). Google Discover only features content with large images (at least 1200px wide) combined with the `max-image-preview:large` robots directive (set site-wide in `src/lib/seo/indexing.ts`).
+- **Recommended size**: 1920x1080 (the `blog` preset in the cover generator) or any 16:9 image at 1200px+ wide.
+- **New blog post covers**: place them at `public/images/blog/<slug>/cover.avif` (or `blog-local` for vibes-native posts) and set `cover:` in the post frontmatter. `scripts/generate-blog-local-images.ts` automatically upscales sources below 1200px and warns; prefer sources that are already large enough.
+- **After adding or changing any cover**: run `bun run generate:cover-manifest`. This regenerates `src/lib/seo/cover-dimensions.json`, which the SEO helpers use to emit accurate `og:image:width` / `og:image:height`. The script warns about undersized covers; fix them with `bun run generate:content-covers` (upscales in place, aspect ratio preserved). The manifest is also regenerated during `bun run build`.
+- **Never** claim 1200x630 for a cover that has different dimensions; the manifest lookup handles this - do not hardcode dimensions in meta tags.
+
+### Article meta and structured data
+
+- Blog post meta tags come from `getBlogPostMetaTags` in `src/lib/blog/seo.ts`: `og:type=article`, `article:published_time` / `article:modified_time` / `article:section` / `article:author`, real cover dimensions, canonical, and Twitter card. Pass resolved authors from the route.
+- Blog post JSON-LD comes from `getBlogPostSchema` (BlogPosting with `mainEntityOfPage`, author `image` + `sameAs` from the author frontmatter, and publisher logo). Keep author frontmatter (`avatar`, `twitter`, `linkedin`, `github`) filled in for E-E-A-T signals.
+- Changelog entries use `getChangelogEntryMetaTags` and `getChangelogEntrySchema` from `src/lib/changelog/seo.ts`; the entry `cover` frontmatter is used as `og:image` (with real dimensions), falling back to the dynamic OG card.
+- Post/entry `date` (and `lastUpdated` for blog) frontmatter must be accurate; they feed `article:*` meta, JSON-LD dates, sitemap `lastmod`, and RSS `pubDate`.
+
+### Feeds
+
+- RSS feeds are served at `/blog/rss.xml` and `/changelog/rss.xml` (`src/routes/_api/*/rss[.]xml.tsx`, built with `buildRssFeed` from `src/lib/seo/rss.ts`). Blog and changelog pages expose them via `<link rel="alternate" type="application/rss+xml">`. No manual updates needed; feeds are generated from content at request time.
+
+### Static OG images
+
+- Do not reference static files under `/images/open-graph/` (removed). Default OG images use the dynamic `/og/image.png` endpoint via `buildOgImageUrl` - see `getMarketingHomeOgImage` in `src/lib/marketing/route-meta.ts` for the pattern.
 
 ---
 

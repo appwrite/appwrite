@@ -90,6 +90,8 @@ import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
+import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
@@ -760,6 +762,16 @@ const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
 const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   id: '/_api/generator/cover',
   path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
+  id: '/_api/changelog/rss.xml',
+  path: '/changelog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
+  id: '/_api/blog/rss.xml',
+  path: '/blog/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicProjectsProjectIdIndexRoute =
@@ -2540,6 +2552,8 @@ export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -2874,6 +2888,8 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3177,6 +3193,8 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3516,6 +3534,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs/'
     | '/generator/'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -3850,6 +3870,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs'
     | '/generator'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -4152,6 +4174,8 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/docs/'
     | '/generator/'
+    | '/_api/blog/rss.xml'
+    | '/_api/changelog/rss.xml'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
@@ -4458,6 +4482,8 @@ export interface RootRouteChildren {
   DomainsContinueRoute: typeof DomainsContinueRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
+  ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
@@ -5036,6 +5062,20 @@ declare module '@tanstack/react-router' {
       path: '/generator/cover'
       fullPath: '/generator/cover'
       preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/changelog/rss.xml': {
+      id: '/_api/changelog/rss.xml'
+      path: '/changelog/rss.xml'
+      fullPath: '/changelog/rss.xml'
+      preLoaderRoute: typeof ApiChangelogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/blog/rss.xml': {
+      id: '/_api/blog/rss.xml'
+      path: '/blog/rss.xml'
+      fullPath: '/blog/rss.xml'
+      preLoaderRoute: typeof ApiBlogRssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId/': {
@@ -8417,6 +8457,8 @@ const rootRouteChildren: RootRouteChildren = {
   DomainsContinueRoute: DomainsContinueRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
+  ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
