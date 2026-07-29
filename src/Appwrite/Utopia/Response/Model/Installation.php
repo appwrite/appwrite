@@ -47,6 +47,12 @@ class Installation extends Model
                 'description' => 'VCS (Version Control System) installation ID.',
                 'default' => '',
                 'example' => '5322',
+            ])
+            ->addRule('fresh', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the installation still holds an access token. When false, it must be reconnected before its repositories can be reached.',
+                'default' => true,
+                'example' => true,
             ]);
     }
 
