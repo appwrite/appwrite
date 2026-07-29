@@ -179,7 +179,7 @@ final class InstallationTokensTest extends TestCase
         // pair may still be good, so it has to survive.
         $db->expects($this->never())->method('updateDocument');
 
-        $oauth2 = $this->fakeOAuth2(rejectRefresh: true);
+        $oauth2 = $this->fakeOAuth2(emptyTokens: true);
 
         $this->expectException(Exception::class);
         (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
@@ -279,13 +279,13 @@ final class InstallationTokensTest extends TestCase
         ]);
     }
 
-    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false, bool $rejectRefresh = false)
+    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false, bool $emptyTokens = false)
     {
-        return new class ($emptyUserId, $throwOnRefresh, $rejectRefresh) extends OAuth2 {
+        return new class ($emptyUserId, $throwOnRefresh, $emptyTokens) extends OAuth2 {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 
-            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh, protected bool $rejectRefresh)
+            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh, protected bool $emptyTokens)
             {
                 parent::__construct('id', 'secret', '');
             }
@@ -312,8 +312,9 @@ final class InstallationTokensTest extends TestCase
                     throw new \RuntimeException('refresh token already used');
                 }
 
-                // Providers answer a rejected refresh token with a 200 and an error body.
-                if ($this->rejectRefresh) {
+                // A provider can answer without any token, and the reason is not visible here:
+                // GitHub reports a dead refresh token this way, and so does a timed out request.
+                if ($this->emptyTokens) {
                     $this->tokens = [];
 
                     return $this->tokens;
