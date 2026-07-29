@@ -73,6 +73,12 @@ final class PoliciesSessionLimitIntegrationTest extends Scope
             $this->assertSame(200, $response['headers']['status-code']);
         };
 
+        $trySetSessionLimit = function (?int $total) use ($serverHeaders): array {
+            return $this->client->call(Client::METHOD_PATCH, '/project/policies/session-limit', $serverHeaders, [
+                'total' => $total,
+            ]);
+        };
+
         // Step 1: Session limit = 1
         $setSessionLimit(1);
 
@@ -109,16 +115,8 @@ final class PoliciesSessionLimitIntegrationTest extends Scope
         $this->assertSame(200, $getAccount($session3)['headers']['status-code']);
         $this->assertSame(401, $getAccount($session2)['headers']['status-code']);
 
-        // Step 4: Disable session limit, create 5 new sessions, all should remain usable
-        $setSessionLimit(null);
-
-        $newSessions = [];
-        for ($i = 0; $i < 5; $i++) {
-            $newSessions[] = $login();
-        }
-
-        foreach ($newSessions as $index => $sessionCookie) {
-            $this->assertSame(200, $getAccount($sessionCookie)['headers']['status-code'], 'Session #' . ($index + 1) . ' should remain valid when limit is disabled');
-        }
+        // Step 4: Session limit does not support being disabled (unlimited sessions)
+        $response = $trySetSessionLimit(null);
+        $this->assertSame(400, $response['headers']['status-code']);
     }
 }
