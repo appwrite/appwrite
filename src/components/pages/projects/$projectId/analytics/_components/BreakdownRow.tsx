@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { formatNumber } from './format'
 
 /**
@@ -91,13 +90,27 @@ export function RowRank({ index }: { index: number }) {
 }
 
 /**
- * Flag for an ISO-3166-1 alpha-2 country code. The breakdown API returns
- * ISO-2 for `country`, so this can be rendered directly; anything that is not
- * a two-letter code falls back to a globe.
+ * Flag for an ISO-3166-1 alpha-2 country code, derived as a regional-indicator
+ * emoji pair. The `country` dimension is the only ISO-2 one, so only that panel
+ * passes codes here.
+ *
+ * This deliberately does not fetch `/avatars/flags/...`. That endpoint needs a
+ * project in the query string plus `avatars.read` on it, which on a
+ * project-scoped page means either the wrong project or a permission the viewer
+ * may not have, so the images silently failed and left empty boxes. Deriving
+ * the glyph needs no request, no auth and no project coupling.
+ *
+ * Caveat: regional-indicator pairs do not render as flags on most Windows
+ * builds, which show two letter boxes instead. That is a platform font
+ * limitation rather than a bug, and the country code is printed beside the
+ * glyph anyway. Do not "fix" it by reintroducing an image fetch.
  */
 export function CountryFlag({ code }: { code: string }) {
-  const normalized = code?.trim().toLowerCase()
-  const isIso2 = /^[a-z]{2}$/.test(normalized ?? '')
+  const trimmed = code?.trim() ?? ''
+  // The geo stack stores codes lowercased and uses `--` for unknown, which the
+  // enrichment maps to an empty string. Anything that is not exactly two ASCII
+  // letters falls back to the globe rather than emitting garbage glyphs.
+  const isIso2 = /^[a-zA-Z]{2}$/.test(trimmed)
 
   if (!isIso2) {
     return (
@@ -110,14 +123,20 @@ export function CountryFlag({ code }: { code: string }) {
     )
   }
 
+  // Offset each letter from ASCII 'A' into the regional-indicator block.
+  const flag = String.fromCodePoint(
+    ...[...trimmed.toUpperCase()].map(
+      (letter) => 0x1f1e6 + letter.charCodeAt(0) - 65,
+    ),
+  )
+
   return (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
-      <img
-        src={`${getBaseEndpoint()}/avatars/flags/${normalized}?width=20&height=20&quality=100&project=console`}
-        alt=""
-        className="h-full w-full object-cover"
-        loading="lazy"
-      />
+    // Decorative: the row label prints the same country code beside it.
+    <span
+      className="w-4 shrink-0 text-center text-[13px] leading-none"
+      aria-hidden
+    >
+      {flag}
     </span>
   )
 }
