@@ -10,7 +10,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
   dailyGiveaways: [
     {
       day: 1,
-      dateLabel: 'JULY 20',
+      dateLabel: 'AUGUST 12',
       scheduleItemId: 'sched-reddit-ama',
       sessionTitle: 'Appwrite 2.0 AMA',
       platform: 'reddit',
@@ -25,7 +25,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 2,
-      dateLabel: 'JULY 21',
+      dateLabel: 'AUGUST 13',
       scheduleItemId: 'sched-reddit-databases-ama',
       sessionTitle: 'PostgreSQL AMA',
       platform: 'reddit',
@@ -40,7 +40,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 3,
-      dateLabel: 'JULY 22',
+      dateLabel: 'AUGUST 14',
       scheduleItemId: 'sched-reddit-servers-ama',
       sessionTitle: 'VectorsDB, DocumentsDB & MySQL AMA',
       platform: 'reddit',
@@ -55,7 +55,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
     },
     {
       day: 4,
-      dateLabel: 'JULY 23',
+      dateLabel: 'AUGUST 15',
       scheduleItemId: 'sched-reddit-s3-ama',
       sessionTitle: 'S3 for Storage AMA',
       platform: 'reddit',
@@ -71,7 +71,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
   ],
   grandPrize: {
     day: 5,
-    dateLabel: 'JULY 24',
+    dateLabel: 'AUGUST 16',
     scheduleItemId: 'sched-discord-closing',
     sessionTitle: 'Init closing party',
     platform: 'discord',
