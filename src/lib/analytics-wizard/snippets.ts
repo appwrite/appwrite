@@ -22,6 +22,15 @@
  * SDKs have not generated this service at all yet, so the method name is not
  * confirmed. That ambiguity is covered by the unreleased warning in the UI.
  *
+ * `enableAllAutoTracking()` is NOT "everything" on either platform, and the
+ * snippets must keep saying so:
+ *   web:     covers pageviews, outbound links, scroll depth and engagement time.
+ *            Downloads are excluded because the extension list is
+ *            application-specific; `enableAutoDownloadTracking()` is required
+ *            for any `file_download` event.
+ *   flutter: covers app lifecycle events only. Route tracking (`screen_view`)
+ *            requires attaching an `AnalyticsObserver`.
+ *
  * REST is the only integration that works against the API today.
  */
 
@@ -128,14 +137,11 @@ const tracking = new AnalyticsTracking((name, options) =>
     {
       label: 'Turn on automatic tracking',
       language: 'typescript',
-      code: `// Everything at once
+      code: `// Covers pageviews, outbound links, scroll depth and engagement time.
 tracking.enableAllAutoTracking()
 
-// Or opt in one at a time
-tracking.enableAutoPageviews()
-tracking.enableAutoScrollDepth()
-tracking.enableAutoEngagementTime()
-tracking.enableAutoOutboundTracking()
+// Downloads are NOT included above: the extension list is app-specific,
+// so file_download events only fire once you opt in here.
 tracking.enableAutoDownloadTracking()`,
     },
     {
@@ -178,17 +184,20 @@ final tracking = AnalyticsTracking(emit);`,
     {
       label: 'Turn on automatic tracking',
       language: 'dart',
-      code: `// Everything at once
+      code: `// Currently this only covers app lifecycle events
+// (app_backgrounded / app_foregrounded).
 tracking.enableAllAutoTracking();
 
-// Or just app lifecycle events
-tracking.enableAutoLifecycleEvents();
+// Equivalent, if you prefer to be explicit:
+// tracking.enableAutoLifecycleEvents();
 // tracking.disableAutoLifecycleEvents();`,
     },
     {
       label: 'Track route changes',
       language: 'dart',
-      code: `MaterialApp(
+      code: `// Route tracking is NOT part of enableAllAutoTracking(): attach the
+// observer to get screen_view events.
+MaterialApp(
   navigatorObservers: [AnalyticsObserver(emit)],
   home: const HomePage(),
 );`,
