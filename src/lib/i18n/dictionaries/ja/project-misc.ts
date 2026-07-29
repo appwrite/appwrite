@@ -513,6 +513,54 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロパティと、収集されたすべてのイベントおよびセッションを完全に削除します。この操作は取り消せません。',
   'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
     'プロパティと、収集されたすべてのイベントおよびセッションが完全に削除されます。この操作は取り消せません。',
+
+  // Analytics add-property wizard and integration snippets
+  'Add analytics property': 'アナリティクスプロパティを追加',
+  'Add another property': '別のプロパティを追加',
+  'Create and continue': '作成して続行',
+  'Pick where you are tracking from. You can change this later.':
+    'どこから計測するかを選択します。後から変更できます。',
+  'Pick where you are tracking from.': 'どこから計測するかを選択します。',
+  'Name and domain for the site or app.': 'サイトまたはアプリの名前とドメイン。',
+  'Install tracking': '計測を導入',
+  'Add the snippet, then wait for the first event.':
+    'スニペットを追加し、最初のイベントを待ちます。',
+  'Daily boundaries use your current timezone. You can change every value later in settings.':
+    '日次の区切りには現在のタイムゾーンを使用します。すべての値は後から設定で変更できます。',
+  'Add tracking to your app': 'アプリに計測を追加',
+  'Add tracking to your site or app to start collecting events.':
+    'サイトやアプリに計測を追加して、イベントの収集を開始します。',
+  'Add this to your app, then load a page so the first event reaches Appwrite.':
+    'アプリに追加してページを読み込むと、最初のイベントが Appwrite に届きます。',
+  'Verify the first event': '最初のイベントを確認',
+  'Waiting for the first event from your site…':
+    'サイトからの最初のイベントを待っています…',
+  'Event received': 'イベントを受信しました',
+  'Your site sends events to the analytics endpoint using this property ID.':
+    'サイトはこのプロパティ ID を使ってアナリティクスのエンドポイントにイベントを送信します。',
+  'Keep this tab open and load a page on your site. Events usually appear within a few seconds.':
+    'このタブを開いたままサイトのページを読み込んでください。イベントは通常数秒で表示されます。',
+  'Loading property...': 'プロパティを読み込んでいます...',
+  'SDK coming soon': 'SDK は近日公開',
+  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, so this code will not resolve if you copy it today. Use the REST tab to start sending events now.':
+    'これらのヘルパーはまだ公開されていません。今後の SDK リリースで提供予定で、API も変更される可能性があるため、現時点でコピーしても動作しません。今すぐイベントを送信するには REST タブを使用してください。',
+  'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
+    'このエンドポイントは公開されているため、クライアント側の計測に API キーは不要です。サーバー側の上書きフィールド (userId、ip、userAgent) のみ、analytics.write スコープを持つ API キーが必要です。',
+  Flutter: 'Flutter',
+  REST: 'REST',
+  'Browser apps and static sites.': 'ブラウザアプリと静的サイト。',
+  'iOS, Android, web and desktop from one codebase.':
+    '1 つのコードベースから iOS、Android、web、デスクトップへ。',
+  'Any language, straight against the HTTP API.':
+    '任意の言語から HTTP API を直接呼び出します。',
+  'Install the SDK': 'SDK をインストール',
+  'Initialize tracking': '計測を初期化',
+  'Turn on automatic tracking': '自動計測を有効化',
+  'Send your own events': '独自のイベントを送信',
+  'Add the package': 'パッケージを追加',
+  'Track route changes': 'ルート変更を計測',
+  'Send an event': 'イベントを送信',
+  'Send a custom event with properties': 'プロパティ付きのカスタムイベントを送信',
   'Connection failed': '接続に失敗しました',
   'WebSocket URL copied': 'WebSocket URL をコピーしました',
   'Connection status': '接続ステータス',

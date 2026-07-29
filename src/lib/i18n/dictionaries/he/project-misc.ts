@@ -853,6 +853,54 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'This permanently deletes the property and every event and session collected for it. This action cannot be undone.':
     'פעולה זו מוחקת לצמיתות את הנכס ואת כל אירוע וסשן שנאספו עבורו. לא ניתן לבטל את הפעולה הזו.',
 
+  // Analytics add-property wizard and integration snippets
+  'Add analytics property': 'הוספת נכס אנליטיקה',
+  'Add another property': 'הוספת נכס נוסף',
+  'Create and continue': 'יצירה והמשך',
+  'Pick where you are tracking from. You can change this later.':
+    'בחרו מהיכן אתם עוקבים. אפשר לשנות את זה מאוחר יותר.',
+  'Pick where you are tracking from.': 'בחרו מהיכן אתם עוקבים.',
+  'Name and domain for the site or app.': 'שם ודומיין עבור האתר או האפליקציה.',
+  'Install tracking': 'התקנת מעקב',
+  'Add the snippet, then wait for the first event.':
+    'הוסיפו את הסניפט, ואז המתינו לאירוע הראשון.',
+  'Daily boundaries use your current timezone. You can change every value later in settings.':
+    'גבולות היום נקבעים לפי אזור הזמן הנוכחי שלכם. אפשר לשנות כל ערך מאוחר יותר בהגדרות.',
+  'Add tracking to your app': 'הוספת מעקב לאפליקציה שלכם',
+  'Add tracking to your site or app to start collecting events.':
+    'הוסיפו מעקב לאתר או לאפליקציה שלכם כדי להתחיל לאסוף אירועים.',
+  'Add this to your app, then load a page so the first event reaches Appwrite.':
+    'הוסיפו את זה לאפליקציה שלכם, ואז טענו דף כדי שהאירוע הראשון יגיע ל-Appwrite.',
+  'Verify the first event': 'אימות האירוע הראשון',
+  'Waiting for the first event from your site…':
+    'ממתין לאירוע הראשון מהאתר שלכם…',
+  'Event received': 'התקבל אירוע',
+  'Your site sends events to the analytics endpoint using this property ID.':
+    'האתר שלכם שולח אירועים לנקודת הקצה של האנליטיקה באמצעות מזהה הנכס הזה.',
+  'Keep this tab open and load a page on your site. Events usually appear within a few seconds.':
+    'השאירו את הכרטיסייה הזו פתוחה וטענו דף באתר שלכם. אירועים מופיעים בדרך כלל תוך שניות ספורות.',
+  'Loading property...': 'טוען נכס...',
+  'SDK coming soon': 'SDK בקרוב',
+  'These helpers are not published yet. They arrive in an upcoming SDK release, and the API surface may still change, so this code will not resolve if you copy it today. Use the REST tab to start sending events now.':
+    'העזרים האלה עדיין לא פורסמו. הם יגיעו במהדורת SDK עתידית, וממשק ה-API עוד עשוי להשתנות, ולכן הקוד הזה לא יעבוד אם תעתיקו אותו היום. השתמשו בלשונית REST כדי להתחיל לשלוח אירועים עכשיו.',
+  'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
+    'נקודת הקצה הזו ציבורית, ולכן לא נדרש מפתח API למעקב בצד הלקוח. רק שדות הדריסה בצד השרת (userId, ip, userAgent) דורשים מפתח API עם ההרשאה analytics.write.',
+  Flutter: 'Flutter',
+  REST: 'REST',
+  'Browser apps and static sites.': 'אפליקציות דפדפן ואתרים סטטיים.',
+  'iOS, Android, web and desktop from one codebase.':
+    'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
+  'Any language, straight against the HTTP API.':
+    'כל שפה, ישירות מול ה-API של HTTP.',
+  'Install the SDK': 'התקנת ה-SDK',
+  'Initialize tracking': 'אתחול המעקב',
+  'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',
+  'Send your own events': 'שליחת אירועים משלכם',
+  'Add the package': 'הוספת החבילה',
+  'Track route changes': 'מעקב אחר שינויי ניתוב',
+  'Send an event': 'שליחת אירוע',
+  'Send a custom event with properties': 'שליחת אירוע מותאם עם מאפיינים',
+
   // Realtime
   Realtime: 'Realtime',
   Connected: 'מחובר',
