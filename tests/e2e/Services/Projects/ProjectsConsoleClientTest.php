@@ -2092,7 +2092,7 @@ final class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.9.1',
         ], $this->getHeaders()), [
-            'duration' => 10, // Set session duration to 10 seconds
+            'duration' => 60, // Set session duration to 60 seconds (the policy minimum)
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2101,7 +2101,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertEquals(10, $response['body']['authDuration']);
+        $this->assertEquals(60, $response['body']['authDuration']);
 
         $projectId = $response['body']['$id'];
 
@@ -2142,7 +2142,7 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Eventually session expires, within 15 seconds (10+variance)
+        // Eventually session expires, within 75 seconds (60+variance)
         $this->assertEventually(function () use ($projectId, $sessionCookie) {
             // Get User
             $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -2152,7 +2152,7 @@ final class ProjectsConsoleClientTest extends Scope
             ]));
 
             $this->assertEquals(401, $response['headers']['status-code']);
-        }, timeoutMs: 15 * 1000);
+        }, timeoutMs: 75 * 1000);
 
         // Set session duration to 10min
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
