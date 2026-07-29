@@ -13,6 +13,7 @@ import {
   LockKeyhole,
   MessageSquare,
   Pentagon,
+  Megaphone,
   Radio,
   Scale,
   Shield,
@@ -287,8 +288,8 @@ function HomePage() {
               className="h-7 rounded-full px-3 text-[12px]"
               asChild
             >
-              <MarketingSiteLink href="/docs/products/realtime/presence">
-                <Radio className="size-3.5" />
+              <MarketingSiteLink href="/init">
+                <Megaphone className="size-3.5" />
                 <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
                 {homeCopy.announcementText}
                 <ArrowRight className="size-3.5" />
@@ -352,8 +353,8 @@ function HomePage() {
                   <img
                     src="/images/heroes/console-app-light.avif"
                     alt={homeCopy.heroImageAlt}
-                    width={1280}
-                    height={960}
+                    width={1920}
+                    height={1234}
                     fetchPriority="high"
                     decoding="async"
                     className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
@@ -361,8 +362,8 @@ function HomePage() {
                   <img
                     src="/images/heroes/console-app-dark.avif"
                     alt={homeCopy.heroImageAlt}
-                    width={1280}
-                    height={960}
+                    width={1920}
+                    height={1234}
                     fetchPriority="high"
                     decoding="async"
                     className="hidden h-full w-full rounded-t-md object-cover object-top opacity-95 dark:block sm:rounded-t-lg"

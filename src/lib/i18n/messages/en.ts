@@ -254,8 +254,8 @@ export const enCatalog = {
     home: {
       seoDescription:
         'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.', // pragma: allowlist secret
-      announcementNew: 'New',
-      announcementText: 'Announcing the Presences API',
+      announcementNew: 'Breaking',
+      announcementText: "We're thrilled to announce Appwrite 2.0",
       heroTitleLineOne: 'Build faster and scale',
       heroTitleLineTwo: 'bigger than ever',
       heroDescription:

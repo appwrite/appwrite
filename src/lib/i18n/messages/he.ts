@@ -271,8 +271,8 @@ export const heCatalog: EnCatalog = {
       ...enCatalog.website.home,
       seoDescription:
         'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
-      announcementNew: 'חדש',
-      announcementText: 'מכריזים על Presences API',
+      announcementNew: 'Breaking',
+      announcementText: 'אנחנו נרגשים להכריז על Appwrite 2.0',
       heroTitleLineOne: 'לבנות מהר יותר,',
       heroTitleLineTwo: 'לצמוח רחוק מאי פעם',
       heroDescription:
