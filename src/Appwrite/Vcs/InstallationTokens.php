@@ -3,6 +3,7 @@
 namespace Appwrite\Vcs;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -98,16 +99,22 @@ class InstallationTokens
     protected function exchange(Document $installation, Database $dbForPlatform, OAuth2 $oauth2): Document
     {
         try {
-            $oauth2->refreshTokens($installation->getAttribute('personalRefreshToken'));
+            $tokens = $oauth2->refreshTokens($installation->getAttribute('personalRefreshToken'));
+        } catch (OAuth2Exception $err) {
+            $this->discard($installation, $dbForPlatform, $err->getError());
+
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         } catch (\Throwable) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
+        // GitHub answers a refused token with a 200 and an error body rather than a 4xx.
+        $this->discard($installation, $dbForPlatform, $tokens['error'] ?? '');
+
         $accessToken = $oauth2->getAccessToken('');
 
-        // A provider can answer without a token, by rejecting the refresh token with a 200 and an
-        // error body or by not answering at all. Both leave nothing worth writing, and persisting
-        // an empty token would replace a pair that may still be good.
+        // No token and no stated reason, so the provider may simply not have answered. Persisting
+        // an empty token here would replace a pair that is possibly still good.
         if (empty($accessToken)) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
@@ -124,6 +131,24 @@ class InstallationTokens
         }
 
         return $installation;
+    }
+
+    /**
+     * Drops the stored pair when the provider states it refused the token, so later calls stop
+     * replaying it. Only an explicit refusal counts: a timeout or a 5xx may pass, and clearing on
+     * those would force a reconnect that was never needed.
+     */
+    protected function discard(Document $installation, Database $dbForPlatform, mixed $error): void
+    {
+        if (!\is_string($error) || !\in_array($error, ['invalid_grant', 'bad_refresh_token'], true)) {
+            return;
+        }
+
+        $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+            'personalAccessToken' => '',
+            'personalRefreshToken' => '',
+            'personalAccessTokenExpiry' => null,
+        ]));
     }
 
     protected function isExpired(?string $expiry): bool

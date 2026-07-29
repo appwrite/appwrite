@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
@@ -169,6 +170,48 @@ final class InstallationTokensTest extends TestCase
         }
     }
 
+    public function testRefusedRefreshTokenIsCleared(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+
+        $db->expects($this->once())
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('', $update->getAttribute('personalAccessToken'));
+                $this->assertSame('', $update->getAttribute('personalRefreshToken'));
+                $this->assertNull($update->getAttribute('personalAccessTokenExpiry'));
+                return true;
+            }))
+            ->willReturnArgument(2);
+
+        $oauth2 = $this->fakeOAuth2(refresh: 'refused');
+
+        $this->expectException(Exception::class);
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+    }
+
+    public function testInvalidGrantIsCleared(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+
+        $db->expects($this->once())
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('', $update->getAttribute('personalRefreshToken'));
+                return true;
+            }))
+            ->willReturnArgument(2);
+
+        $oauth2 = $this->fakeOAuth2(refresh: 'invalidGrant');
+
+        $this->expectException(Exception::class);
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+    }
+
     public function testEmptyTokenResponseIsNotPersisted(): void
     {
         $db = $this->createMock(Database::class);
@@ -179,7 +222,7 @@ final class InstallationTokensTest extends TestCase
         // pair may still be good, so it has to survive.
         $db->expects($this->never())->method('updateDocument');
 
-        $oauth2 = $this->fakeOAuth2(emptyTokens: true);
+        $oauth2 = $this->fakeOAuth2(refresh: 'empty');
 
         $this->expectException(Exception::class);
         (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
@@ -193,7 +236,7 @@ final class InstallationTokensTest extends TestCase
 
         $db->expects($this->never())->method('updateDocument');
 
-        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+        $oauth2 = $this->fakeOAuth2(refresh: 'throw');
 
         $this->expectException(Exception::class);
         (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
@@ -262,7 +305,7 @@ final class InstallationTokensTest extends TestCase
             ->with('vcsCommentLocks', 'installation-installation1')
             ->willReturn(true);
 
-        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+        $oauth2 = $this->fakeOAuth2(refresh: 'throw');
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
@@ -279,13 +322,16 @@ final class InstallationTokensTest extends TestCase
         ]);
     }
 
-    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false, bool $emptyTokens = false)
+    /**
+     * @param string $refresh One of: ok, refused, invalidGrant, empty, throw.
+     */
+    protected function fakeOAuth2(bool $emptyUserId = false, string $refresh = 'ok')
     {
-        return new class ($emptyUserId, $throwOnRefresh, $emptyTokens) extends OAuth2 {
+        return new class ($emptyUserId, $refresh) extends OAuth2 {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 
-            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh, protected bool $emptyTokens)
+            public function __construct(protected bool $emptyUserId, protected string $refresh)
             {
                 parent::__construct('id', 'secret', '');
             }
@@ -308,16 +354,22 @@ final class InstallationTokensTest extends TestCase
             public function refreshTokens(string $refreshToken): array
             {
                 $this->refreshCalls++;
-                if ($this->throwOnRefresh) {
-                    throw new \RuntimeException('refresh token already used');
-                }
 
-                // A provider can answer without any token, and the reason is not visible here:
-                // GitHub reports a dead refresh token this way, and so does a timed out request.
-                if ($this->emptyTokens) {
-                    $this->tokens = [];
+                // GitHub states a refused token in a 200 body; GitLab and Gitea answer 400.
+                // A request that never completed states nothing at all.
+                switch ($this->refresh) {
+                    case 'refused':
+                        $this->tokens = ['error' => 'bad_refresh_token'];
 
-                    return $this->tokens;
+                        return $this->tokens;
+                    case 'invalidGrant':
+                        throw new OAuth2Exception('{"error":"invalid_grant"}', 400);
+                    case 'empty':
+                        $this->tokens = [];
+
+                        return $this->tokens;
+                    case 'throw':
+                        throw new \RuntimeException('connection timed out');
                 }
 
                 $this->tokens = [
