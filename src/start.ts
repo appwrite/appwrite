@@ -1,4 +1,5 @@
 import { createStart } from '@tanstack/react-start'
+import { legacyRedirectsMiddleware } from '@/server/middleware/legacy-redirects'
 import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redirect'
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
 import { seoIndexingMiddleware } from '@/server/middleware/seo-indexing'
@@ -9,6 +10,7 @@ export const startInstance = createStart(() => ({
   requestMiddleware: [
     seoIndexingMiddleware,
     runtimeConfigMiddleware,
+    legacyRedirectsMiddleware,
     websiteAccessMiddleware,
     rootGuestRedirectMiddleware,
   ],

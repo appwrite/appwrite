@@ -1,3 +1,5 @@
+import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
+
 export type DocsRedirectTarget = {
   pathname: string
   hash?: string
@@ -36,12 +38,7 @@ const DOCS_REDIRECTS: Record<string, string> = {
   'products/network/waf': 'products/firewall',
 }
 
-export function getDocsRedirectTarget(slug: string): DocsRedirectTarget | null {
-  const normalized = slug.replace(/^\/+|\/+$/g, '')
-  const target = DOCS_REDIRECTS[normalized]
-  if (!target) return null
-
-  const fullPath = `/docs/${target.replace(/\/+$/, '')}`
+function parseFullPathTarget(fullPath: string): DocsRedirectTarget {
   const hashIndex = fullPath.indexOf('#')
   if (hashIndex === -1) {
     return { pathname: fullPath }
@@ -51,4 +48,21 @@ export function getDocsRedirectTarget(slug: string): DocsRedirectTarget | null {
     pathname: fullPath.slice(0, hashIndex),
     hash: fullPath.slice(hashIndex + 1),
   }
+}
+
+export function getDocsRedirectTarget(slug: string): DocsRedirectTarget | null {
+  const normalized = slug.replace(/^\/+|\/+$/g, '')
+  const target = DOCS_REDIRECTS[normalized]
+  if (target) {
+    return parseFullPathTarget(`/docs/${target.replace(/\/+$/, '')}`)
+  }
+
+  // Legacy website redirects for /docs paths (client-side navigation; the
+  // server middleware already 301s full page loads).
+  const legacyTarget = getLegacyRedirectTarget(`/docs/${normalized}`)
+  if (legacyTarget?.startsWith('/docs')) {
+    return parseFullPathTarget(legacyTarget)
+  }
+
+  return null
 }

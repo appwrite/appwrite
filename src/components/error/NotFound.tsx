@@ -13,6 +13,7 @@ import { StandaloneCommandCenterScope } from '@/components/global/providers/Keyb
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { getMarketingPageUrl } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -223,10 +224,28 @@ export function NotFoundView() {
   const docsHref = getMarketingPageUrl('/docs', features.marketing)
   const docsExternal = !features.marketing
 
+  // Legacy website URLs (client-side navigation; server middleware 301s full
+  // page loads before they ever reach this view).
+  const legacyTarget = getLegacyRedirectTarget(location.pathname)
+
+  useEffect(() => {
+    if (!legacyTarget) return
+    const hashIndex = legacyTarget.indexOf('#')
+    const pathname =
+      hashIndex === -1 ? legacyTarget : legacyTarget.slice(0, hashIndex)
+    const hash = hashIndex === -1 ? undefined : legacyTarget.slice(hashIndex + 1)
+    void router.navigate({ to: pathname as never, hash, replace: true })
+  }, [legacyTarget, router])
+
   useEffect(() => {
     if (typeof document === 'undefined') return
+    if (legacyTarget) return
     document.title = pageTitle(t('Page not found'))
-  }, [t])
+  }, [t, legacyTarget])
+
+  if (legacyTarget) {
+    return null
+  }
 
   return (
     <div className="flex min-h-full w-full flex-1 flex-col">
