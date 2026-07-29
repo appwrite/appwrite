@@ -169,6 +169,47 @@ final class InstallationTokensTest extends TestCase
         }
     }
 
+    public function testRejectedRefreshTokenIsCleared(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+
+        $db->expects($this->once())
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('', $update->getAttribute('personalAccessToken'));
+                $this->assertSame('', $update->getAttribute('personalRefreshToken'));
+                $this->assertNull($update->getAttribute('personalAccessTokenExpiry'));
+                return true;
+            }))
+            ->willReturnArgument(2);
+
+        $oauth2 = $this->fakeOAuth2(rejectRefresh: true);
+
+        try {
+            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+            $this->fail('Expected an Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
+        }
+    }
+
+    public function testProviderOutageLeavesStoredTokenAlone(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+
+        // A throwing call may be a timeout, so the pair must survive it.
+        $db->expects($this->never())->method('updateDocument');
+
+        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+
+        $this->expectException(Exception::class);
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+    }
+
     public function testTokenRefreshedByLockHolderIsReused(): void
     {
         $db = $this->createMock(Database::class);
@@ -249,13 +290,13 @@ final class InstallationTokensTest extends TestCase
         ]);
     }
 
-    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false)
+    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false, bool $rejectRefresh = false)
     {
-        return new class ($emptyUserId, $throwOnRefresh) extends OAuth2 {
+        return new class ($emptyUserId, $throwOnRefresh, $rejectRefresh) extends OAuth2 {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 
-            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh)
+            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh, protected bool $rejectRefresh)
             {
                 parent::__construct('id', 'secret', '');
             }
@@ -280,6 +321,13 @@ final class InstallationTokensTest extends TestCase
                 $this->refreshCalls++;
                 if ($this->throwOnRefresh) {
                     throw new \RuntimeException('refresh token already used');
+                }
+
+                // Providers answer a rejected refresh token with a 200 and an error body.
+                if ($this->rejectRefresh) {
+                    $this->tokens = [];
+
+                    return $this->tokens;
                 }
 
                 $this->tokens = [
