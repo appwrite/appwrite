@@ -692,11 +692,11 @@ class Install extends Action
                 // Run tracking in a coroutine when inside a Swoole
                 // request so it doesn't block the worker.
                 if (Coroutine::getCid() !== -1) {
-                    go(function () use ($input, $isUpgrade, $version) {
-                        $this->trackSelfHostedInstall($input, $isUpgrade, $version);
+                    go(function () use ($input, $isUpgrade, $version, $account) {
+                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
                     });
                 } else {
-                    $this->trackSelfHostedInstall($input, $isUpgrade, $version);
+                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
                 }
 
                 if ($isCLI) {
@@ -846,13 +846,13 @@ class Install extends Action
         );
     }
 
-    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version): void
+    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
     {
         if ($this->isLocalInstall()) {
             return;
         }
 
-        $payload = $this->buildSelfHostedInstallPayload($input, $isUpgrade, $version);
+        $payload = $this->buildSelfHostedInstallPayload($input, $isUpgrade, $version, $account);
 
         if ($payload === null) {
             return;
@@ -871,17 +871,17 @@ class Install extends Action
     }
 
     /**
-     * Build the anonymous self-hosted install/upgrade analytics payload.
+     * Build the self-hosted install/upgrade analytics payload.
      *
      * Returns null when tracking must not happen (opt-out or non-production).
-     * The payload never includes the administrator's name or email (#12863).
      *
      * @param array<string, mixed> $input Resolved environment variables
+     * @param array<string, mixed> $account Administrator account details
      * @return array<string, mixed>|null
      */
-    public function buildSelfHostedInstallPayload(array $input, bool $isUpgrade, string $version): ?array
+    public function buildSelfHostedInstallPayload(array $input, bool $isUpgrade, string $version, array $account = []): ?array
     {
-        if ($this->isTelemetryDisabled($input)) {
+        if ($this->isTelemetryDisabled()) {
             return null;
         }
 
@@ -903,6 +903,8 @@ class Install extends Action
 
         $type = $isUpgrade ? 'upgrade' : 'install';
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
+        $name = $account['name'] ?? 'Admin';
+        $email = $account['email'] ?? 'admin@selfhosted.local';
 
         $hostIp = @gethostbyname($domain);
 
@@ -914,6 +916,8 @@ class Install extends Action
             'label' => 'self_hosted_' . $type,
             'version' => $version,
             'data' => json_encode([
+                'name' => $name,
+                'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
                 'ip' => ($hostIp !== $domain) ? $hostIp : null,
@@ -926,33 +930,15 @@ class Install extends Action
     }
 
     /**
-     * Whether the operator opted out of anonymous install/upgrade telemetry.
+     * Whether the operator opted out of install/upgrade telemetry.
      *
-     * Honors DO_NOT_TRACK (https://consoledonottrack.com) and _APP_TELEMETRY=disabled
-     * from the process environment or resolved installer `$input` (e.g. existing `.env`).
-     *
-     * @param array<string, mixed>|null $input Resolved environment variables
+     * Honors DO_NOT_TRACK (https://donottrack.sh/).
      */
-    public function isTelemetryDisabled(?array $input = null): bool
+    public function isTelemetryDisabled(): bool
     {
         $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
-        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
-            return true;
-        }
 
-        $telemetry = \strtolower((string) System::getEnv('_APP_TELEMETRY', ''));
-        if ($telemetry === 'disabled') {
-            return true;
-        }
-
-        if ($input !== null) {
-            $fromInput = \strtolower((string) ($input['_APP_TELEMETRY'] ?? ''));
-            if ($fromInput === 'disabled') {
-                return true;
-            }
-        }
-
-        return false;
+        return \in_array($doNotTrack, ['1', 'true', 'yes'], true);
     }
 
     /**

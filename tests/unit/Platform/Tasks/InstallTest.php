@@ -17,7 +17,6 @@ final class InstallTest extends TestCase
     {
         // Ensure a deterministic, opted-in environment for each test.
         \putenv('DO_NOT_TRACK');
-        \putenv('_APP_TELEMETRY');
 
         $this->install = new Install();
     }
@@ -25,7 +24,6 @@ final class InstallTest extends TestCase
     protected function tearDown(): void
     {
         \putenv('DO_NOT_TRACK');
-        \putenv('_APP_TELEMETRY');
     }
 
     /**
@@ -40,9 +38,20 @@ final class InstallTest extends TestCase
         ];
     }
 
-    public function testPayloadIsAnonymousAndOmitsAdminNameAndEmail(): void
+    /**
+     * @return array<string, mixed>
+     */
+    private function account(): array
     {
-        $payload = $this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6');
+        return [
+            'name' => 'Jane Admin',
+            'email' => 'jane@example.com',
+        ];
+    }
+
+    public function testPayloadIncludesAdminNameAndEmail(): void
+    {
+        $payload = $this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6', $this->account());
 
         $this->assertIsArray($payload);
         $this->assertSame('install', $payload['action']);
@@ -52,11 +61,8 @@ final class InstallTest extends TestCase
         $data = \json_decode($payload['data'], true);
         $this->assertIsArray($data);
 
-        // The whole point of #12863: no administrator PII in the ping.
-        $this->assertArrayNotHasKey('name', $data);
-        $this->assertArrayNotHasKey('email', $data);
-
-        // Anonymous host/instance fields are still reported.
+        $this->assertSame('Jane Admin', $data['name']);
+        $this->assertSame('jane@example.com', $data['email']);
         $this->assertSame('example.com', $data['domain']);
         $this->assertSame('mariadb', $data['database']);
         $this->assertArrayHasKey('os', $data);
@@ -65,7 +71,7 @@ final class InstallTest extends TestCase
 
     public function testUpgradeActionIsReported(): void
     {
-        $payload = $this->install->buildSelfHostedInstallPayload($this->productionInput(), true, '1.9.6');
+        $payload = $this->install->buildSelfHostedInstallPayload($this->productionInput(), true, '1.9.6', $this->account());
 
         $this->assertIsArray($payload);
         $this->assertSame('upgrade', $payload['action']);
@@ -77,7 +83,7 @@ final class InstallTest extends TestCase
         \putenv('DO_NOT_TRACK=1');
 
         $this->assertTrue($this->install->isTelemetryDisabled());
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6'));
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6', $this->account()));
     }
 
     public function testDoNotTrackTrueValueDisablesTelemetry(): void
@@ -92,24 +98,7 @@ final class InstallTest extends TestCase
         \putenv('DO_NOT_TRACK=yes');
 
         $this->assertTrue($this->install->isTelemetryDisabled());
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6'));
-    }
-
-    public function testAppTelemetryDisabledDisablesTelemetry(): void
-    {
-        \putenv('_APP_TELEMETRY=disabled');
-
-        $this->assertTrue($this->install->isTelemetryDisabled());
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6'));
-    }
-
-    public function testResolvedInputTelemetryDisabledDisablesTelemetry(): void
-    {
-        $input = $this->productionInput();
-        $input['_APP_TELEMETRY'] = 'disabled';
-
-        $this->assertTrue($this->install->isTelemetryDisabled($input));
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6'));
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6', $this->account()));
     }
 
     public function testTelemetryEnabledByDefault(): void
@@ -122,7 +111,7 @@ final class InstallTest extends TestCase
         $input = $this->productionInput();
         $input['_APP_ENV'] = 'development';
 
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6'));
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6', $this->account()));
     }
 
     public function testLocalhostDomainIsNotTracked(): void
@@ -130,6 +119,6 @@ final class InstallTest extends TestCase
         $input = $this->productionInput();
         $input['_APP_DOMAIN'] = 'localhost';
 
-        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6'));
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6', $this->account()));
     }
 }
