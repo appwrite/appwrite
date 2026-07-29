@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Tests\E2E\Services\VCS;
+namespace Tests\E2E\Services\VCSGitHub;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-final class VCSCustomClientTest extends Scope
+final class VCSGitHubCustomClientTest extends Scope
 {
-    use VCSBase;
+    use VCSGitHubBase;
     use ProjectCustom;
     use SideClient;
 
