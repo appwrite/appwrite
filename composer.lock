@@ -161,16 +161,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.20.2",
+            "version": "0.20.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "ae3ab62c57ddc2a0127f3b288c3f035b272025b1"
+                "reference": "a69bb331cc4f5eca3d2bd4652bf7977fb0aba08a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/ae3ab62c57ddc2a0127f3b288c3f035b272025b1",
-                "reference": "ae3ab62c57ddc2a0127f3b288c3f035b272025b1",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/a69bb331cc4f5eca3d2bd4652bf7977fb0aba08a",
+                "reference": "a69bb331cc4f5eca3d2bd4652bf7977fb0aba08a",
                 "shasum": ""
             },
             "require": {
@@ -210,9 +210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.20.2"
+                "source": "https://github.com/appwrite/runtimes/tree/0.20.3"
             },
-            "time": "2026-06-03T13:32:45+00:00"
+            "time": "2026-07-29T11:43:40+00:00"
         },
         {
             "name": "brick/math",
@@ -8433,5 +8433,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
