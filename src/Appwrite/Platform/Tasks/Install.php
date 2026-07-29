@@ -881,7 +881,7 @@ class Install extends Action
      */
     public function buildSelfHostedInstallPayload(array $input, bool $isUpgrade, string $version): ?array
     {
-        if ($this->isTelemetryDisabled()) {
+        if ($this->isTelemetryDisabled($input)) {
             return null;
         }
 
@@ -928,16 +928,31 @@ class Install extends Action
     /**
      * Whether the operator opted out of anonymous install/upgrade telemetry.
      *
-     * Honors DO_NOT_TRACK (https://consoledonottrack.com) and _APP_TELEMETRY=disabled.
+     * Honors DO_NOT_TRACK (https://consoledonottrack.com) and _APP_TELEMETRY=disabled
+     * from the process environment or resolved installer `$input` (e.g. existing `.env`).
+     *
+     * @param array<string, mixed>|null $input Resolved environment variables
      */
-    public function isTelemetryDisabled(): bool
+    public function isTelemetryDisabled(?array $input = null): bool
     {
         $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
-        if ($doNotTrack === '1' || $doNotTrack === 'true') {
+        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
             return true;
         }
 
-        return \strtolower((string) System::getEnv('_APP_TELEMETRY', '')) === 'disabled';
+        $telemetry = \strtolower((string) System::getEnv('_APP_TELEMETRY', ''));
+        if ($telemetry === 'disabled') {
+            return true;
+        }
+
+        if ($input !== null) {
+            $fromInput = \strtolower((string) ($input['_APP_TELEMETRY'] ?? ''));
+            if ($fromInput === 'disabled') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

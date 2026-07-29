@@ -87,12 +87,29 @@ final class InstallTest extends TestCase
         $this->assertTrue($this->install->isTelemetryDisabled());
     }
 
+    public function testDoNotTrackYesValueDisablesTelemetry(): void
+    {
+        \putenv('DO_NOT_TRACK=yes');
+
+        $this->assertTrue($this->install->isTelemetryDisabled());
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6'));
+    }
+
     public function testAppTelemetryDisabledDisablesTelemetry(): void
     {
         \putenv('_APP_TELEMETRY=disabled');
 
         $this->assertTrue($this->install->isTelemetryDisabled());
         $this->assertNull($this->install->buildSelfHostedInstallPayload($this->productionInput(), false, '1.9.6'));
+    }
+
+    public function testResolvedInputTelemetryDisabledDisablesTelemetry(): void
+    {
+        $input = $this->productionInput();
+        $input['_APP_TELEMETRY'] = 'disabled';
+
+        $this->assertTrue($this->install->isTelemetryDisabled($input));
+        $this->assertNull($this->install->buildSelfHostedInstallPayload($input, false, '1.9.6'));
     }
 
     public function testTelemetryEnabledByDefault(): void
