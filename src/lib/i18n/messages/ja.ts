@@ -402,7 +402,7 @@ export const jaCatalog: EnCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'ライブイベント、チャンネル、プレゼンス。',
           domainsName: 'Domains',
-          domainsTagline: 'ドメイン購入、DNS、TLS、アプリ接続。',
+          domainsTagline: 'ドメインの検索、購入、移管、管理。',
           firewallName: 'Firewall',
           firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',

@@ -392,7 +392,7 @@ export const enCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',
           domainsName: 'Domains',
-          domainsTagline: 'Buy domains, DNS, TLS, and app connections.',
+          domainsTagline: 'Search, buy, transfer, and manage domains.',
           firewallName: 'Firewall',
           firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',

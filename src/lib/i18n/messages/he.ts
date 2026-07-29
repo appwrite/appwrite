@@ -402,7 +402,7 @@ export const heCatalog: EnCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',
           domainsName: 'Domains',
-          domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
+          domainsTagline: 'חיפוש, רכישה, העברה וניהול דומיינים.',
           firewallName: 'חומת אש',
           firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',
