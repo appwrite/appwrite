@@ -126,7 +126,6 @@ final class VCSConsoleClientTest extends Scope
         $this->assertEquals(200, $installation['headers']['status-code']);
         $this->assertEquals('github', $installation['body']['provider']);
         $this->assertEquals('appwrite-test', $installation['body']['organization']);
-        $this->assertTrue($installation['body']['fresh']);
     }
 
     public function testDetectRuntime(): void

@@ -67,8 +67,6 @@ class Get extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $installation->setAttribute('fresh', !empty($installation->getAttribute('personalAccessToken')));
-
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     }
 }

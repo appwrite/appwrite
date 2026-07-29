@@ -112,10 +112,6 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        foreach ($results as $installation) {
-            $installation->setAttribute('fresh', !empty($installation->getAttribute('personalAccessToken')));
-        }
-
         $response->dynamic(new Document([
             'installations' => $results,
             'total' => $total,
