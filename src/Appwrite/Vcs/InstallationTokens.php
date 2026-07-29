@@ -47,8 +47,9 @@ class InstallationTokens
         }
 
         // Providers rotate refresh tokens: two requests exchanging the same one revokes the family.
-        // The comment lock collection is reused here, it holds nothing but ids, and the prefix
-        // keeps these apart from the provider comment ids stored alongside them.
+        // The comment lock collection is reused for simplicity: it holds nothing but ids, and the
+        // prefix keeps these apart from the provider comment ids stored alongside them. Ideally
+        // this moves to a generic lock collection.
         $lock = 'installation-' . $installation->getId();
         $authorization = $dbForPlatform->getAuthorization();
         $acquired = false;
