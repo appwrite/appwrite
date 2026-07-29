@@ -9,14 +9,12 @@ use Utopia\Locale\Locale;
 
 final class FallbackTest extends TestCase
 {
-    private string $translationsDir;
-
     protected function setUp(): void
     {
-        $this->translationsDir = __DIR__ . '/../../../app/config/locale/translations';
+        $translationsDir = __DIR__ . '/../../../app/config/locale/translations';
         Locale::$exceptions = false;
-        Locale::setLanguageFromJSON('en', $this->translationsDir . '/en.json');
-        Locale::setLanguageFromJSON('fr', $this->translationsDir . '/fr.json');
+        Locale::setLanguageFromJSON('en', $translationsDir . '/en.json');
+        Locale::setLanguageFromJSON('fr', $translationsDir . '/fr.json');
     }
 
     public function testIncompleteLocaleFallsBackToEnglishForMissingEmailKeys(): void
