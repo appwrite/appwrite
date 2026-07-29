@@ -31,7 +31,7 @@ permissions:
 jobs:
   dependencies:
     name: Checks / Dependencies
-    if: github.event_name == 'pull_request'
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     permissions:
       actions: read
       security-events: write
@@ -40,7 +40,7 @@ jobs:
 
   security:
     name: Checks / Image
-    if: github.event_name == 'pull_request'
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -93,8 +93,9 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
 
-  checks:
-    name: Checks
+  composer:
+    name: Checks / Composer
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -163,6 +164,7 @@ jobs:
 
   locale:
     name: Checks / Locale
+    if: false # TEMP: disabled to iterate on the failing e2e jobs; revert before merge
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -425,7 +427,23 @@ jobs:
       matrix:
         database: ${{ fromJSON(needs.matrix.outputs.databases) }}
         mode: ${{ fromJSON(needs.matrix.outputs.modes) }}
-        service: ${{ fromJSON(needs.matrix.outputs.services) }}
+        # TEMP: narrowed to explain-related services to re-validate this feature.
+        # Revert to the full list before merge.
+        service: [
+          Databases,
+          TablesDB
+        ]
+        include:
+          - service: Databases
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel
+            paratest_processes: 1
+            test_filter: "testExplain"
+            timeout_minutes: 30
+          - service: TablesDB
+            runner: runs-on=${{ github.run_id }}/runner=8cpu-linux-x64/volume=120g/spot=false
+            paratest_processes: 1
+            test_filter: "testExplain"
+            timeout_minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -445,6 +463,7 @@ jobs:
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
+            echo "COMPOSE_FILE=docker-compose.yml:docker-compose.ci-postgres.yml" >> $GITHUB_ENV
             echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV

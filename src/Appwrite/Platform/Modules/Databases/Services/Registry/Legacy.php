@@ -50,6 +50,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as UpsertDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Explain\Get as ExplainDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as GetDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Upsert as UpsertDocument;
