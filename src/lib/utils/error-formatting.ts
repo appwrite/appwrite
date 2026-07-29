@@ -69,6 +69,30 @@ export function isHttpUnauthorizedError(error: unknown): boolean {
   )
 }
 
+/**
+ * True when a project (or similar) fetch failed in a way the console should
+ * surface as not-found / access-denied rather than keep waiting on loaders.
+ */
+export function isHttpProjectAccessError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  if (
+    isHttpUnauthorizedError(error) ||
+    isHttpForbiddenError(error) ||
+    isHttpNotFoundError(error)
+  ) {
+    return true
+  }
+  const e = error as { name?: string; message?: string }
+  if (e.name === 'ForbiddenError' || e.name === 'UnauthorizedError') return true
+  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  return (
+    message.includes('unauthorized') ||
+    message.includes('forbidden') ||
+    message.includes('permission denied') ||
+    message.includes('access denied')
+  )
+}
+
 /** Console / cloud support contact (e.g. blocked account screen). */
 export const APPWRITE_SUPPORT_EMAIL = 'support@appwrite.io'
 

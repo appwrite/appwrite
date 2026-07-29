@@ -2,10 +2,15 @@ import { useEffect, useState, useRef, useMemo, useReducer } from 'react'
 import { useIsFetching, useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useLocation, useMatches } from '@tanstack/react-router'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
-import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
+import {
+  isHttpForbiddenError,
+  isHttpPaymentRequiredError,
+  isHttpProjectAccessError,
+} from '@/lib/utils/error-formatting'
 import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import {
   INITIAL_LOADER_SHELL_GATE,
+  getProjectIdFromPathname,
   projectRouteRequiresProjectSelectorGate,
   resetInitialLoaderShellGate,
   setInitialLoaderShellGate,
@@ -49,13 +54,64 @@ function useConsoleAccountQueryForbidden403(): boolean {
   }, [queryClient, cacheTick])
 }
 
+/**
+ * True when the current project query settled into 401/403/404 (or 402 budget).
+ * Nested routes may never mount ProjectSelector on those paths, so the
+ * fullscreen loader must not wait on the project-selector shell gate.
+ */
+function useProjectQueryShellGateBypass(pathname: string): boolean {
+  const queryClient = useQueryClient()
+  const projectId = getProjectIdFromPathname(pathname)
+  const [cacheTick, bumpCache] = useReducer((n: number) => n + 1, 0)
+
+  useEffect(() => {
+    if (!projectId) return
+    const lastBypassRef = { current: false }
+    return queryClient.getQueryCache().subscribe((event) => {
+      const query = event?.query
+      if (
+        query &&
+        (query.queryKey[0] !== 'project' || query.queryKey[1] !== projectId)
+      ) {
+        return
+      }
+      const state = queryClient.getQueryState(['project', projectId])
+      const next =
+        state?.status === 'error' &&
+        (isHttpProjectAccessError(state.error) ||
+          isHttpPaymentRequiredError(state.error))
+      if (next !== lastBypassRef.current) {
+        lastBypassRef.current = next
+        bumpCache()
+      }
+    })
+  }, [queryClient, projectId])
+
+  return useMemo(() => {
+    if (!projectId) return false
+    const state = queryClient.getQueryState(['project', projectId])
+    return (
+      state?.status === 'error' &&
+      (isHttpProjectAccessError(state.error) ||
+        isHttpPaymentRequiredError(state.error))
+    )
+  }, [queryClient, projectId, cacheTick])
+}
+
 export function useInitialLoader() {
   // Router + location need to be resolved before computing initial loader state
   const router = useRouter()
   const location = useLocation()
   const matches = useMatches()
   const isConsoleAccount403 = useConsoleAccountQueryForbidden403()
-  const shellGatesReady = useInitialLoaderShellGatesReady(location.pathname)
+  const projectShellGateBypass = useProjectQueryShellGateBypass(
+    location.pathname,
+  )
+  const shellGatesReadyFromSelector = useInitialLoaderShellGatesReady(
+    location.pathname,
+  )
+  const shellGatesReady =
+    shellGatesReadyFromSelector || projectShellGateBypass
 
   // Track all active queries and mutations (including Appwrite calls)
   const isFetching = useIsFetching({
