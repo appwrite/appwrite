@@ -104,16 +104,11 @@ class InstallationTokens
 
         $accessToken = $oauth2->getAccessToken('');
 
-        $installation = $installation
-            ->setAttribute('personalAccessToken', $accessToken)
-            ->setAttribute('personalRefreshToken', $oauth2->getRefreshToken(''))
-            ->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
-
         // The provider has already rotated the family, so persist before anything else can fail.
-        $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-            'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
-            'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
-            'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+        $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+            'personalAccessToken' => $accessToken,
+            'personalRefreshToken' => $oauth2->getRefreshToken(''),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')),
         ]));
 
         if (empty($oauth2->getUserID($accessToken))) {
