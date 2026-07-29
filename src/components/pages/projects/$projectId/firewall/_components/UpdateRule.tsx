@@ -20,8 +20,18 @@ import { RuleImpactPreview } from './RuleImpactPreview'
 import { useUpdateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
+  type FirewallRateLimitKey,
   getRuleRateLimit,
   getRuleRedirect,
+  getRuleChallenge,
+  FIREWALL_RATE_LIMIT_KEYS,
+  FIREWALL_RATE_LIMIT_KEY_DEFAULT,
+  CHALLENGE_DIFFICULTY_MIN,
+  CHALLENGE_DIFFICULTY_MAX,
+  CHALLENGE_DIFFICULTY_DEFAULT,
+  CHALLENGE_TTL_MIN,
+  CHALLENGE_TTL_MAX,
+  CHALLENGE_TTL_DEFAULT,
 } from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
@@ -60,6 +70,11 @@ export function UpdateRule({
   const [enabled, setEnabled] = useState(true)
   const [limit, setLimit] = useState(100)
   const [interval, setInterval] = useState(60)
+  const [rateLimitKey, setRateLimitKey] = useState<FirewallRateLimitKey>(
+    FIREWALL_RATE_LIMIT_KEY_DEFAULT,
+  )
+  const [difficulty, setDifficulty] = useState(CHALLENGE_DIFFICULTY_DEFAULT)
+  const [ttl, setTtl] = useState(CHALLENGE_TTL_DEFAULT)
   const [location, setLocation] = useState('/')
   const [statusCode, setStatusCode] = useState(302)
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
@@ -77,6 +92,10 @@ export function UpdateRule({
     const rateLimit = getRuleRateLimit(rule)
     setLimit(rateLimit?.limit ?? 100)
     setInterval(rateLimit?.interval ?? 60)
+    setRateLimitKey(rateLimit?.key ?? FIREWALL_RATE_LIMIT_KEY_DEFAULT)
+    const challenge = getRuleChallenge(rule)
+    setDifficulty(challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT)
+    setTtl(challenge?.ttl ?? CHALLENGE_TTL_DEFAULT)
     const redirect = getRuleRedirect(rule)
     setLocation(redirect?.location ?? '/')
     setStatusCode(redirect?.statusCode ?? 302)
@@ -94,6 +113,11 @@ export function UpdateRule({
     (!needsResourceId || resourceId.trim().length > 0) &&
     areFirewallConditionsComplete(conditions) &&
     (action !== WafRuleAction.RateLimit || (limit > 0 && interval > 0)) &&
+    (action !== WafRuleAction.Challenge ||
+      (difficulty >= CHALLENGE_DIFFICULTY_MIN &&
+        difficulty <= CHALLENGE_DIFFICULTY_MAX &&
+        ttl >= CHALLENGE_TTL_MIN &&
+        ttl <= CHALLENGE_TTL_MAX)) &&
     (action !== WafRuleAction.Redirect ||
       (location.trim().length > 0 && statusCode > 0))
 
@@ -112,6 +136,9 @@ export function UpdateRule({
         conditions: serializeFirewallConditions(conditions),
         limit,
         interval,
+        key: rateLimitKey,
+        difficulty,
+        ttl,
         location: location.trim(),
         statusCode,
       })
@@ -152,6 +179,73 @@ export function UpdateRule({
             onChange={(e) => setInterval(Number(e.target.value) || 1)}
             disabled={updateMutation.isPending}
           />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="update-firewall-key" className="text-[12px]">
+            {t('Limit by')}
+          </Label>
+          <Select
+            value={rateLimitKey}
+            disabled={updateMutation.isPending}
+            onValueChange={(value) =>
+              setRateLimitKey(value as FirewallRateLimitKey)
+            }
+          >
+            <SelectTrigger id="update-firewall-key" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_RATE_LIMIT_KEYS.map((k) => (
+                <SelectItem key={k.value} value={k.value}>
+                  {t(k.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[12px] text-muted-foreground">
+            {t(
+              'Track the request quota per client IP or per authenticated user.',
+            )}
+          </p>
+        </div>
+      </div>
+    ) : action === WafRuleAction.Challenge ? (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="update-firewall-difficulty" className="text-[12px]">
+            {t('Difficulty')}
+          </Label>
+          <Input
+            id="update-firewall-difficulty"
+            type="number"
+            min={CHALLENGE_DIFFICULTY_MIN}
+            max={CHALLENGE_DIFFICULTY_MAX}
+            value={difficulty}
+            onChange={(e) =>
+              setDifficulty(Number(e.target.value) || CHALLENGE_DIFFICULTY_MIN)
+            }
+            disabled={updateMutation.isPending}
+          />
+          <p className="text-[12px] text-muted-foreground">
+            {t('1 (easiest) to 5 (hardest).')}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="update-firewall-ttl" className="text-[12px]">
+            {t('TTL (seconds)')}
+          </Label>
+          <Input
+            id="update-firewall-ttl"
+            type="number"
+            min={CHALLENGE_TTL_MIN}
+            max={CHALLENGE_TTL_MAX}
+            value={ttl}
+            onChange={(e) => setTtl(Number(e.target.value) || CHALLENGE_TTL_MIN)}
+            disabled={updateMutation.isPending}
+          />
+          <p className="text-[12px] text-muted-foreground">
+            {t('How long a visitor stays cleared after passing.')}
+          </p>
         </div>
       </div>
     ) : action === WafRuleAction.Redirect ? (

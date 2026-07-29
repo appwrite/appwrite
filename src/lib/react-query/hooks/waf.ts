@@ -43,9 +43,13 @@ export type CreateFirewallRuleInput = {
   conditions?: string[]
   limit?: number
   interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
   location?: string
   statusCode?: number
   challengeType?: string
+  difficulty?: number
+  ttl?: number
 }
 
 export type UpdateFirewallRuleInput = {
@@ -60,9 +64,13 @@ export type UpdateFirewallRuleInput = {
   conditions?: string[]
   limit?: number
   interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
   location?: string
   statusCode?: number
   challengeType?: string
+  difficulty?: number
+  ttl?: number
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -312,12 +320,15 @@ async function createFirewallRule(
       return waf.createChallengeRule({
         ...base,
         challengeType: input.challengeType?.trim() || undefined,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
       })
     case WafRuleAction.RateLimit:
       return waf.createRateLimitRule({
         ...base,
         limit: input.limit ?? 100,
         interval: input.interval ?? 60,
+        key: input.key,
       })
     case WafRuleAction.Redirect:
       return waf.createRedirectRule({
@@ -355,12 +366,15 @@ async function updateFirewallRule(
       return waf.updateChallengeRule({
         ...base,
         challengeType: input.challengeType,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
       })
     case WafRuleAction.RateLimit:
       return waf.updateRateLimitRule({
         ...base,
         limit: input.limit,
         interval: input.interval,
+        key: input.key,
       })
     case WafRuleAction.Redirect:
       return waf.updateRedirectRule({

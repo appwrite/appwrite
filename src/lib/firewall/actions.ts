@@ -12,6 +12,27 @@ export const FIREWALL_CREATABLE_ACTIONS = [
 export type FirewallCreatableAction =
   (typeof FIREWALL_CREATABLE_ACTIONS)[number]
 
+/** Challenge difficulty bounds (1 easiest → 5 hardest). */
+export const CHALLENGE_DIFFICULTY_MIN = 1
+export const CHALLENGE_DIFFICULTY_MAX = 5
+export const CHALLENGE_DIFFICULTY_DEFAULT = 3
+
+/** Challenge TTL bounds, in seconds (15 minutes → 24 hours). */
+export const CHALLENGE_TTL_MIN = 900
+export const CHALLENGE_TTL_MAX = 86400
+export const CHALLENGE_TTL_DEFAULT = 1800
+
+/** Keys a rate-limit rule can be bucketed by. */
+export const FIREWALL_RATE_LIMIT_KEYS = [
+  { value: 'ip', label: 'IP address' },
+  { value: 'userId', label: 'User ID' },
+] as const
+
+export type FirewallRateLimitKey =
+  (typeof FIREWALL_RATE_LIMIT_KEYS)[number]['value']
+
+export const FIREWALL_RATE_LIMIT_KEY_DEFAULT: FirewallRateLimitKey = 'ip'
+
 export function getFirewallActionLabel(action: string): string {
   switch (action) {
     case WafRuleAction.Deny:
@@ -124,15 +145,33 @@ export function isRedirectRule(
   return rule.action === WafRuleAction.Redirect
 }
 
-export function getRuleRateLimit(
+export function isChallengeRule(
   rule: Models.WafRule,
-): { limit: number; interval: number } | null {
+): rule is Models.WafRuleChallenge {
+  return rule.action === WafRuleAction.Challenge
+}
+
+function normalizeRateLimitKey(value: unknown): FirewallRateLimitKey {
+  return FIREWALL_RATE_LIMIT_KEYS.some((k) => k.value === value)
+    ? (value as FirewallRateLimitKey)
+    : FIREWALL_RATE_LIMIT_KEY_DEFAULT
+}
+
+export function getRuleRateLimit(rule: Models.WafRule): {
+  limit: number
+  interval: number
+  key: FirewallRateLimitKey
+} | null {
   if (
     isRateLimitRule(rule) &&
     typeof rule.limit === 'number' &&
     typeof rule.interval === 'number'
   ) {
-    return { limit: rule.limit, interval: rule.interval }
+    return {
+      limit: rule.limit,
+      interval: rule.interval,
+      key: normalizeRateLimitKey(rule.key),
+    }
   }
 
   const config = readRuleConfig(rule)
@@ -142,7 +181,43 @@ export function getRuleRateLimit(
   const interval = toFiniteNumber(config.interval)
   if (limit == null || interval == null) return null
 
-  return { limit, interval }
+  return { limit, interval, key: normalizeRateLimitKey(config.key) }
+}
+
+export function getRuleChallenge(rule: Models.WafRule): {
+  challengeType: string
+  difficulty: number
+  ttl: number
+} | null {
+  if (!isChallengeRule(rule)) {
+    const config = readRuleConfig(rule)
+    if (!config) return null
+    const difficulty = toFiniteNumber(config.difficulty)
+    const ttl = toFiniteNumber(config.ttl)
+    if (difficulty == null || ttl == null) return null
+    return {
+      challengeType:
+        typeof config.challengeType === 'string' ? config.challengeType : '',
+      difficulty,
+      ttl,
+    }
+  }
+
+  const config = readRuleConfig(rule)
+  const difficulty =
+    typeof rule.difficulty === 'number'
+      ? rule.difficulty
+      : (toFiniteNumber(config?.difficulty) ?? CHALLENGE_DIFFICULTY_DEFAULT)
+  const ttl =
+    typeof rule.ttl === 'number'
+      ? rule.ttl
+      : (toFiniteNumber(config?.ttl) ?? CHALLENGE_TTL_DEFAULT)
+
+  return {
+    challengeType: typeof rule.challengeType === 'string' ? rule.challengeType : '',
+    difficulty,
+    ttl,
+  }
 }
 
 export function getRuleRedirect(
