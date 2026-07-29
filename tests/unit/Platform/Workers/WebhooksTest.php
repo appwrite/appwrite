@@ -38,6 +38,7 @@ final class WebhooksTest extends TestCase
         ], false);
         $database->createAttribute('webhooks', 'attempts', Database::VAR_INTEGER, 0, true);
         $database->createAttribute('webhooks', 'enabled', Database::VAR_BOOLEAN, 0, true);
+        $database->createAttribute('webhooks', 'events', Database::VAR_STRING, Database::LENGTH_KEY, true, null, true, true);
         $database->createAttribute('webhooks', 'logs', Database::VAR_STRING, 20000, false);
 
         $webhook = new Document([
