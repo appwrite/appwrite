@@ -24,6 +24,41 @@ export function parseFirewallResourceTypeSearch(
   return isFirewallResourceType(value) ? value : undefined
 }
 
+/** Non-empty resource ID from a route search param, if present. */
+export function parseFirewallResourceIdSearch(
+  value: unknown,
+): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+/**
+ * Normalize firewall list scope from URL search.
+ * Functions/sites require a resourceId; otherwise fall back to API.
+ */
+export function resolveFirewallListSearch(search: {
+  resourceType?: unknown
+  resourceId?: unknown
+}): {
+  resourceType: FirewallResourceType
+  resourceId?: string
+} {
+  const resourceType =
+    parseFirewallResourceTypeSearch(search.resourceType) ?? 'api'
+  const resourceId = parseFirewallResourceIdSearch(search.resourceId)
+
+  if (resourceType === 'api') {
+    return { resourceType: 'api' }
+  }
+
+  if (!resourceId) {
+    return { resourceType: 'api' }
+  }
+
+  return { resourceType, resourceId }
+}
+
 /** Condition attributes shown in the rule builder, grouped for the picker. */
 export const FIREWALL_CONDITION_ATTRIBUTE_GROUPS = [
   {

@@ -296,6 +296,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create a firewall rule scoped to a site to control how it handles requests.':
     'צרו כלל חומת אש לאתר כדי לשלוט באופן הטיפול בבקשות אליו.',
   'Firewall rule scope': 'היקף כלל חומת האש',
+  'Firewall resource': 'משאב חומת אש',
+  'Search resources...': 'חיפוש משאבים...',
+  'Showing first results. Refine your search to find more.':
+    'מוצגות התוצאות הראשונות. צמצמו את החיפוש כדי למצוא עוד.',
   API: 'API',
   'Firewall protection': 'הגנת חומת אש',
   'Firewall is evaluating rules against incoming traffic for this project.':

@@ -141,6 +141,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create a firewall rule scoped to a site to control how it handles requests.':
     'リクエストの扱いを制御するため、サイト向けのファイアウォールルールを作成してください。',
   'Firewall rule scope': 'ファイアウォールルールの対象',
+  'Firewall resource': 'ファイアウォールリソース',
+  'Search resources...': 'リソースを検索...',
+  'Showing first results. Refine your search to find more.':
+    '最初の結果を表示しています。さらに見つけるには検索を絞り込んでください。',
   API: 'API',
   'Firewall protection': 'Firewall 保護',
   'Firewall is evaluating rules against incoming traffic for this project.':
