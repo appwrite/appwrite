@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { AnalyticsDimension } from '@appwrite.io/console'
 import { View } from '@/components/pages/projects/$projectId/analytics/$propertyId/View'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
+  analyticsBreakdownQueryOptions,
   ANALYTICS_PAGEVIEW_EVENT,
   analyticsEventMetricsQueryOptions,
   analyticsEventsQueryOptions,
@@ -63,6 +65,28 @@ export const Route = createFileRoute(
         )
         .catch(() => undefined),
     ])
+
+    // Only the three dimensions visible above the fold are prefetched; the
+    // rest load when their panel's tab is first shown. Prefetching all 21
+    // would mean 21 requests before first paint.
+    await Promise.all(
+      [
+        AnalyticsDimension.TrafficType,
+        AnalyticsDimension.Channel,
+        AnalyticsDimension.Page,
+      ].map((dimension) =>
+        queryClient
+          .ensureQueryData(
+            analyticsBreakdownQueryOptions(
+              projectId,
+              propertyId,
+              dimension,
+              getDefaultAnalyticsRange(),
+            ),
+          )
+          .catch(() => undefined),
+      ),
+    )
 
     if (!property) return undefined
 

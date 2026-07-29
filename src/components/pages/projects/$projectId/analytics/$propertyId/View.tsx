@@ -46,6 +46,15 @@ import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { PropertySettings } from '../_components/PropertySettings'
 import {
+  BotsPanel,
+  LocationsPanel,
+  PagesPanel,
+  TechnologyPanel,
+  TrafficCompositionPanel,
+  TrafficSourcesPanel,
+  VisitorTypesPanel,
+} from '../_components/DimensionPanels'
+import {
   formatDuration,
   formatNumber,
   formatPercent,
@@ -613,6 +622,45 @@ export function View({
                         value={formatPercent(stats.scrollDepth)}
                       />
                     </div>
+                  </div>
+
+                  {/* Dimension breakdowns. Each panel requests only the
+                      dimension of its visible tab. */}
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                    <TrafficCompositionPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                    <VisitorTypesPanel stats={stats} />
+                    <TrafficSourcesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                    <PagesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                    <LocationsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                    <TechnologyPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <BotsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
                   </div>
 
                   {/* Events */}

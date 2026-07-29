@@ -20,7 +20,12 @@ import { useCallback } from 'react'
 import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
-import { ID, Query, type Models } from '@appwrite.io/console'
+import {
+  AnalyticsDimension,
+  ID,
+  Query,
+  type Models,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_PAGE_SIZE,
@@ -38,6 +43,9 @@ import {
  * still accepts `dateRange`; nothing in the console needs it.
  */
 export type AnalyticsRange = { startAt: string; endAt: string }
+
+/** Rows requested per breakdown panel; panels show fewer until expanded. */
+export const ANALYTICS_BREAKDOWN_LIMIT = 30
 
 /** Conventional event name used for the pageview time series. */
 export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
@@ -517,6 +525,91 @@ export function useAnalyticsEventMetrics(
 
   return {
     points: data?.points ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+// ─── Breakdowns ─────────────────────────────────────────────────────────────
+
+/** Ranked values for one dimension, already sorted by visitors desc. */
+export async function fetchAnalyticsBreakdown(
+  projectId: string,
+  propertyId: string,
+  dimension: AnalyticsDimension,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+) {
+  const response = await sdk.forProject(projectId).analytics.getBreakdown({
+    propertyId,
+    dimension,
+    startAt: range.startAt,
+    endAt: range.endAt,
+    limit,
+  })
+
+  return {
+    breakdown: response.breakdown || [],
+    total: response.total || 0,
+  }
+}
+
+export function analyticsBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  dimension: AnalyticsDimension,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  enabled: boolean = true,
+) {
+  return queryOptions({
+    queryKey: [
+      'analytics',
+      'breakdown',
+      projectId,
+      propertyId,
+      dimension,
+      analyticsRangeKey(range),
+      limit,
+    ],
+    queryFn: () =>
+      fetchAnalyticsBreakdown(projectId!, propertyId!, dimension, range, limit),
+    // Panels only request the dimension of their visible tab, so 21 dimensions
+    // never fan out into 21 requests on mount.
+    enabled: enabled && !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && propertyId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useAnalyticsBreakdown(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  dimension: AnalyticsDimension,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
+  limit: number = ANALYTICS_BREAKDOWN_LIMIT,
+  enabled: boolean = true,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    analyticsBreakdownQueryOptions(
+      projectId,
+      propertyId,
+      dimension,
+      range,
+      limit,
+      enabled,
+    ),
+  )
+
+  return {
+    breakdown: data?.breakdown ?? [],
     total: data?.total ?? 0,
     isLoading,
     isFetching,
