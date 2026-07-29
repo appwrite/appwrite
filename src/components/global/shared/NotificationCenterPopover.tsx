@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Tooltip,
   TooltipContent,
@@ -80,11 +79,11 @@ function NotificationRow({
       >
         <NotificationTypeIcon type={notification.type} className="h-4 w-4" />
       </div>
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="min-w-0 flex-1 space-y-1.5 overflow-hidden">
         <div className="flex items-start justify-between gap-2">
           <p
             className={cn(
-              'text-[13px] leading-snug text-foreground',
+              'min-w-0 flex-1 break-words text-[13px] leading-snug text-foreground',
               isUnread && 'font-semibold',
             )}
           >
@@ -98,7 +97,7 @@ function NotificationRow({
           </Badge>
         </div>
         {notification.body?.trim() ? (
-          <p className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="line-clamp-2 break-words text-[12px] leading-relaxed text-muted-foreground">
             {notification.body}
           </p>
         ) : null}
@@ -196,7 +195,10 @@ export function NotificationCenterPopover() {
           <p>{t('Notifications')}</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent align="end" className="w-[min(24rem,calc(100vw-2rem))] p-0">
+      <PopoverContent
+        align="end"
+        className="w-[min(24rem,calc(100vw-2rem))] overflow-hidden p-0"
+      >
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
           <div className="min-w-0">
             <h3 className="text-[14px] font-semibold text-foreground">
@@ -238,7 +240,7 @@ export function NotificationCenterPopover() {
           ) : null}
         </div>
 
-        <ScrollArea className="max-h-[min(24rem,60dvh)]">
+        <div className="max-h-[min(24rem,60dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
           {isLoading && notifications.length === 0 ? (
             <div className="flex items-center justify-center gap-2 px-4 py-10 text-[13px] text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -267,7 +269,7 @@ export function NotificationCenterPopover() {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {isFetching && notifications.length > 0 ? (
           <div className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
