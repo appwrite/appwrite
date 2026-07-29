@@ -887,6 +887,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'ברירת המחדל היא כיבוד Do Not Track. העבירו { respectDoNotTrack: false } לאפשרויות הבנאי כדי לבטל. האירועים האוטומטיים נקראים pageview, outbound_link, file_download, scroll_depth ו-engagement_time.',
   'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
     'האירועים האוטומטיים נקראים screen_view, app_backgrounded ו-app_foregrounded.',
+  'Event over time': 'אירוע לאורך זמן',
+  'Daily series for a single event. Property totals are in the summary below.':
+    'סדרה יומית עבור אירוע יחיד. סך הכל של הנכס מופיע בסיכום שלמטה.',
+  'Totals across every event in the selected range':
+    'סך הכל עבור כל האירועים בטווח הנבחר',
+  Visits: 'ביקורים',
+  'Engagement time': 'זמן מעורבות',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'נקודת הקצה הזו ציבורית, ולכן לא נדרש מפתח API למעקב בצד הלקוח. רק שדות הדריסה בצד השרת (userId, ip, userAgent) דורשים מפתח API עם ההרשאה analytics.write.',
   Flutter: 'Flutter',

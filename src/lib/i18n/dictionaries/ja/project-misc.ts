@@ -548,6 +548,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Do Not Track はデフォルトで尊重されます。無効にするにはコンストラクタのオプションに { respectDoNotTrack: false } を渡します。自動イベントの名前は pageview、outbound_link、file_download、scroll_depth、engagement_time です。',
   'Automatic events are named screen_view, app_backgrounded and app_foregrounded.':
     '自動イベントの名前は screen_view、app_backgrounded、app_foregrounded です。',
+  'Event over time': 'イベントの推移',
+  'Daily series for a single event. Property totals are in the summary below.':
+    '単一イベントの日次データです。プロパティ全体の合計は下の概要にあります。',
+  'Totals across every event in the selected range':
+    '選択した期間のすべてのイベントの合計',
+  Visits: '訪問数',
+  'Engagement time': 'エンゲージメント時間',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'このエンドポイントは公開されているため、クライアント側の計測に API キーは不要です。サーバー側の上書きフィールド (userId、ip、userAgent) のみ、analytics.write スコープを持つ API キーが必要です。',
   Flutter: 'Flutter',
