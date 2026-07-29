@@ -196,7 +196,7 @@ jobs:
               { name: 'Account',           runner: runner4, functional: true,  processes: null },
               { name: 'Avatars',           runner: runner4, functional: true,  processes: null },
               { name: 'Console',           runner: runner4, functional: true,  processes: null },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3 },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3, documentsdb: true },
               { name: 'TablesDB',          runner: runner8, functional: false, processes: 3 },
               { name: 'Functions',         runner: runner4, functional: false, processes: null },
               { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null },
@@ -204,8 +204,8 @@ jobs:
               { name: 'Health',            runner: runner4, functional: true,  processes: null },
               { name: 'Advisor',           runner: runner4, functional: true,  processes: null },
               { name: 'Locale',            runner: runner4, functional: true,  processes: null },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null, documentsdb: true },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null, documentsdb: true },
               { name: 'Sites',             runner: runner4, functional: true,  processes: null },
               { name: 'Proxy',             runner: runner4, functional: true,  processes: null },
               { name: 'Storage',           runner: runner4, functional: true,  processes: null },
@@ -218,7 +218,7 @@ jobs:
               { name: 'VCSGitea',          runner: runner4, functional: false, processes: null },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null },
               { name: 'Notifications',     runner: runner4, functional: true,  processes: null },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1 },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1, documentsdb: true },
               { name: 'Project',           runner: runner4, functional: true,  processes: null },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null },
             ];
@@ -298,6 +298,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+    env:
+      COMPOSE_PROFILES: ''
     steps:
       - name: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -354,6 +356,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+    env:
+      COMPOSE_PROFILES: ''
     steps:
       - name: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -450,6 +454,13 @@ jobs:
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          fi
+
+          # DocumentsDB is MongoDB-only, so Mongo runs alongside another primary just for
+          # the suites that use it, and in shared tables mode where boot connects every pool.
+          if [ "${{ matrix.database }}" != "MongoDB" ] \
+            && { [ "${{ matrix.service.documentsdb }}" = "true" ] || [ "${{ matrix.mode }}" = "shared" ]; }; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},mongodb"
           fi
 
           # Gitea runs alongside Appwrite only where VCS tests need it.
@@ -580,7 +591,8 @@ jobs:
             compose_profiles: antivirus
             wait: clamav
     env:
-      COMPOSE_PROFILES: ${{ matrix.config.compose_profiles }}
+      # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
+      COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -692,6 +704,8 @@ jobs:
       issues: write
       pull-requests: write
       packages: read
+    env:
+      COMPOSE_PROFILES: ''
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

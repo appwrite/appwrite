@@ -484,9 +484,13 @@ services:
         aliases:
           - appwrite.test
   mariadb:
+    profiles:
+      - mariadb
     ports:
       - "9510:3306"
   mongodb:
+    profiles:
+      - mongodb
     ports:
       - "9511:27017"
   postgresql:
