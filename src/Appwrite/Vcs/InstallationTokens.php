@@ -17,6 +17,13 @@ class InstallationTokens
     {
         $provider = $installation->getAttribute('provider', 'github');
 
+        // GitHub uses a JWT-derived installation token (GitHub::initializeVariables()),
+        // not personalAccessToken/personalRefreshToken -- refreshing those here only
+        // risks a token-rotation race against concurrent requests, for no benefit.
+        if ($provider === 'github') {
+            return $installation;
+        }
+
         return $this->refresh($installation, $dbForPlatform, $vcsFactory->oauth2FromProvider($provider));
     }
 
