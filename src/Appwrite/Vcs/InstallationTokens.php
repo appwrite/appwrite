@@ -101,7 +101,7 @@ class InstallationTokens
         try {
             $tokens = $oauth2->refreshTokens($installation->getAttribute('personalRefreshToken'));
         } catch (OAuth2Exception $err) {
-            $this->discard($installation, $dbForPlatform, $err->getError());
+            $this->clear($installation, $dbForPlatform, $err->getError());
 
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         } catch (\Throwable) {
@@ -109,7 +109,7 @@ class InstallationTokens
         }
 
         // GitHub answers a refused token with a 200 and an error body rather than a 4xx.
-        $this->discard($installation, $dbForPlatform, $tokens['error'] ?? '');
+        $this->clear($installation, $dbForPlatform, $tokens['error'] ?? '');
 
         $accessToken = $oauth2->getAccessToken('');
 
@@ -138,7 +138,7 @@ class InstallationTokens
      * replaying it. Only an explicit refusal counts: a timeout or a 5xx may pass, and clearing on
      * those would force a reconnect that was never needed.
      */
-    protected function discard(Document $installation, Database $dbForPlatform, mixed $error): void
+    protected function clear(Document $installation, Database $dbForPlatform, mixed $error): void
     {
         if (!\is_string($error) || !\in_array($error, ['invalid_grant', 'bad_refresh_token'], true)) {
             return;
