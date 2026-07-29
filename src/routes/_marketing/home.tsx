@@ -228,6 +228,11 @@ function getSecurityItems(homeCopy: HomeCopy) {
   ] as const
 }
 
+/** Bump when replacing homepage hero dashboard screenshots so caches refetch. */
+const HOME_HERO_IMAGE_CACHE_BUST = '20260729'
+const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
+const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
+
 export const Route = createFileRoute('/_marketing/home')({
   staticData: {
     ...MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -244,13 +249,13 @@ export const Route = createFileRoute('/_marketing/home')({
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-light.avif',
+        href: HOME_HERO_LIGHT_SRC,
         media: '(prefers-color-scheme: light)',
       },
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-dark.avif',
+        href: HOME_HERO_DARK_SRC,
         media: '(prefers-color-scheme: dark)',
       },
     ],
@@ -351,7 +356,7 @@ function HomePage() {
                 </div>
                 <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
                   <img
-                    src="/images/heroes/console-app-light.avif"
+                    src={HOME_HERO_LIGHT_SRC}
                     alt={homeCopy.heroImageAlt}
                     width={1920}
                     height={1234}
@@ -360,7 +365,7 @@ function HomePage() {
                     className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
                   />
                   <img
-                    src="/images/heroes/console-app-dark.avif"
+                    src={HOME_HERO_DARK_SRC}
                     alt={homeCopy.heroImageAlt}
                     width={1920}
                     height={1234}
