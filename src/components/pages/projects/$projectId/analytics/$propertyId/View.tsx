@@ -35,6 +35,7 @@ import {
   useAnalyticsProperty,
   useAnalyticsStats,
   useOrganizationScopes,
+  useRefreshAnalyticsProperty,
   useProject,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
@@ -182,6 +183,11 @@ export function View({
   const [activeMetric, setActiveMetric] = useState<ChartSeriesKey>('events')
   const [selectedEvent, setSelectedEvent] = useState<string>(
     ANALYTICS_PAGEVIEW_EVENT,
+  )
+
+  const { refresh, isRefreshing } = useRefreshAnalyticsProperty(
+    projectId,
+    propertyId,
   )
   const [range, setRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE)
 
@@ -363,6 +369,9 @@ export function View({
         activeTab={activeTab}
         onTabChange={setActiveTab}
         showFilters={false}
+        showRefresh={activeTab === 'analytics'}
+        onRefresh={() => void refresh()}
+        isRefreshing={isRefreshing}
         fullWidthBorder
       />
 

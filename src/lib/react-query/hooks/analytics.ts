@@ -14,6 +14,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
+import { useCallback, useState } from 'react'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -315,6 +316,37 @@ export function analyticsEventsQueryOptions(
     refetchOnReconnect: false,
     gcTime: projectId && propertyId ? 5 * 60 * 1000 : 0,
   })
+}
+
+/**
+ * Refetch every analytics query belonging to one property: stats, events, the
+ * event series, breakdowns and the property document. Matching on the key
+ * prefix plus the property ID means panels added later are covered without
+ * having to extend a hardcoded key list.
+ */
+export function useRefreshAnalyticsProperty(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const refresh = useCallback(async () => {
+    if (!projectId || !propertyId) return
+    setIsRefreshing(true)
+    try {
+      await queryClient.refetchQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'analytics' &&
+          query.queryKey.includes(projectId) &&
+          query.queryKey.includes(propertyId),
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [queryClient, projectId, propertyId])
+
+  return { refresh, isRefreshing }
 }
 
 /** How often the setup wizard asks whether the first event has landed. */
