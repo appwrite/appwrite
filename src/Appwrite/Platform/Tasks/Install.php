@@ -852,37 +852,10 @@ class Install extends Action
             return;
         }
 
-        $payload = $this->buildSelfHostedInstallPayload($input, $isUpgrade, $version, $account);
-
-        if ($payload === null) {
+        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
+        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
+        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
             return;
-        }
-
-        try {
-            $client = new Client();
-            $client
-                ->setConnectTimeout(5000)
-                ->setTimeout(5000)
-                ->addHeader('Content-Type', 'application/json')
-                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
-        } catch (\Throwable) {
-            // tracking shouldn't block installation
-        }
-    }
-
-    /**
-     * Build the self-hosted install/upgrade analytics payload.
-     *
-     * Returns null when tracking must not happen (opt-out or non-production).
-     *
-     * @param array<string, mixed> $input Resolved environment variables
-     * @param array<string, mixed> $account Administrator account details
-     * @return array<string, mixed>|null
-     */
-    public function buildSelfHostedInstallPayload(array $input, bool $isUpgrade, string $version, array $account = []): ?array
-    {
-        if ($this->isTelemetryDisabled()) {
-            return null;
         }
 
         $appEnv = $input['_APP_ENV'] ?? 'development';
@@ -890,7 +863,7 @@ class Install extends Action
 
         /* local or test instance */
         if ($appEnv !== 'production') {
-            return null;
+            return;
         }
 
         /* prod but local or test instance */
@@ -898,7 +871,7 @@ class Install extends Action
             || str_starts_with($domain, '127.')
             || str_starts_with($domain, '0.0.0.0')
         ) {
-            return null;
+            return;
         }
 
         $type = $isUpgrade ? 'upgrade' : 'install';
@@ -908,7 +881,7 @@ class Install extends Action
 
         $hostIp = @gethostbyname($domain);
 
-        return [
+        $payload = [
             'action' => $type,
             'account' => 'self-hosted',
             'url' => 'https://' . $domain,
@@ -927,18 +900,17 @@ class Install extends Action
                 'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
             ]),
         ];
-    }
 
-    /**
-     * Whether the operator opted out of install/upgrade telemetry.
-     *
-     * Honors DO_NOT_TRACK (https://donottrack.sh/).
-     */
-    public function isTelemetryDisabled(): bool
-    {
-        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
-
-        return \in_array($doNotTrack, ['1', 'true', 'yes'], true);
+        try {
+            $client = new Client();
+            $client
+                ->setConnectTimeout(5000)
+                ->setTimeout(5000)
+                ->addHeader('Content-Type', 'application/json')
+                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
+        } catch (\Throwable) {
+            // tracking shouldn't block installation
+        }
     }
 
     /**
