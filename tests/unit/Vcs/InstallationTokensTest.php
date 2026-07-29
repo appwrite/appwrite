@@ -76,6 +76,30 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
+    public function testClearedInstallationIsReturnedWithoutCallingTheProvider(): void
+    {
+        // The state clear() leaves behind. GitHub works from here on its app credentials, and the
+        // providers that need the token fail at the adapter with a definite reason.
+        $installation = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => '',
+            'personalRefreshToken' => '',
+            'personalAccessTokenExpiry' => null,
+        ]);
+
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->expects($this->never())->method('updateDocument');
+        $db->expects($this->never())->method('createDocument');
+
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
+
+        $this->assertSame('', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(0, $oauth2->refreshCalls);
+    }
+
     public function testExpiredTokenIsRefreshedAndPersisted(): void
     {
         $db = $this->createMock(Database::class);
