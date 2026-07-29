@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, BarChart3 } from 'lucide-react'
+import { ArrowLeft, BarChart3, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   ServiceHeader,
   type Tab,
@@ -44,9 +50,12 @@ import {
 } from '../_components/format'
 
 /**
- * Time series returned by `getEventMetrics` only carries these three series,
- * so only these metrics are chartable. The remaining aggregates from
- * `getStats` are rendered as summary tiles instead.
+ * `getEventMetrics` returns a daily series for a **single event name**, with
+ * these three measures. There is no all-events time series, so the chart is
+ * always scoped to one event and its tabs select a measure of that event.
+ *
+ * Property-wide aggregates from `getStats` cover every event and therefore
+ * cannot be plotted; they live in the summary card instead.
  */
 type ChartSeriesKey = 'visitors' | 'sessions' | 'events'
 
@@ -170,7 +179,10 @@ export function View({
 }: ViewProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
-  const [activeMetric, setActiveMetric] = useState<ChartSeriesKey>('visitors')
+  const [activeMetric, setActiveMetric] = useState<ChartSeriesKey>('events')
+  const [selectedEvent, setSelectedEvent] = useState<string>(
+    ANALYTICS_PAGEVIEW_EVENT,
+  )
   const [range, setRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE)
 
   const { property: propertyFromHook, isLoading: propertyLoading } =
@@ -207,14 +219,18 @@ export function View({
   const { points: pointsFromHook } = useAnalyticsEventMetrics(
     projectId,
     propertyId,
-    ANALYTICS_PAGEVIEW_EVENT,
+    selectedEvent,
     range,
   )
+  // The loader only prefetches the pageview series, so the initialData
+  // fallback is valid for that event and the default range only.
   const points = useMemo(() => {
     if (pointsFromHook.length > 0) return pointsFromHook
-    if (isDefaultRange) return initialData?.series?.points ?? []
+    if (isDefaultRange && selectedEvent === ANALYTICS_PAGEVIEW_EVENT) {
+      return initialData?.series?.points ?? []
+    }
     return []
-  }, [pointsFromHook, isDefaultRange, initialData])
+  }, [pointsFromHook, isDefaultRange, selectedEvent, initialData])
 
   // Chart container needs measurable dimensions before recharts renders.
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -246,14 +262,30 @@ export function View({
     }
   }, [activeTab])
 
-  const chartMetrics: ChartMetric[] = useMemo(
-    () => [
-      { id: 'visitors', label: 'Unique visitors', value: stats.visitors },
-      { id: 'sessions', label: 'Visits', value: stats.visits },
-      { id: 'events', label: 'Pageviews', value: stats.pageviews },
-    ],
-    [stats],
-  )
+  // Tab values are totals of the plotted series, so the number on the tab and
+  // the line in the chart are always the same quantity. Sourcing them from
+  // `getStats` instead would mix property-wide aggregates with a single
+  // event's series, which can never agree.
+  const chartMetrics: ChartMetric[] = useMemo(() => {
+    const totals = points.reduce(
+      (acc, point) => ({
+        events: acc.events + point.events,
+        visitors: acc.visitors + point.visitors,
+        sessions: acc.sessions + point.sessions,
+      }),
+      { events: 0, visitors: 0, sessions: 0 },
+    )
+    return [
+      { id: 'events', label: 'Events', value: totals.events },
+      { id: 'visitors', label: 'Unique visitors', value: totals.visitors },
+      { id: 'sessions', label: 'Sessions', value: totals.sessions },
+    ]
+  }, [points])
+
+  const eventNames = useMemo(() => {
+    const names = events.map((event) => event.name)
+    return names.includes(selectedEvent) ? names : [selectedEvent, ...names]
+  }, [events, selectedEvent])
 
   const chartData = useMemo(
     () =>
@@ -362,6 +394,44 @@ export function View({
                 <>
                   {/* Metrics and chart */}
                   <div className="rounded-lg border border-border bg-card">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+                      <div className="min-w-0">
+                        <h3 className="text-[13px] font-semibold text-foreground">
+                          {t('Event over time')}
+                        </h3>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {t(
+                            'Daily series for a single event. Property totals are in the summary below.',
+                          )}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 shrink-0 gap-1.5 text-[12px] font-medium"
+                          >
+                            {selectedEvent}
+                            <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[200px]">
+                          {eventNames.map((name) => (
+                            <DropdownMenuItem
+                              key={name}
+                              onClick={() => setSelectedEvent(name)}
+                              className={cn(
+                                'cursor-pointer text-[12px]',
+                                name === selectedEvent && 'bg-accent',
+                              )}
+                            >
+                              {name}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <div className="border-b border-border px-2">
                       <div className="flex overflow-x-auto overflow-y-hidden">
                         {chartMetrics.map((metric, index) => (
@@ -465,14 +535,29 @@ export function View({
                     </div>
                   </div>
 
-                  {/* Engagement summary */}
+                  {/* Property-wide summary */}
                   <div className="mt-4 rounded-lg border border-border bg-card">
                     <div className="border-b border-border px-4 py-2.5">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        {t('Engagement')}
+                        {t('Summary')}
                       </h3>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {t('Totals across every event in the selected range')}
+                      </p>
                     </div>
                     <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <SummaryTile
+                        label={t('Unique visitors')}
+                        value={formatNumber(stats.visitors)}
+                      />
+                      <SummaryTile
+                        label={t('Visits')}
+                        value={formatNumber(stats.visits)}
+                      />
+                      <SummaryTile
+                        label={t('Pageviews')}
+                        value={formatNumber(stats.pageviews)}
+                      />
                       <SummaryTile
                         label={t('Bounce rate')}
                         value={formatPercent(stats.bounceRate)}
@@ -480,6 +565,10 @@ export function View({
                       <SummaryTile
                         label={t('Visit duration')}
                         value={formatDuration(stats.visitDuration)}
+                      />
+                      <SummaryTile
+                        label={t('Engagement time')}
+                        value={formatDuration(stats.engagementTime)}
                       />
                       <SummaryTile
                         label={t('Views per visit')}
