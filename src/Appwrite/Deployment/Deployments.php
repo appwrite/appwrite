@@ -1,10 +1,8 @@
 <?php
 
-namespace Appwrite\Deployment\Backend;
+namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Deployment\Backend;
-use Appwrite\Deployment\Token;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -18,10 +16,15 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\System\System;
 
 /**
- * Builds and submits an open-runtimes jobs-service job for a deployment.
+ * Owns a deployment's lifecycle: upload bookkeeping, creating it and
+ * dispatching the build as an open-runtimes jobs-service job, and canceling one
+ * in flight.
  *
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
@@ -35,27 +38,65 @@ use Utopia\System\System;
  * — everything else about the payload stays the same.
  *
  * Covers function and site deployments whose source is a tarball: manual
- * upload, duplicate/rebuild, and templates (public GitHub tarball resolved
- * from a git reference). Site builds also emit a JSON build manifest, read
- * back post-job as an artifact callback for adapter detection.
+ * upload, duplicate/rebuild, VCS commits, and templates (public GitHub tarball
+ * resolved from a git reference). Site builds also emit a JSON build manifest,
+ * read back post-job as an artifact callback for adapter detection.
  */
-readonly class Orchestrator extends Backend
+readonly class Deployments
 {
     public function __construct(
         private Jobs $jobs,
-        Database $dbForProject,
-        Document $project,
+        protected Database $dbForProject,
+        protected Document $project,
         private array $platform,
     ) {
-        parent::__construct($dbForProject, $project);
     }
 
+    /**
+     * Saves chunked-upload progress onto the deployment — source path/size,
+     * chunk counters, metadata. Never triggers a build; call createFromUpload()
+     * once the upload is complete. Pass a single `Document` carrying every field
+     * the deployment should end up with: either a fresh, not-yet-persisted
+     * one (a plain `new Document([...])`), or the existing one fetched from
+     * the database with more attributes set via `setAttributes()`. A new
+     * document (one with no $sequence, i.e. not yet persisted — a document
+     * only gets one from the database, never from `setAttributes()`) gets
+     * the standard $permissions and resourceId/resourceInternalId/
+     * resourceType merged in automatically.
+     */
+    public function upload(Document $resource, Document $deployment): Document
+    {
+        if ($deployment->getSequence() === null) {
+            return $this->dbForProject->createDocument('deployments', new Document([
+                '$permissions' => self::permissions(),
+                ...self::resourceFields($resource),
+                ...$deployment->getArrayCopy(),
+            ]));
+        }
 
+        return $this->dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+    }
+
+    /**
+     * Finalizes the deployment document (see upload() for what `$deployment`
+     * should carry) and dispatches it for building from its own uploaded
+     * source. Marks it queued, writes its buildPath and deactivates any other
+     * active deployment for $resource. A deployment canceled before it is
+     * queued is left canceled and never dispatched. Returns the persisted,
+     * updated deployment.
+     */
     public function createFromUpload(Document $resource, Document $deployment): Document
     {
         return $this->submit($resource, $deployment, null);
     }
 
+    /**
+     * Same as createFromUpload(), but builds from a public git reference
+     * (a template's repository) instead of the deployment's own uploaded
+     * source. $reference is already resolved to a concrete commit/branch/tag
+     * — resolving a version range (e.g. "0.3.*") is the caller's job, since
+     * only it holds the GitHub client that can do so.
+     */
     public function createFromRef(
         Document $resource,
         Document $deployment,
@@ -73,6 +114,10 @@ readonly class Orchestrator extends Backend
         return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
     }
 
+    /**
+     * Same as createFromUpload(), but builds from a remote tarball at $url
+     * (a VCS presigned URL) instead of the deployment's own uploaded source.
+     */
     public function createFromUrl(
         Document $resource,
         Document $deployment,
@@ -84,22 +129,57 @@ readonly class Orchestrator extends Backend
 
     private function submit(Document $resource, Document $deployment, ?array $source): Document
     {
+        // The caller may have been holding this deployment for a while (the
+        // Builds worker pushes a template commit first), so its status is stale
+        // by now — dropping it keeps upload() from writing a cancel away, and
+        // the queued transition below is guarded instead.
+        $deployment->removeAttribute('status');
         $deployment = $this->upload($resource, $deployment);
-        $this->deactivateOthers($resource, $deployment);
 
-        $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+        $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
-        ]));
+        ]), [
+            Query::equal('$id', [$deployment->getId()]),
+            Query::notEqual('status', 'canceled'),
+        ]);
+
+        $deployment = $this->dbForProject->getDocument('deployments', $deployment->getId());
+
+        // Canceled before it could be queued: leave it canceled, submit nothing,
+        // and leave the currently active deployment alone.
+        if ($queued === 0) {
+            return $deployment;
+        }
+
+        // Claiming activation takes it away from the other pending deployments,
+        // so a cancel landing while we do it would leave nothing able to go
+        // live. Hand the claim back to exactly the deployments it was taken
+        // from, and stop before submitting a job for a canceled deployment.
+        $deactivated = $this->deactivateOthers($resource, $deployment);
+        if ($deactivated !== [] && $this->status($deployment->getId()) === 'canceled') {
+            foreach ($deactivated as $other) {
+                $this->dbForProject->updateDocument('deployments', $other, new Document([
+                    'activate' => true,
+                ]));
+            }
+
+            return $this->dbForProject->getDocument('deployments', $deployment->getId());
+        }
 
         try {
             $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
         } catch (\Throwable $error) {
-            $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            // Guarded like the transition above: a cancel that landed while the
+            // job was being submitted must not be reported as a failure.
+            $this->dbForProject->updateDocuments('deployments', new Document([
                 'status' => 'failed',
                 'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
                 'buildEndedAt' => DateTime::now(),
-            ]));
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
 
             throw $error;
         }
@@ -107,9 +187,70 @@ readonly class Orchestrator extends Backend
         return $deployment;
     }
 
+    /**
+     * Best-effort cancel of an in-flight build. The deployment is already
+     * marked canceled by the caller; this only needs to stop the backend from
+     * still writing to it.
+     */
     public function cancel(string $deploymentId): void
     {
         $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
+    }
+
+    /**
+     * Deactivates any other active deployment for $resource before this one
+     * goes live, called once the deployment is queued for building.
+     *
+     * @return array<string> The ids it deactivated, so the caller can hand the
+     *                       claim back if this deployment never gets to build.
+     */
+    protected function deactivateOthers(Document $resource, Document $deployment): array
+    {
+        if (!$deployment->getAttribute('activate', false)) {
+            return [];
+        }
+
+        $others = $this->dbForProject->find('deployments', [
+            Query::equal('activate', [true]),
+            Query::equal('resourceId', [$resource->getId()]),
+            Query::equal('resourceType', [$resource->getCollection()]),
+            Query::notEqual('$id', $deployment->getId()),
+        ]);
+
+        $deactivated = [];
+        foreach ($others as $other) {
+            $this->dbForProject->updateDocument('deployments', $other->getId(), new Document([
+                'activate' => false,
+            ]));
+            $deactivated[] = $other->getId();
+        }
+
+        return $deactivated;
+    }
+
+    private function status(string $deploymentId): string
+    {
+        return $this->dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status', '');
+    }
+
+    /**
+     * The build command for a deployment: its buildCommands, wrapped for
+     * sites with the framework's env and bundle commands.
+     */
+    public static function command(Document $resource, Document $deployment): string
+    {
+        $command = $deployment->getAttribute('buildCommands', '');
+        if ($resource->getCollection() !== 'sites') {
+            return $command;
+        }
+
+        $framework = Config::getParam('frameworks', [])[$resource->getAttribute('framework', '')] ?? [];
+
+        return \implode(' && ', \array_filter([
+            $framework['envCommand'] ?? '',
+            $command,
+            $framework['bundleCommand'] ?? '',
+        ], fn ($command) => !empty($command)));
     }
 
     /**
@@ -397,5 +538,29 @@ readonly class Orchestrator extends Backend
             "APPWRITE_{$prefix}_MEMORY" => $memory,
             'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
         ]);
+    }
+
+    /**
+     * @return array<string>
+     */
+    private static function permissions(): array
+    {
+        return [
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function resourceFields(Document $resource): array
+    {
+        return [
+            'resourceInternalId' => $resource->getSequence(),
+            'resourceId' => $resource->getId(),
+            'resourceType' => $resource->getCollection(),
+        ];
     }
 }

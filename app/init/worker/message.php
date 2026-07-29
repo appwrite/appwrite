@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Database\Factory as DatabaseFactory;
-use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -189,9 +189,9 @@ return function (Container $container): void {
     }, ['project', 'telemetry']);
 
     // Only the Builds worker uses this, handing template-into-repo pushes to
-    // the jobs-service when _APP_BUILDS_BACKEND=orchestrator — no backend switch.
+    // the jobs-service.
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new Orchestrator($jobs, $dbForProject, $project, $platform);
+        return new Deployments($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {

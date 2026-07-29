@@ -30,8 +30,7 @@ use Utopia\System\System;
 /**
  * Applies open-runtimes jobs-service callbacks to a deployment. The API
  * callback endpoint verifies + enqueues the CloudEvent; this worker owns the
- * deployment state transitions (log streaming and the ready/failed outcome)
- * that the executor path performs inline in the Builds worker.
+ * deployment state transitions: log streaming and the ready/failed outcome.
  *
  * Callbacks arrive concurrently and out of order (one log line each), so
  * processing for a deployment is serialized under a per-deployment lock — that

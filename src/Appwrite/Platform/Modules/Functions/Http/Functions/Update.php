@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -153,7 +153,7 @@ class Update extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Backend $deployments,
+        Deployments $deployments,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Compute;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -10,6 +10,7 @@ use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -68,7 +69,29 @@ class Base extends Action
         return $allowedSpecifications[0];
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Backend $deployments, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
+    /**
+     * Templates can pin a version range (e.g. "0.3.*"); codeload only takes a
+     * concrete ref, so resolve a range to the highest matching tag. Templates
+     * are public github.com repositories regardless of the resource's own
+     * provider, so this always uses the GitHub adapter.
+     */
+    public static function resolveTemplateRef(VcsFactory $vcsFactory, string $owner, string $repository, string $type, string $reference): string
+    {
+        if ($type !== Git::CLONE_TYPE_TAG || ! \str_contains($reference, '*')) {
+            return $reference;
+        }
+
+        try {
+            $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
+
+            return \end($tags) ?: $reference;
+        } catch (\Throwable) {
+            // Fall back to the raw reference; the build surfaces a bad ref.
+            return $reference;
+        }
+    }
+
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Deployments $deployments, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -144,11 +167,9 @@ class Base extends Action
             'activate' => $activate,
         ]);
 
-        // Build a plain (non-template) VCS deployment through $deployments
-        // (executor or jobs-service, decided by _APP_BUILDS_BACKEND).
-        // Template-into-repo pushes go through the Builds worker (which does
-        // the git write, then hands the build to the jobs-service itself
-        // when on orchestrator).
+        // Build a plain (non-template) VCS deployment through $deployments.
+        // Template-into-repo pushes go through the Builds worker, which does the
+        // git write and then hands the build to the jobs-service itself.
         if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $deployment = $deployments->createFromUrl(
@@ -181,7 +202,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Backend $deployments, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Deployments $deployments, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');

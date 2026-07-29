@@ -2,8 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
-use Appwrite\Deployment\Backend;
-use Appwrite\Deployment\Backend\Orchestrator;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -72,7 +71,7 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Backend $deployments,
+        Deployments $deployments,
         callable $locks,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -98,9 +97,9 @@ class Update extends Action
         // Write under the Jobs worker's per-deployment lock: its handlers
         // read-modify-write buildLogs, and an unserialized cancel write here
         // loses the closing log line to an in-flight append.
-        $cancel = function () use ($dbForProject, $deployment, $duration, $deployments) {
+        $cancel = function () use ($dbForProject, $deployment, $duration) {
             try {
-                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
             } catch (TransactionException) {
                 $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
@@ -113,7 +112,7 @@ class Update extends Action
                 }
 
                 if ($deployment->getAttribute('status') !== 'canceled') {
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
                 }
 
                 return $deployment;
@@ -140,25 +139,20 @@ class Update extends Action
     }
 
     /**
-     * The sparse update marking a build canceled. Jobs-backed builds have no
-     * cancel worker to write the closing log line the executor's Builds worker
-     * adds, so it is appended here; executor deployments get it from their worker.
+     * The sparse update marking a build canceled. No worker writes the closing
+     * log line for a canceled build, so it is appended here.
      *
      * @return array<string, mixed>
      */
-    private function cancel(Document $deployment, int $duration, bool $appendLog): array
+    private function cancel(Document $deployment, int $duration): array
     {
-        $update = [
+        $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+
+        return [
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
             'status' => 'canceled',
+            'buildLogs' => \substr($logs, -APP_LOG_LENGTH_LIMIT),
         ];
-
-        if ($appendLog) {
-            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
-            $update['buildLogs'] = \substr($logs, -APP_LOG_LENGTH_LIMIT);
-        }
-
-        return $update;
     }
 }
