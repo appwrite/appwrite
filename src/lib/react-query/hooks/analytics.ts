@@ -8,13 +8,18 @@
 
 import {
   queryOptions,
+  useIsFetching,
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
   keepPreviousData,
+  type Query as CachedQuery,
 } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
+import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
+import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -24,63 +29,72 @@ import {
 } from './constants'
 
 /**
- * Date range shorthands accepted by the Analytics API (`dateRange` query param).
- * For an arbitrary window use an explicit `startAt`/`endAt` range instead.
+ * An analytics window, always concrete ISO 8601 bounds mapped onto the API's
+ * `startAt` / `endAt`.
+ *
+ * The shorthand form (`dateRange: '30d'`) was removed when the page adopted the
+ * shared `DateRangePicker`: every selection now produces real bounds, so a
+ * shorthand branch would have been dead code that still looked live. The API
+ * still accepts `dateRange`; nothing in the console needs it.
  */
-export const ANALYTICS_DATE_RANGES = ['24h', '7d', '30d', '90d'] as const
-
-export type AnalyticsDateRange = (typeof ANALYTICS_DATE_RANGES)[number]
-
-/**
- * An analytics window: either a shorthand the API understands directly, or an
- * explicit ISO 8601 window mapped onto `startAt`/`endAt`.
- */
-export type AnalyticsRange =
-  | { kind: 'shorthand'; dateRange: AnalyticsDateRange }
-  | { kind: 'custom'; startAt: string; endAt: string }
-
-export const DEFAULT_ANALYTICS_DATE_RANGE: AnalyticsDateRange = '30d'
-
-/**
- * Default window used by both route loaders and views. Must stay in sync so the
- * prefetched query key matches what the view requests (no layout shift).
- */
-export const DEFAULT_ANALYTICS_RANGE: AnalyticsRange = {
-  kind: 'shorthand',
-  dateRange: DEFAULT_ANALYTICS_DATE_RANGE,
-}
+export type AnalyticsRange = { startAt: string; endAt: string }
 
 /** Conventional event name used for the pageview time series. */
 export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
 
-export function isAnalyticsDateRange(
-  value: string | undefined | null,
-): value is AnalyticsDateRange {
-  return !!value && (ANALYTICS_DATE_RANGES as readonly string[]).includes(value)
+/**
+ * Default picker selection: the last 30 calendar days, inclusive of today.
+ *
+ * Quantised to day boundaries on purpose. Route loaders and views both call
+ * this, and a rolling `to: now` would differ by milliseconds between the two,
+ * producing different query keys and an immediate refetch on first paint.
+ */
+export function getDefaultAnalyticsDateRange(): DateRange {
+  const now = new Date()
+  return { from: startOfDay(subDays(now, 29)), to: endOfDay(now) }
+}
+
+/**
+ * Picker selection to API bounds.
+ *
+ * Returns `undefined` while a selection is incomplete: DayPicker reports
+ * `{ from }` with no `to` after the first click, and committing then would fire
+ * a request for a half-chosen range.
+ *
+ * `normalizeUsageDateRangeSelection` handles the end-of-day boundary the same
+ * way Usage does: DayPicker returns local midnight for both ends, so a
+ * date-only span is expanded to `startOfDay(from) .. endOfDay(to)`. Passing
+ * `to` verbatim would exclude the final day and show a range one day short.
+ */
+export function toAnalyticsRange(
+  dateRange: DateRange | undefined,
+): AnalyticsRange | undefined {
+  if (!dateRange?.from || !dateRange?.to) return undefined
+  const normalized = normalizeUsageDateRangeSelection(dateRange)
+  if (!normalized?.from || !normalized?.to) return undefined
+  return {
+    startAt: normalized.from.toISOString(),
+    endAt: normalized.to.toISOString(),
+  }
+}
+
+/** Default window shared by route loaders and views so their keys match. */
+export function getDefaultAnalyticsRange(): AnalyticsRange {
+  const range = toAnalyticsRange(getDefaultAnalyticsDateRange())
+  if (!range) throw new Error('Default analytics range must be complete')
+  return range
 }
 
 /** Stable serialization of a range, used as a query-key segment. */
 export function analyticsRangeKey(range: AnalyticsRange): string {
-  return range.kind === 'shorthand'
-    ? range.dateRange
-    : `${range.startAt}..${range.endAt}`
-}
-
-/**
- * Map a range onto the API's parameters. The backend ignores `dateRange` for
- * any bound supplied explicitly, so the two forms are kept mutually exclusive.
- */
-function analyticsRangeParams(
-  range: AnalyticsRange,
-): { dateRange: string } | { startAt: string; endAt: string } {
-  return range.kind === 'shorthand'
-    ? { dateRange: range.dateRange }
-    : { startAt: range.startAt, endAt: range.endAt }
+  return `${range.startAt}..${range.endAt}`
 }
 
 /** Zero-filled metric used while loading or when a property has no data yet. */
 export const EMPTY_ANALYTICS_METRIC: Models.AnalyticsMetric = {
   visitors: 0,
+  newVisitors: 0,
+  returningVisitors: 0,
   sessions: 0,
   visits: 0,
   pageviews: 0,
@@ -204,18 +218,19 @@ export function useAnalyticsProperty(
 export async function fetchAnalyticsStats(
   projectId: string,
   propertyId: string,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   return await sdk.forProject(projectId).analytics.getStats({
     propertyId,
-    ...analyticsRangeParams(range),
+    startAt: range.startAt,
+    endAt: range.endAt,
   })
 }
 
 export function analyticsStatsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   return queryOptions({
     queryKey: [
@@ -239,7 +254,7 @@ export function analyticsStatsQueryOptions(
 export function useAnalyticsStats(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsStatsQueryOptions(projectId, propertyId, range),
@@ -256,7 +271,7 @@ export function useAnalyticsStats(
 export function useAnalyticsPropertiesStats(
   projectId: string | null | undefined,
   propertyIds: string[],
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const results = useQueries({
     queries: propertyIds.map((propertyId) =>
@@ -281,11 +296,12 @@ export function useAnalyticsPropertiesStats(
 export async function fetchAnalyticsEvents(
   projectId: string,
   propertyId: string,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const response = await sdk.forProject(projectId).analytics.listEvents({
     propertyId,
-    ...analyticsRangeParams(range),
+    startAt: range.startAt,
+    endAt: range.endAt,
   })
 
   return {
@@ -297,7 +313,7 @@ export async function fetchAnalyticsEvents(
 export function analyticsEventsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   return queryOptions({
     queryKey: [
@@ -329,40 +345,60 @@ export function useRefreshAnalyticsProperty(
   propertyId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const refresh = useCallback(async () => {
+  const matchesProperty = useCallback(
+    (query: CachedQuery) => {
+      if (!projectId || !propertyId) return false
+      const [scope, resource] = query.queryKey
+      if (scope !== 'analytics') return false
+      // The setup wizard's first-event probe drives itself on a
+      // refetchInterval, so it is never part of a manual refresh. It is not
+      // mounted on this page anyway; excluding it keeps that true if it ever is.
+      if (resource === 'first-event') return false
+      return (
+        query.queryKey.includes(projectId) &&
+        query.queryKey.includes(propertyId)
+      )
+    },
+    [projectId, propertyId],
+  )
+
+  /**
+   * Derived from the queries' own fetch state rather than a boolean we set
+   * ourselves.
+   *
+   * The previous version awaited `refetchQueries` and cleared a flag in
+   * `finally`. That promise only resolves once *every* matched query settles,
+   * so a single request that never settles pinned the flag on forever, and
+   * `RefreshButton` disables itself while refreshing, leaving the control
+   * spinning and unclickable. Measured with query-core: one hanging queryFn
+   * among three healthy ones leaves `refetchQueries` pending indefinitely while
+   * `isFetching` correctly reports 1.
+   *
+   * Reading `isFetching` cannot desync from reality: it falls to 0 exactly when
+   * the requests finish, and it stays 0 when a refresh matches nothing, which
+   * makes "nothing happened" visible instead of faking a spin.
+   */
+  const fetchingCount = useIsFetching({ predicate: matchesProperty })
+
+  const refresh = useCallback(() => {
     if (!projectId || !propertyId) return
-    setIsRefreshing(true)
-    try {
-      await queryClient.refetchQueries({
+    // Fire and forget: the spinner follows real fetch activity, so there is no
+    // promise to await and no flag to reset.
+    void queryClient
+      .refetchQueries({
         // `type: 'all'` also refetches queries whose panel is not currently
         // mounted (an inactive tab), so switching tabs after a refresh shows
         // fresh data instead of a stale cache entry.
         type: 'all',
-        predicate: (query) => {
-          const [scope, resource] = query.queryKey
-          if (scope !== 'analytics') return false
-          // The setup wizard's first-event probe drives itself on a
-          // refetchInterval. Awaiting it here means this promise settles on the
-          // poller's schedule rather than the refresh's, which leaves the button
-          // spinning and disabled long after the data has arrived.
-          if (resource === 'first-event') return false
-          return (
-            query.queryKey.includes(projectId) &&
-            query.queryKey.includes(propertyId)
-          )
-        },
+        predicate: matchesProperty,
       })
-    } catch {
-      // A failed refetch surfaces through each query's own error state; the
-      // button must still return to idle rather than spin forever.
-    } finally {
-      setIsRefreshing(false)
-    }
-  }, [queryClient, projectId, propertyId])
+      .catch(() => {
+        // Failures surface through each query's own error state.
+      })
+  }, [queryClient, matchesProperty, projectId, propertyId])
 
-  return { refresh, isRefreshing }
+  return { refresh, isRefreshing: fetchingCount > 0 }
 }
 
 /** How often the setup wizard asks whether the first event has landed. */
@@ -385,8 +421,8 @@ export function useAnalyticsFirstEvent(
     queryKey: ['analytics', 'first-event', projectId, propertyId],
     queryFn: () =>
       fetchAnalyticsEvents(projectId!, propertyId!, {
-        kind: 'shorthand',
-        dateRange: '24h',
+        startAt: subHours(new Date(), 24).toISOString(),
+        endAt: new Date().toISOString(),
       }),
     enabled: isEnabled,
     retry: false,
@@ -407,7 +443,7 @@ export function useAnalyticsFirstEvent(
 export function useAnalyticsEvents(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsEventsQueryOptions(projectId, propertyId, range),
@@ -427,12 +463,13 @@ export async function fetchAnalyticsEventMetrics(
   projectId: string,
   propertyId: string,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const response = await sdk.forProject(projectId).analytics.getEventMetrics({
     propertyId,
     eventName,
-    ...analyticsRangeParams(range),
+    startAt: range.startAt,
+    endAt: range.endAt,
   })
 
   return {
@@ -445,7 +482,7 @@ export function analyticsEventMetricsQueryOptions(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   return queryOptions({
     queryKey: [
@@ -472,7 +509,7 @@ export function useAnalyticsEventMetrics(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
-  range: AnalyticsRange = DEFAULT_ANALYTICS_RANGE,
+  range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsEventMetricsQueryOptions(projectId, propertyId, eventName, range),

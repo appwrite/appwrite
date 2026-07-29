@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { DateRange } from 'react-day-picker'
 import { cn } from '@/lib/utils'
 import { ArrowLeft, BarChart3, ChevronDown } from 'lucide-react'
 import {
@@ -27,8 +28,10 @@ import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import {
   ANALYTICS_PAGEVIEW_EVENT,
-  DEFAULT_ANALYTICS_DATE_RANGE,
-  DEFAULT_ANALYTICS_RANGE,
+  analyticsRangeKey,
+  getDefaultAnalyticsDateRange,
+  getDefaultAnalyticsRange,
+  toAnalyticsRange,
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsEventMetrics,
   useAnalyticsEvents,
@@ -37,11 +40,10 @@ import {
   useOrganizationScopes,
   useRefreshAnalyticsProperty,
   useProject,
-  type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
-import { DateRangeSelect } from '../_components/DateRangeSelect'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { PropertySettings } from '../_components/PropertySettings'
 import {
   formatDuration,
@@ -189,7 +191,16 @@ export function View({
     projectId,
     propertyId,
   )
-  const [range, setRange] = useState<AnalyticsRange>(DEFAULT_ANALYTICS_RANGE)
+  // The shared picker speaks react-day-picker's DateRange; the query layer
+  // speaks concrete ISO bounds. An incomplete selection keeps the previous
+  // window rather than firing a request for a half-chosen range.
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    getDefaultAnalyticsDateRange,
+  )
+  const range = useMemo(
+    () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
+    [dateRange],
+  )
 
   const { property: propertyFromHook, isLoading: propertyLoading } =
     useAnalyticsProperty(projectId, propertyId)
@@ -200,9 +211,13 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canCreateAnalyticsProperty(access, features)
 
-  const isDefaultRange =
-    range.kind === 'shorthand' &&
-    range.dateRange === DEFAULT_ANALYTICS_DATE_RANGE
+  // Loader-prefetched data is only valid for the default window.
+  const isDefaultRange = useMemo(
+    () =>
+      analyticsRangeKey(range) ===
+      analyticsRangeKey(getDefaultAnalyticsRange()),
+    [range],
+  )
 
   const { stats: statsFromHook, error: statsError } = useAnalyticsStats(
     projectId,
@@ -356,7 +371,16 @@ export function View({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <span className="truncate">{property?.name ?? t('Analytics')}</span>
+            <span className="shrink-0 truncate">
+              {property?.name ?? t('Analytics')}
+            </span>
+            {/* Domain is property metadata, so it belongs beside the name
+                rather than on a caption row of its own. It takes the flexible
+                width and truncates first, so a long domain never pushes the ID
+                or the Disabled badge off a narrow viewport. */}
+            <span className="min-w-0 flex-1 truncate text-[13px] font-normal text-muted-foreground">
+              {property?.domain || t('No domain')}
+            </span>
             <CopyableId id={propertyId} size="xs" className="shrink-0" />
             {property && !property.enabled && (
               <Badge variant="warning" className="text-[10px] shrink-0">
@@ -371,7 +395,11 @@ export function View({
         showFilters={false}
         beforeRefreshButtons={
           activeTab === 'analytics' ? (
-            <DateRangeSelect value={range} onChange={setRange} />
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              className="h-9"
+            />
           ) : undefined
         }
         showRefresh={activeTab === 'analytics'}
@@ -384,10 +412,6 @@ export function View({
         <div className="mx-auto w-full max-w-7xl flex-1">
           {activeTab === 'analytics' && (
             <div className="px-4 py-4 sm:px-6">
-              <div className="mb-3 text-[12px] font-medium text-muted-foreground">
-                {property?.domain || t('No domain')}
-              </div>
-
               {statsError ? (
                 <EmptyState
                   icon={BarChart3}

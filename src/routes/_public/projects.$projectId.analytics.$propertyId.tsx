@@ -7,7 +7,7 @@ import {
   analyticsEventsQueryOptions,
   analyticsPropertyQueryOptions,
   analyticsStatsQueryOptions,
-  DEFAULT_ANALYTICS_RANGE,
+  getDefaultAnalyticsRange,
   fetchProject,
 } from '@/lib/react-query/hooks'
 
@@ -39,7 +39,7 @@ export const Route = createFileRoute(
           analyticsStatsQueryOptions(
             projectId,
             propertyId,
-            DEFAULT_ANALYTICS_RANGE,
+            getDefaultAnalyticsRange(),
           ),
         )
         .catch(() => undefined),
@@ -48,7 +48,7 @@ export const Route = createFileRoute(
           analyticsEventsQueryOptions(
             projectId,
             propertyId,
-            DEFAULT_ANALYTICS_RANGE,
+            getDefaultAnalyticsRange(),
           ),
         )
         .catch(() => undefined),
@@ -58,7 +58,7 @@ export const Route = createFileRoute(
             projectId,
             propertyId,
             ANALYTICS_PAGEVIEW_EVENT,
-            DEFAULT_ANALYTICS_RANGE,
+            getDefaultAnalyticsRange(),
           ),
         )
         .catch(() => undefined),

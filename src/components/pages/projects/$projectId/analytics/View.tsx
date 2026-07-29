@@ -47,7 +47,7 @@ import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
-  DEFAULT_ANALYTICS_RANGE,
+  getDefaultAnalyticsRange,
   DEFAULT_PAGE_SIZE,
   EMPTY_ANALYTICS_METRIC,
   useAnalyticsProperties,
@@ -119,7 +119,7 @@ export function View() {
   const { statsByPropertyId } = useAnalyticsPropertiesStats(
     projectId,
     propertyIds,
-    DEFAULT_ANALYTICS_RANGE,
+    getDefaultAnalyticsRange(),
   )
 
   const { project } = useProject(projectId)

@@ -10,7 +10,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 import {
   analyticsPropertiesQueryOptions,
   analyticsStatsQueryOptions,
-  DEFAULT_ANALYTICS_RANGE,
+  getDefaultAnalyticsRange,
   DEFAULT_PAGE_SIZE,
   fetchProject,
 } from '@/lib/react-query/hooks'
@@ -57,7 +57,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
             analyticsStatsQueryOptions(
               projectId,
               property.$id,
-              DEFAULT_ANALYTICS_RANGE,
+              getDefaultAnalyticsRange(),
             ),
           )
           .catch(() => undefined),
