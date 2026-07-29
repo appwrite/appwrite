@@ -100,23 +100,15 @@ class InstallationTokens
         try {
             $oauth2->refreshTokens($installation->getAttribute('personalRefreshToken'));
         } catch (\Throwable) {
-            // The call itself failed, so this may be a timeout or a provider outage rather than a
-            // dead token. Leave the stored pair alone, it may still work once the provider is back.
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
         $accessToken = $oauth2->getAccessToken('');
 
+        // A provider can answer without a token, by rejecting the refresh token with a 200 and an
+        // error body or by not answering at all. Both leave nothing worth writing, and persisting
+        // an empty token would replace a pair that may still be good.
         if (empty($accessToken)) {
-            // Providers answer a rejected refresh token with a 200 and an error body, so an empty
-            // token here means the pair is dead rather than the request having failed. Clear it:
-            // keeping it replays a token the provider refuses, and empty reads as needs reconnecting.
-            $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-                'personalAccessToken' => '',
-                'personalRefreshToken' => '',
-                'personalAccessTokenExpiry' => null,
-            ]));
-
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 

@@ -169,39 +169,28 @@ final class InstallationTokensTest extends TestCase
         }
     }
 
-    public function testRejectedRefreshTokenIsCleared(): void
+    public function testEmptyTokenResponseIsNotPersisted(): void
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        $db->expects($this->once())
-            ->method('updateDocument')
-            ->with('installations', 'installation1', $this->callback(function (Document $update) {
-                $this->assertSame('', $update->getAttribute('personalAccessToken'));
-                $this->assertSame('', $update->getAttribute('personalRefreshToken'));
-                $this->assertNull($update->getAttribute('personalAccessTokenExpiry'));
-                return true;
-            }))
-            ->willReturnArgument(2);
+        // A provider that answers without a token leaves nothing worth writing, and the stored
+        // pair may still be good, so it has to survive.
+        $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(rejectRefresh: true);
 
-        try {
-            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
-            $this->fail('Expected an Exception');
-        } catch (Exception $e) {
-            $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
-        }
+        $this->expectException(Exception::class);
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
     }
 
-    public function testProviderOutageLeavesStoredTokenAlone(): void
+    public function testFailedRefreshCallIsNotPersisted(): void
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        // A throwing call may be a timeout, so the pair must survive it.
         $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
