@@ -31,6 +31,14 @@
  *   flutter: covers app lifecycle events only. Route tracking (`screen_view`)
  *            requires attaching an `AnalyticsObserver`.
  *
+ * Ingestion is nested under its property, matching the convention used by
+ * `POST /v1/storage/buckets/:bucketId/files`:
+ *
+ *   POST /v1/analytics/properties/:propertyId/events
+ *
+ * The SDK tabs are unaffected because `propertyId` is a declared param that
+ * Appwrite binds into the path, so only the raw curl example carries the URL.
+ *
  * REST is the only integration that works against the API today.
  */
 
@@ -219,11 +227,10 @@ function restBlocks(input: SnippetInput): SnippetBlock[] {
     {
       label: 'Send an event',
       language: 'bash',
-      code: `curl -X POST "${endpoint}/analytics/event" \\
+      code: `curl -X POST "${endpoint}/analytics/properties/${trackingId}/events" \\
   -H "X-Appwrite-Project: ${projectId}" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "propertyId": "${trackingId}",
     "name": "pageview",
     "url": "${sampleUrl(domain)}",
     "domain": "${host}",
@@ -233,11 +240,10 @@ function restBlocks(input: SnippetInput): SnippetBlock[] {
     {
       label: 'Send a custom event with properties',
       language: 'bash',
-      code: `curl -X POST "${endpoint}/analytics/event" \\
+      code: `curl -X POST "${endpoint}/analytics/properties/${trackingId}/events" \\
   -H "X-Appwrite-Project: ${projectId}" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "propertyId": "${trackingId}",
     "name": "signup_completed",
     "url": "${sampleUrl(domain)}",
     "props": ["plan", "pro"]
