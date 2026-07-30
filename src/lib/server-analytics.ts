@@ -8,14 +8,16 @@
  * These are all public pages, so the full concrete path of the requested
  * page is reported (e.g. /blog/post/my-post.md), matching client-side
  * tracking for public pages.
+ *
+ * Loaded raw by Bun from `server.ts` (not Vite-bundled). Must stay free of
+ * Vite-only constructs (`import.meta.env`, `?url` imports, path aliases).
  */
-import { getAnalyticsArea, getAnalyticsSurface } from '@/lib/analytics'
-import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
+import { getAnalyticsArea, getAnalyticsSurface } from './analytics-route.ts'
 import {
   getClientIpFromRequest,
   resolvePlausibleEventUrl,
-} from '@/lib/plausible-proxy'
-import { getRuntimeConfig } from '@/lib/runtime-config'
+} from './plausible-proxy.ts'
+import { readRuntimeConfigFromEnv } from './runtime-config-shared.ts'
 
 export type ServerPageviewFormat = 'markdown' | 'text' | 'json'
 
@@ -46,12 +48,13 @@ export function trackServerPageview(
 ): void {
   if (process.env.TSS_PRERENDERING === 'true') return
 
-  const scriptSrc = getRuntimeConfig().plausibleScriptSrc
+  const scriptSrc = readRuntimeConfigFromEnv(process.env).plausibleScriptSrc
   if (!scriptSrc) return
 
   try {
-    const origin = getRequestSiteOrigin()
-    const pathname = new URL(request.url).pathname || '/'
+    const url = new URL(request.url)
+    const origin = url.origin
+    const pathname = url.pathname || '/'
     const format = options.format ?? inferServerPageviewFormat(pathname)
 
     const headers: Record<string, string> = {
@@ -64,7 +67,7 @@ export function trackServerPageview(
     const body = JSON.stringify({
       name: 'pageview',
       url: `${origin}${pathname}`,
-      domain: new URL(origin).hostname,
+      domain: url.hostname,
       referrer: request.headers.get('referer') || null,
       props: {
         route: pathname,

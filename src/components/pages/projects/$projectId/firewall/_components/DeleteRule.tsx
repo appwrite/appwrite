@@ -1,4 +1,5 @@
 import type { Models } from '@appwrite.io/console'
+import { flushSync } from 'react-dom'
 import {
   Dialog,
   DialogContent,
@@ -30,10 +31,16 @@ export function DeleteRule({
 
   const handleDelete = async () => {
     if (!rule) return
-    try {
-      await deleteMutation.mutateAsync(rule.$id)
-      toast.success(t('Firewall rule deleted'))
+    const ruleId = rule.$id
+    // Close and commit before the mutation refetches the list. Otherwise the
+    // row's DropdownMenu/ContextMenu unmounts while this dialog is still open
+    // and Radix can leave body pointer-events locked (Create rule stops working).
+    flushSync(() => {
       onOpenChange(false)
+    })
+    try {
+      await deleteMutation.mutateAsync(ruleId)
+      toast.success(t('Firewall rule deleted'))
     } catch (error) {
       toast.error(
         getErrorMessage(error as Error, t('Failed to delete firewall rule')),

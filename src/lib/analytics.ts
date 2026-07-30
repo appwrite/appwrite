@@ -1,3 +1,7 @@
+import {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+} from '@/lib/analytics-route'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import {
@@ -9,6 +13,12 @@ import {
   getPlanNameFromTier,
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
+
+export {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+  type AnalyticsSurface,
+} from '@/lib/analytics-route'
 
 /** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
 export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
@@ -56,17 +66,6 @@ export type AnalyticsProps = Record<string, AnalyticsPropValue>
 
 /** Login state for Plausible custom properties. */
 export type AnalyticsAuth = 'user' | 'guest'
-
-/**
- * Coarse product surface for Plausible custom properties.
- * Derived from the sanitized route template, not the raw pathname.
- */
-export type AnalyticsSurface =
-  | 'marketing'
-  | 'console'
-  | 'docs'
-  | 'account'
-  | 'auth'
 
 /**
  * Billing plan bucket for Plausible custom properties.
@@ -162,47 +161,6 @@ export function getAnalyticsRoutePath(
   }
 
   return routePath
-}
-
-export function getAnalyticsArea(routePath: string) {
-  const parts = routePath.split('/').filter(Boolean)
-  if (parts[0] === 'projects') return parts[2] ?? 'overview'
-  if (parts[0] === 'organizations') return parts[2] ?? 'overview'
-  return parts[0] ?? 'root'
-}
-
-/**
- * Map a route path to a coarse Plausible `surface` property.
- */
-export function getAnalyticsSurface(routePath: string): AnalyticsSurface {
-  const root = routePath.split('/').filter(Boolean)[0] ?? ''
-
-  if (root === 'docs') return 'docs'
-  if (root === 'account') return 'account'
-
-  if (
-    root === 'sign-in' ||
-    root === 'sign-up' ||
-    root === 'join' ||
-    root === 'verify-email' ||
-    root === 'auth' ||
-    root === 'oauth2' ||
-    root === 'reset' ||
-    root === 'card'
-  ) {
-    return 'auth'
-  }
-
-  if (
-    root === 'projects' ||
-    root === 'organizations' ||
-    root === 'upgrade' ||
-    root === 'generator'
-  ) {
-    return 'console'
-  }
-
-  return 'marketing'
 }
 
 export function getAnalyticsRouteUrl(routePath: string) {
