@@ -27,13 +27,18 @@ function appendScript(
 
 /** Loads Plausible and Sentry after analytics consent. */
 export function loadTrackingScriptsAfterConsent() {
-  if (trackingScriptsLoaded || typeof window === 'undefined') return
-  trackingScriptsLoaded = true
+  if (typeof window === 'undefined') return
 
-  if (PLAUSIBLE_SCRIPT_SRC) {
-    appendScript({}, PLAUSIBLE_INIT_SCRIPT)
-    appendScript({ src: PLAUSIBLE_SCRIPT_SRC, async: 'true' })
+  if (!trackingScriptsLoaded) {
+    trackingScriptsLoaded = true
+
+    if (PLAUSIBLE_SCRIPT_SRC) {
+      appendScript({}, PLAUSIBLE_INIT_SCRIPT)
+      appendScript({ src: PLAUSIBLE_SCRIPT_SRC, async: 'true' })
+    }
   }
 
+  // Always attempt init (idempotent). Previously we skipped this once
+  // trackingScriptsLoaded was set, so a failed/early call never retried.
   initSentryClient()
 }

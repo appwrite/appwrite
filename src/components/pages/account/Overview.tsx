@@ -111,12 +111,12 @@ export function UpdateNameSection() {
   const queryClient = useQueryClient()
   const t = useT()
   const [name, setName] = useState('')
+  const accountName = account?.name
 
   useEffect(() => {
-    if (account?.name) {
-      setName(account.name)
-    }
-  }, [account])
+    if (!accountName) return
+    setName((prev) => (prev === accountName ? prev : accountName))
+  }, [accountName])
 
   const updateNameMutation = useMutation({
     mutationFn: async (newName: string) => {
@@ -199,12 +199,12 @@ export function UpdateEmailSection() {
   const t = useT()
   const [email, setEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
+  const accountEmail = account?.email
 
   useEffect(() => {
-    if (account?.email) {
-      setEmail(account.email)
-    }
-  }, [account])
+    if (!accountEmail) return
+    setEmail((prev) => (prev === accountEmail ? prev : accountEmail))
+  }, [accountEmail])
 
   const updateEmailMutation = useMutation({
     mutationFn: async ({
@@ -611,12 +611,12 @@ export function MFASection() {
   const { data: factorsData } = useMFAFactors()
   const queryClient = useQueryClient()
   const [mfaEnabled, setMfaEnabled] = useState(account?.mfa || false)
+  const accountMfa = account?.mfa
 
   useEffect(() => {
-    if (account?.mfa !== undefined) {
-      setMfaEnabled(account.mfa)
-    }
-  }, [account])
+    if (accountMfa === undefined) return
+    setMfaEnabled((prev) => (prev === accountMfa ? prev : accountMfa))
+  }, [accountMfa])
 
   const factors = factorsData || {
     totp: false,

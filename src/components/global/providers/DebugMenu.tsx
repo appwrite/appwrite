@@ -116,6 +116,8 @@ import {
   type DebugMenuPosition,
 } from '@/lib/debug-menu-position'
 import { getEnglishCatalog } from '@/lib/i18n'
+import { sendSentryDebugTestError } from '@/lib/sentry/init-client'
+import { toast } from 'sonner'
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
@@ -1335,6 +1337,28 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <Bug className="h-3 w-3" />,
+              },
+              {
+                label: 'Test Sentry',
+                description: 'Force-init and send a test exception.',
+                onClick: () => {
+                  setIsOpen(false)
+                  void (async () => {
+                    const result = await sendSentryDebugTestError()
+                    if (result.ok) {
+                      toast.success(
+                        `Sentry test flushed (${result.eventId}). Check Issues filtered to environment "development".`,
+                      )
+                      return
+                    }
+                    toast.error(
+                      result.eventId
+                        ? `${result.reason} Event: ${result.eventId}`
+                        : result.reason,
+                    )
+                  })()
+                },
+                icon: <AlertTriangle className="h-3 w-3" />,
               },
               {
                 label: 'Org setup',
