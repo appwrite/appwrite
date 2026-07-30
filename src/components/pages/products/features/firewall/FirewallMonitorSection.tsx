@@ -8,7 +8,7 @@ import { FirewallTrafficChart } from '@/components/pages/projects/$projectId/fir
 import { OVERVIEW_CHART_HEIGHT } from '@/components/pages/projects/$projectId/overview/chart-panel'
 import {
   getFirewallTrafficSeriesTotals,
-  sortFirewallTrafficSeriesByValueDesc,
+  sortFirewallTrafficSeriesByValueAsc,
 } from '@/lib/firewall/traffic-series'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { useT } from '@/lib/i18n/translate'
@@ -106,8 +106,8 @@ export function FirewallMonitorSection() {
     () => getFirewallTrafficSeriesTotals(mock.points),
     [mock.points],
   )
-  const seriesByValueDesc = useMemo(
-    () => sortFirewallTrafficSeriesByValueDesc(totals),
+  const seriesByValueAsc = useMemo(
+    () => sortFirewallTrafficSeriesByValueAsc(totals),
     [totals],
   )
 
@@ -164,7 +164,7 @@ export function FirewallMonitorSection() {
 
       <div className="px-2 pb-2 pt-4 sm:px-4 sm:pt-4 lg:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-2 sm:px-2">
-          {seriesByValueDesc.map((series) => (
+          {seriesByValueAsc.map((series) => (
             <div key={series.key} className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-full"

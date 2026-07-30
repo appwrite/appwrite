@@ -45,7 +45,7 @@ import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
   FIREWALL_TRAFFIC_SERIES,
-  sortFirewallTrafficSeriesByValueDesc,
+  sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
@@ -254,10 +254,10 @@ export function TrafficOverview() {
     ],
   )
 
-  // Highest total first (legend / tooltip preference). Recharts stacks
-  // bottom-up, so areas render in reverse of this list.
-  const seriesByValueDesc = useMemo(
-    () => sortFirewallTrafficSeriesByValueDesc(seriesTotals),
+  // Lowest total first (legend / tooltip preference). Recharts stacks
+  // bottom-up, so render in this order for lowest at the bottom.
+  const seriesByValueAsc = useMemo(
+    () => sortFirewallTrafficSeriesByValueAsc(seriesTotals),
     [seriesTotals],
   )
 
@@ -357,7 +357,7 @@ export function TrafficOverview() {
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {seriesByValueDesc.map((series) => (
+          {seriesByValueAsc.map((series) => (
             <div key={series.key} className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-full"
@@ -464,7 +464,7 @@ export function TrafficOverview() {
                     }
 
                     const sortedPayload = [...payload].sort(
-                      (a, b) => seriesValue(b) - seriesValue(a),
+                      (a, b) => seriesValue(a) - seriesValue(b),
                     )
 
                     return (
@@ -493,7 +493,7 @@ export function TrafficOverview() {
                 />
                 {/* Recharts stacks bottom-up: render lowest totals first so the
                     highest-value series sits on top (and owns the outer stroke). */}
-                {[...seriesByValueDesc].reverse().map((series) => (
+                {seriesByValueAsc.map((series) => (
                   <Area
                     key={series.key}
                     type="monotone"
