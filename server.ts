@@ -70,6 +70,10 @@ import {
 } from './src/lib/marketing/marketing-build-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from './src/lib/legacy-console-path.ts'
+import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
   serializeRuntimeConfig,

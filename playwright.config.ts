@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { devices, type PlaywrightTestConfig } from '@playwright/test'
 import { env } from './e2e/config/env'
+import { websiteAccessStorageState } from './e2e/helpers/website-access'
 
 const isCI = env.CI
 const storageState = 'e2e/.auth/auth.json'
@@ -31,12 +32,19 @@ const config: PlaywrightTestConfig = {
     {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Soft-launch gate: unlock /sign-in before capturing auth state.
+        storageState: websiteAccessStorageState,
+      },
     },
     {
       name: 'website',
       testMatch: /website\..*\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: websiteAccessStorageState,
+      },
     },
     {
       name: 'console',

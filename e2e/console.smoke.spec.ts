@@ -34,10 +34,13 @@ test.describe('console smoke (read-only)', () => {
     await page.goto('/account', { waitUntil: 'domcontentloaded' })
     await expect(page).not.toHaveURL(/\/sign-in/)
     await expect(page).toHaveURL(/\/account(?:\/|$|\?)/, { timeout: 45_000 })
+    // Prefer either the settings nav or a heading; `.first()` avoids strict-mode
+    // failures when both are present.
     await expect(
       page
         .locator('[data-testid="settings-navigation"]:visible')
-        .or(page.getByRole('heading').first()),
+        .or(page.getByRole('heading').first())
+        .first(),
     ).toBeVisible({ timeout: 45_000 })
   })
 
@@ -47,7 +50,8 @@ test.describe('console smoke (read-only)', () => {
       ready: () =>
         page
           .locator('[data-testid="settings-navigation"]:visible')
-          .or(page.getByRole('heading').first()),
+          .or(page.getByRole('heading').first())
+          .first(),
     })
   })
 
