@@ -14,12 +14,18 @@ final class FallbackTest extends TestCase
         $translationsDir = __DIR__ . '/../../../app/config/locale/translations';
         Locale::$exceptions = false;
         Locale::setLanguageFromJSON('en', $translationsDir . '/en.json');
-        Locale::setLanguageFromJSON('fr', $translationsDir . '/fr.json');
+
+        // Synthetic incomplete catalog: keep one real key, omit email preview so
+        // the test does not depend on which shipped locales are still partial
+        // (e.g. fr.json was completed in #12449).
+        Locale::setLanguageFromArray('xx', [
+            'emails.verification.subject' => 'Account verification (xx)',
+        ]);
     }
 
     public function testIncompleteLocaleFallsBackToEnglishForMissingEmailKeys(): void
     {
-        $locale = new Locale('fr');
+        $locale = new Locale('xx');
         $locale->setFallback('en');
 
         $preview = $locale->getText('emails.verification.preview');
@@ -29,15 +35,15 @@ final class FallbackTest extends TestCase
             'Verify your email to activate your {{project}} account.',
             $preview
         );
-        // Keys present in fr stay French.
-        $this->assertSame('Vérification du compte', $locale->getText('emails.verification.subject'));
+        // Keys present in the incomplete locale stay local.
+        $this->assertSame('Account verification (xx)', $locale->getText('emails.verification.subject'));
     }
 
     public function testFallbackMatchingIncompleteLocaleLeaksRawKeys(): void
     {
-        $locale = new Locale('fr');
-        // Mirrors the previous bug: fallback = _APP_LOCALE when that env is fr.
-        $locale->setFallback('fr');
+        $locale = new Locale('xx');
+        // Mirrors the previous bug: fallback = request locale when that catalog is incomplete.
+        $locale->setFallback('xx');
 
         $this->assertSame(
             '{{emails.verification.preview}}',
