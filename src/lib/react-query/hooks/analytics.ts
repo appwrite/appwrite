@@ -8,7 +8,6 @@
 
 import {
   queryOptions,
-  useIsFetching,
   useMutation,
   useQueries,
   useQuery,
@@ -16,7 +15,7 @@ import {
   keepPreviousData,
   type Query as CachedQuery,
 } from '@tanstack/react-query'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
@@ -48,15 +47,15 @@ export type AnalyticsRange = { startAt: string; endAt: string }
  * How long an analytics read may take before its query is failed.
  *
  * The SDK sets no request timeout, so a stalled connection leaves the query
- * fetching forever. That is what pinned the refresh control: `isRefreshing`
- * derives from `useIsFetching`, which faithfully reports a request that never
- * settles, and `RefreshButton` disables itself while refreshing - so the icon
- * spun and the button could not be clicked again. Verified with query-core:
- * one queryFn that never resolves holds the fetching count at 1 indefinitely
- * while every other query settles.
+ * fetching forever. `useRefreshAnalyticsProperty` waits for a refresh to settle
+ * before clearing its flag, so without a bound one stalled read would leave the
+ * refresh control spinning and - since `RefreshButton` disables itself while
+ * refreshing - unclickable. Verified with query-core: one queryFn that never
+ * resolves keeps `refetchQueries` pending indefinitely while every other query
+ * settles normally.
  *
- * A timeout fixes it at the source. The query fails, the panel shows its own
- * error, the spinner stops and the button is clickable again.
+ * With a timeout the query fails instead, the panel shows its own error, and the
+ * refresh finishes.
  */
 const READ_TIMEOUT_MS = 20_000
 
@@ -433,55 +432,54 @@ export function useRefreshAnalyticsProperty(
   )
 
   /**
-   * Derived from the queries' own fetch state rather than a boolean we set
-   * ourselves.
+   * A flag we own, set on click and cleared when the work settles - the same
+   * shape `RefreshControls` uses for usage and the Postgres pages.
    *
-   * The previous version awaited `refetchQueries` and cleared a flag in
-   * `finally`. That promise only resolves once *every* matched query settles,
-   * so a single request that never settles pinned the flag on forever, and
-   * `RefreshButton` disables itself while refreshing, leaving the control
-   * spinning and unclickable. Measured with query-core: one hanging queryFn
-   * among three healthy ones leaves `refetchQueries` pending indefinitely while
-   * `isFetching` correctly reports 1.
+   * An earlier version derived this from `useIsFetching` instead. That reports
+   * fetch activity accurately, but it changes on its own between clicks, so the
+   * value `RefreshButton` sees does not simply go true-then-false per press, and
+   * the button's spin only stops when it observes that transition. Matching the
+   * pattern the other pages already use keeps that contract.
    *
-   * Reading `isFetching` cannot desync from reality: it falls to 0 exactly when
-   * the requests finish, and it stays 0 when a refresh matches nothing, which
-   * makes "nothing happened" visible instead of faking a spin.
-   *
-   * It does still report a request that never finishes, which is its own kind of
-   * stuck spinner - see `READ_TIMEOUT_MS`, which bounds every analytics read so
-   * there is always something for this count to fall back from.
+   * Awaiting the refresh is only safe because `READ_TIMEOUT_MS` bounds every
+   * read: this flag waits for all of them, so one request that never settled
+   * would pin it on forever.
    */
-  const fetchingCount = useIsFetching({ predicate: matchesProperty })
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!projectId || !propertyId) return
 
-    // Fire and forget, twice, because the two calls cover different queries and
-    // neither covers all of them (both measured against query-core):
-    //
-    // `refetchQueries` with `type: 'all'` refetches what is on screen plus
-    // queries whose panel is unmounted but still cached. It does NOT touch a
-    // query whose observer is mounted-but-disabled, which is exactly what a
-    // dimension panel's hidden tabs are - so on its own it left a hidden tab
-    // showing pre-refresh numbers for as long as its cache entry lived.
-    //
-    // `invalidateQueries` marks those stale so they refetch when their tab is
-    // shown. `refetchType: 'none'` because the call above already refetched
-    // everything active; without it the visible panels would fetch twice.
-    void queryClient
-      .refetchQueries({ type: 'all', predicate: matchesProperty })
-      .catch(() => {
-        // Failures surface through each query's own error state.
-      })
-    void queryClient
-      .invalidateQueries({ predicate: matchesProperty, refetchType: 'none' })
-      .catch(() => {
-        // Marking cache entries stale cannot fail in a way the user can act on.
-      })
+    setIsRefreshing(true)
+    try {
+      // Two calls, because neither covers every query on the page (both
+      // measured against query-core):
+      //
+      // `refetchQueries` with `type: 'all'` refetches what is on screen plus
+      // queries whose panel is unmounted but still cached. It does NOT touch a
+      // query whose observer is mounted-but-disabled, which is exactly what a
+      // dimension panel's hidden tabs are - so on its own it left a hidden tab
+      // showing pre-refresh numbers for as long as its cache entry lived.
+      //
+      // `invalidateQueries` marks those stale so they refetch when their tab is
+      // shown. `refetchType: 'none'` because the call above already refetched
+      // everything active; without it the visible panels would fetch twice.
+      //
+      // allSettled, so one failing query still clears the flag - failures
+      // surface through each query's own error state.
+      await Promise.allSettled([
+        queryClient.refetchQueries({ type: 'all', predicate: matchesProperty }),
+        queryClient.invalidateQueries({
+          predicate: matchesProperty,
+          refetchType: 'none',
+        }),
+      ])
+    } finally {
+      setIsRefreshing(false)
+    }
   }, [queryClient, matchesProperty, projectId, propertyId])
 
-  return { refresh, isRefreshing: fetchingCount > 0 }
+  return { refresh, isRefreshing }
 }
 
 /** How often the setup wizard asks whether the first event has landed. */
