@@ -16,7 +16,6 @@ import {
   resolveOrganizationAccess,
 } from '@/lib/react-query/hooks'
 import {
-  DEFAULT_PAGE_SIZE,
   DEFAULT_BILLING_PROJECTS_LIMIT,
 } from '@/lib/react-query/hooks/constants'
 
@@ -62,20 +61,7 @@ export const Route = createFileRoute(
     const billingAccess = await resolveOrganizationAccess(queryClient, orgId)
     const canFetchBillingInvoices = canSeeOrganizationBilling(billingAccess)
 
-    // Prefetch first page of project breakdown (server-side pagination)
-    const aggregationPromise = orgData?.billingAggregationId
-      ? queryClient.ensureQueryData(
-          organizationBillingAggregationQueryOptions(
-            orgId,
-            orgData.billingAggregationId,
-            DEFAULT_BILLING_PROJECTS_LIMIT,
-            0,
-          ),
-        )
-      : Promise.resolve(null)
-
     await Promise.all([
-      aggregationPromise,
       queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
       ...(canFetchBillingInvoices
         ? [
@@ -91,6 +77,21 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
     ])
+
+    // Usage/aggregation is non-critical: PlanSummary shows its own skeleton while
+    // this loads, so a slow usage API must not block the rest of billing.
+    if (orgData?.billingAggregationId) {
+      void queryClient
+        .prefetchQuery(
+          organizationBillingAggregationQueryOptions(
+            orgId,
+            orgData.billingAggregationId,
+            DEFAULT_BILLING_PROJECTS_LIMIT,
+            0,
+          ),
+        )
+        .catch(() => undefined)
+    }
 
     const optionalPrefetches = []
     if (orgData?.paymentMethodId) {

@@ -1,0 +1,104 @@
+---
+layout: article
+title: MySQL
+description: Run a native MySQL database provisioned for your project and connect to it directly with standard MySQL clients.
+---
+
+Appwrite native MySQL databases give you a managed MySQL instance provisioned for your project. You pick the compute specification, and Appwrite provisions the engine in your project's region with its own storage, networking, and credentials, exposed through a per-database public hostname secured with TLS.
+
+Native databases are different from Appwrite databases like [TablesDB](/docs/products/databases/tablesdb), [DocumentsDB](/docs/products/databases/documentsdb), and [VectorsDB](/docs/products/databases/vectorsdb), which are accessed through Appwrite SDKs and platform APIs. A native MySQL database gives you the raw engine. You connect with the `mysql` client or any MySQL driver and use the full feature set of MySQL, with no Appwrite abstraction layer in between.
+
+{% info title="Looking for Appwrite data APIs?" %}
+If you want Appwrite SDKs, platform permissions, and serverless scaling for app data, start with [Appwrite Databases](/docs/products/databases). Native MySQL is for teams who want a managed MySQL engine they can talk to directly with their own ORM, migrations, and drivers.
+{% /info %}
+
+# Supported versions {% #versions %}
+
+Appwrite manages the database container, storage, backups, and networking. You bring the application.
+
+| Engine     | Default version | Other supported versions | Default port |
+|------------|-----------------|--------------------------|--------------|
+| MySQL  | 8.4             | 8.0                      | 3306         |
+
+The version is selected on create and can be upgraded later. Upgrades run online by provisioning a second instance on the new version, streaming data over with logical replication, and moving traffic once replication is caught up.
+
+A new database starts in a `provisioning` state and becomes `ready` within a few minutes. Large specifications or high-availability configurations take longer to schedule; poll the database status or check the databases list until it reports `ready`.
+
+# Regions {% #regions %}
+
+A native database lives in the same region as the project that owns it. There is no per-database region selector. Each database gets a unique hostname in the form `db-<hash>.<region>.appwrite.center`, and data does not leave the region.
+
+# Feature overview {% #features %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Connect with the `mysql` client or any driver. Credentials are rotatable through the API.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooling" %}
+Per-database connection pooler with automatic read/write split when high availability is enabled.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/backups" title="Backups" %}
+Scheduled backups, manual backups, restores, and point-in-time recovery.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Spin up an ephemeral copy of your database in seconds from a storage snapshot.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/high-availability" title="High availability" %}
+Up to five synchronous, semi-synchronous, or asynchronous replicas with automatic failover.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/scaling" title="Scaling" %}
+Resize compute online and grow storage automatically as your data grows.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS by default, optional IP allowlists, and a dedicated hostname per database.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/monitoring" title="Monitoring" %}
+Poll live health, connection, replica, and storage information from your pipelines and monitoring.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/maintenance" title="Maintenance" %}
+Maintenance windows, online version upgrades, and pause and resume.
+{% /cards_item %}
+{% /cards %}
+
+# Specifications and pricing {% #specifications %}
+
+Each database runs against one of the following compute specifications, billed monthly:
+
+| Tier            | Specification  | CPU     | Memory | Storage | Bandwidth | Connections | Price   |
+|-----------------|----------------|---------|--------|---------|-----------|-------------|---------|
+| Starter         | `s-1vcpu-1gb`  | 1 core  | 1 GB   | 10 GB   | 50 GB     | 100         | $10/mo  |
+| Standard        | `s-2vcpu-2gb`  | 2 cores | 2 GB   | 25 GB   | 200 GB    | 200         | $20/mo  |
+| Standard Plus   | `s-2vcpu-4gb`  | 2 cores | 4 GB   | 50 GB   | 400 GB    | 500         | $49/mo  |
+| Professional    | `s-4vcpu-8gb`  | 4 cores | 8 GB   | 200 GB  | 1 TB      | 1,000       | $85/mo  |
+| Business        | `s-4vcpu-16gb` | 4 cores | 16 GB  | 500 GB  | 2 TB      | 2,000       | $160/mo |
+| Business Plus   | `s-4vcpu-32gb` | 4 cores | 32 GB  | 1 TB    | 5 TB      | 4,000       | $299/mo |
+| Enterprise      | `s-8vcpu-32gb` | 8 cores | 32 GB  | 2 TB    | 7.5 TB    | 5,000       | $425/mo |
+| Enterprise Plus | `s-8vcpu-64gb` | 8 cores | 64 GB  | 3 TB    | 10 TB     | 10,000      | $699/mo |
+
+The Storage and Bandwidth columns are the monthly allowances included with each tier. Usage beyond them is billed as overage, and optional features are billed as add-ons on top of the tier price:
+
+| Add-on                     | Price                          |
+|----------------------------|---------------------------------|
+| Storage overage            | $0.125 per GB per month        |
+| Bandwidth overage          | $0.08 per GB per month         |
+| High availability replica  | 50% of the tier price, per replica |
+| Point-in-time recovery     | 20% of the tier price          |
+
+You can [resize between tiers](/docs/products/databases/mysql/scaling) as your workload changes.
+
+# Limits {% #limits %}
+
+The following limits apply per database:
+
+| Limit                          | Value                                                     |
+|--------------------------------|-----------------------------------------------------------|
+| Databases per project          | 10                                                        |
+| High availability replicas     | 0 - 5                                                     |
+| IP allowlist entries           | 100                                                       |
+| Backup retention               | 1 - 365 days                                              |
+| Point-in-time recovery window  | 1 - 35 days                                               |
+| Max simultaneous connections   | 10,000 platform cap, lower on smaller specifications      |
+
+# Billing and plan requirements {% #plans %}
+
+Native databases are available on paid plans, and a payment method must be attached to your organization. Each database is billed by the hour against its [compute specification](#specifications), with separate line items for overages and add-ons. See [pricing](/pricing) for details.

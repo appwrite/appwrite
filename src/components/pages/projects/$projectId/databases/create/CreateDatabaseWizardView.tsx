@@ -47,6 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -54,7 +60,8 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
-  enableProductDatabasePitr,
+  dedicatedDatabaseSourceFromDatabaseType,
+  dedicatedDatabaseSourceFromEngine,
   fetchBackupPolicies,
   fetchDedicatedBackupPolicies,
   refetchProjectDatabaseLists,
@@ -65,6 +72,7 @@ import {
   waitForCreatedDatabaseWorkspaceReady,
   useOrganizationPlan,
   useProject,
+  type DedicatedDatabaseSource,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -78,6 +86,7 @@ import {
   TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS,
   getDefaultEnabledSpecId,
   hasLockedDatabaseSpecifications,
+  isServerlessDatabaseSpecId,
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
@@ -200,6 +209,19 @@ function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
   return t === 'Postgres' ? 'postgres' : 'mysql'
 }
 
+function specificationsSourceForWizardType(
+  dbType: DatabaseTypeOption | null,
+): DedicatedDatabaseSource | null {
+  if (!dbType) return null
+  if (dbType === 'Postgres') {
+    return dedicatedDatabaseSourceFromEngine('postgresql')
+  }
+  if (dbType === 'MySQL') {
+    return dedicatedDatabaseSourceFromEngine('mysql')
+  }
+  return dedicatedDatabaseSourceFromDatabaseType(wizardBackend(dbType))
+}
+
 export function CreateDatabaseWizardView() {
   const t = useT()
   const { projectId } = useParams({ strict: false })
@@ -213,8 +235,20 @@ export function CreateDatabaseWizardView() {
   const supportsDedicatedDatabaseCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
 
+  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
+  const specificationsSource = useMemo(
+    () => specificationsSourceForWizardType(dbType),
+    [dbType],
+  )
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useQuery(databaseSpecificationsQueryOptions(pid))
+    useQuery({
+      ...databaseSpecificationsQueryOptions(
+        pid,
+        specificationsSource ??
+          dedicatedDatabaseSourceFromDatabaseType(DatabaseType.Tablesdb),
+      ),
+      enabled: !!pid && !!specificationsSource,
+    })
   const apiSpecOptions = useMemo(
     () => mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
     [specificationsData?.specifications],
@@ -227,8 +261,6 @@ export function CreateDatabaseWizardView() {
       ),
     [organizationPlan, specificationsData?.pricing],
   )
-
-  const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
@@ -731,7 +763,8 @@ export function CreateDatabaseWizardView() {
     const trimmedName = name.trim()
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
-    const showPitrStep = pitrEnabled
+    // Product APIs have no PITR mutation; never enable/wait via engine for product IDs.
+    const showPitrStep = pitrEnabled && isNativeDatabaseType(dbType)
     const shouldCreateBackupPolicies =
       features.databaseBackups &&
       planBackupsEnabled === true &&
@@ -801,14 +834,6 @@ export function CreateDatabaseWizardView() {
 
       if (showPitrStep) {
         setSetupPhase('enabling-pitr')
-        if (!isNativeDatabaseType(dbType) && dbType) {
-          await enableProductDatabasePitr(
-            pid,
-            database.$id,
-            wizardBackend(dbType),
-            project?.region,
-          )
-        }
         const pitrReady = await waitForCreatedDatabasePitrReady(
           pid,
           database.$id,
@@ -1209,6 +1234,26 @@ export function CreateDatabaseWizardView() {
                               >
                                 {t('Upgrade')}
                               </Badge>
+                            ) : isServerlessDatabaseSpecId(spec.id) ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help">
+                                      {t(spec.price)}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="max-w-[240px]"
+                                  >
+                                    <p className="text-[12px]">
+                                      {t(
+                                        'Billed for disk storage and database operations.',
+                                      )}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             ) : (
                               <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">
                                 {spec.price}

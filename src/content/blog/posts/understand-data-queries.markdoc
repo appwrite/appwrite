@@ -3,6 +3,7 @@ layout: post
 title: Understanding data queries in database management
 description: Learn about the different types of data queries, shedding light on their functions and best practices.
 date: 2024-02-29
+lastUpdated: 2026-06-29
 cover: /images/blog/understand-data-queries.avif
 timeToRead: 6
 author: aditya-oberai
@@ -80,47 +81,47 @@ To remove records from a table, you use deletion queries. While powerful, they s
 
 A lot of developers today don’t perform raw SQL queries but prefer to use an ORM such as Prima or a managed database provider such as Appwrite. While these tools enable the same end goal, a managed service can provide an easy-to-use wrapper and helper methods that make these queries easier to write and don’t require you to have a deep knowledge of SQL syntax. Appwrite offers the aforementioned data queries as a part of our Database product, which you can discover in our [product documentation](/docs/products/databases).
 
-One of the data retrieval APIs the Appwrite Database offers is a list documents API to get multiple documents from any collection. The endpoint also allows you to filter, sort, and paginate results, for which Appwrite provides a common set of syntax to build queries, which you can build manually or using our SDKs. With our latest release, we’re adding support for database operators such as `OR`, `AND`, and `CONTAINS` to allow further flexibility.
+One of the data retrieval APIs Appwrite Databases offers is a list rows API to get multiple rows from any table. The endpoint also allows you to filter, sort, and paginate results, for which Appwrite provides a common set of syntax to build queries, which you can build manually or using our SDKs. Appwrite supports database operators such as `OR`, `AND`, and `CONTAINS` to allow further flexibility.
 
 - `AND` operation: This operator allows nesting queries in an AND condition.
 - `OR` operation: This operator allows nesting queries in an OR condition.
 - `CONTAINS` operation: The contains operator allows filtering by values that are contained in an array.
 
 ```client-web
-import { Client, Databases, Query } from "appwrite";
+import { Client, TablesDB, Query } from "appwrite";
 
 const client = new Client()
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
   .setProject('<PROJECT_ID>');
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 // OR operator example
-const movieData1 = databases.listDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    Query.or([
+const movieData1 = tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [Query.or([
         Query.equal('title', ['Back To The Future', 'Top Gun']),
         Query.greaterThan('year', 2017)
-	])
-);
+	])]
+});
 
 // AND operator example
-const movieData2 = databases.listDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    Query.and([
+const movieData2 = tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [Query.and([
         Query.startsWith("title", "Once"),
         Query.greaterThan('year', 1995)
-	])
-);
+	])]
+});
 
 // CONTAINS operator example
-const movieData3 = databases.listDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    Query.contains('director', ["Christopher Nolan"])
-);
+const movieData3 = tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [Query.contains('director', ["Christopher Nolan"])]
+});
 ```
 
 Mastering the art of data querying is a continuous process. As a developer, your aim should be to write efficient, secure, and maintainable queries. Remember, the power of a database is harnessed through the effectiveness of its queries.

@@ -4,6 +4,7 @@ import { prefetchPostgresShellData } from '@/components/pages/projects/$projectI
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
 import {
   databaseSpecificationsQueryOptions,
+  POSTGRES_DATABASE_SPECS_SOURCE,
 } from '@/lib/react-query/hooks'
 import { canAccessPostgresDatabaseSettings } from '@/lib/console-rbac-loader'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -42,7 +43,12 @@ export const Route = createFileRoute(
       databaseId,
     )
 
-    await queryClient.ensureQueryData(databaseSpecificationsQueryOptions(projectId))
+    await queryClient.ensureQueryData(
+      databaseSpecificationsQueryOptions(
+        projectId,
+        POSTGRES_DATABASE_SPECS_SOURCE,
+      ),
+    )
 
     return shellData
   },

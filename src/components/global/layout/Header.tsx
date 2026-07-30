@@ -1220,7 +1220,7 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Feedback / Support — console tools; on marketing only at very wide
+              {/* Feedback / Support - console tools; on marketing only at very wide
                   widths so they cannot crowd the centered Changelog / stars. */}
               <div
                 className={cn(

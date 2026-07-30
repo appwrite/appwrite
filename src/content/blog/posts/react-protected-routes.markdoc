@@ -3,6 +3,7 @@ layout: post
 title: Setting up protected routes in React
 description: Learn how to set up protected routes in React in this easy tutorial.
 date: 2024-10-02
+lastUpdated: 2026-06-29
 cover: /images/blog/react-protected-routes/cover.avif
 timeToRead: 4
 author: dennis-ivy
@@ -18,7 +19,7 @@ faqs:
   - question: "How can I plug Appwrite Auth into a React protected route?"
     answer: "Call [`account.get()`](/docs/products/auth) inside the wrapper component, store the result in state, and render `<Outlet />` if it succeeds or `<Navigate to=\"/login\" />` if it throws. Wrap the call in a loading state to avoid a flash of redirect while the request is in flight."
   - question: "Should I check authentication on the client only?"
-    answer: "No. Client-side protected routes are about UX, not security. Always enforce permissions on the backend, either through [Appwrite document permissions](/docs/products/databases) or your own server logic, since anyone can bypass a client-only check."
+    answer: "No. Client-side protected routes are about UX, not security. Always enforce permissions on the backend, either through [Appwrite row permissions](/docs/products/databases) or your own server logic, since anyone can bypass a client-only check."
 ---
 In this tutorial, we will explore a straightforward method for implementing protected routes in a React application. The aim is to ensure that users can only access certain pages, such as home and profile, after passing an authentication check. If a user is not authenticated, they will be redirected to the login page.
 
@@ -33,13 +34,13 @@ First, create a new file named `ProtectedRoutes.jsx`. In this file, you will imp
 Below is a basic structure for the `ProtectedRoutes` component:
 
 ```jsx
-
-import { Outlet, navigate } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 
 const ProtectedRoutes = () => {
     const user = null; // Simulate an unauthenticated user
-    return user ? <Outlet /> : <Navigate to="/login"/> // Redirect to login if not authenticated
- 
+    return user ? <Outlet /> : <Navigate to="/login" />; // Redirect to login if not authenticated
+};
+
 export default ProtectedRoutes;
 
 ```
@@ -49,25 +50,26 @@ export default ProtectedRoutes;
 With the `ProtectedRoutes` component created, the next step is to wrap the routes we want to protect. We can nest all child routes by using the standard  `<Route>` component and by passing in `<ProtectedRoutes/>` as the element into the parent route.
 
 ```jsx
-//App.jsx
-...
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoutes from './utils/ProtectedRoutes';
+import Login from './Login';
+import Home from './Home';
+import Profile from './Profile';
 
-function App()｛
-		return
-		<BrowserRouter>
-			<Routes>
-				<Route element=｛<Login/>｝ path="/login"'/>
-				
-				{/* 👇 Wrap your protected routes */}
-				<Route element={<ProtectedRoutes/>}>
-						＜Route element=｛<Home/>｝ path="/"/＞
-						＜Route element= ｛<Profile/>｝ path="/profile"/>
-				</Route>	
-				
-			</Routes>
-		</BrowserRouter>
+function App() {
+    return (
+        <Router>
+            <Routes>
+                <Route element={<Login />} path="/login" />
+
+                {/* Wrap your protected routes */}
+                <Route element={<ProtectedRoutes />}>
+                    <Route element={<Home />} path="/" />
+                    <Route element={<Profile />} path="/profile" />
+                </Route>
+            </Routes>
+        </Router>
+    );
 }
 
 ```

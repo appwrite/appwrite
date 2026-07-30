@@ -16,7 +16,7 @@ Series include:
 |--------|--------|---------|
 | **Passed** | Project request volume (`network.requests`) | Overall requests in the window (not a Firewall “allowed” counter) |
 | **Denied** | `waf.requests.denied` | Requests rejected by a deny action (`403`) |
-| **Challenged** | `waf.requests.challenged` | Requests handled by challenge behavior when active |
+| **Challenged** | `waf.requests.challenged` | Requests challenged by a [challenge action](/docs/products/firewall/actions#challenge) |
 | **Rate limited** | `waf.requests.rateLimited` | Requests throttled over a rate limit quota (`429`) |
 | **Redirected** | `waf.requests.redirected` | Requests answered with a redirect action |
 
@@ -42,7 +42,7 @@ Use impact preview to:
 
 - Catch overly broad path or country filters before enabling deny
 - Size rate limit quotas against observed request volume
-- Validate that an IP allowlist matches the traffic you expect (exact IPs only)
+- Validate that an IP allowlist matches the traffic you expect (single IPs or CIDR ranges)
 
 Impact is an estimate from recent events, not a guarantee of future volume.
 

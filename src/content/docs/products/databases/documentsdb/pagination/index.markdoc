@@ -1,0 +1,540 @@
+---
+layout: article
+title: Pagination
+description: Implement pagination for large data sets in Appwrite DocumentsDB. Explore techniques for splitting and displaying data across multiple pages.
+---
+
+As your collection grows in size, you'll need to paginate the documents returned.
+Pagination improves performance by returning a subset of documents that match a query at a time, called a page.
+
+By default, list operations return 25 documents per page, which can be changed using the `Query.limit()` query method.
+There is no hard limit on the number of documents you can request. However, beware that **large pages can degrade performance**.
+
+# Offset pagination {% #offset-pagination %}
+
+Offset pagination divides documents into pages of `N` documents each.
+To read page number `P`, skip `offset = N * (P - 1)` documents, then read the next `N`.
+
+Using `Query.limit()` and `Query.offset()` you can achieve offset pagination.
+With `Query.limit()` you define how many documents can be returned from one request.
+The `Query.offset()` is the number of documents you wish to skip before selecting documents.
+
+{% multicode %}
+```client-web
+import { Client, Query, DocumentsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const documentsDB = new DocumentsDB(client);
+
+// Page 1
+const page1 = await documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.limit(25),
+        Query.offset(0)
+    ]
+});
+
+// Page 2
+const page2 = await documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.limit(25),
+        Query.offset(25)
+    ]
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final documentsDB = DocumentsDB(client);
+
+    final page1 = await documentsDB.listDocuments(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        queries: [
+            Query.limit(25),
+            Query.offset(0)
+        ]
+    );
+
+    final page2 = await documentsDB.listDocuments(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        queries: [
+            Query.limit(25),
+            Query.offset(25)
+        ]
+    );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let documentsDB = DocumentsDB(client)
+
+    let page1 = try await documentsDB.listDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: [
+            Query.limit(25),
+            Query.offset(0)
+        ]
+    )
+
+    let page2 = try await documentsDB.listDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: [
+            Query.limit(25),
+            Query.offset(25)
+        ]
+    )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.DocumentsDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val documentsDB = DocumentsDB(client)
+
+    val page1 = documentsDB.listDocuments(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        queries = listOf(
+            Query.limit(25),
+            Query.offset(0)
+        )
+    )
+
+    val page2 = documentsDB.listDocuments(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        queries = listOf(
+            Query.limit(25),
+            Query.offset(25)
+        )
+    )
+}
+```
+
+{% /multicode %}
+
+{% info title="Drawbacks" %}
+While traditional offset pagination is familiar, it comes with some drawbacks.
+The request gets slower as the offset increases because the database has to skip over all the preceding documents before it can start selecting data.
+If the data changes frequently, offset pagination will also produce **missing and duplicate** results.
+{% /info %}
+
+# Cursor pagination {% #cursor-pagination %}
+
+The cursor is a unique identifier for a document that points to where the next page should start.
+After reading a page of documents, pass the last document's ID into the `Query.cursorAfter(lastId)` query method to get the next page of documents.
+Pass the first document's ID into the `Query.cursorBefore(firstId)` query method to retrieve the previous page.
+
+{% multicode %}
+
+```client-web
+import { Client, Query, DocumentsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+const documentsDB = new DocumentsDB(client);
+
+// Page 1
+const page1 = await documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.limit(25)
+    ]
+});
+
+const lastId = page1.documents[page1.documents.length - 1].$id;
+
+// Page 2
+const page2 = await documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.limit(25),
+        Query.cursorAfter(lastId)
+    ]
+});
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final documentsDB = DocumentsDB(client);
+
+    final page1 = await documentsDB.listDocuments(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        queries: [
+            Query.limit(25)
+        ]
+    );
+
+    final lastId = page1.documents[page1.documents.length - 1].$id;
+
+    final page2 = await documentsDB.listDocuments(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        queries: [
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        ]
+    );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+      .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+      .setProject("<PROJECT_ID>")
+
+    let documentsDB = DocumentsDB(client)
+
+    let page1 = try await documentsDB.listDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: [
+            Query.limit(25)
+        ]
+    )
+
+    let lastId = page1.documents[page1.documents.count - 1].$id
+
+    let page2 = try await documentsDB.listDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: [
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        ]
+    )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.DocumentsDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val documentsDB = DocumentsDB(client)
+
+    val page1 = documentsDB.listDocuments(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        queries = listOf(
+            Query.limit(25)
+        )
+    )
+
+    val lastId = page1.documents[page1.documents.size - 1].$id
+
+    val page2 = documentsDB.listDocuments(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        queries = listOf(
+            Query.limit(25),
+            Query.cursorAfter(lastId)
+        )
+    )
+}
+```
+
+{% /multicode %}
+
+# When to use what? {% #when-to-use %}
+Offset pagination should be used for collections that rarely change.
+Offset pagination lets you build an indicator of the current page number and the total page count.
+For example, a list with up to 20 pages or static data like a list of countries or currencies.
+Using offset pagination on large and frequently updated collections may result in slow performance and **missing and duplicate** results.
+
+Cursor pagination should be used for frequently updated collections.
+It is best suited for lazy-loaded pages with infinite scrolling.
+For example, a feed, comment section, chat history, or high volume datasets.
+
+# Cache list responses {% #cache-list-responses %}
+
+You can cache list responses by passing a `ttl` (time-to-live) value in seconds. Subsequent identical requests return the cached result until the TTL expires. The cache is permission-aware, so users with different roles never see each other's cached data.
+
+Set `ttl` between `1` and `86400` (24 hours). The default is `0` (caching disabled). The response includes an `X-Appwrite-Cache` header with value `hit` or `miss`.
+
+{% multicode %}
+```client-web
+import { Client, Query, DocumentsDB } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const documentsDB = new DocumentsDB(client);
+
+const page = await documentsDB.listDocuments({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const page = await documentsDB.listDocuments({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  queries: [
+    sdk.Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+documents_db = DocumentsDB(client)
+
+page = documents_db.list_documents(
+    database_id='<DATABASE_ID>',
+    collection_id='<COLLECTION_ID>',
+    queries=[
+        Query.limit(25)
+    ],
+    ttl=60  # Cache for 60 seconds
+)
+```
+```server-ruby
+require 'appwrite'
+
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+documents_db = Appwrite::DocumentsDB.new(client)
+
+page = documents_db.list_documents(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    queries: [
+        Appwrite::Query.limit(25)
+    ],
+    ttl: 60  # Cache for 60 seconds
+)
+```
+```server-deno
+import { Client, Query, DocumentsDB } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const documentsDB = new DocumentsDB(client);
+
+const page = await documentsDB.listDocuments({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  queries: [
+    Query.limit(25)
+  ],
+  ttl: 60 // Cache for 60 seconds
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\DocumentsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$documentsDB = new DocumentsDB($client);
+
+$page = $documentsDB->listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query::limit(25)
+    ],
+    ttl: 60 // Cache for 60 seconds
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>')
+        .setKey('<YOUR_API_KEY>');
+
+    final documentsDB = DocumentsDB(client);
+
+    final page = await documentsDB.listDocuments(
+        databaseId: '<DATABASE_ID>',
+        collectionId: '<COLLECTION_ID>',
+        queries: [
+            Query.limit(25)
+        ],
+        ttl: 60 // Cache for 60 seconds
+    );
+}
+```
+```server-swift
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    let documentsDB = DocumentsDB(client)
+
+    let page = try await documentsDB.listDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: [
+            Query.limit(25)
+        ],
+        ttl: 60 // Cache for 60 seconds
+    )
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.DocumentsDB
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    val documentsDB = DocumentsDB(client)
+
+    val page = documentsDB.listDocuments(
+        databaseId = "<DATABASE_ID>",
+        collectionId = "<COLLECTION_ID>",
+        queries = listOf(
+            Query.limit(25)
+        ),
+        ttl = 60 // Cache for 60 seconds
+    )
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let page = documents_db.list_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::limit(25).to_string(),
+        ]),
+        None,        // transaction_id
+        None,        // total
+        Some(60),    // ttl - Cache for 60 seconds
+    ).await?;
+
+    println!("{:?}", page);
+    Ok(())
+}
+```
+```graphql
+query {
+    documentsDBListDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        queries: ["limit(25)"],
+        ttl: 60
+    ) {
+        total
+        documents {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/documentsdb/<DATABASE_ID>/collections/<COLLECTION_ID>/documents?ttl=60 HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+{% /multicode %}
+
+Document writes do **not** invalidate the cache, so cached responses may contain stale data until the TTL expires. Use a short TTL for collections that change often, or skip caching entirely when you always need the latest documents.

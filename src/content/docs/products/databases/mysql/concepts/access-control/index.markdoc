@@ -1,0 +1,105 @@
+---
+layout: article
+title: Security and access control
+description: How MySQL privileges work, what the admin account on your database can do, and patterns for restricting access to data.
+---
+
+MySQL controls access in two layers:
+
+- An **account** is an identity that can connect.
+- **Privileges** decide what an account may do to each schema, table, or column.
+
+This page covers how that model works, what your Appwrite database's `admin` account can and cannot do, and the patterns that restrict access to data in practice.
+
+# The privilege model {% #model %}
+
+A MySQL account is a user name plus a host pattern, such as `'reporting'@'%'`. Privileges attach to accounts at four scopes: global, schema, table, and column. `GRANT` gives them and `REVOKE` takes them away:
+
+| Privilege | Allows |
+| --- | --- |
+| `SELECT` | Read rows |
+| `INSERT` / `UPDATE` / `DELETE` | Write rows |
+| `CREATE` / `ALTER` / `DROP` | Change schema objects |
+| `INDEX` | Create and drop indexes |
+| `EXECUTE` | Run stored procedures |
+| `ALL PRIVILEGES` | Everything at the granted scope |
+
+Inspect any account's effective privileges with `SHOW GRANTS`.
+
+# Your database's admin account {% #admin %}
+
+Your Appwrite database provides one account, `admin`, with full privileges scoped to your schema:
+
+```sql
+SHOW GRANTS FOR CURRENT_USER();
+```
+
+```text
+GRANT USAGE ON *.* TO `admin`@`%`
+GRANT ALL PRIVILEGES ON `your-database`.* TO `admin`@`%`
+```
+
+`admin` owns your data completely: all reads, writes, schema changes, and index management. It does not hold global privileges, so instance-level operations stay with the platform, and it cannot create additional MySQL accounts:
+
+```sql
+CREATE USER 'reporting'@'%' IDENTIFIED BY 'a-strong-password';
+```
+
+```text
+ERROR 1227 (42000): Access denied; you need (at least one of) the CREATE USER privilege(s) for this operation
+```
+
+This means access control below the `admin` account happens in your application and schema design rather than in MySQL's account system. The sections below cover the tools that work within that model.
+
+# Restrict what queries can see with views {% #views %}
+
+A view exposes a controlled subset of a table: fewer columns, fewer rows, or both. Give your application's read paths a view instead of the raw table, and sensitive columns never leave the database:
+
+```sql
+CREATE TABLE users (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email         VARCHAR(255) NOT NULL,
+    display_name  VARCHAR(100) NOT NULL,
+    password_hash VARBINARY(255) NOT NULL,
+    is_deleted    BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+INSERT INTO users (email, display_name, password_hash) VALUES
+    ('ada@example.com', 'Ada', 0x01), ('grace@example.com', 'Grace', 0x02);
+UPDATE users SET is_deleted = TRUE WHERE display_name = 'Grace';
+
+CREATE VIEW visible_users AS
+SELECT id, display_name
+FROM users
+WHERE is_deleted = FALSE;
+
+SELECT * FROM visible_users;
+```
+
+```text
+id	display_name
+1	Ada
+```
+
+The view hides `email` and `password_hash` entirely and filters out soft-deleted rows. Queries against `visible_users` cannot reach what the view doesn't select.
+
+# Enforce integrity in the schema {% #integrity %}
+
+Constraints are a security layer too: they hold no matter which code path performs the write. `CHECK` constraints, `NOT NULL`, foreign keys, and `ENUM` types stop invalid states at the database boundary; see [Tables and data types](/docs/products/databases/mysql/concepts/tables#constraints). For multi-step changes that must not interleave with other writers, use transactions and row locks; see [Transactions](/docs/products/databases/mysql/concepts/transactions).
+
+# Scope tenants in the application {% #multi-tenant %}
+
+MySQL has no row-level security policies, so multi-tenant isolation lives in your queries. Keep it reliable by centralizing it:
+
+- Put a `tenant_id` column on every tenant-owned table, indexed and `NOT NULL`, with a foreign key to the tenants table.
+- Route all data access through one layer (a repository module or ORM scope) that always applies `WHERE tenant_id = ?`, rather than trusting every call site to remember.
+- For read paths, per-tenant views or parameterized views over `tenant_id` make the scoping visible and testable.
+
+# Protect the connection itself {% #connection %}
+
+Since the `admin` credentials are the whole story, treat them accordingly:
+
+- Rotate the password when a person or system that held it should lose access. See [Connections](/docs/products/databases/mysql/connections#rotate).
+- Restrict which networks can reach the database with an IP allowlist. See [Network security](/docs/products/databases/mysql/network-security).
+- All connections require TLS; never disable certificate verification in production drivers.
+- Use parameterized queries everywhere. SQL injection against an account with `ALL PRIVILEGES` on the schema is a full compromise of your data.

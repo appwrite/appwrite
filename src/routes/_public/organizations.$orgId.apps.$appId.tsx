@@ -3,6 +3,7 @@ import {
   type OrgAppLayoutInitialData,
 } from '@/components/pages/organizations/$orgId/apps/$appId/Layout'
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { NotFoundView } from '@/components/error/NotFound'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   organizationAppQueryOptions,
@@ -12,6 +13,8 @@ import {
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/apps/$appId',
 )({
+  // App Layout already provides ConsoleLayout; avoid a nested shell.
+  notFoundComponent: NotFoundView,
   head: ({ loaderData }) => ({
     meta: [
       {

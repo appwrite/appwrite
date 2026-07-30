@@ -22,7 +22,14 @@ import {
   Activity,
 } from 'lucide-react'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useLayoutEffect,
+} from 'react'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -41,7 +48,6 @@ import {
   tableQueryOptions,
   collectionAttributesQueryOptions,
   tableRowsQueryOptions,
-  databaseQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import {
@@ -174,6 +180,7 @@ import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 const SHOW_GRID_DEBUG_TOOLS = false
+const sidebarTableListScrollTopByKey = new Map<string, number>()
 
 export function Workspace({
   databaseId,
@@ -212,6 +219,7 @@ export function Workspace({
   const { database, isLoading: databaseLoading } = useProjectDatabase(
     projectId,
     databaseId,
+    DB_KIND,
   )
 
   const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
@@ -231,6 +239,7 @@ export function Workspace({
   const { tables: dbTables, isLoading: tablesLoading } = useProjectTables(
     projectId,
     databaseId,
+    DB_KIND,
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
   )
@@ -239,6 +248,7 @@ export function Workspace({
   const { isFetching: sidebarTablesFetching } = useProjectTables(
     projectId,
     databaseId,
+    DB_KIND,
     sidebarTablesRequestedPage - 1,
     sidebarTablesPageSize,
     sidebarTablesSearch.trim() || undefined,
@@ -254,6 +264,7 @@ export function Workspace({
   } = useProjectTables(
     projectId,
     databaseId,
+    DB_KIND,
     sidebarTablesDisplayedPage - 1,
     sidebarTablesPageSize,
     sidebarTablesSearch.trim() || undefined,
@@ -284,19 +295,102 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
+  const selectedTable =
+    tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
+  // Only show loading if we don't have data yet (account for prefetched data)
+  const isActuallyLoading =
+    (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
+  // Sidebar unmounts during loading / "not found" flashes on first table open.
+  // Restore must re-run once the list is actually in the DOM.
+  const sidebarScrollReady =
+    !isActuallyLoading &&
+    !!database &&
+    (tableId === '-' || Boolean(selectedTable))
+  const sidebarScrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const sidebarScrollKey = `${projectId}:${databaseId}:${sidebarTablesDisplayedPage}:${sidebarTablesSearch.trim()}:${sidebarTablesOrder}:${sidebarTablesSortBy}`
+  const sidebarScrollKeyRef = useRef(sidebarScrollKey)
+  sidebarScrollKeyRef.current = sidebarScrollKey
+  const ignoreSidebarScrollSaveRef = useRef(false)
+
+  const restoreSidebarScroll = useCallback((node: HTMLDivElement) => {
+    const savedTop = sidebarTableListScrollTopByKey.get(
+      sidebarScrollKeyRef.current,
+    )
+    if (typeof savedTop !== 'number') return
+    ignoreSidebarScrollSaveRef.current = true
+    node.scrollTop = savedTop
+    requestAnimationFrame(() => {
+      node.scrollTop = savedTop
+      ignoreSidebarScrollSaveRef.current = false
+    })
+  }, [])
+
+  // Callback ref restores scroll whenever the list remounts (route change,
+  // layout swap, early-return flash) - useLayoutEffect alone misses that.
+  const setSidebarScrollContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      sidebarScrollContainerRef.current = node
+      if (node) restoreSidebarScroll(node)
+    },
+    [restoreSidebarScroll],
+  )
+
+  const persistSidebarScroll = useCallback(() => {
+    const node = sidebarScrollContainerRef.current
+    if (!node || ignoreSidebarScrollSaveRef.current) return
+    const currentTop = node.scrollTop
+    const savedTop = sidebarTableListScrollTopByKey.get(sidebarScrollKey)
+    // Don't clobber a saved position with 0 before layout can scroll.
+    if (
+      currentTop === 0 &&
+      typeof savedTop === 'number' &&
+      savedTop > 0 &&
+      node.scrollHeight <= node.clientHeight + 1
+    ) {
+      return
+    }
+    sidebarTableListScrollTopByKey.set(sidebarScrollKey, currentTop)
+  }, [sidebarScrollKey])
+
+  const handleSidebarListScroll = persistSidebarScroll
+
+  useLayoutEffect(() => {
+    if (!sidebarScrollReady) return
+    const node = sidebarScrollContainerRef.current
+    if (!node) return
+    restoreSidebarScroll(node)
+
+    // Re-apply if a later layout pass resets scrollTop (e.g. panel sync).
+    const onResize = () => {
+      const savedTop = sidebarTableListScrollTopByKey.get(sidebarScrollKey)
+      if (
+        typeof savedTop === 'number' &&
+        savedTop > 0 &&
+        node.scrollTop === 0
+      ) {
+        restoreSidebarScroll(node)
+      }
+    }
+    const ro = new ResizeObserver(onResize)
+    ro.observe(node)
+    const t = window.setTimeout(onResize, 50)
+    return () => {
+      ro.disconnect()
+      window.clearTimeout(t)
+    }
+  }, [
+    sidebarScrollKey,
+    displayedSidebarTables.length,
+    sidebarScrollReady,
+    tableId,
+    restoreSidebarScroll,
+  ])
 
   // Reset sidebar to page 1 when search, sort, or database changes
   useEffect(() => {
     setSidebarTablesRequestedPage(1)
     setSidebarTablesDisplayedPage(1)
   }, [sidebarTablesSearch, sidebarTablesOrder, sidebarTablesSortBy, databaseId])
-
-  const selectedTable =
-    tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
-
-  // Only show loading if we don't have data yet (account for prefetched data)
-  const isActuallyLoading =
-    (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
@@ -322,7 +416,7 @@ export function Workspace({
       requireOperationalDatabase(queryClient, projectId, databaseId)
       const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
       for (const name of names) {
-        await createProjectTable(projectId, databaseId, { name })
+        await createProjectTable(projectId, databaseId, DB_KIND, { name })
       }
     },
     onSuccess: async () => {
@@ -475,7 +569,7 @@ export function Workspace({
       dimension?: number
     }) => {
       requireOperationalDatabase(queryClient, projectId!, databaseId!)
-      return createProjectTable(projectId!, databaseId!, data)
+      return createProjectTable(projectId!, databaseId!, DB_KIND, data)
     },
     onSuccess: async (table) => {
       toast.success(`${table.name} ${t('has been created')}`)
@@ -508,11 +602,13 @@ export function Workspace({
         queryKey: ['databases', 'project', projectId],
       })
       setCreateDatabaseDialogOpen(false)
+      const nextKind = routeKindForDatabase(database)
       try {
         const tablesData = await queryClient.ensureQueryData(
           tablesQueryOptions(
             projectId,
             database.$id,
+            nextKind,
             0,
             TABLE_WORKSPACE_TABLES_LIST_LIMIT,
             undefined,
@@ -521,7 +617,6 @@ export function Workspace({
         const firstTable = (tablesData.tables || [])[0] as
           | { $id?: string }
           | undefined
-        const nextKind = routeKindForDatabase(database)
         const nextNav = dbNavLink(nextKind)
         if (firstTable?.$id) {
           navigate({
@@ -543,7 +638,6 @@ export function Workspace({
           })
         }
       } catch {
-        const nextKind = routeKindForDatabase(database)
         navigate({
           ...dbNavLink(nextKind).dataGrid({
             projectId,
@@ -563,16 +657,19 @@ export function Workspace({
   const { columns: tableColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     effectiveTableId,
   )
   const { indexes: tableIndexes } = useProjectCollectionIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     effectiveTableId,
   )
   const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
+    DB_KIND,
     effectiveTableId,
   )
 
@@ -1089,7 +1186,12 @@ export function Workspace({
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div
+          ref={setSidebarScrollContainerRef}
+          onScroll={handleSidebarListScroll}
+          onPointerDownCapture={persistSidebarScroll}
+          className="min-h-0 flex-1 overflow-y-auto"
+        >
           {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
               {t('Loading…')}
@@ -1114,24 +1216,35 @@ export function Workspace({
                       // Prefetch new table data before navigating to avoid layout shift / loading screen
                       await Promise.all([
                         queryClient.ensureQueryData(
-                          tableQueryOptions(projectId, databaseId, newTableId),
+                          tableQueryOptions(
+                            projectId,
+                            databaseId,
+                            DB_KIND,
+                            newTableId,
+                          ),
                         ),
                         queryClient.ensureQueryData(
                           collectionAttributesQueryOptions(
                             projectId,
                             databaseId,
+                            DB_KIND,
                             newTableId,
                           ),
                         ),
                         queryClient.ensureQueryData(
                           tableRowsQueryOptions(
-                            projectId,
-                            databaseId,
-                            newTableId,
-                            0,
+            projectId,
+            databaseId,
+            newTableId,
+            DB_KIND,
+            0,
                             ROWS_DEFAULT_PAGE_SIZE,
                             undefined,
-                          ),
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+          ),
                         ),
                       ])
                       navigate({
@@ -1151,6 +1264,7 @@ export function Workspace({
                         databaseId,
                         resourceId: table.$id,
                       })}
+                      onClick={handleSidebarListScroll}
                       className={cn(secondarySidebarNavLinkClassName(isTableSelected, 'transition-colors duration-150'), SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS)}
                     >
                       <ContainerListIcon className="h-3.5 w-3.5 shrink-0" />
@@ -1523,6 +1637,7 @@ export function Workspace({
                 <DatabaseMonitorMobileNav
                   projectId={projectId}
                   databaseId={databaseId}
+                  dbKind={DB_KIND}
                 />
               </div>
             ) : null}
@@ -1580,6 +1695,7 @@ export function Workspace({
               <TableSelector
                 projectId={projectId}
                 databaseId={databaseId}
+                dbKind={DB_KIND}
                 value={tableId}
                 selectedName={selectedTable?.name}
                 placeholder={dbLabels.selectContainerPlaceholder}

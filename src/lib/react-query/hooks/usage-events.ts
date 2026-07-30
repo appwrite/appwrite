@@ -778,7 +778,7 @@ export function overviewStorageOverviewQueryOptions(
   })
 }
 
-/** Org project list sparklines — chart only, no breakdown dimensions payload in query key. */
+/** Org project list sparklines - chart only, no breakdown dimensions payload in query key. */
 export function requestsChartOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -1996,7 +1996,7 @@ export function useProjectRequestsTopEndpoints(
   return useProjectRequestsOverview(projectId, dateRange, enabled, interval)
 }
 
-/** Last 24 hours — matches project overview usage charts. */
+/** Last 24 hours - matches project overview usage charts. */
 export function getProjectListRequestsChartDateRange(): DateRange {
   return getStableUsageChartDateRange()
 }

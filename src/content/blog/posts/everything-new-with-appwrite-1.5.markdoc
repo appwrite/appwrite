@@ -3,6 +3,7 @@ layout: post
 title: See what is new with Appwrite 1.5
 description: Here is a recap off all announcements for Appwrite 1.5.
 date: 2024-03-05
+lastUpdated: 2026-06-29
 cover: /images/blog/everything-new-with-appwrite-1.5/1.5-recap.avif
 timeToRead: 6
 author: dennis-ivy
@@ -16,7 +17,7 @@ faqs:
   - question: "How do I enable two-factor authentication in Appwrite 1.5?"
     answer: "Use [Appwrite Auth](/docs/products/auth) to create a multi-factor challenge with `createMFAChallenge`, choosing a factor like email, phone, or TOTP. Submit the user's one-time code to `updateMFAChallenge` to complete the challenge. The flow lets you layer 2FA on top of any existing login method."
   - question: "What are the contains and or query operators?"
-    answer: "The `contains` operator does partial text matches on string attributes or element matches inside array attributes. The `or` operator lets you combine queries with logical OR, instead of only AND. Together they unlock searches like \"name contains ivy OR age greater than 30\" in a single call to [Appwrite Databases](/docs/products/databases)."
+    answer: "The `contains` operator does partial text matches on text columns or element matches inside array columns. The `or` operator lets you combine queries with logical OR, instead of only AND. Together they unlock searches like \"name contains ivy OR age greater than 30\" in a single call to [Appwrite Databases](/docs/products/databases)."
   - question: "Does Appwrite Messaging support push notifications?"
     answer: "Yes. [Appwrite Messaging](/docs/products/messaging) supports SMS, email, and push notifications through a unified API. Providers include Twilio, Vonage, SendGrid, Mailgun, APNs, and Firebase Cloud Messaging, so you can configure delivery channels without writing separate integrations for each."
   - question: "What is Init at Appwrite?"
@@ -33,9 +34,11 @@ With just a few lines of backend code, you can set up a full-functioning messagi
 
 ```ts
 messaging.createSms(
-    '6541...ea30',
-    'Thanks for signing up!',
-    ['65415281565570ca1f9c'],
+    {
+    messageId: '6541...ea30',
+    content: 'Thanks for signing up!',
+    topics: ['65415281565570ca1f9c']
+},
 );
 ```
 
@@ -86,7 +89,7 @@ await account.updateMFAChallenge({
 
 Two new database operators for more control and flexibility when writing queries.
 
-- `contains` - partial text matches on string attributes, array element matching on array attributes
+- `contains` - partial text matches on text columns, array element matching on array columns
 - `or` - write logical OR queries
 
 ```ts

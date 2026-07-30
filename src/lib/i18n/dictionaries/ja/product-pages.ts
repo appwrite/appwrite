@@ -526,7 +526,7 @@ export const jaProductPagesDictionary: Record<string, string> = {
     'パスルールを変えずにクエリのキーと値でフィルターします。',
   'Geo allow or deny by resolved ISO country code.':
     '解決された ISO 国コードで許可または拒否します。',
-  'Header': 'Header',
+  'Header': 'ヘッダー',
   'Identify clients by TLS fingerprint when IPs rotate.':
     'IP が入れ替わるときも TLS フィンガープリントでクライアントを識別します。',
   'JA4 fingerprint': 'JA4 フィンガープリント',

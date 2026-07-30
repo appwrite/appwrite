@@ -56,13 +56,17 @@ export function View() {
   const { database: productDatabase } = useProjectDatabase(
     projectId,
     databaseId,
+    dbKind,
   )
   const engineHints = useMemo(
     () => productDedicatedEngineHints(dbKind),
     [dbKind],
   )
   const { data: dedicated, isLoading: dedicatedLoading } = useQuery(
-    dedicatedDatabaseByIdQueryOptions(projectId, databaseId, engineHints),
+    dedicatedDatabaseByIdQueryOptions(projectId, databaseId, {
+      type: 'product',
+      dbKind,
+    }),
   )
 
   if (isLoading || dedicatedLoading) return <DatabaseSettingsLoading />

@@ -1,0 +1,214 @@
+---
+layout: article
+title: Prisma
+description: Use Prisma ORM with an Appwrite native MySQL database. Configure the Prisma 7 datasource, apply schema changes through the direct connection, and instantiate Prisma Client with the MySQL driver adapter.
+---
+
+[Prisma ORM](https://www.prisma.io/) works with Appwrite's native MySQL database as a standard MySQL target. Configure Prisma with the connection string from Appwrite, apply schema changes through the direct database connection, and use Prisma Client from your application code.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. The database object returned by the Appwrite API includes `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`; you can read it with `mysql.get()` or from the response when you create the database.
+{% /info %}
+
+# Initialize Prisma {% #initialize %}
+
+Install Prisma, Prisma Client, the MySQL driver adapter, the MariaDB driver used by the adapter, and the TypeScript tools used by the examples:
+
+```bash
+npm install -D prisma typescript tsx @types/node
+npm install @prisma/client @prisma/adapter-mariadb dotenv mariadb
+```
+
+Initialize Prisma for MySQL:
+
+```bash
+npx prisma init --datasource-provider mysql --output ../generated/prisma
+```
+
+Prisma 7 generates a `prisma.config.ts` file and a `prisma/schema.prisma` file. Set `"type": "module"` in `package.json` if your project does not already use ECMAScript modules.
+
+# Configure connection strings {% #connection-strings %}
+
+Store the Appwrite connection string in environment variables and do not commit it:
+
+```env
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>?sslaccept=strict"
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>?sslaccept=strict"
+```
+
+`DATABASE_URL` is the runtime connection used by Prisma Client. `DIRECT_URL` is the direct database connection used by Prisma CLI commands.
+
+Appwrite Cloud uses TLS for MySQL connections. Prisma's MySQL connector uses `sslaccept=strict` for TLS with certificate verification. For mTLS and network controls, see [Network security](/docs/products/databases/mysql/network-security).
+
+Prisma's `migrate dev` command uses a shadow database to detect drift. Appwrite's MySQL `admin` user is scoped to its database and cannot create another MySQL database for that workflow. Generate development migrations against a local MySQL database, a separate Appwrite database, or an Appwrite branch, then apply committed migrations to this database with `migrate deploy`.
+
+# Configure Prisma {% #configure-prisma %}
+
+In `prisma.config.ts`, read the CLI connection string from the environment:
+
+```ts
+import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
+  datasource: {
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
+  },
+});
+```
+
+In `prisma/schema.prisma`, keep the datasource provider in the schema file and generate Prisma Client into the output directory created by `prisma init`:
+
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("prisma_User")
+}
+```
+
+Rename the mapped table for your application. If you are connecting to an existing database, use Prisma introspection after you configure the environment variables so your schema matches the current tables.
+
+# Pool connections from serverless {% #pooling %}
+
+Prisma Client opens database connections from each running application instance. On serverless platforms, many cold starts can quickly multiply the number of backend MySQL connections. On specifications that include the [connection pooler](/docs/products/databases/mysql/connection-pooling), route runtime traffic through the pooler port, `6033`, for `DATABASE_URL` while keeping `DIRECT_URL` on the direct MySQL port, `3306`, for migrations and introspection:
+
+```env
+# Runtime: pooled connection through the Appwrite connection pooler
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>?sslaccept=strict"
+
+# Prisma CLI: direct MySQL connection for migrations and introspection
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>?sslaccept=strict"
+```
+
+The pooler defaults to transaction mode, which gives the highest connection multiplexing. If your application depends on session-level features such as user variables, temporary tables, or session-scoped prepared statements, use session mode or keep that workload on the direct MySQL port. See [Connection pooling](/docs/products/databases/mysql/connection-pooling#modes) for pool mode trade-offs.
+
+# Apply schema changes {% #schema-changes %}
+
+For an initial migration generated from the Prisma schema file, create a migration directory and write the SQL diff:
+
+```bash
+mkdir -p prisma/migrations/20260708160000_init
+npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --output prisma/migrations/20260708160000_init/migration.sql
+```
+
+If this database already contains tables and Prisma has not created its migration history, baseline it once before applying migrations:
+
+```bash
+mkdir -p prisma/migrations/00000000000000_baseline
+touch prisma/migrations/00000000000000_baseline/migration.sql
+npx prisma migrate resolve --applied 00000000000000_baseline
+```
+
+Apply committed migrations through the direct MySQL connection:
+
+```bash
+npx prisma migrate deploy
+```
+
+Generate Prisma Client after you install dependencies or change `prisma/schema.prisma`:
+
+```bash
+npx prisma generate
+```
+
+The primary `admin` user owns its assigned database and can run schema changes inside that database. Keep migrations and introspection on the direct MySQL port because they need session-level behavior.
+
+# Seed data {% #seed %}
+
+With the seed command configured in `prisma.config.ts`, add a seed script:
+
+```ts
+import "dotenv/config";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaClient } from "../generated/prisma/client";
+
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+const prisma = new PrismaClient({ adapter });
+
+await prisma.user.upsert({
+  where: { email: "ada@example.com" },
+  update: {},
+  create: { email: "ada@example.com" },
+});
+
+await prisma.$disconnect();
+```
+
+Run the seed command:
+
+```bash
+npx prisma db seed
+```
+
+# Query with Prisma Client {% #query %}
+
+Instantiate Prisma Client with the MySQL driver adapter:
+
+```ts
+import "dotenv/config";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaClient } from "./generated/prisma/client";
+
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+const prisma = new PrismaClient({ adapter });
+
+const user = await prisma.user.create({
+  data: { email: "grace@example.com" },
+});
+
+const recent = await prisma.user.findMany({
+  orderBy: { createdAt: "desc" },
+  take: 10,
+});
+
+console.log({ user, recent });
+
+await prisma.$disconnect();
+```
+
+On long-running servers, instantiate `PrismaClient` once and reuse it. On serverless platforms, keep a single client per module scope so warm invocations reuse it, and rely on the pooler to absorb cold-start connection churn when your database specification includes it.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are instant, isolated copies of a database with their own hostname and connection string. They are useful for running migrations against throwaway data in a pull-request preview or integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL`, and use the pooled variant as `DATABASE_URL` if the branch has the pooler enabled.
+3. Run `npx prisma migrate deploy` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials, rotate the primary password, and connect with MySQL tools.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooling" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

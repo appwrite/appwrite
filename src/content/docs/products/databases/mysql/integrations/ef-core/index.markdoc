@@ -1,0 +1,178 @@
+---
+layout: article
+title: EF Core
+description: Use Entity Framework Core with an Appwrite native MySQL database. Configure the MySQL provider, run migrations against the direct MySQL host, and rely on the provider's connection pool from an ASP.NET server.
+---
+
+A native MySQL database is a standard MySQL engine, so [Entity Framework Core](https://learn.microsoft.com/ef/core/) works with it through a MySQL EF Core provider. Point the provider at the connection details from the [Connections](/docs/products/databases/mysql/connections) page, then use `DbContext`, migrations, and LINQ queries as you would with any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection details.
+{% /info %}
+
+# Install the provider {% #install %}
+
+Add Oracle's EF Core provider for MySQL, the EF Core design-time package, and the `dotnet-ef` CLI tool:
+
+```bash
+dotnet add package MySql.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet new tool-manifest
+dotnet tool install dotnet-ef
+```
+
+Keep the MySQL provider and EF Core design package on the same major version as your app's EF Core packages.
+
+# Set the connection string {% #connection-string %}
+
+ADO.NET providers use key/value connection strings rather than a URL. Store the connection string in `appsettings.json` under `ConnectionStrings`, and keep the password out of source control with [user secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) or environment variables:
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=Required"
+  }
+}
+```
+
+The Appwrite MySQL host accepts TLS connections on port `3306`. `SslMode=Required` encrypts the connection. For full certificate and hostname verification, use `SslMode=VerifyFull`:
+
+```text
+Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=VerifyFull
+```
+
+# Configure the DbContext {% #dbcontext %}
+
+Define your model and `DbContext`. The model is ordinary EF Core code, and the table name in this example is prefixed so it is easy to identify the objects created by the guide:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+public class User
+{
+    public int Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<User> Users => Set<User>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("ef_core_users");
+            entity.HasIndex(user => user.Email).IsUnique();
+            entity.Property(user => user.Email).HasMaxLength(255).IsRequired();
+            entity.Property(user => user.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+        });
+    }
+}
+```
+
+# Register the provider {% #provider %}
+
+Register the `DbContext` in `Program.cs`, reading the connection string with `GetConnectionString`. Use `UseMySQL(...)` for Oracle's MySQL EF Core provider:
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySQL(
+        builder.Configuration.GetConnectionString("Default")!,
+        mySqlOptions => mySqlOptions.MigrationsHistoryTable("ef_core_migrations_history")));
+```
+
+The `MigrationsHistoryTable` option keeps EF Core's migration tracking table prefixed with the rest of this guide's example objects.
+
+# Run migrations {% #migrate %}
+
+Migrations need a session connection and full DDL privileges, so run them against the direct MySQL host on port `3306`, not the [pooler](/docs/products/databases/mysql/connection-pooling). The primary `admin` user owns the database.
+
+Create the first migration, then apply it:
+
+```bash
+dotnet tool run dotnet-ef migrations add InitialCreate
+dotnet tool run dotnet-ef database update
+```
+
+`dotnet tool run dotnet-ef database update` reads the same `Default` connection string and applies any pending migrations. EF Core records applied migrations in the configured migration history table so it only applies new migrations next time.
+
+# Wire up an ASP.NET server {% #aspnet %}
+
+The route handlers use ordinary EF Core queries:
+
+```csharp
+var app = builder.Build();
+
+app.MapGet("/users", async (AppDbContext db) =>
+    await db.Users.OrderByDescending(user => user.CreatedAt).Take(10).ToListAsync());
+
+app.MapPost("/users", async (AppDbContext db, CreateUser request) =>
+{
+    var user = new User { Email = request.Email };
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/users/{user.Id}", user);
+});
+
+app.Run();
+
+public record CreateUser(string Email);
+```
+
+# Connection pooling {% #pooling %}
+
+Connector/NET has connection pooling enabled by default. Each process keeps its own pool keyed on the connection string, so a long-running ASP.NET server usually connects directly to MySQL and tunes the provider pool with connection string options:
+
+```text
+Server=db-<hash>.<region>.appwrite.center;Port=3306;Database=<database>;User=admin;Password=<password>;SslMode=Required;Max Pool Size=50
+```
+
+Keep the sum across all your processes under the engine's connection limit for the database's specification.
+
+If you run many short-lived instances that each open their own provider pool, route runtime traffic through the Appwrite [connection pooler](/docs/products/databases/mysql/connection-pooling) on port `6033`:
+
+```text
+Server=db-<hash>.<region>.appwrite.center;Port=6033;Database=<database>;User=admin;Password=<password>;SslMode=Required;Max Pool Size=20
+```
+
+Keep migrations and administrative jobs on the direct port `3306`. The pooler defaults to **transaction mode**, which does not hold a backend connection across statements. If your application relies on session state such as server-side prepared statements, user variables, or temporary tables, switch the pooler to **session mode**, see the [pooler](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+Database [branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and credentials. They're useful for running migrations against throwaway data in a pull-request preview or integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Build the connection string for the branch host and pass it as the `Default` connection string.
+3. Run `dotnet tool run dotnet-ef database update` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching the source database.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

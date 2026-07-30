@@ -13,6 +13,16 @@
  * created via the engine services; the API sets `api` from the engine
  * (`postgresql` / `mysql` / `mongodb`).
  *
+ * Never mutate product-owned databases through these engine services
+ * (create/update/delete/replicas/HA/specification/pitr). Product IDs are
+ * reached only through their product APIs (`tablesDB` / `documentsDB` /
+ * `vectorsDB`); use `dedicatedDatabaseService` with a product source for
+ * HA/replicas/listSpecifications. Specification changes on TablesDB use
+ * `tablesDB.createMigration`, not mysql.update.
+ *
+ * Each product and engine exposes its own `listSpecifications()`. Do not use
+ * postgres (or any single engine) as a stand-in for other database types.
+ *
  * Connection credentials are returned inline on `Models.DedicatedDatabase`
  * (`hostname`, `connectionPort`, `connectionUser`, `connectionPassword`,
  * `connectionString`) instead of a separate `getCredentials` endpoint.

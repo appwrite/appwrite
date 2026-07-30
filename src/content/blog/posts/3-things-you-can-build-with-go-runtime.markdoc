@@ -3,6 +3,7 @@ layout: post
 title: "3 things you can build with the Go runtime"
 description: Explore a few use cases of how to leverage Go's speed in your app.
 date: 2024-08-22
+lastUpdated: 2026-06-29
 cover: /images/blog/building-with-go-cover.avif
 timeToRead: 8
 author: aditya-oberai
@@ -16,7 +17,7 @@ faqs:
   - question: "How does the Go runtime compare to Node.js or Python in Appwrite Functions?"
     answer: "In Appwrite's internal benchmarks, the Go runtime had up to 3x faster cold starts and roughly 5x lower memory usage than several interpreted runtimes including Node.js, Deno, Ruby, and Python. Build times can be slower because Go is compiled, but the runtime performance gains usually pay off for production workloads."
   - question: "Can I trigger Go Appwrite Functions from events?"
-    answer: "Yes. Like every Appwrite Function, a Go function can be triggered by HTTP requests, CRON schedules, or events emitted by Appwrite products (user creation, document changes, file uploads, etc.). The event payload is delivered to your handler so you can route on it."
+    answer: "Yes. Like every Appwrite Function, a Go function can be triggered by HTTP requests, CRON schedules, or events emitted by Appwrite products (user creation, row changes, file uploads, etc.). The event payload is delivered to your handler so you can route on it."
   - question: "How do I deploy a Go Appwrite Function via CI/CD?"
     answer: "Connect your GitHub repository to your function in the Appwrite console and pick a branch. Every push to that branch triggers a new build and deployment automatically. You can also deploy from the Appwrite CLI by running `appwrite push functions` from your local project."
   - question: "Can I develop Appwrite Go functions locally before deploying?"
@@ -38,11 +39,11 @@ Our Go runtime (just like our other runtimes) has been developed by our team and
 
 ## Event-driven nature
 
-Appwrite Functions can be executed by various types of events, which allows you to integrate them into your applications in many different ways. These events include all HTTP actions (to consume like a REST API), CRON schedules (to run them on set time periods), and any events across the various Appwrite products in your project (for example, user creation, document deletion, or file upload).
+Appwrite Functions can be executed by various types of events, which allows you to integrate them into your applications in many different ways. These events include all HTTP actions (to consume like a REST API), CRON schedules (to run them on set time periods), and any events across the various Appwrite products in your project (for example, user creation, row deletion, or file upload).
 
 ## Global environment variables
 
-Aside from environment variables at the function level, Appwrite also allows you to environment variables at the project level so that they can be shared across multiple functions in a single project. 
+Aside from environment variables at the function level, Appwrite also allows you to environment variables at the project level so that they can be shared across multiple functions in a single project.
 
 ## Permissions system
 
@@ -64,7 +65,7 @@ Once your function is set up, we can try some examples:
 
 ## Example 1: AI Chatbot using GPT-3.5
 
-The first example is a simple chatbot function that accepts a prompt in the request body and returns an answer in the response from the ChatGPT API. 
+The first example is a simple chatbot function that accepts a prompt in the request body and returns an answer in the response from the ChatGPT API.
 
 To do this, we must first add the `go-openai` dependency to our project’s `mod` file.
 
@@ -151,7 +152,7 @@ You can then deploy this function using the `appwrite deploy function` command.
 
 ## Example 2: HTML Resume
 
-The second example is an online HTML-based resume that you can deliver online through the function. 
+The second example is an online HTML-based resume that you can deliver online through the function.
 
 For this, the first thing we do is create a `static` directory in the function folder and add a file, `resume.html` with the contents of our resume. You can [copy our template](https://github.com/appwrite-community/go-function-examples/blob/main/functions/go-resume/static/resume.html) if you’d like.
 
@@ -191,7 +192,7 @@ You can then deploy this function using the `appwrite deploy function` command.
 
 ## Example 3: URL Shortener
 
-The third example is a personal URL shortener that stores your shortened URL path and long URL in an Appwrite Database and redirects the consumer to the appropriate long URL on pinging the shortened URL. 
+The third example is a personal URL shortener that stores your shortened URL path and long URL in an Appwrite database table and redirects the consumer to the appropriate long URL on pinging the shortened URL.
 
 To build this function, create a `services` directory in the function folder and add a file `setup.go`. Here, we will add the necessary functions to initialize our Appwrite database.
 
@@ -199,62 +200,62 @@ To build this function, create a `services` directory in the function folder and
 package services
 
 import (
-	"github.com/appwrite/sdk-for-go/databases"
 	"github.com/appwrite/sdk-for-go/permission"
+	"github.com/appwrite/sdk-for-go/tablesdb"
 	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
-func DoesDatabaseExist(dbs databases.Databases, dbId string) bool {
-	_, err := dbs.Get(dbId)
+func DoesDatabaseExist(tablesDB tablesdb.TablesDB, dbId string) bool {
+	_, err := tablesDB.Get(dbId)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
-func DoesCollectionExist(dbs databases.Databases, dbId string, collId string) bool {
-	_, err := dbs.GetCollection(dbId, collId)
+func DoesTableExist(tablesDB tablesdb.TablesDB, dbId string, tableId string) bool {
+	_, err := tablesDB.GetTable(dbId, tableId)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
-func DoesAttributeExist(dbs databases.Databases, dbId string, collId string, attribId string) bool {
-	_, err := dbs.GetAttribute(dbId, collId, attribId)
+func DoesColumnExist(tablesDB tablesdb.TablesDB, dbId string, tableId string, columnId string) bool {
+	_, err := tablesDB.GetColumn(dbId, tableId, columnId)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
-func InitialiseDatabase(Context openruntimes.Context, dbs databases.Databases, dbId string, collId string) {
-	doesDbExist := DoesDatabaseExist(dbs, dbId)
+func InitialiseDatabase(Context openruntimes.Context, tablesDB tablesdb.TablesDB, dbId string, tableId string) {
+	doesDbExist := DoesDatabaseExist(tablesDB, dbId)
 	if !doesDbExist {
-		dbs.Create(
+		tablesDB.Create(
 			dbId,
 			"URL Databases",
 		)
 	}
 
-	doesCollExist := DoesCollectionExist(dbs, dbId, collId)
-	if !doesCollExist {
-		dbs.CreateCollection(
+	doesTableExist := DoesTableExist(tablesDB, dbId, tableId)
+	if !doesTableExist {
+		tablesDB.CreateTable(
 			dbId,
-			collId,
+			tableId,
 			"URLs",
-			dbs.WithCreateCollectionPermissions([]string{permission.Read("any")}),
+			tablesDB.WithCreateTablePermissions([]string{permission.Read("any")}),
 		)
 	}
 
-	doesAttribExist := DoesAttributeExist(dbs, dbId, collId, "longUrl")
-	if !doesAttribExist {
-		dbs.CreateUrlAttribute(
+	doesColumnExist := DoesColumnExist(tablesDB, dbId, tableId, "longUrl")
+	if !doesColumnExist {
+		tablesDB.CreateUrlColumn(
 			dbId,
-			collId,
+			tableId,
 			"longUrl",
 			true,
-			dbs.WithCreateUrlAttributeArray(false),
+			tablesDB.WithCreateUrlColumnArray(false),
 		)
 	}
 }
@@ -289,12 +290,12 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
 	)
 
-	databases := appwrite.NewDatabases(client)
+	tablesDB := appwrite.NewTablesDB(client)
 
 	dbId := "urlDatabase"
-	collId := "urlCollection"
+	tableId := "urlTable"
 
-	services.InitialiseDatabase(Context, *databases, dbId, collId)
+	services.InitialiseDatabase(Context, *tablesDB, dbId, tableId)
 
 	if Context.Req.Method == "POST" {
 		var requestBody RequestBody
@@ -307,9 +308,9 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 			}, Context.Res.WithStatusCode(400))
 		}
 
-		_, err = databases.CreateDocument(
+		_, err = tablesDB.CreateRow(
 			dbId,
-			collId,
+			tableId,
 			requestBody.ShortId,
 			map[string]interface{}{
 				"longUrl": requestBody.LongUrl,
@@ -339,7 +340,7 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 
 		shortId := path[1:]
 
-		document, err := databases.GetDocument(dbId, collId, shortId)
+		row, err := tablesDB.GetRow(dbId, tableId, shortId)
 
 		if err != nil {
 			Context.Error(err)
@@ -347,7 +348,7 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 		}
 
 		var responseBody ResponseBody
-		document.Decode(&responseBody)
+		row.Decode(&responseBody)
 
 		return Context.Res.Redirect(responseBody.LongUrl, Context.Res.WithStatusCode(302))
 	}
@@ -358,7 +359,7 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 
 You can then deploy this function using the `appwrite deploy function` command.
 
-After deployment, go to the Settings tab on the Function page in your Appwrite project and enable the following scopes for the dynamic API key: `databases.read`, `databases.write`, `collections.read`, `collections.write`, `attributes.read`, `attributes.write`, `documents.read`, `documents.write`, 
+After deployment, go to the Settings tab on the Function page in your Appwrite project and enable the following scopes for the dynamic API key: `databases.read`, `databases.write`, `tables.read`, `tables.write`, `columns.read`, `columns.write`, `rows.read`, `rows.write`,
 
 # More resources
 

@@ -81,6 +81,7 @@ export function View() {
   const { projectId } = useParams({ strict: false })
   const {
     resourceType: initialResourceType = 'api',
+    resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
   const createMutation = useCreateFirewallRule(projectId)
@@ -88,6 +89,10 @@ export function View() {
   const [form, setForm] = useState({
     ...DEFAULT_FORM,
     resourceType: initialResourceType,
+    resourceId:
+      initialResourceType !== 'api' && initialResourceId
+        ? initialResourceId
+        : '',
   })
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
     initialConditionsFromSearch(initialQuery),
@@ -103,16 +108,22 @@ export function View() {
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0))
 
-  const navigateToRules = (resourceType: FirewallResourceType = 'api') => {
+  const navigateToRules = (
+    resourceType: FirewallResourceType = 'api',
+    resourceId?: string,
+  ) => {
     navigate({
       to: '/projects/$projectId/firewall',
       params: { projectId: projectId! },
-      search: { resourceType },
+      search:
+        resourceType === 'api' || !resourceId?.trim()
+          ? { resourceType: 'api' }
+          : { resourceType, resourceId: resourceId.trim() },
     })
   }
 
   const handleClose = () => {
-    navigateToRules(initialResourceType)
+    navigateToRules(initialResourceType, initialResourceId)
   }
 
   const handleSubmit = async () => {
@@ -134,7 +145,10 @@ export function View() {
         statusCode: form.statusCode,
       })
       toast.success(t('Firewall rule created'))
-      navigateToRules(form.resourceType)
+      navigateToRules(
+        form.resourceType,
+        needsResourceId ? form.resourceId.trim() : undefined,
+      )
     } catch (error) {
       toast.error(
         getErrorMessage(error as Error, t('Failed to create firewall rule')),

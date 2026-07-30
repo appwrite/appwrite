@@ -71,7 +71,7 @@ export function isLaunchEventDayLocked(
 export type InitDisplayEvent = LaunchEvent & {
   currentDay: number
   days: LaunchEventDayView[]
-  /** True after the launch week ends — all days unlocked, no live state. */
+  /** True after the launch week ends - all days unlocked, no live state. */
   isRecapMode: boolean
 }
 
@@ -114,7 +114,7 @@ export interface LaunchEventInvolvement {
   title: string
   description: string
   icon?: LucideIcon
-  /** Brand icon path (e.g. Discord) — rendered instead of `icon` when set. */
+  /** Brand icon path (e.g. Discord) - rendered instead of `icon` when set. */
   iconSrc?: string
   href?: string
 }

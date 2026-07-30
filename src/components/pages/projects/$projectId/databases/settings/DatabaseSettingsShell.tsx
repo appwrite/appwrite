@@ -13,10 +13,7 @@ import {
   dedicatedDatabaseByIdQueryOptions,
   useProjectDatabase,
 } from '@/lib/react-query/hooks'
-import {
-  canConfigureDedicatedReplication,
-  productDedicatedEngineHints,
-} from '@/lib/databases/database-compute'
+import { canConfigureDedicatedReplication } from '@/lib/databases/database-compute'
 import { isDatabaseRouteKind, type DatabaseRouteKind } from '@/lib/database-routes'
 
 type DatabaseSettingsPath =
@@ -68,13 +65,13 @@ export function DatabaseSettingsShell() {
   const { database: productDatabase } = useProjectDatabase(
     projectId,
     databaseId,
-  )
-  const engineHints = useMemo(
-    () => productDedicatedEngineHints(dbKind),
-    [dbKind],
+    dbKind,
   )
   const { data: dedicated } = useQuery(
-    dedicatedDatabaseByIdQueryOptions(projectId, databaseId, engineHints),
+    dedicatedDatabaseByIdQueryOptions(projectId, databaseId, {
+      type: 'product',
+      dbKind,
+    }),
   )
 
   const showReplication = canConfigureDedicatedReplication(

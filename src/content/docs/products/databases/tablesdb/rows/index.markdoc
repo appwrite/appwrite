@@ -1,0 +1,1632 @@
+---
+layout: article
+title: Rows
+description: Master row management with Appwrite Databases. Learn how to create, update, upsert, and query rows within your tables for dynamic data storage.
+---
+Each piece of data or information in Appwrite Databases is a row.
+Rows have a structure defined by the parent table.
+
+# Create rows {% #create-rows %}
+{% info title="Permissions required" %}
+You must grant _create_ permissions to users at the _table level_ before users can create rows.
+[Learn more about permissions](#permissions)
+{% /info %}
+
+In most use cases, you will create rows programmatically.
+
+{% multicode %}
+```client-web
+import { Client, ID, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {}
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final row = tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let row = try await tablesDB.createRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: [:]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val row = tablesDB.createRow(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            rowId = ID.unique(),
+            data = mapOf("a" to "b"),
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+```graphql
+mutation {
+    tablesCreateRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: "<ROW_ID>",
+        data: "{}"
+    ) {
+        _id
+        _tableId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
+During testing, you might prefer to create rows in the Appwrite Console.
+To do so, navigate to the **Rows** tab of your table and click the **Add row** button.
+
+# List rows {% #list-rows %}
+
+{% info title="Permissions required" %}
+You must grant _read_ permissions to users at the _table level_ before users can read rows.
+[Learn more about permissions](#permissions)
+{% /info %}
+
+Rows can be retrieved using the [List rows](/docs/references/cloud/client-web/tables#listRows) endpoint.
+
+Results can be filtered, sorted, and paginated using Appwrite's shared set of query methods.
+You can find a full guide on querying in the [Queries Guide](/docs/products/databases/queries).
+
+By default, results are limited to the _first 25 items_.
+You can change this through [pagination](/docs/products/databases/pagination).
+
+{% info title="Speed up lists by skipping totals" %}
+If your UI doesn't need an exact total, set the `total` flag to `false` on list calls. The response keeps the same shape and sets `total` to `0`.
+This reduces latency for large tables and filtered queries. Learn more in [Pagination: Skip totals](/docs/products/databases/pagination#skip-totals).
+{% /info %}
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+const tablesDB = new TablesDB(client);
+
+let promise = tablesDB.listRows({
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+        Query.equal('title', 'Avatar')
+    ]
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final rows = await tablesDB.listRows(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            queries: [
+                Query.equal('title', 'Avatar')
+            ]
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let rows = try await tablesDB.listRows(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            queries: [
+                Query.equal("title", value: "Avatar")
+            ]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val rows = tablesDB.listRows(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            queries = listOf(
+                Query.equal("title", "Avatar")
+            )
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+```graphql
+query {
+    tablesListRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: ["equal(\"title\", [\"Avatar\"])"]
+    ) {
+        total
+        rows {
+            _id
+            data
+        }
+    }
+}
+```
+{% /multicode %}
+
+# Cache list responses {% #cache-list-responses %}
+
+You can cache list responses by passing a `ttl` (time-to-live) value in seconds to `listRows`. Subsequent identical requests return the cached result until the TTL expires. The cache is permission-aware, so users with different roles never see each other's cached data.
+
+Set `ttl` between `1` and `86400` (24 hours). The default is `0` (caching disabled). The response includes an `X-Appwrite-Cache` header with value `hit` or `miss`.
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+const tablesDB = new TablesDB(client);
+
+const rows = await tablesDB.listRows({
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+        Query.equal('title', 'Avatar')
+    ],
+    ttl: 60 // Cache for 60 seconds
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const rows = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        sdk.Query.equal('title', 'Avatar')
+    ],
+    ttl: 60 // Cache for 60 seconds
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+tables_db = TablesDB(client)
+
+rows = tables_db.list_rows(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
+        Query.equal('title', 'Avatar')
+    ],
+    ttl=60  # Cache for 60 seconds
+)
+```
+```server-ruby
+require 'appwrite'
+
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+tables_db = Appwrite::TablesDB.new(client)
+
+rows = tables_db.list_rows(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    queries: [
+        Appwrite::Query.equal('title', 'Avatar')
+    ],
+    ttl: 60  # Cache for 60 seconds
+)
+```
+```server-deno
+import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+const rows = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.equal('title', 'Avatar')
+    ],
+    ttl: 60 // Cache for 60 seconds
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\TablesDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$rows = $tablesDB->listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query::equal('title', ['Avatar'])
+    ],
+    ttl: 60 // Cache for 60 seconds
+);
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tablesdb"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    clt := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        client.WithProject("<PROJECT_ID>"),
+        client.WithKey("<YOUR_API_KEY>"),
+    )
+
+    tablesDB := tablesdb.New(clt)
+
+    rows, err := tablesDB.ListRows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        tablesDB.WithListRowsQueries([]string{
+            query.Equal("title", []interface{}{"Avatar"}),
+        }),
+        tablesDB.WithListRowsTtl(60), // Cache for 60 seconds
+    )
+
+    if err != nil {
+        fmt.Println(err)
+    }
+    _ = rows
+}
+```
+```server-swift
+import Appwrite
+import AppwriteModels
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let tablesDB = TablesDB(client)
+
+let rows = try await tablesDB.listRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: [
+        Query.equal("title", value: "Avatar")
+    ],
+    ttl: 60 // Cache for 60 seconds
+)
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    val tablesDB = TablesDB(client)
+
+    val rows = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.equal("title", "Avatar")
+        ),
+        ttl = 60 // Cache for 60 seconds
+    )
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::TablesDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let rows = tables_db.list_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(vec![
+            "equal(\"title\", [\"Avatar\"])".to_string(),
+        ]),
+        None,     // transaction_id
+        None,     // total
+        Some(60), // ttl - Cache for 60 seconds
+    ).await?;
+
+    let _ = rows;
+    Ok(())
+}
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+RowList rows = await tablesDB.ListRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    queries: new List<string> {
+        Query.Equal("title", new List<object> { "Avatar" })
+    },
+    ttl: 60 // Cache for 60 seconds
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+TablesDB tablesDB = TablesDB(client);
+
+RowList rows = await tablesDB.listRows(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.equal('title', 'Avatar')
+    ],
+    ttl: 60, // Cache for 60 seconds
+);
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.Query;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.listRows(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    List.of(Query.equal("title", List.of("Avatar"))),
+    null, // transactionId
+    null, // total
+    60, // ttl - Cache for 60 seconds
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+        System.out.println(result);
+    })
+);
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>");
+
+    final tablesDB = TablesDB(client);
+
+    final rows = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        queries: [
+            Query.equal('title', 'Avatar')
+        ],
+        ttl: 60, // Cache for 60 seconds
+    );
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    let rows = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: [
+            Query.equal("title", value: "Avatar")
+        ],
+        ttl: 60 // Cache for 60 seconds
+    )
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    val rows = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        queries = listOf(
+            Query.equal("title", "Avatar")
+        ),
+        ttl = 60 // Cache for 60 seconds
+    )
+}
+```
+```graphql
+query {
+    tablesListRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        queries: ["equal(\"title\", [\"Avatar\"])"],
+        ttl: 60
+    ) {
+        total
+        rows {
+            _id
+            data
+        }
+    }
+}
+```
+{% /multicode %}
+
+## Purge cache {% #purge-cache %}
+
+Row writes do **not** invalidate the cache, so cached responses may contain stale data until the TTL expires. Schema changes (adding or removing columns and indexes) invalidate cached entries automatically.
+
+To force an immediate cache purge, call `updateTable` with `purge` set to `true` using a [Server SDK](/docs/sdks#server).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+await tablesDB.updateTable({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    purge: true
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+tables_db = TablesDB(client)
+
+tables_db.update_table(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    purge=True
+)
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$tablesDB->updateTable(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    purge: true
+);
+```
+```server-ruby
+require 'appwrite'
+
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+tables_db = Appwrite::TablesDB.new(client)
+
+tables_db.update_table(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    purge: true
+)
+```
+```server-deno
+import { Client, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.updateTable({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    purge: true
+});
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+final tablesDB = TablesDB(client);
+
+await tablesDB.updateTable(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    purge: true,
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let tablesDB = TablesDB(client)
+
+let _ = try await tablesDB.updateTable(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    purge: true
+)
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<YOUR_API_KEY>")
+
+    val tablesDB = TablesDB(client)
+
+    tablesDB.updateTable(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        purge = true
+    )
+}
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tablesdb"
+)
+
+func main() {
+    clt := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        client.WithProject("<PROJECT_ID>"),
+        client.WithKey("<YOUR_API_KEY>"),
+    )
+
+    tablesDB := tablesdb.New(clt)
+
+    tablesDB.UpdateTable(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        tablesDB.WithUpdateTablePurge(true),
+    )
+}
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.updateTable(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    null, // name
+    null, // permissions
+    null, // rowSecurity
+    null, // enabled
+    true, // purge
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+        System.out.println(result);
+    })
+);
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+await tablesDB.UpdateTable(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    purge: true
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    tables_db.update_table(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        None,       // name
+        None,       // permissions
+        None,       // row_security
+        None,       // enabled
+        Some(true), // purge
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Update row {% #update-row %}
+{% info title="Permissions required" %}
+You must grant _update_ permissions to users at the _table level_ or _row level_ before users can update rows.
+[Learn more about permissions](#permissions)
+{% /info %}
+
+In most use cases, you will update rows programmatically.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Updated Title' }
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final row = await tablesDB.updateRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: '<ROW_ID>',
+            data: { 'title': 'Updated Title' }
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let row = try await tablesDB.updateRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: "<ROW_ID>",
+            data: ["title": "Updated Title"]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val row = tablesDB.updateRow(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            rowId = "<ROW_ID>",
+            data = mapOf("title" to "Updated Title"),
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```graphql
+mutation {
+    tablesDBUpdateRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: "<ROW_ID>",
+        data: "{\"title\": \"Updated Title\"}"
+    ) {
+        _id
+        _tableId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
+# Upsert rows {% #upsert-rows %}
+
+Upsert is a combination of "update" and "insert" operations. It creates a new row if one doesn't exist with the given ID, or updates an existing row if it does exist.
+
+In most use cases, you will upsert rows programmatically.
+
+{% info title="Permissions required" %}
+You must grant _create_ permissions to users at the _table level_, and _update_ permissions to users at the _table_ or _row_ level before users can upsert rows.
+[Learn more about permissions](#permissions)
+{% /info %}
+{% multicode %}
+```client-web
+import { Client, ID, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const promise = tablesDB.upsertRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {}
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final row = tablesDB.upsertRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: ID.unique(),
+            data: {}
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let row = try await tablesDB.upsertRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.unique(),
+            data: [:]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val row = tablesDB.upsertRow(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            rowId = ID.unique(),
+            data = mapOf("a" to "b"),
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", "Error: " + e.message)
+    }
+}
+```
+```graphql
+mutation {
+    tablesUpsertRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: "<ROW_ID>",
+        data: "{}"
+    ) {
+        _id
+        _tableId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
+        data
+    }
+}
+```
+{% /multicode %}
+
+# Type safety with models {% #type-safety %}
+
+Mobile and native SDKs provide type safety when working with rows through the `nestedType` parameter. This allows you to specify custom model types for complete auto-completion and type safety.
+
+## Define your model
+
+Create a data class or struct that matches your table structure:
+
+{% tabs %}
+{% tabsitem #kotlin title="Kotlin/Java" %}
+```kotlin
+data class Book(
+    val title: String,
+    val author: String,
+    val publishedYear: Int? = null,
+    val genre: List<String>? = null,
+    val isAvailable: Boolean = true
+)
+```
+{% /tabsitem %}
+
+{% tabsitem #swift title="Swift" %}
+```swift
+struct Book: Codable {
+    let title: String
+    let author: String
+    let publishedYear: Int?
+    let genre: [String]?
+    let isAvailable: Bool
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #web title="Web/Node" %}
+```typescript
+interface Book {
+    title: string;
+    author: string;
+    publishedYear?: number;
+    genre?: string[];
+    isAvailable: boolean;
+}
+```
+{% /tabsitem %}
+{% /tabs %}
+
+## Using type-safe operations
+
+Use the `nestedType` parameter for full type safety in native SDKs, or generics in web SDKs:
+
+{% multicode %}
+```client-android-kotlin
+val tablesDB = TablesDB(client)
+
+try {
+    // Create with type safety
+    val newBook = tablesDB.createRow(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        rowId = ID.unique(),
+        data = mapOf(
+            "title" to "The Great Gatsby",
+            "author" to "F. Scott Fitzgerald",
+            "isAvailable" to true
+        ),
+        nestedType = Book::class.java
+    )
+
+    // List with type safety
+    val books = tablesDB.listRows(
+        databaseId = "<DATABASE_ID>",
+        tableId = "<TABLE_ID>",
+        nestedType = Book::class.java
+    )
+
+    // Now you have full type safety
+    for (book in books.rows) {
+        Log.d("Appwrite", "Book: ${book.title} by ${book.author}")
+        if (book.isAvailable) {
+            Log.d("Appwrite", "Available for checkout")
+        }
+    }
+} catch (e: AppwriteException) {
+    Log.e("Appwrite", "Error: ${e.message}")
+}
+```
+```client-apple
+let tablesDB = TablesDB(client)
+
+do {
+    // Create with type safety
+    let newBook = try await tablesDB.createRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: ID.unique(),
+        data: [
+            "title": "The Great Gatsby",
+            "author": "F. Scott Fitzgerald",
+            "isAvailable": true
+        ],
+        nestedType: Book.self
+    )
+
+    // List with type safety
+    let books = try await tablesDB.listRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        nestedType: Book.self
+    )
+
+    // Now you have full type safety
+    for book in books.rows {
+        print("Book: \(book.title) by \(book.author)")
+        if book.isAvailable {
+            print("Available for checkout")
+        }
+    }
+} catch {
+    print(error.localizedDescription)
+}
+```
+```client-web
+const tablesDB = new TablesDB(client);
+
+try {
+    // Create with generics
+    const newBook = await tablesDB.createRow<Book>({
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: ID.unique(),
+        data: {
+            title: "The Great Gatsby",
+            author: "F. Scott Fitzgerald",
+            isAvailable: true
+        }
+    });
+
+    // List with generics
+    const books = await tablesDB.listRows<Book>({
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>'
+    });
+
+    // TypeScript provides full type safety
+    books.rows.forEach(book => {
+        console.log(`Book: ${book.title} by ${book.author}`);
+        if (book.isAvailable) {
+            console.log("Available for checkout");
+        }
+    });
+} catch (error) {
+    console.log(error);
+}
+```
+{% /multicode %}
+
+## Model methods
+
+Models returned by native SDKs include helpful utility methods:
+
+{% tabs %}
+{% tabsitem #kotlin-methods title="Kotlin/Java" %}
+```kotlin
+val book = books.rows.first()
+
+// Convert model to Map for debugging or manual manipulation
+val bookMap = book.toMap()
+Log.d("Appwrite", "Book data: ${bookMap}")
+
+// Create model instance from Map data
+val bookData = mapOf(
+    "title" to "1984",
+    "author" to "George Orwell",
+    "isAvailable" to false
+)
+val newBook = Book.from(bookData, Book::class.java)
+
+// JSON serialization using Gson (used internally by SDK)
+import com.google.gson.Gson
+val gson = Gson()
+val jsonString = gson.toJson(book)
+val bookFromJson = gson.fromJson(jsonString, Book::class.java)
+```
+{% /tabsitem %}
+
+{% tabsitem #swift-methods title="Swift" %}
+```swift
+let book = books.rows.first!
+
+// Convert model to dictionary for debugging
+let bookMap = book.toMap()
+print("Book data: \(bookMap)")
+
+// Create model instance from dictionary
+let bookData: [String: Any] = [
+    "title": "1984",
+    "author": "George Orwell",
+    "isAvailable": false
+]
+let newBook = Book.from(map: bookData)
+
+// JSON encoding using Swift's Codable
+let jsonData = try JSONEncoder().encode(book)
+let jsonString = String(data: jsonData, encoding: .utf8)
+
+// JSON decoding
+if let jsonString = jsonString,
+   let data = jsonString.data(using: .utf8) {
+    let bookFromJson = try JSONDecoder().decode(Book.self, from: data)
+}
+```
+{% /tabsitem %}
+{% /tabs %}
+
+{% info title="Generate types automatically" %}
+You can automatically generate model definitions for your tables using the [Appwrite CLI](/docs/products/databases/type-generation). Run `appwrite types` to generate types based on your database schema.
+{% /info %}
+
+# Permissions {% #permissions %}
+In Appwrite, permissions can be granted at the table level and the row level.
+Before a user can create a row, you need to grant create permissions to the user.
+
+Read, update, and delete permissions can be granted at both the table and row level.
+Users only need to be granted access at either the table or row level to access rows.
+
+[Learn about configuring permissions](/docs/products/databases/permissions).
+
+# Use transactions {% #use-transactions %}
+
+All row operations support `transactionId`. When provided, operations are staged to an internal log and not applied until the transaction is committed. Learn more in the [Transactions guide](/docs/products/databases/transactions).
+
+{% multicode %}
+```client-web
+// Create row inside a transaction
+await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Draft' },
+    transactionId: '<TRANSACTION_ID>'
+});
+
+// Update row inside a transaction
+await tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Published' },
+    transactionId: '<TRANSACTION_ID>'
+});
+```
+```client-flutter
+// Create row inside a transaction
+await tablesDB.createRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { 'title': 'Draft' },
+    transactionId: '<TRANSACTION_ID>'
+);
+
+// Update row inside a transaction
+await tablesDB.updateRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { 'title': 'Published' },
+    transactionId: '<TRANSACTION_ID>'
+);
+```
+```client-apple
+// Create row inside a transaction
+let _ = try await tablesDB.createRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    data: ["title": "Draft"],
+    transactionId: "<TRANSACTION_ID>"
+)
+
+// Update row inside a transaction
+let _2 = try await tablesDB.updateRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    data: ["title": "Published"],
+    transactionId: "<TRANSACTION_ID>"
+)
+```
+```client-android-kotlin
+// Create row inside a transaction
+val _ = tablesDB.createRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf("title" to "Draft"),
+    transactionId = "<TRANSACTION_ID>"
+)
+
+// Update row inside a transaction
+val _2 = tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf("title" to "Published"),
+    transactionId = "<TRANSACTION_ID>"
+)
+```
+```client-android-java
+// Create row inside a transaction (asynchronous)
+Map<String, Object> data = new HashMap<>();
+data.put("title", "Draft");
+
+tablesDB.createRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    data,
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return null;
+        }
+        System.out.println(result);
+        return null;
+    })
+);
+
+// Update row inside a transaction (asynchronous)
+Map<String, Object> update = new HashMap<>();
+update.put("title", "Published");
+
+tablesDB.updateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    update,
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return null;
+        }
+        System.out.println(result);
+        return null;
+    })
+);
+```
+```client-react-native
+// Create row inside a transaction
+await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Draft' },
+    transactionId: '<TRANSACTION_ID>'
+});
+
+// Update row inside a transaction
+await tablesDB.updateRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    data: { title: 'Published' },
+    transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-nodejs
+// Delete row inside a transaction
+await tablesDB.deleteRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-deno
+// Delete row inside a transaction
+await tablesDB.deleteRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-python
+# Delete row inside a transaction
+tablesDB.delete_row(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    row_id = '<ROW_ID>',
+    transaction_id = '<TRANSACTION_ID>'
+)
+```
+```server-php
+// Delete row inside a transaction
+$tablesDB->deleteRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-ruby
+# Delete row inside a transaction
+tablesDB.delete_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    transaction_id: '<TRANSACTION_ID>'
+)
+```
+```server-dotnet
+// Delete row inside a transaction
+await tablesDB.DeleteRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    transactionId: "<TRANSACTION_ID>"
+);
+```
+```server-dart
+// Delete row inside a transaction
+await tablesDB.deleteRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-swift
+// Delete row inside a transaction
+let _ = try await tablesDB.deleteRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    transactionId: "<TRANSACTION_ID>"
+)
+```
+```server-kotlin
+// Delete row inside a transaction
+val _ = tablesDB.deleteRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    transactionId = "<TRANSACTION_ID>"
+)
+```
+```server-java
+// Delete row inside a transaction (asynchronous)
+tablesDB.deleteRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return null;
+        }
+        System.out.println(result);
+        return null;
+    })
+);
+```
+
+```server-rust
+// Delete row inside a transaction
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+
+let client = Client::new()
+    .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .set_project("<PROJECT_ID>")
+    .set_key("<API_KEY>");
+
+let tables_db = TablesDB::new(&client);
+
+tables_db.delete_row(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Some("<TRANSACTION_ID>"),
+).await?;
+```
+{% /multicode %}
+
+# Next steps {% #next-steps %}
+
+Continue learning with these related guides:
+
+{% cards %}
+{% cards_item href="/docs/products/databases/queries" title="Queries" %}
+Learn how to filter, sort, and search your rows with various query operators.
+{% /cards_item %}
+
+{% cards_item href="/docs/products/databases/pagination" title="Pagination" %}
+Handle large datasets by implementing pagination in your row queries.
+{% /cards_item %}
+
+{% cards_item href="/docs/products/databases/bulk-operations" title="Bulk operations" %}
+Perform create, update, and delete operations on multiple rows simultaneously.
+{% /cards_item %}
+
+{% cards_item href="/docs/products/databases/timestamp-overrides" title="Timestamp overrides" %}
+Set custom creation and update timestamps when migrating data or backdating records.
+{% /cards_item %}
+{% /cards %}

@@ -18,7 +18,7 @@ import { Client, Users } from "node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')    // Your API Endpoint
-    .setProject('<PROJECT_ID>');                    // Your project ID
+    .setProject('<PROJECT_ID>')                     // Your project ID
     .setKey('<API_KEY>');                           // Your project API key
 
 const users = new Users(client);
@@ -58,7 +58,7 @@ client = Client()
 
 users = Users(client)
 
-token = users.create_token('<USER_ID>')
+token = users.create_token(user_id='<USER_ID>')
 secret = token.secret
 ```
 
@@ -74,7 +74,7 @@ client = Client.new
 
 users = Users.new(client)
 
-token = users.create_token('<USER_ID>')
+token = users.create_token(user_id: '<USER_ID>')
 secret = token['secret']
 ```
 

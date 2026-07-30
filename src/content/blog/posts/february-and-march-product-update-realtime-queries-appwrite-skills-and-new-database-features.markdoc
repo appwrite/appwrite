@@ -3,6 +3,7 @@ layout: post
 title: "February and March product update: Realtime queries, Appwrite Skills, and new database features"
 description: Get a full recap of features, improvements, and tools we shipped across Databases, Realtime, and AI in February and March.
 date: 2026-04-24
+lastUpdated: 2026-06-29
 cover: /images/blog/february-and-march-product-update-realtime-queries-appwrite-skills-and-new-database-features/cover.avif
 timeToRead: 5
 author: aishwari
@@ -10,11 +11,11 @@ category: product
 featured: false
 faqs:
   - question: "What is new in Appwrite for February and March 2026?"
-    answer: "Major updates across Databases, Realtime, and AI tooling: relationship queries with dot notation, new string column types (`varchar`, `text`, `mediumtext`, `longtext`), Realtime channel helpers, Realtime queries with server-side filtering, Appwrite Skills for AI coding agents, and Appwrite Arena, an open-source benchmark for AI model performance on Appwrite."
+    answer: "Major updates across Databases, Realtime, and AI tooling: relationship queries with dot notation, new text column types (`varchar`, `text`, `mediumtext`, `longtext`), Realtime channel helpers, Realtime queries with server-side filtering, Appwrite Skills for AI coding agents, and Appwrite Arena, an open-source benchmark for AI model performance on Appwrite."
   - question: "How do relationship queries work in Appwrite Databases?"
-    answer: "[Appwrite Databases](/docs/products/databases) now lets you filter directly on relationship columns using dot notation, instead of fetching documents and filtering client-side. All comparison operators work across the relationship, and the underlying engine was rewritten to be 12 to 18 times faster on relationship-heavy queries. It is available on both Cloud and self-hosted."
-  - question: "What are the new string column types in Appwrite Databases?"
-    answer: "Appwrite Databases supports four string column types: `varchar`, `text`, `mediumtext`, and `longtext`. Each comes with different storage characteristics, so you can match the column type to actual data size. Existing string columns continue to work without changes."
+    answer: "[Appwrite Databases](/docs/products/databases) now lets you filter directly on relationship columns using dot notation, so you can query related rows directly. All comparison operators work across the relationship, and the underlying engine was rewritten to be 12 to 18 times faster on relationship-heavy queries. It is available on both Cloud and self-hosted."
+  - question: "What are the new text column types in Appwrite Databases?"
+    answer: "Appwrite Databases supports four text column types: `varchar`, `text`, `mediumtext`, and `longtext`. Each comes with different storage characteristics, so you can match the column type to actual data size. Existing legacy string schemas continue to work without changes."
   - question: "What are Realtime queries in Appwrite?"
     answer: "Realtime queries let you attach query filters when subscribing to a channel, so the server only sends events that match your conditions. You can combine filters with `Query.and()` and `Query.or()`, and subscribe to the same channel multiple times with different filters. It works across Web, Flutter, React Native, Apple, and Android SDKs."
   - question: "What are Appwrite Skills?"
@@ -28,7 +29,7 @@ Welcome back to the product update. This time, we have not one, but two months t
 Here is a quick overview of what we shipped:
 
 - Relationship queries in Appwrite Databases
-- New string column types for Appwrite Databases
+- New text column types for Appwrite Databases
 - Realtime Channel helpers
 - Realtime queries with server-side event filtering
 - Appwrite Skills
@@ -44,11 +45,11 @@ You can now filter directly on relationship columns in Appwrite Databases using 
 
 [Read the announcement](https://appwrite.io/blog/post/announcing-relationship-queries)
 
-![Introducing new string column types for Appwrite Databases.png](/images/blog/february-and-march-product-update-realtime-queries-appwrite-skills-and-new-database-features/Introducing_new_string_column_types_for_Appwrite_Databases.avif)
+![Introducing new text column types for Appwrite Databases.png](/images/blog/february-and-march-product-update-realtime-queries-appwrite-skills-and-new-database-features/Introducing_new_string_column_types_for_Appwrite_Databases.avif)
 
-# New string column types for Appwrite Databases
+# New text column types for Appwrite Databases
 
-Appwrite Databases now supports four explicit string column types: `varchar`, `text`, `mediumtext`, and `longtext`. The new types make storage trade-offs clear for both developers and AI agents. Existing string columns continue to work with full backward support. Live on Appwrite Cloud.
+Appwrite Databases now supports four explicit text column types: `varchar`, `text`, `mediumtext`, and `longtext`. The new types make storage trade-offs clear for both developers and AI agents. Existing legacy string schemas continue to work with full backward support. Live on Appwrite Cloud.
 
 [Learn more](https://appwrite.io/blog/post/new-string-types)
 

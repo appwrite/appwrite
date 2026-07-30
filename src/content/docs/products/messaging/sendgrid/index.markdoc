@@ -149,7 +149,11 @@ client = Client()
 
 messaging = Messaging(client)
 
-result = messaging.create_email('<MESSAGE_ID>', '<SUBJECT>', '<CONTENT>')
+result = messaging.create_email(
+    message_id='<MESSAGE_ID>',
+    subject='<SUBJECT>',
+    content='<CONTENT>'
+)
 ```
 ```ruby
 require 'appwrite'
@@ -341,16 +345,16 @@ client
     .setKey('<YOUR_API_KEY>')        // Your secret API key
 ;
 
-const provider = await messaging.updateSendgridProvider(
-        '<PROVIDER_ID>',             // providerId
-        '<NAME>',                    // name (optional)
-        '<API_KEY>',                 // apiKey (optional)
-        false,                       // enabled (optional)
-        '<FROM_NAME>',               // fromName (optional)
-        'email@example.com',         // fromEmail (optional)
-        '<REPLY_TO_NAME>',           // replyToName (optional)
-        '<REPLY_TO_EMAIL>'           // replyToEmail (optional)
-    );
+const provider = await messaging.updateSendgridProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    apiKey: '<API_KEY>',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -366,16 +370,16 @@ client
     .setKey('<YOUR_API_KEY>')        // Your secret API key
 ;
 
-const provider = await messaging.updateSendgridProvider(
-        '<PROVIDER_ID>',             // providerId
-        '<NAME>',                    // name (optional)
-        '<API_KEY>',                 // apiKey (optional)
-        false,                       // enabled (optional)
-        '<FROM_NAME>',               // fromName (optional)
-        'email@example.com',         // fromEmail (optional)
-        '<REPLY_TO_NAME>',           // replyToName (optional)
-        '<REPLY_TO_EMAIL>'           // replyToEmail (optional)
-    );
+const provider = await messaging.updateSendgridProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    apiKey: '<API_KEY>',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+});
 ```
 ```php
 <?php

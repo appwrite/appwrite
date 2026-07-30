@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { tablesQueryOptions } from '@/lib/react-query/hooks'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -37,6 +38,7 @@ const DEFAULT_LIMIT = 15
 export interface TableSelectorProps {
   projectId: string
   databaseId: string
+  dbKind: DatabaseRouteKind
   value: string
   selectedName?: string
   onSelect: (tableId: string) => void
@@ -62,6 +64,7 @@ export interface TableSelectorProps {
 export function TableSelector({
   projectId,
   databaseId,
+  dbKind,
   value,
   selectedName,
   onSelect,
@@ -95,6 +98,7 @@ export function TableSelector({
     ...tablesQueryOptions(
       projectId,
       databaseId,
+      dbKind,
       0,
       limit,
       debouncedSearch || undefined,

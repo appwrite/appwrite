@@ -228,9 +228,10 @@ export default defineConfig(async () => {
         '@tanstack/store',
         'almostnode',
         'sharp',
-        // Pre-bundling inlines a nested @radix-ui/react-direction copy and can load a
-        // second React instance, breaking hooks (useState of null) in ScrollArea.
+        // Pre-bundling inlines nested @radix-ui copies and can load a second React
+        // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
         '@radix-ui/react-scroll-area',
+        '@radix-ui/react-avatar',
       ],
     },
     ssr: {

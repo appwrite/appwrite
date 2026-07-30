@@ -67,19 +67,20 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
       queryClient.ensureQueryData(
         firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
       ),
-      queryClient
-        .ensureQueryData(
-          firewallTrafficOverviewQueryOptions(
-            projectId,
-            dateRange,
-            chartInterval,
-            logRetentionHours,
-          ),
-        )
-        .catch(() => {
-          // Usage metrics are optional; keep the rules list usable if they fail.
-        }),
     ])
+
+    // Usage is non-critical: prefetch in background so a slow usage API does not
+    // block the rules list or navigation.
+    void queryClient
+      .prefetchQuery(
+        firewallTrafficOverviewQueryOptions(
+          projectId,
+          dateRange,
+          chartInterval,
+          logRetentionHours,
+        ),
+      )
+      .catch(() => undefined)
   },
   component: FirewallLayout,
 })

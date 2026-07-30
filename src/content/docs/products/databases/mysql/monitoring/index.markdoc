@@ -1,0 +1,215 @@
+---
+layout: article
+title: Monitoring
+description: Check database health, watch lifecycle states, and inspect active connections on your native MySQL database.
+---
+
+Every native MySQL database ships with programmatic health checks, and the engine's own instrumentation is fully available to you. There is nothing to install in the database for these checks.
+
+# Database health {% #status %}
+
+Poll the database status for live health information after the database is ready: uptime, connection counts, replica state, and storage volumes. Use it from your own monitoring:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const status = await mysql.getStatus({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const status = await mysql.getStatus({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$status = $mysql->getStatus(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+status = mysql.get_status(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+status = mysql.get_status(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var status = await mysql.GetStatus(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final status = await mysql.getStatus(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val status = mysql.getStatus(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let status = try await mysql.getStatus(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    result, err := service.GetStatus("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let status = mysql.get_status("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/status
+```
+{% /multicode %}
+
+For the database lifecycle state (`ready`, `scaling`, `restoring`, and friends), read the `status` field of the database object itself. Use that field from deploy pipelines to wait for the database; see [lifecycle states](/docs/products/databases/mysql/maintenance#states).
+
+# Inspect activity in the engine {% #activity %}
+
+MySQL's own instrumentation works unmodified. From the `mysql` client or any driver:
+
+```sql
+-- live connections and their current statements
+SELECT id, user, host, db, command, time, state, info
+FROM performance_schema.processlist;
+
+-- kill a runaway connection
+KILL <id>;
+
+-- execution plan for a slow query
+EXPLAIN ANALYZE SELECT ...;
+```
+
+A healthy OLTP database keeps its working set in memory. If throughput drops while disk reads climb, move up a [specification](/docs/products/databases/mysql/scaling) so the buffer pool fits the working set.

@@ -1,8 +1,9 @@
 ---
 layout: post
 title: "Introducing new Database operators: or & contains query methods"
-description: What is a database without queries? Not a lot. That's why we’re happy to announce a new set of query methods, array contains, string contains, and OR operators to Appwrite Databases.
+description: What is a database without queries? Not a lot. That's why we’re happy to announce a new set of query methods, array contains, text contains, and OR operators to Appwrite Databases.
 date: 2024-02-29
+lastUpdated: 2026-06-29
 cover: /images/blog/db-operators-overview.avif
 timeToRead: 5
 author: dennis-ivy
@@ -10,9 +11,9 @@ category: product, announcement
 featured: false
 faqs:
   - question: "What does the contains query do?"
-    answer: "`Query.contains` matches a substring inside a string attribute or an element inside an array attribute. It complements `startsWith` and `endsWith` and is the right choice when you don't know where in the value the match will appear. See [Appwrite Databases](/docs/products/databases)."
+    answer: "`Query.contains` matches a substring inside a text column or an element inside an array column. It complements `startsWith` and `endsWith` and is the right choice when you don't know where in the value the match will appear. See [Appwrite Databases](/docs/products/databases)."
   - question: "How does the OR operator work in Appwrite queries?"
-    answer: "Pass two or more queries inside `Query.or([...])` and any document that satisfies at least one of them is returned. You can nest it with other queries to build expressions like 'category equals X AND (name contains Y OR rating greater than 4)'."
+    answer: "Pass two or more queries inside `Query.or([...])` and any row that satisfies at least one of them is returned. You can nest it with other queries to build expressions like 'category equals X AND (name contains Y OR rating greater than 4)'."
   - question: "Can I combine contains and OR in the same request?"
     answer: "Yes. Both operators are regular query expressions, so you can pass several of them in the same queries array, or nest `Query.contains` calls inside a `Query.or` block."
   - question: "Does contains do a full text search?"
@@ -20,14 +21,14 @@ faqs:
   - question: "When did these operators ship?"
     answer: "Both `contains` and `or` shipped as part of the Appwrite 1.5 release on Appwrite Cloud and self hosted Appwrite in March 2024. They are available across every SDK."
   - question: "Are there performance implications when using contains?"
-    answer: "Substring matches can't always use an index, so very large collections will be slower than equality queries. Where possible, narrow the result set first with indexed attributes (equality, ranges) and then apply contains to filter further."
+    answer: "Substring matches can't always use an index, so very large tables will be slower than equality queries. Where possible, narrow the result set first with indexed columns (equality, ranges) and then apply contains to filter further."
 ---
 
 We've added two new query methods, `or` and `contains`, to Appwrite Databases. By adding array element matches, partial text matches, as well as logical OR queries, we allow for more flexibility in managing your data.
 
 These two query methods have been highly requested by the Appwrite community, and we’re excited to show you how to use them, so let’s jump in and take a look!
 
-- `contains` - partial text matches on string attributes, array element matching on array attributes
+- `contains` - partial text matches on text columns, array element matching on array columns
 - `or` -  write logical OR queries
 
 # Contains operator
@@ -35,16 +36,16 @@ These two query methods have been highly requested by the Appwrite community, an
 The contains operator is a great addition to the existing text search operators such as `startsWith` & `endsWith`, and can be used in combination with these two. With contains, we can now perform a broader search by matching against any text within a substring. This is extremely useful when searching a large body of text or when the placement of keywords is unknown.
 
 ```js
-db.listDocuments({
+tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
+    tableId: '<TABLE_ID>',
     queries: [
         Query.contains('content', ['happy', 'love'])
     ]
 });
 ```
 
-It’s important to note that the contains operator also works on array attributes as well. For example, if we set a string attribute to act as an array, you could search this array in the same way you would search any other string.
+It’s important to note that the contains operator also works on array columns as well. For example, if we set a text column to act as an array, you could search this array in the same way you would search any other text value.
 
 ```js
  Query.contains('tags', ['mystery', 'comedy', 'PG-13'])
@@ -58,9 +59,9 @@ The logical OR operator allows us to nest queries in an OR condition. This gives
 To use the OR operator pass `Query.or([...])` to the queries array and provide at least two queries within the nested array.
 
 ```js
-db.listDocuments({
+tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
+    tableId: '<TABLE_ID>',
     queries: [
         Query.or([
             Query.contains('name','ivy'),

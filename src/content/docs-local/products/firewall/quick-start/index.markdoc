@@ -22,7 +22,7 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
 2. Enter a **Rule name** (for example `Deny staging admin path`).
 3. Leave **Resource type** set to **API** so the rule applies to project API traffic (`/v1/...`).
 4. Under conditions, set:
-   - Attribute: **Request path**
+   - Attribute: **Path**
    - Operator: **Starts with**
    - Value: a path you want to block (for example `/v1/account`)
 5. Set **Action** to **Deny**.

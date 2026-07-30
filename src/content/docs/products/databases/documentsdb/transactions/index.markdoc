@@ -1,0 +1,1274 @@
+---
+layout: article
+title: Transactions
+description: Stage multiple database operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.
+---
+
+Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections.
+
+# How transactions work {% #how-transactions-work %}
+
+1. Call the [createTransaction](#create-a-transaction) method to create a transaction. This will return a transaction model, including its ID.
+2. Stage operations by passing the `transactionId` parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the [createOperations](#create-operations) method.
+3. Call the [updateTransaction](#update-transaction) method to commit or roll back.
+
+On commit, Appwrite replays all staged logs in order inside a real database transaction. Staged operations see earlier staged changes (read your own writes). If any affected document changed outside your transaction, the commit fails with a conflict.
+
+{% info title="Scope and limitations" %}
+You can stage operations across any database and collection within the same transaction. Schema operations (for example, creating or deleting indexes) are not included in transactions.
+{% /info %}
+
+# Limits {% #limits %}
+
+The maximum number of operations you can stage per transaction depends on your plan:
+
+| Plan | Max operations per transaction |
+|------|-------------------------------|
+| Free | 100 |
+| Pro | 1,000 |
+
+# Create a transaction {% #create-a-transaction %}
+
+Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`. Pass this ID as `transactionId` to subsequent operations.
+
+{% multicode %}
+```client-web
+import { Client, DocumentsDB } from 'appwrite';
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const documentsDB = new DocumentsDB(client);
+
+const tx = await documentsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```client-react-native
+import { Client, DocumentsDB } from 'react-native-appwrite';
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+const documentsDB = new DocumentsDB(client);
+
+const tx = await documentsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>');
+
+final documentsDB = DocumentsDB(client);
+
+final tx = await documentsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+
+let documentsDB = DocumentsDB(client)
+
+let tx = try await documentsDB.createTransaction()
+// tx.$id is your transactionId
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.DocumentsDB
+
+val client = Client(applicationContext)
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+
+val documentsDB = DocumentsDB(client)
+
+val tx = documentsDB.createTransaction()
+// tx.$id is your transactionId
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.services.DocumentsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>");
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+// Create a transaction (asynchronous)
+documentsDB.createTransaction(new CoroutineCallback<>((tx, error) -> {
+  if (error != null) {
+    error.printStackTrace();
+    return;
+  }
+  System.out.println(tx);
+}));
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<API_KEY>');
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const tx = await documentsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```server-deno
+import * as sdk from 'npm:node-appwrite';
+
+const client = new sdk.Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<PROJECT_ID>')
+  .setKey('<API_KEY>');
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const tx = await documentsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+documents_db = DocumentsDB(client)
+
+tx = documents_db.create_transaction()
+# tx.$id is your transactionId
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\DocumentsDB;
+
+$client = new Client();
+
+$client
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<PROJECT_ID>')
+  ->setKey('<API_KEY>')
+;
+
+$documentsDB = new DocumentsDB($client);
+
+$tx = $documentsDB->createTransaction();
+// $tx->\$id is your transactionId
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<PROJECT_ID>')
+  .set_key('<API_KEY>')
+
+documents_db = DocumentsDB.new(client)
+
+tx = documents_db.create_transaction
+# tx['$id'] is your transactionId
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<PROJECT_ID>")
+  .SetKey("<API_KEY>");
+
+var documentsDB = new DocumentsDB(client);
+
+var tx = await documentsDB.CreateTransaction();
+// tx.$id is your transactionId
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+void main() async {
+  Client client = Client();
+  DocumentsDB documentsDB = DocumentsDB(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+  final tx = await documentsDB.createTransaction();
+  // tx contains the transaction ID
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<PROJECT_ID>"),
+    appwrite.WithKey("<API_KEY>"),
+  )
+
+  documentsDB := appwrite.NewDocumentsDB(client)
+
+  tx, err := documentsDB.CreateTransaction()
+  if err != nil { log.Fatal(err) }
+  _ = tx
+}
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>")
+
+let documentsDB = DocumentsDB(client)
+
+let tx = try await documentsDB.createTransaction()
+// tx.$id is your transactionId
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.DocumentsDB
+
+val client = Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>")
+
+val documentsDB = DocumentsDB(client)
+
+val tx = documentsDB.createTransaction()
+// tx.$id is your transactionId
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.DocumentsDB;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>");
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+documentsDB.createTransaction(new CoroutineCallback<>((result, error) -> {
+  if (error != null) {
+    error.printStackTrace();
+    return;
+  }
+  System.out.println(result);
+}));
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let tx = documents_db.create_transaction(None).await?;
+    // tx.id is your transaction_id
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Stage operations {% #stage-operations %}
+
+Add the `transactionId` parameter to supported methods to stage them instead of immediately persisting.
+
+When you pass `transactionId`, Appwrite writes the operation to an internal staging area. The target collection is not modified until you commit the transaction.
+
+## Stage single operations {% #stage-single-operations %}
+
+Create, update, upsert, delete, and atomic numeric operations accept `transactionId`, as well as their bulk versions (createDocuments, updateDocuments, upsertDocuments, deleteDocuments).
+
+{% multicode %}
+```client-web
+// Create inside a transaction
+await documentsDB.createDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { name: 'Walter' },
+  transactionId: tx.$id
+});
+
+// Increment inside a transaction
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: tx.$id
+});
+```
+```client-flutter
+// Create inside a transaction
+await documentsDB.createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { 'name': 'Walter' },
+  transactionId: tx.$id
+);
+
+// Increment inside a transaction
+await documentsDB.incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: tx.$id
+);
+```
+```client-apple
+// Create inside a transaction
+try await documentsDB.createDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  data: ["name": "Walter"],
+  transactionId: tx.$id
+)
+
+// Increment inside a transaction
+try await documentsDB.incrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "credits",
+  value: 1,
+  transactionId: tx.$id
+)
+```
+```server-kotlin
+// Create inside a transaction
+documentsDB.createDocument(
+  databaseId = "<DATABASE_ID>",
+  collectionId = "<COLLECTION_ID>",
+  documentId = "<DOCUMENT_ID>",
+  data = mapOf("name" to "Walter"),
+  transactionId = tx.$id
+)
+
+// Increment inside a transaction
+documentsDB.incrementDocumentAttribute(
+  databaseId = "<DATABASE_ID>",
+  collectionId = "<COLLECTION_ID>",
+  documentId = "<DOCUMENT_ID>",
+  attribute = "credits",
+  value = 1,
+  transactionId = tx.$id
+)
+```
+```server-java
+// Create inside a transaction (asynchronous)
+documentsDB.createDocument(
+  "<DATABASE_ID>",
+  "<COLLECTION_ID>",
+  "<DOCUMENT_ID>",
+  Map.of("name", "Walter"),
+  "<TRANSACTION_ID>",
+  new CoroutineCallback<>((document, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(document);
+    return null;
+  })
+);
+
+// Increment inside a transaction (asynchronous)
+documentsDB.incrementDocumentAttribute(
+  "<DATABASE_ID>",
+  "<COLLECTION_ID>",
+  "<DOCUMENT_ID>",
+  "credits",
+  1,
+  "<TRANSACTION_ID>",
+  new CoroutineCallback<>((document, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(document);
+    return null;
+  })
+);
+```
+```client-react-native
+// Create inside a transaction
+await documentsDB.createDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { name: 'Walter' },
+  transactionId: tx.$id
+});
+
+// Increment inside a transaction
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: tx.$id
+});
+```
+```server-nodejs
+// Update inside a transaction
+await documentsDB.updateDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { plan: 'pro' },
+  transactionId: tx.$id
+});
+
+// Delete inside a transaction
+await documentsDB.deleteDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  transactionId: tx.$id
+});
+```
+```server-python
+# Upsert inside a transaction
+documents_db.upsert_document(
+  database_id = '<DATABASE_ID>',
+  collection_id = '<COLLECTION_ID>',
+  document_id = '<DOCUMENT_ID>',
+  data = { 'name': 'Walter' },
+  transaction_id = tx.id
+)
+
+# Decrement inside a transaction
+documents_db.decrement_document_attribute(
+  database_id = '<DATABASE_ID>',
+  collection_id = '<COLLECTION_ID>',
+  document_id = '<DOCUMENT_ID>',
+  attribute = 'credits',
+  value = 1,
+  transaction_id = tx.id
+)
+```
+```server-php
+// Create inside a transaction
+$documentsDB->createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: ['name' => 'Walter'],
+  transactionId: $tx['$id']
+);
+
+// Increment inside a transaction
+$documentsDB->incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: $tx['$id']
+);
+```
+```server-ruby
+# Create inside a transaction
+documents_db.create_document(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: '<DOCUMENT_ID>',
+  data: { 'name' => 'Walter' },
+  transaction_id: tx['$id']
+)
+
+# Increment inside a transaction
+documents_db.increment_document_attribute(
+  database_id: '<DATABASE_ID>',
+  collection_id: '<COLLECTION_ID>',
+  document_id: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transaction_id: tx['$id']
+)
+```
+```server-dotnet
+// Create inside a transaction
+await documentsDB.CreateDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  data: new Dictionary<string, object> { ["name"] = "Walter" },
+  transactionId: tx.Id
+);
+
+// Increment inside a transaction
+await documentsDB.IncrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "credits",
+  value: 1,
+  transactionId: tx.Id
+);
+```
+```server-dart
+// Create inside a transaction
+await documentsDB.createDocument(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { 'name': 'Walter' },
+  transactionId: tx.Id
+);
+
+// Increment inside a transaction
+await documentsDB.incrementDocumentAttribute(
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: tx.Id
+);
+```
+```server-deno
+// Create inside a transaction
+await documentsDB.createDocument({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  data: { name: 'Walter' },
+  transactionId: tx.$id
+});
+
+// Increment inside a transaction
+await documentsDB.incrementDocumentAttribute({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documentId: '<DOCUMENT_ID>',
+  attribute: 'credits',
+  value: 1,
+  transactionId: tx.$id
+});
+```
+```server-swift
+// Create inside a transaction
+try await documentsDB.createDocument(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  data: ["name": "Walter"],
+  transactionId: tx.$id
+)
+
+// Increment inside a transaction
+try await documentsDB.incrementDocumentAttribute(
+  databaseId: "<DATABASE_ID>",
+  collectionId: "<COLLECTION_ID>",
+  documentId: "<DOCUMENT_ID>",
+  attribute: "credits",
+  value: 1,
+  transactionId: tx.$id
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let tx = documents_db.create_transaction(None).await?;
+
+    // Update inside a transaction
+    documents_db.update_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        Some(json!({ "plan": "pro" })),
+        None,
+        Some(&tx.id),
+    ).await?;
+
+    // Delete inside a transaction
+    documents_db.delete_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        Some(&tx.id),
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Stage many with createOperations {% #create-operations %}
+
+Use the `createOperations` method to stage multiple operations across databases and collections in a single request. Provide an array of operation objects:
+
+```json
+[
+  {
+    "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
+    "databaseId": "<DATABASE_ID>",
+    "collectionId": "<COLLECTION_ID>",
+    "documentId": "<DOCUMENT_ID>",
+    "data": {}
+  }
+]
+```
+
+### Provide data for each action (createOperations) {% #provide-data-for-each-action %}
+
+### Create, update, and upsert {% #create-update-upsert %}
+Pass a raw data object.
+```json
+{ "name": "Walter" }
+```
+
+### Increment and decrement {% #increment-decrement %}
+Pass a value and optionally `min`/`max` bounds.
+```json
+{ "value": 1, "min": 0, "max": 1000, "attribute": "<ATTRIBUTE_NAME>" }
+```
+
+### Bulk create and bulk upsert {% #bulk-create-upsert %}
+Pass an array of raw data objects.
+```json
+[{ "$id": "123", "name": "Walter" }]
+```
+
+### Bulk update {% #bulk-update %}
+Pass queries and the data to apply.
+```json
+{ "queries": [{"method": "equal", "attribute": "status", "values": ["draft"]}], "data": { "status": "published" } }
+```
+
+### Bulk delete {% #bulk-delete %}
+Pass queries to select documents to delete.
+```json
+{ "queries": [{"method": "equal", "attribute": "archived", "values": [true]}] }
+```
+
+{% multicode %}
+```server-nodejs
+// Stage multiple operations at once
+await documentsDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'create',
+      databaseId: '<DB_A>',
+      collectionId: '<COLLECTION_1>',
+      documentId: 'u1',
+      data: { name: 'Walter' }
+    },
+    {
+      action: 'increment',
+      databaseId: '<DB_B>',
+      collectionId: '<COLLECTION_2>',
+      documentId: 'u2',
+      data: { value: 1, min: 0, attribute: 'credits' }
+    }
+  ]
+});
+```
+```server-python
+documents_db.create_operations(
+  transaction_id = tx.id,
+  operations = [
+    {
+      'action': 'create',
+      'databaseId': '<DB_A>',
+      'collectionId': '<COLLECTION_1>',
+      'documentId': 'u1',
+      'data': { 'name': 'Walter' }
+    },
+    {
+      'action': 'increment',
+      'databaseId': '<DB_B>',
+      'collectionId': '<COLLECTION_2>',
+      'documentId': 'u2',
+      'data': { 'value': 1, 'min': 0, 'attribute': 'credits' }
+    }
+  ]
+)
+```
+```client-web
+await documentsDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'create',
+      databaseId: '<DB_A>',
+      collectionId: '<COLLECTION_1>',
+      documentId: 'u1',
+      data: { name: 'Walter' }
+    },
+    {
+      action: 'increment',
+      databaseId: '<DB_B>',
+      collectionId: '<COLLECTION_2>',
+      documentId: 'u2',
+      data: { value: 1, min: 0, attribute: 'credits' }
+    }
+  ]
+});
+```
+```client-flutter
+await documentsDB.createOperations(
+  transactionId: tx.$id,
+  operations: [
+    {
+      'action': 'create',
+      'databaseId': '<DB_A>',
+      'collectionId': '<COLLECTION_1>',
+      'documentId': 'u1',
+      'data': { 'name': 'Walter' }
+    },
+    {
+      'action': 'increment',
+      'databaseId': '<DB_B>',
+      'collectionId': '<COLLECTION_2>',
+      'documentId': 'u2',
+      'data': { 'value': 1, 'min': 0, 'attribute': 'credits' }
+    }
+  ],
+);
+```
+```client-apple
+try await documentsDB.createOperations(
+  transactionId: tx.$id,
+  operations: [
+    [
+      "action": "create",
+      "databaseId": "<DB_A>",
+      "collectionId": "<COLLECTION_1>",
+      "documentId": "u1",
+      "data": ["name": "Walter"]
+    ],
+    [
+      "action": "increment",
+      "databaseId": "<DB_B>",
+      "collectionId": "<COLLECTION_2>",
+      "documentId": "u2",
+      "data": ["value": 1, "min": 0, "attribute": "credits"]
+    ]
+  ]
+)
+```
+```server-kotlin
+documentsDB.createOperations(
+  transactionId = tx.$id,
+  operations = listOf(
+    mapOf(
+      "action" to "create",
+      "databaseId" to "<DB_A>",
+      "collectionId" to "<COLLECTION_1>",
+      "documentId" to "u1",
+      "data" to mapOf("name" to "Walter")
+    ),
+    mapOf(
+      "action" to "increment",
+      "databaseId" to "<DB_B>",
+      "collectionId" to "<COLLECTION_2>",
+      "documentId" to "u2",
+      "data" to mapOf("value" to 1, "min" to 0, "attribute" to "credits")
+    )
+  )
+)
+```
+```server-java
+// Stage multiple operations at once (asynchronous)
+List<Map<String, Object>> operations = Arrays.asList(
+  Map.of(
+    "action", "create",
+    "databaseId", "<DB_A>",
+    "collectionId", "<COLLECTION_1>",
+    "documentId", "u1",
+    "data", Map.of("name", "Walter")
+  ),
+  Map.of(
+    "action", "increment",
+    "databaseId", "<DB_B>",
+    "collectionId", "<COLLECTION_2>",
+    "documentId", "u2",
+    "data", Map.of("value", 1, "min", 0, "attribute", "credits")
+  )
+);
+
+documentsDB.createOperations(
+  "<TRANSACTION_ID>",
+  operations,
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
+```client-react-native
+await documentsDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'create',
+      databaseId: '<DB_A>',
+      collectionId: '<COLLECTION_1>',
+      documentId: 'u1',
+      data: { name: 'Walter' }
+    },
+    {
+      action: 'increment',
+      databaseId: '<DB_B>',
+      collectionId: '<COLLECTION_2>',
+      documentId: 'u2',
+      data: { value: 1, min: 0, attribute: 'credits' }
+    }
+  ]
+});
+```
+```server-deno
+await documentsDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'create',
+      databaseId: '<DB_A>',
+      collectionId: '<COLLECTION_1>',
+      documentId: 'u1',
+      data: { name: 'Walter' }
+    },
+    {
+      action: 'increment',
+      databaseId: '<DB_B>',
+      collectionId: '<COLLECTION_2>',
+      documentId: 'u2',
+      data: { value: 1, min: 0, attribute: 'credits' }
+    }
+  ]
+});
+```
+```server-php
+$documentsDB->createOperations(
+  transactionId: $tx['$id'],
+  operations: [
+    [
+      'action' => 'create',
+      'databaseId' => '<DB_A>',
+      'collectionId' => '<COLLECTION_1>',
+      'documentId' => 'u1',
+      'data' => [ 'name' => 'Walter' ]
+    ],
+    [
+      'action' => 'increment',
+      'databaseId' => '<DB_B>',
+      'collectionId' => '<COLLECTION_2>',
+      'documentId' => 'u2',
+      'data' => [ 'value' => 1, 'min' => 0, 'attribute' => 'credits' ]
+    ]
+  ]
+);
+```
+```server-ruby
+documents_db.create_operations(
+  transaction_id: tx['$id'],
+  operations: [
+    {
+      'action' => 'create',
+      'databaseId' => '<DB_A>',
+      'collectionId' => '<COLLECTION_1>',
+      'documentId' => 'u1',
+      'data' => { 'name' => 'Walter' }
+    },
+    {
+      'action' => 'increment',
+      'databaseId' => '<DB_B>',
+      'collectionId' => '<COLLECTION_2>',
+      'documentId' => 'u2',
+      'data' => { 'value' => 1, 'min' => 0, 'attribute' => 'credits' }
+    }
+  ]
+)
+```
+```server-dotnet
+await documentsDB.CreateOperations(
+  transactionId: tx.Id,
+  operations: new List<Dictionary<string, object>>
+  {
+    new Dictionary<string, object>
+    {
+      ["action"] = "create",
+      ["databaseId"] = "<DB_A>",
+      ["collectionId"] = "<COLLECTION_1>",
+      ["documentId"] = "u1",
+      ["data"] = new Dictionary<string, object> { ["name"] = "Walter" }
+    },
+    new Dictionary<string, object>
+    {
+      ["action"] = "increment",
+      ["databaseId"] = "<DB_B>",
+      ["collectionId"] = "<COLLECTION_2>",
+      ["documentId"] = "u2",
+      ["data"] = new Dictionary<string, object> { ["value"] = 1, ["min"] = 0, ["attribute"] = "credits" }
+    }
+  }
+);
+```
+```server-dart
+await documentsDB.createOperations(
+  transactionId: tx.Id,
+  operations: [
+    {
+      'action': 'create',
+      'databaseId': '<DB_A>',
+      'collectionId': '<COLLECTION_1>',
+      'documentId': 'u1',
+      'data': { 'name': 'Walter' }
+    },
+    {
+      'action': 'increment',
+      'databaseId': '<DB_B>',
+      'collectionId': '<COLLECTION_2>',
+      'documentId': 'u2',
+      'data': { 'value': 1, 'min': 0, 'attribute': 'credits' }
+    }
+  ]
+);
+```
+```server-swift
+try await documentsDB.createOperations(
+  transactionId: tx.$id,
+  operations: [
+    [
+      "action": "create",
+      "databaseId": "<DB_A>",
+      "collectionId": "<COLLECTION_1>",
+      "documentId": "u1",
+      "data": ["name": "Walter"]
+    ],
+    [
+      "action": "increment",
+      "databaseId": "<DB_B>",
+      "collectionId": "<COLLECTION_2>",
+      "documentId": "u2",
+      "data": ["value": 1, "min": 0, "attribute": "credits"]
+    ]
+  ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let tx = documents_db.create_transaction(None).await?;
+
+    // Stage multiple operations at once
+    documents_db.create_operations(
+        &tx.id,
+        Some(vec![
+            json!({
+                "action": "create",
+                "databaseId": "<DB_A>",
+                "collectionId": "<COLLECTION_1>",
+                "documentId": "u1",
+                "data": { "name": "Walter" }
+            }),
+            json!({
+                "action": "increment",
+                "databaseId": "<DB_B>",
+                "collectionId": "<COLLECTION_2>",
+                "documentId": "u2",
+                "data": { "value": 1, "min": 0, "attribute": "credits" }
+            }),
+        ]),
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Commit or roll back {% #commit-or-rollback %}
+
+When you are done staging operations, call the `updateTransaction` method to finalize the transaction.
+
+{% multicode %}
+```client-web
+// Commit
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+
+// Or roll back
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  rollback: true
+});
+```
+```client-flutter
+// Commit
+await documentsDB.updateTransaction(
+  transactionId: tx.$id,
+  commit: true
+);
+
+// Roll back
+await documentsDB.updateTransaction(
+  transactionId: tx.$id,
+  rollback: true
+);
+```
+```client-apple
+// Commit
+try await documentsDB.updateTransaction(
+  transactionId: tx.$id,
+  commit: true
+)
+
+// Roll back
+try await documentsDB.updateTransaction(
+  transactionId: tx.$id,
+  rollback: true
+)
+```
+```server-kotlin
+// Commit
+documentsDB.updateTransaction(
+  transactionId = tx.$id,
+  commit = true
+)
+
+// Roll back
+documentsDB.updateTransaction(
+  transactionId = tx.$id,
+  rollback = true
+)
+```
+```server-java
+// Commit (asynchronous)
+documentsDB.updateTransaction(
+  "<TRANSACTION_ID>",
+  true,
+  false,
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+
+// Roll back (asynchronous)
+documentsDB.updateTransaction(
+  "<TRANSACTION_ID>",
+  false,
+  true,
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
+```client-react-native
+// Commit
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+
+// Roll back
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  rollback: true
+});
+```
+```server-nodejs
+// Commit
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+
+// Roll back
+await documentsDB.updateTransaction({
+  transactionId: tx.$id,
+  rollback: true
+});
+```
+```server-python
+# Commit
+documents_db.update_transaction(
+  transaction_id = tx.id,
+  commit = True
+)
+
+# Roll back
+documents_db.update_transaction(
+  transaction_id = tx.id,
+  rollback = True
+)
+```
+```server-php
+// Commit
+$documentsDB->updateTransaction(
+  transactionId: $tx['$id'],
+  commit: true
+);
+
+// Roll back
+$documentsDB->updateTransaction(
+  transactionId: $tx['$id'],
+  rollback: true
+);
+```
+```server-ruby
+# Commit
+documents_db.update_transaction(
+  transaction_id: tx['$id'],
+  commit: true
+)
+
+# Roll back
+documents_db.update_transaction(
+  transaction_id: tx['$id'],
+  rollback: true
+)
+```
+```server-dotnet
+// Commit
+await documentsDB.UpdateTransaction(
+  transactionId: tx.Id,
+  commit: true
+);
+
+// Roll back
+await documentsDB.UpdateTransaction(
+  transactionId: tx.Id,
+  rollback: true
+);
+```
+```server-dart
+// Commit
+await documentsDB.updateTransaction(
+  transactionId: tx.Id,
+  commit: true
+);
+
+// Roll back
+await documentsDB.updateTransaction(
+  transactionId: tx.Id,
+  rollback: true
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    // Commit
+    documents_db.update_transaction(
+        "<TRANSACTION_ID>",
+        Some(true),
+        None,
+    ).await?;
+
+    // Roll back
+    documents_db.update_transaction(
+        "<TRANSACTION_ID>",
+        None,
+        Some(true),
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Handle conflicts {% #handle-conflicts %}
+
+On commit, Appwrite verifies that documents affected by your transaction haven't changed externally since they were staged. If a conflicting change is detected, the commit fails with a conflict error. Resolve the conflict (for example, refetch and re-stage) and try again.
+
+{% info title="Best practices" %}
+Keep transactions short-lived to reduce the likelihood of conflicts. Stage related updates in the order they must be applied. Prefer `createOperations` when you need to stage many changes across multiple collections.
+{% /info %}
+
+{% arrow_link href="/docs/references" %}
+Explore the API references
+{% /arrow_link %}

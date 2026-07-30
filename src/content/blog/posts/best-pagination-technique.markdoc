@@ -3,6 +3,7 @@ layout: post
 title: "Best database pagination technique"
 description: "Learn how to fix database-related performance problems using offset and cursor pagination."
 date: 2024-08-05
+lastUpdated: 2026-06-29
 cover: /images/blog/best-pagination-technique/cover.avif
 timeToRead: 8
 author: matej-baco
@@ -58,9 +59,9 @@ To get the second page, we keep the limit at 10 (this doesn't change since we wa
 
 In the SQL world, such a query would be written as `SELECT * FROM posts OFFSET 10 LIMIT 10`.
 
-Some websites implementing offset pagination also show the page number of the last page. How do they do it? Alongside results for each page, they also tend to return a `sum` attribute telling you how many rows there are in total. Using `limit`, `sum`, and a bit of math, you can calculate last page number using `lastPage = ceil(sum / limit)`
+Some websites implementing offset pagination also show the page number of the last page. How do they do it? Alongside results for each page, they also tend to return a `sum` field telling you how many rows there are in total. Using `limit`, `sum`, and a bit of math, you can calculate last page number using `lastPage = ceil(sum / limit)`
 
-As convenient as this feature is for the user, developers struggle to scale this type of pagination. Looking at `sum` attribute, we can already see that it can take quite some time to count all rows in a database to the exact number. **Alongside that, the `offset` in databases is implemented in a way that loops through rows to know how many should be skipped.** That means that the higher our offset is, the longer our database query will take.
+As convenient as this feature is for the user, developers struggle to scale this type of pagination. Looking at `sum`, we can already see that it can take quite some time to count all rows in a database to the exact number. **Alongside that, the `offset` in databases is implemented in a way that loops through rows to know how many should be skipped.** That means that the higher our offset is, the longer our database query will take.
 
 Another downside of offset pagination is that it doesn't play well with real-time data or data that changes often. Offset says how many rows we want to skip but doesn't account for row deletion or new rows being created. Such an offset can result in showing duplicate data or missing data.
 
@@ -94,47 +95,45 @@ This is a really rare condition and only occurs if the row's ID that you are abo
 
 [Appwrite](https://appwrite.io/) is an open-source backend-as-a-service that abstracts all the complexity involved in building a modern application by providing you with a set of REST APIs for your core backend needs. Appwrite handles user authentication and authorization, databases, file storage, cloud functions, webhooks, messaging, and more. You can extend Appwrite using your favorite backend language if anything is missing.
 
-Appwrite Database lets you store any text-based data that needs to be shared across your users. Appwrite's database allows you to create multiple collections (tables) and store multiple documents (rows) in it. Each collection has attributes (columns) configured to give your dataset a proper schema. You can also configure indexes to make your search queries more performant. When reading your data, you can use powerful queries, filter them, sort them, limit the number of results, and paginate over them.
+Appwrite Database lets you store any text-based data that needs to be shared across your users. Appwrite's database allows you to create multiple tables and store multiple rows in it. Each table has columns configured to give your dataset a proper schema. You can also configure indexes to make your search queries more performant. When reading your data, you can use powerful queries, filter them, sort them, limit the number of results, and paginate over them.
 
-Appwrite's pagination supports both offset and cursor pagination. Let's imagine you have a collection with ID `articles`. You can get documents from this collection with either offset or cursor pagination:
+Appwrite's pagination supports both offset and cursor pagination. Let's imagine you have a table with ID `articles`. You can get rows from this table with either offset or cursor pagination:
 
 ```jsx
-// Setup
-import { Appwrite, Databases, Query } from "appwrite";
+import { Client, TablesDB, Query } from "appwrite";
 
-const client = new Appwrite();
-client
+const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('articles-demo'); // Your project ID
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 // Offset pagination
-databases.listDocuments(
-		'main', // Database ID
-    'articles', // Collection ID
-    [
-	    Query.limit(10), // Limit, total documents in the response
-	    Query.offset(500), // Offset, amount of documents to skip
+tablesDB.listRows({
+    databaseId: 'main',
+    tableId: 'articles',
+    queries: [
+	    Query.limit(10), // Limit, total rows in the response
+	    Query.offset(500), // Offset, amount of rows to skip
     ]
-).then((response) => {
+}).then((response) => {
     console.log(response);
 });
 
 // Cursor pagination
-databases.listDocuments(
-		'main', // Database ID
-    'articles', // Collection ID
-    [
-	    Query.limit(10), // Limit, total documents in the response
-	    Query.cursorAfter('61d6eb2281fce3650c2c', // ID of document I want to paginate after
+tablesDB.listRows({
+    databaseId: 'main',
+    tableId: 'articles',
+    queries: [
+	    Query.limit(10), // Limit, total rows in the response
+	    Query.cursorAfter('61d6eb2281fce3650c2c'), // ID of row I want to paginate after
     ]
-).then((response) => {
+}).then((response) => {
     console.log(response);
 });
 
 ```
 
-First, we import the Appwrite SDK and set up an instance that connects to our Appwrite Cloud project. Then, we list 10 documents using offset pagination. Right after, we write the exact same list documents query, but this time using `cursor` instead of offset pagination.
+First, we import the Appwrite SDK and set up an instance that connects to our Appwrite Cloud project. Then, we list 10 rows using offset pagination. Right after, we write the exact same list rows query, but this time using `cursor` instead of offset pagination.
 
 ## Benchmarks
 
@@ -142,7 +141,7 @@ We’ve frequently mentioned the term "performance" in this article without prov
 
 > You can find complete source code in the [GitHub repository.](https://github.com/appwrite)
 
-First, you set up Appwrite, register a user, create a project and create a collection called `posts` with read permission set to `any`. To learn more about this process, visit the [Appwrite docs](https://appwrite.io/docs). You should now have Appwrite ready to go.
+First, you set up Appwrite, register a user, create a project and create a table called `posts` with read permission set to `any`. To learn more about this process, visit the [Appwrite docs](https://appwrite.io/docs). You should now have Appwrite ready to go.
 
 Use the following script to load data into our MariaDB database and prepare for the benchmark. We could use Appwrite SDK, but talking directly to MariaDB offers more optional write queries for large datasets.
 
@@ -174,7 +173,7 @@ for(let i = 0; i < 100; i++) {
         index++;
     }
 
-    const query = `INSERT INTO _project_${config.projectId}_collection_posts (_uid, _read, _write) VALUES ${queryValues.join(", ")}`;
+    const query = `INSERT INTO posts (_uid, _read, _write) VALUES ${queryValues.join(", ")}`;
     promises.push(connection.execute(query));
 }
 
@@ -188,9 +187,9 @@ console.error(`🌟 Successfully finished`);
 
 > We used two layers for loops to increase the speed of the script. First for loop creates query executions that need to be awaited, and the second loop creates a long query holding multiple insert requests. Ideally, we would want everything in one request, but that is impossible due to MySQL configuration, so we split it into 100 requests.
 
-Now you have 1 million documents inserted in less than a minute, and are ready to start the benchmarks. We will be using the [k6](https://k6.io/) load-testing library for this demo.
+Now you have 1 million rows inserted in less than a minute, and are ready to start the benchmarks. We will be using the [k6](https://k6.io/) load-testing library for this demo.
 
-Let's benchmark the well-known and widely used offset pagination first. During each test scenario, we try to fetch a page with 10 documents, from different parts of our dataset. We will start with offset 0 and go all the way to an offset of 900k in increments of 100k. The benchmark is written in a way that makes only one request at a time to keep it as accurate as possible. We will also run the same benchmark ten times and measure average response times to ensure statistical significance. We'll be using k6's HTTP client to make requests to Appwrite's REST API.
+Let's benchmark the well-known and widely used offset pagination first. During each test scenario, we try to fetch a page with 10 rows, from different parts of our dataset. We will start with offset 0 and go all the way to an offset of 900k in increments of 100k. The benchmark is written in a way that makes only one request at a time to keep it as accurate as possible. We will also run the same benchmark ten times and measure average response times to ensure statistical significance. We'll be using k6's HTTP client to make requests to Appwrite's REST API.
 
 ```jsx
 // script_offset.sh
@@ -211,7 +210,7 @@ export default function () {
 		const offset = Query.offset(__ENV.OFFSET);
 		const limit = 10;
 
-    http.get(`${config.endpoint}/databases/main/collections/posts/documents?queries[]=${offset}&queries[]=${limit}`, {
+    http.get(`${config.endpoint}/tablesdb/main/tables/posts/rows?queries[]=${offset}&queries[]=${limit}`, {
         headers: {
             'content-type': 'application/json',
             'X-Appwrite-Project': config.projectId
@@ -256,9 +255,9 @@ Within a minute, all benchmarks finished, providing me with the average response
 | 90% offset | 482.71 |
 
 ![Cursor pagination benchmark](/images/blog/best-pagination-technique/graph.avif)
-As you can see, offset 0 was pretty fast, responding in less than 4ms. The first jump was to offset 100k, and the change was drastic, increasing response times to 52ms. With each increase in the offset, the duration went up, resulting in almost 500ms to get ten documents after an offset of 900k documents. That is crazy!
+As you can see, offset 0 was pretty fast, responding in less than 4ms. The first jump was to offset 100k, and the change was drastic, increasing response times to 52ms. With each increase in the offset, the duration went up, resulting in almost 500ms to get ten rows after an offset of 900k rows. That is crazy!
 
-Now let's update our script to use cursor pagination. We will update our script to use a cursor instead of offset and update our bash script to provide a cursor (document ID) instead of an offset number.
+Now let's update our script to use cursor pagination. We will update our script to use a cursor instead of offset and update our bash script to provide a cursor (row ID) instead of an offset number.
 
 ```jsx
 // script_cursor.js
@@ -279,7 +278,7 @@ export default function () {
 		const cursor = Query.cursorAfter(__ENV.CURSOR);
 		const limit = 10;
 
-    http.get(`${config.endpoint}/databases/main/collections/posts/documents?queries[]=${offset}&queries[]=${limit}`, {
+    http.get(`${config.endpoint}/tablesdb/main/tables/posts/rows?queries[]=${cursor}&queries[]=${limit}`, {
             headers: {
             'content-type': 'application/json',
             'X-Appwrite-Project': config.projectId

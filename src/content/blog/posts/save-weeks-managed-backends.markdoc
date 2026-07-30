@@ -3,6 +3,7 @@ layout: post
 title: "How developers can save weeks by using managed backends"
 description: A concrete look at the development time saved when using a managed backend platform instead of building and maintaining backend infrastructure from scratch.
 date: 2026-03-16
+lastUpdated: 2026-06-29
 cover: /images/blog/save-weeks-managed-backends/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -70,7 +71,7 @@ Setting up a queue-based job processing system or serverless function infrastruc
 With a managed backend platform like Appwrite, the same components are available on day one:
 
 - **Authentication** is configured in the console and available via SDK. Adding OAuth providers takes minutes per provider. MFA, password policies, and session limits are toggle configurations.
-- **Database** is set up by creating collections with defined schema and indexes. The query API is available immediately. No API layer to build.
+- **Database** is set up by creating tables with defined schema and indexes. The query API is available immediately. No API layer to build.
 - **File storage** is configured in a storage bucket with permission settings. The SDK handles chunking, validation, and serving files.
 - **Messaging** (push notifications, email, SMS) is available via the Messaging service with configured providers.
 - **Serverless functions** deploy from a connected Git repository and are triggered by HTTP, events, or schedules.

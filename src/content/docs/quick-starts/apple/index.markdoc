@@ -232,7 +232,7 @@ do {
 ```
 
 {% info title="Generate types automatically" %}
-Use the [Appwrite CLI](/docs/products/databases/type-generation) to generate model structs automatically: `appwrite types collection`
+Use the [Appwrite CLI](/docs/products/databases/type-generation) to generate model structs automatically: `appwrite types ./models`
 {% /info %}
 
 {% /section %}

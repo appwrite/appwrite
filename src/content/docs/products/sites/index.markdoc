@@ -6,7 +6,7 @@ description: Appwrite Sites is your gateway to scalable web applications. Explor
 
 Appwrite Sites empowers developers to host and manage web applications seamlessly within the Appwrite ecosystem. Appwrite Sites provides a fast, scalable, and secure way to deploy web apps directly from source control, allowing for quick iterations and live updates. Each site has a dedicated URL, runs within its own isolated container, and can be configured with custom domains and environment variables.
 
-Appwrite Sites leverages the [Appwrite Network](/docs/products/network) infrastructure to enhance your sites' performance and reliability. Your deployed sites automatically benefit from global content distribution across strategic edge locations, reducing latency and improving load times, while also gaining advanced security features including DDoS protection, [Firewall](/docs/products/firewall), and TLS encryption.
+Appwrite Sites leverages the [Appwrite Network](/docs/products/network) infrastructure to enhance your sites' performance and reliability. Your deployed sites automatically benefit from global content distribution across strategic edge locations, reducing latency and improving load times, while also gaining advanced security features including DDoS protection, Web Application Firewall (WAF), and TLS encryption.
 
 # Getting started
 

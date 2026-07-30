@@ -68,7 +68,7 @@ export const PATH_DISPLAY_MAX = 42
 export const breakdownLeadingIconFrameClass =
   'flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background'
 
-/** Rows rendered per breakdown card — matches usage API limit. */
+/** Rows rendered per breakdown card - matches usage API limit. */
 export const REQUESTS_BREAKDOWN_ROW_COUNT = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT
 
 const COUNTRY_FLAG_FETCH_PX = 40

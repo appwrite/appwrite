@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-/** Content body font — Inter with website letter-spacing (--web-letter-spacing-tight). */
+/** Content body font - Inter with website letter-spacing (--web-letter-spacing-tight). */
 export const CONTENT_BODY_FONT_CLASS =
   'font-inter font-normal tracking-[-0.0045em]'
 
@@ -10,11 +10,11 @@ export const DOCS_BODY_TEXT_CLASS = cn(
   'text-[16px] leading-[1.7] text-muted-foreground @[640px]:text-[17px] @[640px]:leading-[1.65]',
 )
 
-/** Sidebar TOC links — smaller than article body. */
+/** Sidebar TOC links - smaller than article body. */
 export const DOCS_TOC_LINK_TEXT_CLASS =
   'text-[14px] leading-5 text-muted-foreground'
 
-/** Table body cells — compact relative to article prose. */
+/** Table body cells - compact relative to article prose. */
 export const DOCS_TABLE_CELL_TEXT_CLASS =
   'text-[14px] leading-6 text-muted-foreground'
 
@@ -50,7 +50,7 @@ export const DOCS_PROSE_DETAIL_CLASSES = [
 export const DOCS_TOC_SECTION_TITLE_CLASS =
   'pb-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground'
 
-/** Thread messages — same body scale and prose rhythm as docs articles. */
+/** Thread messages - same body scale and prose rhythm as docs articles. */
 export const THREAD_PROSE_WRAPPER_CLASS = cn(
   DOCS_PROSE_WRAPPER_CLASS,
   'prose-links-neutral min-w-0 break-words',

@@ -1,5 +1,6 @@
 import { extractDocsToc } from '@/lib/docs/toc'
 import type { DocsTocItem } from '@/lib/docs/types'
+import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   BLOG_CATEGORY_SPOTLIGHT_POST_COUNT,
   BLOG_POSTS_PER_PAGE,
@@ -175,7 +176,8 @@ export function getBlogMarkdownExport(slug: string): string | null {
     (path) => slugFromModulePath(path, 'posts') === slug,
   )
   if (!modulePath) return null
-  return postLoaders[modulePath] ?? null
+  const raw = postLoaders[modulePath]
+  return raw ? markdocToMarkdown(raw) : null
 }
 
 export function getBlogAuthor(slug: string): BlogAuthor | null {

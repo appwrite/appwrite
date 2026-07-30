@@ -3,6 +3,7 @@ layout: post
 title: Migrate Firebase projects to Appwrite
 description: Migrate your Firebase projects to Appwrite Cloud in just one click.
 date: 2023-11-06
+lastUpdated: 2026-06-29
 cover: /images/blog/migrate-firebase-projects-to-appwrite/migrate-firebase-projects-to-appwrite.avif
 timeToRead: 10
 author: vincent-ge
@@ -11,11 +12,11 @@ faqs:
   - question: "How do I migrate from Firebase to Appwrite?"
     answer: "Use Appwrite Migrations from the Console. Create a new project, open the Migrations tab in Project Settings, select Firebase as the source, paste your Firebase Admin SDK service account JSON, choose which resources to import, and start the migration. The process runs in the background and handles users and files automatically."
   - question: "What gets migrated automatically from Firebase to Appwrite?"
-    answer: "Appwrite Migrations automatically moves user accounts and files from Firebase. Documents and cloud functions need extra work because their data models and runtimes differ. Nested documents need to be transformed into Appwrite relationships, usually with a small migration script."
+    answer: "Appwrite Migrations automatically moves user accounts and files from Firebase. Firestore data and cloud functions need extra work because their data models and runtimes differ. Nested Firestore records need to be transformed into Appwrite relationships, usually with a small migration script."
   - question: "Do I need to rewrite my Firebase Cloud Functions?"
     answer: "Yes, [Appwrite Functions](/docs/products/functions) use different syntax, runtimes, and deployment methods, so most Firebase Cloud Functions need partial rewrites. The pattern is similar to standard HTTP controllers, so the lift is manageable. Appwrite supports more runtimes and flexible execution triggers than Firebase."
   - question: "How does Appwrite handle nested data compared to Firebase?"
-    answer: "Firebase stores nested documents directly, while Appwrite uses [database relationships](/docs/products/databases) (one to one, one to many, many to many) to model linked data. You typically restructure nested Firebase data into separate Appwrite collections connected by relationships. This makes querying more predictable and easier to optimize."
+    answer: "Firebase stores nested records directly, while Appwrite uses [database relationships](/docs/products/databases) (one to one, one to many, many to many) to model linked data. You typically restructure nested Firebase data into separate Appwrite tables connected by relationships. This makes querying more predictable and easier to optimize."
   - question: "Is Appwrite Migrations free?"
     answer: "Yes, the Migrations tool is included with every Appwrite project and there is no extra fee for running migrations. You pay for the storage and usage of the resulting resources just like any other project. Self hosted Appwrite users get the same Migrations functionality at no cost."
   - question: "What do I do after the migration finishes?"
@@ -31,8 +32,8 @@ Moving is frustrating. Packing, unpacking, renting a truck, wondering if your be
 
 Just like moving houses, not every piece of old furniture will suit your new house. You’ll need some creative rearranging or maybe some new furniture. Appwrite is different from Firebase in a similar sense.
 
-- Appwrite automatically moves user accounts or files, but documents and cloud functions will require some work to move.
-- Nested documents will require some clever engineering to be transformed into Appwrite relationships. In a future version, they might be added automatically, but you will need to migrate them with a script for now.
+- Appwrite automatically moves user accounts or files, but Firestore data and cloud functions require some work to move.
+- Nested Firestore records require some planning to be transformed into Appwrite relationships. In a future version, they might be added automatically, but you need to migrate them with a script for now.
 - Appwrite Functions also use different syntax and deployment methods than Firebase’s Cloud Functions. These will need the most work to migrate and likely need to be partially rewritten.
 
 ## Prepare for your move

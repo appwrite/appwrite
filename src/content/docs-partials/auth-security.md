@@ -23,7 +23,7 @@ You can change the session limit in the **Security** tab of the Auth Service in 
 
 Security is very important to protect users' data and privacy.
 Appwrite uses a [permissions model](/docs/advanced/security/permissions) coupled with user sessions to ensure users need correct permissions to access resources.
-With all Appwrite services, including databases and storage, access is granted at the collection, bucket, document, or file level.
+With all Appwrite services, including databases and storage, access is granted at the table, bucket, row, or file level.
 These permissions are enforced for client SDKs and server SDKs when using JWT, but are ignored when using a server SDK with an API key.
 
 # Password strength {% #password-strength %}

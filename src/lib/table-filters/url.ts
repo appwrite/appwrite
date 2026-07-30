@@ -153,7 +153,7 @@ type RouterLocationLike = {
 }
 
 /**
- * Build a URL from TanStack Router location. Safe when `validateSearch` is set —
+ * Build a URL from TanStack Router location. Safe when `validateSearch` is set -
  * `location.search` is then the parsed object, not a query string.
  */
 export function urlFromRouterLocation(
@@ -207,7 +207,7 @@ export function searchParamsFromRouterLocation(
 
 /**
  * Read list search params from TanStack Router validated `search` (not `location.search`,
- * which is the parsed object when `validateSearch` is set — not a query string).
+ * which is the parsed object when `validateSearch` is set - not a query string).
  */
 export function parseListSearch(
   routeSearch: ListSearchParams | undefined,

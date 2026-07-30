@@ -108,7 +108,7 @@ export async function resolveConsoleCliAuth(): Promise<ResolvedCliAuth | null> {
 
   // httpOnly console sessions cannot be copied into CLI prefs. The fetch bridge
   // forwards browser cookies for almostnode CLI requests. Auth is already
-  // verified by the shared React Query account fetch — no extra account.get here.
+  // verified by the shared React Query account fetch - no extra account.get here.
   return {
     sessionCookie: BROWSER_PROXY_SESSION_COOKIE,
     mode: 'browser-proxy',

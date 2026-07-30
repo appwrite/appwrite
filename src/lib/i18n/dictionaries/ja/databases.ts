@@ -306,7 +306,11 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Current': '現在',
   'Current database': '現在のデータベース',
   'Current session states from pg_stat_activity.': 'pg_stat_activity からの現在のセッション状態。',
-  'Current tier: Serverless. Dedicated tiers are coming soon.': '現在のティア: Serverless。専用ティアは近日公開予定です。',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
+    'Serverless から専用ティアにアップグレードすると、CPU・メモリ・接続数の上限を確保できます。移行時は切り替えのあいだ、短時間の読み取り専用ウィンドウがあります。',
+  'Migration to dedicated compute started': '専用コンピュートへの移行を開始しました',
+  'Compute and connection limits for this database.':
+    'このデータベースのコンピュートと接続数の上限です。',
   'Custom Policies': 'カスタムポリシー',
   'Custom Policy': 'カスタムポリシー',
   'Custom dimension': 'カスタム次元',

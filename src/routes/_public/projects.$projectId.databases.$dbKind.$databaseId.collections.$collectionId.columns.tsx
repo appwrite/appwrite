@@ -80,7 +80,13 @@ export const Route = createFileRoute(
     await Promise.all([
       // Fetch tables list - blocks navigation until ready
       queryClient.ensureQueryData(
-        tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
+        tablesQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          0,
+          TABLES_PER_PAGE,
+        ),
       ),
       // Fetch database - blocks navigation until ready
       queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)),
@@ -89,6 +95,7 @@ export const Route = createFileRoute(
         tableColumnsQueryOptions(
           projectId,
           databaseId,
+          dbKind as DatabaseRouteKind,
           collectionId,
           columnsFilterQueries,
           pageIndexed,
@@ -97,11 +104,21 @@ export const Route = createFileRoute(
       ),
       // Prefetch indexes (optional data)
       queryClient.prefetchQuery(
-        tableIndexesQueryOptions(projectId, databaseId, collectionId),
+        tableIndexesQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          collectionId,
+        ),
       ),
       // Fetch table - blocks navigation until ready
       queryClient.ensureQueryData(
-        tableQueryOptions(projectId, databaseId, collectionId),
+        tableQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          collectionId,
+        ),
       ),
     ])
     const database = queryClient.getQueryData<{
@@ -120,7 +137,12 @@ export const Route = createFileRoute(
       })
     }
     const collection = queryClient.getQueryData<{ name?: string }>(
-      tableQueryOptions(projectId, databaseId, collectionId).queryKey,
+      tableQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        collectionId,
+      ).queryKey,
     )
     return { database, collection }
   },

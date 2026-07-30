@@ -3,6 +3,7 @@ layout: post
 title: Backend mistakes that quietly cost small teams weeks
 description: "Small teams don't lose velocity because of talent, they lose it because of backend mistakes made early. Here are the 6 that cost you the most, and how to avoid them."
 date: 2026-03-17
+lastUpdated: 2026-06-29
 cover: /images/blog/backend-mistakes-that-quietly-cost-small-teams-weeks/cover.avif
 timeToRead: 5
 author: aishwari
@@ -66,7 +67,7 @@ Manual deployments. Manual backups. Manual log reviews. These feel manageable wh
 
 # 6. Letting backend inconsistency accumulate across features
 
-In fast-moving teams, backend inconsistencies creep in gradually: different naming conventions across collections, different data modeling patterns for similar concepts, different permission logic applied to features built three sprints apart. Each one is minor in isolation. Together, they mean every new feature requires a developer to interpret what came before rather than extend a consistent pattern, and interpretation costs time.
+In fast-moving teams, backend inconsistencies creep in gradually: different naming conventions across tables, different data modeling patterns for similar concepts, different permission logic applied to features built three sprints apart. Each one is minor in isolation. Together, they mean every new feature requires a developer to interpret what came before rather than extend a consistent pattern, and interpretation costs time.
 
 **What to do instead:** Define backend standards early. Naming conventions, data modeling guidelines, permission defaults, environment structure. Consistency reduces cognitive load across the entire team, and that compounds into real velocity over time.
 
@@ -86,7 +87,7 @@ For small teams, Appwrite directly addresses the backend mistakes outlined above
 
 - **Consistent backend foundation across projects.** Appwrite's project-based structure gives every application the same set of backend primitives from day one, no stack debates, no rebuilding auth or storage from scratch.
 - **Integrated backend services without glue code.** Auth, databases, storage, functions, and messaging are built to work together out of the box, reducing the integration surface area that accumulates across multi-vendor backends.
-- **Granular permissions as a first-class primitive.** Appwrite's permission system lets you define access at the collection, document, bucket, and file level, making it practical to enforce least-privilege access from the start rather than retrofitting it later.
+- **Granular permissions as a first-class primitive.** Appwrite's permission system lets you define access at the table, row, bucket, and file level, making it practical to enforce least-privilege access from the start rather than retrofitting it later.
 - **Open-source and fully transparent.** Every backend infrastructure decision Appwrite makes can be verified directly in the source code. No vendor trust required.
 - **Self-hosting for teams with data residency requirements.** Deploy Appwrite within your own infrastructure when required, without switching backend stacks.
 

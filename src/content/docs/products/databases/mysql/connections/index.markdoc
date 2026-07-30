@@ -1,0 +1,509 @@
+---
+layout: article
+title: Connections
+description: Connect to your MySQL database with the mysql client or any standard driver. Retrieve connection details and rotate the primary password.
+---
+
+A native MySQL database exposes a MySQL endpoint over TLS. You connect to it the same way you would connect to any MySQL server: with the `mysql` client, any driver in any language, or any ORM.
+
+# Get connection details with the API {% #credentials %}
+
+The connection details are returned on the database object itself. Fetch the database with an API key that has the `databases.read` scope:
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const database = await mysql.get({
+    databaseId: '<DATABASE_ID>',
+});
+
+console.log(database.connectionString);
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const database = await mysql.get({
+    databaseId: '<DATABASE_ID>',
+});
+
+console.log(database.connectionString);
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$database = $mysql->get(databaseId: '<DATABASE_ID>');
+
+echo $database['connectionString'];
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+database = mysql.get(database_id='<DATABASE_ID>')
+
+print(database.connection_string)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+database = mysql.get(database_id: '<DATABASE_ID>')
+
+puts database.connection_string
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var database = await mysql.Get(databaseId: "<DATABASE_ID>");
+
+Console.WriteLine(database.ConnectionString);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final database = await mysql.get(
+    databaseId: '<DATABASE_ID>',
+);
+
+print(database.connectionString);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val database = mysql.get(
+    databaseId = "<DATABASE_ID>",
+)
+
+println(database.connectionString)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let database = try await mysql.get(
+    databaseId: "<DATABASE_ID>"
+)
+
+print(database.connectionString)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    mysql := appwrite.NewMysql(client)
+
+    database, err := mysql.Get("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(database.ConnectionString)
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let database = mysql.get("<DATABASE_ID>").await?;
+
+    println!("{}", database.connection_string);
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+{% /multicode %}
+
+The response includes the connection fields alongside the database configuration:
+
+```json
+{
+  "$id": "<DATABASE_ID>",
+  "name": "main",
+  "engine": "mysql",
+  "version": "8.4",
+  "status": "ready",
+  "hostname": "db-<hash>.<region>.appwrite.center",
+  "connectionPort": 3306,
+  "connectionUser": "admin",
+  "connectionPassword": "<password>",
+  "connectionString": "mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+}
+```
+
+The primary user is `admin` and the database name is generated per database.
+
+# Connect with the mysql client {% #mysql-client %}
+
+Pass the individual connection values to the `mysql` command-line client and enter the password when prompted:
+
+```bash
+mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin -p -D <database>
+```
+
+# Rotate the primary password {% #rotate %}
+
+If your password is compromised, or your security policy requires regular rotation, you can issue a new password for the primary user. The change is applied atomically in the engine, and the response carries the new connection details. Existing sessions stay alive until they disconnect, then have to authenticate with the new password. The API key needs the `databases.write` scope.
+
+{% multicode %}
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const database = await mysql.updateCredentials({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const database = await mysql.updateCredentials({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$database = $mysql->updateCredentials(databaseId: '<DATABASE_ID>');
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+database = mysql.update_credentials(database_id='<DATABASE_ID>')
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+database = mysql.update_credentials(database_id: '<DATABASE_ID>')
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var database = await mysql.UpdateCredentials(databaseId: "<DATABASE_ID>");
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final database = await mysql.updateCredentials(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val database = mysql.updateCredentials(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let database = try await mysql.updateCredentials(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    mysql := appwrite.NewMysql(client)
+
+    _, err := mysql.UpdateCredentials("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let database = mysql.update_credentials("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <YOUR_API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/credentials
+```
+{% /multicode %}
+
+# TLS {% #tls %}
+
+Connections on Appwrite Cloud are encrypted with TLS, terminated at the edge and forwarded to your database over the internal network. The connection string returned on the database object carries the right SSL settings for your environment, so drivers need no extra configuration.
+
+For IP allowlists and other network controls, see [network security](/docs/products/databases/mysql/network-security).
+
+# Connecting from an application {% #drivers %}
+
+There is nothing Appwrite-specific about the driver setup. A few example snippets:
+
+{% multicode %}
+```server-nodejs
+import mysql from 'mysql2/promise';
+
+const connection = await mysql.createConnection(process.env.DATABASE_URL);
+
+const [rows] = await connection.query('SELECT NOW() AS now');
+console.log(rows);
+
+await connection.end();
+```
+```server-python
+import os
+import mysql.connector
+
+conn = mysql.connector.connect(
+    host=os.environ['DB_HOST'],
+    port=3306,
+    user='admin',
+    password=os.environ['DB_PASSWORD'],
+    database=os.environ['DB_NAME'],
+)
+cur = conn.cursor()
+cur.execute('SELECT NOW()')
+print(cur.fetchone())
+conn.close()
+```
+```server-php
+<?php
+
+$pdo = new PDO(
+    sprintf('mysql:host=%s;port=3306;dbname=%s', getenv('DB_HOST'), getenv('DB_NAME')),
+    'admin',
+    getenv('DB_PASSWORD')
+);
+
+$rows = $pdo->query('SELECT NOW()')->fetchAll();
+print_r($rows);
+```
+```server-go
+package main
+
+import (
+    "database/sql"
+    "fmt"
+    "os"
+
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    db, err := sql.Open("mysql", os.Getenv("MYSQL_DSN"))
+    if err != nil {
+        panic(err)
+    }
+    defer db.Close()
+
+    var now string
+    if err := db.QueryRow("SELECT NOW()").Scan(&now); err != nil {
+        panic(err)
+    }
+    fmt.Println(now)
+}
+```
+```server-rust
+use sqlx::mysql::MySqlPoolOptions;
+use sqlx::Row;
+
+#[tokio::main]
+async fn main() -> Result<(), sqlx::Error> {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = MySqlPoolOptions::new().connect(&url).await?;
+
+    let row = sqlx::query("SELECT NOW() AS now").fetch_one(&pool).await?;
+    let now: chrono::DateTime<chrono::Utc> = row.get("now");
+    println!("{now}");
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+Set the environment variables from the connection details on the database object. Once you can run a query, you can use any tool that talks the MySQL wire protocol: MySQL Workbench, DataGrip, your ORM of choice, your migration tool of choice. Appwrite gets out of the way.

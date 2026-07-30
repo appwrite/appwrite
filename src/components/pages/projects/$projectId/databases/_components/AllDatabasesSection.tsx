@@ -6,7 +6,7 @@ import {
   useProject,
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
-  useDatabaseSpecifications,
+  useMergedDatabaseSpecifications,
   dedicatedBackupPoliciesQueryOptions,
   dedicatedDatabaseByIdQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -14,8 +14,10 @@ import { type Models } from '@appwrite.io/console'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   dedicatedDatabaseHomeLink,
+  isDatabaseRouteKind,
   isNativeDedicatedDatabase,
   productDatabaseListLink,
+  type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { useQueries } from '@tanstack/react-query'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
@@ -57,12 +59,12 @@ import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-sta
 import {
   buildProductDedicatedCardSource,
   hasDedicatedDatabaseCompute,
-  productDedicatedEngineHints,
   readDatabaseSpecification,
   resolveDatabaseComputeLabel,
   type DedicatedDatabaseCardSource,
   type ResolveDatabaseComputeLabelOptions,
 } from '@/lib/databases/database-compute'
+import { engineFromDatabaseTypeValue } from '@/lib/databases/database-type'
 import { mapDedicatedDatabaseSpecifications } from '@/lib/database-specs'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
@@ -150,7 +152,7 @@ function formatConnectionsLabel(
   connections: number | null,
   t: (text: string) => string,
 ): string {
-  if (connections == null) return '—'
+  if (connections == null) return '-'
   return connections === 1
     ? `1 ${t('connection')}`
     : `${connections.toLocaleString()} ${t('connections')}`
@@ -496,7 +498,7 @@ export function AllDatabasesSection({
   const { databases: dedicatedDatabases } =
     useProjectDedicatedDatabases(projectId)
 
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useMergedDatabaseSpecifications(projectId)
   const computeLabelOptions = useMemo<ResolveDatabaseComputeLabelOptions>(
     () => ({
       specs: mapDedicatedDatabaseSpecifications(
@@ -516,10 +518,15 @@ export function AllDatabasesSection({
   }, [dedicatedDatabases])
 
   // Product-owned dedicated compute may share the product DB id but be omitted
-  // from engine list responses, or listed without a specification slug. Probe
-  // engine `get` / id-filtered `list` so the card footer can show the real tier.
+  // from engine list responses, or listed without a specification slug. Look up
+  // via that product's API only (or the native engine API for native DBs).
   const missingDedicatedLookups = useMemo(() => {
-    const items: Array<{ databaseId: string; engineHints: string[] }> = []
+    const items: Array<{
+      databaseId: string
+      source:
+        | { type: 'product'; dbKind: DatabaseRouteKind }
+        | { type: 'engine'; engine: string }
+    }> = []
     const seen = new Set<string>()
     for (const db of databases) {
       if (seen.has(db.$id)) continue
@@ -531,17 +538,29 @@ export function AllDatabasesSection({
       if (hasSpec) continue
       if (!hasDedicatedDatabaseCompute(hints, listed)) continue
       seen.add(db.$id)
+      // Product-owned DBs (TablesDB / DocumentsDB / VectorsDB) are looked up
+      // via their product API; native engines via their engine API. Never
+      // probe another product's API for a product-owned ID.
+      const source = isDatabaseRouteKind(hints.databaseType ?? '')
+        ? ({
+            type: 'product',
+            dbKind: hints.databaseType as DatabaseRouteKind,
+          } as const)
+        : ({
+            type: 'engine',
+            engine: engineFromDatabaseTypeValue(hints.databaseType) ?? 'postgresql',
+          } as const)
       items.push({
         databaseId: db.$id,
-        engineHints: productDedicatedEngineHints(hints.databaseType),
+        source,
       })
     }
     return items
   }, [databases, listedDedicatedById])
 
   const fetchedDedicatedQueries = useQueries({
-    queries: missingDedicatedLookups.map(({ databaseId, engineHints }) => ({
-      ...dedicatedDatabaseByIdQueryOptions(projectId, databaseId, engineHints),
+    queries: missingDedicatedLookups.map(({ databaseId, source }) => ({
+      ...dedicatedDatabaseByIdQueryOptions(projectId, databaseId, source),
       enabled: !!projectId && !!databaseId,
     })),
   })

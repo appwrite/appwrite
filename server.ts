@@ -77,15 +77,22 @@ import {
 } from './src/lib/runtime-config-shared.ts'
 import {
   applyNoIndexResponseHeaders,
-  getNonProductionRobotsTxt,
   getRequestHostFromHeaders,
   isSeoIndexableHost,
-  NOINDEX_ROBOTS_HEADER,
 } from './src/lib/seo/indexing.ts'
 import {
-  isLegacyConsolePath,
-  rewriteLegacyConsolePath,
-} from './src/lib/legacy-console-path.ts'
+  AI_CATALOG_CONTENT_TYPE,
+  APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
+  APPWRITE_MCP_SERVER_CARD_PATH,
+  DISCOVERY_CORS_HEADERS,
+  MCP_SERVER_CARD_CONTENT_TYPE,
+  buildAgentSkillsDiscoveryDocument,
+  buildAiCatalogDocument,
+  buildMcpServerCard,
+  serializeDiscoveryJson,
+} from './src/lib/seo/agent-discovery.ts'
+import { trackServerPageview } from './src/lib/server-analytics.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -93,7 +100,7 @@ const CLIENT_DIRECTORY = './dist/client'
 const SERVER_ENTRY_POINT = './dist/server/server.js'
 
 // Public runtime config, read once from the process env (constant per process)
-// and stamped into every HTML response in place of the build-time placeholder —
+// and stamped into every HTML response in place of the build-time placeholder -
 // see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
 const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
 const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
@@ -116,6 +123,37 @@ function withSeoIndexingHeaders(req: Request, response: Response): Response {
     statusText: response.statusText,
     headers,
   })
+}
+
+function discoveryExportResponse(
+  req: Request,
+  body: string,
+  contentType: string,
+): Response {
+  trackServerPageview(req, { format: 'json' })
+  return new Response(body, {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=3600',
+      ...DISCOVERY_CORS_HEADERS,
+    },
+  })
+}
+
+async function readClientExportOrFallback(
+  relativePath: string,
+  fallback: () => string,
+): Promise<string> {
+  const filepath = path.join(CLIENT_DIRECTORY, relativePath)
+  try {
+    const file = Bun.file(filepath)
+    if (await file.exists()) {
+      return await file.text()
+    }
+  } catch {
+    // Fall through to runtime generation.
+  }
+  return fallback()
 }
 
 function htmlResponse(
@@ -174,13 +212,40 @@ const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
 // Parse comma-separated exclude patterns (no defaults)
 const EXCLUDE_PATTERNS = [
   convertGlobToRegExp('*.html'),
-  convertGlobToRegExp('llms-full.txt'),
   ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
     .map((pattern: string) => convertGlobToRegExp(pattern)),
 ]
+
+/**
+ * llms exports must never be registered as static routes (neither preloaded
+ * nor on-demand); requests fall through to the TanStack route, which serves
+ * the same prebuilt file with the right Content-Type and records a
+ * server-side pageview.
+ */
+/**
+ * Text / markdown / robots / discovery exports owned by TanStack or explicit
+ * Bun handlers so they get the correct Content-Type, CORS, and server-side
+ * Plausible pageviews. Never register these as plain Bun static routes.
+ */
+function isServerTrackedExportFile(relativePath: string): boolean {
+  const normalized = relativePath.split(/[/\\]/).join('/')
+  return (
+    normalized === 'llms.txt' ||
+    normalized === 'llms-full.txt' ||
+    normalized === 'docs/llms.txt' ||
+    normalized === 'docs.md' ||
+    normalized === 'blog.md' ||
+    normalized === 'changelog.md' ||
+    normalized === 'integrations.md' ||
+    normalized === 'robots.txt' ||
+    normalized === '.well-known/mcp/server-card.json' ||
+    normalized === '.well-known/ai-catalog.json' ||
+    normalized === '.well-known/agent-skills/index.json'
+  )
+}
 
 // Verbose logging flag
 const VERBOSE = process.env.ASSET_PRELOAD_VERBOSE_LOGGING === 'true'
@@ -256,11 +321,7 @@ function isFileEligibleForPreloading(relativePath: string): boolean {
   const normalized = relativePath.split(/[/\\]/).join('/')
   const fileName = normalized.split('/').pop() ?? normalized
 
-  if (
-    normalized === 'llms-full.txt' ||
-    normalized.startsWith('llms-full/') ||
-    fileName.endsWith('.html')
-  ) {
+  if (fileName.endsWith('.html')) {
     return false
   }
 
@@ -406,6 +467,9 @@ async function initializeStaticRoutes(
     const glob = createCompositeGlobPattern()
     for await (const relativePath of glob.scan({ cwd: clientDirectory })) {
       if (isAccidentalThreadStaticHtml(relativePath)) {
+        continue
+      }
+      if (isServerTrackedExportFile(relativePath)) {
         continue
       }
 
@@ -698,7 +762,6 @@ async function initializeServer() {
 
   // Build static routes with intelligent preloading
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY)
-  const productionRobotsHandler = staticRoutes['/robots.txt']
 
   // Create Bun server
   const server = Bun.serve({
@@ -720,27 +783,40 @@ async function initializeServer() {
       '/console': redirectLegacyConsolePath,
       '/console/*': redirectLegacyConsolePath,
 
-      // Serve static assets (preloaded or on-demand)
+      // MCP / agent discovery (SEP-1649 Server Card + AI Catalog). Excluded from
+      // static registration so we can attach CORS + server-side pageviews.
+      [APPWRITE_MCP_SERVER_CARD_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/mcp/server-card.json',
+            () => serializeDiscoveryJson(buildMcpServerCard()),
+          ),
+          MCP_SERVER_CARD_CONTENT_TYPE,
+        ),
+      [APPWRITE_AI_CATALOG_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/ai-catalog.json',
+            () => serializeDiscoveryJson(buildAiCatalogDocument()),
+          ),
+          AI_CATALOG_CONTENT_TYPE,
+        ),
+      [APPWRITE_AGENT_SKILLS_DISCOVERY_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/agent-skills/index.json',
+            () => serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+          ),
+          'application/json; charset=utf-8',
+        ),
+
+      // Serve static assets (preloaded or on-demand). robots.txt, llms exports,
+      // and discovery documents are excluded so they use tracked handlers above
+      // or fall through to TanStack.
       ...staticRoutes,
-
-      '/robots.txt': async (req: Request) => {
-        if (!isIndexableRequest(req)) {
-          return new Response(getNonProductionRobotsTxt(), {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain; charset=utf-8',
-              'Cache-Control': 'no-store',
-              'X-Robots-Tag': NOINDEX_ROBOTS_HEADER,
-            },
-          })
-        }
-
-        if (productionRobotsHandler) {
-          return productionRobotsHandler(req)
-        }
-
-        return new Response('Not Found', { status: 404 })
-      },
 
       // Fallback to TanStack Start handler for all other routes. HTML responses
       // get the runtime config stamped in (the SSR shell emits a placeholder).
@@ -761,7 +837,7 @@ async function initializeServer() {
           }
 
           // Incomplete strip-only redirects may land on /project-{region}-{id}/...
-          // without the /console prefix — rewrite those before the SPA.
+          // without the /console prefix - rewrite those before the SPA.
           if (isLegacyConsolePath(url.pathname)) {
             return redirectLegacyConsolePath(req)
           }

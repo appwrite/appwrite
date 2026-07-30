@@ -1,3 +1,4 @@
+import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import { DOCS_PAGE_MAP } from './generated/manifest'
 import { parseFrontmatterString, stripFrontmatter } from './frontmatter'
 import { preloadPartialsForContent, resolvePartials } from './partials'
@@ -138,5 +139,5 @@ export async function getAllDocsPages(): Promise<DocsPageData[]> {
 export async function getDocsMarkdownExport(slug: string): Promise<string | null> {
   const page = await getDocsPage(slug)
   if (!page) return null
-  return page.rawContent
+  return markdocToMarkdown(page.rawContent)
 }

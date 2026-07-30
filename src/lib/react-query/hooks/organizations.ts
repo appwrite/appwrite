@@ -108,23 +108,31 @@ export async function resolveProjectTeamIdFromConsole(
 ): Promise<string | null> {
   if (!projectId) return null
   try {
-    const { getConsoleProject } = await import('@/lib/appwrite/console-projects')
-    const project = await getConsoleProject({ projectId })
-    return project?.teamId ?? null
-  } catch {
-    try {
-      const { listConsoleProjects } = await import(
-        '@/lib/appwrite/console-projects'
-      )
-      const { Query } = await import('@appwrite.io/console')
-      const list = await listConsoleProjects({
-        queries: [Query.equal('$id', projectId), Query.limit(1)],
-        total: false,
-      })
-      return list.projects?.[0]?.teamId ?? null
-    } catch {
-      return null
+    const orgs = await fetchOrganizations()
+    const { listConsoleProjects } = await import(
+      '@/lib/appwrite/console-projects'
+    )
+    const { Query } = await import('@appwrite.io/console')
+    for (const org of orgs.teams ?? []) {
+      try {
+        const list = await listConsoleProjects({
+          organizationId: org.$id,
+          queries: [
+            Query.equal('teamId', org.$id),
+            Query.equal('$id', projectId),
+            Query.limit(1),
+          ],
+          total: false,
+        })
+        const teamId = list.projects?.[0]?.teamId
+        if (teamId) return teamId
+      } catch {
+        // Try the next organization.
+      }
     }
+    return null
+  } catch {
+    return null
   }
 }
 
@@ -427,6 +435,11 @@ export function organizationFailedInvoicePresenceQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    // Banner-only data fetched in the background during initial load; must not
+    // hold the fullscreen loader open (see use-initial-loader).
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -1517,6 +1530,10 @@ export function organizationUsageQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow usage must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -1804,6 +1821,10 @@ export function organizationBillingAggregationQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Slow usage aggregation must never keep the fullscreen initial loader up.
+      skipInitialLoader: true,
+    },
   })
 }
 

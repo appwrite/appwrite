@@ -3,6 +3,7 @@ layout: post
 title: 12 developer tools to supercharge your Appwrite project
 description: Boost your developer experience with Appwrite using these awesome tools.
 date: 2024-06-17
+lastUpdated: 2026-06-29
 cover: /images/blog/developer-tools-appwrite/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -12,10 +13,10 @@ faqs:
     answer: "Appwrite ships with the [Appwrite CLI](/docs/tooling/command-line/installation) for managing projects from the terminal, the SDK Generator for creating SDKs in many languages, and the Appwrite Playgrounds with example projects in 15+ languages and frameworks. Together they cover most workflows from local setup to deployment."
   - question: "Where can I find community-built libraries for Appwrite?"
     answer: "The [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) GitHub repository is a curated list of community libraries, tools, and projects. You can also explore [Built with Appwrite](https://builtwith.appwrite.io/) to see real applications and the tools they use."
-  - question: "Can I generate TypeScript types from my Appwrite collections?"
-    answer: "Yes. Community tools like `fetch-appwrite-types` read your [Appwrite Databases](/docs/products/databases) schema and emit TypeScript definitions, so your client code stays in sync with your collections. This cuts down on runtime mistakes and gives you autocomplete on document fields."
+  - question: "Can I generate TypeScript types from my Appwrite tables?"
+    answer: "Yes. Community tools like `fetch-appwrite-types` read your [Appwrite Databases](/docs/products/databases) schema and emit TypeScript definitions, so your client code stays in sync with your tables. This cuts down on runtime mistakes and gives you autocomplete on row fields."
   - question: "How do I manage Appwrite database schema changes across environments?"
-    answer: "Community tools like Appwrite Utils (Node.js CLI) and AppwriteMigrator (.NET CLI) let you treat your schema as code and sync it between local, staging, and production projects. For most teams this is more reliable than recreating collections by hand in the Console."
+    answer: "Community tools like Appwrite Utils (Node.js CLI) and AppwriteMigrator (.NET CLI) let you treat your schema as code and sync it between local, staging, and production projects. For most teams this is more reliable than recreating tables by hand in the Console."
   - question: "Can I deploy a SvelteKit app as an Appwrite Function?"
     answer: "Yes, with the community-built `adapter-appwrite` you can build a SvelteKit app and ship it as an [Appwrite Function](/docs/products/functions). For full sites with SSR, [Appwrite Sites](/docs/products/sites) is usually the better fit, but the adapter is handy for embedding SvelteKit logic inside a function."
   - question: "Is there an Express-like framework for Appwrite Functions?"
@@ -76,7 +77,7 @@ Take a look at their [NuGet package](https://www.nuget.org/packages/PinguApps.Ap
 
 ## fetch-appwrite-types
 
-fetch-appwrite-types is a tool designed to generate TypeScript types from Appwrite database collections. This utility simplifies the integration of Appwrite with TypeScript projects by creating type definitions that reflect the database schema. It enhances type safety and developer experience by providing accurate type information for database operations, reducing runtime errors, and improving code quality.
+fetch-appwrite-types is a tool designed to generate TypeScript types from Appwrite database tables. This utility simplifies the integration of Appwrite with TypeScript projects by creating type definitions that reflect the database schema. It enhances type safety and developer experience by providing accurate type information for database operations, reducing runtime errors, and improving code quality.
 
 Take a look at their [NPM package](https://www.npmjs.com/package/fetch-appwrite-types) and [GitHub repo](https://github.com/YsarocK/fetch-appwrite-types).
 
@@ -104,4 +105,4 @@ To explore more tools and projects that can help you build your applications qui
 
 - [Built with Appwrite](https://builtwith.appwrite.io/): Discover a wide range of projects and applications that utilize Appwrite's features.
 - [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite): A curated list of Appwrite-related resources, including libraries, tools, and projects.
-- [Appwrite Discord](https://discord.com/invite/appwrite): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.
+- [Appwrite Discord](/discord): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

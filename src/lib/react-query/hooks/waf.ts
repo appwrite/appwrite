@@ -45,6 +45,7 @@ export type CreateFirewallRuleInput = {
   interval?: number
   location?: string
   statusCode?: number
+  challengeType?: string
 }
 
 export type UpdateFirewallRuleInput = {
@@ -61,6 +62,7 @@ export type UpdateFirewallRuleInput = {
   interval?: number
   location?: string
   statusCode?: number
+  challengeType?: string
 }
 
 function conditionsPayload(conditions?: string[]) {
@@ -75,6 +77,7 @@ export async function fetchFirewallRules(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   resourceType?: FirewallResourceType,
+  resourceId?: string,
 ) {
   if (!projectId) {
     return { rules: [] as Models.WafRule[], total: 0 }
@@ -88,6 +91,11 @@ export async function fetchFirewallRules(
 
   if (resourceType) {
     queries.unshift(Query.equal('resourceType', resourceType))
+  }
+
+  const normalizedResourceId = resourceId?.trim()
+  if (normalizedResourceId && resourceType && resourceType !== 'api') {
+    queries.unshift(Query.equal('resourceId', normalizedResourceId))
   }
 
   const response = await sdk.forProject(projectId).waf.listRules({
@@ -166,8 +174,10 @@ export function firewallRulesQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   resourceType?: FirewallResourceType,
+  resourceId?: string,
 ) {
   const normalizedSearch = search?.trim() || undefined
+  const normalizedResourceId = resourceId?.trim() || undefined
   return queryOptions({
     queryKey: [
       'firewall-rules',
@@ -177,6 +187,7 @@ export function firewallRulesQueryOptions(
       limit,
       normalizedSearch,
       resourceType ?? null,
+      normalizedResourceId ?? null,
     ],
     queryFn: () =>
       fetchFirewallRules(
@@ -185,6 +196,7 @@ export function firewallRulesQueryOptions(
         limit,
         normalizedSearch,
         resourceType,
+        normalizedResourceId,
       ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
@@ -204,9 +216,17 @@ export function useFirewallRules(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   resourceType?: FirewallResourceType,
+  resourceId?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    firewallRulesQueryOptions(projectId, page, limit, search, resourceType),
+    firewallRulesQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      resourceType,
+      resourceId,
+    ),
   )
 
   return {
@@ -287,6 +307,12 @@ async function createFirewallRule(
       return waf.createBypassRule(base)
     case WafRuleAction.Deny:
       return waf.createDenyRule(base)
+    case WafRuleAction.Challenge:
+      // challengeType is optional; omit to let the API apply its default.
+      return waf.createChallengeRule({
+        ...base,
+        challengeType: input.challengeType?.trim() || undefined,
+      })
     case WafRuleAction.RateLimit:
       return waf.createRateLimitRule({
         ...base,
@@ -325,6 +351,11 @@ async function updateFirewallRule(
       return waf.updateBypassRule(base)
     case WafRuleAction.Deny:
       return waf.updateDenyRule(base)
+    case WafRuleAction.Challenge:
+      return waf.updateChallengeRule({
+        ...base,
+        challengeType: input.challengeType,
+      })
     case WafRuleAction.RateLimit:
       return waf.updateRateLimitRule({
         ...base,

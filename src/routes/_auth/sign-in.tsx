@@ -35,7 +35,7 @@ import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
   try {
-    // Must start with / (but not // — protocol-relative) and not contain ://
+    // Must start with / (but not // - protocol-relative) and not contain ://
     return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
   } catch {
     return false
@@ -132,7 +132,7 @@ function SignInPage() {
 
         // Detect MFA. Force a fresh fetch so it can't replay the guest account.get
         // the _auth loader fires on load (cached/in-flight 401 "missing scopes
-        // account") — a race password managers hit by autofilling and submitting
+        // account") - a race password managers hit by autofilling and submitting
         // before that guest request settled.
         await fetchConsoleAccount({ force: true })
       } catch (error: unknown) {

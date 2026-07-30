@@ -216,7 +216,11 @@ export function TableRowsEditSessionProvider({
   const commitMutation = useMutation({
     mutationFn: async () => {
       const edits = Array.from(pendingEdits.values())
-      const result = await commitProjectTableRowEdits(projectId, edits)
+      const result = await commitProjectTableRowEdits(
+        projectId,
+        'tablesdb',
+        edits,
+      )
       return { ...result, committedEdits: edits }
     },
     onSuccess: async (result) => {

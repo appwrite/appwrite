@@ -102,6 +102,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const { tables, isLoading } = useAllProjectTablesForVisualizer(
     projectId,
     databaseId,
+    DB_KIND,
   )
 
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -974,7 +975,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   // Fetch database schema for export
   const { data: databaseSchema } = useQuery({
     queryKey: ['database-schema', 'project', projectId, databaseId],
-    queryFn: () => fetchDatabaseSchema(projectId, databaseId),
+    queryFn: () => fetchDatabaseSchema(projectId, databaseId, DB_KIND),
     enabled: !!projectId && !!databaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

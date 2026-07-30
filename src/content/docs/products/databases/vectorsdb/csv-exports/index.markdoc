@@ -1,0 +1,102 @@
+---
+layout: article
+title: CSV exports
+description: Export VectorsDB documents to a CSV file. Share embeddings and metadata as a portable dataset without writing custom scripts.
+---
+
+Appwrite's CSV export feature lets you export documents from a VectorsDB collection to a CSV file. This is useful for reporting, sharing a dataset with your team, creating custom backups, or handing embeddings and their metadata off to other tools.
+
+# Exported columns {% #exported-columns %}
+
+A VectorsDB collection has a fixed schema, so every export has the same shape. Each row carries the document's system fields together with the two collection attributes:
+
+| Column       | Type   | Description                                                              |
+|--------------|--------|--------------------------------------------------------------------------|
+| `$id`        | string | The document ID.                                                         |
+| `embeddings` | JSON   | The embedding vector, serialized as a JSON array of numbers.            |
+| `metadata`   | JSON   | The metadata stored alongside the vector, serialized as a JSON object.  |
+
+System columns like `$id`, `$createdAt`, and `$updatedAt` are included automatically. Because `embeddings` is the full vector for each document, exported files can be large for high dimension collections.
+
+An example of exported data, where each `embeddings` value is the full vector for that document:
+
+```text
+$id,embeddings,metadata
+doc-1,"[0.12,0.84,0.33,0.57]","{""title"":""Hamlet"",""year"":1601}"
+doc-2,"[0.2,0.1,0.6,0.1]","{""title"":""Macbeth"",""year"":1606}"
+doc-3,"[0.5,0.5,0.5,0.5]","{""title"":""Othello"",""year"":1603}"
+```
+
+# Export configuration {% #export-configuration %}
+
+Before exporting, you can configure several options to control the output format and contents.
+
+## Apply filters {% #apply-filters %}
+
+You can pass [queries](/docs/products/databases/vectorsdb/queries) to export only the documents you need rather than the whole collection. This is useful when you want a subset of your data for a specific use case.
+
+## Select columns {% #select-columns %}
+
+You can choose which columns to include in the export. By default, all columns are exported. Selecting specific columns creates more focused datasets, for example exporting only `metadata` when you don't need the raw vectors.
+
+## Custom delimiter {% #custom-delimiter %}
+
+You can set a custom delimiter for the CSV file. While commas are standard, you can use tabs, semicolons, or other delimiters based on the tools you import into.
+
+Common delimiters:
+- **Comma (`,`)**: Standard format, compatible with most tools
+- **Tab**: Useful when your data contains many commas
+- **Semicolon (`;`)**: Common in European Excel versions
+- **Pipe (`|`)**: Useful when your data contains many semicolons
+
+## Header row {% #header-row %}
+
+You can choose whether to include a header row with column names. Headers make the data easier to read in spreadsheets, but some import tools work better without them.
+
+# Timestamps {% #timestamps %}
+
+The `$createdAt` and `$updatedAt` columns are exported in ISO 8601 format, making them compatible with most spreadsheet and database tools.
+
+# Permissions {% #permissions %}
+
+If [document security](/docs/products/databases/vectorsdb/permissions) is enabled for your collection, the `$permissions` column is included in the export. Permission strings are formatted as comma-separated role definitions within quotes.
+
+```text
+$id,embeddings,$permissions
+doc-1,"[0.12,0.84,0.33,0.57]","read(""any""),update(""user:user-123"")"
+doc-2,"[0.2,0.1,0.6,0.1]","read(""team:team-456""),update(""team:team-456"")"
+```
+
+The roles used are API strings that can be found in the [permissions documentation](/docs/products/databases/vectorsdb/permissions).
+
+# Background processing {% #background-processing %}
+
+Large exports run as background tasks so they don't block your workflow. When an export completes, you receive an email with a short-lived download link to retrieve your CSV file.
+
+This means you can start an export, close the Console, and return later to download your file. The Console displays a floating progress bar while the export is active.
+
+# Use cases {% #use-cases %}
+
+CSV exports are useful for many common workflows:
+
+- **Reporting**: Generate reports for stakeholders who need data in spreadsheet format
+- **Data sharing**: Share an embeddings dataset with teammates
+- **Analytics hand-off**: Provide vectors and metadata to analysts using other tools
+- **Custom backups**: Archive specific data subsets for record-keeping
+- **Migration preparation**: Extract data to move it into another system
+
+# Best practices {% #best-practices %}
+
+To get the most out of CSV exports:
+
+1. **Filter your data**: Export only the documents you need to reduce file size and processing time
+2. **Select specific columns**: Export only `metadata` when you don't need the raw vectors, since high dimension `embeddings` columns make files much larger
+3. **Choose appropriate delimiters**: Use tabs or semicolons if your data contains many commas
+4. **Consider header requirements**: Include headers for human readability, exclude them for automated imports
+
+# Additional resources {% #additional-resources %}
+
+- [CSV imports](/docs/products/databases/vectorsdb/csv-imports) - Import data from CSV files
+- [Documents](/docs/products/databases/vectorsdb/documents) - Create, read, update, and delete documents
+- [Permissions](/docs/products/databases/vectorsdb/permissions) - Configure document-level security
+- [Backups](/docs/products/databases/vectorsdb/backups) - Automated backup policies

@@ -49,7 +49,7 @@ export async function prefetchOptionalAuthHeaderData(
       const account = await refreshConsoleAccountAfterAuth(queryClient)
       await prefetchOptionalAuthOrganizationPlan(queryClient, account)
     } catch {
-      // Unauthenticated or optional fetch errors — header handles guest state.
+      // Unauthenticated or optional fetch errors - header handles guest state.
     }
     return
   }
@@ -59,7 +59,7 @@ export async function prefetchOptionalAuthHeaderData(
     if (!account) return
     await prefetchOptionalAuthOrganizationPlan(queryClient, account)
   } catch {
-    // Unauthenticated or optional fetch errors — header handles guest state.
+    // Unauthenticated or optional fetch errors - header handles guest state.
   }
 }
 

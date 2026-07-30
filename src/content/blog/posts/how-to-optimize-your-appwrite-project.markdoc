@@ -3,6 +3,7 @@ layout: post
 title: How to optimize your Appwrite project for cost and performance
 description: Learn how to optimize your Appwrite project, manage resource usage, costs, and ensure smooth performance as yout application scales.
 date: 2024-09-20
+lastUpdated: 2026-06-29
 cover: /images/blog/how-to-optimize-your-appwrite-project/cover.avif
 timeToRead: 12
 author: ebenezer-don
@@ -10,7 +11,7 @@ category: product
 featured: false
 faqs:
   - question: "How can I reduce API request usage in Appwrite?"
-    answer: "Use smart querying with listDocuments() and filters instead of multiple requests. Combine queries, enable pagination, and use the Realtime API for live updates instead of polling. This reduces server load and speeds up responses."
+    answer: "Use smart querying with listRows() and filters instead of multiple requests. Combine queries, enable pagination, and use the Realtime API for live updates instead of polling. This reduces server load and speeds up responses."
   - question: "What's the best way to cache data in an Appwrite app?"
     answer: "Cache frequently accessed or static data using localStorage or IndexedDB on the client, and use Redis for server-side caching. Set expiry rules to prevent stale data and limit unnecessary API calls."
   - question: "How do I optimize file storage and image performance?"
@@ -31,21 +32,21 @@ This guide provides a detailed overview of techniques to optimize your Appwrite 
 
 Every API request consumes resources, and when requests are made inefficiently, they can consume substantial resources and increase usage costs. Here are strategies to help reduce unnecessary API calls:
 
-## Efficient use of listDocuments with queries
+## Efficient use of listRows with queries
 
-In Appwrite, fetching multiple documents from a database is made easy with the [listDocuments](https://appwrite.io/docs/references/cloud/client-web/databases#listDocuments) method. This method allows you to retrieve all documents in a collection or apply filters using the Query API. Instead of making multiple requests for each document, you can fetch only the relevant data with a single request.
+In Appwrite, fetching multiple rows from a database is made easy with the [listRows](/docs/references/cloud/client-web/tablesDB#listRows) method. This method allows you to retrieve all rows in a table or apply filters using the Query API. Instead of making multiple requests for each row, you can fetch only the relevant data with a single request.
 
-For example, in a content management system where you need to load blog posts written by a particular author, rather than making individual requests for each document, use Appwrite's `listDocuments` method with a filter:
+For example, in a content management system where you need to load blog posts written by a particular author, rather than making individual requests for each row, use Appwrite's `listRows` method with a filter:
 
 ```javascript
-const blogPosts = await databases.listDocuments({
+const blogPosts = await tablesDB.listRows({
   databaseId: '<DATABASE_ID>',
-  collectionId: '<COLLECTION_ID>',
+  tableId: '<TABLE_ID>',
   queries: [Query.equal('author', 'Michael Scott')]
 })
 ```
 
-By fetching all the documents you need in one go and applying filters, you reduce the number of requests and improve performance. However, as we'll see in the next section, you should use the `listDocuments` method carefully to avoid fetching unnecessary data, else you might end up with a large dataset that could slow down your application.
+By fetching all the rows you need in one go and applying filters, you reduce the number of requests and improve performance. However, as we'll see in the next section, you should use the `listRows` method carefully to avoid fetching unnecessary data, else you might end up with a large dataset that could slow down your application.
 
 ## Optimize pagination and filtering
 
@@ -55,9 +56,9 @@ For example, if you're loading products from a database, instead of fetching all
 
 ```javascript
 ```javascript
-const firstPage = await databases.listDocuments({
+const firstPage = await tablesDB.listRows({
   databaseId: '<DATABASE_ID>',
-  collectionId: '<COLLECTION_ID>',
+  tableId: '<TABLE_ID>',
   queries: [
     Query.equal('author', 'Meredith Palmer'),
     Query.limit(20),
@@ -65,9 +66,9 @@ const firstPage = await databases.listDocuments({
   ]
 })
 
-const secondPage = await databases.listDocuments({
+const secondPage = await tablesDB.listRows({
   databaseId: '<DATABASE_ID>',
-  collectionId: '<COLLECTION_ID>',
+  tableId: '<TABLE_ID>',
   queries: [
     Query.equal('author', 'Meredith Palmer'),
     Query.limit(20),
@@ -79,7 +80,7 @@ const secondPage = await databases.listDocuments({
 
 This strategy will not only conserve bandwidth but will ensure that your queries return faster results, improving your user experience.
 
-For more information on querying documents, the [Appwrite Queries documentation](https://appwrite.io/docs/products/databases/queries) provides detailed examples and options.
+For more information on querying rows, the [Appwrite Queries documentation](/docs/products/databases/queries) provides detailed examples and options.
 
 ## WebSockets for real-time data
 
@@ -97,10 +98,10 @@ const unsubscribe = client.subscribe('files', (response) => {
 
 In addition to handling real-time updates, Appwrite's Realtime API can help decide when further requests are needed. Instead of continuously fetching data to check for updates, you can create a versioning system.
 
-1. **Versioning Document**: Create a document with a single column, `version`, to track updates.
-2. **Subscribe to Changes**: Use the Realtime API to monitor changes in this document. If the `version` field updates, it signals that the data has changed and needs re-fetching.
+1. **Versioning row**: Create a row with a single column, `version`, to track updates.
+2. **Subscribe to changes**: Use the Realtime API to monitor changes in this row. If the `version` field updates, it signals that the data has changed and needs re-fetching.
 
-Appwrite's Realtime API supports multiple channels, such as `files`, `account`, and specific `collections`, ensuring updates from any part of your app. To learn more about the Realtime API, refer to the [Appwrite Realtime documentation](https://appwrite.io/docs/realtime).
+Appwrite's Realtime API supports multiple channels, such as `files`, `account`, and specific tables, ensuring updates from any part of your app. To learn more about the Realtime API, refer to the [Appwrite Realtime documentation](/docs/apis/realtime).
 
 By using Appwrite's real-time feature, you drastically reduce API request overhead, especially for high-traffic apps like live dashboards or messaging platforms, while maintaining instant, event-driven updates.
 

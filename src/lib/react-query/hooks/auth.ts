@@ -262,7 +262,7 @@ export function syncConsoleAccountSingletonFromQueryClient(
 }
 
 /**
- * Console `account.get` — shared by route loaders (prefetch prefs before child
+ * Console `account.get` - shared by route loaders (prefetch prefs before child
  * loaders) and auth UI. Pass `revision` from `useConsoleImpersonationRevision` when
  * overriding `queryFn` in components.
  */
@@ -1236,7 +1236,7 @@ function getAccountPrefsCallerStack(): string[] {
  *
  * When skipping, returns `undefined` (not a partial User). Callers that sync the
  * account cache must treat a missing result as a no-op so they do not poison
- * React Query with `{ prefs }` only — that crashed account UI after impersonation.
+ * React Query with `{ prefs }` only - that crashed account UI after impersonation.
  *
  * @param reason - Short label for debug logs (which feature/hook requested the write).
  */

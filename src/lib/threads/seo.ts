@@ -1,13 +1,19 @@
-import { MARKETING_HOMEPAGE_OG_IMAGE_PATH } from '@/lib/marketing/route-meta'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
-import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
 import { getAuthorDescription } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
 
 function getThreadsDefaultOgImage(siteOrigin?: string): string {
-  return resolveSiteAssetUrl(MARKETING_HOMEPAGE_OG_IMAGE_PATH, siteOrigin)
+  return buildOgImageUrl(
+    {
+      title: 'Appwrite Threads',
+      eyebrow: 'Threads',
+      subtitle: THREADS_DEFAULT_DESCRIPTION,
+    },
+    siteOrigin,
+  )
 }
 
 export function getThreadsCanonicalUrl(path: string): string {

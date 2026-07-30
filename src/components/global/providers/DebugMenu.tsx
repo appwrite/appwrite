@@ -32,6 +32,7 @@ import {
   HeartHandshake,
   MessageSquareQuote,
   Variable,
+  Mail,
 } from 'lucide-react'
 import {
   Popover,
@@ -1343,6 +1344,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <Loader2 className="h-3 w-3" />,
+              },
+              {
+                label: 'Verify email',
+                description: 'Preview the email verification page.',
+                onClick: () => {
+                  navigate({ to: '/debug/verify-email-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Mail className="h-3 w-3" />,
               },
               {
                 label: 'Community support',

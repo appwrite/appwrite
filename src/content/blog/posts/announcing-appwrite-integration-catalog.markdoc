@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Appwrite's new Integrations Catalog"
 description: We are beyond excited to announce the launch of our brand-new Appwrite Integrations Catalog. 
 date: 2024-07-29
+lastUpdated: 2026-06-29
 cover: /images/blog/integrations-catalog.avif
 timeToRead: 12
 author: aditya-oberai
@@ -18,7 +19,7 @@ faqs:
   - question: "How does the GitHub integration with Appwrite Functions work?"
     answer: "The GitHub integration connects an Appwrite project to a GitHub repository so that pushes to a branch automatically deploy your [Function](/docs/products/functions). It also powers function templates: you can pick a template, and Appwrite forks the source repo into your GitHub account before deploying."
   - question: "Can I use Stripe or Lemon Squeezy for subscriptions with Appwrite?"
-    answer: "Yes. Stripe and Lemon Squeezy both have step-by-step integration guides that use [Appwrite Functions](/docs/products/functions) to handle webhooks and a Database collection to store subscription state. Functions sit between your client and the payment provider, so you do not have to run a separate backend."
+    answer: "Yes. Stripe and Lemon Squeezy both have step-by-step integration guides that use [Appwrite Functions](/docs/products/functions) to handle webhooks and a database table to store subscription state. Functions sit between your client and the payment provider, so you do not have to run a separate backend."
   - question: "How are OAuth2 providers added to a project?"
     answer: "OAuth2 providers are configured per project in the Appwrite Console under [Auth](/docs/products/auth). You add your client ID and secret from the provider (Google, GitHub, Discord, and so on), enable the provider, and then call `createOAuth2Session` from a client SDK to start the login flow."
 ---

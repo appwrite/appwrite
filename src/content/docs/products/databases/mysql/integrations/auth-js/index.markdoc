@@ -1,0 +1,222 @@
+---
+layout: article
+title: Auth.js
+description: Use an Appwrite native MySQL database as the backing store for Auth.js (NextAuth.js). Persist users, accounts, and sessions through the Prisma adapter.
+---
+
+[Auth.js](https://authjs.dev/) (formerly NextAuth.js) persists users, accounts, sessions, and verification tokens through a database adapter. When you configure an adapter, those records live in your database, which makes database sessions, account linking, and email sign-in possible. An Appwrite [native MySQL database](/docs/products/databases/mysql) is a standard MySQL engine, so Auth.js works through the same ORM adapters you use with other MySQL databases.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one with the create-database wizard, then use [Connections](/docs/products/databases/mysql/connections#credentials) to read the hostname, password, database name, and connection string with `mysql.get()`.
+{% /info %}
+
+# Choose an adapter {% #adapter %}
+
+Auth.js talks to your database through an adapter. For a native MySQL database, use the adapter that matches your ORM:
+
+- **Prisma** through [`@auth/prisma-adapter`](https://authjs.dev/getting-started/adapters/prisma). This page shows the Prisma setup with Prisma's MySQL provider and `@prisma/adapter-mariadb`.
+- **Drizzle** through [`@auth/drizzle-adapter`](https://authjs.dev/getting-started/adapters/drizzle). Use Drizzle's MySQL schema and a `mysql2` database instance, then pass `DrizzleAdapter(db)` to Auth.js. See the [Drizzle guide](/docs/products/databases/mysql/integrations/drizzle) for the MySQL driver and migration setup.
+
+# Install packages {% #install %}
+
+Install Auth.js, the Prisma adapter, Prisma Client, Prisma's MySQL driver adapter, and the MariaDB driver used by the adapter:
+
+```bash
+npm install next-auth@beta @auth/prisma-adapter @prisma/client @prisma/adapter-mariadb mariadb dotenv
+npm install -D prisma typescript tsx @types/node
+```
+
+# Set the connection strings {% #connection-strings %}
+
+Store the Appwrite connection string in environment variables and do not commit it. Prisma uses `sslaccept=strict` for TLS with certificate verification on MySQL connections:
+
+```env
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>?sslaccept=strict"
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>?sslaccept=strict"
+
+# Runtime pooler, if your database specification includes connection pooling
+# DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>?sslaccept=strict"
+```
+
+`DATABASE_URL` is the runtime connection used by Prisma Client. `DIRECT_URL` is the direct MySQL connection used by Prisma CLI commands for migrations and introspection. Keep migrations on port `3306`; if you use the [connection pooler](/docs/products/databases/mysql/connection-pooling) for runtime traffic, only move `DATABASE_URL` to port `6033`.
+
+# Create the adapter schema {% #schema %}
+
+Auth.js expects four Prisma models: `User`, `Account`, `Session`, and `VerificationToken`. Add them to `prisma/schema.prisma` with the MySQL provider. The table names below use an `auth_js_` prefix so they stay separate from your application tables.
+
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("auth_js_users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("auth_js_accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_js_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("auth_js_verification_tokens")
+}
+```
+
+Configure Prisma CLI commands in `prisma.config.ts`. The CLI uses `DIRECT_URL` because migrations need a direct MySQL session.
+
+```ts
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+    schema: 'prisma/schema.prisma',
+    migrations: {
+        path: 'prisma/migrations'
+    },
+    datasource: {
+        url: env('DIRECT_URL')
+    }
+});
+```
+
+# Run the migration {% #migrate %}
+
+Create a migration file from the Auth.js schema:
+
+```bash
+mkdir -p prisma/migrations/20260708160000_authjs_init
+npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --output prisma/migrations/20260708160000_authjs_init/migration.sql
+```
+
+Apply committed migrations through the direct MySQL connection:
+
+```bash
+npx prisma migrate deploy
+```
+
+Generate Prisma Client after you install dependencies or change `prisma/schema.prisma`:
+
+```bash
+npx prisma generate
+```
+
+Prisma's `migrate dev` command uses a shadow database to detect schema drift. Use it against a local MySQL database, a separate Appwrite database, or an Appwrite branch, then apply committed migrations to this database with `migrate deploy`.
+
+# Wire the adapter into Auth.js {% #config %}
+
+Create one Prisma Client with Prisma's MySQL driver adapter:
+
+```ts
+import 'dotenv/config';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaClient } from '../generated/prisma/client';
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error('DATABASE_URL is required');
+
+const adapter = new PrismaMariaDb(connectionString);
+
+export const prisma = new PrismaClient({ adapter });
+```
+
+Pass the Prisma Client to your Auth.js config through the `adapter` key:
+
+```ts
+import NextAuth from 'next-auth';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from './prisma';
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+    adapter: PrismaAdapter(prisma),
+    session: { strategy: 'database' },
+    providers: [
+        // your providers, e.g. GitHub, Google, Resend
+    ]
+});
+```
+
+# Database vs JWT sessions {% #sessions %}
+
+Auth.js has two session strategies:
+
+- **`database`**: a session row is written to the `Session` model and only an opaque session ID is stored in an `HttpOnly` cookie. Each request looks the session up in the native MySQL database, and sessions can be revoked server-side.
+- **`jwt`**: session state lives in a signed cookie, and the database is not read on the session path.
+
+When you set `strategy: "database"`, keep the `Session` model in your Prisma schema. With `strategy: "jwt"`, the adapter still persists users and linked accounts, so account linking and user management continue to use the database.
+
+# Pool connections from serverless {% #pooling %}
+
+On serverless and edge platforms, each running instance opens its own database connections. On specifications that include the [connection pooler](/docs/products/databases/mysql/connection-pooling), route runtime traffic through port `6033` by setting `DATABASE_URL` to the pooler URL while keeping `DIRECT_URL` on port `3306`.
+
+The pooler defaults to transaction mode, which gives the highest connection multiplexing. Transaction mode does not keep a backend connection across statements, so session-level features such as user variables, temporary tables, and session-scoped prepared statements need session mode or a direct connection.
+
+# Use a branch for previews {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They are useful for pull-request previews and integration-test jobs that sign users in and out against throwaway data:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL`, and use the pooled variant as `DATABASE_URL` if the branch has the pooler enabled.
+3. Run `npx prisma migrate deploy` and your auth flow against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the Auth.js tables and data match the source database at branch time, so preview sign-ins behave like production without touching it.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/integrations/prisma" title="Prisma" %}
+Datasource, driver adapter, and migrations for Prisma.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/integrations/drizzle" title="Drizzle" %}
+Driver connection, schema definitions, and drizzle-kit migrations for MySQL.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and serverless connection handling.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/integrations/better-auth" title="Better Auth" %}
+The same pattern for Better Auth on a native MySQL database.
+{% /cards_item %}
+{% /cards %}

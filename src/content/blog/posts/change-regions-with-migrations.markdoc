@@ -3,6 +3,7 @@ layout: post
 title: How to change regions in Appwrite Cloud using migrations
 description: Learn how to migrate your Appwrite Cloud project from one region to another.
 date: 2025-04-16
+lastUpdated: 2026-06-29
 cover: /images/blog/change-regions-with-migrations/cover.avif
 timeToRead: 10
 author: ebenezer-don
@@ -14,7 +15,7 @@ faqs:
   - question: "Can I change the region of an existing Appwrite Cloud project directly?"
     answer: "No, there is currently no in-place region switch. The supported path is to create a new project in the target region and use Appwrite's built-in migration tool to move data and resources from the source project to the destination. This guide walks through the full process."
   - question: "What does the Appwrite migration tool transfer?"
-    answer: "The migration tool moves your databases, collections and documents, storage files, functions, teams, users, and project settings to the destination project. Custom domain bindings and platform integrations usually need to be reconfigured manually after the migration. See the [Appwrite Network](/docs/products/network) docs for region-specific details."
+    answer: "The migration tool moves your databases, tables and rows, storage files, functions, teams, users, and project settings to the destination project. Custom domain bindings and platform integrations usually need to be reconfigured manually after the migration. See the [Appwrite Network](/docs/products/network) docs for region-specific details."
   - question: "Will there be downtime when I migrate regions?"
     answer: "There is no forced downtime during the data transfer itself, since both projects can run side by side. The downtime, if any, happens during the cutover when you point clients to the new endpoint. Plan for a maintenance window to update environment variables and DNS, and to verify the data in the new region."
   - question: "What happens to API keys and OAuth credentials after migration?"
@@ -112,11 +113,11 @@ Then fill in the details from the source project:
 
 Click **Next**.
 
-Appwrite will now reach into the source project, check what's available, and return a list of resources it found: users, databases, collections, documents, storage buckets, files, functions, and so on.
+Appwrite will now reach into the source project, check what's available, and return a list of resources it found: users, databases, tables, rows, storage buckets, files, functions, and so on.
 
 You'll be prompted to choose what you want to bring over.
 
-If you're planning to fully migrate the project, click **Select all**. You can also check top-level resources (like "Users", "Functions", "Databases") and then decide whether to include things like documents, teams, and environment variables.
+If you're planning to fully migrate the project, click **Select all**. You can also check top-level resources (like "Users", "Functions", "Databases") and then decide whether to include things like rows, teams, and environment variables.
 
 When ready, click **Create**.
 
@@ -126,7 +127,7 @@ Now, Appwrite begins the actual data transfer.
 
 You'll see a progress indicator as the migration runs.
 
-How long this takes depends on your data. If your project is lightweight, it might finish in under a minute. But if you have thousands of documents or large media files, it might take longer.
+How long this takes depends on your data. If your project is lightweight, it might finish in under a minute. But if you have thousands of rows or large media files, it might take longer.
 
 When the migration is complete, you'll see an indication in the console.
 
@@ -139,7 +140,7 @@ Once the migration is done, you can inspect the destination project to ensure ev
 Here are some things to check (if applicable):
 
 - **Auth** → Confirm that users and teams are present.
-- **Databases** → Can you see your collections and documents?
+- **Databases** → Can you see your tables and rows?
 - **Storage** → Look inside your buckets and confirm that files are present.
 - **Functions** → Are your functions listed, and do they include deployments and any environment variables you selected?
 

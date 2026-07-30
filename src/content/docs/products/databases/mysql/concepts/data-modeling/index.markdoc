@@ -1,0 +1,175 @@
+---
+layout: article
+title: Data modeling and normalization
+description: Design MySQL schemas with normalization, decide when to denormalize, and use views to shape data for readers.
+---
+
+Data modeling decides where each fact lives. Normalization is the discipline of storing every fact exactly once, so it can't contradict itself. This page walks a flat spreadsheet-style table through the normal forms, then covers when to deliberately break the rules, and how views let you reshape data without duplicating it.
+
+# The problem with one big table {% #problem %}
+
+Start with an orders table designed the way a spreadsheet would be:
+
+```sql
+CREATE TABLE orders_flat (
+    order_id       BIGINT,
+    customer_name  VARCHAR(100),
+    customer_email VARCHAR(255),
+    product_names  TEXT,      -- 'Keyboard, Mouse'
+    product_prices TEXT       -- '79.00, 29.50'
+);
+
+INSERT INTO orders_flat VALUES
+    (1, 'Ada', 'ada@example.com', 'Keyboard, Mouse', '79.00, 29.50'),
+    (2, 'Ada', 'ada@example.com', 'Monitor', '349.99'),
+    (3, 'Grace', 'grace@example.com', 'Mouse', '29.50');
+```
+
+Every design flaw here causes a concrete failure:
+
+- Ada's email is stored twice. Update one row and not the other, and the database now disagrees with itself. This is an **update anomaly**.
+- Products only exist inside order rows. Delete order 2 and the Monitor, its price, everything, vanishes. A **delete anomaly**.
+- A product has no row of its own, so recording one before anyone orders it means a row with empty order fields. An **insert anomaly**.
+- "Which orders contain a Mouse?" requires string parsing instead of a `WHERE` clause.
+
+# First normal form: one value per cell {% #first-nf %}
+
+First normal form (1NF) requires each column to hold a single atomic value, no comma-separated lists. Split the line items into rows:
+
+```sql
+CREATE TABLE order_lines_1nf (
+    order_id       BIGINT,
+    customer_name  VARCHAR(100),
+    customer_email VARCHAR(255),
+    product_name   VARCHAR(200),
+    product_price  DECIMAL(10, 2)
+);
+
+INSERT INTO order_lines_1nf VALUES
+    (1, 'Ada', 'ada@example.com', 'Keyboard', 79.00),
+    (1, 'Ada', 'ada@example.com', 'Mouse', 29.50),
+    (2, 'Ada', 'ada@example.com', 'Monitor', 349.99),
+    (3, 'Grace', 'grace@example.com', 'Mouse', 29.50);
+```
+
+Now `WHERE product_name = 'Mouse'` works. But the duplication got worse: Ada's email appears three times, and the Mouse's price twice.
+
+# Second and third normal form: facts move to their owners {% #second-third-nf %}
+
+Second normal form (2NF) says every column must depend on the whole key, which here is implicitly `(order_id, product_name)`: `product_price` depends only on the product, not on which order it's in, so it belongs in a products table. Third normal form (3NF) says no column may depend on a non-key column: `customer_email` depends on the customer, not the order, so it belongs in a customers table.
+
+Applying both produces the standard shape, where every fact has exactly one home:
+
+```sql
+CREATE TABLE customers (
+    id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name  VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE products (
+    id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name  VARCHAR(200) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE orders (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+);
+
+CREATE TABLE order_items (
+    order_id   BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity   INT NOT NULL DEFAULT 1,
+    unit_price DECIMAL(10, 2) NOT NULL,   -- price at time of order, see below
+    PRIMARY KEY (order_id, product_id),
+    FOREIGN KEY (order_id) REFERENCES orders (id),
+    FOREIGN KEY (product_id) REFERENCES products (id)
+);
+
+INSERT INTO customers (name, email) VALUES
+    ('Ada', 'ada@example.com'), ('Grace', 'grace@example.com');
+INSERT INTO products (name, price) VALUES
+    ('Keyboard', 79.00), ('Mouse', 29.50), ('Monitor', 349.99);
+INSERT INTO orders (customer_id) VALUES (1), (1), (2);
+INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES
+    (1, 1, 1, 79.00), (1, 2, 1, 29.50), (2, 3, 1, 349.99), (3, 2, 1, 29.50);
+```
+
+Changing Ada's email is now a one-row `UPDATE` that cannot leave a stale copy anywhere. The anomalies are gone because duplication is gone.
+
+Notice `unit_price` in `order_items` looks like duplication but isn't: the price *at the time of the order* is a different fact from the product's *current* price, and both deserve a home. Normalization is about one home per fact, not zero copies of anything that looks similar.
+
+# Reading a normalized schema {% #querying %}
+
+Normalized data comes back together with joins:
+
+```sql
+SELECT o.id AS order_id, c.name, SUM(oi.quantity * oi.unit_price) AS total
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+JOIN order_items oi ON oi.order_id = o.id
+GROUP BY o.id, c.name
+ORDER BY o.id;
+```
+
+```text
+order_id	name	total
+1	Ada	108.50
+2	Ada	349.99
+3	Grace	29.50
+```
+
+If the joins feel verbose, that's what views are for, not denormalization.
+
+# Views: stored queries, not stored data {% #views %}
+
+A view names a query so readers get the convenient shape without the data being duplicated:
+
+```sql
+CREATE VIEW order_summaries AS
+SELECT o.id AS order_id, c.name AS customer, o.created_at,
+       SUM(oi.quantity * oi.unit_price) AS total
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+JOIN order_items oi ON oi.order_id = o.id
+GROUP BY o.id, c.name, o.created_at;
+
+SELECT customer, total FROM order_summaries WHERE order_id = 1;
+```
+
+The view runs its query on every read, so it is always current. MySQL has no materialized views. When an aggregation is too expensive to compute on every read, maintain a summary table yourself: recompute it on a schedule, or update it transactionally alongside the source data:
+
+```sql
+CREATE TABLE customer_totals (
+    name           VARCHAR(100) PRIMARY KEY,
+    lifetime_value DECIMAL(12, 2) NOT NULL
+);
+
+-- refresh on your schedule:
+REPLACE INTO customer_totals
+SELECT c.name, SUM(oi.quantity * oi.unit_price)
+FROM customers c
+JOIN orders o ON o.customer_id = c.id
+JOIN order_items oi ON oi.order_id = o.id
+GROUP BY c.name;
+
+SELECT * FROM customer_totals ORDER BY lifetime_value DESC;
+```
+
+# When to denormalize {% #denormalize %}
+
+Denormalization deliberately duplicates a fact to make reads cheaper, accepting that your code must now keep the copies in sync. It's a real tool with a real cost, so it should be a measured response to a demonstrated problem, not a default:
+
+- **A hot aggregate**, such as showing order totals on every page: store `orders.total` and update it when items change, rather than summing on every read.
+- **An access-pattern mismatch**, such as a search page filtering on a joined column at scale.
+- **Snapshot semantics**, like `unit_price` above, which isn't really denormalization: the historical value is its own fact.
+
+Before duplicating data, check whether an index or a view solves the read problem, since neither can ever disagree with the source data; a summary table lags until its next refresh but needs no synchronization logic beyond the refresh itself. When you do denormalize, keep the copies consistent inside one transaction, so a crash between the write and the sync can't leave them disagreeing. See [Transactions](/docs/products/databases/mysql/concepts/transactions).
+
+# JSON columns in a relational model {% #json %}
+
+A `JSON` column is controlled denormalization for attributes that vary per row, such as per-event metadata. The rule of thumb: anything you filter on, join on, or aggregate regularly deserves a real column with a real type and real constraints; the long tail can live in `JSON`. See [Tables and data types](/docs/products/databases/mysql/concepts/tables#json).

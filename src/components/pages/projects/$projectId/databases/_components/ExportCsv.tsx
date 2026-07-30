@@ -78,10 +78,16 @@ export function ExportCsv({
   const t = useT()
   const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind ?? 'tablesdb')
   const isCollectionExport = isCollectionDatabaseKind(dbKind)
-  const { table } = useProjectTable(projectId, databaseId, tableId)
+  const { table } = useProjectTable(
+    projectId,
+    databaseId,
+    dbKind ?? 'tablesdb',
+    tableId,
+  )
   const { columns: apiColumns } = useProjectTableColumns(
     projectId,
     databaseId,
+    dbKind ?? 'tablesdb',
     tableId,
     undefined,
     0,
@@ -91,6 +97,7 @@ export function ExportCsv({
     projectId,
     databaseId,
     tableId,
+    dbKind ?? 'tablesdb',
     0,
     50,
   )

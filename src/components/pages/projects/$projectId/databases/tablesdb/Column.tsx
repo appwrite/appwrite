@@ -207,7 +207,7 @@ export function ColumnDrawer({
   const [enumElements, setEnumElements] = useState<string[]>([''])
   const [enumElementInput, setEnumElementInput] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  /** Text inputs for bigint min/max — avoids Number precision loss past MAX_SAFE_INTEGER. */
+  /** Text inputs for bigint min/max - avoids Number precision loss past MAX_SAFE_INTEGER. */
   const [bigintMinText, setBigintMinText] = useState('')
   const [bigintMaxText, setBigintMaxText] = useState('')
   // Ref to avoid stale state when user checks Encrypted then immediately submits (state may not have flushed)
@@ -904,7 +904,7 @@ export function ColumnDrawer({
                   <p className="text-[11px] text-muted-foreground">
                     Signed 64-bit range: {INT64_MIN.toString()} to{' '}
                     {INT64_MAX.toString()}. Enter the full value (do not use the
-                    number input — large values lose precision in JavaScript).
+                    number input - large values lose precision in JavaScript).
                   </p>
                 )}
               </>

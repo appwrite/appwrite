@@ -3,6 +3,7 @@ layout: post
 title: "GDPR compliance for mobile apps: a developer’s guide"
 description: Learn how to ensure your mobile app protects user privacy while meeting GDPR.
 date: 2024-09-05
+lastUpdated: 2026-06-29
 cover: /images/blog/gdpr-mobile-apps-guide/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -16,7 +17,7 @@ faqs:
   - question: "What is the difference between a data controller and a data processor?"
     answer: "The data controller decides why and how personal data is processed (usually you, the app owner). The data processor handles data on the controller's behalf (your BaaS, analytics, or hosting provider). Both must comply with GDPR, but the controller carries the heavier responsibility."
   - question: "How does Appwrite help with GDPR compliance?"
-    answer: "Appwrite acts as a data processor when you use it as your backend, and Appwrite Cloud's EU region keeps data within the EU. Features like granular permissions, account deletion via [Appwrite Auth](/docs/products/auth), and per document access control help you implement user data rights like access and erasure without writing custom infrastructure."
+    answer: "Appwrite acts as a data processor when you use it as your backend, and Appwrite Cloud's EU region keeps data within the EU. Features like granular permissions, account deletion via [Appwrite Auth](/docs/products/auth), and per-row access control help you implement user data rights like access and erasure without writing custom infrastructure."
   - question: "What are the penalties for GDPR non-compliance?"
     answer: "Fines can reach up to €20 million or 4% of global annual revenue, whichever is higher. Beyond fines, you face reputation damage, mandatory breach disclosures, and potential lawsuits from affected users. The financial risk alone justifies taking compliance seriously from day one."
   - question: "Do I need a privacy policy if my app does not sell user data?"

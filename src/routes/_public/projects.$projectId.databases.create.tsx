@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { CreateDatabaseWizardView } from '@/components/pages/projects/$projectId/databases/create/CreateDatabaseWizardView'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  databaseSpecificationsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -21,10 +20,8 @@ export const Route = createFileRoute(
     if (!projectId) return
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
-
-    await queryClient.ensureQueryData(
-      databaseSpecificationsQueryOptions(projectId),
-    )
+    // Specs are fetched per selected DB type in the wizard (each product/engine
+    // has its own listSpecifications endpoint).
   },
   // Disable lazy split for this route: avoids dev failures loading
   // `*.tsx?tsr-split=component` (e.g. rolldown/vite transform or HMR edge cases).

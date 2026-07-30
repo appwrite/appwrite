@@ -3,6 +3,7 @@ layout: post
 title: How Appwrite streamlines database operations using hooks
 description: Learn how Appwrite implemented hook functions to develop custom filters in the Databases services.
 date: 2025-01-18
+lastUpdated: 2026-06-29
 cover: /images/blog/hooks-appwrite-databases/cover.avif
 timeToRead: 10
 author: aditya-oberai
@@ -19,7 +20,7 @@ faqs:
   - question: "Are hooks the same thing as middleware?"
     answer: "They overlap but are not identical. Middleware typically wraps an entire request/response cycle, while hooks fire at specific named points inside a library or framework. Middleware is one common implementation of hooks for the HTTP layer, but hooks exist at many other layers including database, ORM, and UI rendering."
   - question: "Does [Appwrite Functions](/docs/products/functions) let me hook into database events?"
-    answer: "Yes. You can configure an Appwrite Function to run on database events like document creation, updates, or deletes. This gives you an event-driven hook outside the database layer, useful for sending notifications, syncing third-party services, or running async business logic after a write."
+    answer: "Yes. You can configure an Appwrite Function to run on database events like row creation, updates, or deletes. This gives you an event-driven hook outside the database layer, useful for sending notifications, syncing third-party services, or running async business logic after a write."
 ---
 
 Software engineering is complex, especially when you aim to build robust applications. For example, you may want to handle type conversions and clean your data before storing it in your database, add external loggers and observability tools, or add additional user authentication factors for specific functionalities. At some point, the need for extensibility will inevitably arise in your software.
@@ -50,7 +51,7 @@ Appwrite's tech stack has numerous points where we need to extend the fundamenta
 
 ## Step 1: Identifying hook points
 
-Our Database library, the [Utopia PHP Databases library](https://github.com/utopia-php/database/), powers every database-relevant action in Appwrite, whether we're talking about user-facing functionalities present in [Appwrite's Database API](https://appwrite.io/docs/references/cloud/client-web/databases) or internal functionalities such as storing Appwrite organization and project data, usage statistics for different services, SSL certificates for custom domains, etc.
+Our Database library, the [Utopia PHP Databases library](https://github.com/utopia-php/database/), powers every database-relevant action in Appwrite, whether we're talking about user-facing functionalities present in [Appwrite's TablesDB API](https://appwrite.io/docs/references/cloud/client-web/tablesDB) or internal functionalities such as storing Appwrite organization and project data, usage statistics for different services, SSL certificates for custom domains, etc.
 
 There are various scenarios (or "hook points") in Appwrite where we need to transform data, such as hashing passwords, converting timezones for DateTime value, and serializing JSON objects before storing them in our underlying MariaDB database. Therefore, we decided to implement hooks in the form of custom filters to achieve these data transformations.
 

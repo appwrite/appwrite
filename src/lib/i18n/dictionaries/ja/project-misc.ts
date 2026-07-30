@@ -141,6 +141,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create a firewall rule scoped to a site to control how it handles requests.':
     'リクエストの扱いを制御するため、サイト向けのファイアウォールルールを作成してください。',
   'Firewall rule scope': 'ファイアウォールルールの対象',
+  'Firewall resource': 'ファイアウォールリソース',
+  'Search resources...': 'リソースを検索...',
+  'Showing first results. Refine your search to find more.':
+    '最初の結果を表示しています。さらに見つけるには検索を絞り込んでください。',
   API: 'API',
   'Firewall protection': 'Firewall 保護',
   'Firewall is evaluating rules against incoming traffic for this project.':
@@ -194,11 +198,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Value: '値',
   'Remove condition': '条件を削除',
   'IP address': 'IP アドレス',
-  'HTTP method': 'HTTP メソッド',
   'Select method': 'メソッドを選択',
   'e.g. curl/8.0': '例: curl/8.0',
+  'Key, e.g. token': 'キー (例: token)',
+  'Key, e.g. x-custom-header': 'キー (例: x-custom-header)',
+  'e.g. 203.0.113.10': '例: 203.0.113.10',
+  'e.g. 203.0.113.10 or CIDR range 203.0.113.0/24':
+    '例: 203.0.113.10 または CIDR 範囲 203.0.113.0/24',
   'User agent': 'User agent',
-  'Request path': 'リクエストパス',
   If: 'If',
   Then: 'Then',
   And: 'And',

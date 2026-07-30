@@ -1,0 +1,151 @@
+---
+layout: article
+title: Django
+description: Use Django's ORM with an Appwrite native MySQL database. Configure the DATABASES setting, run migrations against the direct MySQL port, and choose the right pooler mode for Django connections.
+---
+
+A native MySQL database is a standard MySQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the `DATABASES` setting at the credentials from the [Connections](/docs/products/databases/mysql/connections) page, then use migrations, models, and the rest of Django as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one with the create-database wizard, then use [`mysql.get()`](/docs/products/databases/mysql/connections#credentials) to read the hostname, port, username, password, and generated database name. The primary username is `admin`.
+{% /info %}
+
+# Install a driver {% #driver %}
+
+Django talks to MySQL through a DB API driver. Django's current recommended driver is [mysqlclient](https://pypi.org/project/mysqlclient/):
+
+```bash
+pip install mysqlclient
+```
+
+`mysqlclient` builds against MySQL client libraries. If installation fails, install the MySQL development headers and `pkg-config` for your operating system, then run the same command again.
+
+Django's MySQL backend uses the `ENGINE` value `django.db.backends.mysql`.
+
+# Configure `DATABASES` {% #databases %}
+
+In `settings.py`, point the `default` connection at your native MySQL database. Appwrite Cloud requires TLS on the public hostname, and the certificate is signed by a public certificate authority. Read every value from the environment so credentials stay out of source control:
+
+```python
+import os
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_USER"],
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.environ["DB_HOST"],
+        "PORT": os.environ["DB_PORT"],
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "ssl_mode": os.environ.get("DB_SSL_MODE", "REQUIRED"),
+        },
+    }
+}
+```
+
+The MySQL backend passes `OPTIONS` to `mysqlclient`. `charset` keeps client encoding aligned with Django's UTF-8 expectations, and `ssl_mode` controls TLS for the MySQL connection. Use `REQUIRED` for encrypted Cloud connections. For full certificate and hostname verification, set `DB_SSL_MODE=VERIFY_IDENTITY`. See [Network security](/docs/products/databases/mysql/network-security) for TLS and IP allowlist guidance.
+
+Populate the environment with values from `mysql.get()` in the [API credentials flow](/docs/products/databases/mysql/connections#credentials):
+
+```env
+DB_NAME=<database>
+DB_USER=admin
+DB_PASSWORD=<password>
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=3306
+DB_SSL_MODE=REQUIRED
+```
+
+Port `3306` is the direct MySQL port. Keep migrations on this port, and see [pooling](#pooling) below for when to add the pooler.
+
+# Run migrations {% #migrate %}
+
+Generate migrations from your models, then apply them against the direct MySQL port:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+`migrate` needs a session connection with DDL privileges. The primary `admin` user owns the database and can run schema changes. Always run `migrate` on the direct MySQL port, not through the transaction-mode pooler.
+
+# Define a model {% #model %}
+
+Models map to tables in your native MySQL database. Define one in an app's `models.py`:
+
+```python
+from django.db import models
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "django_articles"
+        ordering = ["-created_at"]
+```
+
+Run `makemigrations` and `migrate` again to create the table, then query it through the ORM:
+
+```python
+from blog.models import Article
+
+Article.objects.create(title="Hello", body="First post")
+
+recent = Article.objects.order_by("-created_at")[:10]
+```
+
+# Persistent connections and pooling {% #pooling %}
+
+By default Django opens a new connection per request (`CONN_MAX_AGE = 0`). On a long-running WSGI server (Gunicorn, uWSGI), you can reuse connections by raising it. Each worker thread keeps its own connection, so the database must allow at least as many connections as you run worker threads:
+
+```python
+DATABASES["default"]["CONN_MAX_AGE"] = 60
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+```
+
+`CONN_HEALTH_CHECKS` revalidates a reused connection once per request, reducing errors after an engine restart. Do not enable persistent connections under the development server, because it spawns a thread per request and gains nothing. Keep persistent connections disabled under ASGI.
+
+{% info title="Persistent connections need a session" %}
+A worker holding a connection across requests behaves like a long-lived session. Connect it to the direct MySQL port or the **session-mode** pooler. The default **transaction-mode** pooler can hand statements to different backend connections, which makes it a better fit for short-lived runtimes that open and close a connection per request or invocation.
+{% /info %}
+
+If you front the database with the transaction-mode [connection pooler](/docs/products/databases/mysql/connection-pooling), point `HOST` and `PORT` at the MySQL pooler on port `6033` and keep `CONN_MAX_AGE = 0`:
+
+```env
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=6033
+```
+
+Transaction mode does not preserve session state between statements. Use the direct port or **session mode** for migrations, temporary tables, user variables, named locks, and other session-scoped behavior. See the [pooler](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are instant, isolated copies of a database with their own hostname and connection details. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Export them as the `DB_*` environment variables your settings read.
+3. Run `python manage.py migrate` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, its schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and connect with common clients.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

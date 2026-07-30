@@ -33,7 +33,7 @@ resource "appwrite_webhook" "user_events" {
 resource "appwrite_webhook" "authenticated" {
   name          = "authenticated webhook"
   url           = "https://api.example.com/webhooks/secure"
-  events        = ["databases.*.collections.*.documents.*.create"]
+  events        = ["tablesdb.*.tables.*.rows.*.create"]
   auth_username = "webhook"
   auth_password = var.webhook_password
   tls           = true

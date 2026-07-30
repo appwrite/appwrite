@@ -67,7 +67,14 @@ export const Route = createFileRoute(
     )
 
     const tablesPromise = queryClient.ensureQueryData(
-      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        0,
+        TABLES_PER_PAGE,
+        undefined,
+      ),
     )
 
     if (tableId === '-') {
@@ -75,6 +82,7 @@ export const Route = createFileRoute(
         tablesQueryOptions(
           projectId,
           databaseId,
+          dbKind as DatabaseRouteKind,
           0,
           ROWS_DEFAULT_PAGE_SIZE,
           undefined,
@@ -138,19 +146,26 @@ export const Route = createFileRoute(
             projectId,
             databaseId,
             tableId,
+            dbKind as DatabaseRouteKind,
             page - 1,
             limit,
             search ?? undefined,
             'desc',
             '$createdAt',
             filterQueries,
+            undefined,
           ),
         ),
         queryClient.ensureQueryData(
           databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
         ),
         queryClient.ensureQueryData(
-          tableQueryOptions(projectId, databaseId, tableId),
+          tableQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+            tableId,
+          ),
         ),
         projectData?.teamId
           ? queryClient.ensureQueryData(
@@ -162,7 +177,12 @@ export const Route = createFileRoute(
         databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
       )
       const table = queryClient.getQueryData<{ name?: string }>(
-        tableQueryOptions(projectId, databaseId, tableId).queryKey,
+        tableQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ).queryKey,
       )
       return { database, table }
     } else {

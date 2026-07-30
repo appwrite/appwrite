@@ -3,6 +3,7 @@ layout: post
 title: The underrated value of great SDK design
 description: "Great SDK design can make or break developer adoption. Here's why SDK quality matters, and what developers actually expect from modern backend platforms."
 date: 2026-04-15
+lastUpdated: 2026-06-29
 cover: /images/blog/the-underrated-value-of-great-sdk-design/cover.avif
 timeToRead: 5
 author: aishwari
@@ -58,7 +59,7 @@ This matters more than it might seem. Passing a plain string where an enum value
 
 Appwrite SDKs ship with [enumeration classes](/docs/sdks#enums) for predefined values used across authentication factors, storage compression algorithms, query operators, runtime environments, and more. These enums are available across all supported languages, not just TypeScript.
 
-The [type generation feature](/docs/products/databases/type-generation) takes this further. Run `appwrite types` and the CLI generates typed model classes directly from your database collections, in your project's language. Schema changes propagate to your types automatically, without any manual mapping.
+The [type generation feature](/docs/products/databases/type-generation) takes this further. Run `appwrite types` and the CLI generates typed model classes directly from your database tables, in your project's language. Schema changes propagate to your types automatically, without any manual mapping.
 
 Developers who want to go even further can use the [`generate` command](/docs/tooling/command-line/generate) to generate a fully typed SDK for their project. Unlike the generic SDKs, a generated SDK reflects your project's specific configuration, giving you end-to-end type safety from your database schema all the way to your client code.
 

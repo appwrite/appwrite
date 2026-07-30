@@ -1,0 +1,1240 @@
+---
+layout: article
+title: Transactions
+description: Stage multiple VectorsDB operations and commit them atomically. Group changes across databases and collections with ordering, isolation, and conflict detection.
+---
+
+Transactions let you stage multiple database operations and apply them together, atomically. Use transactions to keep related changes consistent, even when they span multiple databases and collections.
+
+# How transactions work {% #how-transactions-work %}
+
+1. Call the [createTransaction](#create-a-transaction) method to create a transaction. This will return a transaction model, including its ID.
+2. Stage operations by passing the `transactionId` parameter to supported document, bulk, and atomic numeric methods. You can stage many operations at once with the [createOperations](#create-operations) method.
+3. Call the [updateTransaction](#commit-or-rollback) method to commit or roll back.
+
+On commit, Appwrite replays all staged logs in order inside a real database transaction. Staged operations see earlier staged changes (read your own writes). If any affected document changed outside your transaction, the commit fails with a conflict.
+
+{% info title="Scope and limitations" %}
+You can stage operations across any database and collection within the same transaction. Schema operations (for example, creating or deleting indexes) are not included in transactions.
+{% /info %}
+
+# Limits {% #limits %}
+
+The maximum number of operations you can stage per transaction depends on your plan:
+
+| Plan | Max operations per transaction |
+|------|-------------------------------|
+| Free | 100 |
+| Pro | 1,000 |
+
+# Create a transaction {% #create-a-transaction %}
+
+Call the `createTransaction` method to begin. It returns a transaction model that includes `$id`. Pass this ID as `transactionId` to subsequent operations. Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const tx = await vectorsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const tx = await vectorsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$tx = $vectorsDB->createTransaction();
+// $tx['$id'] is your transactionId
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+tx = vectors_db.create_transaction()
+# tx['$id'] is your transactionId
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+tx = vectors_db.create_transaction
+# tx['$id'] is your transactionId
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+var tx = await vectorsDB.CreateTransaction();
+// tx.Id is your transactionId
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+final tx = await vectorsDB.createTransaction();
+// tx.$id is your transactionId
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val tx = vectorsDB.createTransaction()
+// tx.id is your transactionId
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.createTransaction(new CoroutineCallback<>((tx, error) -> {
+    if (error != null) {
+        error.printStackTrace();
+        return;
+    }
+
+    System.out.println(tx);
+}));
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let tx = try await vectorsDB.createTransaction()
+// tx.id is your transactionId
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let tx = vectors_db.create_transaction(None).await?;
+    // tx.id is your transaction_id
+
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create-transaction
+```
+{% /multicode %}
+
+# Stage operations {% #stage-operations %}
+
+Add the `transactionId` parameter to supported methods to stage them instead of immediately persisting.
+
+When you pass `transactionId`, Appwrite writes the operation to an internal staging area. The target collection is not modified until you commit the transaction.
+
+## Stage single operations {% #stage-single-operations %}
+
+Update, upsert, and delete operations accept `transactionId`, as well as their bulk versions (`updateDocuments`, `upsertDocuments`, `deleteDocuments`). To stage the first write to a brand new document, use `upsertDocument` with `transactionId`.
+
+{% multicode %}
+```server-nodejs
+// Update inside a transaction
+await vectorsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: { metadata: { title: 'Hamlet', year: 1602 } },
+    transactionId: tx.$id
+});
+
+// Delete inside a transaction
+await vectorsDB.deleteDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+});
+```
+```deno
+// Update inside a transaction
+await vectorsDB.updateDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: { metadata: { title: 'Hamlet', year: 1602 } },
+    transactionId: tx.$id
+});
+
+// Delete inside a transaction
+await vectorsDB.deleteDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+});
+```
+```php
+// Update inside a transaction
+$vectorsDB->updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: ['metadata' => ['title' => 'Hamlet', 'year' => 1602]],
+    transactionId: $tx['$id']
+);
+
+// Delete inside a transaction
+$vectorsDB->deleteDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: $tx['$id']
+);
+```
+```python
+# Update inside a transaction
+vectors_db.update_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    data = { "metadata": { "title": "Hamlet", "year": 1602 } },
+    transaction_id = tx['$id']
+)
+
+# Delete inside a transaction
+vectors_db.delete_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    transaction_id = tx['$id']
+)
+```
+```ruby
+# Update inside a transaction
+vectors_db.update_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: '<DOCUMENT_ID>',
+    data: { "metadata" => { "title" => "Hamlet", "year" => 1602 } },
+    transaction_id: tx['$id']
+)
+
+# Delete inside a transaction
+vectors_db.delete_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: '<DOCUMENT_ID>',
+    transaction_id: tx['$id']
+)
+```
+```csharp
+// Update inside a transaction
+await vectorsDB.UpdateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    data: new Dictionary<string, object> {
+        { "metadata", new Dictionary<string, object> { { "title", "Hamlet" }, { "year", 1602 } } }
+    },
+    transactionId: tx.Id
+);
+
+// Delete inside a transaction
+await vectorsDB.DeleteDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    transactionId: tx.Id
+);
+```
+```dart
+// Update inside a transaction
+await vectorsDB.updateDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: { "metadata": { "title": "Hamlet", "year": 1602 } },
+    transactionId: tx.$id
+);
+
+// Delete inside a transaction
+await vectorsDB.deleteDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+);
+```
+```kotlin
+// Update inside a transaction
+vectorsDB.updateDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    data = mapOf("metadata" to mapOf("title" to "Hamlet", "year" to 1602)),
+    transactionId = tx.id
+)
+
+// Delete inside a transaction
+vectorsDB.deleteDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    transactionId = tx.id
+)
+```
+```java
+// Update inside a transaction (asynchronous)
+vectorsDB.updateDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    Map.of("metadata", Map.of("title", "Hamlet", "year", 1602)),
+    listOf(),
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((document, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(document);
+    })
+);
+```
+```swift
+// Update inside a transaction
+try await vectorsDB.updateDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    data: ["metadata": ["title": "Hamlet", "year": 1602]],
+    transactionId: tx.id
+)
+
+// Delete inside a transaction
+try await vectorsDB.deleteDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    transactionId: tx.id
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let tx = vectors_db.create_transaction(None).await?;
+
+    // Update inside a transaction
+    vectors_db.update_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        Some(json!({ "metadata": { "title": "Hamlet", "year": 1602 } })),
+        None,
+        Some(&tx.id),
+    ).await?;
+
+    // Delete inside a transaction
+    vectors_db.delete_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        Some(&tx.id),
+    ).await?;
+
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db update-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID> \
+    --data '{ "metadata": { "title": "Hamlet", "year": 1602 } }' \
+    --transaction-id <TRANSACTION_ID>
+```
+{% /multicode %}
+
+You can read uncommitted changes back inside the same transaction by passing `transactionId` to `getDocument`. A plain read without `transactionId` still returns the committed document.
+
+{% multicode %}
+```server-nodejs
+// Read your own staged write
+const staged = await vectorsDB.getDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+});
+```
+```deno
+// Read your own staged write
+const staged = await vectorsDB.getDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+});
+```
+```php
+// Read your own staged write
+$staged = $vectorsDB->getDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: $tx['$id']
+);
+```
+```python
+# Read your own staged write
+staged = vectors_db.get_document(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
+    transaction_id = tx['$id']
+)
+```
+```ruby
+# Read your own staged write
+staged = vectors_db.get_document(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: '<DOCUMENT_ID>',
+    transaction_id: tx['$id']
+)
+```
+```csharp
+// Read your own staged write
+var staged = await vectorsDB.GetDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    transactionId: tx.Id
+);
+```
+```dart
+// Read your own staged write
+final staged = await vectorsDB.getDocument(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    transactionId: tx.$id
+);
+```
+```kotlin
+// Read your own staged write
+val staged = vectorsDB.getDocument(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
+    transactionId = tx.id
+)
+```
+```java
+// Read your own staged write (asynchronous)
+vectorsDB.getDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    listOf(),
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((document, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(document);
+    })
+);
+```
+```swift
+// Read your own staged write
+let staged = try await vectorsDB.getDocument(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
+    transactionId: tx.id
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let tx = vectors_db.create_transaction(None).await?;
+
+    // Read your own staged write
+    let staged = vectors_db.get_document(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<DOCUMENT_ID>",
+        None,
+        Some(&tx.id),
+    ).await?;
+
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db get-document \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID> \
+    --transaction-id <TRANSACTION_ID>
+```
+{% /multicode %}
+
+## Stage many with createOperations {% #create-operations %}
+
+Use the `createOperations` method to stage multiple operations across databases and collections in a single request. Provide an array of operation objects:
+
+```json
+[
+  {
+    "action": "create|update|upsert|increment|decrement|delete|bulkCreate|bulkUpdate|bulkUpsert|bulkDelete",
+    "databaseId": "<DATABASE_ID>",
+    "collectionId": "<COLLECTION_ID>",
+    "documentId": "<DOCUMENT_ID>",
+    "data": {}
+  }
+]
+```
+
+For `create`, `update`, and `upsert` actions, pass the document `data` (an `embeddings` vector and optional `metadata`). For `delete`, the `documentId` is enough.
+
+{% multicode %}
+```server-nodejs
+// Stage multiple operations at once
+await vectorsDB.createOperations({
+    transactionId: tx.$id,
+    operations: [
+        {
+            action: 'update',
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            documentId: '<DOCUMENT_ID_1>',
+            data: { metadata: { title: 'Macbeth' } }
+        },
+        {
+            action: 'delete',
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            documentId: '<DOCUMENT_ID_2>'
+        }
+    ]
+});
+```
+```deno
+// Stage multiple operations at once
+await vectorsDB.createOperations({
+    transactionId: tx.$id,
+    operations: [
+        {
+            action: 'update',
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            documentId: '<DOCUMENT_ID_1>',
+            data: { metadata: { title: 'Macbeth' } }
+        },
+        {
+            action: 'delete',
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            documentId: '<DOCUMENT_ID_2>'
+        }
+    ]
+});
+```
+```php
+$vectorsDB->createOperations(
+    transactionId: $tx['$id'],
+    operations: [
+        [
+            'action' => 'update',
+            'databaseId' => '<DATABASE_ID>',
+            'collectionId' => '<COLLECTION_ID>',
+            'documentId' => '<DOCUMENT_ID_1>',
+            'data' => [ 'metadata' => [ 'title' => 'Macbeth' ] ]
+        ],
+        [
+            'action' => 'delete',
+            'databaseId' => '<DATABASE_ID>',
+            'collectionId' => '<COLLECTION_ID>',
+            'documentId' => '<DOCUMENT_ID_2>'
+        ]
+    ]
+);
+```
+```python
+vectors_db.create_operations(
+    transaction_id = tx['$id'],
+    operations = [
+        {
+            'action': 'update',
+            'databaseId': '<DATABASE_ID>',
+            'collectionId': '<COLLECTION_ID>',
+            'documentId': '<DOCUMENT_ID_1>',
+            'data': { 'metadata': { 'title': 'Macbeth' } }
+        },
+        {
+            'action': 'delete',
+            'databaseId': '<DATABASE_ID>',
+            'collectionId': '<COLLECTION_ID>',
+            'documentId': '<DOCUMENT_ID_2>'
+        }
+    ]
+)
+```
+```ruby
+vectors_db.create_operations(
+    transaction_id: tx['$id'],
+    operations: [
+        {
+            'action' => 'update',
+            'databaseId' => '<DATABASE_ID>',
+            'collectionId' => '<COLLECTION_ID>',
+            'documentId' => '<DOCUMENT_ID_1>',
+            'data' => { 'metadata' => { 'title' => 'Macbeth' } }
+        },
+        {
+            'action' => 'delete',
+            'databaseId' => '<DATABASE_ID>',
+            'collectionId' => '<COLLECTION_ID>',
+            'documentId' => '<DOCUMENT_ID_2>'
+        }
+    ]
+)
+```
+```csharp
+await vectorsDB.CreateOperations(
+    transactionId: tx.Id,
+    operations: new List<object>
+    {
+        new Dictionary<string, object>
+        {
+            ["action"] = "update",
+            ["databaseId"] = "<DATABASE_ID>",
+            ["collectionId"] = "<COLLECTION_ID>",
+            ["documentId"] = "<DOCUMENT_ID_1>",
+            ["data"] = new Dictionary<string, object> {
+                ["metadata"] = new Dictionary<string, object> { ["title"] = "Macbeth" }
+            }
+        },
+        new Dictionary<string, object>
+        {
+            ["action"] = "delete",
+            ["databaseId"] = "<DATABASE_ID>",
+            ["collectionId"] = "<COLLECTION_ID>",
+            ["documentId"] = "<DOCUMENT_ID_2>"
+        }
+    }
+);
+```
+```dart
+await vectorsDB.createOperations(
+    transactionId: tx.$id,
+    operations: [
+        {
+            'action': 'update',
+            'databaseId': '<DATABASE_ID>',
+            'collectionId': '<COLLECTION_ID>',
+            'documentId': '<DOCUMENT_ID_1>',
+            'data': { 'metadata': { 'title': 'Macbeth' } }
+        },
+        {
+            'action': 'delete',
+            'databaseId': '<DATABASE_ID>',
+            'collectionId': '<COLLECTION_ID>',
+            'documentId': '<DOCUMENT_ID_2>'
+        }
+    ]
+);
+```
+```kotlin
+vectorsDB.createOperations(
+    transactionId = tx.id,
+    operations = listOf(
+        mapOf(
+            "action" to "update",
+            "databaseId" to "<DATABASE_ID>",
+            "collectionId" to "<COLLECTION_ID>",
+            "documentId" to "<DOCUMENT_ID_1>",
+            "data" to mapOf("metadata" to mapOf("title" to "Macbeth"))
+        ),
+        mapOf(
+            "action" to "delete",
+            "databaseId" to "<DATABASE_ID>",
+            "collectionId" to "<COLLECTION_ID>",
+            "documentId" to "<DOCUMENT_ID_2>"
+        )
+    )
+)
+```
+```java
+// Stage multiple operations at once (asynchronous)
+List<Map<String, Object>> operations = Arrays.asList(
+    Map.of(
+        "action", "update",
+        "databaseId", "<DATABASE_ID>",
+        "collectionId", "<COLLECTION_ID>",
+        "documentId", "<DOCUMENT_ID_1>",
+        "data", Map.of("metadata", Map.of("title", "Macbeth"))
+    ),
+    Map.of(
+        "action", "delete",
+        "databaseId", "<DATABASE_ID>",
+        "collectionId", "<COLLECTION_ID>",
+        "documentId", "<DOCUMENT_ID_2>"
+    )
+);
+
+vectorsDB.createOperations(
+    "<TRANSACTION_ID>",
+    operations,
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+try await vectorsDB.createOperations(
+    transactionId: tx.id,
+    operations: [
+        [
+            "action": "update",
+            "databaseId": "<DATABASE_ID>",
+            "collectionId": "<COLLECTION_ID>",
+            "documentId": "<DOCUMENT_ID_1>",
+            "data": ["metadata": ["title": "Macbeth"]]
+        ],
+        [
+            "action": "delete",
+            "databaseId": "<DATABASE_ID>",
+            "collectionId": "<COLLECTION_ID>",
+            "documentId": "<DOCUMENT_ID_2>"
+        ]
+    ]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let tx = vectors_db.create_transaction(None).await?;
+
+    // Stage multiple operations at once
+    vectors_db.create_operations(
+        &tx.id,
+        Some(vec![
+            json!({
+                "action": "update",
+                "databaseId": "<DATABASE_ID>",
+                "collectionId": "<COLLECTION_ID>",
+                "documentId": "<DOCUMENT_ID_1>",
+                "data": { "metadata": { "title": "Macbeth" } }
+            }),
+            json!({
+                "action": "delete",
+                "databaseId": "<DATABASE_ID>",
+                "collectionId": "<COLLECTION_ID>",
+                "documentId": "<DOCUMENT_ID_2>"
+            }),
+        ]),
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Commit or roll back {% #commit-or-rollback %}
+
+When you are done staging operations, call the `updateTransaction` method to finalize the transaction. Set `commit` to `true` to apply the staged operations, or `rollback` to `true` to discard them.
+
+{% multicode %}
+```server-nodejs
+// Commit
+await vectorsDB.updateTransaction({
+    transactionId: tx.$id,
+    commit: true
+});
+
+// Or roll back
+await vectorsDB.updateTransaction({
+    transactionId: tx.$id,
+    rollback: true
+});
+```
+```deno
+// Commit
+await vectorsDB.updateTransaction({
+    transactionId: tx.$id,
+    commit: true
+});
+
+// Or roll back
+await vectorsDB.updateTransaction({
+    transactionId: tx.$id,
+    rollback: true
+});
+```
+```php
+// Commit
+$vectorsDB->updateTransaction(
+    transactionId: $tx['$id'],
+    commit: true
+);
+
+// Roll back
+$vectorsDB->updateTransaction(
+    transactionId: $tx['$id'],
+    rollback: true
+);
+```
+```python
+# Commit
+vectors_db.update_transaction(
+    transaction_id = tx['$id'],
+    commit = True
+)
+
+# Roll back
+vectors_db.update_transaction(
+    transaction_id = tx['$id'],
+    rollback = True
+)
+```
+```ruby
+# Commit
+vectors_db.update_transaction(
+    transaction_id: tx['$id'],
+    commit: true
+)
+
+# Roll back
+vectors_db.update_transaction(
+    transaction_id: tx['$id'],
+    rollback: true
+)
+```
+```csharp
+// Commit
+await vectorsDB.UpdateTransaction(
+    transactionId: tx.Id,
+    commit: true
+);
+
+// Roll back
+await vectorsDB.UpdateTransaction(
+    transactionId: tx.Id,
+    rollback: true
+);
+```
+```dart
+// Commit
+await vectorsDB.updateTransaction(
+    transactionId: tx.$id,
+    commit: true
+);
+
+// Roll back
+await vectorsDB.updateTransaction(
+    transactionId: tx.$id,
+    rollback: true
+);
+```
+```kotlin
+// Commit
+vectorsDB.updateTransaction(
+    transactionId = tx.id,
+    commit = true
+)
+
+// Roll back
+vectorsDB.updateTransaction(
+    transactionId = tx.id,
+    rollback = true
+)
+```
+```java
+// Commit (asynchronous)
+vectorsDB.updateTransaction(
+    "<TRANSACTION_ID>",
+    true,
+    false,
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+
+// Roll back (asynchronous)
+vectorsDB.updateTransaction(
+    "<TRANSACTION_ID>",
+    false,
+    true,
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+// Commit
+try await vectorsDB.updateTransaction(
+    transactionId: tx.id,
+    commit: true
+)
+
+// Roll back
+try await vectorsDB.updateTransaction(
+    transactionId: tx.id,
+    rollback: true
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    // Commit
+    vectors_db.update_transaction(
+        "<TRANSACTION_ID>",
+        Some(true),
+        None,
+    ).await?;
+
+    // Roll back
+    vectors_db.update_transaction(
+        "<TRANSACTION_ID>",
+        None,
+        Some(true),
+    ).await?;
+
+    Ok(())
+}
+```
+```bash
+# Commit
+appwrite vectors-db update-transaction \
+    --transaction-id <TRANSACTION_ID> \
+    --commit true
+
+# Roll back
+appwrite vectors-db update-transaction \
+    --transaction-id <TRANSACTION_ID> \
+    --rollback true
+```
+{% /multicode %}
+
+# Inspect and delete transactions {% #inspect-and-delete %}
+
+Use `getTransaction` to check a transaction's status and operation count, `listTransactions` to list transactions across all databases, and `deleteTransaction` to discard a transaction without committing it.
+
+{% multicode %}
+```server-nodejs
+// Get one transaction
+const tx = await vectorsDB.getTransaction({ transactionId: '<TRANSACTION_ID>' });
+
+// List transactions
+const list = await vectorsDB.listTransactions();
+
+// Delete a transaction
+await vectorsDB.deleteTransaction({ transactionId: '<TRANSACTION_ID>' });
+```
+```deno
+// Get one transaction
+const tx = await vectorsDB.getTransaction({ transactionId: '<TRANSACTION_ID>' });
+
+// List transactions
+const list = await vectorsDB.listTransactions();
+
+// Delete a transaction
+await vectorsDB.deleteTransaction({ transactionId: '<TRANSACTION_ID>' });
+```
+```php
+// Get one transaction
+$tx = $vectorsDB->getTransaction(transactionId: '<TRANSACTION_ID>');
+
+// List transactions
+$list = $vectorsDB->listTransactions();
+
+// Delete a transaction
+$vectorsDB->deleteTransaction(transactionId: '<TRANSACTION_ID>');
+```
+```python
+# Get one transaction
+tx = vectors_db.get_transaction(transaction_id = '<TRANSACTION_ID>')
+
+# List transactions
+list = vectors_db.list_transactions()
+
+# Delete a transaction
+vectors_db.delete_transaction(transaction_id = '<TRANSACTION_ID>')
+```
+```ruby
+# Get one transaction
+tx = vectors_db.get_transaction(transaction_id: '<TRANSACTION_ID>')
+
+# List transactions
+list = vectors_db.list_transactions
+
+# Delete a transaction
+vectors_db.delete_transaction(transaction_id: '<TRANSACTION_ID>')
+```
+```csharp
+// Get one transaction
+var tx = await vectorsDB.GetTransaction(transactionId: "<TRANSACTION_ID>");
+
+// List transactions
+var list = await vectorsDB.ListTransactions();
+
+// Delete a transaction
+await vectorsDB.DeleteTransaction(transactionId: "<TRANSACTION_ID>");
+```
+```dart
+// Get one transaction
+final tx = await vectorsDB.getTransaction(transactionId: '<TRANSACTION_ID>');
+
+// List transactions
+final list = await vectorsDB.listTransactions();
+
+// Delete a transaction
+await vectorsDB.deleteTransaction(transactionId: '<TRANSACTION_ID>');
+```
+```kotlin
+// Get one transaction
+val tx = vectorsDB.getTransaction(transactionId = "<TRANSACTION_ID>")
+
+// List transactions
+val list = vectorsDB.listTransactions()
+
+// Delete a transaction
+vectorsDB.deleteTransaction(transactionId = "<TRANSACTION_ID>")
+```
+```java
+// Get one transaction (asynchronous)
+vectorsDB.getTransaction(
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+
+// List transactions (asynchronous)
+vectorsDB.listTransactions(new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+        error.printStackTrace();
+        return;
+    }
+
+    System.out.println(result);
+}));
+
+// Delete a transaction (asynchronous)
+vectorsDB.deleteTransaction(
+    "<TRANSACTION_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+// Get one transaction
+let tx = try await vectorsDB.getTransaction(transactionId: "<TRANSACTION_ID>")
+
+// List transactions
+let list = try await vectorsDB.listTransactions()
+
+// Delete a transaction
+try await vectorsDB.deleteTransaction(transactionId: "<TRANSACTION_ID>")
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    // Get one transaction
+    let tx = vectors_db.get_transaction("<TRANSACTION_ID>").await?;
+
+    // List transactions
+    let list = vectors_db.list_transactions(None).await?;
+
+    // Delete a transaction
+    vectors_db.delete_transaction("<TRANSACTION_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+# Get one transaction
+appwrite vectors-db get-transaction \
+    --transaction-id <TRANSACTION_ID>
+
+# List transactions
+appwrite vectors-db list-transactions
+
+# Delete a transaction
+appwrite vectors-db delete-transaction \
+    --transaction-id <TRANSACTION_ID>
+```
+{% /multicode %}
+
+# Handle conflicts {% #handle-conflicts %}
+
+On commit, Appwrite verifies that documents affected by your transaction haven't changed externally since they were staged. If a conflicting change is detected, the commit fails with a conflict error. Resolve the conflict (for example, refetch and re-stage) and try again.
+
+{% info title="Best practices" %}
+Keep transactions short-lived to reduce the likelihood of conflicts. Stage related updates in the order they must be applied. Prefer `createOperations` when you need to stage many changes across multiple collections.
+{% /info %}
+
+{% arrow_link href="/docs/references" %}
+Explore the API references
+{% /arrow_link %}

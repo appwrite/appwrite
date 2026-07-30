@@ -1,5 +1,5 @@
 /**
- * Variables card — settings (API) and wizard (local state).
+ * Variables card - settings (API) and wizard (local state).
  *
  * - `variant="settings"` (default): project / function / site variables via mutations.
  * - `variant="wizard"`: create flows; updates `onChange` only (never calls API).

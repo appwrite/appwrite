@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge'
-import { WafRuleAction } from '@appwrite.io/console'
-import { getFirewallActionLabel } from '@/lib/firewall/actions'
+import {
+  getFirewallActionBadgeClass,
+  getFirewallActionLabel,
+} from '@/lib/firewall/actions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -14,19 +16,16 @@ export function RuleActionBadge({
   const t = useT()
   const label = t(getFirewallActionLabel(action))
 
-  const variant =
-    action === WafRuleAction.Deny
-      ? 'error'
-      : action === WafRuleAction.Bypass
-        ? 'processing'
-        : action === WafRuleAction.RateLimit
-          ? 'warning'
-          : action === WafRuleAction.Redirect
-            ? 'info'
-            : 'info'
-
+  // Colors come from the shared firewall action palette so the badge matches
+  // the traffic chart and dropdown dots (see FIREWALL_ACTION_COLORS).
   return (
-    <Badge variant={variant} className={cn('text-[10px] shrink-0', className)}>
+    <Badge
+      className={cn(
+        getFirewallActionBadgeClass(action),
+        'text-[10px] shrink-0',
+        className,
+      )}
+    >
       {label}
     </Badge>
   )

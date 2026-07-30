@@ -3,6 +3,7 @@ layout: post
 title: "The easiest way to add file uploads to your app"
 description: A practical guide to implementing file uploads in your application using Appwrite Storage, covering setup, upload, access control, and image transformations.
 date: 2026-03-18
+lastUpdated: 2026-06-29
 cover: /images/blog/easiest-file-uploads/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -164,7 +165,7 @@ Deleting a file is straightforward:
 await storage.deleteFile({ bucketId: 'profile-photos', fileId: fileId });
 ```
 
-For applications that need to clean up orphaned files (files whose associated database records have been deleted), Appwrite Functions can be used to trigger file deletions on database document delete events.
+For applications that need to clean up orphaned files (files whose associated database records have been deleted), Appwrite Functions can be used to trigger file deletions on database row delete events.
 
 # Implement production-ready file uploads in hours, not days
 

@@ -50,7 +50,7 @@ export function resolveUsageChartXAxisMaxTicks(
 }
 
 /**
- * Evenly spaced data indices for x-axis ticks — always includes first and last point.
+ * Evenly spaced data indices for x-axis ticks - always includes first and last point.
  */
 export function resolveChartXAxisTickIndices(
   pointCount: number,
@@ -116,7 +116,7 @@ export function resolveUsageChartXAxisTickValues<
 }
 
 /**
- * Compact x-axis labels — tooltips keep the full `date` string from chart points.
+ * Compact x-axis labels - tooltips keep the full `date` string from chart points.
  */
 export function formatUsageChartXAxisLabel(
   day: Date,

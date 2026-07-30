@@ -3,6 +3,7 @@ layout: post
 title: How modern developers choose tech stacks today
 description: Learn how modern developers choose tech stacks based on speed, developer experience, flexibility, and lock-in risk to find a backend that scales.
 date: 2026-03-28
+lastUpdated: 2026-06-29
 cover: /images/blog/how-modern-developers-choose-tech-stacks-today/cover.avif
 timeToRead: 5
 author: aishwari
@@ -91,7 +92,7 @@ This is why the modern developer instinct to "figure out the backend later" is s
 
 Getting the backend right means:
 
-- Choosing a **database** that handles your access patterns well and can evolve with your schema. Appwrite Databases support flexible querying, indexing, and document-level permissions out of the box.
+- Choosing a **database** that handles your access patterns well and can evolve with your schema. Appwrite Databases support flexible querying, indexing, and row-level permissions out of the box.
 - Choosing an **auth system** that handles your growth. [Appwrite Auth](https://appwrite.io/docs/products/auth) supports OAuth, magic links, phone OTP, and more without bolting on a third-party service.
 - Choosing a **functions layer** that handles async work cleanly. [Appwrite Functions](https://appwrite.io/docs/products/functions) support multiple runtimes and event-driven triggers so background work stays off your critical path.
 - Choosing a **hosting layer** that keeps your frontend close to your backend. [Appwrite Sites](https://appwrite.io/docs/products/sites) lets you deploy web apps with zero friction, no separate hosting provider needed.

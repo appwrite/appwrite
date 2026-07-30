@@ -395,7 +395,7 @@ export function getActiveProfileFeatures(): ConsoleProfileFeatures {
   return getActiveProfile().features
 }
 
-/** Feature defaults for a profile id (cloud-only gates + env overrides) — what a debug reset restores. */
+/** Feature defaults for a profile id (cloud-only gates + env overrides) - what a debug reset restores. */
 export function getCanonicalProfileFeatures(
   profileId: ConsoleProfileId,
 ): ConsoleProfileFeatures {

@@ -137,7 +137,7 @@ Run with `bun run <command>`. Scripts live in `scripts/`; each task maps to a fi
 | `generate:blog-local-images` | Blog-local cover images (optional slug) |
 | `generate:content-images` | Convert content images to AVIF |
 | `generate:docs` | Docs manifest, nav, LLM exports, sitemap |
-| `generate:docs-exports` | `llms.txt` / `llms-full.txt` only |
+| `generate:docs-exports` | Curated `llms.txt` hub, `docs/llms.txt`, section indexes (`docs.md`, `blog.md`, …), `/.well-known` discovery, and `llms-full.txt` |
 | `generate:docs-nav` | Docs section navigation only |
 | `generate:github-stars` | GitHub star count JSON |
 | `generate:public-icon-manifest` | Public icon picker manifest |

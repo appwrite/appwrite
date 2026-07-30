@@ -20,7 +20,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createDatetimeColumn`](#tablesdb-createdatetimecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/datetime` | `Promise<Models.ColumnDatetime>` |
 | [`createEmailColumn`](#tablesdb-createemailcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/email` | `Promise<Models.ColumnEmail>` |
 | [`createEnumColumn`](#tablesdb-createenumcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/enum` | `Promise<Models.ColumnEnum>` |
-| [`createFailover`](#tablesdb-createfailover) | — | — | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#tablesdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
 | [`createFloatColumn`](#tablesdb-createfloatcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/float` | `Promise<Models.ColumnFloat>` |
 | [`createIndex`](#tablesdb-createindex) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndex>` |
 | [`createIntegerColumn`](#tablesdb-createintegercolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/integer` | `Promise<Models.ColumnInteger>` |
@@ -28,7 +28,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createLineColumn`](#tablesdb-createlinecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/line` | `Promise<Models.ColumnLine>` |
 | [`createLongtextColumn`](#tablesdb-createlongtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/longtext` | `Promise<Models.ColumnLongtext>` |
 | [`createMediumtextColumn`](#tablesdb-createmediumtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/mediumtext` | `Promise<Models.ColumnMediumtext>` |
-| [`createMigration`](#tablesdb-createmigration) | — | — | `Promise<Models.DatabaseMigration>` |
+| [`createMigration`](#tablesdb-createmigration) | - | - | `Promise<Models.DatabaseMigration>` |
 | [`createOperations`](#tablesdb-createoperations) | POST | `/v1/tablesdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createPointColumn`](#tablesdb-createpointcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/point` | `Promise<Models.ColumnPoint>` |
 | [`createPolygonColumn`](#tablesdb-createpolygoncolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/polygon` | `Promise<Models.ColumnPolygon>` |
@@ -41,23 +41,23 @@ Base path prefix: `/v1/tablesdb`
 | [`delete`](#tablesdb-delete) | DELETE | `/v1/tablesdb/{databaseId}` | `Promise<{}>` |
 | [`deleteColumn`](#tablesdb-deletecolumn) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<{}>` |
 | [`deleteIndex`](#tablesdb-deleteindex) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<{}>` |
-| [`deleteMigration`](#tablesdb-deletemigration) | — | — | `Promise<{}>` |
+| [`deleteMigration`](#tablesdb-deletemigration) | - | - | `Promise<{}>` |
 | [`deleteRow`](#tablesdb-deleterow) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}` | `Promise<{}>` |
 | [`deleteTable`](#tablesdb-deletetable) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<{}>` |
 | [`deleteTransaction`](#tablesdb-deletetransaction) | DELETE | `/v1/tablesdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#tablesdb-get) | GET | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getColumn`](#tablesdb-getcolumn) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<Models.ColumnBoolean | Models.ColumnInteger | Models.ColumnFloat | Models.ColumnEmail | Models.ColumnEnum | Models.ColumnUrl | Models.ColumnIp | Models.ColumnDatetime | Models.ColumnRelationship | Models.ColumnString>` |
 | [`getIndex`](#tablesdb-getindex) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<Models.ColumnIndex>` |
-| [`getMigration`](#tablesdb-getmigration) | — | — | `Promise<Models.DatabaseMigration>` |
-| [`getReplicas`](#tablesdb-getreplicas) | — | — | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#tablesdb-getstatus) | — | — | `Promise<Models.DatabaseStatus>` |
+| [`getMigration`](#tablesdb-getmigration) | - | - | `Promise<Models.DatabaseMigration>` |
+| [`getReplicas`](#tablesdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#tablesdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
 | [`getTable`](#tablesdb-gettable) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<Models.Table>` |
 | [`getTransaction`](#tablesdb-gettransaction) | GET | `/v1/tablesdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#tablesdb-list) | GET | `/v1/tablesdb` | `Promise<Models.DatabaseList>` |
 | [`listColumns`](#tablesdb-listcolumns) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns` | `Promise<Models.ColumnList>` |
 | [`listIndexes`](#tablesdb-listindexes) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndexList>` |
-| [`listMigrations`](#tablesdb-listmigrations) | — | — | `Promise<Models.DatabaseMigrationList>` |
-| [`listSpecifications`](#tablesdb-listspecifications) | — | — | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listMigrations`](#tablesdb-listmigrations) | - | - | `Promise<Models.DatabaseMigrationList>` |
+| [`listSpecifications`](#tablesdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTables`](#tablesdb-listtables) | GET | `/v1/tablesdb/{databaseId}/tables` | `Promise<Models.TableList>` |
 | [`listTransactions`](#tablesdb-listtransactions) | GET | `/v1/tablesdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#tablesdb-update) | PUT | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |

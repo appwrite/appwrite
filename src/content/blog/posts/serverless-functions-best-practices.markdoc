@@ -8,7 +8,7 @@ timeToRead: 5
 author: ebenezer-don
 category: product
 featured: false
-lastUpdated: 2025-10-14
+lastUpdated: 2026-06-29
 faqs:
   - question: "What are serverless functions?"
     answer: "Serverless functions let you run small pieces of code in the cloud without managing servers. You just define a function, deploy it, and the platform (like Appwrite, AWS Lambda, or Vercel) automatically scales it up or down based on usage. You only pay for the time your code runs, no idle costs, no manual infrastructure setup."
@@ -144,7 +144,7 @@ Large deployment packages slow down the function initialization process and incr
 
 Ensure only authorized users can execute your functions. Appwrite provides built-in authentication and authorization features that you can leverage to secure your functions. This is important for protecting sensitive data and preventing your functions from being misused or easily exploited.
 
-You must ensure that authorization is enforced on your serverless functions and not solely on the client side. Client-side authorization can be bypassed, leading to security vulnerabilities. Appwrite Databases and Storage services can be configured to enforce access control rules. For example, you can restrict read and write access to documents by navigating to your database collection settings in the Appwrite Console and setting the appropriate permissions. It looks like this:
+You must ensure that authorization is enforced on your serverless functions and not solely on the client side. Client-side authorization can be bypassed, leading to security vulnerabilities. Appwrite Databases and Storage services can be configured to enforce access control rules. For example, you can restrict read and write access to rows by navigating to your database table settings in the Appwrite Console and setting the appropriate permissions. It looks like this:
 
 ![Functions-authorization](/images/blog/serverless-functions/3.avif)
 

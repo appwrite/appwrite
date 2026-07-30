@@ -1,4 +1,5 @@
 import type { Models } from '@appwrite.io/console'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 
 export type DowngradeResourceType =
   | 'databases'
@@ -9,6 +10,8 @@ export type DowngradeResourceType =
 export type DowngradeResourceItem = {
   $id: string
   name: string
+  /** Product route kind; only set for `databases` resource items. */
+  dbKind?: DatabaseRouteKind
 }
 
 export type DowngradeResourceGroup = {

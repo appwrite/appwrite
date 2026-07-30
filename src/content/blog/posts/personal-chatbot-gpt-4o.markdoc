@@ -3,6 +3,7 @@ layout: post
 title: Build a chatbot with GPT-4o and Appwrite Functions
 description: Learn how to use OpenAI's new flagship model, GPT-4o to create an intelligent chatbot.
 date: 2024-05-17
+lastUpdated: 2026-06-29
 cover: /images/blog/personal-chatbot-gpt-4o/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -284,5 +285,5 @@ And with that, you have successfully deployed your personal chatbot powered by G
 
 Additionally, if you would like to learn more about Appwrite Functions, here are some resources:
 
-- [Appwrite Functions docs](https://appwrite.io/docs/functions): These documents provide more information on how to use Appwrite Functions.
+- [Appwrite Functions docs](https://appwrite.io/docs/functions): Learn more about how to use Appwrite Functions.
 - [Appwrite Discord](https://discord.com/invite/appwrite): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

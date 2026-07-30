@@ -3,6 +3,7 @@ layout: post
 title: How to avoid "framework fatigue" when building backends
 description: Avoid framework fatigue when building backends. Learn how to choose stable tools, reduce stack complexity, and ship faster without constantly switching frameworks.
 date: 2026-04-09
+lastUpdated: 2026-06-29
 cover: /images/blog/how-to-avoid-framework-fatigue-when-building-backends/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -99,7 +100,7 @@ Appwrite is an open-source developer infrastructure platform for building web, m
 For developers dealing with framework fatigue, Appwrite addresses the root cause: too many separate decisions.
 
 - **Authentication is built in.** Email/password, OAuth2, phone, magic URLs, and MFA are ready out of the box. No auth library to choose, no session management to implement.
-- **Databases with a query API.** Create collections, define your schema, and query immediately. No separate ORM decision, no API layer to build around your data model.
+- **Databases with a query API.** Create tables, define your schema, and query immediately. No separate ORM decision, no API layer to build around your data model.
 - **Storage without S3 configuration.** File upload, compression, image transformation, and access controls are included. No policies to configure, no upload URL generation logic.
 - **Functions for server-side logic.** When you need processing that belongs on the server, Appwrite Functions run without a separate server to maintain or deploy.
 

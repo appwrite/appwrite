@@ -62,7 +62,7 @@ function getPanelOffset(
   }
 }
 
-/** Flow panel frame — side cards from top, center from bottom. No opacity fade. */
+/** Flow panel frame - side cards from top, center from bottom. No opacity fade. */
 export function FlowPanelCard({
   index,
   panelCount,

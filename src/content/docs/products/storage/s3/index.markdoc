@@ -1,0 +1,287 @@
+---
+layout: article
+title: S3 API
+description: Connect any S3-compatible client, SDK, or tool to Appwrite Storage. Configure credentials once, then manage buckets, objects, and multipart uploads over the S3 API.
+---
+
+Appwrite Storage exposes an S3-compatible API, so you can point the AWS CLI, the AWS SDKs, and third-party tools like rclone or s3cmd at your buckets and files. The API uses AWS Signature Version 4 and maps standard S3 operations onto Appwrite Storage, so most existing S3 code works after you change three settings: the endpoint, the credentials, and the region.
+
+The S3 API is available on Appwrite Cloud. It needs a project ID and an [API key](/docs/advanced/security/api-keys) with the [storage scopes](#api-key-scopes) described below. It also works alongside your existing data: buckets and files are addressable over both the native Storage API and the S3 API at the same time, with no migration required.
+
+# Connect an S3 client {% #connect-an-s3-client %}
+
+Configure your client with the following values. S3 clients authenticate with an access key ID and a secret access key, which Appwrite maps to your project ID and an API key secret.
+
+| Setting | Value |
+| --- | --- |
+| Endpoint | `https://<REGION>.cloud.appwrite.io/v1/s3` |
+| Access key ID | Your Appwrite project ID |
+| Secret access key | An Appwrite API key secret |
+| Region | `auto` or your project's Appwrite region code |
+| Signature version | AWS Signature Version 4 (SigV4) |
+| Addressing style | Path-style only |
+
+The `<REGION>` in the endpoint is your Appwrite Cloud region (for example, `fra` or `nyc`), the same region you use for the rest of the Appwrite API. The S3 `region` setting accepts `auto` or that same region code; some clients require a region to sign requests, and either value works.
+
+The examples below apply these settings in the AWS CLI and the AWS SDKs.
+
+{% multicode %}
+```bash
+# AWS CLI
+aws configure set aws_access_key_id <PROJECT_ID>
+aws configure set aws_secret_access_key <API_KEY_SECRET>
+aws configure set region auto
+
+# Appwrite serves path-style URLs only, so force path addressing
+aws configure set default.s3.addressing_style path
+
+# Pass the Appwrite endpoint on every command
+aws s3 ls --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+```
+
+```js
+// Node.js: @aws-sdk/client-s3 (v3)
+import { S3Client } from '@aws-sdk/client-s3';
+
+const client = new S3Client({
+    endpoint: 'https://<REGION>.cloud.appwrite.io/v1/s3',
+    region: 'auto',
+    forcePathStyle: true,
+    credentials: {
+        accessKeyId: '<PROJECT_ID>',
+        secretAccessKey: '<API_KEY_SECRET>'
+    }
+});
+```
+
+```python
+# Python: boto3
+import boto3
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://<REGION>.cloud.appwrite.io/v1/s3',
+    region_name='auto',
+    aws_access_key_id='<PROJECT_ID>',
+    aws_secret_access_key='<API_KEY_SECRET>',
+    config=Config(signature_version='s3v4', s3={'addressing_style': 'path'})
+)
+```
+
+```go
+// Go: aws-sdk-go-v2
+package main
+
+import (
+    "context"
+    "log"
+
+    "github.com/aws/aws-sdk-go-v2/aws"
+    "github.com/aws/aws-sdk-go-v2/config"
+    "github.com/aws/aws-sdk-go-v2/credentials"
+    "github.com/aws/aws-sdk-go-v2/service/s3"
+)
+
+func main() {
+    cfg, err := config.LoadDefaultConfig(context.TODO(),
+        config.WithRegion("auto"),
+        config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+            "<PROJECT_ID>", "<API_KEY_SECRET>", "",
+        )),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+        o.BaseEndpoint = aws.String("https://<REGION>.cloud.appwrite.io/v1/s3")
+        o.UsePathStyle = true
+    })
+
+    buckets, err := client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, bucket := range buckets.Buckets {
+        log.Println(*bucket.Name)
+    }
+}
+```
+
+```php
+// PHP: aws/aws-sdk-php
+use Aws\S3\S3Client;
+
+$client = new S3Client([
+    'version' => 'latest',
+    'region' => 'auto',
+    'endpoint' => 'https://<REGION>.cloud.appwrite.io/v1/s3',
+    'use_path_style_endpoint' => true,
+    'credentials' => [
+        'key' => '<PROJECT_ID>',
+        'secret' => '<API_KEY_SECRET>',
+    ],
+]);
+```
+{% /multicode %}
+
+# API key scopes {% #api-key-scopes %}
+
+Create an API key in the Appwrite Console under **Overview** > **Integrations** > **API keys**, then grant the storage scopes your workload needs. The project ID identifies your project, while the API key secret both authenticates the request and determines what it is allowed to do.
+
+| Access level | Required scopes |
+| --- | --- |
+| Read-only (list and download) | `buckets.read`, `files.read` |
+| Write (create buckets, upload, delete) | `buckets.write`, `files.write` |
+| Copy (`CopyObject`, `UploadPartCopy`) | `files.read`, `files.write` |
+| Full read and write | `buckets.read`, `files.read`, `buckets.write`, `files.write` |
+
+Copying an object reads the source and writes the destination, so `CopyObject` and `UploadPartCopy` need both `files.read` and `files.write`. A request signed with a secret that does not match a project API key, or a key missing the required scope, is rejected with `AccessDenied` (HTTP 403).
+
+# Object key mapping {% #object-key-mapping %}
+
+S3 buckets map directly to Appwrite Storage buckets, and S3 objects map to files. Creating a bucket over S3 creates an Appwrite bucket that uses the S3 bucket name as both its ID and its name, with Appwrite's default settings. Any bucket you already have in your project is usable over S3 immediately.
+
+When you upload an object, Appwrite stores it as a file with an automatically generated file ID and uses the object key you provided as the file's name. Read, copy, and delete operations then address the object by its **canonical key**, which list operations return:
+
+```text
+{fileId}-{fileName}
+```
+
+For example, uploading to the key `reports/january.pdf` creates a file whose name is `reports/january.pdf`, and the object is then listed under a canonical key such as `6710e2f300048d1e2c3f-reports/january.pdf`.
+
+The same flow covers files created through the native Storage API or the Console: list the bucket to discover a file's canonical key, then address it over S3 with that key.
+
+{% info title="Uploads never overwrite by key" %}
+Because a new file ID is generated on every plain upload, uploading twice with the same key creates two distinct objects instead of overwriting. To read, copy, overwrite, or delete an object, use its canonical key from a list operation. Uploading to a canonical key that already exists overwrites that object in place.
+{% /info %}
+
+# Folders {% #folders %}
+
+Appwrite Storage organizes the files in a bucket with [virtual folders](/docs/products/storage/folders), derived from the paths of your files and never created or deleted on their own. Over the S3 API, folders appear as `/`-separated prefixes in object keys: uploading to `reports/2024/january.pdf` stores a single object whose name contains those prefixes, and does not create `reports/` or `reports/2024/` as separate entities.
+
+To browse a bucket like a directory tree, list objects with the `/` delimiter and, optionally, a `prefix`. Appwrite groups object names at each `/` boundary: names sharing a prefix up to the next `/` collapse into a single entry under `CommonPrefixes` (the "folders"), while objects at the current level are returned under `Contents` (the "files").
+
+Grouping is applied to the object's name rather than its canonical key, so folder prefixes come back clean, without the generated file ID. Pass a `prefix` such as `reports/` to open that folder and list one level deeper, or list without a delimiter to enumerate a bucket recursively.
+
+Objects under `Contents` are still identified by their [canonical key](#object-key-mapping); use that key to read, copy, or delete a file. `CommonPrefixes` are folder paths only, with nothing to download at the prefix itself.
+
+`/` is the only supported delimiter. Setting `delimiter` to any other value returns `NotImplemented` (HTTP 501).
+
+```bash
+# List the top level of a bucket: immediate folders (CommonPrefixes) and files
+aws s3api list-objects-v2 --bucket my-bucket --delimiter / \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# Open the "reports" folder and list one level down
+aws s3api list-objects-v2 --bucket my-bucket --prefix reports/ --delimiter / \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# aws s3 ls uses the / delimiter automatically; omit --recursive to browse by folder
+aws s3 ls s3://my-bucket/reports/ \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+```
+
+# Example commands {% #example-commands %}
+
+Once your client is configured, everyday S3 commands work as usual. These AWS CLI examples assume you have run `aws configure` as shown above; each command passes the endpoint explicitly with `--endpoint-url`.
+
+```bash
+# Create a bucket
+aws s3api create-bucket --bucket my-bucket \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# Upload a file (uses multipart automatically for large files)
+aws s3 cp ./january.pdf s3://my-bucket/reports/january.pdf \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# List objects to discover canonical keys
+aws s3 ls s3://my-bucket --recursive \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# Download using the canonical {fileId}-{fileName} key from the listing
+aws s3api get-object --bucket my-bucket \
+  --key 6710e2f300048d1e2c3f-reports/january.pdf ./january.pdf \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+```
+
+# Bucket operations {% #bucket-operations %}
+
+All operations are addressed with path-style URLs under `/v1/s3`. The following bucket operations are supported.
+
+| Operation | Description |
+| --- | --- |
+| `ListBuckets` | List the project's buckets. |
+| `CreateBucket` | Create a bucket. The S3 bucket name becomes the Appwrite bucket's ID and name, with Appwrite's default settings. |
+| `HeadBucket` | Check that a bucket exists and is accessible. |
+| `DeleteBucket` | Delete an empty bucket. Deleting a bucket that still contains objects returns `BucketNotEmpty` (HTTP 409). |
+| `GetBucketLocation` | Returns `us-east-1`. |
+| `GetBucketAcl`, `PutBucketAcl` | Compatibility responses only. See [Limitations](#limitations). |
+
+# Object operations {% #object-operations %}
+
+The following object operations are supported.
+
+| Operation | Description |
+| --- | --- |
+| `PutObject` | Upload an object. Returns an `ETag`. Honors `Content-Type`, `x-amz-meta-*` user metadata, and `x-amz-server-side-encryption`. |
+| `GetObject` | Download an object. Supports `Range` requests (HTTP 206), and the `If-None-Match` (HTTP 304) and `If-Match` (HTTP 412) conditional headers. |
+| `HeadObject` | Retrieve an object's metadata (size, content type, `ETag`, user metadata) without the body. |
+| `CopyObject` | Copy an object using the `x-amz-copy-source` header. Supports `x-amz-metadata-directive: REPLACE` to replace metadata. |
+| `DeleteObject` | Delete a single object. |
+| `DeleteObjects` | Delete multiple objects in one request, including quiet mode. |
+| `ListObjects` | List objects in a bucket, with `prefix` filtering. |
+| `ListObjectsV2` | List objects with `prefix`, `delimiter` (only `/`), `max-keys`, `continuation-token`, and `start-after`. Use `delimiter=/` to browse [folders](#folders). |
+| `GetObjectAcl`, `PutObjectAcl` | Compatibility responses only. See [Limitations](#limitations). |
+
+Content type is taken from the `Content-Type` header you send. When that is missing or generic (`application/octet-stream`), Appwrite infers a type from the file extension. Buckets keep their constraints under the S3 API: uploads that exceed the bucket's maximum file size or use a disallowed extension are rejected, and disabled buckets are treated as not found.
+
+# Multipart uploads {% #multipart-uploads %}
+
+Large files are uploaded in parts. Standard SDK multipart helpers, such as the AWS CLI's `aws s3 cp` and the SDK transfer managers, use these operations automatically.
+
+| Operation | Description |
+| --- | --- |
+| `CreateMultipartUpload` | Begin a multipart upload and receive an `UploadId`. |
+| `UploadPart` | Upload a single part. Returns the part's `ETag`. |
+| `UploadPartCopy` | Upload a part by copying a byte range from another object, using `x-amz-copy-source` and `x-amz-copy-source-range`. |
+| `CompleteMultipartUpload` | Assemble the uploaded parts into the final object. |
+| `AbortMultipartUpload` | Discard an in-progress multipart upload and its parts. |
+| `ListMultipartUploads` | List in-progress multipart uploads in a bucket. |
+| `ListParts` | List the parts already uploaded for an `UploadId`. |
+
+{% info title="Multipart requirements" %}
+Parts must be contiguous and start at part number 1. Completing an upload with non-contiguous part numbers (for example, parts 1, 5, and 100) is rejected. SDK multipart helpers upload parts sequentially, so they are unaffected. In-progress uploads are kept for 24 hours before they are cleaned up, so complete or abort within that window.
+{% /info %}
+
+# Limitations {% #limitations %}
+
+The S3 API targets the operations most clients depend on. Keep the following in mind.
+
+- **Path-style addressing only.** Virtual-hosted-style URLs (`https://<bucket>.host/...`) are not supported. Enable path-style addressing in your client, as shown in [Connect an S3 client](#connect-an-s3-client).
+- **Signature Version 4 only.** Requests are authenticated with SigV4, and the request timestamp must be within 15 minutes of the server's clock.
+- **Objects are addressed by canonical key.** Reads, copies, overwrites, and deletes use the canonical key from a list operation, not the raw key you uploaded with. See [Object key mapping](#object-key-mapping).
+- **ACLs are compatibility responses.** `GetObjectAcl`, `PutObjectAcl`, `GetBucketAcl`, and `PutBucketAcl` return a canned private ACL and are accepted for tooling compatibility. They do not change access. Manage access with [Appwrite permissions](/docs/products/storage/permissions) and API key scopes instead.
+- **No folder resource or folder markers.** Folders are virtual: they are `/`-separated prefixes in object keys, browsed by listing with `delimiter=/`. See [Folders](#folders). Using any other delimiter value or uploading a folder-marker object (a key ending in `/`) returns `NotImplemented` (HTTP 501).
+- **Prefer `ListObjectsV2` for large buckets.** `ListObjects` returns every matching object in a single response, while `ListObjectsV2` honors `max-keys` (capped at 1000) and paginates with `IsTruncated` and a `NextContinuationToken`. No objects are silently dropped.
+- **Unsupported S3 features.** Object tagging, CORS, lifecycle, bucket policies and policy status, encryption configuration, ownership controls, notifications, and versioning are not supported. Requests to these sub-resources return `NotImplemented` (HTTP 501).
+- **Custom file IDs with hyphens.** The canonical key is split on the first `-`. Objects created through the S3 API use generated IDs without hyphens, so this only affects interop with pre-existing files whose custom ID contains a `-`. A mismatch returns `NoSuchKey` rather than the wrong object.
+
+# Error responses {% #error-responses %}
+
+Errors are returned as standard S3 XML error documents with an S3 error code and HTTP status.
+
+| S3 error code | HTTP status | Meaning |
+| --- | --- | --- |
+| `NoSuchBucket` | 404 | The bucket does not exist, is disabled, or is not accessible. |
+| `NoSuchKey` | 404 | The object key does not exist. |
+| `BucketNotEmpty` | 409 | The bucket still contains objects and cannot be deleted. |
+| `BucketAlreadyOwnedByYou` | 409 | A bucket with that ID already exists in your project. |
+| `AccessDenied` | 403 | The signature is invalid, or the API key is expired or missing a required scope. |
+| `InvalidRange` | 416 | The requested `Range` cannot be satisfied. |
+| `PreconditionFailed` | 412 | An `If-Match` precondition did not hold. |
+| `NotImplemented` | 501 | The requested S3 feature is not supported. |
+| `InvalidRequest` | 400 | The request was malformed or violated a bucket constraint. |
+| `InternalError` | 500 | An unexpected server error occurred. |

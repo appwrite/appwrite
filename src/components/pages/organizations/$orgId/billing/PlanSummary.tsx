@@ -58,7 +58,7 @@ import {
   getDedicatedDbComputeCreditFromResources,
   resolveBillingAddonDisplayName,
 } from '@/lib/billing/billing-addon-charges'
-import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
+import { databaseSpecificationsQueryOptions, dedicatedDatabaseSourceFromEngine } from '@/lib/react-query/hooks'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
@@ -153,7 +153,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   }, [aggregation?.breakdown])
 
   const { data: databaseSpecificationsData } = useQuery(
-    databaseSpecificationsQueryOptions(dedicatedDbSpecLookupProjectId, 'Postgres'),
+    databaseSpecificationsQueryOptions(
+      dedicatedDbSpecLookupProjectId,
+      dedicatedDatabaseSourceFromEngine('postgresql'),
+    ),
   )
 
   const dedicatedDbBillingSpecLookup = useMemo(

@@ -1,0 +1,104 @@
+---
+layout: article
+title: Quick start
+description: Create your first native MySQL database in the Appwrite Console, retrieve its credentials, and run your first queries with the mysql client.
+---
+
+You can create a MySQL database and run your first query in a few minutes.
+
+# Create a database {% #create %}
+
+1. In your project, go to **Databases**.
+2. Click **Create database**.
+3. Give your database a name, and optionally a custom database ID.
+4. Under **Choose database type**, select **MySQL** from the **Native databases** group.
+
+{% only_dark %}
+![Create database type selection](/images/docs/products/databases/mysql/dark/create-database-type.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database type selection](/images/docs/products/databases/mysql/create-database-type.avif)
+{% /only_light %}
+
+5. Under **Specifications**, select your preferred tier.
+6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later.
+
+{% only_dark %}
+![Database specifications](/images/docs/products/databases/mysql/dark/create-database-specs.avif)
+{% /only_dark %}
+{% only_light %}
+![Database specifications](/images/docs/products/databases/mysql/create-database-specs.avif)
+{% /only_light %}
+
+7. Review the database summary and click **Create database**.
+
+Your database starts provisioning and becomes `ready` shortly after.
+
+# Get your connection details {% #credentials %}
+
+The connection details are returned on the database object. Fetch the database with an API key that has the `databases.read` scope:
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const database = await mysql.get({
+    databaseId: '<DATABASE_ID>',
+});
+
+console.log(database.connectionString);
+```
+
+The response includes the hostname, port, username, password, and the generated database name, plus a ready-made connection string in the form `mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>`. See [Connections](/docs/products/databases/mysql/connections) for the full response and every language.
+
+# Connect with the mysql client {% #mysql-client %}
+
+Pass the connection details to the `mysql` command-line client:
+
+```bash
+mysql -h db-<hash>.<region>.appwrite.center -P 3306 -u admin -p -D <database>
+```
+
+Enter the password when prompted.
+
+# Run your first queries {% #first-queries %}
+
+Create a table, insert a row, and read it back:
+
+```sql
+CREATE TABLE books (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL
+);
+
+INSERT INTO books (title, author)
+VALUES ('The Hitchhiker''s Guide to the Galaxy', 'Douglas Adams');
+
+SELECT * FROM books;
+```
+
+You can run the same queries from your application with any MySQL driver. See [Connections](/docs/products/databases/mysql/connections) for driver examples.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Connect from your application with any MySQL driver or ORM.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/backups" title="Backups" %}
+Configure backup policies and point-in-time recovery.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/high-availability" title="High availability" %}
+Add read replicas with automatic failover.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/monitoring" title="Monitoring" %}
+Poll live health and status information from your pipelines.
+{% /cards_item %}
+{% /cards %}

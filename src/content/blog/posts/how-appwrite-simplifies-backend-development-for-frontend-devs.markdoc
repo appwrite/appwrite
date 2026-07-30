@@ -3,6 +3,7 @@ layout: post
 title: How Appwrite simplifies backend development for frontend devs
 description: See how Appwrite makes backend development easier for frontend developers by handling auth, databases, storage, and server-side logic through simple APIs and tools. This guide shows how you can build full-stack apps faster without getting buried in backend complexity or infrastructure setup.
 date: 2026-03-16
+lastUpdated: 2026-06-29
 cover: /images/blog/how-appwrite-simplifies-backend-development-for-frontend-devs/cover.avif
 timeToRead: 5
 author: atharva
@@ -52,7 +53,7 @@ Traditional backend development often means setting up a database server, writin
 
 [Appwrite Databases](/docs/products/databases) lets you create tables, define columns, and query data directly through the client SDK. You structure your data in the Appwrite Console or through the API, set up indexes for performance, and start reading and writing from your frontend immediately. Permissions are built in at the row level, so you control exactly who can access what.
 
-Need relationships between collections? Appwrite supports those too, with one-to-one, one-to-many, and many-to-many [relationship attributes](/docs/products/databases/relationships). And if your project outgrows a single database model, you can [integrate external databases](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project) like PostgreSQL, MongoDB, or any SQL/NoSQL store into your Appwrite project.
+Need relationships between tables? Appwrite supports those too, with one-to-one, one-to-many, and many-to-many [relationship columns](/docs/products/databases/relationships). And if your project outgrows a single database model, you can [integrate external databases](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project) like PostgreSQL, MongoDB, or any SQL/NoSQL store into your Appwrite project.
 
 # File storage that handles the hard parts
 

@@ -9,7 +9,7 @@ export { API_NAV_ACTIVE_BG_CLASS as DOCS_NAV_ACTIVE_BG_CLASS } from '@/lib/api-e
 export const DOCS_SECTION_HEADER_CLASS =
   'flex h-14 shrink-0 items-center border-b border-border bg-background'
 
-/** Scrollable docs nav panels — overlay scrollbar on Windows/Linux. */
+/** Scrollable docs nav panels - overlay scrollbar on Windows/Linux. */
 export const DOCS_NAV_SCROLL_CLASS = 'overlay-scrollbar overscroll-y-contain'
 
 /** Section subnav links (desktop panel + mobile sheet). */

@@ -271,8 +271,8 @@ export const jaCatalog: EnCatalog = {
       ...enCatalog.website.home,
       seoDescription:
         'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。数百人規模のチームのように構築できます。', // pragma: allowlist secret
-      announcementNew: '新着',
-      announcementText: 'Presences API を発表',
+      announcementNew: 'Breaking',
+      announcementText: 'Appwrite 2.0 の発表を嬉しく思います',
       heroTitleLineOne: 'より速く構築し、',
       heroTitleLineTwo: 'これまで以上にスケール',
       heroDescription:
@@ -402,7 +402,7 @@ export const jaCatalog: EnCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'ライブイベント、チャンネル、プレゼンス。',
           domainsName: 'Domains',
-          domainsTagline: 'ドメイン購入、DNS、TLS、アプリ接続。',
+          domainsTagline: 'ドメインの検索、購入、移管、管理。',
           firewallName: 'Firewall',
           firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',

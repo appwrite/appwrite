@@ -13,6 +13,7 @@
  */
 
 import { ID, type Models } from '@appwrite.io/console'
+import type { QueryClient } from '@tanstack/react-query'
 import { setConsoleAccountCache } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { createConsoleProject } from '@/lib/appwrite/console-projects'
@@ -20,6 +21,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { createOrganization } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
 import { fetchOrganizationProjects } from '@/lib/react-query/hooks/organizations'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
 import {
   fetchConsoleAccount,
   updateAccountPrefs,
@@ -29,16 +31,25 @@ import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
 
-/** Preferred org from account prefs when still accessible, otherwise ensure a valid org. */
+/**
+ * Preferred org from account prefs when still accessible, otherwise ensure a valid org.
+ *
+ * Pass `queryClient` when available so the organizations list goes through the
+ * query cache and is reused by `prefetchOrganizationOverviewData` instead of
+ * being fetched twice during initial load.
+ */
 export async function resolvePostAuthOrganizationId(
   account?: Awaited<ReturnType<typeof fetchConsoleAccount>>,
+  queryClient?: QueryClient,
 ): Promise<string> {
   const resolved = account ?? (await fetchConsoleAccount())
   const prefs = (resolved.prefs || {}) as Record<string, unknown>
   const fromPrefs = prefs[USER_PREFS_KEY_ORGANIZATION] as string | undefined
 
   if (fromPrefs) {
-    const response = await fetchOrganizations()
+    const response = queryClient
+      ? await queryClient.ensureQueryData(organizationsQueryOptions())
+      : await fetchOrganizations()
     const exists = response.teams?.some((org) => org.$id === fromPrefs)
     if (exists) return fromPrefs
 

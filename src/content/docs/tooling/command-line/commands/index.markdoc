@@ -228,7 +228,7 @@ List commands across services accept a set of dedicated flags for the most commo
 * Return results before this cursor ID. Use for backward cursor pagination.
 ---
 * `--select <attribute>`
-* Limit returned attributes on row and document list commands such as `tables-db list-rows`. Repeat the flag to include multiple attributes.
+* Limit returned attributes on list commands such as `tables-db list-rows`. Repeat the flag to include multiple attributes.
 ---
 {% /table %}
 

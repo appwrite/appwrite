@@ -3,6 +3,7 @@ layout: post
 title: 7 things Claude can do that will blow your mind
 description: Discover 7 things Claude can do that most people don't use. From better prompts to smarter workflows, learn how to get more out of your AI.
 date: 2026-04-27
+lastUpdated: 2026-06-29
 cover: /images/blog/7-things-claude-can-do-that-will-blow-your-mind/cover.avif
 timeToRead: 5
 author: aishwari
@@ -17,7 +18,7 @@ faqs:
   - question: "What is Claude Projects?"
     answer: "Projects is a feature in Claude that lets the model retain context across sessions. You can give it background about your codebase, your team's conventions, and the constraints you work under, and it carries that forward into every conversation inside the project. This removes the repetitive setup of re-explaining your stack at the start of each chat."
   - question: "What is the Model Context Protocol (MCP) in Claude?"
-    answer: "MCP gives Claude the ability to connect to external systems like databases, APIs, and services, and actually act on them rather than just describing what it would do. With the Appwrite MCP server, for example, Claude can create users, query collections, manage storage, and trigger functions directly inside an Appwrite project."
+    answer: "MCP gives Claude the ability to connect to external systems like databases, APIs, and services, and actually act on them rather than just describing what it would do. With the Appwrite MCP server, for example, Claude can create users, query tables, manage storage, and trigger functions directly inside an Appwrite project."
   - question: "Can Claude analyze images and generate code from them?"
     answer: "Yes. Claude understands images and can take screenshots of UIs, mockups, diagrams, or schemas drawn on a whiteboard, then describe what it sees and generate code to match. This is useful for design-to-code workflows, where a Figma screenshot or screen recording of a broken UI can produce a matching layout or pinpoint where the CSS is off."
   - question: "What is Claude Code?"
@@ -64,7 +65,7 @@ It's worth trying for tasks that would normally take you an afternoon of focused
 
 The **Model Context Protocol (MCP)** gives Claude the ability to connect to external systems, your database, your APIs, your services, and actually interact with them. Not just describe what it would do, but do it.
 
-With the [Appwrite MCP server](/docs/tooling/mcp), for example, Claude can create users, query collections, manage storage, and trigger functions directly inside your Appwrite project. You describe what you need in plain language, and Claude handles the operation. No copy-pasting API responses. No switching tabs to check the console.
+With the [Appwrite MCP server](/docs/tooling/mcp), for example, Claude can create users, query tables, manage storage, and trigger functions directly inside your Appwrite project. You describe what you need in plain language, and Claude handles the operation. No copy-pasting API responses. No switching tabs to check the console.
 
 This is what [agentic AI](/blog/post/agentic-ai-vs-generative-ai) actually looks like in practice: the model connected to real systems, taking real actions. If you've only ever used Claude in a chat window, adding MCP changes the category of work it can handle.
 

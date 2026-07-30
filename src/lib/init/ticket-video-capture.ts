@@ -1,4 +1,4 @@
-/** Dotted surface behind the ticket — matches the Init ticket section on the page. */
+/** Dotted surface behind the ticket - matches the Init ticket section on the page. */
 export const INIT_TICKET_VIDEO_SURFACE_CLASS =
   'bg-muted/40 dark:bg-background'
 
@@ -10,7 +10,7 @@ export const INIT_TICKET_VIDEO_HERO_WARMUP_MS = 550
 
 /** Target frame rate for tab element capture (Chrome & Edge). */
 export const INIT_TICKET_VIDEO_EXPORT_FPS = 60
-/** Canvas snapshot fallback — encode/replay target fps for the exported file. */
+/** Canvas snapshot fallback - encode/replay target fps for the exported file. */
 export const INIT_TICKET_VIDEO_FALLBACK_FPS = 60
 /** Length of the exported video file. */
 export const INIT_TICKET_VIDEO_CLIP_DURATION_SEC = 10

@@ -1,0 +1,1879 @@
+---
+layout: article
+title: Queries
+description: Filter VectorsDB documents by their metadata using the Query class. Discover comparison, string, logical, ordering, and pagination operators.
+---
+
+Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries.
+
+In VectorsDB, every document stores an `embeddings` vector and an optional `metadata` object. The queries on this page filter documents by the fields inside that `metadata` object. To rank documents by vector similarity instead, see [vector search](/docs/products/databases/vectorsdb/vector-search).
+
+# Query class {% #query-class %}
+
+Appwrite SDKs provide a `Query` class to help you build queries. The `Query` class has methods for each type of supported query operation.
+
+# Building queries {% #building-queries %}
+
+Queries are passed to an endpoint through the `queries` parameter as an array of query strings, which can be generated using the `Query` class.
+
+Each query method is logically separated via `AND` operations. For `OR` operation, pass multiple values into the query method separated by commas.
+For example `Query.equal('metadata.genre', ['sci-fi', 'drama'])` will fetch documents whose genre is `sci-fi` or `drama`.
+
+To filter on a field inside the `metadata` object, reference it with dot notation, such as `metadata.genre` or `metadata.year`.
+
+{% info title="Filter metadata with string values" %}
+VectorsDB stores `metadata` as a JSON object, so metadata fields are compared as strings. Pass filter values as strings, even when the stored value is a number. For example, use `Query.greaterThan('metadata.year', '2010')`, not `Query.greaterThan('metadata.year', 2010)`. Passing a numeric value returns a `400` error.
+{% /info %}
+
+{% info title="Default pagination behavior" %}
+By default, results are limited to the **first 25 items**.
+You can change this through [pagination](/docs/products/databases/vectorsdb/pagination).
+{% /info %}
+
+{% multicode %}
+
+```client-web
+import { Client, Query, VectorsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const vectorsDB = new VectorsDB(client);
+
+vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.equal('metadata.genre', ['sci-fi', 'drama']),
+        Query.greaterThan('metadata.year', '2010')
+    ]
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>')
+;
+
+const promise = vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.equal('metadata.genre', ['sci-fi', 'drama']),
+        sdk.Query.greaterThan('metadata.year', '2010')
+    ]
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final vectorsDB = VectorsDB(client);
+
+    try {
+        final documents = await vectorsDB.listDocuments(
+            '<DATABASE_ID>',
+            '<COLLECTION_ID>',
+            [
+                Query.equal('metadata.genre', ['sci-fi', 'drama']),
+                Query.greaterThan('metadata.year', '2010')
+            ]
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let vectorsDB = VectorsDB(client)
+
+    do {
+        let documents = try await vectorsDB.listDocuments(
+            databaseId: "<DATABASE_ID>",
+            collectionId: "<COLLECTION_ID>",
+            queries: [
+                Query.equal("metadata.genre", value: ["sci-fi", "drama"]),
+                Query.greaterThan("metadata.year", value: "2010")
+            ]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.VectorsDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    val vectorsDB = VectorsDB(client)
+
+    try {
+        val documents = vectorsDB.listDocuments(
+            databaseId = "<DATABASE_ID>",
+            collectionId = "<COLLECTION_ID>",
+            queries = listOf(
+                Query.equal("metadata.genre", listOf("sci-fi", "drama")),
+                Query.greaterThan("metadata.year", "2010")
+            )
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", e.message)
+    }
+}
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    vectorsDB := appwrite.NewVectorsDB(client)
+
+    documents, err := vectorsDB.ListDocuments(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        vectorsDB.WithListDocumentsQueries([]string{
+            query.Equal("metadata.genre", []string{"sci-fi", "drama"}),
+            query.GreaterThan("metadata.year", "2010"),
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Documents: %+v\n", documents)
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::query::Query;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let documents = vectors_db.list_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::equal("metadata.genre", Value::Array(vec![
+                Value::String("sci-fi".to_string()),
+                Value::String("drama".to_string()),
+            ])).to_string(),
+            Query::greater_than("metadata.year", "2010").to_string(),
+        ]),
+        None,
+        None,
+        None,
+    ).await?;
+
+    println!("{:?}", documents);
+    Ok(())
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\VectorsDB;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>')
+;
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->listDocuments(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query::equal('metadata.genre', ['sci-fi', 'drama']),
+        Query::greaterThan('metadata.year', '2010')
+    ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.query import Query
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+)
+
+vectorsDB = VectorsDB(client)
+
+result = vectorsDB.list_documents(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query.equal('metadata.genre', ['sci-fi', 'drama']),
+        Query.greater_than('metadata.year', '2010')
+    ]
+)
+```
+```graphql
+query {
+    vectorsDBListDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>"
+        queries: [
+            "{\"method\":\"equal\",\"attribute\":\"metadata.genre\",\"values\":[\"sci-fi\",\"drama\"]}",
+            "{\"method\":\"greaterThan\",\"attribute\":\"metadata.year\",\"values\":[\"2010\"]}"
+        ]
+    ) {
+        total
+        documents {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/vectorsdb/<DATABASE_ID>/collections/<COLLECTION_ID>/documents?queries[]=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22metadata.genre%22%2C%22values%22%3A%5B%22sci-fi%22%2C%22drama%22%5D%7D&queries[]=%7B%22method%22%3A%22greaterThan%22%2C%22attribute%22%3A%22metadata.year%22%2C%22values%22%3A%5B%222010%22%5D%7D HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi","drama"]}' '{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}'
+```
+{% /multicode %}
+
+# Query operators {% #query-operators %}
+
+## Select {% #select %}
+
+The `select` operator allows you to specify which fields should be returned from a document. This optimizes response size and retrieves only the data you need. Each VectorsDB document has two data fields, `embeddings` and `metadata`.
+
+{% multicode %}
+```client-web
+Query.select(["metadata"])
+```
+```client-flutter
+Query.select(["metadata"])
+```
+```server-python
+Query.select(["metadata"])
+```
+```server-ruby
+Query.select(["metadata"])
+```
+```server-deno
+Query.select(["metadata"])
+```
+```server-php
+Query::select(["metadata"])
+```
+```client-apple
+Query.select(["metadata"])
+```
+```server-go
+query.Select([]string{"metadata"})
+```
+```server-nodejs
+Query.select(["metadata"])
+```
+```server-rust
+Query::select(vec!["metadata"]).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"select","values":["metadata"]}'
+```
+```http
+{"method":"select","values":["metadata"]}
+```
+{% /multicode %}
+
+### Use selection patterns {% #select-patterns %}
+
+| Pattern | Description | Use case |
+|---------|-------------|----------|
+| `["metadata"]` | Metadata object only | Return metadata without the embedding vector |
+| `["embeddings"]` | Embedding vector only | Return the stored vector |
+| `["metadata", "embeddings"]` | Both data fields | Get the complete document data |
+
+### Optimize performance {% #select-performance %}
+
+**Optimize response size** - Only select the fields you actually need. Embedding vectors are large, so omitting `embeddings` keeps responses small when you only need metadata.
+
+**Reduce database load** - Selecting fewer fields reduces database processing time.
+
+## Comparison operators {% #comparison %}
+
+Pass metadata filter values as strings. See [Filter metadata with string values](#building-queries).
+
+### Equal {% #equal %}
+
+Returns document if a metadata field is equal to any value in the provided array.
+
+{% multicode %}
+```client-web
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```client-flutter
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-python
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-ruby
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-deno
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-php
+Query::equal("metadata.genre", ["sci-fi"])
+```
+```client-apple
+Query.equal("metadata.genre", value: ["sci-fi"])
+```
+```server-go
+query.Equal("metadata.genre", []string{"sci-fi"})
+```
+```server-nodejs
+Query.equal("metadata.genre", ["sci-fi"])
+```
+```server-rust
+Query::equal("metadata.genre", Value::Array(vec![Value::String("sci-fi".to_string())])).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}'
+```
+```http
+{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}
+```
+{% /multicode %}
+
+### Not equal {% #not-equal %}
+
+Returns document if a metadata field is not equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```client-flutter
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```server-python
+Query.not_equal("metadata.genre", "sci-fi")
+```
+```server-ruby
+Query.not_equal("metadata.genre", "sci-fi")
+```
+```server-deno
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```server-php
+Query::notEqual("metadata.genre", "sci-fi")
+```
+```client-apple
+Query.notEqual("metadata.genre", value: "sci-fi")
+```
+```server-go
+query.NotEqual("metadata.genre", "sci-fi")
+```
+```server-nodejs
+Query.notEqual("metadata.genre", "sci-fi")
+```
+```server-rust
+Query::not_equal("metadata.genre", "sci-fi").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notEqual","attribute":"metadata.genre","values":["sci-fi"]}'
+```
+```http
+{"method":"notEqual","attribute":"metadata.genre","values":"sci-fi"}
+```
+{% /multicode %}
+
+### Less than {% #less-than %}
+
+Returns document if a metadata field is less than the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThan("metadata.year", "2009")
+```
+```client-flutter
+Query.lessThan("metadata.year", "2009")
+```
+```server-python
+Query.less_than("metadata.year", "2009")
+```
+```server-ruby
+Query.less_than("metadata.year", "2009")
+```
+```server-deno
+Query.lessThan("metadata.year", "2009")
+```
+```server-php
+Query::lessThan("metadata.year", "2009")
+```
+```client-apple
+Query.lessThan("metadata.year", value: "2009")
+```
+```server-go
+query.LessThan("metadata.year", "2009")
+```
+```server-nodejs
+Query.lessThan("metadata.year", "2009")
+```
+```server-rust
+Query::less_than("metadata.year", "2009").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"lessThan","attribute":"metadata.year","values":["2009"]}'
+```
+```http
+{"method":"lessThan","attribute":"metadata.year","values":["2009"]}
+```
+{% /multicode %}
+
+### Less than or equal {% #less-than-equal %}
+
+Returns document if a metadata field is less than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThanEqual("metadata.year", "2009")
+```
+```client-flutter
+Query.lessThanEqual("metadata.year", "2009")
+```
+```server-python
+Query.less_than_equal("metadata.year", "2009")
+```
+```server-ruby
+Query.less_than_equal("metadata.year", "2009")
+```
+```server-deno
+Query.lessThanEqual("metadata.year", "2009")
+```
+```server-php
+Query::lessThanEqual("metadata.year", "2009")
+```
+```client-apple
+Query.lessThanEqual("metadata.year", value: "2009")
+```
+```server-go
+query.LessThanEqual("metadata.year", "2009")
+```
+```server-nodejs
+Query.lessThanEqual("metadata.year", "2009")
+```
+```server-rust
+Query::less_than_equal("metadata.year", "2009").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"lessThanEqual","attribute":"metadata.year","values":["2009"]}'
+```
+```http
+{"method":"lessThanEqual","attribute":"metadata.year","values":["2009"]}
+```
+{% /multicode %}
+
+### Greater than {% #greater-than %}
+
+Returns document if a metadata field is greater than the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThan("metadata.year", "2009")
+```
+```client-flutter
+Query.greaterThan("metadata.year", "2009")
+```
+```server-python
+Query.greater_than("metadata.year", "2009")
+```
+```server-ruby
+Query.greater_than("metadata.year", "2009")
+```
+```server-deno
+Query.greaterThan("metadata.year", "2009")
+```
+```server-php
+Query::greaterThan("metadata.year", "2009")
+```
+```client-apple
+Query.greaterThan("metadata.year", value: "2009")
+```
+```server-go
+query.GreaterThan("metadata.year", "2009")
+```
+```server-nodejs
+Query.greaterThan("metadata.year", "2009")
+```
+```server-rust
+Query::greater_than("metadata.year", "2009").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"greaterThan","attribute":"metadata.year","values":["2009"]}'
+```
+```http
+{"method":"greaterThan","attribute":"metadata.year","values":["2009"]}
+```
+{% /multicode %}
+
+### Greater than or equal {% #greater-than-equal %}
+
+Returns document if a metadata field is greater than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```client-flutter
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```server-python
+Query.greater_than_equal("metadata.year", "2009")
+```
+```server-ruby
+Query.greater_than_equal("metadata.year", "2009")
+```
+```server-deno
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```server-php
+Query::greaterThanEqual("metadata.year", "2009")
+```
+```client-apple
+Query.greaterThanEqual("metadata.year", value: "2009")
+```
+```server-go
+query.GreaterThanEqual("metadata.year", "2009")
+```
+```server-nodejs
+Query.greaterThanEqual("metadata.year", "2009")
+```
+```server-rust
+Query::greater_than_equal("metadata.year", "2009").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"greaterThanEqual","attribute":"metadata.year","values":["2009"]}'
+```
+```http
+{"method":"greaterThanEqual","attribute":"metadata.year","values":["2009"]}
+```
+{% /multicode %}
+
+### Between {% #between %}
+
+Returns document if a metadata field value falls between the two values. The boundary values are inclusive.
+
+{% multicode %}
+```client-web
+Query.between("metadata.year", "2005", "2010")
+```
+```client-flutter
+Query.between("metadata.year", "2005", "2010")
+```
+```server-python
+Query.between("metadata.year", "2005", "2010")
+```
+```server-ruby
+Query.between("metadata.year", "2005", "2010")
+```
+```server-deno
+Query.between("metadata.year", "2005", "2010")
+```
+```server-php
+Query::between("metadata.year", "2005", "2010")
+```
+```client-apple
+Query.between("metadata.year", start: "2005", end: "2010")
+```
+```server-go
+query.Between("metadata.year", "2005", "2010")
+```
+```server-nodejs
+Query.between("metadata.year", "2005", "2010")
+```
+```server-rust
+Query::between("metadata.year", "2005", "2010").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"between","attribute":"metadata.year","values":["2005","2010"]}'
+```
+```http
+{"method":"between","attribute":"metadata.year","values":["2005","2010"]}
+```
+{% /multicode %}
+
+### Not between {% #not-between %}
+
+Returns documents if the metadata field value is outside the range defined by the two values. Boundary values are excluded.
+
+{% multicode %}
+```client-web
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```client-flutter
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```client-apple
+Query.notBetween("metadata.year", start: "2005", end: "2010")
+```
+```client-android-kotlin
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```client-android-java
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```server-python
+Query.not_between("metadata.year", "2005", "2010")
+```
+```server-ruby
+Query.not_between("metadata.year", "2005", "2010")
+```
+```server-deno
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```server-nodejs
+Query.notBetween("metadata.year", "2005", "2010")
+```
+```server-php
+Query::notBetween("metadata.year", "2005", "2010")
+```
+```server-swift
+Query.notBetween("metadata.year", start: "2005", end: "2010")
+```
+```server-rust
+Query::not_between("metadata.year", "2005", "2010").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notBetween","attribute":"metadata.year","values":["2005","2010"]}'
+```
+```http
+{"method":"notBetween","attribute":"metadata.year","values":["2005","2010"]}
+```
+{% /multicode %}
+
+## Null checks {% #null-checks %}
+
+### Is null {% #is-null %}
+
+Returns documents where the metadata field value is null or absent.
+
+{% multicode %}
+```client-web
+Query.isNull("metadata.archived")
+```
+```client-flutter
+Query.isNull("metadata.archived")
+```
+```server-python
+Query.is_null("metadata.archived")
+```
+```server-ruby
+Query.is_null("metadata.archived")
+```
+```server-deno
+Query.isNull("metadata.archived")
+```
+```server-php
+Query::isNull("metadata.archived")
+```
+```client-apple
+Query.isNull("metadata.archived")
+```
+```server-go
+query.IsNull("metadata.archived")
+```
+```server-nodejs
+Query.isNull("metadata.archived")
+```
+```server-rust
+Query::is_null("metadata.archived").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"isNull","attribute":"metadata.archived"}'
+```
+```http
+{"method":"isNull","attribute":"metadata.archived"}
+```
+{% /multicode %}
+
+### Is not null {% #is-not-null %}
+
+Returns documents where the metadata field value is **not** null.
+
+{% multicode %}
+```client-web
+Query.isNotNull("metadata.archived")
+```
+```client-flutter
+Query.isNotNull("metadata.archived")
+```
+```server-python
+Query.is_not_null("metadata.archived")
+```
+```server-ruby
+Query.is_not_null("metadata.archived")
+```
+```server-deno
+Query.isNotNull("metadata.archived")
+```
+```server-php
+Query::isNotNull("metadata.archived")
+```
+```client-apple
+Query.isNotNull("metadata.archived")
+```
+```server-go
+query.IsNotNull("metadata.archived")
+```
+```server-nodejs
+Query.isNotNull("metadata.archived")
+```
+```server-rust
+Query::is_not_null("metadata.archived").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"isNotNull","attribute":"metadata.archived"}'
+```
+```http
+{"method":"isNotNull","attribute":"metadata.archived"}
+```
+{% /multicode %}
+
+## String operations {% #string-operations %}
+
+### Starts with {% #starts-with %}
+
+Returns documents if a metadata string field starts with a substring.
+
+{% multicode %}
+```client-web
+Query.startsWith("metadata.title", "Iron")
+```
+```client-flutter
+Query.startsWith("metadata.title", "Iron")
+```
+```server-python
+Query.starts_with("metadata.title", "Iron")
+```
+```server-ruby
+Query.starts_with("metadata.title", "Iron")
+```
+```server-deno
+Query.startsWith("metadata.title", "Iron")
+```
+```server-php
+Query::startsWith("metadata.title", "Iron")
+```
+```client-apple
+Query.startsWith("metadata.title", value: "Iron")
+```
+```server-go
+query.StartsWith("metadata.title", "Iron")
+```
+```server-nodejs
+Query.startsWith("metadata.title", "Iron")
+```
+```server-rust
+Query::starts_with("metadata.title", "Iron").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"startsWith","attribute":"metadata.title","values":["Iron"]}'
+```
+```http
+{"method":"startsWith","attribute":"metadata.title","values":["Iron"]}
+```
+{% /multicode %}
+
+### Not starts with {% #not-starts-with %}
+
+Returns documents if a metadata string field does not start with a substring.
+
+{% multicode %}
+```client-web
+Query.notStartsWith("metadata.title", "Iron")
+```
+```client-flutter
+Query.notStartsWith("metadata.title", "Iron")
+```
+```client-apple
+Query.notStartsWith("metadata.title", value: "Iron")
+```
+```client-android-kotlin
+Query.notStartsWith("metadata.title", "Iron")
+```
+```client-android-java
+Query.notStartsWith("metadata.title", "Iron")
+```
+```server-python
+Query.not_starts_with("metadata.title", "Iron")
+```
+```server-ruby
+Query.not_starts_with("metadata.title", "Iron")
+```
+```server-deno
+Query.notStartsWith("metadata.title", "Iron")
+```
+```server-nodejs
+Query.notStartsWith("metadata.title", "Iron")
+```
+```server-php
+Query::notStartsWith("metadata.title", "Iron")
+```
+```server-swift
+Query.notStartsWith("metadata.title", value: "Iron")
+```
+```server-rust
+Query::not_starts_with("metadata.title", "Iron").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notStartsWith","attribute":"metadata.title","values":["Iron"]}'
+```
+```http
+{"method":"notStartsWith","attribute":"metadata.title","values":["Iron"]}
+```
+{% /multicode %}
+
+### Ends with {% #ends-with %}
+
+Returns documents if a metadata string field ends with a substring.
+
+{% multicode %}
+```client-web
+Query.endsWith("metadata.title", "Man")
+```
+```client-flutter
+Query.endsWith("metadata.title", "Man")
+```
+```server-python
+Query.ends_with("metadata.title", "Man")
+```
+```server-ruby
+Query.ends_with("metadata.title", "Man")
+```
+```server-deno
+Query.endsWith("metadata.title", "Man")
+```
+```server-php
+Query::endsWith("metadata.title", "Man")
+```
+```client-apple
+Query.endsWith("metadata.title", value: "Man")
+```
+```server-go
+query.EndsWith("metadata.title", "Man")
+```
+```server-nodejs
+Query.endsWith("metadata.title", "Man")
+```
+```server-rust
+Query::ends_with("metadata.title", "Man").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"endsWith","attribute":"metadata.title","values":["Man"]}'
+```
+```http
+{"method":"endsWith","attribute":"metadata.title","values":["Man"]}
+```
+{% /multicode %}
+
+### Not ends with {% #not-ends-with %}
+
+Returns documents if a metadata string field does not end with a substring.
+
+{% multicode %}
+```client-web
+Query.notEndsWith("metadata.title", "Man")
+```
+```client-flutter
+Query.notEndsWith("metadata.title", "Man")
+```
+```client-apple
+Query.notEndsWith("metadata.title", value: "Man")
+```
+```client-android-kotlin
+Query.notEndsWith("metadata.title", "Man")
+```
+```client-android-java
+Query.notEndsWith("metadata.title", "Man")
+```
+```server-python
+Query.not_ends_with("metadata.title", "Man")
+```
+```server-ruby
+Query.not_ends_with("metadata.title", "Man")
+```
+```server-deno
+Query.notEndsWith("metadata.title", "Man")
+```
+```server-nodejs
+Query.notEndsWith("metadata.title", "Man")
+```
+```server-php
+Query::notEndsWith("metadata.title", "Man")
+```
+```server-swift
+Query.notEndsWith("metadata.title", value: "Man")
+```
+```server-rust
+Query::not_ends_with("metadata.title", "Man").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notEndsWith","attribute":"metadata.title","values":["Man"]}'
+```
+```http
+{"method":"notEndsWith","attribute":"metadata.title","values":["Man"]}
+```
+{% /multicode %}
+
+### Contains {% #contains %}
+
+Returns documents if a metadata array field contains the specified elements or if a metadata string field contains the specified substring.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```client-flutter
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-python
+# For arrays
+Query.contains("metadata.tags", ["space"])
+
+# For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-ruby
+# For arrays
+Query.contains("metadata.tags", ["space"])
+
+# For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-deno
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-php
+// For arrays
+Query::contains("metadata.tags", ["space"])
+
+// For strings
+Query::contains("metadata.title", "Iron")
+```
+```client-apple
+// For arrays
+Query.contains("metadata.tags", value: ["space"])
+
+// For strings
+Query.contains("metadata.title", value: "Iron")
+```
+```server-go
+// For arrays
+query.Contains("metadata.tags", []string{"space"})
+
+// For strings
+query.Contains("metadata.title", "Iron")
+```
+```server-nodejs
+// For arrays
+Query.contains("metadata.tags", ["space"])
+
+// For strings
+Query.contains("metadata.title", "Iron")
+```
+```server-rust
+// For arrays
+Query::contains("metadata.tags", Value::Array(vec![
+    Value::String("space".to_string()),
+])).to_string()
+
+// For strings
+Query::contains("metadata.title", "Iron").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"contains","attribute":"metadata.tags","values":["space"]}'
+```
+```http
+# For arrays
+{"method":"contains","attribute":"metadata.tags","values":["space"]}
+
+# For strings
+{"method":"contains","attribute":"metadata.title","values":["Iron"]}
+```
+{% /multicode %}
+
+### Not contains {% #not-contains %}
+
+Returns documents if a metadata array field does not contain the specified elements, or if a metadata string field does not contain the specified substring.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```client-flutter
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```client-react-native
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```client-apple
+// For arrays
+Query.notContains("metadata.tags", value: ["space"])
+
+// For strings
+Query.notContains("metadata.title", value: "Iron")
+```
+```client-android-kotlin
+// For arrays
+Query.notContains("metadata.tags", listOf("space"))
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```client-android-java
+// For arrays
+Query.notContains("metadata.tags", Arrays.asList("space"))
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```server-python
+# For arrays
+Query.not_contains("metadata.tags", ["space"])
+
+# For strings
+Query.not_contains("metadata.title", "Iron")
+```
+```server-ruby
+# For arrays
+Query.not_contains("metadata.tags", ["space"])
+
+# For strings
+Query.not_contains("metadata.title", "Iron")
+```
+```server-deno
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```server-nodejs
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```server-php
+// For arrays
+Query::notContains("metadata.tags", ["space"])
+
+// For strings
+Query::notContains("metadata.title", "Iron")
+```
+```server-dotnet
+// For arrays
+Query.NotContains("metadata.tags", new List<string> { "space" })
+
+// For strings
+Query.NotContains("metadata.title", "Iron")
+```
+```server-go
+// For arrays
+query.NotContains("metadata.tags", []string{"space"})
+
+// For strings
+query.NotContains("metadata.title", "Iron")
+```
+```server-dart
+// For arrays
+Query.notContains("metadata.tags", ["space"])
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```server-swift
+// For arrays
+Query.notContains("metadata.tags", value: ["space"])
+
+// For strings
+Query.notContains("metadata.title", value: "Iron")
+```
+```server-kotlin
+// For arrays
+Query.notContains("metadata.tags", listOf("space"))
+
+// For strings
+Query.notContains("metadata.title", "Iron")
+```
+```server-rust
+// For arrays
+Query::not_contains("metadata.tags", Value::Array(vec![
+    Value::String("space".to_string()),
+])).to_string()
+
+// For strings
+Query::not_contains("metadata.title", "Iron").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"notContains","attribute":"metadata.tags","values":["space"]}'
+```
+```http
+# For arrays
+{"method":"notContains","attribute":"metadata.tags","values":["space"]}
+
+# For strings
+{"method":"notContains","attribute":"metadata.title","values":["Iron"]}
+```
+{% /multicode %}
+
+## Logical operators {% #logical-operators %}
+
+### AND {% #and %}
+
+Returns document if it matches all of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
+```client-flutter
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
+```server-python
+Query.and_queries([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.starts_with("metadata.title", "Inter")
+])
+```
+```server-ruby
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.starts_with("metadata.title", "Inter")
+])
+```
+```server-deno
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
+```server-php
+Query::and([
+    Query::equal("metadata.genre", "sci-fi"),
+    Query::startsWith("metadata.title", "Inter")
+])
+```
+```client-apple
+Query.and([
+    Query.equal("metadata.genre", value: "sci-fi"),
+    Query.startsWith("metadata.title", value: "Inter")
+])
+```
+```server-go
+query.And([]string{
+    query.Equal("metadata.genre", []string{"sci-fi"}),
+    query.StartsWith("metadata.title", "Inter"),
+})
+```
+```server-nodejs
+Query.and([
+    Query.equal("metadata.genre", "sci-fi"),
+    Query.startsWith("metadata.title", "Inter")
+])
+```
+```server-rust
+Query::and(vec![
+    Query::equal("metadata.genre", Value::String("sci-fi".to_string())).to_string(),
+    Query::starts_with("metadata.title", "Inter").to_string(),
+]).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"startsWith","attribute":"metadata.title","values":["Inter"]}]}'
+```
+```http
+{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"startsWith","attribute":"metadata.title","values":["Inter"]}]}
+```
+{% /multicode %}
+
+### OR {% #or %}
+
+Returns document if it matches any of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```client-flutter
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```server-python
+Query.or_queries([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```server-ruby
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```server-deno
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```server-php
+Query::or([
+    Query::equal("metadata.genre", "romance"),
+    Query::equal("metadata.genre", "sci-fi")
+])
+```
+```client-apple
+Query.or([
+    Query.equal("metadata.genre", value: "romance"),
+    Query.equal("metadata.genre", value: "sci-fi")
+])
+```
+```server-go
+query.Or([]string{
+    query.Equal("metadata.genre", []string{"romance"}),
+    query.Equal("metadata.genre", []string{"sci-fi"}),
+})
+```
+```server-nodejs
+Query.or([
+    Query.equal("metadata.genre", "romance"),
+    Query.equal("metadata.genre", "sci-fi")
+])
+```
+```server-rust
+Query::or(vec![
+    Query::equal("metadata.genre", Value::String("romance".to_string())).to_string(),
+    Query::equal("metadata.genre", Value::String("sci-fi".to_string())).to_string(),
+]).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"or","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}]}'
+```
+```http
+{"method":"or","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]}]}
+```
+{% /multicode %}
+
+## Ordering {% #ordering %}
+
+Order results by a top-level document attribute such as `$createdAt`, `$updatedAt`, or `$id`. Ordering by a nested `metadata` field is not supported.
+
+### Order descending {% #order-desc %}
+
+Orders results in descending order by attribute.
+
+{% multicode %}
+```client-web
+Query.orderDesc("$createdAt")
+```
+```client-flutter
+Query.orderDesc("$createdAt")
+```
+```server-python
+Query.order_desc("$createdAt")
+```
+```server-ruby
+Query.order_desc("$createdAt")
+```
+```server-nodejs
+Query.orderDesc("$createdAt")
+```
+```server-php
+Query::orderDesc("$createdAt")
+```
+```client-apple
+Query.orderDesc("$createdAt")
+```
+```server-go
+query.OrderDesc("$createdAt")
+```
+```server-rust
+Query::order_desc("$createdAt").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderDesc","attribute":"$createdAt"}'
+```
+```http
+{"method":"orderDesc","attribute":"$createdAt"}
+```
+{% /multicode %}
+
+### Order ascending {% #order-asc %}
+
+Orders results in ascending order by attribute.
+
+{% multicode %}
+```client-web
+Query.orderAsc("$createdAt")
+```
+```client-flutter
+Query.orderAsc("$createdAt")
+```
+```server-python
+Query.order_asc("$createdAt")
+```
+```server-ruby
+Query.order_asc("$createdAt")
+```
+```server-nodejs
+Query.orderAsc("$createdAt")
+```
+```server-php
+Query::orderAsc("$createdAt")
+```
+```client-apple
+Query.orderAsc("$createdAt")
+```
+```server-go
+query.OrderAsc("$createdAt")
+```
+```server-rust
+Query::order_asc("$createdAt").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderAsc","attribute":"$createdAt"}'
+```
+```http
+{"method":"orderAsc","attribute":"$createdAt"}
+```
+{% /multicode %}
+
+### Order random {% #order-random %}
+
+Orders results in random order.
+
+{% multicode %}
+```client-web
+Query.orderRandom()
+```
+```client-flutter
+Query.orderRandom()
+```
+```server-python
+Query.order_random()
+```
+```server-ruby
+Query.order_random()
+```
+```server-nodejs
+Query.orderRandom()
+```
+```server-php
+Query::orderRandom()
+```
+```client-apple
+Query.orderRandom()
+```
+```server-go
+query.OrderRandom()
+```
+```server-rust
+Query::order_random().to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"orderRandom"}'
+```
+```http
+{"method":"orderRandom"}
+```
+{% /multicode %}
+
+## Pagination {% #pagination %}
+
+### Limit {% #limit %}
+
+Limits the number of results returned by the query. Used for [pagination](/docs/products/databases/vectorsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.limit(25)
+```
+```client-flutter
+Query.limit(25)
+```
+```server-python
+Query.limit(25)
+```
+```server-ruby
+Query.limit(25)
+```
+```server-deno
+Query.limit(25)
+```
+```server-php
+Query::limit(25)
+```
+```client-apple
+Query.limit(25)
+```
+```server-go
+query.Limit(25)
+```
+```server-nodejs
+Query.limit(25)
+```
+```server-rust
+Query::limit(25).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"limit","values":[25]}'
+```
+```http
+{"method":"limit","values":[25]}
+```
+{% /multicode %}
+
+### Offset {% #offset %}
+
+Offset the results returned by skipping some of the results. Used for [pagination](/docs/products/databases/vectorsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.offset(0)
+```
+```client-flutter
+Query.offset(0)
+```
+```server-python
+Query.offset(0)
+```
+```server-ruby
+Query.offset(0)
+```
+```server-deno
+Query.offset(0)
+```
+```server-php
+Query::offset(0)
+```
+```client-apple
+Query.offset(0)
+```
+```server-go
+query.Offset(0)
+```
+```server-nodejs
+Query.offset(0)
+```
+```server-rust
+Query::offset(0).to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"offset","values":[0]}'
+```
+```http
+{"method":"offset","values":[0]}
+```
+{% /multicode %}
+
+### Cursor after {% #cursor-after %}
+
+Places the cursor after the specified document ID. Used for [pagination](/docs/products/databases/vectorsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorAfter("62a7...f620")
+```
+```client-flutter
+Query.cursorAfter("62a7...f620")
+```
+```server-python
+Query.cursor_after("62a7...f620")
+```
+```server-ruby
+Query.cursor_after("62a7...f620")
+```
+```server-deno
+Query.cursorAfter("62a7...f620")
+```
+```server-php
+Query::cursorAfter("62a7...f620")
+```
+```client-apple
+Query.cursorAfter("62a7...f620")
+```
+```server-go
+query.CursorAfter("62a7...f620")
+```
+```server-nodejs
+Query.cursorAfter("62a7...f620")
+```
+```server-rust
+Query::cursor_after("62a7...f620").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"cursorAfter","values":["62a7...f620"]}'
+```
+```http
+{"method":"cursorAfter","values":["62a7...f620"]}
+```
+{% /multicode %}
+
+### Cursor before {% #cursor-before %}
+
+Places the cursor before the specified document ID. Used for [pagination](/docs/products/databases/vectorsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorBefore("62a7...a600")
+```
+```client-flutter
+Query.cursorBefore("62a7...a600")
+```
+```server-python
+Query.cursor_before("62a7...a600")
+```
+```server-ruby
+Query.cursor_before("62a7...a600")
+```
+```server-deno
+Query.cursorBefore("62a7...a600")
+```
+```server-php
+Query::cursorBefore("62a7...a600")
+```
+```client-apple
+Query.cursorBefore("62a7...a600")
+```
+```server-go
+query.CursorBefore("62a7...a600")
+```
+```server-nodejs
+Query.cursorBefore("62a7...a600")
+```
+```server-rust
+Query::cursor_before("62a7...a600").to_string()
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"cursorBefore","values":["62a7...a600"]}'
+```
+```http
+{"method":"cursorBefore","values":["62a7...a600"]}
+```
+{% /multicode %}
+
+# Complex queries {% #complex-queries %}
+
+You can create complex queries by combining AND and OR operations. For example, to find documents that are either sci-fi released after 2010 or romance released before 2005:
+
+{% multicode %}
+```client-web
+const results = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.or([
+            Query.and([
+                Query.equal('metadata.genre', ['sci-fi']),
+                Query.greaterThan('metadata.year', '2010')
+            ]),
+            Query.and([
+                Query.equal('metadata.genre', ['romance']),
+                Query.lessThan('metadata.year', '2005')
+            ])
+        ])
+    ]
+});
+```
+```client-flutter
+final results = await vectorsDB.listDocuments(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query.or([
+            Query.and([
+                Query.equal('metadata.genre', ['sci-fi']),
+                Query.greaterThan('metadata.year', '2010')
+            ]),
+            Query.and([
+                Query.equal('metadata.genre', ['romance']),
+                Query.lessThan('metadata.year', '2005')
+            ])
+        ])
+    ]
+);
+```
+```server-nodejs
+const results = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.or([
+            Query.and([
+                Query.equal('metadata.genre', ['sci-fi']),
+                Query.greaterThan('metadata.year', '2010')
+            ]),
+            Query.and([
+                Query.equal('metadata.genre', ['romance']),
+                Query.lessThan('metadata.year', '2005')
+            ])
+        ])
+    ]
+});
+```
+```server-python
+results = vectorsDB.list_documents(
+    database_id='<DATABASE_ID>',
+    collection_id='<COLLECTION_ID>',
+    queries=[
+        Query.or_queries([
+            Query.and_queries([
+                Query.equal('metadata.genre', ['sci-fi']),
+                Query.greater_than('metadata.year', '2010')
+            ]),
+            Query.and_queries([
+                Query.equal('metadata.genre', ['romance']),
+                Query.less_than('metadata.year', '2005')
+            ])
+        ])
+    ]
+)
+```
+```server-go
+documents, err := vectorsDB.ListDocuments(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    vectorsDB.WithListDocumentsQueries([]string{
+        query.Or([]string{
+            query.And([]string{
+                query.Equal("metadata.genre", []string{"sci-fi"}),
+                query.GreaterThan("metadata.year", "2010"),
+            }),
+            query.And([]string{
+                query.Equal("metadata.genre", []string{"romance"}),
+                query.LessThan("metadata.year", "2005"),
+            }),
+        }),
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+```server-rust
+let documents = vectors_db.list_documents(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    Some(vec![
+        Query::or(vec![
+            Query::and(vec![
+                Query::equal("metadata.genre", Value::Array(vec![Value::String("sci-fi".to_string())])).to_string(),
+                Query::greater_than("metadata.year", "2010").to_string(),
+            ]).to_string(),
+            Query::and(vec![
+                Query::equal("metadata.genre", Value::Array(vec![Value::String("romance".to_string())])).to_string(),
+                Query::less_than("metadata.year", "2005").to_string(),
+            ]).to_string(),
+        ]).to_string(),
+    ]),
+    None,
+    None,
+    None,
+).await?;
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"or","values":[{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}]},{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"lessThan","attribute":"metadata.year","values":["2005"]}]}]}'
+```
+```http
+{"method":"or","values":[{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["sci-fi"]},{"method":"greaterThan","attribute":"metadata.year","values":["2010"]}]},{"method":"and","values":[{"method":"equal","attribute":"metadata.genre","values":["romance"]},{"method":"lessThan","attribute":"metadata.year","values":["2005"]}]}]}
+```
+{% /multicode %}
+
+This example demonstrates how to combine `OR` and `AND` operations. The query uses `Query.or()` to match either condition: sci-fi released after 2010 OR romance released before 2005.
+Each condition within the OR is composed of two AND conditions, one for the genre and one for the year. The database returns documents that match either of these combined conditions.
+
+{% arrow_link href="/docs/products/databases/vectorsdb/vector-search" %}
+Learn about vector search
+{% /arrow_link %}

@@ -5,6 +5,7 @@ import {
   isRedirect,
   useLocation,
 } from '@tanstack/react-router'
+import { NotFoundView } from '@/components/error/NotFound'
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
@@ -45,7 +46,11 @@ import {
 } from '@/lib/project-region'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
-import { isHttpPaymentRequiredError } from '@/lib/utils/error-formatting'
+import {
+  isHttpNotFoundError,
+  isHttpPaymentRequiredError,
+  isHttpProjectAccessError,
+} from '@/lib/utils/error-formatting'
 import {
   INITIAL_LOADER_SHELL_GATE,
   setInitialLoaderShellGate,
@@ -135,10 +140,51 @@ const EMPTY_PROJECT_LAYOUT_CONTEXT: ProjectLayoutRouteContext = {
   budgetLimitTeamId: null,
 }
 
+function ProjectAccessErrorView({
+  error,
+  reset,
+}: {
+  error: Error
+  reset: () => void
+}) {
+  // Route errorComponent mounts without ProjectSelector; release the shell gate
+  // so the fullscreen loader does not cover this screen on hard reload.
+  useLayoutEffect(() => {
+    setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, true)
+  }, [])
+
+  return (
+    <div className="org-layout-container flex h-full flex-col bg-background">
+      <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+        <DevConstructionStripe />
+        <CloudStatusBanner />
+        <ConsoleImpersonationBanner />
+      </div>
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <ErrorComponent error={error} info={undefined} reset={reset} />
+      </main>
+    </div>
+  )
+}
+
+function ProjectRouteErrorComponent({
+  error,
+  reset,
+}: {
+  error: Error
+  reset: () => void
+}) {
+  return <ProjectAccessErrorView error={error} reset={reset} />
+}
+
 export const Route = createFileRoute('/_public/projects/$projectId')({
+  // Parent ProjectCliShellLayout already provides ConsoleLayout; avoid a nested shell.
+  notFoundComponent: NotFoundView,
+  errorComponent: ProjectRouteErrorComponent,
   // Region + budget/plan-limit check must run before child loaders (loaders execute in parallel).
   // When the org is blocked, nested project routes are redirected to the project root
   // so heavy service loaders cannot hang the navigation.
+  // Project access failures (401/403/404) are thrown so child beforeLoad/loaders never run.
   beforeLoad: async ({
     params,
     context,
@@ -156,9 +202,6 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     await ensureProjectRegion(context.queryClient, projectId).catch(() => {})
 
     const features = getActiveProfileFeatures()
-    if (!features.billing) {
-      return EMPTY_PROJECT_LAYOUT_CONTEXT
-    }
 
     const redirectIfNested = () => {
       const pathParts = location.pathname.split('/').filter(Boolean)
@@ -171,19 +214,77 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       }
     }
 
+    // Always resolve the project first. Throwing on access errors stops the
+    // rest of the match (child beforeLoad + loaders) so nested pages cannot
+    // re-fetch project.get and hang the fullscreen loader.
+    let projectData: Awaited<ReturnType<typeof fetchProject>>
     try {
-      const projectData = await context.queryClient.ensureQueryData({
+      projectData = await context.queryClient.ensureQueryData({
         queryKey: ['project', projectId],
         queryFn: () => fetchProject(projectId),
         staleTime: 5 * 60 * 1000,
+        retry: false,
       })
       registerProjectRegionFromProject(projectData)
+    } catch (error) {
+      if (isRedirect(error)) throw error
 
-      const teamId = projectData?.teamId
-      if (!teamId) {
+      // Budget cap blocks project-scoped APIs with HTTP 402. Resolve teamId via
+      // the console projects API so we can still show the lock curtain.
+      if (isHttpPaymentRequiredError(error)) {
+        if (features.billing) {
+          const teamId = await resolveProjectTeamIdFromConsole(projectId)
+          let budgetConfirmed = true
+          if (teamId) {
+            const organization = await context.queryClient
+              .fetchQuery({
+                queryKey: ['organization', teamId],
+                queryFn: () => fetchOrganizationById(teamId),
+                staleTime: 30 * 1000,
+              })
+              .catch(() => null)
+            // If org loads and clearly has no budget limit, do not force the curtain.
+            if (
+              organization &&
+              organization.billingLimits &&
+              !isBudgetLimitReached(organization)
+            ) {
+              budgetConfirmed = false
+            }
+          }
+          if (budgetConfirmed) {
+            redirectIfNested()
+            return {
+              budgetLimitReached: true,
+              planUsageLimitReached: false,
+              budgetLimitTeamId: teamId,
+            }
+          }
+        }
+        // Unconfirmed budget 402: do not treat as access error; layout/loader may recover.
+        console.warn('Failed to resolve budget limit in beforeLoad:', error)
         return EMPTY_PROJECT_LAYOUT_CONTEXT
       }
 
+      // 401/403/404: stop child beforeLoad/loaders so they cannot re-fetch and hang.
+      if (isHttpProjectAccessError(error)) {
+        throw error
+      }
+
+      console.warn('Failed to resolve project in beforeLoad:', error)
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
+    }
+
+    if (!features.billing) {
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
+    }
+
+    const teamId = projectData?.teamId
+    if (!teamId) {
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
+    }
+
+    try {
       // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
       const organization = await context.queryClient
         .fetchQuery({
@@ -211,39 +312,6 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       }
     } catch (error) {
       if (isRedirect(error)) throw error
-
-      // Budget cap blocks project-scoped APIs with HTTP 402. Resolve teamId via
-      // the console projects API so we can still show the lock curtain.
-      if (isHttpPaymentRequiredError(error)) {
-        const teamId = await resolveProjectTeamIdFromConsole(projectId)
-        let budgetConfirmed = true
-        if (teamId) {
-          const organization = await context.queryClient
-            .fetchQuery({
-              queryKey: ['organization', teamId],
-              queryFn: () => fetchOrganizationById(teamId),
-              staleTime: 30 * 1000,
-            })
-            .catch(() => null)
-          // If org loads and clearly has no budget limit, do not force the curtain.
-          if (
-            organization &&
-            organization.billingLimits &&
-            !isBudgetLimitReached(organization)
-          ) {
-            budgetConfirmed = false
-          }
-        }
-        if (budgetConfirmed) {
-          redirectIfNested()
-          return {
-            budgetLimitReached: true,
-            planUsageLimitReached: false,
-            budgetLimitTeamId: teamId,
-          }
-        }
-      }
-
       console.warn('Failed to resolve budget limit in beforeLoad:', error)
       return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
@@ -266,7 +334,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     const planUsageLimitReached = context.planUsageLimitReached === true
     let budgetLimitTeamId = context.budgetLimitTeamId
 
-    // When budget-locked, project.get returns 402 — do not fetch the project.
+    // When budget-locked, project.get returns 402 - do not fetch the project.
     if (budgetLimitReached) {
       if (!budgetLimitTeamId) {
         budgetLimitTeamId = await resolveProjectTeamIdFromConsole(projectId)
@@ -289,6 +357,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           queryKey: ['project', projectId],
           queryFn: () => fetchProject(projectId),
           staleTime: 5 * 60 * 1000, // 5 minutes
+          retry: false,
         }),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         features.multiTenancy
@@ -364,6 +433,10 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           budgetLimitReached: true,
           planUsageLimitReached: false,
         }
+      }
+      // Fail closed: surface via route errorComponent instead of painting the shell.
+      if (isHttpProjectAccessError(error)) {
+        throw error
       }
       console.warn('Failed to fetch project in loader:', error)
       return undefined
@@ -529,12 +602,29 @@ function ProjectLayout() {
       ? routeContext.budgetLimitTeamId
       : null)
 
-  // Hard reload waits on the project-selector shell gate; release it when budget-locked
-  // so the fullscreen loader does not hang (project.get returns 402, selector never "ready").
+  // Classify project fetch failures before effects that depend on them.
+  const errorMessage = projectError?.message || ''
+  const isNotFound = Boolean(projectError && isHttpNotFoundError(projectError))
+  const isAccessDenied = Boolean(
+    projectError && isHttpProjectAccessError(projectError) && !isNotFound,
+  )
+
+  // Hard reload waits on the project-selector shell gate; release it when the layout
+  // will not mount ProjectSelector (budget lock, not found, or access denied) so the
+  // fullscreen loader does not hang over the error/curtain UI.
   useLayoutEffect(() => {
-    if (!budgetLimitReached) return
+    const shouldReleaseShellGate =
+      budgetLimitReached ||
+      (!isProjectLoading && (isNotFound || isAccessDenied))
+    if (!shouldReleaseShellGate) return
     setInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector, true)
-  }, [budgetLimitReached])
+  }, [
+    budgetLimitReached,
+    isProjectLoading,
+    isNotFound,
+    isAccessDenied,
+    location.pathname,
+  ])
 
   // Extract active section from pathname (leading empty segment from split)
   const pathParts = location.pathname.split('/')
@@ -631,68 +721,39 @@ function ProjectLayout() {
     features.billing,
   ])
 
-  // Check if this is a project not found or access denied error
-  // Do this AFTER all hooks are called to avoid hooks order violation
-  const errorMessage = projectError?.message || ''
-  const lowerMessage = errorMessage.toLowerCase()
-  const errorCode = (projectError as unknown)?.code
-  const errorName =
-    (projectError as unknown)?.name ||
-    (projectError instanceof Error ? projectError.name : '')
-
-  const isNotFound =
-    projectError &&
-    (errorName === 'NotFoundError' ||
-      errorCode === 404 ||
-      lowerMessage.includes('not found') ||
-      lowerMessage.includes('404') ||
-      lowerMessage.includes('does not exist'))
-
-  const isAccessDenied =
-    projectError &&
-    (errorName === 'UnauthorizedError' ||
-      errorName === 'ForbiddenError' ||
-      errorCode === 401 ||
-      errorCode === 403 ||
-      lowerMessage.includes('unauthorized') ||
-      lowerMessage.includes('forbidden') ||
-      lowerMessage.includes('permission denied') ||
-      lowerMessage.includes('access denied'))
-
-  // Show error component if project is not found or access denied
-  // Only show after loading is complete to avoid flashing
-  // Skip when budget-locked (402) — the curtain handles that state.
+  // Show error without painting the project shell (no flash of sidebar/header).
+  // Skip when budget-locked (402) - the curtain handles that state.
   if (
     !budgetLimitReached &&
     !planUsageLimitReached &&
-    !isProjectLoading &&
     projectError &&
     (isNotFound || isAccessDenied)
   ) {
-    // Ensure we have an Error object for the ErrorComponent
     const errorObj =
       projectError instanceof Error
         ? projectError
         : new Error(errorMessage || 'Project error occurred')
 
     return (
-      <div className="org-layout-container flex h-full flex-col bg-background">
-        <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
-          <DevConstructionStripe />
-          <CloudStatusBanner />
-          <ConsoleImpersonationBanner />
-        </div>
-        <main className="min-h-0 flex-1 overflow-y-auto">
-          <ErrorComponent
-            error={errorObj}
-            info={undefined}
-            reset={() => {
-              window.location.reload()
-            }}
-          />
-        </main>
-      </div>
+      <ProjectAccessErrorView
+        error={errorObj}
+        reset={() => {
+          window.location.reload()
+        }}
+      />
     )
+  }
+
+  // While the project is still resolving, paint nothing. Hard reloads stay on the
+  // fullscreen loader; soft navigations keep the previous page until beforeLoad settles.
+  if (
+    !budgetLimitReached &&
+    !planUsageLimitReached &&
+    isProjectLoading &&
+    !project &&
+    !loaderData?.project
+  ) {
+    return null
   }
 
   return (

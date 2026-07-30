@@ -1,37 +1,38 @@
 ---
 layout: post
-title: "Announcing Auto-increment support: Built-in numeric sequencing for your documents"
-description: Get reliable, sequential ordering across your collections with fast, indexed auto-increment IDs.
+title: "Announcing Auto-increment support: Built-in numeric sequencing for your rows"
+description: Get reliable, sequential ordering across your tables with fast, indexed auto-increment IDs.
 date: 2025-07-15
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-auto-increment-support/cover.avif
 timeToRead: 5
 author: jake-barnby
 category: announcement
 featured: false
 faqs:
-  - question: "What is the `$sequence` field on Appwrite documents?"
-    answer: "`$sequence` is a numeric field that Appwrite automatically assigns to each document at insertion time. It starts at one for the first row in a collection and increases by one with every new insert, giving you a strictly ascending, indexed identifier without writing any counter logic."
+  - question: "What is the `$sequence` field on Appwrite rows?"
+    answer: "`$sequence` is a numeric field that Appwrite automatically assigns to each row at insertion time. It starts at one for the first row in a table and increases by one with every new insert, giving you a strictly ascending, indexed identifier without writing any counter logic."
   - question: "How is `$sequence` different from `$id`?"
     answer: "`$id` is a string identifier that is either generated as a unique slug (`ID.unique()`) or set by the caller. `$sequence` is a numeric, monotonically increasing counter managed by Appwrite. Use `$id` for lookups and references and `$sequence` when you need ordering or numeric IDs like invoice numbers."
-  - question: "How do I sort documents by insertion order?"
-    answer: "Query the collection with `Query.orderAsc('$sequence')` (or `orderDesc` for newest-first). The field is fully indexed, so sorting and pagination by `$sequence` perform efficiently even on large collections. The full reference lives in the [order documentation](/docs/products/databases/order#sequence-ordering)."
+  - question: "How do I sort rows by insertion order?"
+    answer: "Query the table with `Query.orderAsc('$sequence')` (or `orderDesc` for newest-first). The field is fully indexed, so sorting and pagination by `$sequence` perform efficiently even on large tables. The full reference lives in the [order documentation](/docs/products/databases/order#sequence-ordering)."
   - question: "Can I modify the `$sequence` value?"
     answer: "No. `$sequence` is read-only by design. That guarantees the values are consistent, monotonically increasing, and tamper-resistant, which is what makes it suitable for audit logs, invoice numbers, and other use cases that require stable ordering."
   - question: "When should I use timestamps instead of `$sequence`?"
-    answer: "Use `$createdAt` when you need wall-clock ordering and are comfortable with millisecond resolution. Use `$sequence` when you need a strict numeric identifier or guaranteed insertion order, since two documents created in the same millisecond will have distinct sequence numbers but identical timestamps."
+    answer: "Use `$createdAt` when you need wall-clock ordering and are comfortable with millisecond resolution. Use `$sequence` when you need a strict numeric identifier or guaranteed insertion order, since two rows created in the same millisecond will have distinct sequence numbers but identical timestamps."
   - question: "Is auto-increment available on self-hosted Appwrite?"
-    answer: "Yes. Auto-increment support is available on both Appwrite Cloud and self-hosted installations of the supported version. Existing collections automatically expose `$sequence` for newly inserted documents going forward."
+    answer: "Yes. Auto-increment support is available on both Appwrite Cloud and self-hosted installations of the supported version. Existing tables automatically expose `$sequence` for newly inserted rows."
 ---
 
 Managing ordered data can often be complex and error-prone, especially when it requires manual counters or timestamp-based sorting, which can introduce inconsistencies and unpredictability.
 
 To tackle this issue, we're introducing **Auto-increment support.**
 
-This new feature automatically handles a `$sequence` column within your documents, incrementing reliably with each new insertion. This ensures your data remains ordered and clear without additional manual overhead.
+This new feature automatically handles a `$sequence` column within your rows, incrementing reliably with each new insertion. This ensures your data remains ordered and clear without additional manual overhead.
 
 # Automatic, predictable ordering
 
-Previously, maintaining consistent insertion order and generating numeric identifiers required either manual increments, complex logic, or dependence on timestamps, which weren't always accurate or reliable. Appwrite’s new Auto-increment support feature solves these issues seamlessly, providing a built-in numeric identifier that increases predictably with every new document added.
+Previously, maintaining consistent insertion order and generating numeric identifiers required either manual increments, complex logic, or dependence on timestamps, which weren't always accurate or reliable. Appwrite’s new Auto-increment support feature solves these issues seamlessly, providing a built-in numeric identifier that increases predictably with every new row added.
 
 Whether you're creating paginated data sets, managing invoice numbers, logging activities, or building real-time feeds, Appwrite's Auto-increment support feature offers effortless numeric sequencing. This means less manual work, fewer bugs, and significantly improved reliability.
 
@@ -50,21 +51,21 @@ Integrating Auto-increment support into your Appwrite Databases makes your backe
 
 # How it works
 
-For numeric ordering based on insertion order, you can use the `$sequence` field, which Appwrite automatically adds to all documents. This field increments with each new insert.
+For numeric ordering based on insertion order, you can use the `$sequence` field, which Appwrite automatically adds to all rows. This field increments with each new insert.
 
 
 ```client-web
-import { Client, Databases, Query } from "appwrite";
+import { Client, TablesDB, Query } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
     .setProject('<PROJECT_ID>');
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
-databases.listDocuments({
+tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
-    collectionId: '<COLLECTION_ID>',
+    tableId: '<TABLE_ID>',
     queries: [
         Query.orderAsc('$sequence'),
     ]
@@ -77,4 +78,4 @@ databases.listDocuments({
 
 - [Read the documentation to get started](/docs/products/databases/order)
 - [Explore best practices for database pagination](/blog/post/best-pagination-technique)
-- [Secure sensitive database fields with encrypted attributes](/blog/post/encrypted-attributes-for-sensitive-fields)
+- [Secure sensitive database fields with encrypted columns](/blog/post/encrypted-attributes-for-sensitive-fields)

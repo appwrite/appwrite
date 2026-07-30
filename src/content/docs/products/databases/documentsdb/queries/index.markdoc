@@ -1,0 +1,1855 @@
+---
+layout: article
+title: Queries
+description: Harness the power of querying with Appwrite DocumentsDB. Discover various query options, filtering, sorting, and advanced querying techniques.
+---
+
+Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries.
+
+# Query class {% #query-class %}
+
+Appwrite SDKs provide a `Query` class to help you build queries. The `Query` class has methods for each type of supported query operation.
+
+# Building queries {% #building-queries %}
+
+Queries are passed to an endpoint through the `queries` parameter as an array of query strings, which can be generated using the `Query` class.
+
+Each query method is logically separated via `AND` operations. For `OR` operation, pass multiple values into the query method separated by commas.
+For example `Query.equal('title', ['Avatar', 'Lord of the Rings'])` will fetch the movies `Avatar` or `Lord of the Rings`.
+
+{% info title="Default pagination behavior" %}
+By default, results are limited to the **first 25 items**.
+You can change this through [pagination](/docs/products/databases/documentsdb/pagination).
+{% /info %}
+
+{% multicode %}
+
+```client-web
+import { Client, Query, DocumentsDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const documentsDB = new DocumentsDB(client);
+
+documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        Query.greaterThan('year', 1999)
+    ]
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>')
+;
+
+const promise = documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        sdk.Query.greaterThan('year', 1999)
+    ]
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final documentsDB = DocumentsDB(client);
+
+    try {
+        final documents = await documentsDB.listDocuments(
+            '<DATABASE_ID>',
+            '<COLLECTION_ID>',
+            [
+                Query.equal('title', ['Avatar', 'Lord of the Rings']),
+                Query.greaterThan('year', 1999)
+            ]
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let documentsDB = DocumentsDB(client)
+
+    do {
+        let documents = try await documentsDB.listDocuments(
+            databaseId: "<DATABASE_ID>",
+            collectionId: "<COLLECTION_ID>",
+            queries: [
+                Query.equal("title", value: ["Avatar", "Lord of the Rings"]),
+                Query.greaterThan("year", value: 1999)
+            ]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.DocumentsDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    val documentsDB = DocumentsDB(client)
+
+    try {
+        val documents = documentsDB.listDocuments(
+            databaseId = "<DATABASE_ID>",
+            collectionId = "<COLLECTION_ID>",
+            queries = listOf(
+                Query.equal("title", listOf("Avatar", "Lord of the Rings")),
+                Query.greaterThan("year", 1999)
+            )
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", e.message)
+    }
+}
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    documentsDB := appwrite.NewDocumentsDB(client)
+
+    documents, err := documentsDB.ListDocuments(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        documentsDB.WithListDocumentsQueries([]string{
+            query.Equal("title", []string{"Avatar", "Lord of the Rings"}),
+            query.GreaterThan("year", 1999),
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Documents: %+v\n", documents)
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::documents_db::DocumentsDB;
+use appwrite::query::Query;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let documents = documents_db.list_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::equal("title", Value::Array(vec![
+                Value::String("Avatar".to_string()),
+                Value::String("Lord of the Rings".to_string()),
+            ])).to_string(),
+            Query::greater_than("year", 1999).to_string(),
+        ]),
+        None,
+        None,
+        None,
+    ).await?;
+
+    println!("{:?}", documents);
+    Ok(())
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\DocumentsDB;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>')
+;
+
+$documentsDB = new DocumentsDB($client);
+
+$result = $documentsDB->listDocuments(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query::equal('title', ['Avatar', 'Lord of the Rings']),
+        Query::greaterThan('year', 1999)
+    ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.query import Query
+from appwrite.services.documents_db import DocumentsDB
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+)
+
+documentsDB = DocumentsDB(client)
+
+result = documentsDB.list_documents(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        Query.greater_than('year', 1999)
+    ]
+)
+```
+```graphql
+query {
+    documentsDBListDocuments(
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>"
+        queries: [
+            "{\"method\":\"equal\",\"attribute\":\"title\",\"values\":[\"Avatar\",\"Lord of the Rings\"]}",
+            "{\"method\":\"greaterThan\",\"attribute\":\"year\",\"values\":[1999]}"
+        ]
+    ) {
+        total
+        documents {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/documentsdb/<DATABASE_ID>/collections/<COLLECTION_ID>/documents?queries[]=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22title%22%2C%22values%22%3A%5B%22Avatar%22%2C%22Lord%20of%20the%20Rings%22%5D%7D&queries[]=%7B%22method%22%3A%22greaterThan%22%2C%22attribute%22%3A%22year%22%2C%22values%22%3A%5B1999%5D%7D HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+```bash
+appwrite documents-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"equal","attribute":"title","values":["Avatar","Lord of the Rings"]}' '{"method":"greaterThan","attribute":"year","values":[1999]}'
+```
+{% /multicode %}
+
+# Query operators {% #query-operators %}
+
+## Select {% #select %}
+
+The `select` operator allows you to specify which fields should be returned from a document. This optimizes response size and retrieves only the data you need.
+
+{% multicode %}
+```client-web
+Query.select(["name", "title"])
+```
+```client-flutter
+Query.select(["name", "title"])
+```
+```server-python
+Query.select(["name", "title"])
+```
+```server-ruby
+Query.select(["name", "title"])
+```
+```server-deno
+Query.select(["name", "title"])
+```
+```server-php
+Query::select(["name", "title"])
+```
+```client-apple
+Query.select(["name", "title"])
+```
+```server-go
+query.Select([]string{"name", "title"})
+```
+```server-rust
+Query::select(vec!["name", "title"]).to_string()
+```
+```http
+{"method":"select","values":["name","title"]}
+```
+{% /multicode %}
+
+### Use selection patterns {% #select-patterns %}
+
+| Pattern | Description | Use case |
+|---------|-------------|----------|
+| `["field1", "field2"]` | Specific fields only | Minimize response size |
+| `["*"]` | All document fields | Get complete document data |
+
+### Optimize performance {% #select-performance %}
+
+**Optimize response size** - Only select the fields you actually need. Smaller responses are faster to transfer and parse.
+
+**Reduce database load** - Selecting fewer fields reduces database processing time, especially for large documents.
+
+## Comparison operators {% #comparison %}
+
+### Equal {% #equal %}
+
+Returns document if field is equal to any value in the provided array.
+
+{% multicode %}
+```client-web
+Query.equal("title", ["Iron Man"])
+```
+```client-flutter
+Query.equal("title", ["Iron Man"])
+```
+```server-python
+Query.equal("title", ["Iron Man"])
+```
+```server-ruby
+Query.equal("title", ["Iron Man"])
+```
+```server-deno
+Query.equal("title", ["Iron Man"])
+```
+```server-php
+Query::equal("title", ["Iron Man"])
+```
+```client-apple
+Query.equal("title", value: ["Iron Man"])
+```
+```server-go
+query.Equal("title", []string{"Iron Man"})
+```
+```server-rust
+Query::equal("title", Value::Array(vec![Value::String("Iron Man".to_string())])).to_string()
+```
+```http
+{"method":"equal","attribute":"title","values":["Iron Man"]}
+```
+{% /multicode %}
+
+### Not equal {% #not-equal %}
+
+Returns document if field is not equal to any value in the provided array.
+
+{% multicode %}
+```client-web
+Query.notEqual("title", "Iron Man")
+```
+```client-flutter
+Query.notEqual("title", "Iron Man")
+```
+```server-python
+Query.not_equal("title", "Iron Man")
+```
+```server-ruby
+Query.not_equal("title", "Iron Man")
+```
+```server-deno
+Query.notEqual("title", "Iron Man")
+```
+```server-php
+Query::notEqual("title", "Iron Man")
+```
+```client-apple
+Query.notEqual("title", value: "Iron Man")
+```
+```server-go
+query.NotEqual("title", "Iron Man")
+```
+```server-rust
+Query::not_equal("title", "Iron Man").to_string()
+```
+```http
+{"method":"notEqual","attribute":"title","values":"Iron Man"}
+```
+{% /multicode %}
+
+### Less than {% #less-than %}
+
+Returns document if field is less than the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThan("score", 10)
+```
+```client-flutter
+Query.lessThan("score", 10)
+```
+```server-python
+Query.less_than("score", 10)
+```
+```server-ruby
+Query.less_than("score", 10)
+```
+```server-deno
+Query.lessThan("score", 10)
+```
+```server-php
+Query::lessThan("score", 10)
+```
+```client-apple
+Query.lessThan("score", value: 10)
+```
+```server-go
+query.LessThan("score", 10)
+```
+```server-rust
+Query::less_than("score", 10).to_string()
+```
+```http
+{"method":"lessThan","attribute":"score","values":[10]}
+```
+{% /multicode %}
+
+### Less than or equal {% #less-than-equal %}
+
+Returns document if field is less than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThanEqual("score", 10)
+```
+```client-flutter
+Query.lessThanEqual("score", 10)
+```
+```server-python
+Query.less_than_equal("score", 10)
+```
+```server-ruby
+Query.less_than_equal("score", 10)
+```
+```server-deno
+Query.lessThanEqual("score", 10)
+```
+```server-php
+Query::lessThanEqual("score", 10)
+```
+```client-apple
+Query.lessThanEqual("score", value: 10)
+```
+```server-go
+query.LessThanEqual("score", 10)
+```
+```server-rust
+Query::less_than_equal("score", 10).to_string()
+```
+```http
+{"method":"lessThanEqual","attribute":"score","values":[10]}
+```
+{% /multicode %}
+
+### Greater than {% #greater-than %}
+
+Returns document if field is greater than the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThan("score", 10)
+```
+```client-flutter
+Query.greaterThan("score", 10)
+```
+```server-python
+Query.greater_than("score", 10)
+```
+```server-ruby
+Query.greater_than("score", 10)
+```
+```server-deno
+Query.greaterThan("score", 10)
+```
+```server-php
+Query::greaterThan("score", 10)
+```
+```client-apple
+Query.greaterThan("score", value: 10)
+```
+```server-go
+query.GreaterThan("score", 10)
+```
+```server-rust
+Query::greater_than("score", 10).to_string()
+```
+```http
+{"method":"greaterThan","attribute":"score","values":[10]}
+```
+{% /multicode %}
+
+### Greater than or equal {% #greater-than-equal %}
+
+Returns document if field is greater than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThanEqual("score", 10)
+```
+```client-flutter
+Query.greaterThanEqual("score", 10)
+```
+```server-python
+Query.greater_than_equal("score", 10)
+```
+```server-ruby
+Query.greater_than_equal("score", 10)
+```
+```server-deno
+Query.greaterThanEqual("score", 10)
+```
+```server-php
+Query::greaterThanEqual("score", 10)
+```
+```client-apple
+Query.greaterThanEqual("score", value: 10)
+```
+```server-go
+query.GreaterThanEqual("score", 10)
+```
+```server-rust
+Query::greater_than_equal("score", 10).to_string()
+```
+```http
+{"method":"greaterThanEqual","attribute":"score","values":[10]}
+```
+{% /multicode %}
+
+### Between {% #between %}
+
+Returns document if field value falls between the two values. The boundary values are inclusive and can be strings or numbers.
+
+{% multicode %}
+```client-web
+Query.between("price", 5, 10)
+```
+```client-flutter
+Query.between("price", 5, 10)
+```
+```server-python
+Query.between("price", 5, 10)
+```
+```server-ruby
+Query.between("price", 5, 10)
+```
+```server-deno
+Query.between("price", 5, 10)
+```
+```server-php
+Query::between("price", 5, 10)
+```
+```client-apple
+Query.between("price", start: 5, end: 10)
+```
+```server-go
+query.Between("price", 5, 10)
+```
+```server-rust
+Query::between("price", 5, 10).to_string()
+```
+```http
+{"method":"between","attribute":"price","values":[5,10]}
+```
+{% /multicode %}
+
+### Not between {% #not-between %}
+
+Returns documents if the field value is outside the range defined by the two values (strictly less than start OR strictly greater than end).
+Works with strings or numbers. Boundary values are excluded.
+
+{% multicode %}
+```client-web
+Query.notBetween("price", 5, 10)
+```
+```client-flutter
+Query.notBetween("price", 5, 10)
+```
+```client-apple
+Query.notBetween("price", start: 5, end: 10)
+```
+```client-android-kotlin
+Query.notBetween("price", 5, 10)
+```
+```client-android-java
+Query.notBetween("price", 5, 10)
+```
+```server-python
+Query.not_between("price", 5, 10)
+```
+```server-ruby
+Query.not_between("price", 5, 10)
+```
+```server-deno
+Query.notBetween("price", 5, 10)
+```
+```server-nodejs
+Query.notBetween("price", 5, 10)
+```
+```server-php
+Query::notBetween("price", 5, 10)
+```
+```server-swift
+Query.notBetween("price", start: 5, end: 10)
+```
+```server-rust
+Query::not_between("price", 5, 10).to_string()
+```
+```http
+{"method":"notBetween","attribute":"price","values":[5,10]}
+```
+{% /multicode %}
+
+## Null checks {% #null-checks %}
+
+### Is null {% #is-null %}
+
+Returns documents where field value is null.
+
+{% multicode %}
+```client-web
+Query.isNull("name")
+```
+```client-flutter
+Query.isNull("name")
+```
+```server-python
+Query.is_null("name")
+```
+```server-ruby
+Query.is_null("name")
+```
+```server-deno
+Query.isNull("name")
+```
+```server-php
+Query::isNull("name")
+```
+```client-apple
+Query.isNull("name")
+```
+```server-go
+query.IsNull("name")
+```
+```server-rust
+Query::is_null("name").to_string()
+```
+```http
+{"method":"isNull","attribute":"name"}
+```
+{% /multicode %}
+
+### Is not null {% #is-not-null %}
+
+Returns documents where field value is **not** null.
+
+{% multicode %}
+```client-web
+Query.isNotNull("name")
+```
+```client-flutter
+Query.isNotNull("name")
+```
+```server-python
+Query.is_not_null("name")
+```
+```server-ruby
+Query.is_not_null("name")
+```
+```server-deno
+Query.isNotNull("name")
+```
+```server-php
+Query::isNotNull("name")
+```
+```client-apple
+Query.isNotNull("name")
+```
+```server-go
+query.IsNotNull("name")
+```
+```server-rust
+Query::is_not_null("name").to_string()
+```
+```http
+{"method":"isNotNull","attribute":"name"}
+```
+{% /multicode %}
+
+## String operations {% #string-operations %}
+
+### Starts with {% #starts-with %}
+
+Returns documents if a string field starts with a substring.
+
+{% multicode %}
+```client-web
+Query.startsWith("name", "Once upon a time")
+```
+```client-flutter
+Query.startsWith("name", "Once upon a time")
+```
+```server-python
+Query.starts_with("name", "Once upon a time")
+```
+```server-ruby
+Query.starts_with("name", "Once upon a time")
+```
+```server-deno
+Query.startsWith("name", "Once upon a time")
+```
+```server-php
+Query::startsWith("name", "Once upon a time")
+```
+```client-apple
+Query.startsWith("name", value: "Once upon a time")
+```
+```server-go
+query.StartsWith("name", "Once upon a time")
+```
+```server-rust
+Query::starts_with("name", "Once upon a time").to_string()
+```
+```http
+{"method":"startsWith","attribute":"name","values":["Once upon a time"]}
+```
+{% /multicode %}
+
+### Not starts with {% #not-starts-with %}
+
+Returns documents if a string field does not start with a substring.
+
+{% multicode %}
+```client-web
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-flutter
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-apple
+Query.notStartsWith("name", value: "Once upon a time")
+```
+```client-android-kotlin
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-android-java
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-python
+Query.not_starts_with("name", "Once upon a time")
+```
+```server-ruby
+Query.not_starts_with("name", "Once upon a time")
+```
+```server-deno
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-nodejs
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-php
+Query::notStartsWith("name", "Once upon a time")
+```
+```server-swift
+Query.notStartsWith("name", value: "Once upon a time")
+```
+```server-rust
+Query::not_starts_with("name", "Once upon a time").to_string()
+```
+```http
+{"method":"notStartsWith","attribute":"name","values":["Once upon a time"]}
+```
+{% /multicode %}
+
+### Ends with {% #ends-with %}
+
+Returns documents if a string field ends with a substring.
+
+{% multicode %}
+```client-web
+Query.endsWith("name", "happily ever after.")
+```
+```client-flutter
+Query.endsWith("name", "happily ever after.")
+```
+```server-python
+Query.ends_with("name", "happily ever after.")
+```
+```server-ruby
+Query.ends_with("name", "happily ever after.")
+```
+```server-deno
+Query.endsWith("name", "happily ever after.")
+```
+```server-php
+Query::endsWith("name", "happily ever after.")
+```
+```client-apple
+Query.endsWith("name", value: "happily ever after.")
+```
+```server-go
+query.EndsWith("name", "happily ever after.")
+```
+```server-rust
+Query::ends_with("name", "happily ever after.").to_string()
+```
+```http
+{"method":"endsWith","attribute":"name","values":["happily ever after."]}
+```
+{% /multicode %}
+
+### Not ends with {% #not-ends-with %}
+
+Returns documents if a string field does not end with a substring.
+
+{% multicode %}
+```client-web
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-flutter
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-apple
+Query.notEndsWith("name", value: "happily ever after.")
+```
+```client-android-kotlin
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-android-java
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-python
+Query.not_ends_with("name", "happily ever after.")
+```
+```server-ruby
+Query.not_ends_with("name", "happily ever after.")
+```
+```server-deno
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-nodejs
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-php
+Query::notEndsWith("name", "happily ever after.")
+```
+```server-swift
+Query.notEndsWith("name", value: "happily ever after.")
+```
+```server-rust
+Query::not_ends_with("name", "happily ever after.").to_string()
+```
+```http
+{"method":"notEndsWith","attribute":"name","values":["happily ever after."]}
+```
+{% /multicode %}
+
+### Contains {% #contains %}
+
+Returns documents if the array field contains the specified elements or if a string field contains the specified substring.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
+```client-flutter
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
+```server-python
+# For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+# For strings
+Query.contains("name", "Tom")
+```
+```server-ruby
+# For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+# For strings
+Query.contains("name", "Tom")
+```
+```server-deno
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.contains("name", "Tom")
+```
+```server-php
+// For arrays
+Query::contains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query::contains("name", "Tom")
+```
+```client-apple
+// For arrays
+Query.contains("ingredients", value: ["apple", "banana"])
+
+// For strings
+Query.contains("name", value: "Tom")
+```server-go
+// For arrays
+query.Contains("ingredients", []string{"apple", "banana"})
+
+// For strings
+query.Contains("name", "Tom")
+```
+```server-rust
+// For arrays
+Query::contains("ingredients", Value::Array(vec![
+    Value::String("apple".to_string()),
+    Value::String("banana".to_string()),
+])).to_string()
+
+// For strings
+Query::contains("name", "Tom").to_string()
+```
+```http
+# For arrays
+{"method":"contains","attribute":"ingredients","values":["apple","banana"]}
+
+# For strings
+{"method":"contains","attribute":"name","values":["Tom"]}
+```
+{% /multicode %}
+
+### Not contains {% #not-contains %}
+
+Returns documents if the array field does not contain the specified
+elements, or if a string field does not contain the specified
+substring.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```client-flutter
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```client-react-native
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```client-apple
+// For arrays
+Query.notContains("ingredients", value: ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", value: "Tom")
+```
+```client-android-kotlin
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```client-android-java
+// For arrays
+Query.notContains("ingredients", Arrays.asList("apple", "banana"))
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```server-python
+# For arrays
+Query.not_contains("ingredients", ['apple', 'banana'])
+
+# For strings
+Query.not_contains("name", "Tom")
+```
+```server-ruby
+# For arrays
+Query.not_contains("ingredients", ['apple', 'banana'])
+
+# For strings
+Query.not_contains("name", "Tom")
+```
+```server-deno
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```server-nodejs
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```server-php
+// For arrays
+Query::notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query::notContains("name", "Tom")
+```
+```server-dotnet
+// For arrays
+Query.NotContains("ingredients", new List<string> { "apple", "banana" })
+
+// For strings
+Query.NotContains("name", "Tom")
+```
+```server-go
+// For arrays
+query.NotContains("ingredients", []string{"apple", "banana"})
+
+// For strings
+query.NotContains("name", "Tom")
+```server-dart
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```server-swift
+// For arrays
+Query.notContains("ingredients", value: ['apple', 'banana'])
+
+// For strings
+Query.notContains("name", value: "Tom")
+```
+```server-kotlin
+// For arrays
+Query.notContains("ingredients", listOf("apple", "banana"))
+
+// For strings
+Query.notContains("name", "Tom")
+```
+```server-rust
+// For arrays
+Query::not_contains("ingredients", Value::Array(vec![
+    Value::String("apple".to_string()),
+    Value::String("banana".to_string()),
+])).to_string()
+
+// For strings
+Query::not_contains("name", "Tom").to_string()
+```
+```http
+# For arrays
+{"method":"notContains","attribute":"ingredients","values":["apple","banana"]}
+
+# For strings
+{"method":"notContains","attribute":"name","values":["Tom"]}
+```
+{% /multicode %}
+
+### Search {% #search %}
+
+Searches string fields for provided keywords. Requires a [full-text index](/docs/products/databases/documentsdb/collections#indexes) on queried fields.
+
+{% multicode %}
+```client-web
+Query.search("text", "key words")
+```
+```client-flutter
+Query.search("text", "key words")
+```
+```server-python
+Query.search("text", "key words")
+```
+```server-ruby
+Query.search("text", "key words")
+```
+```server-deno
+Query.search("text", "key words")
+```
+```server-php
+Query::search("text", "key words")
+```
+```client-apple
+Query.search("text", value: "key words")
+```
+```server-go
+query.Search("text", "key words")
+```
+```server-rust
+Query::search("text", "key words").to_string()
+```
+```http
+{"method":"search","attribute":"text","values":["key words"]}
+```
+{% /multicode %}
+
+### Not search {% #not-search %}
+
+Returns documents if a string field does not match the full-text search
+query. Requires a [full-text index](/docs/products/databases/documentsdb/collections#indexes)
+on queried fields.
+
+{% multicode %}
+```client-web
+Query.notSearch("text", "key words")
+```
+```client-flutter
+Query.notSearch("text", "key words")
+```
+```client-apple
+Query.notSearch("text", value: "key words")
+```
+```client-android-kotlin
+Query.notSearch("text", "key words")
+```
+```client-android-java
+Query.notSearch("text", "key words")
+```
+```server-python
+Query.not_search("text", "key words")
+```
+```server-ruby
+Query.not_search("text", "key words")
+```
+```server-deno
+Query.notSearch("text", "key words")
+```
+```server-nodejs
+Query.notSearch("text", "key words")
+```
+```server-php
+Query::notSearch("text", "key words")
+```
+```server-swift
+Query.notSearch("text", value: "key words")
+```
+```server-rust
+Query::not_search("text", "key words").to_string()
+```
+```http
+{"method":"notSearch","attribute":"text","values":["key words"]}
+```
+{% /multicode %}
+
+## Logical operators {% #logical-operators %}
+
+### AND {% #and %}
+
+Returns document if it matches all of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```client-flutter
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```server-python
+Query.and_queries([
+    Query.less_than("size", 10),
+    Query.greater_than("size", 5)
+])
+```
+```server-ruby
+Query.and([
+    Query.less_than("size", 10),
+    Query.greater_than("size", 5)
+])
+```
+```server-deno
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```server-php
+Query::and([
+    Query::lessThan("size", 10),
+    Query::greaterThan("size", 5)
+])
+```
+```client-apple
+Query.and([
+    Query.lessThan("size", value: 10),
+    Query.greaterThan("size", value: 5)
+])
+```
+```server-go
+query.And([]string{
+    query.LessThan("size", 10),
+    query.GreaterThan("size", 5),
+})
+```
+```server-rust
+Query::and(vec![
+    Query::less_than("size", 10).to_string(),
+    Query::greater_than("size", 5).to_string(),
+]).to_string()
+```
+```http
+{"method":"and","values":[{"method":"lessThan","attribute":"size","values":[10]},{"method":"greaterThan","attribute":"size","values":[5]}]}
+```
+{% /multicode %}
+
+### OR {% #or %}
+
+Returns document if it matches any of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```client-flutter
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```server-python
+Query.or_queries([
+    Query.less_than("size", 5),
+    Query.greater_than("size", 10)
+])
+```
+```server-ruby
+Query.or([
+    Query.less_than("size", 5),
+    Query.greater_than("size", 10)
+])
+```
+```server-deno
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```server-php
+Query::or([
+    Query::lessThan("size", 5),
+    Query::greaterThan("size", 10)
+])
+```
+```client-apple
+Query.or([
+    Query.lessThan("size", value: 5),
+    Query.greaterThan("size", value: 10)
+])
+```
+```server-go
+query.Or([]string{
+    query.LessThan("size", 5),
+    query.GreaterThan("size", 10),
+})
+```
+```server-rust
+Query::or(vec![
+    Query::less_than("size", 5).to_string(),
+    Query::greater_than("size", 10).to_string(),
+]).to_string()
+```
+```http
+{"method":"or","values":[{"method":"lessThan","attribute":"size","values":[5]},{"method":"greaterThan","attribute":"size","values":[10]}]}
+```
+{% /multicode %}
+
+## Ordering {% #ordering %}
+
+### Order descending {% #order-desc %}
+
+Orders results in descending order by field.
+
+{% multicode %}
+```client-web
+Query.orderDesc("field")
+```
+```client-flutter
+Query.orderDesc("field")
+```
+```server-python
+Query.order_desc("field")
+```
+```server-ruby
+Query.order_desc("field")
+```
+```server-nodejs
+Query.orderDesc("field")
+```
+```server-php
+Query::orderDesc("field")
+```
+```client-apple
+Query.orderDesc("field")
+```
+```server-go
+query.OrderDesc("attribute")
+```
+```server-rust
+Query::order_desc("field").to_string()
+```
+```http
+{"method":"orderDesc","attribute":"field"}
+```
+{% /multicode %}
+
+### Order ascending {% #order-asc %}
+
+Orders results in ascending order by field.
+
+{% multicode %}
+```client-web
+Query.orderAsc("field")
+```
+```client-flutter
+Query.orderAsc("field")
+```
+```server-python
+Query.order_asc("field")
+```
+```server-ruby
+Query.order_asc("field")
+```
+```server-nodejs
+Query.orderAsc("field")
+```
+```server-php
+Query::orderAsc("field")
+```
+```client-apple
+Query.orderAsc("field")
+```
+```server-go
+query.OrderAsc("attribute")
+```
+```server-rust
+Query::order_asc("field").to_string()
+```
+```http
+{"method":"orderAsc","attribute":"field"}
+```
+{% /multicode %}
+
+## Pagination {% #pagination %}
+
+### Limit {% #limit %}
+
+Limits the number of results returned by the query. Used for [pagination](/docs/products/databases/documentsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.limit(25)
+```
+```client-flutter
+Query.limit(25)
+```
+```server-python
+Query.limit(25)
+```
+```server-ruby
+Query.limit(25)
+```
+```server-deno
+Query.limit(25)
+```
+```server-php
+Query::limit(25)
+```
+```client-apple
+Query.limit(25)
+```
+```server-go
+query.Limit(25)
+```
+```server-rust
+Query::limit(25).to_string()
+```
+```http
+{"method":"limit","values":[25]}
+```
+{% /multicode %}
+
+### Offset {% #offset %}
+
+Offset the results returned by skipping some of the results. Used for [pagination](/docs/products/databases/documentsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.offset(0)
+```
+```client-flutter
+Query.offset(0)
+```
+```server-python
+Query.offset(0)
+```
+```server-ruby
+Query.offset(0)
+```
+```server-deno
+Query.offset(0)
+```
+```server-php
+Query::offset(0)
+```
+```client-apple
+Query.offset(0)
+```
+```server-go
+query.Offset(0)
+```
+```server-rust
+Query::offset(0).to_string()
+```
+```http
+{"method":"offset","values":[0]}
+```
+{% /multicode %}
+
+### Cursor after {% #cursor-after %}
+
+Places the cursor after the specified resource ID. Used for [pagination](/docs/products/databases/documentsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorAfter("62a7...f620")
+```
+```client-flutter
+Query.cursorAfter("62a7...f620")
+```
+```server-python
+Query.cursor_after("62a7...f620")
+```
+```server-ruby
+Query.cursor_after("62a7...f620")
+```
+```server-deno
+Query.cursorAfter("62a7...f620")
+```
+```server-php
+Query::cursorAfter("62a7...f620")
+```
+```client-apple
+Query.cursorAfter("62a7...f620")
+```
+```server-go
+query.CursorAfter("62a7...f620")
+```
+```server-rust
+Query::cursor_after("62a7...f620").to_string()
+```
+```http
+{"method":"cursorAfter","values":["62a7...f620"]}
+```
+{% /multicode %}
+
+### Cursor before {% #cursor-before %}
+
+Places the cursor before the specified resource ID. Used for [pagination](/docs/products/databases/documentsdb/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorBefore("62a7...a600")
+```
+```client-flutter
+Query.cursorBefore("62a7...a600")
+```
+```server-python
+Query.cursor_before("62a7...a600")
+```
+```server-ruby
+Query.cursor_before("62a7...a600")
+```
+```server-deno
+Query.cursorBefore("62a7...a600")
+```
+```server-php
+Query::cursorBefore("62a7...a600")
+```
+```client-apple
+Query.cursorBefore("62a7...a600")
+```
+```server-go
+query.CursorBefore("62a7...a600")
+```
+```server-rust
+Query::cursor_before("62a7...a600").to_string()
+```
+```http
+{"method":"cursorBefore","values":["62a7...a600"]}
+```
+{% /multicode %}
+
+# Time helpers {% #time-helpers %}
+
+Built-in helpers for filtering by creation and update timestamps using
+ISO 8601 date-time strings (for example, "2025-01-01T00:00:00Z").
+
+### Created before {% #created-before %}
+
+Returns documents created before the given date.
+
+{% multicode %}
+```client-web
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.created_before("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.created_before("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::createdBefore("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::created_before("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"createdBefore","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Created after {% #created-after %}
+
+Returns documents created after the given date.
+
+{% multicode %}
+```client-web
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.created_after("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.created_after("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::createdAfter("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::created_after("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"createdAfter","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Updated before {% #updated-before %}
+
+Returns documents updated before the given date.
+
+{% multicode %}
+```client-web
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.updated_before("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.updated_before("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::updated_before("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"updatedBefore","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Updated after {% #updated-after %}
+
+Returns documents updated after the given date.
+
+{% multicode %}
+```client-web
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.updated_after("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.updated_after("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::updated_after("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"updatedAfter","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+# Complex queries {% #complex-queries %}
+
+You can create complex queries by combining AND and OR operations. For example, to find items that are either books under $20 or magazines under $10:
+
+{% multicode %}
+```client-web
+const results = await documentsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.or([
+            Query.and([
+                Query.equal('category', ['books']),
+                Query.lessThan('price', 20)
+            ]),
+            Query.and([
+                Query.equal('category', ['magazines']),
+                Query.lessThan('price', 10)
+            ])
+        ])
+    ]
+});
+```
+```client-flutter
+final results = await documentsDB.listDocuments(
+    '<DATABASE_ID>',
+    '<COLLECTION_ID>',
+    [
+        Query.or([
+            Query.and([
+                Query.equal('category', ['books']),
+                Query.lessThan('price', 20)
+            ]),
+            Query.and([
+                Query.equal('category', ['magazines']),
+                Query.lessThan('price', 10)
+            ])
+        ])
+    ]
+);
+```
+```server-python
+results = documentsDB.list_documents(
+    database_id='<DATABASE_ID>',
+    collection_id='<COLLECTION_ID>',
+    queries=[
+        Query.or_queries([
+            Query.and_queries([
+                Query.equal('category', ['books']),
+                Query.less_than('price', 20)
+            ]),
+            Query.and_queries([
+                Query.equal('category', ['magazines']),
+                Query.less_than('price', 10)
+            ])
+        ])
+    ]
+)
+```
+```server-go
+documents, err := documentsDB.ListDocuments(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    documentsDB.WithListDocumentsQueries([]string{
+        query.Or([]string{
+            query.And([]string{
+                query.Equal("category", []string{"books"}),
+                query.LessThan("price", 20),
+            }),
+            query.And([]string{
+                query.Equal("category", []string{"magazines"}),
+                query.LessThan("price", 10),
+            }),
+        }),
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+```server-rust
+let documents = documents_db.list_documents(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    Some(vec![
+        Query::or(vec![
+            Query::and(vec![
+                Query::equal("category", Value::Array(vec![Value::String("books".to_string())])).to_string(),
+                Query::less_than("price", 20).to_string(),
+            ]).to_string(),
+            Query::and(vec![
+                Query::equal("category", Value::Array(vec![Value::String("magazines".to_string())])).to_string(),
+                Query::less_than("price", 10).to_string(),
+            ]).to_string(),
+        ]).to_string(),
+    ]),
+    None,
+    None,
+    None,
+).await?;
+```
+```http
+{"method":"or","values":[{"method":"and","values":[{"method":"equal","attribute":"category","values":["books"]},{"method":"lessThan","attribute":"price","values":[20]}]},{"method":"and","values":[{"method":"equal","attribute":"category","values":["magazines"]},{"method":"lessThan","attribute":"price","values":[10]}]}]}
+```
+{% /multicode %}
+
+This example demonstrates how to combine `OR` and `AND` operations. The query uses `Query.or()` to match either condition: books under $20 OR magazines under $10.
+Each condition within the OR is composed of two AND conditions - one for the category and one for the price threshold. The database will return documents that match either of these combined conditions.
+

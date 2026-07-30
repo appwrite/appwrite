@@ -25,13 +25,28 @@ import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
 import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
+import type { FirewallResourceSelection } from './_components/FirewallResourceSelector'
+
+function firewallListSearch(selection: FirewallResourceSelection) {
+  if (selection.resourceType === 'api') {
+    return { resourceType: 'api' as const }
+  }
+  return {
+    resourceType: selection.resourceType,
+    resourceId: selection.resourceId,
+  }
+}
 
 export function View() {
   const t = useT()
   const navigate = useNavigate()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const { resourceType: resourceScope = 'api' } = Route.useSearch()
+  const search = Route.useSearch()
+  const resourceSelection: FirewallResourceSelection = {
+    resourceType: search.resourceType ?? 'api',
+    resourceId: search.resourceId,
+  }
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -137,12 +152,12 @@ export function View() {
           <RulesList
             projectId={projectId}
             canWrite={canWrite}
-            resourceScope={resourceScope}
-            onResourceScopeChange={(next) => {
+            resourceSelection={resourceSelection}
+            onResourceSelectionChange={(next) => {
               void navigate({
                 to: '/projects/$projectId/firewall',
                 params: { projectId },
-                search: { resourceType: next },
+                search: firewallListSearch(next),
                 replace: true,
               })
             }}
@@ -152,7 +167,7 @@ export function View() {
               navigate({
                 to: '/projects/$projectId/firewall/create',
                 params: { projectId },
-                search: { resourceType: resourceScope },
+                search: firewallListSearch(resourceSelection),
               })
             }
           />

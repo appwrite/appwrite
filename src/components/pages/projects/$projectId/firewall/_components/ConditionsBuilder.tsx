@@ -1,31 +1,44 @@
 import { useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import {
+  AppWindow,
+  Building2,
   Fingerprint,
+  Globe,
   Globe2,
+  MapPin,
+  Monitor,
   Plus,
   Route,
+  SearchCode,
   Send,
+  Server,
+  Tags,
   Trash2,
   UserRound,
   type LucideIcon,
 } from 'lucide-react'
 import {
-  FIREWALL_CONDITION_ATTRIBUTES,
+  FIREWALL_CONDITION_ATTRIBUTE_GROUPS,
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
   getOperatorsForAttribute,
+  isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isPremiumAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -38,20 +51,37 @@ import {
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
-import { useCountries } from '@/lib/react-query/hooks'
+import {
+  useContinents,
+  useCountries,
+  useProjectAddons,
+} from '@/lib/react-query/hooks'
+import {
+  ADDON_KEY_PREMIUM_GEO_DB,
+  findActiveOrPendingAddon,
+} from '@/lib/billing/addons'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { ReactNode } from 'react'
 
 const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   ip: Fingerprint,
+  host: Server,
   path: Route,
   method: Send,
+  headers: Tags,
+  query: SearchCode,
   country: Globe2,
+  continent: Globe,
+  city: Building2,
+  state: MapPin,
+  os: Monitor,
+  browser: AppWindow,
   userAgent: UserRound,
 }
 
-/** Examples only. Never use bare `/` — it looks like a real value when the field is empty. */
+/** Examples only. Never use bare `/` - it looks like a real value when the field is empty. */
 const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
   api: 'e.g. /v1/account',
   functions: 'e.g. /api',
@@ -85,6 +115,37 @@ function RailLabel({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Key input for headers / query conditions. The API prefix (`headers.` /
+ * `query.`) is added automatically on submit.
+ */
+function ConditionKeyInput({
+  attribute,
+  value,
+  disabled,
+  onChange,
+}: {
+  attribute: 'headers' | 'query'
+  value: string
+  disabled?: boolean
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  return (
+    <Input
+      value={value}
+      disabled={disabled}
+      placeholder={
+        attribute === 'headers'
+          ? t('Key, e.g. x-custom-header')
+          : t('Key, e.g. token')
+      }
+      className="h-9 w-full font-mono text-[13px]"
+      onChange={(e) => onChange(e.target.value)}
+    />
+  )
+}
+
 function ConditionValueInput({
   attribute,
   operator,
@@ -102,6 +163,7 @@ function ConditionValueInput({
 }) {
   const t = useT()
   const { data: countriesData, isLoading: countriesLoading } = useCountries()
+  const { data: continentsData } = useContinents()
 
   const countryItems = useMemo(
     () =>
@@ -167,6 +229,41 @@ function ConditionValueInput({
         />
       )
 
+    case 'continent':
+      // Text-match operators need a free-text value, same as country.
+      if (isTextMatchOperator(operator)) {
+        return (
+          <Input
+            value={value}
+            disabled={disabled}
+            placeholder={t('e.g. EU')}
+            className="h-9 w-full font-mono text-[13px]"
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )
+      }
+      return (
+        <Select
+          value={value || undefined}
+          disabled={disabled}
+          onValueChange={onChange}
+        >
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue placeholder={t('Select a continent')} />
+          </SelectTrigger>
+          <SelectContent>
+            {(continentsData?.continents ?? []).map((continent) => (
+              <SelectItem
+                key={continent.code}
+                value={continent.code.toUpperCase()}
+              >
+                {continent.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )
+
     case 'path':
       return (
         <Input
@@ -179,11 +276,71 @@ function ConditionValueInput({
       )
 
     case 'ip':
+      // CIDR blocks only match on equal / not equal server-side.
       return (
         <Input
           value={value}
           disabled={disabled}
-          placeholder="203.0.113.10"
+          placeholder={
+            isTextMatchOperator(operator)
+              ? t('e.g. 203.0.113.10')
+              : t('e.g. 203.0.113.10 or CIDR range 203.0.113.0/24')
+          }
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'host':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. api.example.com')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'city':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. London')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'state':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. California')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'os':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. Windows')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'browser':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. Chrome')}
           className="h-9 w-full font-mono text-[13px]"
           onChange={(e) => onChange(e.target.value)}
         />
@@ -195,6 +352,18 @@ function ConditionValueInput({
           value={value}
           disabled={disabled}
           placeholder={t('e.g. curl/8.0')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'headers':
+    case 'query':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('Value')}
           className="h-9 w-full font-mono text-[13px]"
           onChange={(e) => onChange(e.target.value)}
         />
@@ -229,6 +398,20 @@ export function ConditionsBuilder({
     action != null && (onActionChange != null || actionReadOnly)
   const pathPlaceholder = PATH_PLACEHOLDERS[resourceType] ?? 'e.g. /v1/account'
 
+  // Premium geo attributes (city / state) are only selectable when the project
+  // has the Premium Geo DB addon active - the API rejects them otherwise.
+  // Profiles without billing (self-hosted) have no addon gating.
+  const { features } = useConsoleProfile()
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string | undefined
+  const { addons } = useProjectAddons(
+    features.billing ? (projectId ?? null) : null,
+  )
+  const premiumGeoEnabled =
+    !features.billing ||
+    findActiveOrPendingAddon(addons, ADDON_KEY_PREMIUM_GEO_DB)?.status ===
+      'active'
+
   const updateAt = (index: number, patch: Partial<FirewallConditionDraft>) => {
     // Functional update so rapid typing never applies against a stale conditions array.
     onChange((prev) =>
@@ -255,8 +438,9 @@ export function ConditionsBuilder({
           ...condition,
           attribute,
           operator: nextOperator,
-          // Clear value when switching attribute; method/country need discrete picks.
+          // Clear value/key when switching attribute; method/country need discrete picks.
           value: '',
+          key: '',
         }
       }),
     )
@@ -327,11 +511,36 @@ export function ConditionsBuilder({
                             </span>
                           </SelectTrigger>
                           <SelectContent>
-                            {FIREWALL_CONDITION_ATTRIBUTES.map((attr) => (
-                              <SelectItem key={attr.value} value={attr.value}>
-                                {t(attr.label)}
-                              </SelectItem>
-                            ))}
+                            {FIREWALL_CONDITION_ATTRIBUTE_GROUPS.map(
+                              (group) => (
+                                <SelectGroup key={group.label}>
+                                  <SelectLabel>{t(group.label)}</SelectLabel>
+                                  {group.attributes.map((attr) => {
+                                    const premiumLocked =
+                                      isPremiumAttribute(attr.value) &&
+                                      !premiumGeoEnabled
+                                    return (
+                                      <SelectItem
+                                        key={attr.value}
+                                        value={attr.value}
+                                        disabled={premiumLocked}
+                                      >
+                                        <span className="flex items-center gap-2">
+                                          {t(attr.label)}
+                                          {isPremiumAttribute(attr.value) ? (
+                                            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                              {premiumLocked
+                                                ? t('Premium Geo DB required')
+                                                : t('Premium')}
+                                            </span>
+                                          ) : null}
+                                        </span>
+                                      </SelectItem>
+                                    )
+                                  })}
+                                </SelectGroup>
+                              ),
+                            )}
                           </SelectContent>
                         </Select>
 
@@ -357,7 +566,34 @@ export function ConditionsBuilder({
                         </Select>
                       </div>
 
-                      {isNoValueOperator(condition.operator) ? null : (
+                      {isDynamicKeyAttribute(condition.attribute) ? (
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <ConditionKeyInput
+                              attribute={condition.attribute}
+                              value={condition.key ?? ''}
+                              disabled={disabled}
+                              onChange={(nextKey) =>
+                                updateAt(index, { key: nextKey })
+                              }
+                            />
+                          </div>
+                          {isNoValueOperator(condition.operator) ? null : (
+                            <div className="min-w-0 flex-1">
+                              <ConditionValueInput
+                                attribute={condition.attribute}
+                                operator={condition.operator}
+                                value={condition.value}
+                                disabled={disabled}
+                                pathPlaceholder={pathPlaceholder}
+                                onChange={(nextValue) =>
+                                  updateAt(index, { value: nextValue })
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ) : isNoValueOperator(condition.operator) ? null : (
                         <ConditionValueInput
                           attribute={condition.attribute}
                           operator={condition.operator}

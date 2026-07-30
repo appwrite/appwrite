@@ -1,0 +1,201 @@
+---
+layout: article
+title: Indexes
+description: Speed up MySQL queries with B-tree, composite, prefix, functional, and invisible indexes, and read EXPLAIN ANALYZE output.
+---
+
+An index is a sorted data structure the database maintains next to a table so it can find rows without scanning everything. Reads get faster; writes pay a small tax to keep each index current. Knowing when an index helps, and how to confirm it's being used, is the highest-leverage performance skill in SQL.
+
+# Setup {% #setup %}
+
+Index behavior only shows up with enough data on the table, so the setup seeds 100,000 users to give the query optimizer a real choice to make:
+
+```sql
+CREATE TABLE users (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email      VARCHAR(255) NOT NULL,
+    country    CHAR(2) NOT NULL,
+    created_at DATETIME NOT NULL
+);
+
+SET SESSION cte_max_recursion_depth = 100000;
+
+INSERT INTO users (email, country, created_at)
+WITH RECURSIVE seq (n) AS (
+    SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < 100000
+)
+SELECT CONCAT('user', n, '@example.com'),
+       ELT(1 + n % 4, 'DE', 'US', 'IN', 'BR'),
+       NOW() - INTERVAL n MINUTE
+FROM seq;
+
+ANALYZE TABLE users;
+```
+
+`ANALYZE TABLE` refreshes the statistics the optimizer uses to estimate row counts. InnoDB updates them automatically in the background; running it manually after a bulk load just avoids waiting.
+
+# How an index works {% #how-it-works %}
+
+{% only_dark %}
+![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/dark/index-lookup.avif)
+{% /only_dark %}
+{% only_light %}
+![Index lookup: binary search over the sorted index, entry pointing to the table row](/images/docs/products/databases/concepts/index-lookup.avif)
+{% /only_light %}
+
+Table rows are stored in no order useful for searching an arbitrary column, so answering `WHERE email = '...'` without an index means reading every row and checking each one. The work grows with the table: ten times the rows, ten times the reads.
+
+A **B-tree** (balanced tree) is the data structure indexes use to fix this. It keeps every value of the indexed column in **sorted order**, stored as a tree of small pages: the top page holds a few boundary values that direct the search into one of its child pages, each child narrows the range further, and the bottom layer, the leaves, holds the actual values with pointers back to their rows. Sorted order is what makes searching cheap:
+
+- The database starts in the middle of the index, checks whether the target value sorts before or after that point, and discards the half that cannot contain it. Repeating this takes a handful of steps even on millions of rows.
+- Equal values sit next to each other, so one descent lands on every matching entry at once.
+- The same sorted order answers range conditions (`<`, `BETWEEN`) and returns rows already sorted for `ORDER BY`.
+
+Indexes have a price: each one is a second copy of the column that must be kept correct, so every insert, update, and delete on the table also rewrites part of every index. They trade write work and disk space for read speed, which is why you add them for the queries you actually run rather than on every column.
+
+# Reading EXPLAIN ANALYZE {% #explain %}
+
+Before adding indexes, you need to see what the database is currently doing. Prefix any query with `EXPLAIN ANALYZE` and instead of returning its result, the database runs it and reports the plan it used:
+
+```sql
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'user4242@example.com';
+```
+
+```text
+-> Filter: (users.email = 'user4242@example.com')  (cost=10092 rows=9988) (actual time=0.589..13.2 rows=1 loops=1)
+    -> Table scan on users  (cost=10092 rows=99882) (actual time=0.0314..8.87 rows=100000 loops=1)
+```
+
+The tree reads bottom-up:
+
+- **Table scan on users** is the chosen strategy: read the table start to finish. Its `actual ... rows=100000` shows all 100,000 rows were produced.
+- **Filter** receives those rows and checks the condition against each one; its `rows=1` shows only one survived.
+- **actual time=0.589..13.2** is when the first and last row were produced, in milliseconds. The `cost` and estimated `rows` numbers are the optimizer's internal estimates, not measurements.
+
+Exact numbers will differ on your database; the plan shape is what matters, and this shape, an entire table read to return one row, is the signal that an index would help. Plain `EXPLAIN` without `ANALYZE` shows the plan without executing the query, which is safer for slow queries and writes.
+
+# Create an index {% #create %}
+
+`CREATE INDEX` builds the structure from the table's existing rows and keeps it maintained on every future write. Rerunning the earlier query shows the optimizer picking it up immediately:
+
+```sql
+CREATE INDEX idx_users_email ON users (email);
+
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'user4242@example.com';
+```
+
+```text
+-> Index lookup on users using idx_users_email (email='user4242@example.com')  (cost=0.35 rows=1) (actual time=0.011..0.0116 rows=1 loops=1)
+```
+
+The plan flipped to an `Index lookup`, and execution time dropped from milliseconds to microseconds.
+
+One B-tree index serves several kinds of conditions on its column:
+
+- equality: `=` and `IN`
+- ranges: `<`, `>`, `BETWEEN`
+- sorting: `ORDER BY`
+- prefix patterns like `LIKE 'user42%'`
+
+Primary keys and `UNIQUE` constraints create indexes automatically, so don't add duplicates for those columns. In InnoDB the primary key is special: the table's rows are physically stored in primary-key order (the clustered index), and every secondary index entry carries the primary key to locate the row.
+
+# Composite indexes and column order {% #composite %}
+
+An index on multiple columns is sorted by the first column, then the second within it, like a phone book sorted by last name, then first name. Column order decides which queries it serves:
+
+```sql
+CREATE INDEX idx_users_email_created ON users (email, created_at);
+```
+
+This index answers `WHERE email = ...`, and `WHERE email = ... AND created_at > ...`, but a filter on `created_at` alone can't use the sorted order because entries for every email are interleaved:
+
+```sql
+EXPLAIN FORMAT=TREE SELECT * FROM users WHERE created_at > NOW() - INTERVAL 1 DAY;
+```
+
+```text
+-> Filter: (users.created_at > <cache>((now() - interval 1 day)))  (cost=3433 rows=33291)
+    -> Table scan on users  (cost=3433 rows=99882)
+```
+
+Rule of thumb: put equality-filtered columns first and range-filtered columns last. If you also query `created_at` on its own, that's a separate index.
+
+# Covering indexes {% #covering %}
+
+A normal index lookup is two steps: find the matching entries in the index, then fetch each matching row from the table to read the other columns. That second step is the expensive part, and it's unnecessary when the query only asks for columns the index already stores.
+
+This query selects only `email`, and the index contains `email`, so the answer comes straight out of the index:
+
+```sql
+EXPLAIN ANALYZE SELECT email FROM users WHERE email = 'user4242@example.com';
+```
+
+```text
+-> Covering index lookup on users using idx_users_email (email='user4242@example.com')  (cost=1.1 rows=1) (actual time=0.00846..0.01 rows=1 loops=1)
+```
+
+**Covering index lookup** in the plan confirms the table was read zero times; an index that satisfies a query this way is called a covering index. Because every secondary index in InnoDB already includes the primary key, a query selecting only `id` and indexed columns is covered for free.
+
+# Prefix indexes {% #prefix %}
+
+Long string columns make large indexes. A prefix index stores only the first n characters, trading a little selectivity for a much smaller structure:
+
+```sql
+CREATE INDEX idx_users_email_prefix ON users (email(12));
+```
+
+Pick a prefix length long enough to stay selective; check with `SELECT COUNT(DISTINCT LEFT(email, 12)) / COUNT(*) FROM users;`, aiming close to 1. Prefix indexes can't serve covering lookups or `ORDER BY`, since the index doesn't hold the full value.
+
+# Functional indexes {% #functional %}
+
+Indexing an expression makes queries on that expression fast:
+
+```sql
+CREATE INDEX idx_users_email_lower ON users ((LOWER(email)));
+
+EXPLAIN FORMAT=TREE SELECT * FROM users WHERE LOWER(email) = 'user4242@example.com';
+```
+
+```text
+-> Index lookup on users using idx_users_email_lower (lower(email)='user4242@example.com')  (cost=0.35 rows=1)
+```
+
+The query's expression must match the indexed expression exactly. Note the double parentheses in the `CREATE INDEX` syntax; they mark the key part as an expression.
+
+# Invisible indexes {% #invisible %}
+
+An invisible index is maintained on writes but ignored by the optimizer. It's the safe way to test dropping an index: make it invisible, watch your query performance, then drop it for real or flip it back:
+
+```sql
+ALTER TABLE users ALTER INDEX idx_users_email_lower INVISIBLE;
+-- observe workload ...
+ALTER TABLE users ALTER INDEX idx_users_email_lower VISIBLE;
+```
+
+Creating a new index as `INVISIBLE` first also lets you verify plans with targeted queries before exposing it to the whole workload.
+
+# Beyond B-tree {% #other-types %}
+
+| Type | Use for |
+| --- | --- |
+| B-tree | Equality and ranges on scalar values (default, InnoDB) |
+| `FULLTEXT` | Natural-language search over text columns |
+| `SPATIAL` | Geometric data in spatial columns |
+| Multi-valued | Entries inside JSON arrays, via `CAST(... AS ... ARRAY)` |
+
+A `FULLTEXT` index enables `MATCH ... AGAINST` relevance search, which behaves very differently from `LIKE '%word%'` and deserves its own evaluation before you rely on it.
+
+# The cost of indexes {% #cost %}
+
+Every index consumes disk and slows every `INSERT`, `UPDATE`, and `DELETE` on the table, because each write updates each index. Check what your indexes weigh:
+
+```sql
+ANALYZE TABLE users;   -- refresh stats so the sizes are current
+
+SELECT ROUND(data_length / 1024 / 1024, 1)  AS table_mb,
+       ROUND(index_length / 1024 / 1024, 1) AS indexes_mb
+FROM information_schema.TABLES
+WHERE table_schema = DATABASE() AND table_name = 'users';
+```
+
+Index the queries you actually run, verify each index earns its keep with `EXPLAIN`, and drop (or first hide) the ones that don't. To find slow queries worth indexing in the first place, see [Monitoring](/docs/products/databases/mysql/monitoring).

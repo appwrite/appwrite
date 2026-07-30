@@ -3,6 +3,7 @@ layout: post
 title: Integrate any external authentication solution into your Appwrite project
 description: Add any custom authentication flow to your applications.
 date: 2024-05-30
+lastUpdated: 2026-06-29
 cover: /images/blog/integrate-custom-auth-sveltekit/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -146,7 +147,7 @@ async function authLogic(email, password) {
         if (password === '123456') {
             return await getUser(email);
         } else {
-	        returns null;
+            return null;
         }
     } catch (err) {
         console.error(err);
@@ -262,7 +263,9 @@ We will create a file `./src/routes/+page.svelte` and add the following code:
 		token = '';
 		session = '';
 		currentState = state[0];
-		await account.deleteSession('current');
+		await account.deleteSession({
+			sessionId: 'current'
+		});
 	}
 
 	onMount(async () => {
@@ -317,5 +320,5 @@ And with that, our demo project to try custom token authentication in Appwrite i
 
 Additionally, if you would like to learn more about Appwrite Auth, here are some resources:
 
-- [Appwrite Auth docs](https://appwrite.io/docs/products/auth): These documents provide more information on how to use Appwrite Auth.
+- [Appwrite Auth docs](https://appwrite.io/docs/products/auth): Learn more about how to use Appwrite Auth.
 - [Appwrite Discord](https://discord.com/invite/appwrite): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

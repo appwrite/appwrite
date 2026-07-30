@@ -3,6 +3,7 @@ layout: post
 title: "Predicting your developer destiny: how I built the AI Crystal Ball"
 description: How I used Appwrite, OpenAI, GitHub, and SvelteKit to develop an AI prank app.
 date: 2024-05-10
+lastUpdated: 2026-06-29
 cover: /images/blog/ai-crystal-ball/cover.avif
 timeToRead: 9
 author: aditya-oberai
@@ -17,7 +18,7 @@ faqs:
   - question: "How do I prevent abuse of an OpenAI API key on the frontend?"
     answer: "Never call OpenAI directly from the client. Instead, expose your own endpoint via an [Appwrite Function](/docs/products/functions) that holds the API key server-side, validates the authenticated user, and applies rate limits. The client only ever talks to your function, not to OpenAI."
   - question: "How do permissions work for the shareable destiny link?"
-    answer: "The `destiny` collection in the post grants `read` permission to `Any` and `create` permission to `Users`, so any anonymous visitor can read a destiny by document ID but only logged-in users can create new ones. This is the standard Appwrite permission pattern for share links."
+    answer: "The `destiny` table in the post grants `read` permission to `Any` and `create` permission to `Users`, so any anonymous visitor can read a destiny by row ID but only logged-in users can create new ones. This is the standard Appwrite permission pattern for share links."
   - question: "Can I build this entirely without writing my own backend?"
     answer: "Largely yes. [Appwrite Functions](/docs/products/functions) hosts the OpenAI call, [Appwrite Databases](/docs/products/databases) stores the data, and [Appwrite Auth](/docs/products/auth) handles GitHub OAuth. The only piece you write is the SvelteKit frontend and the single function that talks to GPT-4."
 ---
@@ -33,7 +34,7 @@ In order to build this application, we have a few prerequisites. We must set up 
 - OpenAI API key
 - GitHub OAuth app
 - Appwrite OAuth adapter for GitHub
-- Appwrite collections to store GitHub data and destinies
+- Appwrite tables to store GitHub data and destinies
 
 ## OpenAI
 
@@ -72,35 +73,35 @@ To implement GitHub OAuth, we must visit the **Auth** page on the Appwrite proje
 
 ## Appwrite Database
 
-We must create a database with the ID `crystalball` and two collections with the IDs `githubData` and `destiny` in the Appwrite project with the following details:
+We must create a database with the ID `crystalball` and two tables with the IDs `githubData` and `destiny` in the Appwrite project with the following details:
 
-#### The `githubData` collection
+#### The `githubData` table
 
-Create the collection and add the following attributes:
+Create the table and add the following columns:
 
 | Key | Type | Size | Required | Array |
 | --- | --- | --- | --- | --- |
-| languages | String | 2000 | - | Yes |
+| languages | Text | - | - | Yes |
 | followers | Integer | - | Yes | - |
 | following | Integer | - | Yes | - |
-| username | String | 255 | Yes | - |
+| username | Varchar | 255 | Yes | - |
 
-Visit the collection settings, enable **Document security,** and set the following (collection-level) **Permissions**:
+Visit the table settings, enable **Row security,** and set the following (table-level) **Permissions**:
 
 | Role | Create | Read | Update | Delete |
 | --- | --- | --- | --- | --- |
 | Users | Yes | - | - | - |
 
-#### The `destiny` collection
+#### The `destiny` table
 
-Create the collection and add the following attributes:
+Create the table and add the following columns:
 
 | Key | Type | Size | Required |
 | --- | --- | --- | --- |
-| destiny | String | 25000 | Yes |
-| username | String | 255 | Yes |
+| destiny | MediumText | - | Yes |
+| username | Varchar | 255 | Yes |
 
-Visit the collection settings, enable **Document security,** and set the following (collection-level) **Permissions**:
+Visit the table settings, enable **Row security,** and set the following (table-level) **Permissions**:
 
 | Role | Create | Read | Update | Delete |
 | --- | --- | --- | --- | --- |
@@ -136,15 +137,15 @@ Lastly, we must create a `.env` file at the root of the directory and add the fo
 PUBLIC_APPWRITE_ENDPOINT=
 PUBLIC_APPWRITE_PROJECT_ID=
 PUBLIC_APPWRITE_DATABASE_ID=
-PUBLIC_APPWRITE_COLLECTION_ID_GITHUBDATA=
-PUBLIC_APPWRITE_COLLECTION_ID_DESTINY=
+PUBLIC_APPWRITE_TABLE_ID_GITHUBDATA=
+PUBLIC_APPWRITE_TABLE_ID_DESTINY=
 SECRET_OPENAI_API_KEY=
 ```
 
 After the environment variables are created, we can set up the Appwrite SDK by creating a file `./src/lib/appwrite.js` and adding the following:
 
 ```js
-import { Client, Account, Databases, OAuthProvider } from 'appwrite';
+import { Client, Account, TablesDB, OAuthProvider } from 'appwrite';
 import { env } from '$env/dynamic/public';
 
 const client = new Client()
@@ -152,7 +153,7 @@ const client = new Client()
     .setProject(env.PUBLIC_APPWRITE_PROJECT_ID);
 
 export const account = new Account(client);
-export const databases = new Databases(client);
+export const tablesDB = new TablesDB(client);
 export { OAuthProvider };
 ```
 
@@ -281,23 +282,23 @@ export const github = {
 }
 ```
 
-At this point, we also want to create our Database library using the Appwrite SDK, so that we can store the information from the GitHub API. For that, we shall create a file `./src/lib/databases.js` and add the following:
+At this point, we also want to create our database library using the Appwrite SDK, so that we can store the information from the GitHub API. For that, we shall create a file `./src/lib/databases.js` and add the following:
 
 ```js
 import { Permission, Role, ID } from 'appwrite';
-import { databases } from './appwrite';
+import { tablesDB } from './appwrite';
 import { env } from '$env/dynamic/public';
 
 const databaseId = env.PUBLIC_APPWRITE_DATABASE_ID;
-const githubDataCollectionId = env.PUBLIC_APPWRITE_COLLECTION_ID_GITHUBDATA;
+const githubDataTableId = env.PUBLIC_APPWRITE_TABLE_ID_GITHUBDATA;
 
 export const db = {
-    getUserData: async(documentId) => {
+    getUserData: async(rowId) => {
         try{
-            return await databases.getDocument({
+            return await tablesDB.getRow({
                 databaseId,
-                collectionId: githubDataCollectionId,
-                documentId
+                tableId: githubDataTableId,
+                rowId
             });
         } catch(err){
             return false;
@@ -305,10 +306,10 @@ export const db = {
     },
 
     addUserData: async(userId, username, followers, following, languages) => {
-        return await databases.createDocument({
+        return await tablesDB.createRow({
             databaseId,
-            collectionId: githubDataCollectionId,
-            documentId: userId,
+            tableId: githubDataTableId,
+            rowId: userId,
             data: {
                 username,
                 followers,
@@ -511,47 +512,41 @@ Since our UI has already been prepared in the previous step, we need not make an
 
 ## Storing and sharing the destiny
 
-Lastly, to share our destiny with the rest of the world, we must create an additional page that gets destiny data from the Appwrite Database and displays it. For this, we must first add functions to add and get destinies from the Appwrite Database to our Database library. To do so, we visit `./src/lib/databases/js` and add the following functions to our export:
+Lastly, to share our destiny with the rest of the world, we must create an additional page that gets destiny data from the Appwrite Database and displays it. For this, we must first add functions to add and get destinies from the Appwrite Database to our Database library. To do so, we visit `./src/lib/databases.js` and add the following functions to our export:
 
 ```js
-.
-.
-.
-const destinyCollectionId = env.PUBLIC_APPWRITE_COLLECTION_ID_DESTINY;
+const destinyTableId = env.PUBLIC_APPWRITE_TABLE_ID_DESTINY;
 
-export const db = {**
-.
-.
-.
-		addDestiny: async(username, destiny) => {
-		    return await databases.createDocument({
-		        databaseId,
-		        collectionId: destinyCollectionId,
-		        documentId: ID.unique(),
-		        data: {
-		            username,
-		            destiny
-		        }
-		    })
-		},
+export const db = {
+    // Existing getUserData and addUserData functions
 
-		getDestiny: async(documentId) => {
-		    try{
-		        return await databases.getDocument({
-		            databaseId,
-		            collectionId: destinyCollectionId,
-		            documentId
-		        });
-		    } catch(err){
-		        return {
-		            username: 'Not found',
-		            destiny: 'Not found'
-		        }
-		    }
-		}
-.
-.
-.
+    addDestiny: async (username, destiny) => {
+        return await tablesDB.createRow({
+            databaseId,
+            tableId: destinyTableId,
+            rowId: ID.unique(),
+            data: {
+                username,
+                destiny
+            }
+        });
+    },
+
+    getDestiny: async (rowId) => {
+        try {
+            return await tablesDB.getRow({
+                databaseId,
+                tableId: destinyTableId,
+                rowId
+            });
+        } catch (err) {
+            return {
+                username: 'Not found',
+                destiny: 'Not found'
+            };
+        }
+    }
+};
 ```
 
 After that, we will create a new directory `./src/routes/destiny/[slug]` and add the following

@@ -3,6 +3,7 @@ layout: post
 title: "How to use Appwrite's Server SDK vs Client SDK"
 description: Understand the difference between Appwrite's Client and Server SDKs, when to use each one, and how to avoid common security mistakes in your app.
 date: 2026-03-26
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-server-sdk-vs-client-sdk/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -64,7 +65,10 @@ const account = new Account(client);
 const tablesDB = new TablesDB(client);
 
 // Log in
-await account.createEmailPasswordSession("user@example.com", "password");
+await account.createEmailPasswordSession({
+    email: "user@example.com",
+    password: "password"
+});
 
 // Read data, scoped to what this user can access
 const docs = await tablesDB.listRows({

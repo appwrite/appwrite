@@ -32,11 +32,11 @@ client
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
-const promise = teams.create(
-    'teachers',
-    'Teachers',
-    ['maths', 'sciences', 'arts', 'literature']
-);
+const promise = teams.create({
+    teamId: 'teachers',
+    name: 'Teachers',
+    roles: ['maths', 'sciences', 'arts', 'literature']
+});
 
 promise.then(function (response) {
     console.log(response); // Success
@@ -120,11 +120,11 @@ client
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
-const promise = teams.createMembership(
-    'teachers',
-    ["maths"],
-    "david@example.com"
-    );
+const promise = teams.createMembership({
+    teamId: 'teachers',
+    roles: ["maths"],
+    email: "david@example.com"
+});
 
 promise.then(function (response) {
     console.log(response); // Success
@@ -230,4 +230,3 @@ These details can be made private:
 - `userName` - The member's name
 - `userEmail` - The member's email address
 - `mfa` - Whether the member has enabled multi-factor authentication
-

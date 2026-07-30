@@ -1,0 +1,148 @@
+---
+layout: article
+title: CSV imports
+description: Master row imports with Appwrite's CSV Import feature. Learn how to create rows within your tables by uploading a CSV file.
+---
+
+Appwrite's CSV Import feature allows you to create multiple rows in a table by uploading a single CSV file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems.
+
+This feature is available in both Appwrite Cloud and the self-hosted version.
+
+# Prepare your table {% #prepare-table %}
+
+To get started, create a table in your database and define its columns. Your CSV file must match the structure of this table. All required columns must be present in the CSV. Each row is validated before being imported.
+
+Each column in the CSV should map to a column key in your table, and each row should represent a new row.
+
+{% info title="Good to know" %}
+You can optionally include the `$id` column to define custom row IDs. If not provided, Appwrite will generate unique IDs for each row automatically.
+
+Appwrite imports rows in batches of 100 rows at a time. If a provided ID already exists in the table, the entire batch containing that row will fail, but rows in other batches will continue to be imported successfully.
+{% /info %}
+
+An example of a valid CSV file for a table with the following columns:
+- `title` (string)
+- `author` (string)
+- `year` (integer)
+- `available` (boolean)
+
+```text
+$id,title,author,year,available
+f3k91x8b2q,Harry Potter and the Sorcerer's Stone,J.K. Rowling,1997,true
+mz7lq3dp5c,The Fellowship of the Ring,J.R.R. Tolkien,1954,true
+x0v4p8ncq2,To Kill a Mockingbird,Harper Lee,1960,false
+```
+
+# Empty values {% #empty-values %}
+
+Different column types handle empty values differently:
+
+- **Text columns (varchar, text, mediumtext, longtext):** Empty values are interpreted as empty strings. To add null values to a text column, use the value `null` without quotes.
+- **Integer columns:** Empty values are interpreted as `null`.
+- **Boolean columns:** Empty values are interpreted as `null`.
+- **Array of any type:** Empty values are interpreted as empty arrays.
+
+# Create and update timestamps {% #created-at-and-updated-at %}
+
+You can also optionally include `$createdAt` and `$updatedAt` columns to set custom timestamps for imported rows. If omitted, Appwrite sets these automatically during import.
+
+An example of a valid CSV file with `$createdAt` and `$updatedAt` timestamps:
+
+```text
+$id,$createdAt,$updatedAt,title,author,year,available
+f3k91x8b2q,2025-08-10T12:34:56.000Z,2025-08-10T12:34:56.000Z,Harry Potter and the Sorcerer's Stone,J.K. Rowling,1997,true
+mz7lq3dp5c,2025-08-11T09:15:00.000Z,2025-08-11T10:00:00.000Z,The Fellowship of the Ring,J.R.R. Tolkien,1954,true
+x0v4p8ncq2,2025-08-12T08:00:00.000Z,2025-08-12T08:30:00.000Z,To Kill a Mockingbird,Harper Lee,1960,false
+```
+
+{% info title="Timestamps format" %}
+`$createdAt` and `$updatedAt` must be valid ISO 8601 date-time strings, for example: `2025-08-10T12:34:56.000Z`.
+{% /info %}
+
+# Arrays {% #arrays %}
+
+You can also include data for array columns in your CSV file. For any column configured as an array, you can include a comma-separated list of values within double quotes (`"one,two"`).
+
+An example of a valid CSV file with an array column:
+
+```text
+$id,title,author,year,available,categories
+f3k91x8b2q,Harry Potter and the Sorcerer's Stone,J.K. Rowling,1997,true,"fiction,fantasy"
+mz7lq3dp5c,The Fellowship of the Ring,J.R.R. Tolkien,1954,true,"fiction,fantasy"
+x0v4p8ncq2,To Kill a Mockingbird,Harper Lee,1960,false,"fiction,nonfiction"
+```
+
+# Relationships {% #relationships %}
+
+If you want to create relationships between rows in different tables, you can provide the `$id` of the related row in the related table.
+
+An example of a valid CSV file with relationships between tables where `related_id` is the `$id` of the related row in the related table:
+
+```text
+$id,title,author,year,related_id
+f3k91x8b2q,Harry Potter and the Sorcerer's Stone,J.K. Rowling,1997,id_1
+mz7lq3dp5c,The Fellowship of the Ring,J.R.R. Tolkien,1954,id_2
+x0v4p8ncq2,To Kill a Mockingbird,Harper Lee,1960,id_3
+```
+
+# Permissions {% #permissions %}
+
+You can set permissions for rows in your CSV file by adding data for the `$permissions` column. Make sure row-level security is enabled for your table.
+
+An example of a valid permissions string:
+
+```text
+"read(""any""),update(""users""),delete(""user:user_id"")"
+```
+
+The roles used are API strings that can be found in the [permissions documentation](/docs/apis/rest#roles).
+
+A full example of a valid CSV file with row permissions:
+
+```text
+name,$id,$permissions
+blog-post-1,post-1,"read(""any""),update(""user:user_id""),delete(""user:user_id"")"
+blog-post-2,post-2,"read(""guests""),update(""user:user_id"")"
+blog-post-3,post-3,"read(""users""),update(""user:user_id""),delete(""user:user_id"")"
+blog-post-4,post-4,"read(""any""),update(""team:team_id""),delete(""team:team_id"")"
+```
+
+# Special characters {% #special-characters %}
+
+If your CSV file contains characters like double quotes (`"`) or commas (`,`), you need to escape them. 
+
+## Comma
+
+There are different ways to escape commas based on different scenarios.
+
+- If your column type is a **text type** (varchar, text, mediumtext, or longtext), you can enclose the value in double quotes (`"comma,used,here"`).
+- If your column type is a **text type array** (varchar, text, mediumtext, or longtext), you need to escape double quotes within the array to use a comma (`"one,two,""comma,allowed,here"""`).
+
+
+## Double quotes
+
+If you want to add double quotes to a text column (varchar, text, mediumtext, or longtext), you need to escape them by doubling them (`""`), otherwise it will be treated as an array.
+
+# Import rows from the Console {% #import-console %}
+
+To import rows using the Appwrite Console:
+
+1. Go to your project -> Databases
+2. Navigate to your target Table
+3. Click on the **Import CSV** button in the action area
+4. Upload a new CSV file or choose an existing file from your Storage bucket
+
+{% only_dark %}
+![CSV import screen](/images/docs/databases/dark/csv-import.avif)
+{% /only_dark %}
+{% only_light %}
+![CSV import screen](/images/docs/databases/csv-import.avif)
+{% /only_light %}
+
+CSV imports run as background tasks. The Console displays a floating progress bar while the import is active.
+
+# Additional resources {% #additional-resources %}
+
+- [Appwrite CLI](/docs/command-line)
+- [Database Permissions](/docs/products/databases/permissions)
+- [TablesDB API Reference](/docs/references/cloud/client-web/tablesDB)

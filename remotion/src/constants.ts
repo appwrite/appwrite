@@ -40,7 +40,7 @@ export const BRAND = {
   logoGray: '#c4c6d7',
 } as const
 
-/** Left content column — matches cover generator `COVER_CONTENT_X` scaled to 1920. */
+/** Left content column - matches cover generator `COVER_CONTENT_X` scaled to 1920. */
 export const CONTENT_X = 154
 
 export const INTRODUCING_TITLE = 'Introducing'
@@ -56,7 +56,7 @@ export const SLOGAN = 'Build like a team of hundreds'
 export const AREA_VIDEO_SRC = 'videos/area.mp4'
 export const CONSOLE_SCREENSHOT_VIDEO_SRC = 'videos/console-main.mp4'
 export const EXPLORER_VIDEO_SRC = 'videos/explorer.mp4'
-/** Native explorer recording size — used to size the split-layout browser frame. */
+/** Native explorer recording size - used to size the split-layout browser frame. */
 export const EXPLORER_VIDEO_WIDTH = 1724
 export const EXPLORER_VIDEO_HEIGHT = 1080
 export const EXPLORER_VIDEO_CONTENT_ASPECT =
@@ -64,7 +64,7 @@ export const EXPLORER_VIDEO_CONTENT_ASPECT =
 
 /** Seconds of screen recording per feature beat. Replace clips in FEATURE_CLIPS when ready. */
 export const FEATURE_CLIP_PLAY_FRAMES = 240
-/** API explorer hold — longer so the screen recording can play through. */
+/** API explorer hold - longer so the screen recording can play through. */
 export const EXPLORER_CLIP_PLAY_FRAMES = FPS * 2
 /** Premount feature scenes so video decodes before the clip plays. */
 export const FEATURE_CLIP_PREMOUNT_FRAMES = FPS * 2
@@ -161,7 +161,7 @@ export const LAUNCH_MUSIC_HOLD_AT_ZERO_FRAMES = 24
 export const LAUNCH_MUSIC_FADE_IN_FRAMES = 60
 export const LAUNCH_MUSIC_FADE_OUT_FRAMES = 90
 
-/** Dragon Studio keyboard ASMR — converted to WAV in public/audio. */
+/** Dragon Studio keyboard ASMR - converted to WAV in public/audio. */
 export const TYPING_SOUND_SRC = 'audio/typing-keyboard.wav'
 export const TYPING_SOUND_VOLUME = 0.4
 /** Frames of each keystroke clip (maps to ~150ms at 30fps). */

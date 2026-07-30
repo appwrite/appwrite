@@ -6,10 +6,7 @@ import {
   dedicatedDatabaseReplicasQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import {
-  canConfigureDedicatedReplication,
-  productDedicatedEngineHints,
-} from '@/lib/databases/database-compute'
+import { canConfigureDedicatedReplication } from '@/lib/databases/database-compute'
 import { dedicatedReplicationSourceFromRouteKind } from '@/lib/databases/dedicated-replication'
 import {
   isDatabaseRouteKind,
@@ -37,11 +34,10 @@ export const Route = createFileRoute(
     )
 
     const dedicated = await queryClient.ensureQueryData(
-      dedicatedDatabaseByIdQueryOptions(
-        projectId,
-        databaseId,
-        productDedicatedEngineHints(dbKind),
-      ),
+      dedicatedDatabaseByIdQueryOptions(projectId, databaseId, {
+        type: 'product',
+        dbKind,
+      }),
     )
 
     const product = queryClient.getQueryData<Models.Database>(

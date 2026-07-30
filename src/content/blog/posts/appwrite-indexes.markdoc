@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite Indexes: how to speed up your database queries"
 description: Learn what indexes are in Appwrite Databases, which types to use, when to create them, and when adding more indexes actually hurts performance.
 date: 2026-03-26
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-indexes/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -13,13 +14,13 @@ faqs:
   - question: "What is a database index in Appwrite?"
     answer: "An index is a separate, sorted data structure that the database (MariaDB under the hood) maintains alongside your table. It stores the values of one or more columns with pointers back to the matching rows, so queries can jump directly to results instead of scanning the entire table. Indexes are essential for keeping queries fast as your data grows."
   - question: "Which index types does Appwrite support?"
-    answer: "Appwrite supports four index types: key indexes for equality, range, and ordering queries; unique indexes which add a uniqueness constraint on top of a key index; fulltext indexes which are required for Query.search on string columns; and spatial indexes for geographic Point, Line, and Polygon columns used with geo queries."
+    answer: "Appwrite supports four index types: key indexes for equality, range, and ordering queries; unique indexes which add a uniqueness constraint on top of a key index; fulltext indexes which are required for Query.search on text columns; and spatial indexes for geographic Point, Line, and Polygon columns used with geo queries."
   - question: "Which columns should I index?"
-    answer: "Index columns you filter on with Query.equal, Query.greaterThan, Query.between, and similar operators, columns you sort on with Query.orderAsc or Query.orderDesc, columns that must be unique like emails or slugs, and string columns you run Query.search against. Spatial columns used in geo queries should have a spatial index."
+    answer: "Index columns you filter on with Query.equal, Query.greaterThan, Query.between, and similar operators, columns you sort on with Query.orderAsc or Query.orderDesc, columns that must be unique like emails or slugs, and text columns you run Query.search against. Spatial columns used in geo queries should have a spatial index."
   - question: "Can adding too many indexes hurt performance?"
     answer: "Yes. Every index has to be updated on inserts, updates, and deletes, so a table with many redundant indexes pays a write-time cost that scales with the index count. Add indexes for queries you actually run, drop ones you do not use, and prefer composite indexes over multiple single-column indexes when several columns are queried together."
   - question: "How do I create an index in Appwrite?"
-    answer: "You can create indexes from the Console by opening the table and using the Indexes tab, or programmatically with the Databases API by calling createIndex with a key, type, attributes array, and orders array. Indexes are built asynchronously and report a processing status until ready, which can take time on large tables."
+    answer: "You can create indexes from the Console by opening the table and using the Indexes tab, or programmatically with the TablesDB API by calling createIndex with a key, type, columns array, and orders array. Indexes are built asynchronously and report a processing status until ready, which can take time on large tables."
 ---
 
 If your Appwrite queries are slow, or getting slower as your data grows, the most likely fix is an index. Without indexes, every filtered or sorted query requires a full table scan: the database reads every row and checks whether it matches your conditions. That is fine for a table with 100 rows. It becomes a serious problem at 100,000.
@@ -55,7 +56,7 @@ Unique indexes are enforced at the database level, not just in your application 
 
 ## Fulltext index
 
-A fulltext index is required for [`Query.search`](/docs/products/databases/queries). It enables word-level text search across string columns. Without a fulltext index on the target column, `Query.search` returns an error.
+A fulltext index is required for [`Query.search`](/docs/products/databases/queries). It enables word-level text search across text columns. Without a fulltext index on the target column, `Query.search` returns an error.
 
 Fulltext indexes are suited for content columns like `title`, `body`, or `description`. They are not appropriate for short identifiers or numeric fields.
 
@@ -67,7 +68,7 @@ Without a spatial index, geo queries will still run but will perform a full scan
 
 # Creating an index
 
-You can create indexes from the Appwrite Console or programmatically using the Databases API. In the Console, navigate to your database, open the table, and go to the Indexes tab. Select the index type, choose the column, and save.
+You can create indexes from the Appwrite Console or programmatically using the TablesDB API. In the Console, navigate to your database, open the table, and go to the Indexes tab. Select the index type, choose the column, and save.
 
 Using the Appwrite Node.js SDK:
 
@@ -86,8 +87,9 @@ await tablesDB.createIndex({
   tableId: "<TABLE_ID>",
   key: "status_index",    // Index ID
   type: "key",             // Index type: "key", "unique", or "fulltext"
-  attributes: ["status"],  // Columns to index
+  columns: ["status"],     // Columns to index
   orders: ["ASC"],         // Sort order per column
+  lengths: [32],           // Prefix length for text columns
 });
 ```
 
@@ -99,8 +101,9 @@ await tablesDB.createIndex({
   tableId: "<TABLE_ID>",
   key: "email_unique",
   type: "unique",
-  attributes: ["email"],
+  columns: ["email"],
   orders: ["ASC"],
+  lengths: [255],
 });
 ```
 
@@ -134,8 +137,9 @@ await tablesDB.createIndex({
   tableId: "<TABLE_ID>",
   key: "status_author_index",
   type: "key",
-  attributes: ["status", "authorId"],
+  columns: ["status", "authorId"],
   orders: ["ASC", "ASC"],
+  lengths: [32, 36],
 });
 ```
 
@@ -165,7 +169,7 @@ Indexes and the Query API work as a pair. The Query API expresses what data you 
 
 Before putting a table into production, review every query pattern you will run on it and verify the needed indexes are in place. Adding indexes retroactively on large tables takes time and temporarily affects performance during the build phase.
 
-The [Appwrite Databases queries reference](/docs/products/databases/queries) rows every `Query` method and makes it clear which ones require or benefit from specific index types. Keep it open when designing your schema.
+The [Appwrite Databases queries reference](/docs/products/databases/queries) lists every `Query` method and makes it clear which ones require or benefit from specific index types. Keep it open when designing your schema.
 
 # Build faster queries with the right indexes
 

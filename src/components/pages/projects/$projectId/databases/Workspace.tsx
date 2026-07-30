@@ -2,6 +2,7 @@ import { useParams } from '@tanstack/react-router'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   databaseRouteKindFromApiType,
+  isDatabaseRouteKind,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { useProjectDatabase } from '@/lib/react-query/hooks'
@@ -17,7 +18,14 @@ import { Workspace as VectorsDbWorkspace } from './vectorsdb/Workspace'
 export function Workspace(props: WorkspaceProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
-  const { database } = useProjectDatabase(projectId, props.databaseId)
+  const routeDbKind = (
+    isDatabaseRouteKind(params.dbKind ?? '') ? params.dbKind : 'tablesdb'
+  ) as DatabaseRouteKind
+  const { database } = useProjectDatabase(
+    projectId,
+    props.databaseId,
+    routeDbKind,
+  )
   const kind: DatabaseRouteKind =
     (params.dbKind as DatabaseRouteKind | undefined) ??
     databaseRouteKindFromApiType(

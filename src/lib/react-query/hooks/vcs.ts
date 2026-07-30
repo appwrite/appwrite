@@ -166,12 +166,11 @@ export async function fetchRepositories(
     queries.push(Query.equal('namespace', providerNamespace))
   }
 
-  // Console SDK 15.4 mistypes `queries` as `string`; runtime still accepts string[].
   return (await projectSdk.vcs.listRepositories({
     installationId,
     type,
     search: search?.trim() || undefined,
-    queries: queries as unknown as string,
+    queries,
   })) as ProviderRepositoriesResult
 }
 

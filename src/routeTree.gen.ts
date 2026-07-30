@@ -9,9 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
+import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
+import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
+import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as AccessRouteImport } from './routes/access'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
@@ -67,6 +74,7 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
@@ -89,6 +97,8 @@ import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
+import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
@@ -349,9 +359,34 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
 
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
+  id: '/integrations.md',
+  path: '/integrations.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsDotmdRoute = DocsDotmdRouteImport.update({
+  id: '/docs.md',
+  path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -362,6 +397,16 @@ const DocsRoute = DocsRouteImport.update({
 const DiscordRoute = DiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogDotmdRoute = ChangelogDotmdRouteImport.update({
+  id: '/changelog.md',
+  path: '/changelog.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogDotmdRoute = BlogDotmdRouteImport.update({
+  id: '/blog.md',
+  path: '/blog.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccessRoute = AccessRouteImport.update({
@@ -639,6 +684,12 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugVerifyEmailPreviewRoute =
+  PublicDebugVerifyEmailPreviewRouteImport.update({
+    id: '/debug/verify-email-preview',
+    path: '/debug/verify-email-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
@@ -754,6 +805,16 @@ const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
 const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   id: '/_api/generator/cover',
   path: '/generator/cover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
+  id: '/_api/changelog/rss.xml',
+  path: '/changelog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
+  id: '/_api/blog/rss.xml',
+  path: '/blog/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicProjectsProjectIdIndexRoute =
@@ -2497,9 +2558,16 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
 
 export interface FileRoutesByFullPath {
   '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
+  '/docs.md': typeof DocsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2540,6 +2608,8 @@ export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -2562,6 +2632,7 @@ export interface FileRoutesByFullPath {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -2834,7 +2905,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
+  '/docs.md': typeof DocsDotmdRoute
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2874,6 +2952,8 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -2896,6 +2976,7 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3134,9 +3215,16 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
+  '/docs.md': typeof DocsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -3177,6 +3265,8 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3199,6 +3289,7 @@ export interface FileRoutesById {
   '/_public/account/sessions': typeof PublicAccountSessionsRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3473,9 +3564,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
     | '/docs'
+    | '/docs.md'
     | '/generator'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3516,6 +3614,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs/'
     | '/generator/'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -3538,6 +3638,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -3810,7 +3911,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
+    | '/docs.md'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3850,6 +3958,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs'
     | '/generator'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -3872,6 +3982,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -4109,9 +4220,16 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
     | '/docs'
+    | '/docs.md'
     | '/generator'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -4152,6 +4270,8 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/docs/'
     | '/generator/'
+    | '/_api/blog/rss.xml'
+    | '/_api/changelog/rss.xml'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
@@ -4174,6 +4294,7 @@ export interface FileRouteTypes {
     | '/_public/account/sessions'
     | '/_public/debug/error-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/verify-email-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4451,13 +4572,22 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   AccessRoute: typeof AccessRoute
+  BlogDotmdRoute: typeof BlogDotmdRoute
+  ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
+  DocsDotmdRoute: typeof DocsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
+  IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   ApiHelloRoute: typeof ApiHelloRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
+  ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
@@ -4471,11 +4601,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations.md': {
+      id: '/integrations.md'
+      path: '/integrations.md'
+      fullPath: '/integrations.md'
+      preLoaderRoute: typeof IntegrationsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
       fullPath: '/generator'
       preLoaderRoute: typeof GeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs.md': {
+      id: '/docs.md'
+      path: '/docs.md'
+      fullPath: '/docs.md'
+      preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -4490,6 +4655,20 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof DiscordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog.md': {
+      id: '/changelog.md'
+      path: '/changelog.md'
+      fullPath: '/changelog.md'
+      preLoaderRoute: typeof ChangelogDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog.md': {
+      id: '/blog.md'
+      path: '/blog.md'
+      fullPath: '/blog.md'
+      preLoaderRoute: typeof BlogDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/access': {
@@ -4877,6 +5056,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/verify-email-preview': {
+      id: '/_public/debug/verify-email-preview'
+      path: '/debug/verify-email-preview'
+      fullPath: '/debug/verify-email-preview'
+      preLoaderRoute: typeof PublicDebugVerifyEmailPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
@@ -5029,6 +5215,20 @@ declare module '@tanstack/react-router' {
       path: '/generator/cover'
       fullPath: '/generator/cover'
       preLoaderRoute: typeof ApiGeneratorCoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/changelog/rss.xml': {
+      id: '/_api/changelog/rss.xml'
+      path: '/changelog/rss.xml'
+      fullPath: '/changelog/rss.xml'
+      preLoaderRoute: typeof ApiChangelogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/blog/rss.xml': {
+      id: '/_api/blog/rss.xml'
+      path: '/blog/rss.xml'
+      fullPath: '/blog/rss.xml'
+      preLoaderRoute: typeof ApiBlogRssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId/': {
@@ -8331,6 +8531,7 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -8346,6 +8547,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }
@@ -8411,13 +8613,22 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   AccessRoute: AccessRoute,
+  BlogDotmdRoute: BlogDotmdRoute,
+  ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
+  DocsDotmdRoute: DocsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
+  IntegrationsDotmdRoute: IntegrationsDotmdRoute,
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   ApiHelloRoute: ApiHelloRoute,
   DomainsContinueRoute: DomainsContinueRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
+  ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,

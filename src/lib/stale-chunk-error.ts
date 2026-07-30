@@ -76,8 +76,8 @@ export function isStaleChunkLoadError(
 
 /**
  * Inline boot script (runs via ScriptOnce before the app module graph).
- * Recovers when the entry/main chunk 404s after a deploy — before router.tsx
- * listeners exist — and uses a cache-busting navigation so soft reload cannot
+ * Recovers when the entry/main chunk 404s after a deploy - before router.tsx
+ * listeners exist - and uses a cache-busting navigation so soft reload cannot
  * reuse stale HTML that still points at deleted hashed assets.
  *
  * Prefer structural signals (vite:preloadError, /assets/ URLs) over message text.
@@ -168,7 +168,7 @@ export function stripStaleChunkCacheBustParam(): void {
 
 /**
  * Clears the reload guard only after the app has stayed up long enough that
- * chunk loads likely succeeded. Must not run on router init immediately —
+ * chunk loads likely succeeded. Must not run on router init immediately -
  * that defeats the one-reload limit and causes infinite reload loops when a
  * chunk is still missing after the first recovery attempt.
  */

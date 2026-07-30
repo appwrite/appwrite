@@ -1,0 +1,156 @@
+---
+layout: post
+title: "Announcing the S3 API: Use any S3 client with Appwrite Storage"
+description: Appwrite Storage now exposes an S3-compatible API. Point the AWS CLI, the AWS SDKs, and tools like rclone at your Appwrite buckets, with no migration required.
+date: 2026-07-31
+cover: /images/blog/announcing-s3-api/cover.avif
+timeToRead: 5
+author: torsten-dittmann
+category: announcement
+featured: false
+callToAction: true
+faqs:
+  - question: "What is the Appwrite S3 API?"
+    answer: "It is an S3-compatible API for Appwrite Storage. It authenticates requests with AWS Signature Version 4 and maps standard S3 operations onto Appwrite buckets and files, so existing S3 clients, SDKs, and tools work after you change the endpoint, credentials, and region."
+  - question: "Which credentials do I use with an S3 client?"
+    answer: "Your Appwrite project ID is the access key ID, and an Appwrite API key secret is the secret access key. The API key needs the storage scopes that match your workload: `buckets.read` and `files.read` for read-only access, plus `buckets.write` and `files.write` for uploads, deletes, and bucket creation."
+  - question: "Do I need to migrate my existing buckets and files?"
+    answer: "No. Buckets and files are addressable over both the native Storage API and the S3 API at the same time. Any bucket you already have in your project is usable over S3 immediately, and objects uploaded over S3 appear in the Appwrite Console like any other file."
+  - question: "Which S3 operations are supported?"
+    answer: "The API covers the operations most clients depend on: bucket operations like `ListBuckets`, `CreateBucket`, and `DeleteBucket`; object operations like `PutObject`, `GetObject`, `CopyObject`, `DeleteObjects`, and `ListObjectsV2`; and the full multipart upload flow. Features like object tagging, lifecycle rules, bucket policies, and versioning return `NotImplemented`."
+  - question: "Does the S3 API support folders?"
+    answer: "Folders are virtual, as they are on S3 itself: they exist as `/`-separated prefixes in object keys. List a bucket with `delimiter=/` and an optional `prefix` to browse it like a directory tree, with folders returned under `CommonPrefixes` and files under `Contents`."
+  - question: "How are object keys mapped to Appwrite files?"
+    answer: "Uploading an object creates an Appwrite file with a generated file ID and your object key as the file name. Read, copy, and delete operations then address the object by its canonical `{fileId}-{fileName}` key, which list operations return. See the [S3 API documentation](/docs/products/storage/s3) for details."
+---
+
+The S3 API has become the common language of object storage. The AWS CLI, the AWS SDKs, backup tools like rclone and s3cmd, data pipelines, and countless libraries all speak it. Until now, using them with Appwrite Storage meant writing glue code around the native API.
+
+Today, we are announcing the **S3 API** for Appwrite Storage, an S3-compatible API that lets you point any S3 client, SDK, or tool at your Appwrite buckets and files.
+
+The API uses AWS Signature Version 4 and maps standard S3 operations onto Appwrite Storage, so most existing S3 code works after you change three settings: the endpoint, the credentials, and the region.
+
+# Why this matters
+
+Appwrite Storage already gives you buckets, permissions, image transformations, and file tokens through the native API and SDKs. The S3 API adds a second door into the same storage, unlocking the whole S3 ecosystem:
+
+- **Bring your existing tools.** Use the AWS CLI, rclone, s3cmd, and any S3-aware library or service against Appwrite buckets without glue code.
+- **Reuse existing code.** Applications already written against the AWS SDKs connect to Appwrite by changing the client configuration, not the code.
+- **No migration required.** Buckets and files are addressable over both the native Storage API and the S3 API at the same time. Files uploaded over S3 show up in the Appwrite Console, and files uploaded through the Console or SDKs are listable and downloadable over S3.
+- **Multipart uploads out of the box.** SDK transfer managers and `aws s3 cp` upload large files in parts automatically, with the standard multipart operations fully supported.
+
+# How it works
+
+S3 clients authenticate with an access key ID and a secret access key. Appwrite maps these to your project ID and an [API key](/docs/advanced/security/api-keys) secret:
+
+| Setting | Value |
+| --- | --- |
+| Endpoint | `https://<REGION>.cloud.appwrite.io/v1/s3` |
+| Access key ID | Your Appwrite project ID |
+| Secret access key | An Appwrite API key secret |
+| Region | `auto` or your project's Appwrite region |
+| Signature version | AWS Signature Version 4 (SigV4) |
+| Addressing style | Path-style only |
+
+The API key's scopes control what the client can do: grant `buckets.read` and `files.read` for read-only workloads, and add `buckets.write` and `files.write` for uploads, deletes, and bucket creation.
+
+Here is the same configuration in the AWS CLI, the AWS SDK for JavaScript, and boto3:
+
+{% multicode %}
+```bash
+# AWS CLI
+aws configure set aws_access_key_id <PROJECT_ID>
+aws configure set aws_secret_access_key <API_KEY_SECRET>
+aws configure set region auto
+
+# Appwrite serves path-style URLs only, so force path addressing
+aws configure set default.s3.addressing_style path
+
+# Pass the Appwrite endpoint on every command
+aws s3 ls --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+```
+
+```js
+// Node.js: @aws-sdk/client-s3 (v3)
+import { S3Client } from '@aws-sdk/client-s3';
+
+const client = new S3Client({
+    endpoint: 'https://<REGION>.cloud.appwrite.io/v1/s3',
+    region: 'auto',
+    forcePathStyle: true,
+    credentials: {
+        accessKeyId: '<PROJECT_ID>',
+        secretAccessKey: '<API_KEY_SECRET>'
+    }
+});
+```
+
+```python
+# Python: boto3
+import boto3
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://<REGION>.cloud.appwrite.io/v1/s3',
+    region_name='auto',
+    aws_access_key_id='<PROJECT_ID>',
+    aws_secret_access_key='<API_KEY_SECRET>',
+    config=Config(signature_version='s3v4', s3={'addressing_style': 'path'})
+)
+```
+{% /multicode %}
+
+Once the client is configured, everyday S3 commands work as usual:
+
+```bash
+# Create a bucket
+aws s3api create-bucket --bucket my-bucket \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# Upload a file (uses multipart automatically for large files)
+aws s3 cp ./january.pdf s3://my-bucket/reports/january.pdf \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+
+# List objects to discover canonical keys
+aws s3 ls s3://my-bucket --recursive \
+  --endpoint-url https://<REGION>.cloud.appwrite.io/v1/s3
+```
+
+# S3 objects, Appwrite files
+
+S3 buckets map directly to Appwrite Storage buckets, and S3 objects map to files. When you upload an object, Appwrite stores it as a file with a generated file ID and uses your object key as the file's name. Read, copy, and delete operations then address the object by its **canonical key**, which list operations return:
+
+```text
+{fileId}-{fileName}
+```
+
+This means files created through the native Storage API or the Console are usable over S3 too: list the bucket to discover a file's canonical key, then address it with that key.
+
+[Folders](/docs/products/storage/folders) work the way they do on S3 itself: they are virtual, existing as `/`-separated prefixes in object keys. List a bucket with the `/` delimiter and an optional `prefix` to browse it like a directory tree, with folders grouped under `CommonPrefixes` and files under `Contents`.
+
+# What's supported
+
+The S3 API targets the operations most clients depend on:
+
+- **Bucket operations**: `ListBuckets`, `CreateBucket`, `HeadBucket`, `DeleteBucket`, and `GetBucketLocation`
+- **Object operations**: `PutObject`, `GetObject` (with `Range` and conditional requests), `HeadObject`, `CopyObject`, `DeleteObject`, `DeleteObjects`, `ListObjects`, and `ListObjectsV2`
+- **Multipart uploads**: the full flow, from `CreateMultipartUpload` through `UploadPart`, `UploadPartCopy`, `CompleteMultipartUpload`, `AbortMultipartUpload`, `ListMultipartUploads`, and `ListParts`
+
+Buckets keep their constraints under the S3 API: uploads that exceed the bucket's maximum file size or use a disallowed extension are rejected, and access is governed by [Appwrite permissions](/docs/products/storage/permissions) and API key scopes. Features outside this set, such as object tagging, lifecycle rules, bucket policies, and versioning, return standard `NotImplemented` errors, so clients fail cleanly. The full list is in the [limitations documentation](/docs/products/storage/s3#limitations).
+
+# Get started
+
+The S3 API is available on **Appwrite Cloud** today.
+
+1. Navigate to **Overview** > **Integrations** > **API keys** and create an API key with the storage scopes your workload needs.
+2. Configure your S3 client with the `https://<REGION>.cloud.appwrite.io/v1/s3` endpoint, your project ID as the access key ID, and the API key secret as the secret access key.
+3. Run your existing S3 commands and code against your Appwrite buckets.
+
+Full documentation, including object key mapping, folder listings, and error responses, is available on the [S3 API documentation page](/docs/products/storage/s3).
+
+# Resources
+
+- [S3 API documentation](/docs/products/storage/s3)
+- [Storage documentation](/docs/products/storage)
+- [API keys documentation](/docs/advanced/security/api-keys)

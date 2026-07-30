@@ -3,7 +3,7 @@
  *
  * The Appwrite SDK keeps one WebSocket per `Realtime` client and supports
  * multiple independent `subscribe()` calls on that socket. Each hub listener
- * gets its own SDK subscription with its own channels — do not merge channels
+ * gets its own SDK subscription with its own channels - do not merge channels
  * into one subscription and reconnect on every listener change; that pattern
  * drops channels (e.g. `presences`) during debounced resyncs and prevents
  * events from reaching subscribers.

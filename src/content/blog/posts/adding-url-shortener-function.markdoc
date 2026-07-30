@@ -5,6 +5,7 @@ description: Learning how to add the URL shortener function template to your app
 cover: /images/blog/adding-url-shortener/cover.avif
 timeToRead: 5
 date: 2023-11-08
+lastUpdated: 2026-06-29
 author: haimantika-mitra
 category: tutorial
 featured: false
@@ -14,13 +15,13 @@ faqs:
   - question: "How do I create a custom domain for my URL shortener function?"
     answer: "Use the Domains tab of the function to attach a custom domain like `s.example.com`. Once configured, all generated short URLs will use that domain instead of the default Appwrite Function URL, which is what most production shorteners need."
   - question: "Can I add analytics or click tracking?"
-    answer: "Yes. Extend the template so that on each redirect it writes a row to a `clicks` collection with the timestamp, IP, referrer, and user agent. You can then query that collection (or wire it into a dashboard) for click-through rates and geographic data. The original function template intentionally keeps this minimal."
+    answer: "Yes. Extend the template so that on each redirect it writes a row to a `clicks` table with the timestamp, IP, referrer, and user agent. You can then query that table (or wire it into a dashboard) for click-through rates and geographic data. The original function template intentionally keeps this minimal."
   - question: "Where are the shortened URLs stored?"
-    answer: "The function template stores them as documents in an [Appwrite Databases](/docs/products/databases) collection in your project. That gives you a query-able list of all generated short URLs with their target destinations and creation timestamps."
+    answer: "The function template stores them as rows in an [Appwrite Databases](/docs/products/databases) table in your project. That gives you a query-able list of all generated short URLs with their target destinations and creation timestamps."
   - question: "Is the URL shortener function open source?"
     answer: "Yes, the template source code is available in the [Appwrite templates repo](https://github.com/appwrite/templates/tree/main/node/url-shortener). You can fork it, customize the slug generator, add authentication, or rewrite it in another runtime."
   - question: "Can I limit who can create short URLs?"
-    answer: "Yes. By default the function endpoint is open, but you can require an Appwrite session by reading the user context from the function execution. Combine that with permission rules on the underlying collection so only authenticated users can create entries."
+    answer: "Yes. By default the function endpoint is open, but you can require an Appwrite session by reading the user context from the function execution. Combine that with permission rules on the underlying table so only authenticated users can create entries."
 ---
 
 Appwrite Functions are user-defined functions that can start small and scale big, deploying automatically from source control. With the introduction of function templates, you can quickly add new integrations into your app without writing additional code or managing infrastructure. Function templates are pre-built Appwrite Functions that can be integrated into your Appwrite project with just a few clicks. 
@@ -68,6 +69,6 @@ Be sure to check out the other available Function Templates. We’ve created man
 
 For more information about Appwrite and Appwrite Functions:
 
-1. **[Appwrite Function Docs](https://appwrite.io/docs/functions)**: These documents provide more information on how to use Appwrite Functions.
+1. **[Appwrite Function Docs](/docs/products/functions)**: Learn more about how to use Appwrite Functions.
 2. **[Functions Announcement](https://dev.to/appwrite/serverless-your-way-unleashing-appwrite-functions-true-potential-2l4f)**: Read the full announcement on Functions 1.4.
-3. **[Appwrite Discord](https://discord.com/invite/appwrite)**: Connect with other developers and the Appwrite team for discussion, questions, and collaboration.
+3. **[Appwrite Discord](/discord)**: Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

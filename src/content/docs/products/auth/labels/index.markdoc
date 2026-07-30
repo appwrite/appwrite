@@ -17,10 +17,10 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const promise = users.updateLabels(
-    '<USER_ID>',
-    [ 'subscriber' ]
-);
+const promise = users.updateLabels({
+    userId: '<USER_ID>',
+    labels: [ 'subscriber' ]
+});
 
 promise.then(function (response) {
     console.log(response); // Success
@@ -65,8 +65,8 @@ client = Client()
 users = Users(client)
 
 result = users.update_labels(
-    '<USER_ID>',
-    [ 'subscriber' ]
+    user_id='<USER_ID>',
+    labels=[ 'subscriber' ]
 );
 ```
 ```ruby
@@ -97,10 +97,10 @@ let client = new sdk.Client()
 
 let users = new sdk.Users(client);
 
-const promise = users.updateLabels(
-    '<USER_ID>',
-    [ 'subscriber' ]
-);
+const promise = users.updateLabels({
+    userId: '<USER_ID>',
+    labels: [ 'subscriber' ]
+});
 
 promise.then(function (response) {
     console.log(response); // Success

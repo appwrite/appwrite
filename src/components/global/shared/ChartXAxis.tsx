@@ -171,7 +171,7 @@ export function SeriesChartXAxis({
   )
 
   // Prefer index-based domain when `labels` is provided so tooltip/cursor use
-  // activeIndex instead of findEntryInArray(label) — which returns the wrong
+  // activeIndex instead of findEntryInArray(label) - which returns the wrong
   // point when labels repeat (e.g. HH:mm across multiple days).
   const useIndexDomain = labels != null
   const dataKey = useIndexDomain ? undefined : (dataKeyProp ?? 'date')

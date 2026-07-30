@@ -57,7 +57,7 @@ async function listUsageGaugeGroupsByMetric(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  // Prefer Utopia queries for filters — top-level resourceId is not in the SDK.
+  // Prefer Utopia queries for filters - top-level resourceId is not in the SDK.
   const queries = [
     ...(buildUsageResourceFilterQueries({
       queries: params.queries,

@@ -16,6 +16,7 @@ import sharp from 'sharp'
 import { resolveCoverSizePresetKey } from '../src/lib/cover-generator/constants.ts'
 import { renderCoverImage } from '../src/lib/cover-generator/render-cover.ts'
 import type { CoverRenderData } from '../src/lib/cover-generator/types.ts'
+import { MIN_COVER_IMAGE_WIDTH } from '../src/lib/seo/cover-constants.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VIBES_ROOT = join(__dirname, '..')
@@ -29,12 +30,29 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * Encodes a cover to AVIF, upscaling to the Google Discover minimum width
+ * (aspect ratio preserved) when the source is too narrow.
+ */
+async function encodeCoverAvif(input: Buffer | string): Promise<Buffer> {
+  let pipeline = sharp(input)
+  const metadata = await pipeline.metadata()
+  if ((metadata.width ?? 0) < MIN_COVER_IMAGE_WIDTH) {
+    console.warn(
+      `Cover source is ${metadata.width}px wide; upscaling to ${MIN_COVER_IMAGE_WIDTH}px (Google Discover minimum). Prefer sources at least ${MIN_COVER_IMAGE_WIDTH}px wide.`,
+    )
+    pipeline = pipeline.resize({ width: MIN_COVER_IMAGE_WIDTH })
+  }
+
+  return pipeline
+    .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
+    .toBuffer()
+}
+
 async function writeAvifFromPng(outputDir: string, png: Uint8Array): Promise<void> {
   writeFileSync(join(outputDir, 'cover-source.png'), png)
 
-  const avif = await sharp(Buffer.from(png))
-    .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
-    .toBuffer()
+  const avif = await encodeCoverAvif(Buffer.from(png))
 
   writeFileSync(join(outputDir, 'cover.avif'), avif)
   console.log(`Wrote cover-source.png and cover.avif (${avif.length} bytes)`)
@@ -48,9 +66,7 @@ async function convertCoverSourceToAvif(outputDir: string): Promise<void> {
     throw new Error(`Missing cover source: ${sourcePath}`)
   }
 
-  const avif = await sharp(sourcePath)
-    .avif({ quality: 82, effort: 4, chromaSubsampling: '4:4:4' })
-    .toBuffer()
+  const avif = await encodeCoverAvif(sourcePath)
 
   writeFileSync(join(outputDir, 'cover.avif'), avif)
   console.log(`Wrote cover.avif (${avif.length} bytes)`)

@@ -3,6 +3,7 @@ layout: post
 title: "Get inspired for Hacktoberfest 2024 with these ideas"
 description: Check out what the Appwrite team created during our internal hackathon and get inspired for your own project in the Hacktoberfest 2024 Hackathon!
 date: 2024-09-27
+lastUpdated: 2026-06-29
 cover: /images/blog/get-inspired-for-hackathon/cover.avif
 timeToRead: 4
 author: snezhanna
@@ -85,7 +86,7 @@ Managing multiple personal and work calendars can be overwhelming, especially wi
 ## Appwrite features used
 
 - [GitHub OAuth](https://appwrite.io/docs/products/auth/oauth2) in Appwrite Authentication
-- [Appwrite Database](https://appwrite.io/docs/products/databases) and Collections
+- [Appwrite Databases](https://appwrite.io/docs/products/databases) and Tables
 - [Mailgun provider](https://appwrite.io/docs/references/cloud/server-nodejs/messaging) on Messaging
 - [New Go runtime and SDK](https://appwrite.io/blog/post/announcing-go-support) for Functions
 - [New Functions ecosystem](https://appwrite.io/blog/post/introducing-functions-ecosystem) to sync calendars and schedule emails

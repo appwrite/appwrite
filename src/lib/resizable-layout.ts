@@ -73,7 +73,7 @@ export function clampSplitFirstPaneWidthPx(
 /**
  * When a split's container shrinks (e.g. outer sidebar resize), only shrink the
  * first pane if it no longer fits. Do not snap toward min when the container
- * grows — that keeps nested splits independent from sibling resizes.
+ * grows - that keeps nested splits independent from sibling resizes.
  */
 export function fitSplitFirstPaneWidthOnContainerResize(
   currentWidthPx: number,

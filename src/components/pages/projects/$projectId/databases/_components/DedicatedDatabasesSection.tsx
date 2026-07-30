@@ -261,7 +261,7 @@ function DedicatedDatabaseCard({
   )
   const connectionsLabel =
     connections == null
-      ? '—'
+      ? '-'
       : connections === 1
         ? `1 ${t('connection')}`
         : `${connections.toLocaleString()} ${t('connections')}`

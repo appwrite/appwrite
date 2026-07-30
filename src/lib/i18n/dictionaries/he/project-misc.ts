@@ -296,6 +296,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create a firewall rule scoped to a site to control how it handles requests.':
     'צרו כלל חומת אש לאתר כדי לשלוט באופן הטיפול בבקשות אליו.',
   'Firewall rule scope': 'היקף כלל חומת האש',
+  'Firewall resource': 'משאב חומת אש',
+  'Search resources...': 'חיפוש משאבים...',
+  'Showing first results. Refine your search to find more.':
+    'מוצגות התוצאות הראשונות. צמצמו את החיפוש כדי למצוא עוד.',
   API: 'API',
   'Firewall protection': 'הגנת חומת אש',
   'Firewall is evaluating rules against incoming traffic for this project.':
@@ -379,11 +383,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Value: 'ערך',
   'Remove condition': 'הסרת תנאי',
   'IP address': 'כתובת IP',
-  'HTTP method': 'מתודת HTTP',
   'Select method': 'בחרו מתודה',
   'e.g. curl/8.0': 'למשל curl/8.0',
+  'Key, e.g. token': 'מפתח, למשל token',
+  'Key, e.g. x-custom-header': 'מפתח, למשל x-custom-header',
+  'e.g. 203.0.113.10': 'למשל 203.0.113.10',
+  'e.g. 203.0.113.10 or CIDR range 203.0.113.0/24':
+    'למשל 203.0.113.10 או טווח CIDR 203.0.113.0/24',
   'User agent': 'User agent',
-  'Request path': 'נתיב בקשה',
   If: 'אם',
   Then: 'אז',
   And: 'וגם',

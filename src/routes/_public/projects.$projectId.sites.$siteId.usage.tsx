@@ -22,10 +22,11 @@ export const Route = createFileRoute(
     // Fetch site - blocks navigation until ready
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
 
-    // Fetch critical data before rendering to prevent layout shifts
-    await queryClient.ensureQueryData(
-      siteUsageQueryOptions(projectId, siteId, 'ThirtyDays'),
-    )
+    // Usage is non-critical: prefetch in background so a slow usage API does not
+    // block the page shell.
+    void queryClient
+      .prefetchQuery(siteUsageQueryOptions(projectId, siteId, 'ThirtyDays'))
+      .catch(() => undefined)
   },
   component: SiteUsagePage,
 })

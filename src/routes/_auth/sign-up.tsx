@@ -138,7 +138,7 @@ function SignUpPage() {
 
         // Detect MFA. Force a fresh fetch so it can't replay the guest account.get
         // the _auth loader fires on load (cached/in-flight 401 "missing scopes
-        // account") — a race password managers hit by autofilling and submitting
+        // account") - a race password managers hit by autofilling and submitting
         // before that guest request settled.
         await fetchConsoleAccount({ force: true })
       } catch (error: unknown) {

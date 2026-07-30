@@ -3,6 +3,7 @@ layout: post
 title: How to build a file manager with Appwrite Storage
 description: Learn how to create buckets, upload and download files, set permissions, and build a complete file manager UI using Appwrite Storage.
 date: 2026-03-24
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-storage-file-manager/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -52,15 +53,15 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const bucket = await storage.createBucket(
-  ID.unique(),       // bucketId
-  'User Uploads',    // name
-  ['any'],           // permissions (covered below)
-  true,             // fileSecurity
-  true,              // enabled
-  10000000,          // maximumFileSize (10 MB)
-  ['image/jpeg', 'image/png', 'application/pdf'] // allowedFileExtensions (MIME types or extensions, e.g. 'jpg')
-);
+const bucket = await storage.createBucket({
+    bucketId: ID.unique(),
+    name: 'User Uploads',
+    permissions: ['any'],
+    fileSecurity: true,
+    enabled: true,
+    maximumFileSize: 10000000,
+    allowedFileExtensions: ['image/jpeg', 'image/png', 'application/pdf']
+});
 ```
 
 The `fileSecurity` flag is important. When set to `true`, each file can have its own permissions in addition to bucket-level permissions. When `false`, only bucket-level permissions apply. For a multi-user file manager, you'll want `fileSecurity: true`.

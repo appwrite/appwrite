@@ -38,16 +38,19 @@ Build **at least one** complete condition (attribute, operator, and value). Ever
 
 Examples:
 
-- IP address **Equals** `203.0.113.10` (exact IP only; no CIDR)
-- Request path **Starts with** `/v1/account`
-- HTTP method **Equals** `POST`
+- IP address **Equals** `203.0.113.10` (or a CIDR block like `198.51.100.0/24`)
+- Path **Starts with** `/v1/account`
+- Method **Equals** `POST`
+- Header `x-api-client` **Is empty**
 - Country **Equals** `DE`
 
-See [Conditions](/docs/products/firewall/conditions) for attributes, operators, and matching details.
+Attributes are grouped into **Request** (hostname, path, method, header, query parameter), **Client** (IP address, operating system, browser, user agent), and **Location** (country, continent, city, state). City and state require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions) for attributes, operators, and matching details.
 
 # Choose an action {% #choose-an-action %}
 
-Select **Deny**, **Bypass**, **Rate limit**, or **Redirect**. The action type is fixed after create; to switch actions, create a new rule and delete the old one.
+Select **Deny**, **Bypass**, **Challenge**, **Rate limit**, or **Redirect**. The action type is fixed after create; to switch actions, create a new rule and delete the old one.
+
+**Deny**, **Bypass**, and **Challenge** need no extra settings. Challenge rules use the platform default challenge type. See [Challenge](/docs/products/firewall/actions#challenge).
 
 For **Rate limit**, set:
 
@@ -85,5 +88,5 @@ Free plans allow **2** rules per project. Pro allows **50**. See [Plan limits](/
 
 - Confirm the rule under the correct scope tab.
 - Test with a client SDK or API key (Firewall does not block Console access).
-- Watch [traffic overview](/docs/products/firewall/monitor) for denied, rate-limited, or redirected counts.
+- Watch [traffic overview](/docs/products/firewall/monitor) for denied, challenged, rate-limited, or redirected counts.
 - [Update](/docs/products/firewall/update) priority, conditions, or scope if legitimate traffic is affected.

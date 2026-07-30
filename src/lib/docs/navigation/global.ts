@@ -102,6 +102,7 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
   {
     label: 'APIS',
     items: [
+      { label: 'Overview', href: '/docs/apis', icon: 'layout-grid' },
       {
         label: 'Realtime',
         href: '/docs/apis/realtime',

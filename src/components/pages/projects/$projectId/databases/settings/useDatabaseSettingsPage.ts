@@ -23,8 +23,21 @@ export function useDatabaseSettingsPage() {
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { database, isLoading } = useProjectDatabase(projectId, databaseId)
-  const { total: containersTotal } = useProjectTables(projectId, databaseId, 0, 1)
+  const { database, isLoading } = useProjectDatabase(
+    projectId,
+    databaseId,
+    dbKind,
+  )
+  const { total: containersTotal } = useProjectTables(
+    projectId,
+    databaseId,
+    dbKind,
+    0,
+    1,
+    undefined,
+    'asc',
+    '$createdAt',
+  )
   const { canWrite } = useDatabaseAdminOperationsAccess()
 
   return {

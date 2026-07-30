@@ -3,6 +3,7 @@ layout: post
 title: "HIPAA compliance for web apps: A practical guide"
 description: This guide breaks down what HIPAA compliance actually requires for modern web architectures, and how to design secure, PHI-safe systems from the backend up.
 date: 2026-02-25
+lastUpdated: 2026-06-29
 cover: /images/blog/hipaa-compliance-for-web-apps-a-practical-guide/cover.avif
 timeToRead: 5
 author: aishwari
@@ -86,7 +87,7 @@ Platforms like Appwrite help teams centralize authentication and authorization l
 
 HIPAA expects organizations to follow the principle of least privilege. Users and services should only have access to the minimum data required to perform their role.
 
-Modern applications should enforce role-based access control at the backend, not just in frontend interfaces. Permissions should be scoped to specific records, collections, or actions, and enforced consistently across APIs. Implementing detailed audit trails is essential for tracking user actions, supporting least privilege, and enabling effective monitoring for suspicious activity.
+Modern applications should enforce role-based access control at the backend, not just in frontend interfaces. Permissions should be scoped to specific records, resources, or actions, and enforced consistently across APIs. Implementing detailed audit trails is essential for tracking user actions, supporting least privilege, and enabling effective monitoring for suspicious activity.
 
 This approach not only supports compliance but also improves long-term maintainability as teams and products grow. Administrative safeguards, as required by the HIPAA Security Rule, are a key component in ensuring proper access control and overall compliance.
 

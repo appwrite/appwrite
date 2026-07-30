@@ -307,7 +307,11 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Current': 'נוכחי',
   'Current database': 'מסד הנתונים הנוכחי',
   'Current session states from pg_stat_activity.': 'מצבי הסשנים הנוכחיים מתוך pg_stat_activity.',
-  'Current tier: Serverless. Dedicated tiers are coming soon.': 'הרמה הנוכחית: Serverless. רמות ייעודיות יגיעו בקרוב.',
+  'Upgrade from serverless to a dedicated tier to reserve CPU, memory, and connection limits. Migrating applies with a brief read-only window during cutover.':
+    'שדרגו מ-Serverless לרמה ייעודית כדי לשריין CPU, זיכרון ומגבלות חיבורים. המיגרציה כוללת חלון קצר לקריאה בלבד בזמן המעבר.',
+  'Migration to dedicated compute started': 'מיגרציה למחשוב ייעודי התחילה',
+  'Compute and connection limits for this database.':
+    'מגבלות מחשוב וחיבורים עבור מסד הנתונים הזה.',
   'Custom Policies': 'כללי מדיניות מותאמים אישית',
   'Custom Policy': 'מדיניות מותאמת אישית',
   'Custom dimension': 'ממד מותאם אישית',

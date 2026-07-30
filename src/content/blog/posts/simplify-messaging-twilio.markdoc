@@ -3,6 +3,7 @@ layout: post
 title: How Twilio simplifies messaging for developers
 description: Learn the challenges of building a messaging system and how Twilio helps in simplifying implementation.
 date: 2024-02-26
+lastUpdated: 2026-06-29
 cover: /images/blog/simplify-messaging-twilio.avif
 timeToRead: 7
 author: aditya-oberai
@@ -97,14 +98,14 @@ client
 	.setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const promise = await messaging.updateTwilioProvider(
-  '<PROVIDER_ID>',                         // providerId
-  '<NAME>',                                // name (optional)
-  false,                                   // enabled (optional)
-  '<ACCOUNT_SID>',                         // accountSid (optional)
-  '<AUTH_TOKEN>',                          // authToken (optional)
-  '<FROM>'                                 // from (optional)
-);
+const promise = await messaging.updateTwilioProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    accountSid: '<ACCOUNT_SID>',
+    authToken: '<AUTH_TOKEN>',
+    from: '<FROM>'
+});
 ```
 
 # Resources

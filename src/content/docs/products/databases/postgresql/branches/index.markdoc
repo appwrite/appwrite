@@ -1,0 +1,677 @@
+---
+layout: article
+title: Branches
+description: Spin up an ephemeral, isolated copy of your PostgreSQL database in seconds from a storage snapshot. Use branches for previews, migrations, and testing.
+---
+
+A branch is a short-lived, isolated copy of your database. It has its own endpoint and reuses the parent's credentials, because it is a snapshot copy of the parent's storage volume taken at a point in time. Branches are not replicas: once created, they diverge from the parent and never sync back.
+
+{% info title="Branches do not merge back" %}
+There is no branch merge operation. Use a branch to validate a migration, data repair, or application change, then intentionally cut application traffic over to the validated database or copy the data you want back with engine-native tools. Appwrite does not reconcile two diverged database histories for you.
+{% /info %}
+
+Use cases:
+
+- **Preview environments**: one branch per pull request, destroyed when the PR closes
+- **Test migrations**: apply a destructive `ALTER` against the branch first, observe the behavior, then run it against the source
+- **Reproduce a bug**: branch the database, attach a debugger, throw the branch away when done
+- **Heavy analytical queries**: `EXPLAIN ANALYZE` experiments against a branch cannot slow down the primary
+
+# How it works {% #how %}
+
+Creating a branch takes a fast `CHECKPOINT` on the parent, snapshots the parent's storage volume with a near-instant copy-on-write operation, and provisions a branch instance from the snapshot on the same engine version with its own isolated storage. Branch compute is fixed and lightweight, enough to validate a change rather than carry production load, and is not configurable. The parent and the branch share storage at the moment of branching; storage cost grows as the two diverge.
+
+# Create a branch {% #create %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createBranch({
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+    ttl: 86400,
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createBranch({
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+    ttl: 86400,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createBranch(
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+    ttl: 86400,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_branch(
+    database_id='<DATABASE_ID>',
+    branch_id='preview',
+    ttl=86400,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_branch(
+    database_id: '<DATABASE_ID>',
+    branch_id: 'preview',
+    ttl: 86400,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateBranch(
+    databaseId: "<DATABASE_ID>",
+    branchId: "preview",
+    ttl: 86400
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createBranch(
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+    ttl: 86400,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createBranch(
+    databaseId = "<DATABASE_ID>",
+    branchId = "preview",
+    ttl = 86400,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createBranch(
+    databaseId: "<DATABASE_ID>",
+    branchId: "preview",
+    ttl: 86400
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateBranch(
+        "<DATABASE_ID>",
+        postgresql.WithCreateBranchBranchId("preview"),
+        postgresql.WithCreateBranchTtl(86400),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_branch("<DATABASE_ID>", Some("preview"), Some(86400)).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "branchId": "preview",
+      "ttl": 86400
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/branches
+```
+{% /multicode %}
+
+Both fields are optional:
+
+| Field      | Default            | Purpose                                                              |
+|------------|--------------------|-----------------------------------------------------------------------|
+| `branchId` | auto-generated     | Custom ID (`a-z`, `A-Z`, `0-9`, `.`, `-`, `_`, max 36 chars)          |
+| `ttl`      | `86400` (24 hours) | Lifetime in seconds before the branch expires (min 300, max 604800)   |
+
+The call is asynchronous and returns immediately while the branch provisions in the background. When the TTL elapses, the branch and its storage are removed automatically.
+
+# List branches and connect {% #list %}
+
+Each entry carries its metadata and connection details, so there is no separate credentials call:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const branches = await postgresql.listBranches({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const branches = await postgresql.listBranches({
+    databaseId: '<DATABASE_ID>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$branches = $postgresql->listBranches(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+branches = postgresql.list_branches(
+    database_id='<DATABASE_ID>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+branches = postgresql.list_branches(
+    database_id: '<DATABASE_ID>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var branches = await postgresql.ListBranches(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final branches = await postgresql.listBranches(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val branches = postgresql.listBranches(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let branches = try await postgresql.listBranches(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.ListBranches("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let branches = postgresql.list_branches("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/branches
+```
+{% /multicode %}
+
+A branch gets its own hostname, and reuses the parent's username and password because it is a snapshot copy of the parent's storage. The port is the standard `5432`; branches have no connection pooler. Connect with the branch's `connectionString` straight from the response:
+
+```bash
+psql "<branch connectionString>"
+```
+
+# Delete a branch {% #delete %}
+
+Deleting a branch removes the branch's instance, its storage volume, and the underlying snapshot. There is no soft delete: once the branch is gone, the data is gone.
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.deleteBranch({
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.deleteBranch({
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->deleteBranch(
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.delete_branch(
+    database_id='<DATABASE_ID>',
+    branch_id='preview',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.delete_branch(
+    database_id: '<DATABASE_ID>',
+    branch_id: 'preview',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.DeleteBranch(
+    databaseId: "<DATABASE_ID>",
+    branchId: "preview"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.deleteBranch(
+    databaseId: '<DATABASE_ID>',
+    branchId: 'preview',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.deleteBranch(
+    databaseId = "<DATABASE_ID>",
+    branchId = "preview",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.deleteBranch(
+    databaseId: "<DATABASE_ID>",
+    branchId: "preview"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.DeleteBranch("<DATABASE_ID>", "preview")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.delete_branch("<DATABASE_ID>", "preview").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X DELETE \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/branches/preview
+```
+{% /multicode %}
+
+# Billing {% #billing %}
+
+A branch runs on fixed, lightweight compute, so its cost is dominated by storage. The snapshot is free at the moment of branching; storage cost accumulates as the branch's data diverges from the parent. There is no separate branch line item, branches roll into your regular database storage and compute totals.
+
+# Use case: per-PR preview database {% #ci-example %}
+
+A CI pipeline that branches on every pull request and tears down on close:
+
+```yaml
+name: preview-database
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  branch:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create branch
+        run: |
+          curl -X POST \
+            -H "X-Appwrite-Project: ${{ vars.APPWRITE_PROJECT_ID }}" \
+            -H "X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"branchId": "pr-${{ github.event.number }}", "ttl": 604800}' \
+            https://<REGION>.cloud.appwrite.io/v1/postgresql/${{ vars.DATABASE_ID }}/branches || true
+
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branch
+        run: |
+          curl -X DELETE \
+            -H "X-Appwrite-Project: ${{ vars.APPWRITE_PROJECT_ID }}" \
+            -H "X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}" \
+            https://<REGION>.cloud.appwrite.io/v1/postgresql/${{ vars.DATABASE_ID }}/branches/pr-${{ github.event.number }}
+```
+
+The `|| true` on the create call makes the workflow idempotent: if the branch already exists, the call is a no-op.

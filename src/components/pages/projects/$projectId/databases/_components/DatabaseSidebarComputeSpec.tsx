@@ -32,6 +32,8 @@ import { postgresNav } from '@/lib/postgres-database-routes'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
+  dedicatedDatabaseSourceFromRouteKind,
   useDatabaseSpecifications,
   useOrganizationScopes,
   usePostgresDatabase,
@@ -102,12 +104,20 @@ export function DatabaseSidebarComputeSpec({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const specificationsSource =
+    mode === 'postgres'
+      ? POSTGRES_DATABASE_SPECS_SOURCE
+      : dedicatedDatabaseSourceFromRouteKind(dbKind ?? 'tablesdb')
+  const { data: specificationsData } = useDatabaseSpecifications(
+    projectId,
+    specificationsSource,
+  )
   // Only fetch product DB metadata on product routes. Passing the Postgres id into
   // `useProjectDatabase` probes tablesdb/documentsdb/vectorsdb and fails noisily.
   const { database: productDatabase } = useProjectDatabase(
     projectId,
     mode === 'product' ? databaseId : null,
+    dbKind ?? 'tablesdb',
   )
   const { database: postgresDatabase } = usePostgresDatabase(
     projectId,

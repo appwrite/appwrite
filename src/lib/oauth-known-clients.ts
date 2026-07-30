@@ -10,7 +10,7 @@ import type { Models } from '@appwrite.io/console'
  *
  * Matching is heuristic and display-only: DCR metadata (client_name,
  * redirect_uris, client_uri) is entirely attacker-controllable, so a match
- * must never grant trust — it only picks a logo and groups duplicates.
+ * must never grant trust - it only picks a logo and groups duplicates.
  * When the API exposes redirect/client URIs, at least one must corroborate
  * the name match; when it strips them (apps the viewer can't manage), the
  * name match stands on its own.
@@ -142,7 +142,7 @@ function collectAppUris(
 
 /**
  * Match an OAuth2 client against the known-client registry. Works for
- * registered apps (DCR or console-created) and URL-form CIMD clients —
+ * registered apps (DCR or console-created) and URL-form CIMD clients -
  * pass the consent's `cimdUrl` when available so the document host can
  * corroborate the name match. Returns null when nothing matches; callers
  * then fall back to the app's own logoUri or the generic placeholder.
@@ -161,7 +161,7 @@ export function matchKnownOAuthClient(
     // Corroborate the name with a redirect or client URI when we have any.
     // The API strips redirectUris from apps the viewer can't manage (all
     // DCR-registered clients on the account applications page), so an empty
-    // list means "unavailable", not "none registered" — fall back to the
+    // list means "unavailable", not "none registered" - fall back to the
     // name match alone there. Matching stays display-only either way.
     if (
       client.uriPatterns &&

@@ -3,6 +3,7 @@ layout: post
 title: "Leveling up the Appwrite Functions ecosystem"
 description: The new Appwrite Functions ecosystem is now faster, smoother, better and more secure.
 date: 2024-08-21
+lastUpdated: 2026-06-29
 cover: /images/blog/init-day2/cover.avif
 timeToRead: 5
 author: luke-silver
@@ -45,7 +46,7 @@ To combat this, we've introduced automatically generated, short-lived API keys f
 Here's how you can use them:
 
 ```jsx
-import { Client, Databases } from 'node-appwrite';
+import { Client, TablesDB } from 'node-appwrite';
 
 export default async ({ req, res }) => {
     const client = new Client()
@@ -53,7 +54,7 @@ export default async ({ req, res }) => {
         .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
         .setKey(req.headers['x-appwrite-key']);
 
-    const databases = new Databases(client);
+    const tablesDB = new TablesDB(client);
 
     // Your function logic here
 

@@ -8,11 +8,16 @@ import {
 } from '@/lib/docs/firewall-docs-feature'
 import { isPartnersDocsEnabled, isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
+import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
+import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
+import { trackServerPageview } from '@/lib/server-analytics'
 import { getDocsMetaTags } from '@/lib/docs/route-meta'
 import {
   getDocsArticleSchema,
   getDocsBreadcrumbSchema,
 } from '@/lib/docs/seo'
+
+const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 
 function isFeatureGatedDocsSlugHidden(slug: string): boolean {
   if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) return true
@@ -25,8 +30,18 @@ export const Route = createFileRoute('/docs/$')({
   notFoundComponent: NotFoundView,
   server: {
     handlers: {
-      GET: async ({ params, next }) => {
+      GET: async ({ params, request, next }) => {
         const splat = params._splat ?? ''
+
+        if (splat === DOCS_LLMS_TXT_SPLAT) {
+          trackServerPageview(request)
+          return respondWithPrebuiltOrRuntime(
+            'docs/llms.txt',
+            'text/markdown; charset=utf-8',
+            () => generateDocsLlmsTxt(),
+          )
+        }
+
         if (!splat.endsWith('.md')) {
           return next()
         }
@@ -41,6 +56,8 @@ export const Route = createFileRoute('/docs/$')({
           return new Response('Not found', { status: 404 })
         }
 
+        trackServerPageview(request)
+
         return new Response(markdown, {
           headers: {
             'Content-Type': 'text/markdown; charset=utf-8',
@@ -52,7 +69,7 @@ export const Route = createFileRoute('/docs/$')({
   },
   beforeLoad: ({ params }) => {
     const splat = params._splat ?? ''
-    if (splat.endsWith('.md')) return
+    if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) return
 
     if (isFeatureGatedDocsSlugHidden(splat)) {
       throw redirect({ to: '/docs', replace: true })
@@ -60,7 +77,7 @@ export const Route = createFileRoute('/docs/$')({
   },
   loader: async ({ params }) => {
     const splat = params._splat ?? ''
-    if (splat.endsWith('.md')) {
+    if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) {
       throw notFound()
     }
 
@@ -91,6 +108,15 @@ export const Route = createFileRoute('/docs/$')({
     const { meta, slug } = { meta: loaderData.page.meta, slug: loaderData.page.meta.slug }
     return {
       meta: getDocsMetaTags({ ...meta, slug }),
+      links: slug
+        ? [
+            {
+              rel: 'alternate',
+              type: 'text/markdown',
+              href: `/docs/${slug}.md`,
+            },
+          ]
+        : [],
       scripts: [
         {
           type: 'application/ld+json',

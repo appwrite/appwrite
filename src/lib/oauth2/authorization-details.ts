@@ -23,7 +23,7 @@ import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 export const PROJECT_RAR_TYPE = 'project'
 export const ORGANIZATION_RAR_TYPE = 'organization'
 
-/** Wildcard identifier — binds a tier's scopes to every owned resource. */
+/** Wildcard identifier - binds a tier's scopes to every owned resource. */
 export const WILDCARD_IDENTIFIER = '*'
 
 /** The reserved internal project id; never a valid RAR target. */
@@ -125,7 +125,7 @@ export function serializeGrantedDetails(granted: {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Resource name resolution — turn identifiers into display names            */
+/*  Resource name resolution - turn identifiers into display names            */
 /* -------------------------------------------------------------------------- */
 
 export interface ResolvedResource {
@@ -154,15 +154,15 @@ function idOnlyMap(ids: string[]): ResourceNameMap {
 }
 
 /** How many results a resource search returns. Keeps the dropdown bounded and
- *  sidesteps pagination — the user types to narrow rather than scrolling. */
+ *  sidesteps pagination - the user types to narrow rather than scrolling. */
 const SEARCH_LIMIT = 8
 /** Cap on organizations swept per project search, to bound the request fan-out. */
 const SEARCH_ORG_SCAN = 20
 
 /**
  * Best-effort resolution of project ids to their display names. A bare project
- * id can't be fetched directly — projects are reachable only through their
- * owning organization — so we list the user's organizations and ask each for
+ * id can't be fetched directly - projects are reachable only through their
+ * owning organization - so we list the user's organizations and ask each for
  * the requested ids. Anything we can't find (not owned, or in a non-primary
  * region the console endpoint doesn't see) falls back to showing the raw id.
  * Never throws: on any failure the caller still gets an id-only map.
@@ -233,7 +233,7 @@ export async function resolveOrganizationNames(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Type-to-search — narrowing a wildcard grant to specific resources         */
+/*  Type-to-search - narrowing a wildcard grant to specific resources         */
 /* -------------------------------------------------------------------------- */
 
 /**

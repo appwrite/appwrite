@@ -3,6 +3,7 @@ layout: post
 title: "April Product update: MongoDB support, Appwrite 1.9.0, Realtime upgrades and AI tooling"
 description: Get a full recap of everything shipped across Appwrite in April, including the official MongoDB partnership in Appwrite 1.9.0, Terraform support, Realtime upgrades, performance improvements, new infrastructure APIs, and deeper AI integrations for Claude Code, Cursor, and MCP workflows.
 date: 2026-05-08
+lastUpdated: 2026-06-29
 cover: /images/blog/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling/cover.avif
 timeToRead: 5
 author: aishwari
@@ -10,7 +11,7 @@ category: product
 featured: false
 faqs:
   - question: "What's new in Appwrite 1.9.0?"
-    answer: "Appwrite 1.9.0 adds MongoDB as a supported database option for self-hosted deployments, better handling of large integers, new string column types, configurable caching, and improved database observability. Real-time, auth, and infrastructure all got updates too."
+    answer: "Appwrite 1.9.0 adds MongoDB as a supported database option for self-hosted deployments, better handling of large integers, new text column types, configurable caching, and improved database observability. Real-time, auth, and infrastructure all got updates too."
   - question: "Can I now use MongoDB with Appwrite?"
     answer: "Yes, on self-hosted Appwrite starting with version 1.9.0. You can run Appwrite directly on your existing MongoDB infrastructure while keeping the same SDKs and APIs. Backups, monitoring, and scaling tools you've built around MongoDB carry over."
   - question: "How does the new message-based Realtime work?"
@@ -49,7 +50,7 @@ You can run Appwrite directly on your existing MongoDB infrastructure while keep
 
 Reuse your existing backups, monitoring, and scaling setup while staying fully open source and self hosted.
 
-This release also includes improvements across Databases, Realtime, Auth, and infrastructure. You get better handling of large integers, new string column types, configurable caching, and improved observability for database usage.
+This release also includes improvements across Databases, Realtime, Auth, and infrastructure. You get better handling of large integers, new text column types, configurable caching, and improved observability for database usage.
 
 [Read the announcement](https://appwrite.io/blog/post/appwrite-mongodb-partnership-self-hosted)
 

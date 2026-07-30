@@ -5,22 +5,23 @@ description: Learn how to add a search function to your application.
 cover: /images/blog/add-a-search-function-to-your-app/cover.avif
 timeToRead: 5
 date: 2023-11-17
+lastUpdated: 2026-06-29
 author: haimantika-mitra
 category: tutorial
 featured: false
 faqs:
   - question: "Why use Meilisearch instead of Appwrite's built-in queries?"
-    answer: "[Appwrite Databases](/docs/products/databases) supports basic queries, including a `search` operator on indexed string columns, which is sufficient for many apps. Meilisearch adds typo tolerance, ranking, faceted filtering, and instant search-as-you-type that is a step up for product search or large content catalogues. Use the built-in queries until you hit limits, then introduce Meilisearch."
+    answer: "[Appwrite Databases](/docs/products/databases) supports basic queries, including a `search` operator on indexed text columns, which is sufficient for many apps. Meilisearch adds typo tolerance, ranking, faceted filtering, and instant search-as-you-type that is a step up for product search or large content catalogues. Use the built-in queries until you hit limits, then introduce Meilisearch."
   - question: "What is an Appwrite Function template?"
     answer: "Function templates are pre-built [Appwrite Functions](/docs/products/functions) you can deploy in a few clicks. They cover common integrations like Stripe, OpenAI, Meilisearch, and more. You configure the required environment variables, connect a Git repo, and the function is deployed and ready to call."
-  - question: "How does the Meilisearch sync function stay in sync with new documents?"
-    answer: "By default the template syncs documents on demand when the function runs. To keep the index up to date automatically, configure the function to trigger on database events (document.create, document.update, document.delete) so every change is mirrored to Meilisearch in near real time."
+  - question: "How does the Meilisearch sync function stay in sync with new rows?"
+    answer: "By default the template syncs rows on demand when the function runs. To keep the index up to date automatically, configure the function to trigger on `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.create`, `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.update`, and `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.delete` events so every change is mirrored to Meilisearch in near real time."
   - question: "Do I need to self-host Meilisearch to use this template?"
     answer: "No. Meilisearch Cloud is the easiest option and the template works against either Cloud or a self-hosted instance. You just need a Meilisearch endpoint URL, an admin API key for indexing, and a search key for client-side queries."
   - question: "Can I run the Meilisearch sync function on a schedule?"
     answer: "Yes. Appwrite Functions support CRON schedules, so you can run the sync every 5 minutes, every hour, or whatever cadence your use case needs. For most production cases, combining a periodic full sync with event-driven incremental updates gives you both consistency and freshness."
-  - question: "Is there a way to search documents directly in Appwrite without Meilisearch?"
-    answer: "Yes. Appwrite Databases supports a `Query.search` operator on string attributes that have a fulltext index. It is enough for simple search UIs. Meilisearch (or another dedicated search engine) is the right move once you need typo tolerance, custom ranking, or faceted filters."
+  - question: "Is there a way to search rows directly in Appwrite without Meilisearch?"
+    answer: "Yes. Appwrite Databases supports a `Query.search` operator on text columns that have a fulltext index. It is enough for simple search UIs. Meilisearch (or another dedicated search engine) is the right move once you need typo tolerance, custom ranking, or faceted filters."
 ---
 
 Function templates are pre-built Appwrite Functions that can be integrated into your Appwrite project with just a few clicks. Using them, you can easily incorporate new features and integrations into your app without writing additional code or managing infrastructure.
@@ -29,14 +30,14 @@ One such integration you can implement using Appwrite Functions is **Searching**
 
 # Setting up the Template
 
-Meilisearch is a flexible and powerful user-focused search engine that can be added to any website or application. The purpose of this function template is to sync documents in an Appwrite database collection to a Meilisearch index. Using this function template, users can explore, search, and retrieve information from the connected database collection. Through this template, documents from the Appwrite collection are systematically indexed within Meilisearch.
+Meilisearch is a flexible and powerful user-focused search engine that can be added to any website or application. The purpose of this function template is to sync rows in an Appwrite database table to a Meilisearch index. Using this function template, users can explore, search, and retrieve information from the connected database table. Through this template, rows from the Appwrite table are systematically indexed within Meilisearch.
 
 To use the function, you need the following set of keys:
 
 - `APPWRITE_KEY` - API Key to talk to Appwrite backend APIs.To generate API Keys you can follow the documentation [here](https://appwrite.io/docs/getting-started-for-server#apiKey)
 - `APPWRITE_ENDPOINT` - To get the Appwrite endpoint, you need to go to [Appwrite](https://cloud.appwrite.io/) and find it under “Settings”
-- `APPWRITE_DATABASE_ID` - The ID of the Appwrite database that contains the collection to sync. You can find the documentation [here](https://appwrite.io/docs/databases).
-- `APPWRITE_COLLECTION_ID` - The ID of the collection in the Appwrite database to sync.
+- `APPWRITE_DATABASE_ID` - The ID of the Appwrite database that contains the table to sync. You can find the documentation [here](/docs/products/databases).
+- `APPWRITE_TABLE_ID` - The ID of the table in the Appwrite database to sync.
 
 To use Meilisearch, you can either self-host it using the command 👇
 
@@ -63,12 +64,12 @@ Here’s the keys you need:
 
 ![Keys](/images/blog/add-a-search-function-to-your-app/connect.avif)
 
-- `MEILISEARCH_INDEX_NAME` - Name of the Meilisearch index to which the documents will be synchronized. For e.g, in the above picture, the Index name is `Newindex`. You can also find it under `Settings` as `Index Name`.
+- `MEILISEARCH_INDEX_NAME` - Name of the Meilisearch index to which the rows will be synchronized. For e.g, in the above picture, the Index name is `Newindex`. You can also find it under `Settings` as `Index Name`.
  
 
 ## Preparing the Function
 
-The function template syncs documents in an Appwrite database collection to a Meilisearch index. It should get you up and running, but you will need to add real data to build a useful search index.
+The function template syncs rows in an Appwrite database table to a Meilisearch index. It should get you up and running, but you will need to add real data to build a useful search index.
 
 If you want to see the source code, you can find it on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/sync-with-meilisearch). Now, let’s navigate to our functions page on **[Appwrite](https://cloud.appwrite.io/)**. From there, we will select the **Templates** tab, search for and select the **Sync with Meilisearch** function template.
 
@@ -76,7 +77,7 @@ If you want to see the source code, you can find it on our [templates GitHub re
 
 ![templates](/images/blog/add-a-search-function-to-your-app/templates.avif)
 
-The function requires `APPWRITE_API_KEY`, `APPWRITE_DATABASE_ID`, `APPWRITE_COLLECTION_ID` , `MEILISEARCH_ENDPOINT`, `MEILISEARCH_ADMIN_API_KEY`, `MEILISEARCH_SEARCH_API_KEY`, `MEILISEARCH_INDEX_NAME`. Once you have added them you can proceed to the Connect step.
+The function requires `APPWRITE_API_KEY`, `APPWRITE_DATABASE_ID`, `APPWRITE_TABLE_ID`, `MEILISEARCH_ENDPOINT`, `MEILISEARCH_ADMIN_API_KEY`, `MEILISEARCH_SEARCH_API_KEY`, `MEILISEARCH_INDEX_NAME`. Once you have added them you can proceed to the Connect step.
 
 Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
 
@@ -97,7 +98,7 @@ Visit the **Domains** tab on the function page and copy the domain URL to test
 We’ve added search functionality to our app and opened up many possibilities to improve the experience of our app’s users.
 
 How can the *template* be extended ?
-- Using events to automatically index new collections
+- Using `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.create`, `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.update`, and `tablesdb.<DATABASE_ID>.tables.<TABLE_ID>.rows.*.delete` events to automatically index new rows
 - Using weights and other meilisearch features to optimise search such as excluding certain fields from indexing
 
 Some examples are:
@@ -109,6 +110,6 @@ Be sure to check out the other available Function Templates. We’ve created mul
 
 For more information about Appwrite and Appwrite Functions:
 
-1. **[Appwrite Function Docs](https://appwrite.io/docs/functions)**: These documents provide more information on how to use Appwrite Functions.
+1. **[Appwrite Function Docs](/docs/products/functions)**: Learn more about how to use Appwrite Functions.
 2. **[Functions Announcement](https://dev.to/appwrite/serverless-your-way-unleashing-appwrite-functions-true-potential-2l4f)**: Read the full announcement on Functions 1.4.
-3. **[Appwrite Discord](https://discord.com/invite/appwrite)**: Connect with other developers and the Appwrite team for discussion, questions, and collaboration.
+3. **[Appwrite Discord](/discord)**: Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

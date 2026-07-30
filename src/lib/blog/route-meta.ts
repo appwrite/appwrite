@@ -17,8 +17,14 @@ export function getBlogIndexRouteMetaTags(options?: BlogSeoOptions) {
   return asRouteMetaTags(buildBlogIndexMetaTags(options) as unknown as MetaTag[])
 }
 
-export function getBlogPostRouteMetaTags(post: BlogPost, options?: BlogSeoOptions) {
-  return asRouteMetaTags(buildBlogPostMetaTags(post, options) as unknown as MetaTag[])
+export function getBlogPostRouteMetaTags(
+  post: BlogPost,
+  authors: BlogAuthor[] = [],
+  options?: BlogSeoOptions,
+) {
+  return asRouteMetaTags(
+    buildBlogPostMetaTags(post, authors, options) as unknown as MetaTag[],
+  )
 }
 
 export function getBlogCategoryRouteMetaTags(

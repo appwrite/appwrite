@@ -270,11 +270,28 @@ export async function fetchProjectById(projectId: string): Promise<Models.Projec
     }
     return response
   } catch (error) {
-    const list = await listConsoleProjects({
-      queries: [Query.equal('$id', projectId), Query.limit(1)],
-      total: false,
-    })
-    const stub = list.projects?.[0]
+    const { fetchOrganizations } = await import(
+      '@/lib/react-query/hooks/organizations'
+    )
+    const orgs = await fetchOrganizations().catch(() => ({ teams: [] as Array<{ $id: string }> }))
+    let stub: Models.Project | undefined
+    for (const org of orgs.teams ?? []) {
+      try {
+        const list = await listConsoleProjects({
+          organizationId: org.$id,
+          queries: [
+            Query.equal('teamId', org.$id),
+            Query.equal('$id', projectId),
+            Query.limit(1),
+          ],
+          total: false,
+        })
+        stub = list.projects?.[0]
+        if (stub) break
+      } catch {
+        // Try the next organization.
+      }
+    }
     if (!stub) {
       throw error
     }

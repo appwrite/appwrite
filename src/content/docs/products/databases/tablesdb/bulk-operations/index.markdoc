@@ -1,0 +1,566 @@
+---
+layout: article
+title: Bulk operations
+description: Perform bulk operations on rows within your tables for efficient data handling.
+---
+
+Appwrite Databases supports bulk operations for rows, allowing you to create, update, or delete multiple rows in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets.
+
+Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments can perform large-scale data operations.
+
+For client applications that need bulk-like functionality, consider using [Appwrite Functions](/docs/products/functions) with proper rate limiting and validation.
+
+{% info title="Important notes" %}
+- Bulk operations trigger Functions, Webhooks, or Realtime events for each row manipulated. Rather than a single event for the entire bulk operation, each row generates a separate event on the existing realtime channels for its operation type.
+- Tables that contain relationship columns are not supported via bulk operations. Use individual row operations for tables with relationships.
+{% /info %}
+
+# Atomic behavior {% #atomic-behavior %}
+
+Bulk operations in Appwrite are **atomic**, meaning they follow an all-or-nothing approach. Either all rows in your bulk request succeed, or all rows fail.
+
+This atomicity ensures:
+- **Data consistency**: Your database remains in a consistent state even if some operations would fail.
+- **Race condition prevention**: Multiple clients can safely perform bulk operations simultaneously.
+- **Simplified error handling**: You only need to handle complete success or complete failure scenarios.
+
+For example, if you attempt to create 100 rows and one fails due to a validation error, none of the 100 rows will be created.
+
+# Plan limits {% #plan-limits %}
+
+Bulk operations have different limits based on your Appwrite plan:
+
+| Plan | Rows per request |
+|------|----------------------|
+| Free | 100 |
+| Pro  | 1,000 |
+
+These limits apply to all bulk operations including create, update, upsert, and delete operations. If you need higher limits than what the Pro plan offers, you can [inquire](/contact-us/enterprise) about a custom plan.
+
+# Create rows {% #create-rows %}
+
+You can create multiple rows in a single request using the `createRows` method.
+
+{% info title="Custom timestamps" %}
+When creating, updating or upserting in bulk, you can set `$createdAt` and `$updatedAt` for each row in the payload. Values must be ISO 8601 date-time strings. If omitted, Appwrite sets them automatically.
+{% /info %}
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.createRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rows: [
+        {
+            $id: sdk.ID.unique(),
+            name: 'Row 1'
+        },
+        {
+            $id: sdk.ID.unique(),
+            name: 'Row 2'
+        }
+    ]
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.create_rows(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    rows = [
+        {
+            '$id': appwrite.ID.unique(),
+            'name': 'Row 1'
+        },
+        {
+            '$id': appwrite.ID.unique(),
+            'name': 'Row 2'
+        }
+    ]
+)
+```
+
+```rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.create_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        vec![
+            json!({
+                "$id": ID::unique(),
+                "name": "Row 1"
+            }),
+            json!({
+                "$id": ID::unique(),
+                "name": "Row 2"
+            }),
+        ],
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Update rows {% #update-rows %}
+
+{% info title="Permissions required" %}
+You must grant **update** permissions to users at the **table level** before users can update rows.
+[Learn more about permissions](/docs/products/databases/permissions)
+{% /info %}
+
+You can update multiple rows in a single request using the `updateRows` method.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.updateRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    data: {
+        status: 'published'
+    },
+    queries: [
+        sdk.Query.equal('status', 'draft')
+    ]
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.update_rows(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    data = {
+        'status': 'published'
+    },
+    queries = [
+        Query.equal('status', 'draft')
+    ]
+)
+```
+
+```rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::query::Query;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.update_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(json!({
+            "status": "published"
+        })),
+        Some(vec![
+            Query::equal("status", "draft").to_string(),
+        ]),
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Upsert rows {% #upsert-rows %}
+
+{% info title="Permissions required" %}
+You must grant **create** and **update** permissions to users at the **table level** before users can create rows.
+[Learn more about permissions](/docs/products/databases/permissions)
+{% /info %}
+
+You can upsert multiple rows in a single request using the `upsertRows(` method.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.upsertRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rows: [
+        {
+            $id: sdk.ID.unique(),
+            name: 'New Row 1'
+        },
+        {
+            $id: 'row-id-2', // Existing row ID
+            name: 'New Row 2'
+        }
+    ]
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.id import ID
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.upsert_rows(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    rows = [
+        {
+            '$id': appwrite.ID.unique(),
+            'name': 'Row 1'
+        },
+        {
+            '$id': 'row-id-2',  # Existing row ID
+            'name': 'New Row 2'
+        }
+    ]
+)
+```
+
+```rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.upsert_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        vec![
+            json!({
+                "$id": ID::unique(),
+                "name": "New Row 1"
+            }),
+            json!({
+                "$id": "row-id-2", // Existing row ID
+                "name": "New Row 2"
+            }),
+        ],
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Delete rows {% #delete-rows %}
+
+{% info title="Permissions required" %}
+You must grant **delete** permissions to users at the **table level** before users can delete rows.
+[Learn more about permissions](/docs/products/databases/permissions)
+{% /info %}
+
+You can delete multiple rows in a single request using the `deleteRows` method.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.deleteRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        sdk.Query.equal('status', 'archived')
+    ]
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.delete_rows(
+    database_id = '<DATABASE_ID>',
+    table_id = '<TABLE_ID>',
+    queries = [
+        Query.equal('status', 'archived')
+    ]
+)
+```
+
+```rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.delete_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(vec![
+            Query::equal("status", "archived").to_string(),
+        ]),
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+{% info title="Queries for deletion" %}
+
+When deleting rows, you must specify queries to filter which rows to delete.
+If no queries are provided, all rows in the table will be deleted.
+[Learn more about queries](/docs/products/databases/queries).
+
+{% /info %}
+
+# Use transactions {% #use-transactions %}
+
+All bulk operations accept `transactionId`. When provided, Appwrite stages the bulk request and applies it on commit. See [Transactions](/docs/products/databases/transactions).
+
+{% multicode %}
+```server-nodejs
+await tablesDB.createRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rows: [
+    { $id: sdk.ID.unique(), name: 'One' },
+    { $id: sdk.ID.unique(), name: 'Two' }
+  ],
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-python
+tablesDB.create_rows(
+  database_id = '<DATABASE_ID>',
+  table_id = '<TABLE_ID>',
+  rows = [
+    { '$id': appwrite.ID.unique(), 'name': 'One' },
+    { '$id': appwrite.ID.unique(), 'name': 'Two' }
+  ],
+  transaction_id = '<TRANSACTION_ID>'
+)
+```
+```server-deno
+await tablesDB.createRows({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rows: [
+    { $id: sdk.ID.unique(), name: 'One' },
+    { $id: sdk.ID.unique(), name: 'Two' }
+  ],
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```server-php
+$tablesDB->createRows(
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rows: [
+    [ '$id' => ID::unique(), 'name' => 'One' ],
+    [ '$id' => ID::unique(), 'name' => 'Two' ]
+  ],
+  transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-ruby
+tablesDB.create_rows(
+  database_id: '<DATABASE_ID>',
+  table_id: '<TABLE_ID>',
+  rows: [
+    { '$id' => ID.unique(), 'name' => 'One' },
+    { '$id' => ID.unique(), 'name' => 'Two' }
+  ],
+  transaction_id: '<TRANSACTION_ID>'
+)
+```
+```server-dotnet
+await tablesDB.CreateRows(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rows: new List<Dictionary<string, object>>
+  {
+    new Dictionary<string, object>
+    {
+      ["$id"] = ID.Unique(),
+      ["name"] = "One"
+    },
+    new Dictionary<string, object>
+    {
+      ["$id"] = ID.Unique(),
+      ["name"] = "Two"
+    }
+  },
+  transactionId: "<TRANSACTION_ID>"
+);
+```
+```server-dart
+await tablesDB.createRows(
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rows: [
+    { '\$id': ID.unique(), 'name': 'One' },
+    { '\$id': ID.unique(), 'name': 'Two' }
+  ],
+  transactionId: '<TRANSACTION_ID>'
+);
+```
+```server-swift
+try await tablesDB.createRows(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rows: [
+    ["$id": ID.unique(), "name": "One"],
+    ["$id": ID.unique(), "name": "Two"]
+  ],
+  transactionId: "<TRANSACTION_ID>"
+)
+```
+```server-kotlin
+tablesDB.createRows(
+  databaseId = "<DATABASE_ID>",
+  tableId = "<TABLE_ID>",
+  rows = listOf(
+    mapOf("\$id" to ID.unique(), "name" to "One"),
+    mapOf("\$id" to ID.unique(), "name" to "Two")
+  ),
+  transactionId = "<TRANSACTION_ID>"
+)
+```
+```server-java
+tablesDB.createRows(
+  "<DATABASE_ID>",
+  "<TABLE_ID>",
+  Arrays.asList(
+    Map.of(
+      "$id", ID.unique(),
+      "name", "One"
+    ),
+    Map.of(
+      "$id", ID.unique(),
+      "name", "Two"
+    )
+  ),
+  "<TRANSACTION_ID>",
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return null;
+    }
+    System.out.println(result);
+    return null;
+  })
+);
+```
+```rust
+let result = tables_db.create_rows(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    vec![
+        json!({
+            "$id": ID::unique(),
+            "name": "One"
+        }),
+        json!({
+            "$id": ID::unique(),
+            "name": "Two"
+        }),
+    ],
+    Some("<TRANSACTION_ID>"),
+).await?;
+```
+{% /multicode %}

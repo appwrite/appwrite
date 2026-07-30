@@ -377,7 +377,14 @@ export function ProjectSettingsOverview({
           `${t('Name must be between 1 and')} ${PROJECT_NAME_MAX_LENGTH} ${t('characters')}`,
         )
       }
-      await updateConsoleProject({ projectId, name: trimmedName })
+      if (!project?.teamId) {
+        throw new Error(t('Organization not found for this project'))
+      }
+      await updateConsoleProject({
+        projectId,
+        name: trimmedName,
+        organizationId: project.teamId,
+      })
     },
     onSuccess: async () => {
       toast.success(t('Project name has been updated'))

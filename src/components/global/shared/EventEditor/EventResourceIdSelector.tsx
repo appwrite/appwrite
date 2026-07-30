@@ -40,6 +40,8 @@ import {
   tableColumnsQueryOptions,
   tableIndexesQueryOptions,
 } from '@/lib/react-query/hooks/databases'
+import { databaseRouteKindFromApiType } from '@/lib/database-routes'
+import { Query } from '@appwrite.io/console'
 import {
   bucketsQueryOptions,
   bucketFilesQueryOptions,
@@ -158,15 +160,37 @@ export function EventResourceIdSelector({
     placeholderData: keepPreviousData,
   })
 
+  // Resolve the selected database's product kind so table/row/column/index
+  // lookups hit the right product API. Never guess; fetch via the
+  // product-agnostic console list filtered by ID.
+  const needsDbKind =
+    !!databaseId &&
+    (type === 'table' || type === 'row' || type === 'column' || type === 'index')
+  const dbTypeQuery = useQuery({
+    ...consoleDatabasesQueryOptions(projectId, 0, 1, undefined, [
+      Query.equal('$id', [databaseId ?? '']),
+    ]),
+    enabled: !!projectId && !!databaseId && open && needsDbKind,
+  })
+  const dbKind = databaseRouteKindFromApiType(
+    dbTypeQuery.data?.databases?.[0]?.type,
+  )
+
   const tableQuery = useQuery({
     ...tablesQueryOptions(
       projectId,
       databaseId,
+      dbKind,
       0,
       20,
       debouncedSearch || undefined,
     ),
-    enabled: !!projectId && !!databaseId && open && type === 'table',
+    enabled:
+      !!projectId &&
+      !!databaseId &&
+      open &&
+      type === 'table' &&
+      dbTypeQuery.isFetched,
     placeholderData: keepPreviousData,
   })
 
@@ -190,28 +214,49 @@ export function EventResourceIdSelector({
 
   const rowQuery = useQuery({
     ...tableRowsQueryOptions(
-      projectId,
-      databaseId,
-      tableId,
-      0,
+            projectId,
+            databaseId,
+            tableId,
+            dbKind,
+            0,
       20,
       debouncedSearch || undefined,
-    ),
-    enabled: !!projectId && !!databaseId && !!tableId && open && type === 'row',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+          ),
+    enabled:
+      !!projectId &&
+      !!databaseId &&
+      !!tableId &&
+      open &&
+      type === 'row' &&
+      dbTypeQuery.isFetched,
     placeholderData: keepPreviousData,
   })
 
   const columnQuery = useQuery({
-    ...tableColumnsQueryOptions(projectId, databaseId, tableId),
+    ...tableColumnsQueryOptions(projectId, databaseId, dbKind, tableId),
     enabled:
-      !!projectId && !!databaseId && !!tableId && open && type === 'column',
+      !!projectId &&
+      !!databaseId &&
+      !!tableId &&
+      open &&
+      type === 'column' &&
+      dbTypeQuery.isFetched,
     placeholderData: keepPreviousData,
   })
 
   const indexQuery = useQuery({
-    ...tableIndexesQueryOptions(projectId, databaseId, tableId),
+    ...tableIndexesQueryOptions(projectId, databaseId, dbKind, tableId),
     enabled:
-      !!projectId && !!databaseId && !!tableId && open && type === 'index',
+      !!projectId &&
+      !!databaseId &&
+      !!tableId &&
+      open &&
+      type === 'index' &&
+      dbTypeQuery.isFetched,
     placeholderData: keepPreviousData,
   })
 

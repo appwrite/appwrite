@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/tanstackstart-react'
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { getSentryEnvironment } from '@/lib/sentry/environment'
 import { shouldSkipSentryError } from '@/lib/sentry/report-error'
 
 let sentryInitialized = false
@@ -11,6 +12,7 @@ export function initSentryClient() {
 
   Sentry.init({
     dsn: sentryDsn,
+    environment: getSentryEnvironment(),
     sendDefaultPii: false,
     beforeSend(event, hint) {
       if (shouldSkipSentryError(hint.originalException)) return null

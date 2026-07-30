@@ -1459,13 +1459,13 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Databases: Tables DB — which row attributes to fetch & column order (account)
+// Databases: Tables DB - which row attributes to fetch & column order (account)
 // ---------------------------------------------------------------------------
 
 /**
  * Per-table preference key: `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`
  *
- * Value: JSON string `string[]` — ordered column keys: optional system fields
+ * Value: JSON string `string[]` - ordered column keys: optional system fields
  * (`$sequence`, `$id`, `$createdAt`, `$updatedAt`) plus attribute keys.
  * Prefix `!` on a key means it is hidden but keeps its position in the list.
  * Absent or invalid: fetch and show all columns (default).
@@ -1812,7 +1812,7 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Console right pane width (account prefs) — shared by docs, assistant, etc.
+// Console right pane width (account prefs) - shared by docs, assistant, etc.
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.rightPane.widthPx` - shared right pane width in pixels. */
