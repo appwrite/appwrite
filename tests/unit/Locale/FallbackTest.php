@@ -9,18 +9,37 @@ use Utopia\Locale\Locale;
 
 final class FallbackTest extends TestCase
 {
+    private const COMPLETE = 'test-fallback-complete';
+    private const PARTIAL = 'test-fallback-partial';
+
+    private bool $exceptions;
+
     protected function setUp(): void
     {
-        $translationsDir = __DIR__ . '/../../../app/config/locale/translations';
+        $this->exceptions = Locale::$exceptions;
         Locale::$exceptions = false;
-        Locale::setLanguageFromJSON('en', $translationsDir . '/en.json');
-        Locale::setLanguageFromJSON('fr', $translationsDir . '/fr.json');
+
+        // Synthetic catalogs, because shipped translations get completed over
+        // time (see #12449) and asserting on their coverage is self-breaking.
+        Locale::setLanguageFromArray(self::COMPLETE, [
+            'emails.verification.subject' => 'Account Verification',
+            'emails.verification.preview' => 'Verify your email to activate your {{project}} account.',
+        ]);
+
+        Locale::setLanguageFromArray(self::PARTIAL, [
+            'emails.verification.subject' => 'Vérification du compte',
+        ]);
     }
 
-    public function testIncompleteLocaleFallsBackToEnglishForMissingEmailKeys(): void
+    protected function tearDown(): void
     {
-        $locale = new Locale('fr');
-        $locale->setFallback('en');
+        Locale::$exceptions = $this->exceptions;
+    }
+
+    public function testIncompleteLocaleFallsBackToCompleteLocaleForMissingEmailKeys(): void
+    {
+        $locale = new Locale(self::PARTIAL);
+        $locale->setFallback(self::COMPLETE);
 
         $preview = $locale->getText('emails.verification.preview');
 
@@ -29,15 +48,15 @@ final class FallbackTest extends TestCase
             'Verify your email to activate your {{project}} account.',
             $preview
         );
-        // Keys present in fr stay French.
+        // Keys present in the requested locale are not overridden by the fallback.
         $this->assertSame('Vérification du compte', $locale->getText('emails.verification.subject'));
     }
 
     public function testFallbackMatchingIncompleteLocaleLeaksRawKeys(): void
     {
-        $locale = new Locale('fr');
-        // Mirrors the previous bug: fallback = _APP_LOCALE when that env is fr.
-        $locale->setFallback('fr');
+        $locale = new Locale(self::PARTIAL);
+        // Mirrors the previous bug: fallback = _APP_LOCALE when that env is a partial locale.
+        $locale->setFallback(self::PARTIAL);
 
         $this->assertSame(
             '{{emails.verification.preview}}',
