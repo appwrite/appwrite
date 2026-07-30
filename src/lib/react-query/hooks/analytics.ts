@@ -44,6 +44,55 @@ import {
  */
 export type AnalyticsRange = { startAt: string; endAt: string }
 
+/**
+ * How long an analytics read may take before its query is failed.
+ *
+ * The SDK sets no request timeout, so a stalled connection leaves the query
+ * fetching forever. That is what pinned the refresh control: `isRefreshing`
+ * derives from `useIsFetching`, which faithfully reports a request that never
+ * settles, and `RefreshButton` disables itself while refreshing - so the icon
+ * spun and the button could not be clicked again. Verified with query-core:
+ * one queryFn that never resolves holds the fetching count at 1 indefinitely
+ * while every other query settles.
+ *
+ * A timeout fixes it at the source. The query fails, the panel shows its own
+ * error, the spinner stops and the button is clickable again.
+ */
+const READ_TIMEOUT_MS = 20_000
+
+/**
+ * Reject if `request` has not settled within `READ_TIMEOUT_MS`.
+ *
+ * Note this does not abort the underlying HTTP request - the console SDK takes
+ * no AbortSignal - it only stops the query from waiting on it. A late response
+ * is ignored, since React Query has already settled the query.
+ */
+async function withReadTimeout<T>(
+  operation: string,
+  request: Promise<T>,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `Analytics ${operation} timed out after ${READ_TIMEOUT_MS / 1000}s`,
+              ),
+            ),
+          READ_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /** Rows requested per breakdown panel; panels show fewer until expanded. */
 export const ANALYTICS_BREAKDOWN_LIMIT = 30
 
@@ -130,15 +179,18 @@ export async function fetchAnalyticsProperties(
     return { properties: [] as Models.AnalyticsProperty[], total: 0 }
   }
 
-  const response = await sdk.forProject(projectId).analytics.listProperties({
-    queries: [
-      Query.orderDesc('$createdAt'),
-      Query.limit(limit),
-      Query.offset(page * limit),
-    ],
-    search: search?.trim() || undefined,
-    total: true,
-  })
+  const response = await withReadTimeout(
+    'listProperties',
+    sdk.forProject(projectId).analytics.listProperties({
+      queries: [
+        Query.orderDesc('$createdAt'),
+        Query.limit(limit),
+        Query.offset(page * limit),
+      ],
+      search: search?.trim() || undefined,
+      total: true,
+    }),
+  )
 
   return {
     properties: response.properties || [],
@@ -190,7 +242,10 @@ export async function fetchAnalyticsProperty(
   projectId: string,
   propertyId: string,
 ) {
-  return await sdk.forProject(projectId).analytics.getProperty({ propertyId })
+  return await withReadTimeout(
+    'getProperty',
+    sdk.forProject(projectId).analytics.getProperty({ propertyId }),
+  )
 }
 
 export function analyticsPropertyQueryOptions(
@@ -228,11 +283,14 @@ export async function fetchAnalyticsStats(
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
-  return await sdk.forProject(projectId).analytics.getStats({
-    propertyId,
-    startAt: range.startAt,
-    endAt: range.endAt,
-  })
+  return await withReadTimeout(
+    'getStats',
+    sdk.forProject(projectId).analytics.getStats({
+      propertyId,
+      startAt: range.startAt,
+      endAt: range.endAt,
+    }),
+  )
 }
 
 export function analyticsStatsQueryOptions(
@@ -306,11 +364,14 @@ export async function fetchAnalyticsEvents(
   propertyId: string,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
-  const response = await sdk.forProject(projectId).analytics.listEvents({
-    propertyId,
-    startAt: range.startAt,
-    endAt: range.endAt,
-  })
+  const response = await withReadTimeout(
+    'listEvents',
+    sdk.forProject(projectId).analytics.listEvents({
+      propertyId,
+      startAt: range.startAt,
+      endAt: range.endAt,
+    }),
+  )
 
   return {
     events: response.events || [],
@@ -386,23 +447,37 @@ export function useRefreshAnalyticsProperty(
    * Reading `isFetching` cannot desync from reality: it falls to 0 exactly when
    * the requests finish, and it stays 0 when a refresh matches nothing, which
    * makes "nothing happened" visible instead of faking a spin.
+   *
+   * It does still report a request that never finishes, which is its own kind of
+   * stuck spinner - see `READ_TIMEOUT_MS`, which bounds every analytics read so
+   * there is always something for this count to fall back from.
    */
   const fetchingCount = useIsFetching({ predicate: matchesProperty })
 
   const refresh = useCallback(() => {
     if (!projectId || !propertyId) return
-    // Fire and forget: the spinner follows real fetch activity, so there is no
-    // promise to await and no flag to reset.
+
+    // Fire and forget, twice, because the two calls cover different queries and
+    // neither covers all of them (both measured against query-core):
+    //
+    // `refetchQueries` with `type: 'all'` refetches what is on screen plus
+    // queries whose panel is unmounted but still cached. It does NOT touch a
+    // query whose observer is mounted-but-disabled, which is exactly what a
+    // dimension panel's hidden tabs are - so on its own it left a hidden tab
+    // showing pre-refresh numbers for as long as its cache entry lived.
+    //
+    // `invalidateQueries` marks those stale so they refetch when their tab is
+    // shown. `refetchType: 'none'` because the call above already refetched
+    // everything active; without it the visible panels would fetch twice.
     void queryClient
-      .refetchQueries({
-        // `type: 'all'` also refetches queries whose panel is not currently
-        // mounted (an inactive tab), so switching tabs after a refresh shows
-        // fresh data instead of a stale cache entry.
-        type: 'all',
-        predicate: matchesProperty,
-      })
+      .refetchQueries({ type: 'all', predicate: matchesProperty })
       .catch(() => {
         // Failures surface through each query's own error state.
+      })
+    void queryClient
+      .invalidateQueries({ predicate: matchesProperty, refetchType: 'none' })
+      .catch(() => {
+        // Marking cache entries stale cannot fail in a way the user can act on.
       })
   }, [queryClient, matchesProperty, projectId, propertyId])
 
@@ -473,12 +548,15 @@ export async function fetchAnalyticsEventMetrics(
   eventName: string = ANALYTICS_PAGEVIEW_EVENT,
   range: AnalyticsRange = getDefaultAnalyticsRange(),
 ) {
-  const response = await sdk.forProject(projectId).analytics.getEventMetrics({
-    propertyId,
-    eventName,
-    startAt: range.startAt,
-    endAt: range.endAt,
-  })
+  const response = await withReadTimeout(
+    'getEventMetrics',
+    sdk.forProject(projectId).analytics.getEventMetrics({
+      propertyId,
+      eventName,
+      startAt: range.startAt,
+      endAt: range.endAt,
+    }),
+  )
 
   return {
     points: response.metrics || [],
@@ -543,13 +621,16 @@ export async function fetchAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
 ) {
-  const response = await sdk.forProject(projectId).analytics.getBreakdown({
-    propertyId,
-    dimension,
-    startAt: range.startAt,
-    endAt: range.endAt,
-    limit,
-  })
+  const response = await withReadTimeout(
+    'getBreakdown',
+    sdk.forProject(projectId).analytics.getBreakdown({
+      propertyId,
+      dimension,
+      startAt: range.startAt,
+      endAt: range.endAt,
+      limit,
+    }),
+  )
 
   return {
     breakdown: response.breakdown || [],
