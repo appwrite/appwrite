@@ -108,7 +108,9 @@ export function ConsoleRightPane() {
       ref={panelRef}
       style={{ width: `${widthPx}px` }}
       className={cn(
-        'relative flex h-full shrink-0 flex-col border-s border-border bg-background',
+        // Above ConsoleLayout sticky header (z-[110]) so the centered resize
+        // rail hover/drag highlight is not clipped where it overlaps the header.
+        'relative z-[111] flex h-full shrink-0 flex-col border-s border-border bg-background',
         resolvedContent === 'assistant' &&
           '[&_button:not(:disabled)]:cursor-pointer',
       )}
