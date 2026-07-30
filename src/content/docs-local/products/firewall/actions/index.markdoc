@@ -43,6 +43,11 @@ Challenge verifies matching requests before allowing them through. Clients that 
 
 Use challenge instead of deny when you want to filter out automated traffic without hard-blocking legitimate users, for example on sign-in, sign-up, or other abuse-prone paths.
 
+| Setting | Purpose | Limits |
+|---------|---------|--------|
+| **Difficulty** | Client-side proof-of-work cost. Higher values demand more work from the client, deterring automated traffic at the cost of a slower challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
+| **TTL (seconds)** | How long a visitor stays cleared after passing the challenge before being challenged again | `900` (15 minutes) to `86400` (24 hours), Console default `1800` (30 minutes) |
+
 Behavior:
 
 - The Console creates challenge rules with the platform default challenge type. The API also accepts an optional `challengeType` parameter.
@@ -52,14 +57,17 @@ Challenged requests appear in [traffic overview](/docs/products/firewall/monitor
 
 # Rate limit {% #rate-limit %}
 
-Rate limit throttles matching requests that exceed a quota. The quota is counted **per client IP, per rule, per project**.
+Rate limit throttles matching requests that exceed a quota. The quota is counted **per bucket key, per rule, per project**, where the key is either the client IP or the authenticated user (see **Limit by** below).
 
 | Setting | Purpose | Limits |
 |---------|---------|--------|
 | **Request limit** | Maximum matching requests allowed in the interval | `1` to `1000000` (Console default `100`) |
 | **Interval (seconds)** | Sliding window length for the quota | `1` to `86400` (Console default `60`) |
+| **Limit by** | What the quota is bucketed by: `ip` counts per client IP, `userId` counts per authenticated user | `ip` or `userId` (Console default `ip`) |
 
-Example: limit `100` with interval `60` allows up to 100 matching requests per minute from each client IP for that rule.
+Example: limit `100` with interval `60` and **Limit by** `ip` allows up to 100 matching requests per minute from each client IP for that rule. Choose `userId` instead to enforce the quota per authenticated user regardless of the IP they connect from.
+
+When **Limit by** is set to `userId`, Appwrite reads the authenticated user from the `x-appwrite-user-jwt` request header, which must contain a valid user JWT. Requests that reach a `userId` rate limit rule without this header cannot be attributed to a user and are not counted against the per-user quota, so pair the rule with conditions (or an earlier deny rule) if unauthenticated traffic should be handled separately.
 
 Important behaviors:
 
