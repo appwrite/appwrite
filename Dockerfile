@@ -74,4 +74,5 @@ HEALTHCHECK \
       .then((r) => process.exit(r.ok ? 0 : 1)) \
       .catch(() => process.exit(1))'
 
-CMD ["bun", "run", "server.ts"]
+# Preload Sentry before server.ts so boot-time import failures are reported.
+CMD ["bun", "--preload", "./src/lib/sentry/init-server.ts", "run", "server.ts"]
