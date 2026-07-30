@@ -189,8 +189,9 @@ function getCodeFiles(
     endpoint,
     projectId,
   )
-  const envLabel = frameworkId === 'next' ? '.env.local' : '.env'
+  const envLabel = '.env'
   const tsLang = 'typescript' as CodeBlockLanguage
+  const jsLang = 'javascript' as CodeBlockLanguage
 
   const webEndpoint =
     frameworkId === 'next'
@@ -215,10 +216,190 @@ function getCodeFiles(
   switch (sdkId) {
     case 'web': {
       if (frameworkId === 'react') {
+        const isCra = usingId === 'cra'
+        if (isCra) {
+          return [
+            { label: envLabel, code: envCode, language: 'env' },
+            {
+              label: 'src/lib/appwrite.js',
+              code: `import { Client } from 'appwrite'
+
+${clientInitWeb}
+
+export { client }
+`,
+              language: jsLang,
+            },
+            {
+              label: 'src/App.js',
+              code: `import { useEffect, useState } from 'react'
+import './App.css'
+import { client } from './lib/appwrite'
+import { Account } from 'appwrite'
+import { SignIn } from './pages/SignIn'
+import { SignUp } from './pages/SignUp'
+
+function Home() {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const account = new Account(client)
+    account
+      .get()
+      .then((u) => setUser({ name: u.name }))
+      .catch(() => {})
+  }, [])
+
+  return (
+    <div>
+      {user ? (
+        <p>Hello, {user.name}</p>
+      ) : (
+        <div>
+          <p>Sign in to get started.</p>
+          <p>
+            <a href="/sign-in">Sign in</a>
+            {' · '}
+            <a href="/sign-up">Sign up</a>
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function App() {
+  const path = window.location.pathname
+  if (path === '/sign-in') return <SignIn />
+  if (path === '/sign-up') return <SignUp />
+  return <Home />
+}
+
+export default App
+`,
+              language: jsLang,
+            },
+            {
+              label: 'src/pages/SignIn.js',
+              code: `import { useState } from 'react'
+import { Account } from 'appwrite'
+import { client } from '../lib/appwrite'
+
+export function SignIn() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.createEmailPasswordSession({ email, password })
+      window.location.href = '/'
+    } catch (err) {
+      setError(err?.message || 'Sign in failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign in</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign in</button>
+      <p>
+        No account? <a href="/sign-up">Sign up</a>
+      </p>
+    </form>
+  )
+}
+`,
+              language: jsLang,
+            },
+            {
+              label: 'src/pages/SignUp.js',
+              code: `import { useState } from 'react'
+import { Account, ID } from 'appwrite'
+import { client } from '../lib/appwrite'
+
+export function SignUp() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      })
+      await account.createEmailPasswordSession({ email, password })
+      window.location.href = '/'
+    } catch (err) {
+      setError(err?.message || 'Sign up failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign up</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign up</button>
+      <p>
+        Already have an account? <a href="/sign-in">Sign in</a>
+      </p>
+    </form>
+  )
+}
+`,
+              language: jsLang,
+            },
+          ]
+        }
         return [
           { label: envLabel, code: envCode, language: 'env' },
           {
-            label: 'lib/appwrite.ts',
+            label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
 
 ${clientInitWeb}
@@ -230,10 +411,12 @@ export { client }
           {
             label: 'src/App.tsx',
             code: `import { useEffect, useState } from 'react'
-import { client } from '../lib/appwrite'
+import { client } from './lib/appwrite'
 import { Account } from 'appwrite'
+import { SignIn } from './pages/SignIn'
+import { SignUp } from './pages/SignUp'
 
-export default function App() {
+function Home() {
   const [user, setUser] = useState<{ name: string } | null>(null)
 
   useEffect(() => {
@@ -243,8 +426,141 @@ export default function App() {
 
   return (
     <div>
-      {user ? <p>Hello, {user.name}</p> : <p>Sign in to get started.</p>}
+      {user ? (
+        <p>Hello, {user.name}</p>
+      ) : (
+        <div>
+          <p>Sign in to get started.</p>
+          <p>
+            <a href="/sign-in">Sign in</a>
+            {' · '}
+            <a href="/sign-up">Sign up</a>
+          </p>
+        </div>
+      )}
     </div>
+  )
+}
+
+export default function App() {
+  const path = window.location.pathname
+  if (path === '/sign-in') return <SignIn />
+  if (path === '/sign-up') return <SignUp />
+  return <Home />
+}
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/pages/SignIn.tsx',
+            code: `import { useState, type FormEvent } from 'react'
+import { Account } from 'appwrite'
+import { client } from '../lib/appwrite'
+
+export function SignIn() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.createEmailPasswordSession({ email, password })
+      window.location.href = '/'
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign in</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign in</button>
+      <p>
+        No account? <a href="/sign-up">Sign up</a>
+      </p>
+    </form>
+  )
+}
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/pages/SignUp.tsx',
+            code: `import { useState, type FormEvent } from 'react'
+import { Account, ID } from 'appwrite'
+import { client } from '../lib/appwrite'
+
+export function SignUp() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      })
+      await account.createEmailPasswordSession({ email, password })
+      window.location.href = '/'
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign up failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign up</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign up</button>
+      <p>
+        Already have an account? <a href="/sign-in">Sign in</a>
+      </p>
+    </form>
   )
 }
 `,
@@ -361,17 +677,155 @@ export { client }
             ? [
                 {
                   label: 'app/page.tsx',
-                  code: `import { client } from '@/lib/appwrite'
+                  code: `import Link from 'next/link'
+import { client } from '@/lib/appwrite'
 import { Account } from 'appwrite'
 
 export default async function HomePage() {
-  try {
-    const account = new Account(client)
-    const user = await account.get()
-    return <p>Hello, {user.name}</p>
-  } catch {
-    return <p>Sign in to get started.</p>
+  const account = new Account(client)
+  const user = await account.get().catch(() => null)
+
+  if (!user) {
+    return (
+      <div>
+        <p>Sign in to get started.</p>
+        <p>
+          <Link href="/sign-in">Sign in</Link>
+          {' · '}
+          <Link href="/sign-up">Sign up</Link>
+        </p>
+      </div>
+    )
   }
+
+  return <p>Hello, {user.name}</p>
+}
+`,
+                  language: tsLang,
+                },
+                {
+                  label: 'app/sign-in/page.tsx',
+                  code: `'use client'
+
+import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Account } from 'appwrite'
+import { client } from '@/lib/appwrite'
+
+export default function SignInPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.createEmailPasswordSession({ email, password })
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign in</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign in</button>
+      <p>
+        No account? <Link href="/sign-up">Sign up</Link>
+      </p>
+    </form>
+  )
+}
+`,
+                  language: tsLang,
+                },
+                {
+                  label: 'app/sign-up/page.tsx',
+                  code: `'use client'
+
+import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Account, ID } from 'appwrite'
+import { client } from '@/lib/appwrite'
+
+export default function SignUpPage() {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      })
+      await account.createEmailPasswordSession({ email, password })
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign up failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign up</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign up</button>
+      <p>
+        Already have an account? <Link href="/sign-in">Sign in</Link>
+      </p>
+    </form>
+  )
 }
 `,
                   language: tsLang,
@@ -381,6 +835,7 @@ export default async function HomePage() {
                 {
                   label: 'pages/index.tsx',
                   code: `import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { client } from '@/lib/appwrite'
 import { Account } from 'appwrite'
 
@@ -394,8 +849,140 @@ export default function Home() {
 
   return (
     <div>
-      {user ? <p>Hello, {user.name}</p> : <p>Sign in to get started.</p>}
+      {user ? (
+        <p>Hello, {user.name}</p>
+      ) : (
+        <div>
+          <p>Sign in to get started.</p>
+          <p>
+            <Link href="/sign-in">Sign in</Link>
+            {' · '}
+            <Link href="/sign-up">Sign up</Link>
+          </p>
+        </div>
+      )}
     </div>
+  )
+}
+`,
+                  language: tsLang,
+                },
+                {
+                  label: 'pages/sign-in.tsx',
+                  code: `import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { Account } from 'appwrite'
+import { client } from '@/lib/appwrite'
+
+export default function SignInPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.createEmailPasswordSession({ email, password })
+      router.push('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign in</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign in</button>
+      <p>
+        No account? <Link href="/sign-up">Sign up</Link>
+      </p>
+    </form>
+  )
+}
+`,
+                  language: tsLang,
+                },
+                {
+                  label: 'pages/sign-up.tsx',
+                  code: `import { useState, type FormEvent } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { Account, ID } from 'appwrite'
+import { client } from '@/lib/appwrite'
+
+export default function SignUpPage() {
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      const account = new Account(client)
+      await account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      })
+      await account.createEmailPasswordSession({ email, password })
+      router.push('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign up failed')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h1>Sign up</h1>
+      {error ? <p>{error}</p> : null}
+      <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit">Sign up</button>
+      <p>
+        Already have an account? <Link href="/sign-in">Sign in</Link>
+      </p>
+    </form>
   )
 }
 `,
