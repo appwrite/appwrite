@@ -160,22 +160,22 @@ class Bitbucket extends OAuth2
     }
 
     /**
-     * The workspace identifier repository/ownership API calls actually need
-     * to address the account's personal workspace.
+     * The workspace slug repository/ownership API calls actually need to
+     * address the account's personal workspace.
      *
      * `/user`'s `username` (old accounts) or `nickname` (accounts migrated to
      * Atlassian's unified identity) are display handles, not workspace
      * identifiers -- for migrated accounts `nickname` is an opaque value that
      * Bitbucket's REST API doesn't recognize as a workspace, silently
-     * returning zero repositories rather than an error.
+     * returning zero repositories rather than an error. A personal account's
+     * own UUID does *not* double as its workspace's identifier either --
+     * confirmed live, the two UUIDs are unrelated.
      *
-     * Listing workspaces to resolve the personal one by matching UUIDs
-     * (`GET /workspaces`) hit CHANGE-2770 -- Atlassian's removal of
-     * cross-workspace listing endpoints -- so this instead relies on a
-     * documented Bitbucket convention instead of a second API call: a
-     * personal account's own UUID doubles as its personal workspace's
-     * identifier, and workspace-scoped endpoints accept a UUID (in its
-     * curly-brace form) anywhere they accept a slug.
+     * `GET /workspaces` (cross-workspace listing, to resolve the workspace by
+     * some other means) hit CHANGE-2770 -- Atlassian's removal of that
+     * endpoint. `GET /user/workspaces` is the endpoint Atlassian's migration
+     * guidance names as its replacement, scoped to the authenticated user
+     * rather than cross-workspace, so it isn't part of the same deprecation.
      *
      * @param string $accessToken
      *
@@ -185,7 +185,20 @@ class Bitbucket extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['uuid'] ?? ($user['username'] ?? ($user['nickname'] ?? ''));
+        $headers = ['Authorization: Bearer ' . $accessToken];
+        $workspaces = \json_decode($this->request('GET', 'https://api.bitbucket.org/2.0/user/workspaces', $headers), true);
+        $values = $workspaces['values'] ?? [];
+        // Some Bitbucket user-scoped list endpoints wrap the resource under
+        // its own key (e.g. the older /permissions/workspaces did); accept
+        // either shape rather than assume this one is flat.
+        $first = $values[0] ?? [];
+        $slug = $first['slug'] ?? ($first['workspace']['slug'] ?? '');
+
+        if (!empty($slug)) {
+            return $slug;
+        }
+
+        return $user['username'] ?? ($user['nickname'] ?? '');
     }
 
     /**
