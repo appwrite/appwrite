@@ -160,10 +160,16 @@ class Bitbucket extends OAuth2
     }
 
     /**
-     * Bitbucket's `/user` response carries `username` for older accounts and
-     * `nickname` for accounts migrated to Atlassian identity, which don't
-     * expose one. Callers (repository creation, ownership resolution) need
-     * whichever of the two the account actually has.
+     * The workspace slug repository/ownership API calls actually need to
+     * address the account's personal workspace.
+     *
+     * `/user`'s `username` (old accounts) or `nickname` (accounts migrated to
+     * Atlassian's unified identity) are display handles, not workspace
+     * identifiers -- for migrated accounts `nickname` is an opaque value that
+     * Bitbucket's REST API doesn't recognize as a workspace, silently
+     * returning zero repositories rather than an error. The personal
+     * workspace is instead resolved via `/workspaces`, matched by UUID
+     * against the user's own account.
      *
      * @param string $accessToken
      *
@@ -172,8 +178,22 @@ class Bitbucket extends OAuth2
     public function getUserSlug(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
+        $userUuid = $user['uuid'] ?? '';
 
-        return $user['username'] ?? ($user['nickname'] ?? '');
+        $headers = ['Authorization: Bearer ' . $accessToken];
+        $workspaces = \json_decode($this->request('GET', 'https://api.bitbucket.org/2.0/workspaces', $headers), true);
+        $values = $workspaces['values'] ?? [];
+
+        foreach ($values as $workspace) {
+            if (!empty($userUuid) && ($workspace['uuid'] ?? '') === $userUuid) {
+                return $workspace['slug'] ?? '';
+            }
+        }
+
+        // No workspace matched the account UUID directly (unexpected, but
+        // fall back rather than fail outright): the first workspace, then
+        // the old username/nickname fields as a last resort.
+        return $values[0]['slug'] ?? ($user['username'] ?? ($user['nickname'] ?? ''));
     }
 
     /**
