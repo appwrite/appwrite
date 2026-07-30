@@ -8,6 +8,10 @@ import {
   useContext,
 } from 'react'
 import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import {
   useParams,
   Link,
   useNavigate,
@@ -666,7 +670,6 @@ export function View() {
           : `${t('Successfully deleted')} ${selectedDeployments.size} ${t('deployments')}`,
       )
       setSelectedDeployments(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
@@ -680,7 +683,11 @@ export function View() {
 
   const confirmBulkDelete = () => {
     if (selectedDeployments.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedDeployments))
+    const ids = Array.from(selectedDeployments)
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+    })
+    bulkDeleteMutation.mutate(ids)
   }
 
   const toggleDeployment = (deploymentId: string) => {
@@ -1977,12 +1984,12 @@ export function View() {
                                     deploymentData.status,
                                   ) && (
                                     <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setCancelTargetDeploymentId(
-                                          deploymentData.$id,
-                                        )
-                                        setCancelBuildDialogOpen(true)
+                                      onSelect={() => {
+                                        const id = deploymentData.$id
+                                        openDialogAfterOverlayCloses(() => {
+                                          setCancelTargetDeploymentId(id)
+                                          setCancelBuildDialogOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={XCircle}>

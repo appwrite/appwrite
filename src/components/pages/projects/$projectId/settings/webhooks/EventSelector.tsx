@@ -6,6 +6,7 @@ import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK } from '@/lib/events-editor/events-model'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface EventSelectorProps {
   projectId?: string | null
@@ -36,10 +37,7 @@ export function EventSelector({
   }
 
   const handleOpenEventDialog = () => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur()
-    }
-    window.setTimeout(() => setEventDialogOpen(true), 0)
+    openDialogAfterOverlayCloses(() => setEventDialogOpen(true))
   }
 
   return (

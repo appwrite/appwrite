@@ -40,6 +40,7 @@ import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 export function SiteDomainsView() {
   const t = useT()
@@ -83,18 +84,24 @@ export function SiteDomainsView() {
   }, [orgDomains])
 
   const handleRetry = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setVerifyOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setVerifyOpen(true)
+    })
   }
 
   const handleViewLogs = (rule: Models.ProxyRule) => {
-    setViewLogsRule(rule)
-    setViewLogsOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setViewLogsRule(rule)
+      setViewLogsOpen(true)
+    })
   }
 
   const handleDelete = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setDeleteDomainOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setDeleteDomainOpen(true)
+    })
   }
 
   const getOrganizationDomainId = (rule: Models.ProxyRule) => {

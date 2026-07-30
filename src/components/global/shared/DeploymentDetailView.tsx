@@ -92,6 +92,7 @@ import { useAvifSupport } from '@/lib/avif-support'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses, closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -1066,14 +1067,16 @@ export function DeploymentDetailView({
   }, [navigate, listRoute, projectId, parentResourceParam, resourceId])
 
   const refetchAndNavigate = async () => {
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+      setCancelBuildDialogOpen(false)
+    })
     for (const queryKey of invalidateQueries) {
       const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
         ? queryKey
         : [queryKey]
       await queryClient.refetchQueries({ queryKey: normalizedKey })
     }
-    setDeleteDialogOpen(false)
-    setCancelBuildDialogOpen(false)
     navigateToDeploymentsList()
   }
 
@@ -1086,13 +1089,13 @@ export function DeploymentDetailView({
       return await onCancelBuild(apiDeploymentId)
     },
     onSuccess: async () => {
+      closeDialogBeforeOverlayUnmount(() => setCancelBuildDialogOpen(false))
       for (const queryKey of invalidateQueries) {
         const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
           ? queryKey
           : [queryKey]
         await queryClient.refetchQueries({ queryKey: normalizedKey })
       }
-      setCancelBuildDialogOpen(false)
       toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
@@ -1919,7 +1922,9 @@ export function DeploymentDetailView({
                         className="h-10 w-full justify-start text-[13px]"
                         onClick={() => {
                           setDeploymentActionsDrawerOpen(false)
-                          setCancelBuildDialogOpen(true)
+                          openDialogAfterOverlayCloses(() =>
+                            setCancelBuildDialogOpen(true),
+                          )
                         }}
                         disabled={cancelBuildMutation.isPending}
                       >
@@ -1938,7 +1943,9 @@ export function DeploymentDetailView({
                       className="h-10 w-full justify-start text-[13px]"
                       onClick={() => {
                         setDeploymentActionsDrawerOpen(false)
-                        setDeleteDialogOpen(true)
+                        openDialogAfterOverlayCloses(() =>
+                          setDeleteDialogOpen(true),
+                        )
                       }}
                       disabled={isActiveDeployment}
                       title={

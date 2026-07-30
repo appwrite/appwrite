@@ -47,6 +47,10 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 export type BucketContextMenuBucket = {
@@ -81,7 +85,6 @@ export function BucketContextMenu({
       const nextBucketId = pickNextBucketIdAfterDelete(lists, deletedId)
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
       toast.success(t('Bucket deleted'))
-      setDeleteDialogOpen(false)
       if (nextBucketId) {
         navigate({
           to: '/projects/$projectId/storage/$bucketId',
@@ -125,7 +128,7 @@ export function BucketContextMenu({
   )
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const hasName = !!bucket.name
@@ -223,7 +226,10 @@ export function BucketContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => {
+                closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+                deleteMutation.mutate()
+              }}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

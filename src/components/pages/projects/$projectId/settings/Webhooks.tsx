@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   fetchProjectWebhook,
   useDeleteWebhook,
@@ -56,6 +56,10 @@ import {
   copyToClipboard,
   openInNewTab,
   openInNewWindow} from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
@@ -81,26 +85,19 @@ export function Webhooks({
   const { webhooks, isLoading } = useProjectWebhooks(projectId)
   const deleteMutation = useDeleteWebhook(projectId)
 
-  const blurActiveElement = useCallback(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur()
-    }
-  }, [])
-
   // Listen for create event from ServiceHeader
   useEffect(() => {
     const handleCreate = () => {
-      blurActiveElement()
-      window.setTimeout(() => {
+      openDialogAfterOverlayCloses(() => {
         setSelectedWebhook(null)
         setDrawerOpen(true)
-      }, 0)
+      })
     }
     window.addEventListener('settings-create-webhook', handleCreate)
     return () => {
       window.removeEventListener('settings-create-webhook', handleCreate)
     }
-  }, [blurActiveElement])
+  }, [])
 
   // Filter webhooks by search
   const filteredWebhooks = useMemo(() => {
@@ -123,26 +120,29 @@ export function Webhooks({
   }, [filteredWebhooks, pageIndexed, pageSize])
 
   const handleUpdate = (webhook: Models.Webhook) => {
-    blurActiveElement()
-    window.setTimeout(() => {
+    openDialogAfterOverlayCloses(() => {
       setSelectedWebhook(webhook)
       setDrawerOpen(true)
-    }, 0)
+    })
   }
 
   const requestDelete = (webhook: Models.Webhook) => {
-    blurActiveElement()
-    setWebhookToDelete(webhook)
+    openDialogAfterOverlayCloses(() => {
+      setWebhookToDelete(webhook)
+    })
   }
 
   const handleDelete = () => {
     if (!webhookToDelete) return
+    const webhookId = webhookToDelete.$id
+    closeDialogBeforeOverlayUnmount(() => {
+      setWebhookToDelete(null)
+      setSelectedWebhook(null)
+    })
 
-    deleteMutation.mutate(webhookToDelete.$id, {
+    deleteMutation.mutate(webhookId, {
       onSuccess: () => {
         toast.success(t('Webhook has been deleted'))
-        setWebhookToDelete(null)
-        setSelectedWebhook(null)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete webhook'))

@@ -18,6 +18,10 @@ import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
+import {
   Plus,
   Key,
   Table2,
@@ -3683,7 +3687,6 @@ export function RowsSpreadsheet({
         }
       }
       setSelectedRows(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(
@@ -3699,7 +3702,9 @@ export function RowsSpreadsheet({
 
   const confirmBulkDelete = () => {
     if (selectedRows.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedRows))
+    const rowIds = Array.from(selectedRows)
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    bulkDeleteMutation.mutate(rowIds)
   }
 
   const duplicateRowMutation = useMutation({
@@ -4753,7 +4758,9 @@ export function RowsSpreadsheet({
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedRows(new Set([row.$id]))
-                              setDeleteDialogOpen(true)
+                              openDialogAfterOverlayCloses(() =>
+                                setDeleteDialogOpen(true),
+                              )
                             }}
                           >
                             <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>

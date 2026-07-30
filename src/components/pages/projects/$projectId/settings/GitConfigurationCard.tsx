@@ -20,6 +20,10 @@ import {
 } from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
+import {
   VcsIcon,
   getKnownVcsProvider,
   getProviderOwnerUrl,
@@ -161,13 +165,17 @@ export function GitConfigurationCard({
   const handleDisconnect = async () => {
     if (!selectedInstallation) return
 
-    try {
-      await deleteMutation.mutateAsync(selectedInstallation.$id)
-      toast.success(
-        `${selectedInstallation.organization} ${t('has been disconnected from this project')}`,
-      )
+    const installation = selectedInstallation
+    closeDialogBeforeOverlayUnmount(() => {
       setDisconnectModalOpen(false)
       setSelectedInstallation(null)
+    })
+
+    try {
+      await deleteMutation.mutateAsync(installation.$id)
+      toast.success(
+        `${installation.organization} ${t('has been disconnected from this project')}`,
+      )
     } catch (error: unknown) {
       toast.error(
         getErrorMessage(error, t('Failed to disconnect installation')),
@@ -177,7 +185,7 @@ export function GitConfigurationCard({
 
   const handleOpenDisconnectModal = (installation: Models.Installation) => {
     setSelectedInstallation(installation)
-    setDisconnectModalOpen(true)
+    openDialogAfterOverlayCloses(() => setDisconnectModalOpen(true))
   }
 
   const getProviderUrl = (provider: string, organization: string) => {

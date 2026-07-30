@@ -52,6 +52,10 @@ import {
   MenuItemIcon,
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 export type FileContextMenuFile = {
@@ -81,7 +85,6 @@ function useFileActions(
         queryKey: Dependencies.FILES,
       })
       toast.success(t('File deleted'))
-      setDeleteDialogOpen(false)
       navigate({
         to: '/projects/$projectId/storage/$bucketId',
         params: { projectId, bucketId },
@@ -122,7 +125,8 @@ function useFileActions(
     hasName: !!file.name,
     fileHref,
     navigateToTab,
-    handleDeleteClick: () => setDeleteDialogOpen(true),
+    handleDeleteClick: () =>
+      openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true)),
     deleteDialogOpen,
     setDeleteDialogOpen,
     deleteMutation}
@@ -158,7 +162,10 @@ function FileDeleteDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={() => deleteMutation.mutate()}
+            onClick={() => {
+              closeDialogBeforeOverlayUnmount(() => onOpenChange(false))
+              deleteMutation.mutate()
+            }}
             disabled={deleteMutation.isPending}
           >
             {t('Delete')}

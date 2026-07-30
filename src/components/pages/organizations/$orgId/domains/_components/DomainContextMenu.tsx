@@ -43,6 +43,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
@@ -81,12 +85,20 @@ export function DomainContextMenu({
         queryKey: ['domains', 'organization', orgId],
       })
       toast.success(`${domain.domain} ${t('has been deleted')}`)
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to delete domain'))
     },
   })
+
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
+  }
 
   const handleRetryVerification = () => {
     retryVerification.mutate(domain.$id, {
@@ -198,7 +210,7 @@ export function DomainContextMenu({
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
-            onSelect={() => setDeleteDialogOpen(true)}
+            onSelect={handleDeleteClick}
 >
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
@@ -227,7 +239,7 @@ export function DomainContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
 >
               {t('Delete')}

@@ -1,5 +1,4 @@
 import type { Models } from '@appwrite.io/console'
-import { flushSync } from 'react-dom'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useDeleteFirewallRule } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 
@@ -32,10 +32,7 @@ export function DeleteRule({
   const handleDelete = async () => {
     if (!rule) return
     const ruleId = rule.$id
-    // Close and commit before the mutation refetches the list. Otherwise the
-    // row's DropdownMenu/ContextMenu unmounts while this dialog is still open
-    // and Radix can leave body pointer-events locked (Create rule stops working).
-    flushSync(() => {
+    closeDialogBeforeOverlayUnmount(() => {
       onOpenChange(false)
     })
     try {

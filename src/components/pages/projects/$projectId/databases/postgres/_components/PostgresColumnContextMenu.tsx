@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/context-menu'
 import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import { useT } from '@/lib/i18n/translate'
@@ -38,7 +39,11 @@ export function PostgresColumnContextMenu({
       <ContextMenuContent className="w-56">
         {canWrite ? (
           <>
-            <ContextMenuItem onSelect={() => onUpdate(column)}>
+            <ContextMenuItem
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() => onUpdate(column))
+              }
+            >
               <ContextMenuIcon icon={Pencil} />
               {t('Update')}
             </ContextMenuItem>
@@ -83,7 +88,11 @@ export function PostgresColumnContextMenu({
           <>
             <ContextMenuSeparator />
             <ContextMenuItem
-              onSelect={() => onDelete(column.column_name)}
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() =>
+                  onDelete(column.column_name),
+                )
+              }
             >
               <ContextMenuIcon icon={Trash2} />
               {t('Delete')}

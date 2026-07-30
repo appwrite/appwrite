@@ -42,6 +42,10 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 export type SiteContextMenuSite = {
@@ -81,14 +85,14 @@ export function SiteContextMenu({
   const siteHref = buildConsoleUrl(`/projects/${projectId}/sites/${site.$id}/`)
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const handleConfirmDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(site.$id, {
       onSuccess: () => {
         toast.success(t('Site deleted'))
-        setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete site'))

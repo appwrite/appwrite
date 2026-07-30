@@ -54,6 +54,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 
@@ -94,12 +98,20 @@ export function DatabaseContextMenu({
       invalidateDatabaseModelAndType(projectId, database.$id)
       await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database deleted successfully'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, t('Failed to delete database')))
     },
   })
+
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
+  }
 
   const databaseHref = buildConsoleUrl(
     productDatabaseHomePath(projectId, database.$id, database.databaseType),
@@ -258,7 +270,7 @@ export function DatabaseContextMenu({
             {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>
@@ -285,7 +297,7 @@ export function DatabaseContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

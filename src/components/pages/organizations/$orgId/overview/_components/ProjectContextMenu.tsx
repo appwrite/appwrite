@@ -48,6 +48,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 
@@ -125,12 +129,20 @@ export function ProjectContextMenu({
       }
 
       toast.success(`${project.name || t('Project')} ${t('has been deleted')}`)
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error, t('Failed to delete project')))
     },
   })
+
+  const handleDeleteClick = () => {
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
+  }
 
   if (!project.$id) {
     return <>{children}</>
@@ -277,7 +289,7 @@ export function ProjectContextMenu({
           {canDeleteProject && (
             <>
               <ContextMenuSeparator />
-              <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+              <ContextMenuItem onSelect={handleDeleteClick}>
                 <ContextMenuIcon icon={Trash2} />
                 {t('Delete')}
               </ContextMenuItem>
@@ -306,7 +318,7 @@ export function ProjectContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

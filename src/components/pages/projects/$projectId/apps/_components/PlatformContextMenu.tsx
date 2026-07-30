@@ -21,6 +21,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { sdk } from '@/lib/appwrite/sdk'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useDeletePlatform } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -56,10 +60,10 @@ export function PlatformContextMenu({
   const hasIdentifier = !!identifier
 
   const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(platform.$id, {
       onSuccess: () => {
         toast.success(t('App deleted'))
-        setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete app'))
@@ -74,7 +78,11 @@ export function PlatformContextMenu({
         <ContextMenuContent className="w-56">
           {onUpdate && (
             <>
-              <ContextMenuItem onSelect={() => onUpdate(platform)}>
+              <ContextMenuItem
+                onSelect={() =>
+                  openDialogAfterOverlayCloses(() => onUpdate(platform))
+                }
+              >
                 <ContextMenuIcon icon={Pencil} />
                 {t('Update')}
               </ContextMenuItem>
@@ -126,7 +134,11 @@ export function PlatformContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+            }
+          >
             <ContextMenuIcon icon={Trash2} />
             {t('Delete')}
           </ContextMenuItem>

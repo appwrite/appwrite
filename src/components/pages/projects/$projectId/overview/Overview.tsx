@@ -97,6 +97,7 @@ import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import {
   Dialog,
   DialogContent,
@@ -863,11 +864,15 @@ export function View({ projectId, initialData }: ViewProps) {
   const confirmDelete = () => {
     if (!selectedKeyId) return
 
-    deleteMutation.mutate(selectedKeyId, {
+    const keyId = selectedKeyId
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+      setSelectedKeyId(null)
+    })
+
+    deleteMutation.mutate(keyId, {
       onSuccess: () => {
         toast.success(t('API key deleted successfully'))
-        setDeleteDialogOpen(false)
-        setSelectedKeyId(null)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete API key'))

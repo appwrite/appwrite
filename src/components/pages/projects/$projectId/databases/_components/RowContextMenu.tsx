@@ -29,6 +29,10 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import {
   deleteProjectTableRow,
@@ -104,7 +108,6 @@ export function RowContextMenu({
     mutationFn: () =>
       deleteProjectTableRow(projectId, databaseId, dbKind, tableId, row.$id),
     onSuccess: async () => {
-      setDeleteDialogOpen(false)
       await queryClient.refetchQueries({ queryKey: [...queryKey] })
       toast.success(t('Row deleted'))
       onRowDeleted?.(row.$id)
@@ -189,7 +192,12 @@ export function RowContextMenu({
   }
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
   }
 
   return (
@@ -283,7 +291,7 @@ export function RowContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

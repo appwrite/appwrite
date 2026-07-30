@@ -50,6 +50,10 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 export type FunctionContextMenuFunction = {
@@ -96,14 +100,14 @@ export function FunctionContextMenu({
   )
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const handleConfirmDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(func.$id, {
       onSuccess: () => {
         toast.success(t('Function deleted'))
-        setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete function'))

@@ -43,6 +43,7 @@ import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 import { BillingAddressContextMenu } from './BillingAddressContextMenu'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 export function AccountBillingAddresses({
   initialData,
@@ -93,13 +94,17 @@ export function AccountBillingAddresses({
   }
 
   const handleEdit = (address: Models.BillingAddress) => {
-    setSelectedAddress(address)
-    setEditModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedAddress(address)
+      setEditModalOpen(true)
+    })
   }
 
   const handleDelete = (address: Models.BillingAddress) => {
-    setSelectedAddress(address)
-    setDeleteModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedAddress(address)
+      setDeleteModalOpen(true)
+    })
   }
 
   const handleAddSuccess = () => {
