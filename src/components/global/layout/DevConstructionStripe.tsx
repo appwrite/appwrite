@@ -1,8 +1,8 @@
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
 /**
- * Vite DEV construction-tape strip. Sits at the top of the sticky header stack
- * (above status / promo / impersonation banners and the main header bar).
+ * Vite DEV construction-tape strip. Rendered at the root shell so it spans the
+ * full viewport width above both the main column and the console right pane.
  */
 export function DevConstructionStripe() {
   const { showConstruction } = useDebugOverrides()
