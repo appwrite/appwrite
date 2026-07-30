@@ -2,6 +2,8 @@
 
 import { cn } from '@/lib/utils'
 import type { UsageChartAxisFormat } from '@/lib/usage/format-metric'
+import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
+import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
@@ -28,12 +30,16 @@ type StorageMetricBentoCardProps = {
   changePercent: number
   isLoading: boolean
   isError: boolean
+  queryError?: unknown
   formatTotal: (value: number) => string
   formatValue: (value: number) => string
   axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
   breakdownItems: UsageBreakdownItem[]
   breakdownLookup: StorageBreakdownResourceMap | undefined
+  /** Unified storage rows can name functions/sites or databases, not just buckets. */
+  computeLookup?: ComputeBreakdownResourceMap
+  databaseLookup?: DatabaseBreakdownResourceMap
   onRetry: () => void
   docsHref?: string
 }
@@ -49,12 +55,15 @@ export function StorageMetricBentoCard({
   changePercent,
   isLoading,
   isError,
+  queryError,
   formatTotal,
   formatValue,
   axisFormat = 'bytes',
   showBreakdown,
   breakdownItems,
   breakdownLookup,
+  computeLookup,
+  databaseLookup,
   onRetry,
   docsHref,
 }: StorageMetricBentoCardProps) {
@@ -77,6 +86,7 @@ export function StorageMetricBentoCard({
             chartPoints={chartPoints}
             isLoading={isLoading}
             isError={isError}
+            queryError={queryError}
             errorTitle={STORAGE_USAGE_ERROR.title}
             errorMessage={STORAGE_USAGE_ERROR.message}
             formatTotal={formatTotal}
@@ -94,6 +104,8 @@ export function StorageMetricBentoCard({
             isLoading={isLoading}
             isError={isError}
             storageLookup={breakdownLookup}
+            computeLookup={computeLookup}
+            databaseLookup={databaseLookup}
             errorTitle={STORAGE_USAGE_ERROR.title}
             errorMessage={STORAGE_USAGE_ERROR.message}
             formatValue={formatValue}

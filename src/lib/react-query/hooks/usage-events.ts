@@ -55,15 +55,13 @@ import {
 } from '@/lib/usage/breakdown-limits'
 import {
   fetchProjectImageTransformationsUsageOverview,
-  fetchProjectStorageBuildsOverview,
-  fetchProjectStorageDeploymentsOverview,
-  fetchProjectStorageFilesUsageOverview,
+  fetchProjectStorageResourceTypeUsageOverview,
   fetchProjectOverviewStorageOverview,
   fetchProjectStorageOverview,
+  type OverviewStorageBreakdownType,
   type ProjectOverviewStorageOverview,
-  type StorageFilesUsageOverview,
   type StorageImageTransformationsOverview,
-  type StorageUsageChartOverview,
+  type StorageResourceTypeUsageOverview,
 } from '@/lib/usage/storage-usage'
 import type { ProjectStorageOverview } from '@/lib/usage/storage-gauges'
 import {
@@ -1231,7 +1229,8 @@ export function useProjectOverviewStorageOverview(
   })
 }
 
-function storageFilesUsageQueryOptions(
+function storageResourceTypeUsageQueryOptions(
+  breakdownType: OverviewStorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
@@ -1246,7 +1245,7 @@ function storageFilesUsageQueryOptions(
     queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
-      'files',
+      breakdownType,
       usageOverviewQueryScope(includeBreakdown),
       'project',
       projectId,
@@ -1254,58 +1253,13 @@ function storageFilesUsageQueryOptions(
       interval,
     ], filterQueries),
     queryFn: () =>
-      fetchProjectStorageFilesUsageOverview(
+      fetchProjectStorageResourceTypeUsageOverview(
         projectId!,
         getBounds(),
+        breakdownType,
         interval,
         mergeUsageFetchOptions({ includeBreakdown }, filterQueries, logRetentionHours),
       ),
-    enabled: !!projectId,
-    ...usageEventsQueryOptionsBase,
-    placeholderData: keepPreviousUsageChartDataForProject(projectId),
-    refetchOnMount: refetchOnMountRolling
-      ? 'always'
-      : usageEventsQueryOptionsBase.refetchOnMount,
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-function storageGaugeChartQueryOptions(
-  scope: 'deployments' | 'builds',
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-  filterQueries?: UsageFilterQueries,
-  logRetentionHours?: number,
-) {
-  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
-    normalizeDateRangeKey(dateRange)
-
-  return queryOptions({
-    queryKey: appendUsageFiltersToQueryKey([
-      'usage-gauges',
-      'storage',
-      scope,
-      'chart',
-      'project',
-      projectId,
-      rangeKeyPart,
-      interval,
-    ], filterQueries),
-    queryFn: () =>
-      scope === 'deployments'
-        ? fetchProjectStorageDeploymentsOverview(
-            projectId!,
-            getBounds(),
-            interval,
-            mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
-          )
-        : fetchProjectStorageBuildsOverview(
-            projectId!,
-            getBounds(),
-            interval,
-            mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
-          ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1355,7 +1309,9 @@ function imageTransformationsUsageQueryOptions(
   })
 }
 
-export function useProjectStorageFilesUsage(
+/** Unified storage gauge scoped to one resource family (buckets, databases, …). */
+export function useProjectStorageResourceTypeUsage(
+  breakdownType: OverviewStorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
@@ -1367,7 +1323,8 @@ export function useProjectStorageFilesUsage(
   const queryClient = useQueryClient()
 
   return useQuery({
-    ...storageFilesUsageQueryOptions(
+    ...storageResourceTypeUsageQueryOptions(
+      breakdownType,
       projectId,
       dateRange,
       interval,
@@ -1376,46 +1333,20 @@ export function useProjectStorageFilesUsage(
       logRetentionHours,
     ),
     enabled: !!projectId && enabled,
-    placeholderData: usageOverviewPlaceholderData<StorageFilesUsageOverview>(
-      queryClient,
-      projectId,
-      storageFilesUsageQueryOptions(
+    placeholderData:
+      usageOverviewPlaceholderData<StorageResourceTypeUsageOverview>(
+        queryClient,
         projectId,
-        dateRange,
-        interval,
-        !includeBreakdown,
-        filterQueries,
-        logRetentionHours,
-      ).queryKey,
-    ),
-  })
-}
-
-export function useProjectStorageDeploymentsChart(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  enabled = true,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries('gauges')
-
-  return useQuery({
-    ...storageGaugeChartQueryOptions('deployments', projectId, dateRange, interval, filterQueries),
-    enabled: !!projectId && enabled,
-  })
-}
-
-export function useProjectStorageBuildsChart(
-  projectId: string | null | undefined,
-  dateRange: DateRange | undefined,
-  enabled = true,
-  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
-) {
-  const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries('gauges')
-
-  return useQuery({
-    ...storageGaugeChartQueryOptions('builds', projectId, dateRange, interval, filterQueries),
-    enabled: !!projectId && enabled,
+        storageResourceTypeUsageQueryOptions(
+          breakdownType,
+          projectId,
+          dateRange,
+          interval,
+          !includeBreakdown,
+          filterQueries,
+          logRetentionHours,
+        ).queryKey,
+      ),
   })
 }
 
@@ -3374,8 +3305,8 @@ export type {
   ProjectExecutionsOverview,
   ProjectGbHoursOverview,
   ProjectStorageOverview,
-  StorageFilesUsageOverview,
   StorageImageTransformationsOverview,
+  StorageResourceTypeUsageOverview,
   StorageUsageChartOverview,
   ProjectRequestsOverview,
   ProjectRequestsChartOverview,

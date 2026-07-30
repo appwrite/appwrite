@@ -46,6 +46,7 @@ import {
   useProjectGbHoursOverview,
   useProjectOverviewStorageOverview,
   useComputeBreakdownResources,
+  useDatabaseBreakdownResources,
   useStorageBreakdownResources,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
@@ -202,7 +203,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const projectConnect = useProjectConnectDialog()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
-    useState<OverviewStorageBreakdownType>('files')
+    useState<OverviewStorageBreakdownType>('buckets')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -470,26 +471,35 @@ export function View({ projectId, initialData }: ViewProps) {
 
   const storageBreakdownIds = useMemo(() => {
     const ids = new Set<string>()
-    for (const item of storageUsage?.storageBreakdown?.files ?? []) {
+    for (const item of storageUsage?.storageBreakdown?.buckets ?? []) {
       const id = item.id?.trim() || item.path?.trim()
       if (id) ids.add(id)
     }
     return Array.from(ids)
-  }, [storageUsage?.storageBreakdown?.files])
+  }, [storageUsage?.storageBreakdown?.buckets])
+
+  const storageDatabaseBreakdownIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of storageUsage?.storageBreakdown?.databases ?? []) {
+      const id = item.id?.trim() || item.path?.trim()
+      if (id) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [storageUsage?.storageBreakdown?.databases])
 
   const storageComputeBreakdownIds = useMemo(() => {
     const ids = new Set<string>()
     for (const item of [
-      ...(storageUsage?.storageBreakdown?.deployments ?? []),
-      ...(storageUsage?.storageBreakdown?.builds ?? []),
+      ...(storageUsage?.storageBreakdown?.functions ?? []),
+      ...(storageUsage?.storageBreakdown?.sites ?? []),
     ]) {
       const id = item.id?.trim() || item.path?.trim()
       if (id) ids.add(id)
     }
     return Array.from(ids)
   }, [
-    storageUsage?.storageBreakdown?.deployments,
-    storageUsage?.storageBreakdown?.builds,
+    storageUsage?.storageBreakdown?.functions,
+    storageUsage?.storageBreakdown?.sites,
   ])
 
   const activeStorageBreakdownTitle = 'Top consumers'
@@ -529,6 +539,16 @@ export function View({ projectId, initialData }: ViewProps) {
         showUsageBreakdownPanels &&
         activeTab === 'storage' &&
         storageComputeBreakdownIds.length > 0,
+    )
+
+  const { data: storageDatabaseBreakdownResources } =
+    useDatabaseBreakdownResources(
+      projectId,
+      storageDatabaseBreakdownIds,
+      isOverviewChartTabVisible('storage') &&
+        showUsageBreakdownPanels &&
+        activeTab === 'storage' &&
+        storageDatabaseBreakdownIds.length > 0,
     )
 
   const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
@@ -1202,6 +1222,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       projectId={projectId}
                       storageLookup={storageBreakdownResources?.resources}
                       resourceLookup={storageComputeBreakdownResources?.resources}
+                      databaseLookup={storageDatabaseBreakdownResources?.resources}
                       headerAddon={
                         <OverviewStorageBreakdownToggle
                           value={storageBreakdownType}

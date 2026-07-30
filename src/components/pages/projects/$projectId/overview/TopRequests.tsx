@@ -12,6 +12,11 @@ import {
   type StorageBreakdownResourceMap,
 } from '@/lib/usage/resolve-storage-breakdown-resources'
 import {
+  getDatabaseBreakdownServiceLabel,
+  resolveDatabaseBreakdownResource,
+  type DatabaseBreakdownResourceMap,
+} from '@/lib/usage/resolve-database-breakdown-resources'
+import {
   getOverviewBreakdownUsageCategoryId,
   getOverviewBreakdownUsageLinkProps,
   getOverviewEndpointBreakdownFilters,
@@ -57,6 +62,7 @@ interface TopRequestsProps {
   projectId?: string
   resourceLookup?: ComputeBreakdownResourceMap
   storageLookup?: StorageBreakdownResourceMap
+  databaseLookup?: DatabaseBreakdownResourceMap
   storageBreakdownKind?: OverviewStorageBreakdownType
   headerAddon?: ReactNode
   itemCount?: number
@@ -134,7 +140,8 @@ export function TopRequests({
   projectId,
   resourceLookup,
   storageLookup,
-  storageBreakdownKind = 'files',
+  databaseLookup,
+  storageBreakdownKind = 'buckets',
   headerAddon,
   itemCount = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   items,
@@ -154,14 +161,17 @@ export function TopRequests({
   const displayTitle = title || 'Top requests'
   const formatValue = formatCount ?? ((value: number) => value.toLocaleString())
   const isResourceBreakdown = breakdownVariant === 'resource'
+  const isStorageBreakdown = isResourceBreakdown && metric === 'storage'
   const useStorageBucketLookup =
-    isResourceBreakdown &&
-    metric === 'storage' &&
-    storageBreakdownKind === 'files'
+    isStorageBreakdown && storageBreakdownKind === 'buckets'
+  const useDatabaseLookup =
+    isStorageBreakdown && storageBreakdownKind === 'databases'
   const useComputeResourceLookup =
     isResourceBreakdown &&
     projectId &&
-    (metric !== 'storage' || storageBreakdownKind !== 'files')
+    (!isStorageBreakdown ||
+      storageBreakdownKind === 'functions' ||
+      storageBreakdownKind === 'sites')
   const itemSlots = Array.from(
     { length: itemCount },
     (_, index) => requestItems[index] ?? null,
@@ -253,11 +263,15 @@ export function TopRequests({
               const computeResource = useComputeResourceLookup
                 ? resolveComputeBreakdownResource(resourceKey, resourceLookup)
                 : undefined
+              const databaseResource = useDatabaseLookup
+                ? resolveDatabaseBreakdownResource(resourceKey, databaseLookup)
+                : undefined
               const fallbackLabel = formatBreakdownPath(request.path)
               const breakdownFilters = isResourceBreakdown
                 ? getOverviewResourceBreakdownFilters(resourceKey, {
                     computeResource,
                     storageResource,
+                    databaseResource,
                   })
                 : getOverviewEndpointBreakdownFilters(request.path)
               const usageLinkProps =
@@ -284,6 +298,26 @@ export function TopRequests({
                     >
                       {storageResource.name}
                     </span>
+                  )
+                }
+
+                if (databaseResource) {
+                  const typeLabel = getDatabaseBreakdownServiceLabel(
+                    databaseResource.databaseType,
+                  )
+                  return (
+                    <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {t(typeLabel)}
+                      </span>
+                      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                      <span
+                        className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors group-hover:text-primary"
+                        title={`${typeLabel} / ${databaseResource.name}`}
+                      >
+                        {databaseResource.name}
+                      </span>
+                    </div>
                   )
                 }
 

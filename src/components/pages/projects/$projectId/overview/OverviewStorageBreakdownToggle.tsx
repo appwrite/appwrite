@@ -39,10 +39,10 @@ export function OverviewStorageBreakdownToggle({
           onValueChange(next as OverviewStorageBreakdownType)
         }
       }}
-      className={cn(
-        'grid h-8 w-full min-w-0 grid-cols-3 gap-0 rounded-md',
-        className,
-      )}
+      className={cn('grid h-8 w-full min-w-0 gap-0 rounded-md', className)}
+      style={{
+        gridTemplateColumns: `repeat(${optionCount}, minmax(0, 1fr))`,
+      }}
       aria-label={t('Storage breakdown type')}
     >
       {OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option, index) => {
