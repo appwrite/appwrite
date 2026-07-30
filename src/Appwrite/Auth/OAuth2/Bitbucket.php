@@ -53,16 +53,22 @@ class Bitbucket extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            // Required as per Bitbucket Spec.
-            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            // Bitbucket authenticates the client via HTTP Basic Auth on this
+            // endpoint, not client_id/client_secret in the body -- sending
+            // them as body params is silently accepted by the endpoint but
+            // fails client authentication, surfacing as a generic
+            // "invalid_grant: authorization_code is invalid" rather than an
+            // auth error.
+            $headers = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            ];
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://bitbucket.org/site/oauth2/access_token',
                 $headers,
                 \http_build_query([
                     'code' => $code,
-                    'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
                     'grant_type' => 'authorization_code'
                 ])
             ), true);
@@ -78,14 +84,15 @@ class Bitbucket extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $headers = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+        ];
         $this->tokens = \json_decode($this->request(
             'POST',
             'https://bitbucket.org/site/oauth2/access_token',
             $headers,
             \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken
             ])
