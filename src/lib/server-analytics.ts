@@ -28,6 +28,8 @@ function inferServerPageviewFormat(pathname: string): ServerPageviewFormat {
   if (pathname.includes('llms')) return 'markdown'
   if (
     pathname.endsWith('.txt') ||
+    pathname.endsWith('.sh') ||
+    pathname.endsWith('.ps1') ||
     pathname === '/robots.txt' ||
     pathname.endsWith('/robots.txt')
   ) {

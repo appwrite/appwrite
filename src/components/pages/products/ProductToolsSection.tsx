@@ -233,7 +233,7 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
             <ToolsTileIcon icon={Sparkles} />
             <ToolsTileTitle>{toolsCopy.agentSkillsTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.agentSkillsDescription}</ToolsTileDescription>
-            <ToolsTileSnippet>npx skills add appwrite/agent-skills</ToolsTileSnippet>
+            <ToolsTileSnippet>npx skills add appwrite/skills</ToolsTileSnippet>
           </ToolsTileLink>
 
           <ToolsTileLink

@@ -1721,6 +1721,51 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Connect project dialog tab (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.connect.tab` - last selected Connect modal tab. */
+export const USER_PREFS_KEY_CONNECT_PROJECT_TAB = 'console.connect.tab'
+
+const CONNECT_PROJECT_TAB_PREF_VALUES = [
+  'mcp',
+  'app',
+  'cli',
+  'skills',
+  'terraform',
+  's3',
+] as const
+
+export type ConnectProjectTabPref =
+  (typeof CONNECT_PROJECT_TAB_PREF_VALUES)[number]
+
+const CONNECT_PROJECT_TAB_PREF_SET = new Set<string>(
+  CONNECT_PROJECT_TAB_PREF_VALUES,
+)
+
+export const DEFAULT_CONNECT_PROJECT_TAB_PREF: ConnectProjectTabPref = 'mcp'
+
+export function parseConnectProjectTab(
+  prefs: UserPrefs | null | undefined,
+): ConnectProjectTabPref {
+  const raw = prefs?.[USER_PREFS_KEY_CONNECT_PROJECT_TAB]
+  if (typeof raw === 'string' && CONNECT_PROJECT_TAB_PREF_SET.has(raw)) {
+    return raw as ConnectProjectTabPref
+  }
+  return DEFAULT_CONNECT_PROJECT_TAB_PREF
+}
+
+export function mergeConnectProjectTabIntoPrefs(
+  prefs: UserPrefs,
+  tab: ConnectProjectTabPref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_CONNECT_PROJECT_TAB]: tab,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // AI assistant panel (account prefs)
 // ---------------------------------------------------------------------------
 

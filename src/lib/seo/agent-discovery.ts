@@ -25,7 +25,7 @@ export const APPWRITE_AGENT_SKILLS_DISCOVERY_PATH =
   '/.well-known/agent-skills/index.json'
 export const APPWRITE_MCP_DOCS_PATH = '/docs/tooling/ai/mcp-servers'
 
-/** Canonical skills repository (appwrite/agent-skills redirects here). */
+/** Canonical skills repository. */
 export const APPWRITE_AGENT_SKILLS_REPO = 'https://github.com/appwrite/skills'
 export const APPWRITE_AGENT_SKILLS_INSTALL = 'npx skills add appwrite/skills'
 

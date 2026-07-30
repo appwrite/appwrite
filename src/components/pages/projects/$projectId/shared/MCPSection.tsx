@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Check, Copy, Download } from 'lucide-react'
+import { Check, Copy, Download, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   MCP_CLAUDE_CODE_INSTALL_COMMAND,
+  MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET,
   MCP_CODEX_INSTALL_COMMAND,
   MCP_EDITOR_CONFIG_SNIPPET,
+  MCP_OPENCODE_CONFIG_SNIPPET,
   MCP_SELF_HOSTED_DOCS_URL,
   getCursorMcpInstallUrl,
   getSelfHostedClaudeCodeInstallCommand,
   getSelfHostedCodexConfig,
   getSelfHostedMcpEditorConfig,
+  getSelfHostedOpencodeConfig,
   getVscodeMcpInstallUrl,
   openMcpInstallUrl,
 } from '@/lib/config/mcp'
@@ -40,7 +43,13 @@ export interface MCPSectionProps {
   compact?: boolean
 }
 
-type McpToolId = 'claude-code' | 'codex' | 'cursor' | 'vscode'
+type McpToolId =
+  | 'claude-code'
+  | 'codex'
+  | 'cursor'
+  | 'claude-desktop'
+  | 'vscode'
+  | 'opencode'
 
 type McpToolConfig = {
   id: McpToolId
@@ -50,6 +59,12 @@ type McpToolConfig = {
   code: string
   installUrl?: string
 }
+
+function jsonSnippet(value: unknown): string {
+  return JSON.stringify(value, null, 2)
+}
+
+const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
 
 const CLOUD_MCP_TOOLS: McpToolConfig[] = [
   {
@@ -71,16 +86,30 @@ const CLOUD_MCP_TOOLS: McpToolConfig[] = [
     name: 'Cursor',
     iconPath: '/icons/cursor-ai.svg',
     language: 'json',
-    code: JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2),
+    code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
     installUrl: getCursorMcpInstallUrl(),
+  },
+  {
+    id: 'claude-desktop',
+    name: 'Claude Desktop',
+    iconPath: '/icons/claude.svg',
+    language: 'json',
+    code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
   },
   {
     id: 'vscode',
     name: 'VS Code',
     iconPath: '/icons/vscode.svg',
     language: 'json',
-    code: JSON.stringify(MCP_EDITOR_CONFIG_SNIPPET, null, 2),
+    code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
     installUrl: getVscodeMcpInstallUrl(),
+  },
+  {
+    id: 'opencode',
+    name: 'OpenCode',
+    iconPath: '/icons/opencode.svg',
+    language: 'json',
+    code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
   },
 ]
 
@@ -88,10 +117,8 @@ function getSelfHostedMcpTools(
   projectId: string,
   endpoint: string,
 ): McpToolConfig[] {
-  const editorConfig = JSON.stringify(
+  const editorConfig = jsonSnippet(
     getSelfHostedMcpEditorConfig(projectId, endpoint),
-    null,
-    2,
   )
   return [
     {
@@ -116,11 +143,25 @@ function getSelfHostedMcpTools(
       code: editorConfig,
     },
     {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
       id: 'vscode',
       name: 'VS Code',
       iconPath: '/icons/vscode.svg',
       language: 'json',
       code: editorConfig,
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(getSelfHostedOpencodeConfig(projectId, endpoint)),
     },
   ]
 }
@@ -263,6 +304,7 @@ export function MCPSection({
       </div>
 
       <CodeBlock
+        key={selectedTool.id}
         code={selectedTool.code}
         language={selectedTool.language}
         showCopy={false}
@@ -279,6 +321,14 @@ export function MCPSection({
           {t('Install')}
         </Button>
       ) : null}
+
+      <DocsRouteLink
+        href={MCP_MORE_TOOLS_DOCS_HREF}
+        className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+      >
+        {t('More tools in the docs')}
+        <ExternalLink className="h-3 w-3" />
+      </DocsRouteLink>
     </div>
   )
 

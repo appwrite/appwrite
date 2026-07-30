@@ -29,6 +29,8 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/changelog.md',
   '/integrations.md',
   '/robots.txt',
+  '/cli/install.sh',
+  '/cli/install.ps1',
   '/.well-known/mcp/server-card.json',
   '/.well-known/ai-catalog.json',
   '/.well-known/agent-skills/index.json',

@@ -4,7 +4,7 @@ title: Agent skills
 description: Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.
 ---
 
-Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on [GitHub](https://github.com/appwrite/agent-skills/).
+Skills are open-source Markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. You can find all Appwrite skills on [GitHub](https://github.com/appwrite/skills/).
 
 Skills work across all major AI dev tools that support them. They are installed per-project or globally, and are available for all Appwrite client and server SDKs. Supported tools include but not limited to:
 
@@ -34,7 +34,7 @@ When you run `appwrite init project`, the Appwrite CLI auto-detects your project
 Run the following command in your project directory:
 
 ```bash
-npx skills add appwrite/agent-skills
+npx skills add appwrite/skills
 ```
 {% /section %}
 
@@ -76,3 +76,13 @@ Select **symlink** as the installation method. This creates a symbolic link to t
 
 ![Installation method prompt](/images/docs/skills/method.avif)
 {% /section %}
+
+# Try it {% #try-it %}
+
+Skills teach your agent how to **write** Appwrite code. They do not call your project APIs live. For actions like listing users or creating buckets, use the [MCP server](/docs/tooling/ai/mcp-servers) instead.
+
+After installing, ask your agent something like:
+
+- Implement email/password sign-in with the Appwrite SDK
+- Review my Appwrite auth implementation against best practices
+- Add Realtime updates to my dashboard with the Appwrite SDK

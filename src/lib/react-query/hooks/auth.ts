@@ -93,6 +93,7 @@ import {
   mergeCliShellOpenIntoPrefs,
   mergeCliShellSessionsIntoPrefs,
   mergeCliShellSessionsSidebarWidthPxIntoPrefs,
+  mergeConnectProjectTabIntoPrefs,
   mergeSidebarCollapsedIntoPrefs,
   getCliShellSessionsKey,
   parseCliShellHistory,
@@ -114,6 +115,7 @@ import {
   parseCliShellHeightPx,
   parseCliShellOpen,
   parseCliShellSessionsSidebarWidthPx,
+  parseConnectProjectTab,
   parseSidebarCollapsed,
   parseStorageFilesTablePaneWidthPx,
   readLegacyAIChatPanelOpenFromLocalStorage,
@@ -1436,6 +1438,71 @@ export function useSidebarCollapsed(
   )
 
   return { collapsed, setCollapsed }
+}
+
+/**
+ * Last selected tab in the Connect project dialog (`console.connect.tab`).
+ *
+ * Must be used within RequireAuth (or where account is available).
+ */
+export function useConnectProjectTab(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
+  const queryClient = useQueryClient()
+  const accountPrefs = account?.prefs as UserPrefs | undefined
+  const tab = parseConnectProjectTab(accountPrefs)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: ReturnType<typeof parseConnectProjectTab>) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeConnectProjectTabIntoPrefs(
+          { ...(account.prefs ?? {}) },
+          value,
+        ),
+        'connect-project-tab',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeConnectProjectTabIntoPrefs(
+                  { ...(current.prefs ?? {}) },
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setTab = useCallback(
+    (
+      value:
+        | ReturnType<typeof parseConnectProjectTab>
+        | ((
+            prev: ReturnType<typeof parseConnectProjectTab>,
+          ) => ReturnType<typeof parseConnectProjectTab>),
+    ) => {
+      const nextValue = typeof value === 'function' ? value(tab) : value
+      if (nextValue === tab) return
+      updateMutation.mutate(nextValue)
+    },
+    [tab, updateMutation],
+  )
+
+  return { tab, setTab }
 }
 
 // ============================================================================

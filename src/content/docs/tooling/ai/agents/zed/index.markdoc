@@ -100,7 +100,7 @@ Install Appwrite skills to give Zed's agent SDK-specific knowledge about Appwrit
 Run the following command in your project directory:
 
 ```bash
-npx skills add appwrite/agent-skills
+npx skills add appwrite/skills
 ```
 
 When prompted:

@@ -3,7 +3,7 @@
  * Adapted from Supabase-style connect flow; tailored to Appwrite (endpoint, project ID, API keys).
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Check, Copy, ExternalLink, Key } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -23,16 +23,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useProject } from '@/lib/react-query/hooks'
+import { useConnectProjectTab, useProject } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { getApiEndpoint, getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { CLISection } from '@/components/pages/projects/$projectId/shared/CLISection'
 import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
@@ -43,14 +43,16 @@ import {
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { useT } from '@/lib/i18n/translate'
 import { getVcsProvider } from '@/lib/vcs/providers'
+import {
+  APPWRITE_AGENT_SKILLS_INSTALL,
+  APPWRITE_AGENT_SKILLS_REPO,
+} from '@/lib/seo/agent-discovery'
+import { SKILLS_TRY_IT_PROMPTS } from '@/lib/skills-adoption'
 
 const APPWRITE_DOCS_URL = '/docs'
-const APPWRITE_CLI_INSTALL_URL = '/docs/tooling/command-line/installation'
-const APPWRITE_CLI_DOCS_URL = '/docs/tooling/command-line/commands'
 const APPWRITE_SKILLS_DOCS_URL = '/docs/tooling/skills'
-const APPWRITE_AGENT_SKILLS_REPO = 'https://github.com/appwrite/agent-skills'
 
-// This link always points at a GitHub-hosted repo (appwrite/agent-skills),
+// This link always points at a GitHub-hosted repo (appwrite/skills),
 // not a user-connected VCS installation, so the provider is hardcoded here.
 const { Icon: GitHubIcon } = getVcsProvider('github')
 
@@ -1355,31 +1357,27 @@ export function ConnectProject({
   const [connectTab, setConnectTab] = useState<ConnectProjectTab>(
     DEFAULT_CONNECT_PROJECT_TAB,
   )
+  const { account } = useAuth()
+  const { setTab: persistConnectTab } = useConnectProjectTab(account)
+
+  const selectConnectTab = useCallback(
+    (tab: ConnectProjectTab) => {
+      setConnectTab(tab)
+      persistConnectTab(tab)
+    },
+    [persistConnectTab],
+  )
+
   useEffect(() => {
-    if (!open) {
-      setConnectTab(DEFAULT_CONNECT_PROJECT_TAB)
-      return
-    }
+    if (!open) return
     setConnectTab(initialConnectTab)
   }, [open, initialConnectTab])
 
-  const [cliInstallOs, setCliInstallOs] = useState<
-    'macos' | 'windows' | 'linux'
-  >(() => {
-    if (typeof navigator === 'undefined') return 'macos'
-    const ua = navigator.userAgent.toLowerCase()
-    const platform = navigator.platform?.toLowerCase() ?? ''
-    if (
-      /platform|win32|win64|wow64|windows/.test(platform) ||
-      /windows|win32|wow64/.test(ua)
-    )
-      return 'windows'
-    if (/mac|darwin|iphone|ipad/.test(platform) || /macintosh|mac os/.test(ua))
-      return 'macos'
-    return 'linux'
-  })
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
+    null,
+  )
   useEffect(() => {
     setSelectedFileIndex(0)
   }, [sdkId, frameworkId, usingId, runtime])
@@ -1401,18 +1399,6 @@ export function ConnectProject({
     navigate({ to: '/projects/$projectId/api-keys', params: { projectId } })
   }
 
-  const { account } = useAuth()
-  const userEmail = (account as { email?: string } | null)?.email ?? ''
-  const cliLoginCommand = `appwrite login --email ${userEmail || 'your@email.com'} --password yourpassword`
-  const [cliLoginCopied, setCliLoginCopied] = useState(false)
-
-  const handleCopyCliLogin = () => {
-    navigator.clipboard.writeText(cliLoginCommand)
-    setCliLoginCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCliLoginCopied(false), 2000)
-  }
-
   if (!project) return null
 
   return (
@@ -1423,7 +1409,7 @@ export function ConnectProject({
         </DialogHeader>
         <Tabs
           value={connectTab}
-          onValueChange={(v) => setConnectTab(v as ConnectProjectTab)}
+          onValueChange={(v) => selectConnectTab(v as ConnectProjectTab)}
           className="min-h-0 flex-1 flex flex-col overflow-hidden"
         >
           <div
@@ -1450,7 +1436,7 @@ export function ConnectProject({
                   type="button"
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => setConnectTab(tabId)}
+                  onClick={() => selectConnectTab(tabId)}
                   className={cn(
                     'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -1725,181 +1711,14 @@ export function ConnectProject({
           </TabsContent>
           <TabsContent
             value="cli"
-            className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden"
+            className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
           >
-            <div className="space-y-4 pt-4">
-              <p className="text-[13px] text-muted-foreground">
-                {t(
-                  'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.', // pragma: allowlist secret
-                )}
-              </p>
-              <div className="space-y-3">
-                <h4 className="text-[13px] font-semibold text-foreground">
-                  1. {t('Install the CLI')}
-                </h4>
-                <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-1 w-fit mb-4">
-                  {(['macos', 'windows', 'linux'] as const).map((os) => (
-                    <button
-                      key={os}
-                      type="button"
-                      onClick={() => setCliInstallOs(os)}
-                      className={cn(
-                        'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
-                        cliInstallOs === os
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {os === 'macos'
-                        ? 'macOS'
-                        : os === 'windows'
-                          ? 'Windows'
-                          : 'Linux'}
-                    </button>
-                  ))}
-                </div>
-                <div className="space-y-4">
-                  {cliInstallOs === 'macos' && (
-                    <>
-                      <CodeBlock
-                        code="npm install -g appwrite-cli"
-                        language="bash"
-                        label="npm"
-                        showCopy
-                      />
-                      <CodeBlock
-                        code="brew install appwrite"
-                        language="bash"
-                        label="Homebrew"
-                        showCopy
-                      />
-                      <CodeBlock
-                        code="curl -sL https://appwrite.io/cli/install.sh | bash"
-                        language="bash"
-                        label={t('Install script')}
-                        showCopy
-                      />
-                    </>
-                  )}
-                  {cliInstallOs === 'windows' && (
-                    <>
-                      <CodeBlock
-                        code="npm install -g appwrite-cli"
-                        language="bash"
-                        label="npm"
-                        showCopy
-                      />
-                      <CodeBlock
-                        code="iwr -useb https://appwrite.io/cli/install.ps1 | iex"
-                        language="bash"
-                        label="PowerShell"
-                        showCopy
-                      />
-                      <CodeBlock
-                        code="scoop install https://raw.githubusercontent.com/appwrite/sdk-for-cli/master/scoop/appwrite.config.json"
-                        language="bash"
-                        label="Scoop"
-                        showCopy
-                      />
-                    </>
-                  )}
-                  {cliInstallOs === 'linux' && (
-                    <>
-                      <CodeBlock
-                        code="npm install -g appwrite-cli"
-                        language="bash"
-                        label="npm"
-                        showCopy
-                      />
-                      <CodeBlock
-                        code="curl -sL https://appwrite.io/cli/install.sh | bash"
-                        language="bash"
-                        label={t('Install script')}
-                        showCopy
-                      />
-                    </>
-                  )}
-                </div>
-                <DocsRouteLink
-                  href={APPWRITE_CLI_INSTALL_URL}
-                  className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
-                >
-                  {t('Full installation guide')}
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </DocsRouteLink>
-              </div>
-              <div className="space-y-3">
-                <h4 className="text-[13px] font-semibold text-foreground">
-                  2. {t('Log in')}
-                </h4>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {t('Terminal')}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-[12px] text-muted-foreground hover:text-foreground"
-                      onClick={handleCopyCliLogin}
-                    >
-                      {cliLoginCopied ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      {t('Copy')}
-                    </Button>
-                  </div>
-                  <div
-                    dir="ltr"
-                    data-code-example
-                    className={cn(
-                      FORCE_LTR_CLASS,
-                      'relative rounded-xl border border-border overflow-hidden bg-background',
-                    )}
-                  >
-                    <pre className="overflow-x-auto p-4 text-[12px] font-mono text-start m-0 bg-background">
-                      <code>
-                        appwrite login --email{' '}
-                        <span
-                          className="blur-[5px] select-none"
-                          title={t('Your email (blurred)')}
-                        >
-                          {userEmail || 'your@email.com'}
-                        </span>{' '}
-                        --password yourpassword
-                      </code>
-                    </pre>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <h4 className="text-[13px] font-semibold text-foreground">
-                  3. {t('Connect to this project')}
-                </h4>
-                <CodeBlock
-                  code={`appwrite client --endpoint ${endpoint ?? getBaseEndpoint()} --project-id ${projectId ?? 'YOUR_PROJECT_ID'}`}
-                  language="bash"
-                  label={t('Terminal')}
-                  showCopy
-                />
-                <p className="text-[13px] text-muted-foreground">
-                  {t('For non-interactive use (CI/CD), add')}{' '}
-                  <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
-                    --key YOUR_API_KEY
-                  </code>
-                  . {t('Create API keys in your project settings.')}
-                </p>
-              </div>
-              <DocsRouteLink
-                href={APPWRITE_CLI_DOCS_URL}
-                className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
-              >
-                {t('CLI commands')}
-                <ExternalLink className="h-3.5 w-3.5" />
-              </DocsRouteLink>
-            </div>
+            <CLISection
+              endpoint={endpoint ?? getBaseEndpoint()}
+              projectId={projectId ?? ''}
+              onViewApiKeys={handleViewApiKeys}
+              onClose={() => onOpenChange(false)}
+            />
           </TabsContent>
           <TabsContent
             value="mcp"
@@ -1913,17 +1732,16 @@ export function ConnectProject({
           </TabsContent>
           <TabsContent
             value="skills"
-            className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
+            className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
           >
-            <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
-              {/* Left: description + supported SDKs as flowing text */}
-              <div className="min-w-0 min-h-0 overflow-y-auto">
+            <div className="flex flex-col gap-4 pt-4 min-h-0 flex-1">
+              <div className="shrink-0 space-y-2">
                 <p className="text-[13px] text-muted-foreground">
                   {t(
-                    'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.', // pragma: allowlist secret
+                    'SDK context for your AI agent: accurate methods, patterns, and best practices. For live project actions like listing users, use MCP.',
                   )}
                 </p>
-                <p className="text-[13px] text-muted-foreground mt-3">
+                <p className="text-[13px] text-muted-foreground">
                   {t('Skills are available for')}{' '}
                   {[
                     'CLI',
@@ -1946,7 +1764,7 @@ export function ConnectProject({
                   ))}{' '}
                   - {t('pick what you use during setup.')}
                 </p>
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   <DocsRouteLink
                     href={APPWRITE_SKILLS_DOCS_URL}
                     className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
@@ -1954,34 +1772,41 @@ export function ConnectProject({
                     {t('Docs')}
                     <ExternalLink className="h-3.5 w-3.5" />
                   </DocsRouteLink>
+                  <a
+                    href={APPWRITE_AGENT_SKILLS_REPO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
+                  >
+                    <GitHubIcon className="h-3.5 w-3.5" />
+                    appwrite/skills
+                  </a>
                 </div>
               </div>
-              {/* Right (main): install command */}
-              <div className="min-w-0 space-y-0">
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-border">
+
+              <div className="grid grid-cols-2 gap-4 min-h-0 flex-1">
+                <div className="min-w-0 rounded-xl border border-border bg-card/50 overflow-hidden flex flex-col">
+                  <div className="px-4 py-2.5 border-b border-border shrink-0">
                     <h4 className="text-[13px] font-semibold text-foreground">
-                      {t('Install command')}
+                      {t('1. Install')}
                     </h4>
-                    <p className="text-[12px] text-muted-foreground mt-1">
-                      {t(
-                        "Run in project root. You'll pick SDKs, tools, and scope.",
-                      )}
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
+                      {t('Run in project root.')}
                     </p>
                   </div>
-                  <div className="px-4 py-3">
+                  <div className="px-4 py-3 shrink-0">
                     <CodeBlock
-                      code="npx skills add appwrite/agent-skills"
+                      code={APPWRITE_AGENT_SKILLS_INSTALL}
                       language="bash"
                       label={t('Terminal')}
                       showCopy={true}
                     />
                   </div>
                   <div className="px-4 py-2.5 border-t border-border">
-                    <p className="text-[12px] font-medium text-foreground mb-1.5">
+                    <p className="text-[12px] font-medium text-foreground mb-1">
                       {t('Then the CLI will ask:')}
                     </p>
-                    <ul className="text-[12px] text-muted-foreground space-y-1">
+                    <ul className="text-[12px] text-muted-foreground space-y-0.5">
                       <li>
                         <span className="text-foreground font-medium">
                           {t('Skills')}
@@ -2008,17 +1833,47 @@ export function ConnectProject({
                       </li>
                     </ul>
                   </div>
-                  <div className="px-4 py-3 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <a
-                      href={APPWRITE_AGENT_SKILLS_REPO}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
-                    >
-                      <GitHubIcon className="h-4 w-4" />
-                      appwrite/agent-skills
-                    </a>
+                </div>
+
+                <div className="min-w-0 flex flex-col gap-2.5 min-h-0">
+                  <div className="shrink-0">
+                    <h4 className="text-[13px] font-semibold text-foreground">
+                      {t('2. Try it')}
+                    </h4>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
+                      {t('Ask your agent to write Appwrite code:')}
+                    </p>
                   </div>
+                  <ul className="space-y-1.5 min-h-0">
+                    {SKILLS_TRY_IT_PROMPTS.map((prompt) => (
+                      <li
+                        key={prompt}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-1.5"
+                      >
+                        <span className="min-w-0 flex-1 text-[12px] font-medium text-foreground leading-snug">
+                          {t(prompt)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+                          onClick={() => {
+                            navigator.clipboard.writeText(prompt)
+                            setCopiedSkillsPrompt(prompt)
+                            toast.success(t('Copied to clipboard'))
+                            setTimeout(() => setCopiedSkillsPrompt(null), 2000)
+                          }}
+                        >
+                          {copiedSkillsPrompt === prompt ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )}
+                          {t('Copy')}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>

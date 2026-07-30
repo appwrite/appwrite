@@ -30,6 +30,7 @@ import {
   USER_PREFS_KEY_CLI_SHELL_SESSIONS_PREFIX,
   USER_PREFS_KEY_CLI_SHELL_SESSIONS_SIDEBAR_WIDTH_PX,
   USER_PREFS_KEY_COMMUNITY_SUPPORT,
+  USER_PREFS_KEY_CONNECT_PROJECT_TAB,
   USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT,
   USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT,
   USER_PREFS_KEY_DATABASE_TABLE_ROW_COLUMN_WIDTHS,
@@ -112,6 +113,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_SIDEBAR_COLLAPSED,
     description: 'Main navigation sidebar collapsed state.',
+    category: 'Layout',
+  },
+  {
+    id: 'connectProjectTab',
+    scope: 'account',
+    key: USER_PREFS_KEY_CONNECT_PROJECT_TAB,
+    description: 'Last selected tab in the Connect project dialog.',
     category: 'Layout',
   },
   {
