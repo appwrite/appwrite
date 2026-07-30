@@ -56,8 +56,16 @@ export type AnalyticsRange = { startAt: string; endAt: string }
  *
  * With a timeout the query fails instead, the panel shows its own error, and the
  * refresh finishes.
+ *
+ * Deliberately generous. This is a backstop against a request that will never
+ * arrive, not a latency budget - a read that is merely slow should still be
+ * allowed to land. It was 20s, which turned out to sit right on top of real
+ * breakdown latency against staging (four panels measured at 20.3s), so it was
+ * rejecting queries whose responses then arrived a fraction of a second later
+ * with a 200. Raising it costs nothing: a genuinely dead request still settles,
+ * just later, and nothing else keys off this value.
  */
-const READ_TIMEOUT_MS = 20_000
+const READ_TIMEOUT_MS = 60_000
 
 /**
  * Reject if `request` has not settled within `READ_TIMEOUT_MS`.
