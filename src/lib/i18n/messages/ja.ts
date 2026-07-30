@@ -72,6 +72,8 @@ export const jaCatalog: EnCatalog = {
         enabled: '有効',
         disabled: '無効',
         console: 'コンソール',
+        // Temporary: remove once the old console is retired
+        oldConsole: '旧コンソール',
         home: 'ホーム',
         docs: 'ドキュメント',
         changelog: '変更履歴',
@@ -383,7 +385,6 @@ export const jaCatalog: EnCatalog = {
         triggerLabel: 'プロダクト',
         desktopTitle: 'プラットフォームプロダクト',
         desktopSubtitle: '一つの Backend プラットフォームで構築、デプロイ、スケール',
-        viewOverview: 'プラットフォーム概要を見る',
         newLabel: '新着',
         categories: {
           ...enCatalog.website.products.navigation.categories,

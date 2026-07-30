@@ -72,6 +72,8 @@ export const heCatalog: EnCatalog = {
         enabled: 'מופעל',
         disabled: 'כבוי',
         console: 'קונסול',
+        // Temporary: remove once the old console is retired
+        oldConsole: 'קונסול ישן',
         home: 'בית',
         docs: 'דוקומנטציה',
         changelog: 'יומן שינויים',
@@ -383,7 +385,6 @@ export const heCatalog: EnCatalog = {
         triggerLabel: 'מוצרים',
         desktopTitle: 'מוצרי הפלטפורמה',
         desktopSubtitle: 'לבנות, לפרוס ולהתרחב על פלטפורמת Backend אחת',
-        viewOverview: 'צפו בסקירת הפלטפורמה',
         newLabel: 'חדש',
         categories: {
           ...enCatalog.website.products.navigation.categories,
