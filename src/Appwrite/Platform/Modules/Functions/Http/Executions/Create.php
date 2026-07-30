@@ -408,6 +408,11 @@ class Create extends Base
         ]);
 
         /** Execute function */
+        $executionResponse = [
+            'headers' => [],
+            'body' => '',
+        ];
+
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
