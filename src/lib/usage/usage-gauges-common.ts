@@ -15,6 +15,7 @@ import {
   getUsageChartFirstHalfPoints,
   resolveOverviewUsagePeriod,
   type ProjectUsageChartOverview,
+  type UsageChartPoint,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
@@ -291,6 +292,150 @@ function mergeGaugeValuesByTime(
     merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
   }
   return merged
+}
+
+/** A chart series built from one or more `resourceType` values of a gauge. */
+export interface UsageGaugeResourceTypeSeries {
+  key: string
+  resourceTypes: readonly string[]
+}
+
+function mergeGaugeValuesByTimePerSeries(
+  groups: Models.UsageDataPoint[],
+  series: readonly UsageGaugeResourceTypeSeries[],
+): Map<string, Map<string, number>> {
+  const seriesKeyByResourceType = new Map<string, string>()
+  for (const entry of series) {
+    for (const resourceType of entry.resourceTypes) {
+      seriesKeyByResourceType.set(resourceType, entry.key)
+    }
+  }
+
+  const merged = new Map<string, Map<string, number>>(
+    series.map((entry) => [entry.key, new Map<string, number>()]),
+  )
+
+  for (const group of groups) {
+    const seriesKey = seriesKeyByResourceType.get(
+      group.resourceType?.trim() ?? '',
+    )
+    if (!seriesKey) continue
+
+    const byTime = merged.get(seriesKey)!
+    byTime.set(group.time, (byTime.get(group.time) ?? 0) + group.value)
+  }
+
+  return merged
+}
+
+/**
+ * Current and previous gauge chart series, one per `resourceType` group.
+ *
+ * Per-resource gauges (the unified `storage` metric) hold one row per resource
+ * instance, so a resource type's value in a bucket is the sum of every
+ * resource's snapshot. Grouping on `resourceType` alone would let the server's
+ * `argMax` collapse each bucket to a single resource, so `resourceId` stays in
+ * `dimensions` and the sum happens here. Rows are capped at
+ * `USAGE_API_MAX_LIMIT` (buckets x resources), so very large projects on a fine
+ * interval can truncate the oldest end of the series.
+ */
+export async function fetchProjectUsageGaugeChartSeriesByResourceType(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  metric: string,
+  series: readonly UsageGaugeResourceTypeSeries[],
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+): Promise<{
+  chartPointsBySeries: Map<string, ProjectUsageChartOverview['chartPoints']>
+  previousChartPointsBySeries: Map<
+    string,
+    ProjectUsageChartOverview['chartPoints']
+  >
+}> {
+  const emptySeries = () =>
+    new Map(series.map((entry) => [entry.key, [] as UsageChartPoint[]]))
+
+  if (!projectId || series.length === 0) {
+    return {
+      chartPointsBySeries: emptySeries(),
+      previousChartPointsBySeries: emptySeries(),
+    }
+  }
+
+  const {
+    from,
+    to,
+    previousFrom,
+    previousTo,
+    interval: resolvedInterval,
+    comparisonMode,
+  } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
+
+  const resourceTypes = series.flatMap((entry) => [...entry.resourceTypes])
+  const scopedQueries = [
+    ...(queries ?? []),
+    Query.equal('resourceType', resourceTypes),
+  ]
+  const dimensions = ['resourceType', 'resourceId']
+
+  const currentGroups = await listUsageGaugeGroupsForMetrics(
+    projectId,
+    [metric],
+    {
+      interval: resolvedInterval,
+      startAt: from.toISOString(),
+      endAt: to.toISOString(),
+      dimensions,
+      queries: scopedQueries,
+    },
+  )
+
+  // First-half comparison reuses the current series; a second fetch would
+  // request the same buckets we already have.
+  const previousGroups =
+    comparisonMode === 'prior_window'
+      ? await listUsageGaugeGroupsForMetrics(projectId, [metric], {
+          interval: resolvedInterval,
+          startAt: previousFrom.toISOString(),
+          endAt: previousTo.toISOString(),
+          dimensions,
+          queries: scopedQueries,
+        })
+      : []
+
+  const currentBySeries = mergeGaugeValuesByTimePerSeries(currentGroups, series)
+  const previousBySeries = mergeGaugeValuesByTimePerSeries(
+    previousGroups,
+    series,
+  )
+
+  const chartPointsBySeries = new Map<string, UsageChartPoint[]>()
+  const previousChartPointsBySeries = new Map<string, UsageChartPoint[]>()
+
+  for (const entry of series) {
+    const chartPoints = fillGaugeChartPointsGaps(
+      currentBySeries.get(entry.key) ?? new Map(),
+      from,
+      to,
+      resolvedInterval,
+    )
+    chartPointsBySeries.set(entry.key, chartPoints)
+    previousChartPointsBySeries.set(
+      entry.key,
+      comparisonMode === 'first_half'
+        ? getUsageChartFirstHalfPoints(chartPoints)
+        : fillGaugeChartPointsGaps(
+            previousBySeries.get(entry.key) ?? new Map(),
+            previousFrom,
+            previousTo,
+            resolvedInterval,
+          ),
+    )
+  }
+
+  return { chartPointsBySeries, previousChartPointsBySeries }
 }
 
 /** Current and previous gauge chart series (merged per bucket). */
