@@ -22,7 +22,6 @@ import {
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
-import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
@@ -132,20 +131,18 @@ export function UsageBreakdownDrawer({
     refetch,
   } = activeQuery
 
-  const resourceLabels = useMemo(
+  const resourceItems = useMemo(
     () =>
-      dimension === 'resource' || dimension === 'resourceId'
-        ? getUsageBreakdownResourceIds(items)
-        : [],
+      dimension === 'resource' || dimension === 'resourceId' ? items : [],
     [dimension, items],
   )
 
   const fetchedLookups = useUsageResourceBreakdownLookups(
     projectId,
-    resourceLabels,
+    resourceItems,
     open &&
       (dimension === 'resource' || dimension === 'resourceId') &&
-      resourceLabels.length > 0,
+      resourceItems.length > 0,
   )
 
   const computeLookup = computeLookupProp ?? fetchedLookups.computeLookup

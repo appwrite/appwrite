@@ -53,6 +53,7 @@ import {
   OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   USAGE_BREAKDOWN_DRAWER_LIMIT,
 } from '@/lib/usage/breakdown-limits'
+import { partitionUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import {
   fetchProjectImageTransformationsUsageOverview,
   fetchProjectStorageResourceTypeUsageOverview,
@@ -1493,32 +1494,59 @@ export function useComputeBreakdownResources(
   })
 }
 
-/** Resolve mixed usage breakdown resource IDs to functions, sites, databases, and buckets. */
+/**
+ * Resolve mixed usage breakdown rows to functions, sites, databases, and buckets.
+ *
+ * Pass breakdown *items* (with resourceType) so IDs are partitioned before each
+ * typed lookup applies its own limit. A flat ID list truncates later families.
+ */
 export function useUsageResourceBreakdownLookups(
   projectId: string | null | undefined,
-  resourceIds: string[],
+  items: UsageBreakdownItem[],
   enabled = true,
 ) {
-  const shouldFetch = enabled && !!projectId && resourceIds.length > 0
+  const partitioned = useMemo(
+    () => partitionUsageBreakdownResourceIds(items),
+    [items],
+  )
+
+  const computeIds = useMemo(
+    () => [...partitioned.computeIds, ...partitioned.unknownIds],
+    [partitioned.computeIds, partitioned.unknownIds],
+  )
+  const databaseIds = useMemo(
+    () => [...partitioned.databaseIds, ...partitioned.unknownIds],
+    [partitioned.databaseIds, partitioned.unknownIds],
+  )
+  const bucketIds = useMemo(
+    () => [...partitioned.bucketIds, ...partitioned.unknownIds],
+    [partitioned.bucketIds, partitioned.unknownIds],
+  )
+  const tableIds = useMemo(
+    () => [...partitioned.tableIds, ...partitioned.unknownIds],
+    [partitioned.tableIds, partitioned.unknownIds],
+  )
+
+  const shouldFetch = enabled && !!projectId && items.length > 0
   const { data: computeData } = useComputeBreakdownResources(
     projectId,
-    resourceIds,
-    shouldFetch,
+    computeIds,
+    shouldFetch && computeIds.length > 0,
   )
   const { data: databaseData } = useDatabaseBreakdownResources(
     projectId,
-    resourceIds,
-    shouldFetch,
+    databaseIds,
+    shouldFetch && databaseIds.length > 0,
   )
   const { data: storageData } = useStorageBreakdownResources(
     projectId,
-    resourceIds,
-    shouldFetch,
+    bucketIds,
+    shouldFetch && bucketIds.length > 0,
   )
   const { data: tableData } = useTableBreakdownResources(
     projectId,
-    resourceIds,
-    shouldFetch,
+    tableIds,
+    shouldFetch && tableIds.length > 0,
   )
 
   return {

@@ -14,6 +14,15 @@ export type UsageResourceBreakdownDimension = Extract<
   'resource'
 >
 
+export type PartitionedUsageBreakdownResourceIds = {
+  bucketIds: string[]
+  computeIds: string[]
+  databaseIds: string[]
+  tableIds: string[]
+  /** Missing or unrecognized resourceType - try every lookup. */
+  unknownIds: string[]
+}
+
 export function getUsageBreakdownResourceIds(
   items: UsageBreakdownItem[],
 ): string[] {
@@ -34,6 +43,65 @@ export function getUsageBreakdownResourceIds(
   }
 
   return Array.from(ids)
+}
+
+/**
+ * Split breakdown rows by resourceType before name lookups.
+ *
+ * Each lookup normalizes with its own small limit (6–8). Passing a flat mix of
+ * bucket + database + function + site IDs (e.g. storage usage) truncates away
+ * later families, so functions/sites never resolve. Overview already partitions;
+ * usage pages must do the same.
+ */
+export function partitionUsageBreakdownResourceIds(
+  items: UsageBreakdownItem[],
+): PartitionedUsageBreakdownResourceIds {
+  const bucketIds = new Set<string>()
+  const computeIds = new Set<string>()
+  const databaseIds = new Set<string>()
+  const tableIds = new Set<string>()
+  const unknownIds = new Set<string>()
+
+  for (const item of items) {
+    if (isUsageProjectResourceType(item.resourceType)) continue
+
+    const resourceId = (item.resourceId ?? item.label).trim()
+    if (!resourceId) continue
+
+    const resourceType = item.resourceType?.trim() ?? ''
+
+    if (resourceType === 'bucket') {
+      bucketIds.add(resourceId)
+      continue
+    }
+
+    if (resourceType === 'function' || resourceType === 'site') {
+      computeIds.add(resourceId)
+      continue
+    }
+
+    if (resourceType === 'database' || resourceType === 'dedicatedDatabases') {
+      databaseIds.add(resourceId)
+      continue
+    }
+
+    const tableDatabaseId = parseTableUsageResourceType(resourceType)
+    if (tableDatabaseId) {
+      tableIds.add(resourceId)
+      tableIds.add(`${tableDatabaseId}/${resourceId}`)
+      continue
+    }
+
+    unknownIds.add(resourceId)
+  }
+
+  return {
+    bucketIds: Array.from(bucketIds),
+    computeIds: Array.from(computeIds),
+    databaseIds: Array.from(databaseIds),
+    tableIds: Array.from(tableIds),
+    unknownIds: Array.from(unknownIds),
+  }
 }
 
 export function splitUsageBreakdownEntries<

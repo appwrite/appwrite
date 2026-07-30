@@ -169,7 +169,11 @@ function mapGaugeBreakdownGroups(
     }
   }
 
+  // Drop non-positive rows. Dimensioned gauge responses often include zero
+  // placeholders (or last-bucket zeros) for resources with no usage in range;
+  // showing "Storage / bucket · 0" while the chart is flat is misleading.
   return Array.from(latestByKey.entries())
+    .filter(([, { value }]) => value > 0)
     .sort((a, b) => b[1].value - a[1].value)
     .slice(0, limit)
     .map(([key, { value, resourceType }]) => {

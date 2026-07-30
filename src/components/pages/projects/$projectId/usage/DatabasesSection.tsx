@@ -32,7 +32,6 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import {
   collectUsageResourceBreakdownItems,
-  getUsageBreakdownResourceIds,
 } from '@/lib/usage/usage-resources-breakdown'
 import { DatabaseOperationBentoCard } from './_components/DatabaseOperationBentoCard'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
@@ -118,16 +117,11 @@ export function DatabasesSection({
     [readsBreakdowns, writesBreakdowns, showBreakdown],
   )
 
-  const resourceLookupIds = useMemo(
-    () => getUsageBreakdownResourceIds(resourceBreakdownItems),
-    [resourceBreakdownItems],
-  )
-
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceLookupIds,
-      showBreakdown && resourceLookupIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && resourceBreakdownItems.length > 0,
     )
 
   useEffect(() => {

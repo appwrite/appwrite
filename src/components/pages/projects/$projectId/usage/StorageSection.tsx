@@ -25,7 +25,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
@@ -131,20 +130,20 @@ export function StorageSection({
     [imageTransformationsQuery.isError, imageTransformationsQuery.data?.topConsumers],
   )
 
-  const breakdownResourceIds = useMemo(() => {
+  const breakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
-    return getUsageBreakdownResourceIds([
+    return [
       ...storageCards.flatMap((card) => card.breakdownItems),
       ...imageTransformationsBreakdownItems,
-    ])
+    ]
   }, [showBreakdown, storageCards, imageTransformationsBreakdownItems])
 
   const { storageLookup, computeLookup, databaseLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      breakdownResourceIds,
-      showBreakdown && breakdownResourceIds.length > 0,
+      breakdownItems,
+      showBreakdown && breakdownItems.length > 0,
     )
 
   useEffect(() => {
