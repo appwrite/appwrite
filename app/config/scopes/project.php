@@ -65,6 +65,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.oauth2.read" => [
+        "description" =>
+            "Access to read project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
+    "project.oauth2.write" => [
+        "description" =>
+            "Access to update project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
     "templates.read" => [
         "description" =>
             "Access to read project\'s templates",
@@ -75,14 +85,14 @@ return [
             "Access to create, update, and delete project\'s templates",
         "category" => "Project",
     ],
-    "oauth2.read" => [
+    "stages.read" => [
         "description" =>
-            "Access to read project\'s OAuth2 configuration",
+            "Access to read project\'s stages",
         "category" => "Project",
     ],
-    "oauth2.write" => [
+    "stages.write" => [
         "description" =>
-            "Access to update project\'s OAuth2 configuration",
+            "Access to update project\'s stages",
         "category" => "Project",
     ],
 

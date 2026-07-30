@@ -37,6 +37,7 @@ class XList extends Base
             ->desc('List variables')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label(
                 'sdk',

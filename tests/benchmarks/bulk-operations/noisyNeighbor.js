@@ -1,7 +1,7 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
 import { Trend } from "k6/metrics";
-import { provisionProject, provisionDatabase, cleanup, unique } from "./utils.js";
+import { provisionProject, provisionDatabase, cleanup, unique, ENDPOINT } from "./utils.js";
 
 // Custom Trend metric for light response time tracking
 export const lightResponseTime = new Trend("light_response_time", true);
@@ -12,7 +12,7 @@ const LIGHT_AMOUNT = 10; // Light operation amount
 export function setup() {
     // Set up two separate projects - one for bulk operations (noisy neighbor) and one for light operations
     const heavyResources = provisionProject({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         email: 'heavy@test.com',
         password: 'password123',
         name: 'Heavy User',
@@ -20,7 +20,7 @@ export function setup() {
     });
 
     const lightResources = provisionProject({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         email: 'light@test.com',
         password: 'password123',
         name: 'Light User',
@@ -29,12 +29,12 @@ export function setup() {
 
     // Set up databases for both projects
     const heavy = provisionDatabase({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         apiHeaders: heavyResources.apiHeaders
     });
 
     const light = provisionDatabase({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         apiHeaders: lightResources.apiHeaders
     });
 
@@ -84,7 +84,7 @@ export function heavy(data) {
     const payload = JSON.stringify({ documents });
 
     const res = http.post(
-        `http://localhost/v1/databases/${data.heavy.databaseId}/collections/${data.heavy.collectionId}/documents`,
+        `${ENDPOINT}/databases/${data.heavy.databaseId}/collections/${data.heavy.collectionId}/documents`,
         payload,
         {
             headers: data.heavy.apiHeaders
@@ -103,7 +103,7 @@ export function light(data) {
 
     const startTime = new Date();
     const res = http.post(
-        `http://localhost/v1/databases/${data.light.databaseId}/collections/${data.light.collectionId}/documents`,
+        `${ENDPOINT}/databases/${data.light.databaseId}/collections/${data.light.collectionId}/documents`,
         payload,
         {
             headers: data.light.apiHeaders

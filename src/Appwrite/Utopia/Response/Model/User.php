@@ -185,7 +185,7 @@ class User extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
                 'required' => false,
-                'default' => '',
+                'default' => null,
                 'example' => '5e5ea5c16897e',
             ])
         ;

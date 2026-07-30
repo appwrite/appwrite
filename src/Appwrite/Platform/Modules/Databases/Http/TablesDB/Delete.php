@@ -31,6 +31,7 @@ class Delete extends DatabaseDelete
             ->label('event', 'databases.[databaseId].delete')
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'tablesdb',

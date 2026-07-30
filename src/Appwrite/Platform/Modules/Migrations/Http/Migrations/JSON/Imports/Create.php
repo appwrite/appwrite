@@ -10,7 +10,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -67,7 +66,8 @@ class Create extends Action
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
-            ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+            ->param('databaseId', '', new UID(), 'Database ID containing the target collection.')
+            ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
             ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
             ->inject('response')
@@ -86,7 +86,8 @@ class Create extends Action
     public function action(
         string $bucketId,
         string $fileId,
-        string $resourceId,
+        string $databaseId,
+        string $collectionId,
         bool $internalFile,
         string $onDuplicate,
         Response $response,
@@ -164,14 +165,19 @@ class Create extends Action
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
 
-        [$databaseId] = \explode(':', $resourceId, 2);
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
         $databaseType = $database->getAttribute('type');
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
-        $resourceType = self::resourceTypeForDatabaseType($databaseType);
+        $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -180,8 +186,15 @@ class Create extends Action
             'source' => JSONSource::getName(),
             'destination' => AppwriteSource::getName(),
             'resources' => $resources,
-            'resourceId' => $resourceId,
-            'resourceType' => $resourceType,
+            'resourceId' => $collection->getId(),
+            'resourceInternalId' => $collection->getSequence(),
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => $database->getId(),
+            'parentResourceInternalId' => $database->getSequence(),
+            'parentResourceType' => $parentResourceType,
+            'destinationResourceId' => $database->getId(),
+            'destinationResourceInternalId' => $database->getSequence(),
+            'destinationResourceType' => $parentResourceType,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],

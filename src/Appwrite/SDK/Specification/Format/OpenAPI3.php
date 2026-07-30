@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
@@ -318,6 +319,7 @@ class OpenAPI3 extends Format
                             'image/jpeg',
                             'image/gif',
                             'image/png',
+                            'image/svg+xml',
                             'image/webp',
                             'image/svg-x',
                             'image/x-icon',
@@ -418,23 +420,9 @@ class OpenAPI3 extends Format
                 $temp['security'][] = $securities;
             }
 
-            $body = [
-                'content' => [
-                    $consumes[0]  => [
-                        'schema'  => [
-                            'type' => 'object',
-                            'properties' => [],
-                        ],
-                    ],
-                ],
-            ];
+            $parameterNodes = [];
 
-            $bodyRequired = [];
-
-            $parameters = \array_merge(
-                $route->getParams(),
-                $sdk->getAdditionalParameters(),
-            );
+            $parameters = $this->getMethodParameters($route, $sdk);
 
             foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {
@@ -469,12 +457,10 @@ class OpenAPI3 extends Format
 
                 $class = \get_class($validator);
 
-                $base = \get_parent_class($class);
-
-                switch ($base) {
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                        $class = $base;
-                        break;
+                // Every Queries validator serialises to an array of query strings, so
+                // normalise the whole hierarchy instead of enumerating each subclass.
+                if (\is_subclass_of($class, Queries::class)) {
+                    $class = Queries::class;
                 }
 
                 if ($class === \Utopia\Validator\AnyOf::class) {
@@ -586,7 +572,7 @@ class OpenAPI3 extends Format
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
-                    case \Utopia\Storage\Validator\File::class:
+                    case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'binary';
@@ -601,36 +587,7 @@ class OpenAPI3 extends Format
                             $node['schema']['x-example'] = $param['example'];
                         }
                         break;
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Attributes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Buckets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Identities::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Messages::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Migrations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Projects::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Providers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Rules::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Subscribers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Targets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Topics::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
-                    case \Utopia\Database\Validator\Queries::class:
-                    case \Utopia\Database\Validator\Queries\Document::class:
-                    case \Utopia\Database\Validator\Queries\Documents::class:
+                    case Queries::class:
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
@@ -825,55 +782,12 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($isPathParam) { // Param is in URL path (directly or through alias)
-                    $node['in'] = 'path';
-                    $temp['parameters'][] = $node;
-                } elseif (\in_array($route->getMethod(), ['GET', 'DELETE'], true)) { // Param is in query
-                    $node['in'] = 'query';
-                    $temp['parameters'][] = $node;
-                } else { // Param is in payload
-                    if ($node['required']) {
-                        $bodyRequired[] = $name;
-                    }
-
-                    $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                        'type' => $node['schema']['type'],
-                        'description' => $node['description'],
-                    ];
-
-                    if (\array_key_exists('default', $node['schema'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
-                    }
-
-                    $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
-
-                    if (isset($node['schema']['format'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
-                    }
-
-                    if (isset($node['schema']['enum'])) {
-                        /// If the enum flag is Set, add the enum values to the body
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
-                    }
-
-                    if ($node['schema']['x-upload-id'] ?? false) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
-                    }
-
-                    if (isset($node['schema']['x-appwrite'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
-                    }
-
-                    if (\array_key_exists('items', $node['schema'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
-                    }
-
-                    if ($parameter['nullable']) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
-                    }
-                }
+                $parameterNodes[] = [
+                    'name' => $name,
+                    'config' => $parameter,
+                    'node' => $node,
+                    'path' => $isPathParam,
+                ];
 
                 $segments = \explode('/', $url);
                 foreach ($segments as &$segment) {
@@ -885,15 +799,97 @@ class OpenAPI3 extends Format
                 $url = \implode('/', $segments);
             }
 
-            if (!empty($bodyRequired)) {
-                $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
-            }
+            $methods = \array_values($route->getMethods());
+            foreach ($methods as $index => $method) {
+                $methodTemp = $temp;
+                if (\count($methods) > 1) {
+                    $suffix = \ucfirst(\strtolower($method));
+                    $methodTemp['operationId'] .= $suffix;
 
-            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
-                $temp['requestBody'] = $body;
-            }
+                    // Keep the first method's SDK name stable while ensuring
+                    // additional HTTP methods generate unique SDK methods.
+                    if ($index > 0) {
+                        $methodTemp['x-appwrite']['method'] .= $suffix;
+                    }
+                }
+                $body = [
+                    'content' => [
+                        $consumes[0]  => [
+                            'schema'  => [
+                                'type' => 'object',
+                                'properties' => [],
+                            ],
+                        ],
+                    ],
+                ];
+                $bodyRequired = [];
 
-            $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
+                foreach ($parameterNodes as $parameterNode) {
+                    $name = $parameterNode['name'];
+                    $parameter = $parameterNode['config'];
+                    $node = $parameterNode['node'];
+
+                    if ($parameterNode['path']) { // Param is in URL path (directly or through alias)
+                        $node['in'] = 'path';
+                        $methodTemp['parameters'][] = $node;
+                    } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
+                        $node['in'] = 'query';
+                        $methodTemp['parameters'][] = $node;
+                    } else { // Param is in payload
+                        if ($node['required']) {
+                            $bodyRequired[] = $name;
+                        }
+
+                        $body['content'][$consumes[0]]['schema']['properties'][$name] = [
+                            'type' => $node['schema']['type'],
+                            'description' => $node['description'],
+                        ];
+
+                        if (\array_key_exists('default', $node['schema'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
+                        }
+
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
+
+                        if (isset($node['schema']['format'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
+                        }
+
+                        if (isset($node['schema']['enum'])) {
+                            /// If the enum flag is Set, add the enum values to the body
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
+                        }
+
+                        if ($node['schema']['x-upload-id'] ?? false) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                        }
+
+                        if (isset($node['schema']['x-appwrite'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
+                        }
+
+                        if (\array_key_exists('items', $node['schema'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
+                        }
+
+                        if ($parameter['nullable']) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                        }
+                    }
+                }
+
+                if (!empty($bodyRequired)) {
+                    $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
+                }
+
+                if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                    $methodTemp['requestBody'] = $body;
+                }
+
+                $output['paths'][$url][\strtolower($method)] = $methodTemp;
+            }
         }
 
         foreach ($this->models as $model) {

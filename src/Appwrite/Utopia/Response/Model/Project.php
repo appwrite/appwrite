@@ -153,6 +153,12 @@ class Project extends Model
                 'default' => 'active',
                 'example' => 'active',
             ])
+            ->addRule('onboarding', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
+                'default' => [],
+                'example' => [],
+            ])
 
             // Resource: Auth methods
             ->addRule('authMethods', [

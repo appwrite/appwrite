@@ -50,13 +50,17 @@ class Headers extends Validator
 
         $size = 0;
         foreach ($value as $key => $val) {
-            $length = \strlen($key);
             // Reject non-string keys
-            if (!\is_string($key) || $length === 0) {
+            if (!\is_string($key)) {
                 return false;
             }
 
-            $size += $length + \strlen($val);
+            $length = \strlen($key);
+            if ($length === 0) {
+                return false;
+            }
+
+            $size += $length + \strlen($val ?? '');
             if ($size >= $this->maxSize) {
                 return false;
             }

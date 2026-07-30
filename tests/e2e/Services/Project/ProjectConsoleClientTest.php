@@ -112,7 +112,6 @@ final class ProjectConsoleClientTest extends Scope
 
         // Other fields
         $this->assertIsArray($response['body']['labels']);
-        $this->assertIsArray($response['body']['devKeys']);
         $this->assertSame(0, $response['body']['pingCount']);
         $this->assertSame('', $response['body']['pingedAt']);
 

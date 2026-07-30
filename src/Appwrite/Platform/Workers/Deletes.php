@@ -14,8 +14,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
-use Utopia\Audit\Adapter\SQL;
-use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -25,6 +23,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -69,10 +68,8 @@ class Deletes extends Action
             ->inject('executor')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
-            ->inject('auditRetention')
             ->inject('log')
             ->inject('publisherForDeletes')
-            ->inject('getAudit')
             ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
@@ -97,10 +94,8 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
-        string $auditRetention,
         Log $log,
         DeletePublisher $publisherForDeletes,
-        callable $getAudit,
         UsagePublisher $publisherForUsage,
     ): void {
         $payload = $message->getPayload();
@@ -177,11 +172,6 @@ class Deletes extends Action
                     );
                 }
                 break;
-            case DELETE_TYPE_AUDIT:
-                if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $getAudit, $auditRetention);
-                }
-                break;
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForPlatform, $datetime);
                 break;
@@ -218,7 +208,6 @@ class Deletes extends Action
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
-                $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredOAuth2Grants($project, $getProjectDB);
@@ -788,6 +777,17 @@ class Deletes extends Action
             Console::error('Failed to delete schedules: ' . $th->getMessage());
         }
 
+        // Delete Notifications
+        try {
+            $this->deleteByGroup('notifications', [
+                Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete notifications: ' . $th->getMessage());
+        }
+
         // Delete Advisor insights
         try {
             $this->deleteByGroup('insights', [
@@ -822,7 +822,6 @@ class Deletes extends Action
 
             $projectCollectionIds = [
                 ...\array_keys(Config::getParam('collections', [])['projects']),
-                SQL::COLLECTION,
                 AbuseDatabase::COLLECTION,
             ];
 
@@ -1078,14 +1077,18 @@ class Deletes extends Action
         /* delete log for a given $resourceInternalId  */
         $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
             // get the execution at position `N+1`
-            $execution = $dbForProject->findOne('executions', [
-                Query::select(['$createdAt']),
-                Query::equal('resourceInternalId', [$resourceInternalId]),
-                Query::equal('resourceType', [$resourceType]),
-                Query::orderDesc('$createdAt'),
-                Query::orderDesc(),
-                Query::offset($executionsRetentionCount),
-            ]);
+            try {
+                $execution = $dbForProject->findOne('executions', [
+                    Query::select(['$createdAt']),
+                    Query::equal('resourceInternalId', [$resourceInternalId]),
+                    Query::equal('resourceType', [$resourceType]),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc(),
+                    Query::offset($executionsRetentionCount),
+                ]);
+            } catch (NotFoundException) {
+                return;
+            }
 
             if (!$execution->isEmpty()) {
                 // delete everything older
@@ -1106,7 +1109,7 @@ class Deletes extends Action
             // fast path, no need to list anything!
             $delete($dbForProject, $resourceInternalId, $resourceType);
         } else {
-            $processResource = function (string $type) use ($dbForProject, $delete) {
+            foreach ([RESOURCE_TYPE_SITES, RESOURCE_TYPE_FUNCTIONS] as $type) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id', '$sequence'])],
@@ -1115,13 +1118,7 @@ class Deletes extends Action
                         $delete($dbForProject, $resource->getSequence(), $type);
                     }
                 );
-            };
-
-            /* perform processing in parallel */
-            batch([
-                fn () => $processResource(RESOURCE_TYPE_SITES),
-                fn () => $processResource(RESOURCE_TYPE_FUNCTIONS),
-            ]);
+            }
         }
     }
 
@@ -1218,28 +1215,6 @@ class Deletes extends Action
             Query::orderDesc('timestamp'),
             Query::orderAsc(),
         ], $dbForPlatform);
-    }
-
-    /**
-     * @param Document $project
-     * @param callable $getAudit
-     * @param string $auditRetention
-     * @return void
-     * @throws Exception
-     */
-    private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
-    {
-        Console::info('Delete audit logs');
-
-        $projectId = $project->getId();
-        /** @var Audit $audit */
-        $audit = $getAudit($project);
-
-        try {
-            $audit->cleanup(new \DateTime($auditRetention));
-        } catch (Throwable $th) {
-            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $th->getMessage());
-        }
     }
 
     /**
@@ -1848,10 +1823,6 @@ class Deletes extends Action
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
     {
-        if ($project->getId() === 'console') {
-            return;
-        }
-
         Console::info('Delete expired presences');
 
         $dbForProject = $getProjectDB($project);

@@ -29,7 +29,7 @@ class XList extends Action
 
     protected function getDatabaseTypeQueryFilters(): array
     {
-        return [Query::equal('type', [$this->getDatabaseType()])];
+        return [Query::equal('type', $this->getAllowedDatabaseTypes())];
     }
 
     public function __construct()

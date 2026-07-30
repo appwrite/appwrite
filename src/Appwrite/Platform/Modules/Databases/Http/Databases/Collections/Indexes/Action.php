@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
 use Appwrite\Extend\Exception;
-use Utopia\Platform\Action as UtopiaAction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'columnIndex' or 'index').
@@ -17,12 +17,14 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMN_INDEX;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     /**

@@ -29,6 +29,7 @@ Table of Contents:
   - [Windows](#windows)
     - [CMD](#cmd)
     - [PowerShell](#powershell)
+  - [Docker API version mismatch](#docker-api-version-mismatch)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
@@ -104,6 +105,22 @@ docker run -it --rm `
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
 
+### Docker API version mismatch
+
+If install or upgrade fails with an error like `client version 1.52 is too new. Maximum supported API version is 1.42`, the Docker CLI inside the Appwrite image is newer than your host Docker Engine. Pass `DOCKER_API_VERSION` set to the maximum API version from the error (or upgrade Docker on the host):
+
+```bash
+docker run -it --rm \
+    --env DOCKER_API_VERSION=1.42 \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
+    appwrite/appwrite:1.9.0
+```
+
+Use the same `--env DOCKER_API_VERSION=...` flag with `--entrypoint="upgrade"` when upgrading.
+
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
 
 ### Upgrade from an Older Version
@@ -166,6 +183,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 |                       | [Quick start for PHP](https://appwrite.io/docs/quick-starts/php)                   |
 |                       | [Quick start for Kotlin](https://appwrite.io/docs/quick-starts/kotlin)             |
 |                       | [Quick start for Swift](https://appwrite.io/docs/quick-starts/swift)               |
+|                       | [Quick start for Go](https://appwrite.io/docs/quick-starts/go)                     |
+|                       | [Quick start for Rust](https://appwrite.io/docs/quick-starts/rust)                 |
 
 ### SDKs
 
@@ -181,15 +200,16 @@ Below is a list of currently supported platforms and languages. If you would lik
 
 #### Server
 
-- :white_check_mark: &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node)
-- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
-- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
-- :white_check_mark: &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno)
-- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
+- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node)
 - :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python)
-- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
-- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart)
+- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php)
+- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby)
 - :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift)
+- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin)
+- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 

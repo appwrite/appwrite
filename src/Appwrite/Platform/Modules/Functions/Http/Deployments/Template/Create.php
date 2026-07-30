@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -12,11 +12,10 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -25,7 +24,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -48,13 +46,14 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
+
                 Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/functions/templates) to find the template details.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -79,7 +78,8 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('deployments')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -100,7 +100,8 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        Deployments $deployments,
         Authorization $authorization,
         array $platform
     ) {
@@ -123,6 +124,8 @@ class Create extends Base
         ]);
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
+            // VCS-connected function: the Builds worker merges the template into
+            // the user's repo, pushes it as a commit, then builds that commit.
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsFunction(
@@ -133,8 +136,9 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
+                deployments: $deployments,
                 platform: $platform,
                 referenceType: $type,
                 reference: $reference
@@ -152,38 +156,40 @@ class Create extends Base
         }
 
         $deploymentId = ID::unique();
-        $deployment = $dbForProject->createDocument('deployments', new Document([
-            '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getSequence(),
-            'resourceType' => 'functions',
-            'entrypoint' => $function->getAttribute('entrypoint', ''),
-            'buildCommands' => $function->getAttribute('commands', ''),
-            'startCommand' => $function->getAttribute('startCommand', ''),
-            'providerRepositoryName' => $repository,
-            'providerRepositoryOwner' => $owner,
-            'providerRepositoryUrl' => $repositoryUrl,
-            'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
-            'type' => 'vcs',
-            'activate' => $activate,
-        ]));
+
+        $ref = Base::resolveTemplateRef($vcsFactory, $owner, $repository, $type, $reference);
+
+        // Public template: pull the source straight from GitHub's public repo
+        // as a codeload tarball; unarchive strips down to the rootDirectory.
+        $deployment = $deployments->createFromRef(
+            $function,
+            new Document([
+                '$id' => $deploymentId,
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'buildCommands' => $function->getAttribute('commands', ''),
+                'startCommand' => $function->getAttribute('startCommand', ''),
+                'providerRepositoryName' => $repository,
+                'providerRepositoryOwner' => $owner,
+                'providerRepositoryUrl' => $repositoryUrl,
+                'providerBranchUrl' => $branchUrl,
+                // The resolved concrete ref (branch, tag, or commit — codeload
+                // serves them all through the same URL form), so a duplicate
+                // can re-fetch the exact same source later; likewise the root
+                // directory. Remote-source builds never store a tarball, so
+                // these coordinates are all a redeploy has.
+                'providerBranch' => $ref,
+                'providerRootDirectory' => $rootDirectory,
+                'type' => 'vcs',
+                'activate' => $activate,
+            ]),
+            $owner,
+            $repository,
+            $type,
+            $ref,
+            $rootDirectory,
+        );
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
-
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $function,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

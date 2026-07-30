@@ -37,6 +37,7 @@ class Delete extends Action
             ->label('audits.event', 'bucket.delete')
             ->label('event', 'buckets.[bucketId].delete')
             ->label('audits.resource', 'bucket/{request.bucketId}')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'buckets',
