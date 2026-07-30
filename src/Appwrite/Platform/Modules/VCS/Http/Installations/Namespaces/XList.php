@@ -97,7 +97,11 @@ class XList extends Action
 
         $page = ($offset / $limit) + 1;
 
-        if (\method_exists($vcs, 'listNamespaces')) {
+        // listNamespaces() is declared on the abstract Git class with a
+        // throwing default, not omitted -- method_exists() is always true,
+        // so unsupported providers (Bitbucket, GitHub, Gitea) are detected by
+        // catching the exception, not by checking for the method.
+        try {
             ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
             $namespaces = \array_map(fn ($namespace) => [
                 '$id' => $namespace['id'] ?? '',
@@ -106,7 +110,7 @@ class XList extends Action
                 'type' => ($namespace['kind'] ?? '') === 'user' ? 'user' : 'organization',
                 'avatarUrl' => $namespace['avatarUrl'] ?? '',
             ], $namespaces);
-        } else {
+        } catch (\Throwable) {
             $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
             $owner = $vcs->getOwnerName($providerInstallationId);
             $matches = empty($search) || \stripos($owner, $search) !== false;

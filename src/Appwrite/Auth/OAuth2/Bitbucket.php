@@ -153,6 +153,74 @@ class Bitbucket extends OAuth2
     }
 
     /**
+     * Bitbucket's `/user` response carries `username` for older accounts and
+     * `nickname` for accounts migrated to Atlassian identity, which don't
+     * expose one. Callers (repository creation, ownership resolution) need
+     * whichever of the two the account actually has.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserSlug(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['username'] ?? ($user['nickname'] ?? '');
+    }
+
+    /**
+     * @link https://developer.atlassian.com/cloud/bitbucket/rest/api-group-repositories/#api-repositories-workspace-repo-slug-post
+     *
+     * Bitbucket has no implicit "current user's default namespace" the way
+     * GitHub/GitLab do -- the workspace is always part of the URL. Defaults
+     * to the token owner's own workspace (their user slug) when no
+     * $namespaceId (a workspace slug) is given.
+     *
+     * @param string $accessToken
+     * @param string $repositoryName
+     * @param bool $private
+     * @param string $namespaceId
+     *
+     * @return array
+     */
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
+    {
+        $workspace = !empty($namespaceId) ? $namespaceId : $this->getUserSlug($accessToken);
+
+        $repository = $this->request(
+            'POST',
+            'https://api.bitbucket.org/2.0/repositories/' . \rawurlencode($workspace) . '/' . \rawurlencode($repositoryName),
+            ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'],
+            \json_encode([
+                'scm' => 'git',
+                'is_private' => $private,
+            ])
+        );
+
+        $repository = \json_decode($repository, true) ?? [];
+
+        // Normalize to the GitHub/Gitea/GitLab field shape ProviderRepository expects.
+        if (isset($repository['uuid'])) {
+            $repository['id'] = $repository['uuid'];
+        }
+
+        if (isset($repository['is_private'])) {
+            $repository['private'] = $repository['is_private'];
+        }
+
+        if (isset($repository['updated_on'])) {
+            $repository['pushed_at'] = $repository['updated_on'];
+        }
+
+        if (isset($repository['error']['message']) && !isset($repository['message'])) {
+            $repository['message'] = $repository['error']['message'];
+        }
+
+        return $repository;
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
