@@ -283,16 +283,21 @@ trait AvatarsBase
     {
         /**
          * Test for SUCCESS
+         *
+         * Wrapped in assertEventually to handle transient external URL failures
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => 'https://github.com/',
-        ]);
+        $response = null;
+        $this->assertEventually(function () use (&$response) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://github.com/',
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/svg+xml', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/svg+xml', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $this->getProject()['$id'],
