@@ -39,8 +39,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -65,6 +63,7 @@ use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -77,8 +76,10 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
+
+$oauthDefaultSuccess = $legacyConsolePaths ? '/console/auth/oauth2/success' : '/auth/oauth2/success';
+$oauthDefaultFailure = $legacyConsolePaths ? '/console/auth/oauth2/failure' : '/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -1498,7 +1499,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1571,8 +1572,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
-            $exception = new Exception($type, $message, $code);
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response, $project, $oauthDefaultFailure) {
+            $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
                 $query['error'] = json_encode([
@@ -1580,6 +1581,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'type' => $exception->getType(),
                     'code' => !\is_null($code) ? $code : $exception->getCode(),
                 ]);
+                // Mirror success path: default OAuth failure relay needs project to deep-link
+                // back into the native app via appwrite-callback-{project}://
+                if (($failure['path'] ?? '') === $oauthDefaultFailure) {
+                    $query['project'] = $project->getId();
+                }
                 $failure['query'] = URLParser::unparseQuery($query);
                 $response->redirect(URLParser::unparse($failure), 301);
             }
@@ -1618,11 +1624,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         } catch (OAuth2Exception $ex) {
+            $providerError = $ex->getError() ?: $ex->getMessage();
 
             $failureRedirect(
-                $ex->getType(),
-                'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
-                $ex->getCode(),
+                Exception::USER_OAUTH2_PROVIDER_FAILURE,
+                previous: $ex,
+                params: [$providerName, $providerError],
             );
         }
 
@@ -2250,7 +2257,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) use ($legacyConsolePaths) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2396,7 +2403,9 @@ Http::post('/v1/account/tokens/magic-url')
             } elseif ($protocol === 'http' && $port !== '80') {
                 $callbackBase .= ':' . $port;
             }
-            $url = $callbackBase . '/auth/magic-url';
+            $url = $legacyConsolePaths
+                ? "{$callbackBase}/console/auth/magic-url"
+                : "{$callbackBase}/auth/magic-url";
         }
 
         $url = Template::parseURL($url);
@@ -3169,15 +3178,9 @@ Http::post('/v1/account/tokens/phone')
                 providerType: MESSAGE_TYPE_SMS,
             ));
 
-            $helper = PhoneNumberUtil::getInstance();
-            try {
-                $countryCode = $helper->parse($phone)->getCountryCode();
-
-                if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                }
-            } catch (NumberParseException $e) {
-                // Ignore invalid phone number for country code stats
+            $countryCode = CallingCode::fromPhoneNumber($phone);
+            if (!empty($countryCode)) {
+                $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
@@ -3827,6 +3830,14 @@ Http::post('/v1/account/recovery')
         $customTemplate =
             $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.recovery-' . $locale->fallback] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3906,12 +3917,27 @@ Http::post('/v1/account/recovery')
             'team' => ''
         ];
 
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $emailVariables = [
+                ...$emailVariables,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
+            ];
+        }
+
         $publisherForMails->enqueue(new MailMessage(
             project: $project,
             recipient: $profile->getAttribute('email', ''),
             name: $profile->getAttribute('name', ''),
             subject: $subject,
             template: MAIL_TEMPLATE_RECOVERY,
+            bodyTemplate: $bodyTemplate,
             body: $body,
             preview: $preview,
             smtp: $smtpConfig,
@@ -4493,15 +4519,9 @@ Http::post('/v1/account/verifications/phone')
                 providerType: MESSAGE_TYPE_SMS,
             ));
 
-            $helper = PhoneNumberUtil::getInstance();
-            try {
-                $countryCode = $helper->parse($phone)->getCountryCode();
-
-                if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                }
-            } catch (NumberParseException $e) {
-                // Ignore invalid phone number for country code stats
+            $countryCode = CallingCode::fromPhoneNumber($phone);
+            if (!empty($countryCode)) {
+                $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }

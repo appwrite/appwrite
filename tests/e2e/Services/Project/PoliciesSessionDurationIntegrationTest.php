@@ -41,8 +41,8 @@ final class PoliciesSessionDurationIntegrationTest extends Scope
             $this->assertSame($seconds, $response['body']['authDuration']);
         };
 
-        // Step 1: Set session duration to 5 seconds
-        $setDuration(5);
+        // Step 1: Set session duration to 60 seconds (the policy minimum)
+        $setDuration(60);
 
         // Step 2: Create user and a session
         $email = 'duration_' . uniqid() . '@localhost.test';
@@ -73,14 +73,14 @@ final class PoliciesSessionDurationIntegrationTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
 
-        // Step 3: Poll until the 5s TTL elapses - session should expire
+        // Step 3: Poll until the 60s TTL elapses - session should expire
         $this->assertEventually(function () use ($accountHeaders) {
             $response = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
             $this->assertSame(401, $response['headers']['status-code']);
-        }, 15_000, 500);
+        }, 75_000, 500);
 
-        // Step 4: Raise duration to 10s - same session should still not be usable
-        $setDuration(10);
+        // Step 4: Raise duration to 120s - same session should still not be usable
+        $setDuration(120);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', $accountHeaders);
         $this->assertSame(401, $response['headers']['status-code']);

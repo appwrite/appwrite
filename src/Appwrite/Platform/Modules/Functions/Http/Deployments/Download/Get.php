@@ -125,11 +125,16 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $contentType = $type === 'source' ? 'application/gzip' : 'application/octet-stream';
+        $filename = $type === 'source'
+            ? $deploymentId . '-source.tar.gz'
+            : $deploymentId . '-output-' . \basename($path);
+
         $response
-            ->setContentType('application/gzip')
+            ->setContentType($contentType)
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeaderLine('range');

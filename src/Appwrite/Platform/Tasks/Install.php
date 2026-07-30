@@ -15,6 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -59,7 +60,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb']), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->callback($this->action(...));
     }
 
@@ -202,7 +203,7 @@ class Install extends Action
         }
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
         if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
@@ -335,7 +336,7 @@ class Install extends Action
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
             $enabledDatabases[] = $lockedDatabase;
         }
@@ -426,17 +427,11 @@ class Install extends Action
             }
         }
 
-        foreach ($input as $key => $value) {
-            if (!is_string($value)) {
-                continue;
-            }
-            if (str_contains($value, "\n") || str_contains($value, "\r")) {
-                throw new \InvalidArgumentException('Invalid value for ' . $key);
-            }
-        }
+        // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
+        // encodes them as escaped single-line double-quoted assignments.
 
         // Set database-specific connection details
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
         if ($database === 'mongodb') {
             $input['_APP_DB_HOST'] = 'mongodb';
             $input['_APP_DB_PORT'] = 27017;
@@ -541,7 +536,7 @@ class Install extends Action
         }
         $composeGenerator = new Generator($composeYaml);
 
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
@@ -857,6 +852,12 @@ class Install extends Action
             return;
         }
 
+        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
+        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
+        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
+            return;
+        }
+
         $appEnv = $input['_APP_ENV'] ?? 'development';
         $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
@@ -874,7 +875,7 @@ class Install extends Action
         }
 
         $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 

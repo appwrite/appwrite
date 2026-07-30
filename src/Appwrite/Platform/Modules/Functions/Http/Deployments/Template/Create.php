@@ -2,9 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -13,22 +12,18 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -58,7 +53,7 @@ class Create extends Base
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
+
                 Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/functions/templates) to find the template details.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -83,8 +78,8 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('deployments')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -105,8 +100,8 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        Deployments $deployments,
         Authorization $authorization,
         array $platform
     ) {
@@ -130,9 +125,7 @@ class Create extends Base
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             // VCS-connected function: the Builds worker merges the template into
-            // the user's repo, pushes it as a commit, then builds that commit —
-            // on the executor itself, or by submitting a job when
-            // _APP_BUILDS_BACKEND=orchestrator.
+            // the user's repo, pushes it as a commit, then builds that commit.
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsFunction(
@@ -143,8 +136,9 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
+                deployments: $deployments,
                 platform: $platform,
                 referenceType: $type,
                 reference: $reference
@@ -161,69 +155,41 @@ class Create extends Base
             return;
         }
 
-        // Backend for the template build: 'orchestrator' (jobs-service, which
-        // pulls the public GitHub tarball via artifacts) or 'executor' (default;
-        // the Builds worker clones the repo). The jobs path pre-declares buildPath.
-        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-
         $deploymentId = ID::unique();
-        $deployment = $dbForProject->createDocument('deployments', new Document([
-            '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getSequence(),
-            'resourceType' => 'functions',
-            'entrypoint' => $function->getAttribute('entrypoint', ''),
-            'buildCommands' => $function->getAttribute('commands', ''),
-            'startCommand' => $function->getAttribute('startCommand', ''),
-            'providerRepositoryName' => $repository,
-            'providerRepositoryOwner' => $owner,
-            'providerRepositoryUrl' => $repositoryUrl,
-            'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
-            'type' => 'vcs',
-            'activate' => $activate,
-            'status' => 'waiting',
-            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
-        ]));
+
+        $ref = Base::resolveTemplateRef($vcsFactory, $owner, $repository, $type, $reference);
+
+        // Public template: pull the source straight from GitHub's public repo
+        // as a codeload tarball; unarchive strips down to the rootDirectory.
+        $deployment = $deployments->createFromRef(
+            $function,
+            new Document([
+                '$id' => $deploymentId,
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'buildCommands' => $function->getAttribute('commands', ''),
+                'startCommand' => $function->getAttribute('startCommand', ''),
+                'providerRepositoryName' => $repository,
+                'providerRepositoryOwner' => $owner,
+                'providerRepositoryUrl' => $repositoryUrl,
+                'providerBranchUrl' => $branchUrl,
+                // The resolved concrete ref (branch, tag, or commit — codeload
+                // serves them all through the same URL form), so a duplicate
+                // can re-fetch the exact same source later; likewise the root
+                // directory. Remote-source builds never store a tarball, so
+                // these coordinates are all a redeploy has.
+                'providerBranch' => $ref,
+                'providerRootDirectory' => $rootDirectory,
+                'type' => 'vcs',
+                'activate' => $activate,
+            ]),
+            $owner,
+            $repository,
+            $type,
+            $ref,
+            $rootDirectory,
+        );
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
-
-        if ($useJobs) {
-            // Templates can pin a version range (e.g. "0.3.*"); codeload only
-            // takes a concrete ref, so resolve the range to the highest matching
-            // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
-            $ref = $reference;
-            if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
-                try {
-                    $tags = $github->listTags($owner, $repository, $reference);
-                    $ref = \end($tags) ?: $reference;
-                } catch (\Throwable) {
-                    // Fall back to the raw reference; the build surfaces a bad ref.
-                }
-            }
-
-            // Public template: pull the source straight from GitHub's codeload
-            // tarball; unarchive strips the "{repo}-{ref}/" wrapper + the rootDirectory.
-            $source = [
-                'url' => "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$ref}",
-                'subdir' => $rootDirectory,
-            ];
-            $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
-        } else {
-            $publisherForBuilds->enqueue(new BuildMessage(
-                project: $project,
-                resource: $function,
-                deployment: $deployment,
-                type: BUILD_TYPE_DEPLOYMENT,
-                template: $template,
-                platform: $platform,
-            ));
-        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

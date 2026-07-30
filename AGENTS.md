@@ -227,6 +227,7 @@ Register new injections alongside existing ones in `app/init/resources.php` and 
 - **E2E**: `tests/e2e/Services/{Service}/` mirrors the API service. Shared logic in `{Service}Base` traits; suites as `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`.
 - **E2E methods**: `test{Verb}` or `test{Verb}{Qualifier}` -- `testCreateTeam`, `testListProjectsQuerySelect`. Omit the service name when the test class already implies it.
 - **Unit**: path mirrors source under `tests/unit/`; class `{ClassUnderTest}Test`.
+- **Never use reflection in tests** (no `ReflectionMethod`/`ReflectionClass`/`setAccessible` to reach private members). A private method is not a contract; test through the public surface.
 
 ### Tracing span keys
 
