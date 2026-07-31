@@ -156,7 +156,7 @@ final class DatabasesPermissionsTeamTest extends Scope
     #[DataProvider('readDocumentsProvider')]
     public function testReadDocuments($user, $collection, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $this->databaseId . '/collections/' . $collection  . '/documents/query', [
+        $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

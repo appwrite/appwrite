@@ -157,7 +157,7 @@ final class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "any" permission collection
          */
-        $documents = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collections['public'] . '/documents/query', [
+        $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collections['public'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -170,7 +170,7 @@ final class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "users" permission collection
          */
-        $documents = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collections['private'] . '/documents/query', [
+        $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collections['private'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -183,7 +183,7 @@ final class DatabasesPermissionsMemberTest extends Scope
         /**
          * Check "user:user1" document only permission collection
          */
-        $documents = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents/query', [
+        $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -1,13 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents;
+namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Queries;
 
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as DocumentXList;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -15,24 +14,19 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
-class XList extends DocumentXList
+class Create extends XList
 {
     public static function getName(): string
     {
-        return 'listVectorsDBDocuments';
-    }
-
-    protected function getResponseModel(): string
-    {
-        return UtopiaResponse::MODEL_DOCUMENT_LIST;
+        return 'createVectorsDBDocumentsQuery';
     }
 
     public function __construct()
     {
         $this
-            ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents')
-            ->desc('List documents')
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
+            ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')
+            ->desc('Create query')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -40,8 +34,8 @@ class XList extends DocumentXList
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: $this->getSdkGroup(),
-                name: 'listDocuments',
-                description: '/docs/references/vectorsdb/list-documents.md',
+                name: 'createQuery',
+                description: '/docs/references/vectorsdb/create-query.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

@@ -127,7 +127,7 @@ final class ACIDTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']);
 
         // Verify NO new documents were created (atomicity)
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -236,7 +236,7 @@ final class ACIDTest extends Scope
         $this->assertContains($response['headers']['status-code'], [400, 409, 500], 'Transaction commit should fail due to validation. Response: ' . json_encode($response['body']));
 
         // Verify no documents were created
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -521,7 +521,7 @@ final class ACIDTest extends Scope
         $this->assertEquals('Modified outside transaction', $document1['body']['metadata']['data']);
 
         // List all documents to verify total count
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

@@ -117,11 +117,11 @@ final class DatabasesPermissionsGuestTest extends Scope
         $roles = $this->getAuthorization()->getRoles();
         $this->getAuthorization()->cleanRoles();
 
-        $publicDocuments = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $publicCollectionId  . '/documents/query', [
+        $publicDocuments = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $publicCollectionId  . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
-        $privateDocuments = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $privateCollectionId  . '/documents/query', [
+        $privateDocuments = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $privateCollectionId  . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);

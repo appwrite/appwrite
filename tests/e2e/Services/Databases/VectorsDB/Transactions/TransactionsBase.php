@@ -344,7 +344,7 @@ trait TransactionsBase
         $this->assertEquals('committed', $response['body']['status']);
 
         // Verify documents were created
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -456,7 +456,7 @@ trait TransactionsBase
         $this->assertEquals('failed', $response['body']['status']);
 
         // Verify no documents were created
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1022,7 +1022,7 @@ trait TransactionsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Verify results
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1187,7 +1187,7 @@ trait TransactionsBase
         $this->assertEquals(409, $response['headers']['status-code']); // Conflict due to duplicate
 
         // Verify NO new documents were created (atomicity)
-        $documents = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -1884,7 +1884,7 @@ trait TransactionsBase
         $this->assertEquals(200, $response['headers']['status-code']); // Bulk operations return 200
 
         // Documents should not exist outside transaction yet
-        $response = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1913,7 +1913,7 @@ trait TransactionsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now exist
-        $response = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2009,7 +2009,7 @@ trait TransactionsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should still have original category outside transaction
-        $response = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2030,7 +2030,7 @@ trait TransactionsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Documents should now have updated category
-        $response = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", array_merge([
+        $response = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
