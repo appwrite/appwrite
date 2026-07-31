@@ -234,9 +234,25 @@ class InstallationTokens
             }
 
             $currentHolderId = $document->getAttribute('holderId');
-            $reread = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+            $claimId = 'steal-' . \bin2hex(\random_bytes(8));
 
-            if ($reread->isEmpty() || $reread->getAttribute('holderId') !== $currentHolderId) {
+            $authorization->skip(function () use ($dbForPlatform, $lock, $currentHolderId, $claimId) {
+                $current = $dbForPlatform->getDocument('vcsCommentLocks', $lock);
+                if ($current->isEmpty() || $current->getAttribute('holderId') !== $currentHolderId) {
+                    return;
+                }
+                $dbForPlatform->updateDocument(
+                    'vcsCommentLocks',
+                    $lock,
+                    new Document(['holderId' => $claimId])
+                );
+            });
+
+            $claimed = $authorization->skip(
+                fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock)
+            );
+
+            if ($claimed->isEmpty() || $claimed->getAttribute('holderId') !== $claimId) {
                 return false;
             }
 

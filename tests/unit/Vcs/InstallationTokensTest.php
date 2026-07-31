@@ -558,7 +558,13 @@ final class InstallationTokensTest extends TestCase
 
             return new Document();
         });
-        $db->method('updateDocument')->willReturnArgument(2);
+        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $staleLockDoc) {
+            $target = $createdLock ?? $staleLockDoc;
+            foreach ($doc->getArrayCopy() as $k => $v) {
+                $target->setAttribute($k, $v);
+            }
+            return $target;
+        });
 
         $db->expects($this->exactly(2))
             ->method('deleteDocument')
@@ -602,7 +608,13 @@ final class InstallationTokensTest extends TestCase
 
             return new Document();
         });
-        $db->method('updateDocument')->willReturnArgument(2);
+        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $malformedLockDoc) {
+            $target = $createdLock ?? $malformedLockDoc;
+            foreach ($doc->getArrayCopy() as $k => $v) {
+                $target->setAttribute($k, $v);
+            }
+            return $target;
+        });
 
         $db->expects($this->exactly(2))
             ->method('deleteDocument')
@@ -646,7 +658,13 @@ final class InstallationTokensTest extends TestCase
 
             return new Document();
         });
-        $db->method('updateDocument')->willReturnArgument(2);
+        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $missingLockDoc) {
+            $target = $createdLock ?? $missingLockDoc;
+            foreach ($doc->getArrayCopy() as $k => $v) {
+                $target->setAttribute($k, $v);
+            }
+            return $target;
+        });
 
         $db->expects($this->exactly(2))
             ->method('deleteDocument')
