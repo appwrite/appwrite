@@ -488,7 +488,7 @@ final class InstallationTokensTest extends TestCase
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime, -65);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -80);
         $initialStaleLock = new Document([
             '$id' => 'installation-installation1',
             'holderId' => 'original-holder-id',
@@ -545,7 +545,7 @@ final class InstallationTokensTest extends TestCase
             return $doc;
         });
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime, -65);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -80);
         $staleLockDoc = new Document([
             '$id' => 'installation-installation1',
             '$createdAt' => $staleLockedAt,

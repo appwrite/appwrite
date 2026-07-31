@@ -13,9 +13,11 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
-    private const LOCK_WAIT_SECONDS = 65; // > LOCK_TTL so waiters can steal
+    // Budget: 3x 15s provider HTTP calls (refreshTokens + 2x getUserID) + backoff + DB write/jitter margin = 50.3s.
+    // LOCK_TTL (75s) provides a 24.7s safety buffer so a live refresh is never stolen while in flight.
+    private const LOCK_TTL_SECONDS = (OAuth2::TIMEOUT * 4) + 15;
 
-    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 4;
+    private const LOCK_WAIT_SECONDS = 80; // > LOCK_TTL so waiters can steal
 
     public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
     {
