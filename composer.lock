@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a811ab43bece6d9d01be1caab8a08a75",
+    "content-hash": "dd9294ec6748886d8819aa3c8ae438f8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4358,16 +4358,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.20.1",
+            "version": "1.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "9dc829536b545d548e1cd4a924776c625c3edab8"
+                "reference": "4806dce18d6793b1cfd1b513b425245761933670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9dc829536b545d548e1cd4a924776c625c3edab8",
-                "reference": "9dc829536b545d548e1cd4a924776c625c3edab8",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4806dce18d6793b1cfd1b513b425245761933670",
+                "reference": "4806dce18d6793b1cfd1b513b425245761933670",
                 "shasum": ""
             },
             "require": {
@@ -4378,7 +4378,7 @@
                 "php": ">=8.5",
                 "utopia-php/database": "^6.0.0",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/storage": "3.*"
+                "utopia-php/storage": "4.*"
             },
             "require-dev": {
                 "ext-pdo": "*",
@@ -4407,9 +4407,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.20.1"
+                "source": "https://github.com/utopia-php/migration/tree/1.21.0"
             },
-            "time": "2026-07-22T04:10:07+00:00"
+            "time": "2026-07-31T09:11:04+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4926,16 +4926,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "3.1.0",
+            "version": "4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "38bfc0c14a16a7de2a86b3331865dad1230ed739"
+                "reference": "ad05f341a9a62a4de73c5312f4ab6fe69f7d0051"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/38bfc0c14a16a7de2a86b3331865dad1230ed739",
-                "reference": "38bfc0c14a16a7de2a86b3331865dad1230ed739",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad05f341a9a62a4de73c5312f4ab6fe69f7d0051",
+                "reference": "ad05f341a9a62a4de73c5312f4ab6fe69f7d0051",
                 "shasum": ""
             },
             "require": {
@@ -4970,9 +4970,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/3.1.0"
+                "source": "https://github.com/utopia-php/storage/tree/4.0.0"
             },
-            "time": "2026-07-22T15:57:57+00:00"
+            "time": "2026-07-23T20:37:10+00:00"
         },
         {
             "name": "utopia-php/system",

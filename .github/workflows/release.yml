@@ -19,6 +19,29 @@ jobs:
         # Fetch submodules
         submodules: recursive
 
+    - name: Ensure this version was not already published
+      env:
+        TAG: ${{ github.event.release.tag_name }}
+      run: |
+        set -euo pipefail
+        version="${TAG#v}"
+        status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+          --retry 3 --retry-all-errors --max-time 30 \
+          "https://hub.docker.com/v2/repositories/appwrite/appwrite/tags/${version}" || true)
+        case "$status" in
+          404)
+            echo "appwrite/appwrite:${version} has not been published yet, proceeding."
+            ;;
+          200)
+            echo "::error::appwrite/appwrite:${version} already exists on Docker Hub. Published versions are immutable — ship a new patch version instead of re-tagging ${TAG}."
+            exit 1
+            ;;
+          *)
+            echo "::error::Unexpected response ${status} from Docker Hub while checking appwrite/appwrite:${version}. Refusing to publish."
+            exit 1
+            ;;
+        esac
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
