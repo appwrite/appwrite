@@ -7,6 +7,7 @@ use Appwrite\Auth\OAuth2\Exception;
 abstract class OAuth2
 {
     public const TIMEOUT = 15;
+
     /**
      * @var string
      */

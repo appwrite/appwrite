@@ -210,8 +210,10 @@ final class InstallationTokensTest extends TestCase
             ->willReturnArgument(2);
 
         $userIdCalls = 0;
-        $oauth2 = new class (false, 'ok', $userIdCalls) extends OAuth2 {
+        $oauth2 = new class(false, 'ok', $userIdCalls) extends OAuth2
+        {
             public int $refreshCalls = 0;
+
             protected array $tokens = [];
 
             public function __construct(protected bool $emptyUserId, protected string $refresh, public int &$userIdCalls)
@@ -219,9 +221,15 @@ final class InstallationTokensTest extends TestCase
                 parent::__construct('id', 'secret', '');
             }
 
-            public function getName(): string { return 'fake'; }
+            public function getName(): string
+            {
+                return 'fake';
+            }
 
-            public function getLoginURL(): string { return ''; }
+            public function getLoginURL(): string
+            {
+                return '';
+            }
 
             protected function getTokens(string $code): array
             {
@@ -243,14 +251,23 @@ final class InstallationTokensTest extends TestCase
                 return $this->userIdCalls === 1 ? '' : 'user1';
             }
 
-            public function getUserEmail(string $accessToken): string { return ''; }
+            public function getUserEmail(string $accessToken): string
+            {
+                return '';
+            }
 
-            public function isEmailVerified(string $accessToken): bool { return true; }
+            public function isEmailVerified(string $accessToken): bool
+            {
+                return true;
+            }
 
-            public function getUserName(string $accessToken): string { return ''; }
+            public function getUserName(string $accessToken): string
+            {
+                return '';
+            }
         };
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
@@ -353,10 +370,10 @@ final class InstallationTokensTest extends TestCase
                     '$id' => 'installation1',
                     'personalAccessToken' => 'already-refreshed-token',
                     'personalRefreshToken' => 'already-refreshed-refresh',
-                    'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+                    'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, 3600),
                     '$updatedAt' => DateTime::now(),
                 ])],
-                ['vcsCommentLocks', 'installation-installation1', new Document()],
+                ['vcsCommentLocks', 'installation-installation1', new Document],
             ]);
         $db->expects($this->never())->method('updateDocument');
 
@@ -435,13 +452,13 @@ final class InstallationTokensTest extends TestCase
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
     }
 
     public function testStolenLockIsNotDeletedByOriginalHolder(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
         $db->method('updateDocument')->willReturnArgument(2);
         $db->method('createDocument')->willReturnArgument(1);
 
@@ -453,7 +470,7 @@ final class InstallationTokensTest extends TestCase
 
         $db->method('getDocument')->willReturnMap([
             ['vcsCommentLocks', 'installation-installation1', $stolenLock],
-            ['installations', 'installation1', new Document()],
+            ['installations', 'installation1', new Document],
         ]);
 
         // Guard against releasing a lock that no longer belongs to this worker
@@ -471,7 +488,7 @@ final class InstallationTokensTest extends TestCase
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -50);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime, -65);
         $initialStaleLock = new Document([
             '$id' => 'installation-installation1',
             'holderId' => 'original-holder-id',
@@ -498,7 +515,8 @@ final class InstallationTokensTest extends TestCase
         // Ensure delete is aborted when re-read shows a different holderId
         $db->expects($this->never())->method('deleteDocument');
 
-        $tokensService = new class extends InstallationTokens {
+        $tokensService = new class extends InstallationTokens
+        {
             public function triggerStealLock(Database $db, mixed $auth, string $lock): bool
             {
                 return $this->stealLock($db, $auth, $lock);
@@ -527,7 +545,7 @@ final class InstallationTokensTest extends TestCase
             return $doc;
         });
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -50);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime, -65);
         $staleLockDoc = new Document([
             '$id' => 'installation-installation1',
             '$createdAt' => $staleLockedAt,
@@ -549,7 +567,7 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = $this->silentInstallationTokens()->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
@@ -593,7 +611,7 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = $this->silentInstallationTokens()->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
@@ -637,7 +655,7 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = $this->silentInstallationTokens()->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
@@ -645,13 +663,14 @@ final class InstallationTokensTest extends TestCase
 
     public function testLockWaitTimeoutThrowsResourceLocked(): void
     {
-        $db = $this->createMock(Database::class);
+        $db = $this->createStub(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
 
         $db->method('createDocument')->willThrowException(new \RuntimeException('Lock collision'));
 
         $activeLockDoc = new Document([
             '$id' => 'installation-installation1',
+            'holderId' => 'some-other-worker',
             '$createdAt' => DateTime::addSeconds(new \DateTime(), -5),
         ]);
 
@@ -665,15 +684,16 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $tokensService = new class extends InstallationTokens {
+        $tokensService = new class extends InstallationTokens
+        {
             protected function getLockWaitSeconds(): int
             {
                 return 0;
             }
 
-            protected function sleepWithBackoff(int $retries): void
-            {
-            }
+            protected function sleepWithBackoff(int $retries): void {}
+
+            protected function logWarning(string $message): void {}
         };
 
         try {
@@ -686,7 +706,8 @@ final class InstallationTokensTest extends TestCase
 
     public function testSleepWithBackoffCalculatesExponentialDelayWithJitter(): void
     {
-        $tokensService = new class extends InstallationTokens {
+        $tokensService = new class extends InstallationTokens
+        {
             public array $recordedSeconds = [];
 
             public function sleepWithBackoff(int $retries): void
@@ -720,17 +741,19 @@ final class InstallationTokensTest extends TestCase
             '$id' => 'installation1',
             'personalAccessToken' => 'stale-token',
             'personalRefreshToken' => 'stale-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, -3600),
         ]);
     }
 
     /**
-     * @param string $refresh One of: ok, refused, invalidGrant, empty, throw.
+     * @param  string  $refresh  One of: ok, refused, invalidGrant, empty, throw.
      */
     protected function fakeOAuth2(bool $emptyUserId = false, string $refresh = 'ok')
     {
-        return new class ($emptyUserId, $refresh) extends OAuth2 {
+        return new class($emptyUserId, $refresh) extends OAuth2
+        {
             public int $refreshCalls = 0;
+
             protected array $tokens = [];
 
             public function __construct(protected bool $emptyUserId, protected string $refresh)
@@ -793,6 +816,14 @@ final class InstallationTokensTest extends TestCase
             {
                 return '';
             }
+        };
+    }
+
+    protected function silentInstallationTokens(): InstallationTokens
+    {
+        return new class extends InstallationTokens
+        {
+            protected function logWarning(string $message): void {}
         };
     }
 }

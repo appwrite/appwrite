@@ -13,8 +13,9 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
-    private const LOCK_WAIT_SECONDS = 50; // > LOCK_TTL so waiters can steal
-    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 3;
+    private const LOCK_WAIT_SECONDS = 65; // > LOCK_TTL so waiters can steal
+
+    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 4;
 
     public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
     {
@@ -40,7 +41,7 @@ class InstallationTokens
             ->setAttribute('personalRefreshToken', $refreshToken)
             ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
 
-        if (!$this->isExpired($accessTokenExpiry) && !empty($accessToken)) {
+        if (! $this->isExpired($accessTokenExpiry) && ! empty($accessToken)) {
             return $installation;
         }
 
@@ -54,7 +55,7 @@ class InstallationTokens
         // this moves to a generic lock collection.
         $waitStartedAt = new \DateTime('now');
 
-        $lock = 'installation-' . $installation->getId();
+        $lock = 'installation-'.$installation->getId();
         // Random per-attempt id so a waiter can only ever delete the lock it created,
         // never one a different worker (original holder or another stealer) is using.
         $holderId = \bin2hex(\random_bytes(8));
@@ -86,7 +87,7 @@ class InstallationTokens
             }
         }
 
-        if (!$acquired) {
+        if (! $acquired) {
             if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
                 return $fresh;
             }
@@ -143,14 +144,14 @@ class InstallationTokens
         return $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
             'personalAccessToken' => $accessToken,
             'personalRefreshToken' => $newRefreshToken,
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), $expirySeconds),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, $expirySeconds),
         ]));
     }
 
     /** Clear tokens only on explicit refusal (invalid_grant, bad_refresh_token). */
     protected function clear(Document $installation, Database $dbForPlatform, mixed $error): void
     {
-        if (!\is_string($error) || !\in_array($error, ['invalid_grant', 'bad_refresh_token'], true)) {
+        if (! \is_string($error) || ! \in_array($error, ['invalid_grant', 'bad_refresh_token'], true)) {
             return;
         }
 
@@ -176,9 +177,9 @@ class InstallationTokens
 
     protected function isUsable(Document $installation): bool
     {
-        return !$installation->isEmpty()
-            && !empty($installation->getAttribute('personalAccessToken'))
-            && !$this->isExpired($installation->getAttribute('personalAccessTokenExpiry'));
+        return ! $installation->isEmpty()
+            && ! empty($installation->getAttribute('personalAccessToken'))
+            && ! $this->isExpired($installation->getAttribute('personalAccessTokenExpiry'));
     }
 
     protected function tryReturnFresh(Database $dbForPlatform, Document $installation, \DateTime $waitStartedAt): ?Document
@@ -189,7 +190,7 @@ class InstallationTokens
             return null;
         }
 
-        if (!$this->isUsable($current)) {
+        if (! $this->isUsable($current)) {
             return null;
         }
 
@@ -202,6 +203,15 @@ class InstallationTokens
             return new \DateTime($updatedAt) >= (clone $waitStartedAt)->modify('-2 seconds') ? $current : null;
         } catch (\Throwable) {
             return null;
+        }
+    }
+
+    protected function getCurrentInstallation(Database $dbForPlatform, Document $installation): Document
+    {
+        try {
+            return $dbForPlatform->getDocument('installations', $installation->getId());
+        } catch (\Throwable) {
+            return new Document();
         }
     }
 
@@ -219,7 +229,7 @@ class InstallationTokens
             $lockedAt = $document->getAttribute('$createdAt');
             $expired = empty($lockedAt) || (\time() - \strtotime($lockedAt)) >= self::LOCK_TTL_SECONDS;
 
-            if (!$expired) {
+            if (! $expired) {
                 return false;
             }
 
@@ -231,7 +241,7 @@ class InstallationTokens
             }
 
             $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
-            Console::warning('Stole expired vcs installation lock: ' . $lock);
+            $this->logWarning('Stole expired vcs installation lock: '.$lock);
 
             return true;
         } catch (\Throwable) {
@@ -256,8 +266,13 @@ class InstallationTokens
 
             $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
         } catch (\Throwable $err) {
-            Console::warning('Failed to release vcs installation lock for ' . $installationId . ': ' . $err->getMessage());
+            $this->logWarning('Failed to release vcs installation lock for '.$installationId.': '.$err->getMessage());
         }
+    }
+
+    protected function logWarning(string $message): void
+    {
+        Console::warning($message);
     }
 
     protected function deleteLockDocument(Database $dbForPlatform, mixed $authorization, string $lock): void
