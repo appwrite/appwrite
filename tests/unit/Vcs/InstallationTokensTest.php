@@ -373,8 +373,7 @@ final class InstallationTokensTest extends TestCase
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
 
-        $db->expects($this->exactly(2))
-            ->method('getDocument')
+        $db->method('getDocument')
             ->willReturnMap([
                 ['installations', 'installation1', new Document([
                     '$id' => 'installation1',
@@ -383,7 +382,7 @@ final class InstallationTokensTest extends TestCase
                     'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, 3600),
                     '$updatedAt' => DateTime::now(),
                 ])],
-                ['vcsCommentLocks', 'installation-installation1', new Document],
+                ['vcsCommentLocks', 'installation-installation1', new Document()],
             ]);
         $db->expects($this->never())->method('updateDocument');
 
@@ -399,9 +398,18 @@ final class InstallationTokensTest extends TestCase
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('updateDocument')->willReturnArgument(2);
 
-        $createdLock = null;
+        $createdLock = new Document();
+        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock) {
+            if ($collection === 'vcsCommentLocks') {
+                foreach ($doc->getArrayCopy() as $k => $v) {
+                    $createdLock->setAttribute($k, $v);
+                }
+            }
+
+            return $doc;
+        });
+
         $db->expects($this->once())
             ->method('createDocument')
             ->with('vcsCommentLocks', $this->callback(function (Document $lock) use (&$createdLock) {
@@ -415,7 +423,7 @@ final class InstallationTokensTest extends TestCase
 
         $db->method('getDocument')->willReturnCallback(function ($collection, $id) use (&$createdLock) {
             if ($collection === 'vcsCommentLocks') {
-                return $createdLock ?? new Document();
+                return $createdLock;
             }
 
             return new Document();
@@ -438,7 +446,17 @@ final class InstallationTokensTest extends TestCase
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
 
-        $createdLock = null;
+        $createdLock = new Document();
+        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock) {
+            if ($collection === 'vcsCommentLocks') {
+                foreach ($doc->getArrayCopy() as $k => $v) {
+                    $createdLock->setAttribute($k, $v);
+                }
+            }
+
+            return $doc;
+        });
+
         $db->method('createDocument')->willReturnCallback(function ($collection, $doc) use (&$createdLock) {
             $createdLock = $doc;
 
@@ -447,7 +465,7 @@ final class InstallationTokensTest extends TestCase
 
         $db->method('getDocument')->willReturnCallback(function ($collection, $id) use (&$createdLock) {
             if ($collection === 'vcsCommentLocks') {
-                return $createdLock ?? new Document();
+                return $createdLock;
             }
 
             return new Document();
@@ -462,7 +480,7 @@ final class InstallationTokensTest extends TestCase
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
     }
 
     public function testStolenLockIsNotDeletedByOriginalHolder(): void
