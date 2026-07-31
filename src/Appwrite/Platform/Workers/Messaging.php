@@ -1008,7 +1008,7 @@ class Messaging extends Action
                 }
 
                 if ($deviceForFiles->getType() !== DeviceType::Local) {
-                    $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
+                    $deviceForFiles->copy($path, $path, $this->getLocalDevice($project));
                 }
 
                 $attachment = new Attachment(
