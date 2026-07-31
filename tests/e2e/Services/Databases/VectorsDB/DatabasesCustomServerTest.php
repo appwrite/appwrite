@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 final class DatabasesCustomServerTest extends Scope
 {
@@ -547,6 +548,29 @@ final class DatabasesCustomServerTest extends Scope
         return [ 'databaseId' => $databaseId, 'collectionId' => $collectionId, 'bulkIds' => $ids ];
     }
 
+    #[Depends('testBulkCreate')]
+    public function testListDocuments(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        // Listing is a POST so queries travel in the JSON body instead of the query string.
+        $res = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $res['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(2, $res['body']['total']);
+        $this->assertIsArray($res['body']['documents']);
+        $this->assertCount(1, $res['body']['documents']);
+    }
+
     public function testCreateTextEmbeddingsSuccessAndErrors(): void
     {
         // Setup new database and collection
@@ -577,7 +601,7 @@ final class DatabasesCustomServerTest extends Scope
 
         // Success: two embeddings
         $this->assertEventually(function () {
-            $ok = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+            $ok = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -603,7 +627,7 @@ final class DatabasesCustomServerTest extends Scope
         }, 3000, 100);
 
         // Error: missing texts payload
-        $missingTexts = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $missingTexts = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -611,7 +635,7 @@ final class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $missingTexts['headers']['status-code']);
 
         // Error: invalid texts item type (must be strings)
-        $invalidItem = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $invalidItem = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -625,7 +649,7 @@ final class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $invalidItem['headers']['status-code']);
 
         // Error: unknown embedding model
-        $unknownModel = $this->client->call(Client::METHOD_POST, "/vectorsdb/embeddings/text", [
+        $unknownModel = $this->client->call(Client::METHOD_POST, "/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
