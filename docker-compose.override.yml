@@ -500,6 +500,16 @@ services:
   redis:
     ports:
       - "9513:6379"
+    # Test suites spike well past the 512mb default, and eviction cannot keep up,
+    # so writes get refused with OOM and queued jobs are silently dropped.
+    command:
+      - redis-server
+      - --maxmemory
+      - 1gb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --maxmemory-samples
+      - "5"
   appwrite-embedding:
     ports:
       - "9505:3000"
