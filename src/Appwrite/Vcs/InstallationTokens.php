@@ -16,9 +16,6 @@ class InstallationTokens
     private const LOCK_WAIT_SECONDS = 50; // > LOCK_TTL so waiters can steal
     private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 3;
 
-    /**
-     * Refreshes an installation's token, resolving the OAuth2 client for its provider.
-     */
     public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
     {
         $provider = $installation->getAttribute('provider', 'github');
@@ -58,6 +55,9 @@ class InstallationTokens
         $waitStartedAt = new \DateTime('now');
 
         $lock = 'installation-' . $installation->getId();
+        // Random per-attempt id so a waiter can only ever delete the lock it created,
+        // never one a different worker (original holder or another stealer) is using.
+        $holderId = \bin2hex(\random_bytes(8));
         $authorization = $dbForPlatform->getAuthorization();
         $acquired = false;
         $deadline = \time() + $this->getLockWaitSeconds();
@@ -67,7 +67,10 @@ class InstallationTokens
             $retries++;
 
             try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                    '$id' => $lock,
+                    'holderId' => $holderId,
+                ])));
                 $acquired = true;
                 break;
             } catch (\Throwable $err) {
@@ -84,7 +87,6 @@ class InstallationTokens
         }
 
         if (!$acquired) {
-            // The holder outlasted our wait. Reuse its token if it landed, never replay ours.
             if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
                 return $fresh;
             }
@@ -93,18 +95,13 @@ class InstallationTokens
         }
 
         try {
-            // The lock holder may have refreshed already.
             if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
                 return $fresh;
             }
 
             return $this->exchange($installation, $dbForPlatform, $oauth2);
         } finally {
-            try {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
-            } catch (\Throwable $err) {
-                Console::warning('Failed to release vcs installation lock for ' . $installation->getId() . ': ' . $err->getMessage());
-            }
+            $this->releaseLock($dbForPlatform, $authorization, $lock, $holderId, $installation->getId());
         }
     }
 
@@ -120,7 +117,6 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
-        // GitHub answers a refused token with a 200 and an error body rather than a 4xx.
         $this->clear($installation, $dbForPlatform, $tokens['error'] ?? '');
 
         $accessToken = $oauth2->getAccessToken('');
@@ -131,7 +127,16 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
-        if (empty($oauth2->getUserID($accessToken))) {
+        // Retry once: a network blip on the identity check shouldn't discard an
+        // otherwise good, already-rotated token. A genuinely empty/invalid response
+        // on both attempts means the token itself is bad, not the network.
+        $userId = $oauth2->getUserID($accessToken);
+        if (empty($userId)) {
+            $this->sleepWithBackoff(1);
+            $userId = $oauth2->getUserID($accessToken);
+        }
+
+        if (empty($userId)) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
@@ -213,7 +218,7 @@ class InstallationTokens
 
             $lockedAt = $document->getAttribute('$createdAt') ?? $document->getAttribute('lockedAt');
             if (empty($lockedAt)) {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+                $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
                 Console::warning('Stole vcs installation lock with missing timestamp: ' . $lock);
 
                 return true;
@@ -224,13 +229,41 @@ class InstallationTokens
                 return false;
             }
 
-            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+            $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
             Console::warning('Stole expired vcs installation lock: ' . $lock);
 
             return true;
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    /**
+     * Deletes only when the caller is the current owner, so a released or already-stolen
+     * lock is never removed out from under whoever holds it now. Falls back to an
+     * unconditional delete when releasing without a known holder (e.g. from stealLock,
+     * where the caller has already decided the existing lock is abandoned).
+     */
+    protected function releaseLock(Database $dbForPlatform, mixed $authorization, string $lock, string $holderId, string $installationId): void
+    {
+        try {
+            $current = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+
+            if ($current->isEmpty() || $current->getAttribute('holderId') !== $holderId) {
+                // Someone else's lock now occupies this id (ours was stolen while we
+                // worked, or already released) — deleting it would drop a lock we don't own.
+                return;
+            }
+
+            $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
+        } catch (\Throwable $err) {
+            Console::warning('Failed to release vcs installation lock for ' . $installationId . ': ' . $err->getMessage());
+        }
+    }
+
+    protected function deleteLockDocument(Database $dbForPlatform, mixed $authorization, string $lock): void
+    {
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
     }
 
     protected function sleepWithBackoff(int $retries): void

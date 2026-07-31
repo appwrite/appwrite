@@ -2228,7 +2228,19 @@ $platformCollections = [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('vcsCommentLocks'),
         'name' => 'vcsCommentLocks',
-        'attributes' => [],
+        'attributes' => [
+            [
+                '$id' => ID::custom('holderId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
         'indexes' => []
     ],
 
