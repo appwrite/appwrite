@@ -13,8 +13,8 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
-    private const LOCK_WAIT_SECONDS = 40; // > LOCK_TTL so waiters can steal
-    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 2;
+    private const LOCK_WAIT_SECONDS = 50; // > LOCK_TTL so waiters can steal
+    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 3;
 
     /**
      * Refreshes an installation's token, resolving the OAuth2 client for its provider.
@@ -67,7 +67,7 @@ class InstallationTokens
             $retries++;
 
             try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock, 'lockedAt' => DateTime::now()])));
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
                 $acquired = true;
                 break;
             } catch (\Throwable $err) {
@@ -211,7 +211,7 @@ class InstallationTokens
                 return true;
             }
 
-            $lockedAt = $document->getAttribute('lockedAt');
+            $lockedAt = $document->getAttribute('$createdAt') ?? $document->getAttribute('lockedAt');
             if (empty($lockedAt)) {
                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
                 Console::warning('Stole vcs installation lock with missing timestamp: ' . $lock);

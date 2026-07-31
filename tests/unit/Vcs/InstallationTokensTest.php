@@ -351,10 +351,10 @@ final class InstallationTokensTest extends TestCase
             return $doc;
         });
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -45);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -50);
         $staleLockDoc = new Document([
             '$id' => 'installation-installation1',
-            'lockedAt' => $staleLockedAt,
+            '$createdAt' => $staleLockedAt,
         ]);
 
         $db->method('getDocument')->willReturnMap([
@@ -393,7 +393,7 @@ final class InstallationTokensTest extends TestCase
 
         $malformedLockDoc = new Document([
             '$id' => 'installation-installation1',
-            'lockedAt' => 'invalid-timestamp-string',
+            '$createdAt' => 'invalid-timestamp-string',
         ]);
 
         $db->method('getDocument')->willReturnMap([
@@ -432,7 +432,7 @@ final class InstallationTokensTest extends TestCase
 
         $missingLockDoc = new Document([
             '$id' => 'installation-installation1',
-            'lockedAt' => null,
+            '$createdAt' => null,
         ]);
 
         $db->method('getDocument')->willReturnMap([
@@ -463,7 +463,7 @@ final class InstallationTokensTest extends TestCase
 
         $activeLockDoc = new Document([
             '$id' => 'installation-installation1',
-            'lockedAt' => DateTime::addSeconds(new \DateTime(), -5),
+            '$createdAt' => DateTime::addSeconds(new \DateTime(), -5),
         ]);
 
         $db->method('getDocument')->willReturnMap([
