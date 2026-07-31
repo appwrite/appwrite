@@ -130,9 +130,14 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
-        // Retry once: a network blip on the identity check shouldn't discard an
-        // otherwise good, already-rotated token. A genuinely empty/invalid response
-        // on both attempts means the token itself is bad, not the network.
+        // Persist new access + refresh token immediately so database never holds invalidated tokens
+        $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+            'personalAccessToken' => $accessToken,
+            'personalRefreshToken' => $newRefreshToken,
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, $expirySeconds),
+        ]));
+
+        // Validate user identity (retry once)
         $userId = $oauth2->getUserID($accessToken);
         if (empty($userId)) {
             $this->sleepWithBackoff(1);
@@ -140,14 +145,10 @@ class InstallationTokens
         }
 
         if (empty($userId)) {
-            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
+            $this->logWarning('Failed to verify user identity for refreshed installation '.$installation->getId().', but rotated tokens were persisted safely.');
         }
 
-        return $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-            'personalAccessToken' => $accessToken,
-            'personalRefreshToken' => $newRefreshToken,
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, $expirySeconds),
-        ]));
+        return $installation;
     }
 
     /** Clear tokens only on explicit refusal (invalid_grant, bad_refresh_token). */

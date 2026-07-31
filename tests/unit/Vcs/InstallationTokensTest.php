@@ -172,26 +172,36 @@ final class InstallationTokensTest extends TestCase
 
     public function testFailedRefreshThrows(): void
     {
-        $oauth2 = $this->fakeOAuth2(emptyUserId: true);
+        $oauth2 = $this->fakeOAuth2(refresh: 'throw');
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
         (new InstallationTokens())->refresh($this->expired(), $this->db(), $oauth2);
     }
 
-    public function testUnverifiedTokenIsNotPersistedWhenVerificationFails(): void
+    public function testRotatedTokensPersistedEvenIfIdentityCheckFlakes(): void
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        // Validate-then-persist guarantees unverified tokens are never written to the DB.
-        $db->expects($this->never())->method('updateDocument');
+        // Rotated tokens MUST be persisted immediately so the DB never holds an invalidated refresh token.
+        $db->expects($this->once())
+            ->method('updateDocument')
+            ->with('installations', 'installation1', $this->callback(function (Document $update) {
+                $this->assertSame('fresh-token', $update->getAttribute('personalAccessToken'));
+                $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
+
+                return true;
+            }))
+            ->willReturnArgument(2);
 
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
-        $this->expectException(Exception::class);
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame('fresh-refresh', $result->getAttribute('personalRefreshToken'));
     }
 
     public function testTransientUserIdFailureRetriesAndSucceeds(): void
