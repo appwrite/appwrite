@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Site;
 
+use Appwrite\Certificates\Issuance;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -143,7 +144,11 @@ class Create extends Action
 
         $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
-        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
+        $isAppwriteOwned = $rule->getAttribute('owner', '') === 'Appwrite';
+        $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
+            || ($isAppwriteOwned && Issuance::isRequired($rule->getAttribute('domain', '')));
+
+        if ($needsCertificate) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
                 project: $project,
                 domain: new Document([
