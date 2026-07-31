@@ -216,16 +216,17 @@ class InstallationTokens
                 return true;
             }
 
-            $lockedAt = $document->getAttribute('$createdAt') ?? $document->getAttribute('lockedAt');
-            if (empty($lockedAt)) {
-                $this->deleteLockDocument($dbForPlatform, $authorization, $lock);
-                Console::warning('Stole vcs installation lock with missing timestamp: ' . $lock);
+            $lockedAt = $document->getAttribute('$createdAt');
+            $expired = empty($lockedAt) || (\time() - \strtotime($lockedAt)) >= self::LOCK_TTL_SECONDS;
 
-                return true;
+            if (!$expired) {
+                return false;
             }
 
-            $age = \time() - \strtotime($lockedAt);
-            if ($age < self::LOCK_TTL_SECONDS) {
+            $currentHolderId = $document->getAttribute('holderId');
+            $reread = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
+
+            if ($reread->isEmpty() || $reread->getAttribute('holderId') !== $currentHolderId) {
                 return false;
             }
 
@@ -240,9 +241,7 @@ class InstallationTokens
 
     /**
      * Deletes only when the caller is the current owner, so a released or already-stolen
-     * lock is never removed out from under whoever holds it now. Falls back to an
-     * unconditional delete when releasing without a known holder (e.g. from stealLock,
-     * where the caller has already decided the existing lock is abandoned).
+     * lock is never removed out from under whoever holds it now.
      */
     protected function releaseLock(Database $dbForPlatform, mixed $authorization, string $lock, string $holderId, string $installationId): void
     {

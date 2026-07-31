@@ -466,6 +466,50 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
+    public function testStaleLockStealIsAbortedIfAlreadyReplaced(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+
+        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -50);
+        $initialStaleLock = new Document([
+            '$id' => 'installation-installation1',
+            'holderId' => 'original-holder-id',
+            '$createdAt' => $staleLockedAt,
+        ]);
+
+        $replacedLock = new Document([
+            '$id' => 'installation-installation1',
+            'holderId' => 'newer-stealer-holder-id',
+            '$createdAt' => DateTime::now(),
+        ]);
+
+        $calls = 0;
+        $db->method('getDocument')->willReturnCallback(function ($collection, $id) use (&$calls, $initialStaleLock, $replacedLock) {
+            if ($collection === 'vcsCommentLocks') {
+                $calls++;
+
+                return $calls === 1 ? $initialStaleLock : $replacedLock;
+            }
+
+            return new Document();
+        });
+
+        // Ensure delete is aborted when re-read shows a different holderId
+        $db->expects($this->never())->method('deleteDocument');
+
+        $tokensService = new class extends InstallationTokens {
+            public function triggerStealLock(Database $db, mixed $auth, string $lock): bool
+            {
+                return $this->stealLock($db, $auth, $lock);
+            }
+        };
+
+        $result = $tokensService->triggerStealLock($db, $db->getAuthorization(), 'installation-installation1');
+
+        $this->assertFalse($result);
+    }
+
     public function testStaleLockIsStolenAndRefreshed(): void
     {
         $db = $this->createMock(Database::class);
