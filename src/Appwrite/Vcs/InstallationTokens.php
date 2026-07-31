@@ -124,25 +124,23 @@ class InstallationTokens
         $this->clear($installation, $dbForPlatform, $tokens['error'] ?? '');
 
         $accessToken = $oauth2->getAccessToken('');
+        $newRefreshToken = $oauth2->getRefreshToken('') ?: $installation->getAttribute('personalRefreshToken');
+        $expirySeconds = (int) $oauth2->getAccessTokenExpiry('');
 
-        // No token and no stated reason, so the provider may simply not have answered. Persisting
-        // an empty token here would replace a pair that is possibly still good.
-        if (empty($accessToken)) {
+        if (empty($accessToken) || empty($newRefreshToken)) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
-
-        // The provider has already rotated the family, so persist before anything else can fail.
-        $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-            'personalAccessToken' => $accessToken,
-            'personalRefreshToken' => $oauth2->getRefreshToken(''),
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')),
-        ]));
 
         if (empty($oauth2->getUserID($accessToken))) {
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
-        return $installation;
+        // Persist new token pair once access token and user identity are verified.
+        return $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+            'personalAccessToken' => $accessToken,
+            'personalRefreshToken' => $newRefreshToken,
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), $expirySeconds),
+        ]));
     }
 
     /**

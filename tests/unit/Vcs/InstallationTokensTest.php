@@ -167,20 +167,14 @@ final class InstallationTokensTest extends TestCase
         (new InstallationTokens())->refresh($this->expired(), $this->db(), $oauth2);
     }
 
-    public function testRotatedTokenIsPersistedWhenVerificationFails(): void
+    public function testUnverifiedTokenIsNotPersistedWhenVerificationFails(): void
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        $db->expects($this->once())
-            ->method('updateDocument')
-            ->with('installations', 'installation1', $this->callback(function (Document $update) {
-                $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
-
-                return true;
-            }))
-            ->willReturnArgument(2);
+        // Validate-then-persist guarantees unverified tokens are never written to the DB.
+        $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
