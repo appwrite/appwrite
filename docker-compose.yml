@@ -958,6 +958,8 @@ services:
       - _APP_DOMAIN_TARGET_CAA
       - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
+      - _APP_EDITION
+      - _APP_OPTIONS_ROUTER_CERTIFICATES
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Certificates\Issuance;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -154,6 +155,12 @@ class Maintenance extends Action
                     ]);
 
             if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+                continue;
+            }
+
+            // Respect the operator opt-out. If Appwrite would not auto-issue this
+            // subdomain today, it must not auto-renew it either.
+            if ($rule->getAttribute('owner') === 'Appwrite' && !Issuance::isRequired($domain)) {
                 continue;
             }
 
