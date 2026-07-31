@@ -5164,12 +5164,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "d7f53dae360706367b32e7794f77408fb72e791f"
+                "reference": "070f703820ece61c0232614a07dddcd359eb81f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/d7f53dae360706367b32e7794f77408fb72e791f",
-                "reference": "d7f53dae360706367b32e7794f77408fb72e791f",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/070f703820ece61c0232614a07dddcd359eb81f7",
+                "reference": "070f703820ece61c0232614a07dddcd359eb81f7",
                 "shasum": ""
             },
             "require": {
@@ -5223,7 +5223,7 @@
                 "source": "https://github.com/utopia-php/vcs/tree/feat-bitbucket-adapter",
                 "issues": "https://github.com/utopia-php/vcs/issues"
             },
-            "time": "2026-07-30T16:40:37+00:00"
+            "time": "2026-07-31T08:22:20+00:00"
         },
         {
             "name": "utopia-php/websocket",
