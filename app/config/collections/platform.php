@@ -1842,9 +1842,9 @@ $platformCollections = [
                 '$id' => ID::custom('personalAccessToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                // Bitbucket's opaque OAuth tokens (Atlassian's unified identity
-                // platform) can exceed 2048 chars, unlike GitLab/Gitea's.
-                'size' => 4096,
+                // Past the varchar ceiling (16381), this stores as TEXT --
+                // headroom for any provider's token, not just today's longest.
+                'size' => Database::MAX_TEXT_BYTES,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1866,7 +1866,7 @@ $platformCollections = [
                 '$id' => ID::custom('personalRefreshToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 4096,
+                'size' => Database::MAX_TEXT_BYTES,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

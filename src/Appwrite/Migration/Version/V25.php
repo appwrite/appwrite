@@ -74,7 +74,7 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, size: 4096);
+                                $this->dbForProject->updateAttribute($id, $attribute, size: Database::MAX_TEXT_BYTES);
                             } catch (Throwable $th) {
                                 Console::warning("Failed to resize attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
                             }

@@ -53,12 +53,9 @@ class Bitbucket extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            // Bitbucket authenticates the client via HTTP Basic Auth on this
-            // endpoint, not client_id/client_secret in the body -- sending
-            // them as body params is silently accepted by the endpoint but
-            // fails client authentication, surfacing as a generic
-            // "invalid_grant: authorization_code is invalid" rather than an
-            // auth error.
+            // Bitbucket wants HTTP Basic Auth here, not client_id/secret in
+            // the body -- the body form fails silently with a misleading
+            // "invalid_grant" error instead of an auth error.
             $headers = [
                 'Content-Type: application/x-www-form-urlencoded',
                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
@@ -160,25 +157,14 @@ class Bitbucket extends OAuth2
     }
 
     /**
-     * The workspace slug repository/ownership API calls actually need to
-     * address the account's personal workspace.
-     *
-     * `/user`'s `username` (old accounts) or `nickname` (accounts migrated to
-     * Atlassian's unified identity) are display handles, not workspace
-     * identifiers -- for migrated accounts `nickname` is an opaque value that
-     * Bitbucket's REST API doesn't recognize as a workspace, silently
-     * returning zero repositories rather than an error. A personal account's
-     * own UUID does *not* double as its workspace's identifier either --
-     * confirmed live, the two UUIDs are unrelated.
-     *
-     * `GET /workspaces` (cross-workspace listing, to resolve the workspace by
-     * some other means) hit CHANGE-2770 -- Atlassian's removal of that
-     * endpoint. `GET /user/workspaces` is the endpoint Atlassian's migration
-     * guidance names as its replacement, scoped to the authenticated user
-     * rather than cross-workspace, so it isn't part of the same deprecation.
+     * Resolves the account's personal workspace slug, which repository API
+     * calls need to address. `/user`'s username/nickname aren't valid
+     * workspace identifiers for migrated accounts (silently returns zero
+     * repositories rather than an error), and the account's UUID doesn't
+     * double as its workspace's either, so this goes through
+     * GET /user/workspaces instead.
      *
      * @param string $accessToken
-     *
      * @return string
      */
     public function getUserSlug(string $accessToken): string
