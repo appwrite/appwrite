@@ -58,6 +58,8 @@ class InstallationTokens
         // The comment lock collection is reused for simplicity: it holds nothing but ids, and the
         // prefix keeps these apart from the provider comment ids stored alongside them. Ideally
         // this moves to a generic lock collection.
+        $waitStartedAt = new \DateTime('now');
+
         $lock = 'installation-' . $installation->getId();
         $authorization = $dbForPlatform->getAuthorization();
         $acquired = false;
@@ -72,6 +74,10 @@ class InstallationTokens
                 $acquired = true;
                 break;
             } catch (\Throwable $err) {
+                if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
+                    return $fresh;
+                }
+
                 if ($this->tryStealExpiredLock($dbForPlatform, $authorization, $lock)) {
                     continue;
                 }
@@ -82,9 +88,8 @@ class InstallationTokens
 
         if (!$acquired) {
             // The holder outlasted our wait. Reuse its token if it landed, never replay ours.
-            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
-            if ($this->isUsable($current)) {
-                return $current;
+            if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
+                return $fresh;
             }
 
             throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
@@ -92,10 +97,8 @@ class InstallationTokens
 
         try {
             // The lock holder may have refreshed already.
-            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
-
-            if ($this->isUsable($current)) {
-                return $current;
+            if ($fresh = $this->tryReturnFresh($dbForPlatform, $installation, $waitStartedAt)) {
+                return $fresh;
             }
 
             return $this->exchange($installation, $dbForPlatform, $oauth2);
@@ -179,6 +182,33 @@ class InstallationTokens
         return !$installation->isEmpty()
             && !empty($installation->getAttribute('personalAccessToken'))
             && !$this->isExpired($installation->getAttribute('personalAccessTokenExpiry'));
+    }
+
+    protected function isUsableAndFresh(Document $installation, \DateTime $waitStartedAt): bool
+    {
+        if (!$this->isUsable($installation)) {
+            return false;
+        }
+
+        $updatedAt = $installation->getAttribute('$updatedAt');
+        if (empty($updatedAt)) {
+            return false;
+        }
+
+        try {
+            $toleranceWindow = (clone $waitStartedAt)->modify('-2 seconds');
+
+            return new \DateTime($updatedAt) >= $toleranceWindow;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function tryReturnFresh(Database $dbForPlatform, Document $installation, \DateTime $waitStartedAt): ?Document
+    {
+        $current = $this->getCurrentInstallation($dbForPlatform, $installation);
+
+        return $this->isUsableAndFresh($current, $waitStartedAt) ? $current : null;
     }
 
     protected function getCurrentInstallation(Database $dbForPlatform, Document $installation): Document

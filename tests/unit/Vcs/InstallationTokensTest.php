@@ -271,6 +271,7 @@ final class InstallationTokensTest extends TestCase
                 'personalAccessToken' => 'already-refreshed-token',
                 'personalRefreshToken' => 'already-refreshed-refresh',
                 'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+                '$updatedAt' => DateTime::now(),
             ]));
         $db->expects($this->never())->method('updateDocument');
 
