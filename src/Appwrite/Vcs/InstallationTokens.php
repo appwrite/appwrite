@@ -13,10 +13,7 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
-    /** WAIT (40s) must exceed TTL so a waiter can detect and steal an abandoned lock. */
-    private const LOCK_WAIT_SECONDS = 40;
-
-    /** TTL is structurally derived as 2x the OAuth2 HTTP timeout (15s). */
+    private const LOCK_WAIT_SECONDS = 40; // > LOCK_TTL so waiters can steal
     private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 2;
 
     /**
@@ -46,7 +43,7 @@ class InstallationTokens
             ->setAttribute('personalRefreshToken', $refreshToken)
             ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
 
-        if (!$this->isExpired($accessTokenExpiry)) {
+        if (!$this->isExpired($accessTokenExpiry) && !empty($accessToken)) {
             return $installation;
         }
 
@@ -78,7 +75,7 @@ class InstallationTokens
                     return $fresh;
                 }
 
-                if ($this->tryStealExpiredLock($dbForPlatform, $authorization, $lock)) {
+                if ($this->stealLock($dbForPlatform, $authorization, $lock)) {
                     continue;
                 }
 
@@ -138,7 +135,6 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
-        // Persist new token pair once access token and user identity are verified.
         return $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
             'personalAccessToken' => $accessToken,
             'personalRefreshToken' => $newRefreshToken,
@@ -146,11 +142,7 @@ class InstallationTokens
         ]));
     }
 
-    /**
-     * Drops the stored pair when the provider states it refused the token, so later calls stop
-     * replaying it. Only an explicit refusal counts: a timeout or a 5xx may pass, and clearing on
-     * those would force a reconnect that was never needed.
-     */
+    /** Clear tokens only on explicit refusal (invalid_grant, bad_refresh_token). */
     protected function clear(Document $installation, Database $dbForPlatform, mixed $error): void
     {
         if (!\is_string($error) || !\in_array($error, ['invalid_grant', 'bad_refresh_token'], true)) {
@@ -173,7 +165,7 @@ class InstallationTokens
         try {
             return new \DateTime($expiry) < new \DateTime('now');
         } catch (\Throwable) {
-            return false;
+            return true;
         }
     }
 
@@ -184,43 +176,31 @@ class InstallationTokens
             && !$this->isExpired($installation->getAttribute('personalAccessTokenExpiry'));
     }
 
-    protected function isUsableAndFresh(Document $installation, \DateTime $waitStartedAt): bool
-    {
-        if (!$this->isUsable($installation)) {
-            return false;
-        }
-
-        $updatedAt = $installation->getAttribute('$updatedAt');
-        if (empty($updatedAt)) {
-            return false;
-        }
-
-        try {
-            $toleranceWindow = (clone $waitStartedAt)->modify('-2 seconds');
-
-            return new \DateTime($updatedAt) >= $toleranceWindow;
-        } catch (\Throwable) {
-            return false;
-        }
-    }
-
     protected function tryReturnFresh(Database $dbForPlatform, Document $installation, \DateTime $waitStartedAt): ?Document
     {
-        $current = $this->getCurrentInstallation($dbForPlatform, $installation);
-
-        return $this->isUsableAndFresh($current, $waitStartedAt) ? $current : null;
-    }
-
-    protected function getCurrentInstallation(Database $dbForPlatform, Document $installation): Document
-    {
         try {
-            return $dbForPlatform->getDocument('installations', $installation->getId());
+            $current = $dbForPlatform->getDocument('installations', $installation->getId());
         } catch (\Throwable) {
-            return new Document();
+            return null;
+        }
+
+        if (!$this->isUsable($current)) {
+            return null;
+        }
+
+        $updatedAt = $current->getAttribute('$updatedAt');
+        if (empty($updatedAt)) {
+            return null;
+        }
+
+        try {
+            return new \DateTime($updatedAt) >= (clone $waitStartedAt)->modify('-2 seconds') ? $current : null;
+        } catch (\Throwable) {
+            return null;
         }
     }
 
-    protected function tryStealExpiredLock(Database $dbForPlatform, mixed $authorization, string $lock): bool
+    protected function stealLock(Database $dbForPlatform, mixed $authorization, string $lock): bool
     {
         try {
             $document = $authorization->skip(

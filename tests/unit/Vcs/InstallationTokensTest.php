@@ -59,7 +59,7 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testInvalidExpiryIsNotRefreshed(): void
+    public function testInvalidExpiryForcesRefresh(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
@@ -68,16 +68,23 @@ final class InstallationTokensTest extends TestCase
             'personalAccessTokenExpiry' => 'not-a-date',
         ]);
 
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getDocument')->willReturn(new Document());
+        $db->expects($this->once())->method('updateDocument')->willReturnArgument(2);
+
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
 
-        $this->assertSame('valid-token', $result->getAttribute('personalAccessToken'));
-        $this->assertSame(0, $oauth2->refreshCalls);
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testClearedInstallationIsReturnedWithoutCallingTheProvider(): void
+    public function testClearedInstallationThrowsWithoutCallingTheProvider(): void
     {
+        // The state clear() leaves behind. GitHub works from here on its app credentials, and the
+        // providers that need the token fail at the adapter with a definite reason.
         $installation = new Document([
             '$id' => 'installation1',
             'personalAccessToken' => '',
@@ -92,10 +99,8 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
-
-        $this->assertSame('', $result->getAttribute('personalAccessToken'));
-        $this->assertSame(0, $oauth2->refreshCalls);
+        $this->expectException(Exception::class);
+        (new InstallationTokens())->refresh($installation, $db, $oauth2);
     }
 
     public function testExpiredTokenIsRefreshedAndPersisted(): void
@@ -135,6 +140,7 @@ final class InstallationTokensTest extends TestCase
 
         $this->assertSame('identity-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame('identity-refresh', $result->getAttribute('personalRefreshToken'));
+        $this->assertSame($identity->getAttribute('providerAccessTokenExpiry'), $result->getAttribute('personalAccessTokenExpiry'));
     }
 
     public function testMissingRefreshTokenThrowsClearError(): void
@@ -563,6 +569,8 @@ final class InstallationTokensTest extends TestCase
             {
                 $this->refreshCalls++;
 
+                // GitHub states a refused token in a 200 body; GitLab and Gitea answer 400.
+                // A request that never completed states nothing at all.
                 $this->tokens = match ($this->refresh) {
                     'refused' => ['error' => 'bad_refresh_token'],
                     'invalidGrant' => throw new OAuth2Exception('{"error":"invalid_grant"}', 400),
