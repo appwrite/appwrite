@@ -189,6 +189,16 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial'
+import {
+  EmbeddingField,
+  resolveEmbeddingFromText,
+  type EmbeddingGenerateIntent,
+} from './_components/EmbeddingField'
+import {
+  MetadataObjectField,
+  normalizeMetadataObjectValue,
+  parseMetadataObjectInput,
+} from './_components/MetadataObjectField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -239,6 +249,8 @@ const getColumnTypeColor = (type: string) => {
     enum: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     relationship:
       'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    vector:
+      'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20',
   }
   return colors[type] || 'bg-muted text-muted-foreground'
 }
@@ -288,11 +300,20 @@ interface RowData {
   /** Server-provided sequence (stable); fallback to computed rowNumber when absent */
   $sequence?: number
   rowNumber: number
-  data: Record<string, string | number | bigint | boolean | unknown[] | null>
+  data: Record<string, FormFieldValue>
   $createdAt?: string
   $updatedAt?: string
   $permissions?: string[]
 }
+
+type FormFieldValue =
+  | string
+  | number
+  | bigint
+  | boolean
+  | unknown[]
+  | Record<string, unknown>
+  | null
 
 /** Flat document object for the inline JSON editor (metadata + attributes). */
 function buildInlineDocumentJsonObjectFromRow(row: RowData): Record<string, unknown> {
@@ -337,8 +358,10 @@ function buildInlineDocumentJsonObjectForCreate(
         o[colKey] = c.default
       } else if (c.type === 'boolean') {
         o[colKey] = false
-      } else if (c.array) {
+      } else if (c.type === 'vector' || c.array) {
         o[colKey] = []
+      } else if (c.type === 'object') {
+        o[colKey] = null
       } else {
         o[colKey] = ''
       }
@@ -414,9 +437,11 @@ interface RowEditDrawerProps {
   /** When set, drawer opens with this tab selected (e.g. 'data' for Update row, 'permissions' from context menu) */
   initialTab?: 'data' | 'permissions'
   columns?: unknown[]
+  /** Fixed embedding dimension for the VectorsDB collection */
+  collectionDimension?: number | null
   onSave: (
     rowId: string | null,
-    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
+    data: Record<string, FormFieldValue>,
     customId?: string | undefined,
     permissions?: string[],
   ) => void
@@ -490,20 +515,56 @@ function getTableColumnKey(col: unknown): string | null {
   return String(colKey)
 }
 
-function defaultFormValueForColumn(
-  col: unknown,
-): string | number | bigint | boolean | unknown[] | null {
+function defaultFormValueForColumn(col: unknown): FormFieldValue {
   const c = col as {
     default?: unknown
     type?: string
     array?: boolean
   }
   if (c.default !== undefined && c.default !== null) {
-    return c.default as string | number | bigint | boolean | unknown[] | null
+    return c.default as FormFieldValue
   }
   if (c.type === 'boolean') return false
-  if (c.array) return []
+  if (c.type === 'vector' || c.array) return []
+  if (c.type === 'object') return null
   return ''
+}
+
+function getVectorExpectedDimension(columnInfo?: unknown): number | null {
+  const col = columnInfo as { size?: unknown; dimension?: unknown } | undefined
+  if (typeof col?.size === 'number' && col.size > 0) return col.size
+  if (typeof col?.dimension === 'number' && col.dimension > 0) {
+    return col.dimension
+  }
+  return null
+}
+
+function normalizeVectorFieldValue(
+  value: unknown,
+): number[] | null {
+  if (value === null || value === undefined || value === '') return null
+  if (
+    Array.isArray(value) &&
+    value.every((item) => typeof item === 'number' && Number.isFinite(item))
+  ) {
+    return value.length > 0 ? value : null
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value) as unknown
+      if (
+        Array.isArray(parsed) &&
+        parsed.every(
+          (item) => typeof item === 'number' && Number.isFinite(item),
+        )
+      ) {
+        return parsed.length > 0 ? parsed : null
+      }
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 function getRelationshipTableId(columnInfo?: unknown): string | undefined {
@@ -738,6 +799,7 @@ function RowEditDrawer({
   focusedField,
   initialTab,
   columns = [],
+  collectionDimension = null,
   onSave,
   isSaving = false,
   presentation = 'drawer',
@@ -783,9 +845,37 @@ function RowEditDrawer({
     return keys
   }, [isCreateMode, row, columns])
 
-  const [formData, setFormData] = useState<
-    Record<string, string | number | bigint | boolean | unknown[] | null>
+  const { dateFieldKeys, vectorFieldKeys, otherFieldKeys } = useMemo(() => {
+    const dateKeys: string[] = []
+    const vectorKeys: string[] = []
+    const otherKeys: string[] = []
+    for (const key of dataTabFieldKeys) {
+      if (key === '$createdAt' || key === '$updatedAt') {
+        dateKeys.push(key)
+        continue
+      }
+      const columnInfo = columns.find((col: unknown) => {
+        const colKey = getTableColumnKey(col)
+        return colKey === key
+      }) as { type?: string } | undefined
+      if (columnInfo?.type === 'vector') {
+        vectorKeys.push(key)
+      } else {
+        otherKeys.push(key)
+      }
+    }
+    return {
+      dateFieldKeys: dateKeys,
+      vectorFieldKeys: vectorKeys,
+      otherFieldKeys: otherKeys,
+    }
+  }, [dataTabFieldKeys, columns])
+
+  const [formData, setFormData] = useState<Record<string, FormFieldValue>>({})
+  const [embeddingGenerateIntents, setEmbeddingGenerateIntents] = useState<
+    Record<string, EmbeddingGenerateIntent | null>
   >({})
+  const [isResolvingEmbeddings, setIsResolvingEmbeddings] = useState(false)
   const [customRowId, setCustomRowId] = useState<string | undefined>(undefined)
   const fieldRefs = useRef<
     Record<
@@ -855,25 +945,22 @@ function RowEditDrawer({
   useEffect(() => {
     if (row) {
       // Preserve null values explicitly; normalize array columns (e.g. comma-separated string → array)
-      const initialData: Record<
-        string,
-        string | number | bigint | boolean | unknown[] | null
-      > = {}
+      const initialData: Record<string, FormFieldValue> = {}
       columns.forEach((column) => {
         const key = getTableColumnKey(column)
         if (!key || key.startsWith('$')) return
 
         const value = row.data[key]
         const columnInfo = getColumnInfo(key)
-        initialData[key] =
-          value === null || value === undefined
-            ? null
-            : (normalizeValueForColumn(value, columnInfo) as
-              | string
-              | number
-              | boolean
-              | unknown[]
-              | null)
+        const colType = (columnInfo as { type?: string } | undefined)?.type
+        if (colType === 'object') {
+          initialData[key] = normalizeMetadataObjectValue(value)
+        } else {
+          initialData[key] =
+            value === null || value === undefined
+              ? null
+              : (normalizeValueForColumn(value, columnInfo) as FormFieldValue)
+        }
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
@@ -886,12 +973,10 @@ function RowEditDrawer({
       fieldRefs.current = {}
       // Reset custom row ID when editing existing row
       setCustomRowId(undefined)
+      setEmbeddingGenerateIntents({})
     } else {
       // Initialize form data from columns when creating a new row
-      const initialData: Record<
-        string,
-        string | number | bigint | boolean | unknown[] | null
-      > = {}
+      const initialData: Record<string, FormFieldValue> = {}
       columns.forEach((col: unknown) => {
         const colKey = getTableColumnKey(col)
         if (!colKey) return
@@ -903,6 +988,7 @@ function RowEditDrawer({
       fieldRefs.current = {}
       // Reset custom row ID when creating new row
       setCustomRowId(undefined)
+      setEmbeddingGenerateIntents({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row?.$id, columns]) // Re-run when row ID changes or columns change
@@ -1003,10 +1089,7 @@ function RowEditDrawer({
     onOpenChange(newOpen)
   }
 
-  const handleFieldChange = (
-    key: string,
-    value: string | number | bigint | boolean | unknown[] | null,
-  ) => {
+  const handleFieldChange = (key: string, value: FormFieldValue) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -1213,7 +1296,7 @@ function RowEditDrawer({
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // For create mode, pass customRowId if set, otherwise pass null to use auto-generated
     // For update mode, pass the existing row ID
     const idToSave = isCreateMode ? customRowId || null : row?.$id || null
@@ -1262,9 +1345,18 @@ function RowEditDrawer({
       delete payload.$id
       delete payload.$permissions
       delete payload.$sequence
+      columns.forEach((col) => {
+        const colKey = getTableColumnKey(col)
+        if (!colKey) return
+        const colType = String(
+          (col as { type?: string }).type ?? '',
+        ).toLowerCase()
+        if (colType !== 'object') return
+        payload[colKey] = normalizeMetadataObjectValue(payload[colKey])
+      })
       onSave(
         idToSaveInline,
-        payload as Record<string, string | number | bigint | boolean | unknown[] | null>,
+        payload as Record<string, FormFieldValue>,
         customIdFromJson,
         permissionsInline,
       )
@@ -1278,6 +1370,11 @@ function RowEditDrawer({
         .filter((key): key is string => Boolean(key && !key.startsWith('$'))),
     )
     const missingRequiredFields: string[] = []
+    const vectorsToGenerate: {
+      fieldKey: string
+      intent: EmbeddingGenerateIntent
+      expectedDimension: number | null
+    }[] = []
 
     columns.forEach((col: unknown) => {
       const columnInfo = col as Record<string, unknown>
@@ -1304,6 +1401,50 @@ function RowEditDrawer({
         (typeof currentValue === 'string' && currentValue.trim() === '') ||
         (Array.isArray(currentValue) && currentValue.length === 0)
 
+      if (fieldType === 'vector') {
+        const intent = embeddingGenerateIntents[fieldKey]
+        if (intent && intent.text.trim()) {
+          vectorsToGenerate.push({
+            fieldKey,
+            intent,
+            expectedDimension:
+              getVectorExpectedDimension(columnInfo) ?? collectionDimension,
+          })
+          return
+        }
+        const normalized = normalizeVectorFieldValue(currentValue)
+        if (required && (!normalized || normalized.length === 0)) {
+          missingRequiredFields.push(fieldKey)
+          return
+        }
+        payload[fieldKey] = normalized
+        return
+      }
+
+      if (fieldType === 'object') {
+        if (typeof currentValue === 'string') {
+          const { value: parsed, error: parseError } =
+            parseMetadataObjectInput(currentValue)
+          if (parseError) {
+            toast.error(t(parseError))
+            return
+          }
+          if (required && !parsed) {
+            missingRequiredFields.push(fieldKey)
+            return
+          }
+          payload[fieldKey] = parsed
+          return
+        }
+        const normalized = normalizeMetadataObjectValue(currentValue)
+        if (required && !normalized) {
+          missingRequiredFields.push(fieldKey)
+          return
+        }
+        payload[fieldKey] = normalized
+        return
+      }
+
       if (required && fieldType !== 'boolean' && isEmptyValue) {
         missingRequiredFields.push(fieldKey)
         return
@@ -1322,8 +1463,40 @@ function RowEditDrawer({
     })
 
     if (missingRequiredFields.length > 0) {
-      toast.error(`${t('Required fields')}: ${missingRequiredFields.join(', ')}`)
+      const needsText = missingRequiredFields.some(
+        (key) => embeddingGenerateIntents[key] != null,
+      )
+      toast.error(
+        needsText
+          ? t('Enter text to generate an embedding')
+          : `${t('Required fields')}: ${missingRequiredFields.join(', ')}`,
+      )
       return
+    }
+
+    if (vectorsToGenerate.length > 0) {
+      if (!projectId) {
+        toast.error(t('Failed to generate embedding'))
+        return
+      }
+      setIsResolvingEmbeddings(true)
+      try {
+        for (const job of vectorsToGenerate) {
+          payload[job.fieldKey] = await resolveEmbeddingFromText({
+            projectId,
+            text: job.intent.text.trim(),
+            model: job.intent.model,
+            expectedDimension: job.expectedDimension,
+          })
+        }
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, t('Failed to generate embedding')),
+        )
+        return
+      } finally {
+        setIsResolvingEmbeddings(false)
+      }
     }
 
     if (
@@ -1343,6 +1516,8 @@ function RowEditDrawer({
     onSave(idToSave, payload, customRowId, permissionsToSave)
     // Don't close drawer here - wait for mutation to complete
   }
+
+  const formBusy = isSaving || isResolvingEmbeddings
 
   const getFieldType = (
     key: string,
@@ -1657,12 +1832,83 @@ function RowEditDrawer({
                   )}
 
                   {/* Editable fields */}
-                  <div className="space-y-3">
-                    <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {t('Row Data')}
-                    </h4>
-                    <div className="space-y-4">
-                      {dataTabFieldKeys.map((key) => {
+                  <div className="space-y-6">
+                    {dateFieldKeys.length > 0 ? (
+                      <div className="space-y-4">
+                        {dateFieldKeys.map((key) => {
+                          const value = isCreateMode
+                            ? formData[key]
+                            : (row as RowData)[key as keyof RowData]
+                          const currentValue =
+                            key in formData ? formData[key] : value
+                          const shouldFocus = focusedField === key
+                          return (
+                            <div key={key} className="space-y-1.5">
+                              <Label
+                                htmlFor={key}
+                                className="flex items-center gap-1.5 text-[12px] font-medium text-foreground"
+                              >
+                                <span>{key}</span>
+                              </Label>
+                              <DateTimePicker
+                                id={key}
+                                value={(currentValue as string | null) ?? null}
+                                onChange={(val) => handleFieldChange(key, val)}
+                                triggerRef={(el) => {
+                                  fieldRefs.current[key] = el
+                                }}
+                                autoFocus={shouldFocus}
+                                clearable
+                                placeholder="NULL"
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+
+                    {vectorFieldKeys.length > 0 ? (
+                      <div className="space-y-4">
+                        {vectorFieldKeys.map((key) => {
+                          const columnInfo = getColumnInfo(key)
+                          const currentValue =
+                            key in formData
+                              ? formData[key]
+                              : columnInfo !== undefined
+                                ? defaultFormValueForColumn(columnInfo)
+                                : null
+                          const isRequired = isColumnRequired(
+                            columnInfo as Record<string, unknown> | undefined,
+                          )
+                          return (
+                            <EmbeddingField
+                              key={key}
+                              id={key}
+                              fieldKey={key}
+                              value={normalizeVectorFieldValue(currentValue)}
+                              onChange={(val) => handleFieldChange(key, val)}
+                              onGenerateIntentChange={(intent) => {
+                                setEmbeddingGenerateIntents((prev) => ({
+                                  ...prev,
+                                  [key]: intent,
+                                }))
+                              }}
+                              expectedDimension={
+                                getVectorExpectedDimension(columnInfo) ??
+                                collectionDimension
+                              }
+                              isRequired={isRequired}
+                              disabled={formBusy}
+                              autoFocus={focusedField === key}
+                            />
+                          )
+                        })}
+                      </div>
+                    ) : null}
+
+                    {otherFieldKeys.length > 0 ? (
+                      <div className="space-y-4">
+                      {otherFieldKeys.map((key) => {
                         const value = isCreateMode
                           ? formData[key]
                           : key === '$createdAt' || key === '$updatedAt'
@@ -1695,6 +1941,7 @@ function RowEditDrawer({
 
                         return (
                           <div key={key} className="space-y-1.5">
+                            {fieldType !== 'object' ? (
                             <Label
                               htmlFor={key}
                               className="text-[12px] font-medium text-foreground flex items-center gap-1.5"
@@ -1720,6 +1967,7 @@ function RowEditDrawer({
                                 </span>
                               )}
                             </Label>
+                            ) : null}
 
                             {fieldType === 'boolean' ? (
                               <div className="flex items-center gap-2">
@@ -2324,6 +2572,18 @@ function RowEditDrawer({
                                 isRequired={isRequired}
                                 disabled={isSaving}
                               />
+                            ) : fieldType === 'object' ? (
+                              <MetadataObjectField
+                                id={key}
+                                fieldKey={key}
+                                value={normalizeMetadataObjectValue(
+                                  currentValue,
+                                )}
+                                onChange={(val) => handleFieldChange(key, val)}
+                                isRequired={isRequired}
+                                disabled={isSaving}
+                                autoFocus={shouldFocus}
+                              />
                             ) : (
                               (() => {
                                 const size = columnInfo?.size || null
@@ -2494,7 +2754,8 @@ function RowEditDrawer({
                           </div>
                         )
                       })}
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -2550,8 +2811,10 @@ function RowEditDrawer({
                     </Button>
                     <Button
                       size="sm"
-                      onClick={handleSave}
-                      disabled={isSaving}
+                      onClick={() => {
+                        void handleSave()
+                      }}
+                      disabled={formBusy}
                       className="h-8 text-xs"
                     >
                       {isCreateMode ? dbLabels.createRecord : t('Update')}
@@ -2565,13 +2828,18 @@ function RowEditDrawer({
 
         {presentation !== 'inline' ? (
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button
+              onClick={() => {
+                void handleSave()
+              }}
+              disabled={formBusy}
+            >
               {isCreateMode ? dbLabels.createRecord : t('Update')}
             </Button>
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSaving}
+              disabled={formBusy}
             >
               {t('Cancel')}
             </Button>
@@ -2637,6 +2905,19 @@ export function DocumentsRowCreateBridge({
     DB_KIND,
     table.$id,
   )
+  const { table: tableMeta } = useProjectTable(
+    projectId,
+    databaseId,
+    DB_KIND,
+    table.$id,
+  )
+  const collectionDimension =
+    typeof tableMeta?.dimension === 'number'
+      ? tableMeta.dimension
+      : typeof (table as unknown as { dimension?: unknown }).dimension ===
+          'number'
+        ? (table as unknown as { dimension: number }).dimension
+        : null
 
   const saveRowMutation = useMutation({
     mutationFn: async ({
@@ -2646,7 +2927,7 @@ export function DocumentsRowCreateBridge({
       permissions,
     }: {
       rowId: string | null
-      data: Record<string, string | number | bigint | boolean | unknown[] | null>
+      data: Record<string, FormFieldValue>
       customId?: string | undefined
       permissions?: string[]
     }) => {
@@ -2693,7 +2974,7 @@ export function DocumentsRowCreateBridge({
 
   const handleSaveRow = (
     rowId: string | null,
-    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
+    data: Record<string, FormFieldValue>,
     customId?: string | undefined,
     permissions?: string[],
   ) => {
@@ -2744,6 +3025,7 @@ export function DocumentsRowCreateBridge({
       focusedField={focusedField}
       initialTab={drawerInitialTab ?? undefined}
       columns={apiColumns}
+      collectionDimension={collectionDimension}
       onSave={handleSaveRow}
       isSaving={saveRowMutation.isPending}
     />
@@ -2812,6 +3094,10 @@ export function RowsSpreadsheet({
   const isMobileViewport = useIsMobile()
   const isDocumentsStackedLayout = useInlineDocumentPane && isMobileViewport
   const tableId = table.$id
+  const collectionDimension =
+    typeof (table as unknown as { dimension?: unknown }).dimension === 'number'
+      ? (table as unknown as { dimension: number }).dimension
+      : null
 
   const urlDriven = onNavigateToRowsList != null
 
@@ -3212,7 +3498,7 @@ export function RowsSpreadsheet({
   // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
     const rowObj = row as Record<string, unknown>
-    const data: Record<string, string | number | bigint | boolean | unknown[] | null> =
+    const data: Record<string, FormFieldValue> =
       {}
     Object.keys(rowObj).forEach((key) => {
       if (!key.startsWith('$')) {
@@ -3555,7 +3841,7 @@ export function RowsSpreadsheet({
       permissions,
     }: {
       rowId: string | null
-      data: Record<string, string | number | bigint | boolean | unknown[] | null>
+      data: Record<string, FormFieldValue>
       customId?: string | undefined
       permissions?: string[]
     }) => {
@@ -3649,7 +3935,7 @@ export function RowsSpreadsheet({
 
   const handleSaveRow = (
     rowId: string | null,
-    data: Record<string, string | number | bigint | boolean | unknown[] | null>,
+    data: Record<string, FormFieldValue>,
     customId?: string | undefined,
     permissions?: string[],
   ) => {
@@ -4092,6 +4378,7 @@ export function RowsSpreadsheet({
           tableName={table.name}
           focusedField={focusedField}
           columns={apiColumns}
+          collectionDimension={collectionDimension}
           onSave={handleSaveRow}
           isSaving={saveRowMutation.isPending}
         />
@@ -4802,6 +5089,7 @@ export function RowsSpreadsheet({
                 focusedField={focusedField}
                 initialTab={drawerInitialTab ?? undefined}
                 columns={apiColumns}
+                collectionDimension={collectionDimension}
                 onSave={handleSaveRow}
                 isSaving={saveRowMutation.isPending}
               />
@@ -4980,6 +5268,7 @@ export function RowsSpreadsheet({
           focusedField={focusedField}
           initialTab={drawerInitialTab ?? undefined}
           columns={apiColumns}
+          collectionDimension={collectionDimension}
           onSave={handleSaveRow}
           isSaving={saveRowMutation.isPending}
         />

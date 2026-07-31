@@ -13,7 +13,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
-import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
+import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate, EmbeddingModel } from '@appwrite.io/console'
 import { DatabaseType, coerceDatabaseType, toSdkDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
@@ -3020,7 +3020,7 @@ async function ensureDocumentOrVectorCreateDataPopulated(
         type === 'number'
       ) {
         filled[key] = 0
-      } else if (isArray) {
+      } else if (type === 'vector' || isArray) {
         filled[key] = []
       } else {
         filled[key] = ''
@@ -3030,6 +3030,29 @@ async function ensureDocumentOrVectorCreateDataPopulated(
     }
   }
   return Object.keys(filled).length > 0 ? filled : payloadWithoutId
+}
+
+/**
+ * Generate vector embeddings from text via VectorsDB.
+ * Returns the embedding list from the API (not persisted until stored on a document).
+ */
+export async function createTextEmbeddings(
+  projectId: string,
+  texts: string[],
+  model?: EmbeddingModel,
+): Promise<Models.EmbeddingList> {
+  if (!projectId) {
+    throw new Error('Missing required parameters')
+  }
+  if (!Array.isArray(texts) || texts.length === 0) {
+    throw new Error('At least one text value is required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.vectorsDB.createTextEmbeddings({
+    texts,
+    ...(model ? { model } : {}),
+  })
 }
 
 /**
@@ -5088,6 +5111,28 @@ export function useProjectTable(
     error,
     refetch,
   }
+}
+
+/**
+ * Hook to generate text embeddings via VectorsDB.
+ */
+export function useCreateTextEmbeddings(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async ({
+      texts,
+      model,
+    }: {
+      texts: string[]
+      model?: EmbeddingModel
+    }) => {
+      if (!projectId) {
+        throw new Error('Missing required parameters')
+      }
+      return await createTextEmbeddings(projectId, texts, model)
+    },
+  })
 }
 
 /**
