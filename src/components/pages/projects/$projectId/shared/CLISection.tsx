@@ -2,19 +2,21 @@
  * Connect modal CLI tab: install, then Interactive (OAuth + init) or CI/CD (API key + client).
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ExternalLink, Key, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useUserOs } from '@/hooks/use-user-os'
 import { canShowProjectTerminal } from '@/lib/console-access-checks'
 import {
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { getUserOsLabel, type UserOs } from '@/lib/user-os'
 import { useT } from '@/lib/i18n/translate'
 
 const CLI_INSTALL_URL = '/docs/tooling/command-line/installation'
@@ -24,9 +26,8 @@ const CLI_DEVICE_AUTH_BLOG =
   '/blog/post/announcing-cli-device-authorization'
 
 type CliMode = 'interactive' | 'cicd'
-type CliOs = 'macos' | 'windows' | 'linux'
 
-function installCommands(os: CliOs): { id: string; label: string; code: string }[] {
+function installCommands(os: UserOs): { id: string; label: string; code: string }[] {
   if (os === 'macos') {
     return [
       { id: 'npm', label: 'npm', code: 'npm install -g appwrite-cli' },
@@ -63,22 +64,6 @@ function installCommands(os: CliOs): { id: string; label: string; code: string }
   ]
 }
 
-function detectOs(): CliOs {
-  if (typeof navigator === 'undefined') return 'macos'
-  const ua = navigator.userAgent.toLowerCase()
-  const platform = navigator.platform?.toLowerCase() ?? ''
-  if (
-    /win32|win64|wow64|windows/.test(platform) ||
-    /windows|win32|wow64/.test(ua)
-  ) {
-    return 'windows'
-  }
-  if (/mac|darwin|iphone|ipad/.test(platform) || /macintosh|mac os/.test(ua)) {
-    return 'macos'
-  }
-  return 'linux'
-}
-
 export interface CLISectionProps {
   endpoint: string
   projectId: string
@@ -98,14 +83,21 @@ export function CLISection({
   const { project } = useProject(projectId)
   const { features, isSelfHosted } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
+  const { os: resolvedOs, orderOptions } = useUserOs()
   const showTerminal =
     Boolean(cliShell) && canShowProjectTerminal(access, features)
 
   const [mode, setMode] = useState<CliMode>('interactive')
-  const [cliInstallOs, setCliInstallOs] = useState<CliOs>(detectOs)
+  const [cliInstallOs, setCliInstallOs] = useState<UserOs>(resolvedOs)
   const [installMethodId, setInstallMethodId] = useState<string>(() => {
-    return installCommands(detectOs())[0]?.id ?? 'npm'
+    return installCommands(resolvedOs)[0]?.id ?? 'npm'
   })
+  const osOptions = orderOptions()
+
+  useEffect(() => {
+    setCliInstallOs(resolvedOs)
+    setInstallMethodId(installCommands(resolvedOs)[0]?.id ?? 'npm')
+  }, [resolvedOs])
 
   const installOptions = useMemo(
     () => installCommands(cliInstallOs),
@@ -121,7 +113,7 @@ export function CLISection({
     : 'appwrite login'
   const clientCommand = `appwrite client --endpoint="${endpoint}" --project-id="${projectId}" --key="YOUR_API_KEY"`
 
-  const handleOsChange = (os: CliOs) => {
+  const handleOsChange = (os: UserOs) => {
     setCliInstallOs(os)
     const next = installCommands(os)
     setInstallMethodId(next[0]?.id ?? 'npm')
@@ -178,7 +170,7 @@ export function CLISection({
               {t('1. Install')}
             </h4>
             <div className="flex flex-wrap gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-              {(['macos', 'windows', 'linux'] as const).map((os) => (
+              {osOptions.map((os) => (
                 <button
                   key={os}
                   type="button"
@@ -190,11 +182,7 @@ export function CLISection({
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  {os === 'macos'
-                    ? 'macOS'
-                    : os === 'windows'
-                      ? 'Windows'
-                      : 'Linux'}
+                  {getUserOsLabel(os)}
                 </button>
               ))}
             </div>

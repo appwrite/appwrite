@@ -4,7 +4,7 @@
  * Line continuation: Unix `\`, CMD `^`, PowerShell `,`. Chain: Unix/CMD `&&`, PowerShell `;`.
  */
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,12 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useUserOs } from '@/hooks/use-user-os'
+import {
+  orderCliShellTabs,
+  resolveDefaultCliShellTab,
+  type CliShellTab,
+} from '@/lib/user-os'
 import { useT } from '@/lib/i18n/translate'
 
 export type CreateCliDeploymentResourceType = 'function' | 'site'
@@ -136,15 +142,10 @@ appwrite functions create-deployment ,
   return { unix: unixTrimmed, cmd: cmdTrimmed, powershell: psTrimmed }
 }
 
-function getDefaultCliTab(): 'unix' | 'cmd' | 'powershell' {
-  if (typeof navigator === 'undefined') return 'unix'
-  const platform =
-    (navigator as Navigator & { userAgentData?: { platform: string } })
-      .userAgentData?.platform ||
-    navigator.platform ||
-    ''
-  if (platform.toLowerCase().includes('win')) return 'cmd'
-  return 'unix'
+const SHELL_TAB_LABELS: Record<CliShellTab, string> = {
+  unix: 'Unix',
+  cmd: 'CMD',
+  powershell: 'PowerShell',
 }
 
 const DESCRIPTION = {
@@ -162,8 +163,15 @@ export function CreateCliDeploymentModal({
   siteBuildConfig,
 }: CreateCliDeploymentModalProps) {
   const t = useT()
-  const defaultTab = useMemo(() => getDefaultCliTab(), [])
-  const [activeTab, setActiveTab] = useState(defaultTab)
+  const { os } = useUserOs()
+  const shellTabs = useMemo(() => orderCliShellTabs(os), [os])
+  const defaultTab = resolveDefaultCliShellTab(os)
+  const [activeTab, setActiveTab] = useState<CliShellTab>(defaultTab)
+
+  useEffect(() => {
+    setActiveTab(resolveDefaultCliShellTab(os))
+  }, [os])
+
   const commands = buildCommands(
     resourceType,
     projectId,
@@ -176,7 +184,7 @@ export function CreateCliDeploymentModal({
     cmd: commands.cmd,
     powershell: commands.powershell,
   } as const
-  const languageByTab: Record<string, CodeBlockLanguage> = {
+  const languageByTab: Record<CliShellTab, CodeBlockLanguage> = {
     unix: 'bash',
     cmd: 'bash',
     powershell: 'powershell',
@@ -193,56 +201,34 @@ export function CreateCliDeploymentModal({
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as CliShellTab)}
+          >
             <TabsList className="mb-3 w-full grid grid-cols-3">
-              <TabsTrigger value="unix" className="text-[13px]">
-                Unix
-              </TabsTrigger>
-              <TabsTrigger value="cmd" className="text-[13px]">
-                CMD
-              </TabsTrigger>
-              <TabsTrigger value="powershell" className="text-[13px]">
-                PowerShell
-              </TabsTrigger>
+              {shellTabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab} className="text-[13px]">
+                  {SHELL_TAB_LABELS[tab]}
+                </TabsTrigger>
+              ))}
             </TabsList>
             {/* Fixed-height container with explicit CodeBlock height so all tabs scroll properly */}
             <div className="min-h-0 overflow-hidden" style={{ height: 250 }}>
-              <TabsContent
-                value="unix"
-                className="mt-0 h-full data-[state=inactive]:hidden"
-              >
-                <CodeBlock
-                  code={codeByTab.unix}
-                  language={languageByTab.unix}
-                  copyInside
-                  fixedHeight="230px"
-                  className="[&>div:last-child]:min-h-0"
-                />
-              </TabsContent>
-              <TabsContent
-                value="cmd"
-                className="mt-0 h-full data-[state=inactive]:hidden"
-              >
-                <CodeBlock
-                  code={codeByTab.cmd}
-                  language={languageByTab.cmd}
-                  copyInside
-                  fixedHeight="230px"
-                  className="[&>div:last-child]:min-h-0"
-                />
-              </TabsContent>
-              <TabsContent
-                value="powershell"
-                className="mt-0 h-full data-[state=inactive]:hidden"
-              >
-                <CodeBlock
-                  code={codeByTab.powershell}
-                  language={languageByTab.powershell}
-                  copyInside
-                  fixedHeight="230px"
-                  className="[&>div:last-child]:min-h-0"
-                />
-              </TabsContent>
+              {shellTabs.map((tab) => (
+                <TabsContent
+                  key={tab}
+                  value={tab}
+                  className="mt-0 h-full data-[state=inactive]:hidden"
+                >
+                  <CodeBlock
+                    code={codeByTab[tab]}
+                    language={languageByTab[tab]}
+                    copyInside
+                    fixedHeight="230px"
+                    className="[&>div:last-child]:min-h-0"
+                  />
+                </TabsContent>
+              ))}
             </div>
           </Tabs>
           <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3 flex gap-3 text-[12px] text-muted-foreground">

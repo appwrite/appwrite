@@ -10,6 +10,7 @@ import type { ImperativePanelHandle } from 'react-resizable-panels'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useT } from '@/lib/i18n/translate'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { isHtmlDarkChrome, isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { monacoSyntaxHighlightRules } from '@/lib/code-syntax-theme'
 import Editor from '@monaco-editor/react'
@@ -440,6 +441,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
 
 export function View() {
   const t = useT()
+  const { isMac } = usePlatform()
   const { projectId } = useParams({ strict: false })
   const { resolvedTheme } = useTheme()
   const isDark = isResolvedThemeDarkChrome(resolvedTheme)
@@ -540,9 +542,6 @@ export function View() {
     )
   }, [editorSplitWidth, explorerOpen])
 
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
   const shortcutFind = isMac ? '⌘F' : 'Ctrl+F'
   const shortcutReplace = isMac ? '⌘H' : 'Ctrl+H'
 

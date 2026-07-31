@@ -23,7 +23,7 @@ import {
   CalendarDays,
   Ticket,
   Boxes,
-  Keyboard,
+  Monitor,
   Terminal,
   History,
   Search,
@@ -58,7 +58,6 @@ import {
   subscribeToDebugOverrides,
   type DebugOverrides,
   type FeatureFlagsMenuDebugKey,
-  type KeyboardLayoutOverride,
   type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
 import {
@@ -66,7 +65,12 @@ import {
   OVERVIEW_CHART_TAB_DISABLE_KEYS,
   OVERVIEW_CHART_TAB_LABELS,
 } from '@/lib/overview-chart-tabs'
-import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
+import {
+  detectUserOs,
+  getUserOsLabel,
+  USER_OS_LABELS,
+  type UserOsOverride,
+} from '@/lib/user-os'
 import { formatInitMockCurrentDay } from '@/lib/init/mock-current-day'
 import { formatInitMockTicketType } from '@/lib/init/ticket-types'
 import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
@@ -859,44 +863,48 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Palette className="h-3 w-3" />,
     }))
 
-    const keyboardLayoutDescription =
-      overrides.keyboardLayout === 'auto'
-        ? `Auto (${isMacPlatform() ? 'macOS' : 'Windows'})`
-        : overrides.keyboardLayout === 'macos'
-          ? 'macOS layout'
-          : 'Windows layout'
+    const detectedOs = detectUserOs()
+    const userOsDescription =
+      overrides.userOs === 'auto'
+        ? `Auto (${getUserOsLabel(detectedOs)})`
+        : USER_OS_LABELS[overrides.userOs]
 
-    const keyboardLayoutOptions: MenuItem[] = (
+    const userOsOptions: MenuItem[] = (
       [
         {
           label: 'Auto',
           value: 'auto' as const,
-          description: 'Detect from device',
+          description: `Detect from device (${getUserOsLabel(detectedOs)})`,
         },
         {
-          label: 'macOS layout',
+          label: 'macOS',
           value: 'macos' as const,
-          description: 'Show macOS keyboard and ⌘ shortcuts',
+          description: 'macOS UI defaults and ⌘ shortcuts',
         },
         {
-          label: 'Windows layout',
+          label: 'Windows',
           value: 'windows' as const,
-          description: 'Show Windows keyboard and Ctrl shortcuts',
+          description: 'Windows UI defaults and Ctrl shortcuts',
+        },
+        {
+          label: 'Linux',
+          value: 'linux' as const,
+          description: 'Linux UI defaults and Ctrl shortcuts',
         },
       ] satisfies ReadonlyArray<{
         label: string
-        value: KeyboardLayoutOverride
+        value: UserOsOverride
         description: string
       }>
     ).map((option) => ({
       label: option.label,
       description: option.description,
       onClick: () => {
-        setOverrides((prev) => ({ ...prev, keyboardLayout: option.value }))
-        setDebugOverride('keyboardLayout', option.value)
+        setOverrides((prev) => ({ ...prev, userOs: option.value }))
+        setDebugOverride('userOs', option.value)
       },
-      active: overrides.keyboardLayout === option.value,
-      icon: <Keyboard className="h-3 w-3" />,
+      active: overrides.userOs === option.value,
+      icon: <Monitor className="h-3 w-3" />,
     }))
 
     const pageDirectionDescription =
@@ -1179,10 +1187,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: faviconOptions,
           },
           {
-            label: 'Keyboard layout',
-            description: keyboardLayoutDescription,
-            icon: <Keyboard className="h-3 w-3" />,
-            submenu: keyboardLayoutOptions,
+            label: 'Operating system',
+            description: userOsDescription,
+            icon: <Monitor className="h-3 w-3" />,
+            submenu: userOsOptions,
           },
           {
             label: 'Page direction',

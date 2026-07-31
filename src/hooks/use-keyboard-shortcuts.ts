@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { shouldSuppressGlobalShortcuts } from '@/lib/global-shortcut-suppress'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
-  useDebugOverrides,
-  type KeyboardLayoutOverride,
-} from '@/lib/debug-overrides'
-import { isMacPlatform } from '@/lib/keyboard-shortcuts/display'
+  isMacOs,
+  resolveUserOs,
+  type UserOs,
+  type UserOsOverride,
+} from '@/lib/user-os'
 
 type KeyCombo = string | string[]
 type ShortcutHandler = (e: KeyboardEvent) => void
@@ -376,33 +378,34 @@ export function useArrowNavigation(
 
 /**
  * Resolve whether to show macOS or Windows keyboard layout / shortcut labels.
+ * Linux and Windows both use Ctrl-style modifiers.
  */
-export function resolveKeyboardLayoutIsMac(
-  override: KeyboardLayoutOverride,
-): boolean {
-  if (override === 'macos') return true
-  if (override === 'windows') return false
-  return isMacPlatform()
+export function resolveKeyboardLayoutIsMac(override: UserOsOverride): boolean {
+  return isMacOs(resolveUserOs(override))
 }
 
 /**
  * Hook to detect platform for showing correct modifier key and keyboard layout.
- * Respects debug menu keyboard layout override when set.
+ * Respects debug menu OS override when set.
  */
 export function usePlatform() {
   const [isPlatformKnown, setIsPlatformKnown] = useState(false)
-  const { keyboardLayout } = useDebugOverrides()
+  const { userOs: userOsOverride } = useDebugOverrides()
 
   useEffect(() => {
     setIsPlatformKnown(true)
   }, [])
 
-  const isMac = resolveKeyboardLayoutIsMac(keyboardLayout)
+  const os: UserOs = resolveUserOs(userOsOverride)
+  const isMac = isMacOs(os)
 
   return {
+    os,
     isMac,
     isPlatformKnown,
-    keyboardLayout,
+    userOsOverride,
+    /** @deprecated Use `userOsOverride`. */
+    keyboardLayout: userOsOverride,
     modKey: isPlatformKnown ? (isMac ? '⌘' : 'Ctrl') : undefined,
     altKey: isPlatformKnown ? (isMac ? '⌥' : 'Alt') : undefined,
   }
