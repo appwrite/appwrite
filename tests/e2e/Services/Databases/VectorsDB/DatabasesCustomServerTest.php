@@ -13,7 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 
 final class DatabasesCustomServerTest extends Scope
 {
@@ -546,29 +545,6 @@ final class DatabasesCustomServerTest extends Scope
         }
 
         return [ 'databaseId' => $databaseId, 'collectionId' => $collectionId, 'bulkIds' => $ids ];
-    }
-
-    #[Depends('testBulkCreate')]
-    public function testListDocuments(array $data): void
-    {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
-
-        // Listing is a POST so queries travel in the JSON body instead of the query string.
-        $res = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'queries' => [
-                Query::limit(1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $res['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(2, $res['body']['total']);
-        $this->assertIsArray($res['body']['documents']);
-        $this->assertCount(1, $res['body']['documents']);
     }
 
     public function testCreateTextEmbeddingsSuccessAndErrors(): void

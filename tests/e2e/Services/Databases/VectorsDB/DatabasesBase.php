@@ -163,7 +163,7 @@ trait DatabasesBase
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
-        $list = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $list = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -176,7 +176,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
 
         // Pagination: limit 1, then offset 1
-        $page1 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $page1 = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -189,7 +189,7 @@ trait DatabasesBase
         $this->assertEquals(200, $page1['headers']['status-code']);
         $this->assertEquals(1, \count($page1['body']['documents'] ?? []));
 
-        $page2 = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $page2 = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -325,7 +325,7 @@ trait DatabasesBase
         $mk($vB, 'B');
 
         // Dot product
-        $dot = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $dot = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -339,7 +339,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(1, $dot['body']['total']);
 
         // Cosine
-        $cos = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $cos = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -353,7 +353,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(1, $cos['body']['total']);
 
         // Euclidean
-        $eu = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $eu = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -367,7 +367,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(1, $eu['body']['total']);
 
         // Combined vector + metadata filters
-        $combo = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $combo = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -382,7 +382,7 @@ trait DatabasesBase
         $this->assertGreaterThanOrEqual(1, $combo['body']['total']);
 
         // Ordering with $id ascending combined with vector
-        $ordered = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $ordered = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -421,7 +421,7 @@ trait DatabasesBase
         $this->assertEquals(404, $getMissing['headers']['status-code']);
 
         // List should still work and reflect at least one less document compared to earlier pages (best-effort)
-        $list = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $list = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -751,7 +751,7 @@ trait DatabasesBase
         ]);
 
         // Query with vectorCosine
-        $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $res = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -858,7 +858,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [ 'data' => ['embeddings' => [1.0, 0.0, 0.0]] ]);
 
-        $results = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $results = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -886,7 +886,7 @@ trait DatabasesBase
         $collectionId = $col['body']['$id'];
 
         // Two vector queries simultaneously should fail
-        $fail = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $fail = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -918,7 +918,7 @@ trait DatabasesBase
         $collectionId = $col['body']['$id'];
 
         // Query on non-vector attribute 'metadata' should fail
-        $fail = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $fail = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -944,7 +944,7 @@ trait DatabasesBase
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
-        $res = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", [
+        $res = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/query", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

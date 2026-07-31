@@ -5561,7 +5561,7 @@ trait MigrationsBase
                 return true;
             }, 60_000, 500);
 
-            $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            $documents = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents/query', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -7318,7 +7318,7 @@ trait MigrationsBase
         }, 30_000, 500);
 
         // Verify documents were imported
-        $docs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers);
+        $docs = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents/query', $headers);
         $this->assertEquals(200, $docs['headers']['status-code']);
         $this->assertEquals(10, $docs['body']['total'], 'Should have imported 10 vectorsdb documents');
 
