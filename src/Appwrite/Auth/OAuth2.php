@@ -6,6 +6,7 @@ use Appwrite\Auth\OAuth2\Exception;
 
 abstract class OAuth2
 {
+    public const TIMEOUT = 15;
     /**
      * @var string
      */
@@ -193,6 +194,7 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
+        \curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT);
 
         if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);

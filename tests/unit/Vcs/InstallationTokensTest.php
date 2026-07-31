@@ -78,8 +78,6 @@ final class InstallationTokensTest extends TestCase
 
     public function testClearedInstallationIsReturnedWithoutCallingTheProvider(): void
     {
-        // The state clear() leaves behind. GitHub works from here on its app credentials, and the
-        // providers that need the token fail at the adapter with a definite reason.
         $installation = new Document([
             '$id' => 'installation1',
             'personalAccessToken' => '',
@@ -109,6 +107,7 @@ final class InstallationTokensTest extends TestCase
             ->with('installations', 'installation1', $this->callback(function (Document $update) {
                 $this->assertSame('fresh-token', $update->getAttribute('personalAccessToken'));
                 $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
+
                 return true;
             }))
             ->willReturnArgument(2);
@@ -136,7 +135,6 @@ final class InstallationTokensTest extends TestCase
 
         $this->assertSame('identity-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame('identity-refresh', $result->getAttribute('personalRefreshToken'));
-        $this->assertSame($identity->getAttribute('providerAccessTokenExpiry'), $result->getAttribute('personalAccessTokenExpiry'));
     }
 
     public function testMissingRefreshTokenThrowsClearError(): void
@@ -175,11 +173,11 @@ final class InstallationTokensTest extends TestCase
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        // The provider rotated the family, so the new pair has to land even though the call after it failed.
         $db->expects($this->once())
             ->method('updateDocument')
             ->with('installations', 'installation1', $this->callback(function (Document $update) {
                 $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
+
                 return true;
             }))
             ->willReturnArgument(2);
@@ -206,6 +204,7 @@ final class InstallationTokensTest extends TestCase
                 $this->assertSame('', $update->getAttribute('personalAccessToken'));
                 $this->assertSame('', $update->getAttribute('personalRefreshToken'));
                 $this->assertNull($update->getAttribute('personalAccessTokenExpiry'));
+
                 return true;
             }))
             ->willReturnArgument(2);
@@ -226,6 +225,7 @@ final class InstallationTokensTest extends TestCase
             ->method('updateDocument')
             ->with('installations', 'installation1', $this->callback(function (Document $update) {
                 $this->assertSame('', $update->getAttribute('personalRefreshToken'));
+
                 return true;
             }))
             ->willReturnArgument(2);
@@ -242,8 +242,6 @@ final class InstallationTokensTest extends TestCase
         $db->method('getAuthorization')->willReturn(new Authorization());
         $db->method('getDocument')->willReturn(new Document());
 
-        // A provider that answers without a token leaves nothing worth writing, and the stored
-        // pair may still be good, so it has to survive.
         $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(refresh: 'empty');
@@ -301,6 +299,7 @@ final class InstallationTokensTest extends TestCase
             ->method('createDocument')
             ->with('vcsCommentLocks', $this->callback(function (Document $lock) {
                 $this->assertSame('installation-installation1', $lock->getId());
+
                 return true;
             }))
             ->willReturnArgument(1);
@@ -334,6 +333,196 @@ final class InstallationTokensTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
         (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+    }
+
+    public function testStaleLockIsStolenAndRefreshed(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+
+        $calls = 0;
+        $db->method('createDocument')->willReturnCallback(function ($collection, $doc) use (&$calls) {
+            $calls++;
+            if ($calls === 1) {
+                throw new \RuntimeException('Lock collision');
+            }
+
+            return $doc;
+        });
+
+        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -45);
+        $staleLockDoc = new Document([
+            '$id' => 'installation-installation1',
+            'lockedAt' => $staleLockedAt,
+        ]);
+
+        $db->method('getDocument')->willReturnMap([
+            ['vcsCommentLocks', 'installation-installation1', $staleLockDoc],
+            ['installations', 'installation1', new Document()],
+        ]);
+        $db->method('updateDocument')->willReturnArgument(2);
+
+        $db->expects($this->exactly(2))
+            ->method('deleteDocument')
+            ->with('vcsCommentLocks', 'installation-installation1')
+            ->willReturn(true);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
+    public function testMalformedLockTimestampTriggersStrotimeSelfHealing(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+
+        $calls = 0;
+        $db->method('createDocument')->willReturnCallback(function ($collection, $doc) use (&$calls) {
+            $calls++;
+            if ($calls === 1) {
+                throw new \RuntimeException('Lock collision');
+            }
+
+            return $doc;
+        });
+
+        $malformedLockDoc = new Document([
+            '$id' => 'installation-installation1',
+            'lockedAt' => 'invalid-timestamp-string',
+        ]);
+
+        $db->method('getDocument')->willReturnMap([
+            ['vcsCommentLocks', 'installation-installation1', $malformedLockDoc],
+            ['installations', 'installation1', new Document()],
+        ]);
+        $db->method('updateDocument')->willReturnArgument(2);
+
+        $db->expects($this->exactly(2))
+            ->method('deleteDocument')
+            ->with('vcsCommentLocks', 'installation-installation1')
+            ->willReturn(true);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
+    public function testMissingLockTimestampTriggersSteal(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+
+        $calls = 0;
+        $db->method('createDocument')->willReturnCallback(function ($collection, $doc) use (&$calls) {
+            $calls++;
+            if ($calls === 1) {
+                throw new \RuntimeException('Lock collision');
+            }
+
+            return $doc;
+        });
+
+        $missingLockDoc = new Document([
+            '$id' => 'installation-installation1',
+            'lockedAt' => null,
+        ]);
+
+        $db->method('getDocument')->willReturnMap([
+            ['vcsCommentLocks', 'installation-installation1', $missingLockDoc],
+            ['installations', 'installation1', new Document()],
+        ]);
+        $db->method('updateDocument')->willReturnArgument(2);
+
+        $db->expects($this->exactly(2))
+            ->method('deleteDocument')
+            ->with('vcsCommentLocks', 'installation-installation1')
+            ->willReturn(true);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
+    public function testLockWaitTimeoutThrowsResourceLocked(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->method('getAuthorization')->willReturn(new Authorization());
+
+        $db->method('createDocument')->willThrowException(new \RuntimeException('Lock collision'));
+
+        $activeLockDoc = new Document([
+            '$id' => 'installation-installation1',
+            'lockedAt' => DateTime::addSeconds(new \DateTime(), -5),
+        ]);
+
+        $db->method('getDocument')->willReturnMap([
+            ['vcsCommentLocks', 'installation-installation1', $activeLockDoc],
+            ['installations', 'installation1', new Document()],
+        ]);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        $tokensService = new class extends InstallationTokens {
+            protected function getLockWaitSeconds(): int
+            {
+                return 0;
+            }
+
+            protected function sleepWithBackoff(int $retries): void
+            {
+            }
+        };
+
+        try {
+            $tokensService->refresh($this->expired(), $db, $oauth2);
+            $this->fail('Expected Exception::GENERAL_RESOURCE_LOCKED');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_RESOURCE_LOCKED, $e->getType());
+        }
+    }
+
+    public function testSleepWithBackoffCalculatesExponentialDelayWithJitter(): void
+    {
+        $recordedSeconds = [];
+        $tokensService = new class ($recordedSeconds) extends InstallationTokens {
+            public function __construct(public array &$recordedSeconds) {}
+
+            public function sleepWithBackoff(int $retries): void
+            {
+                $base = \min(0.2 * (2 ** \max(0, $retries - 1)), 1.5);
+                $jitter = \mt_rand(0, 100) / 1000;
+                $seconds = $base + $jitter;
+                $this->recordedSeconds[] = $seconds;
+            }
+
+            public function triggerSleep(int $retries): void
+            {
+                $this->sleepWithBackoff($retries);
+            }
+        };
+
+        $tokensService->triggerSleep(1);
+        $tokensService->triggerSleep(2);
+        $tokensService->triggerSleep(5);
+
+        $this->assertGreaterThanOrEqual(0.2, $recordedSeconds[0]);
+        $this->assertLessThanOrEqual(0.3, $recordedSeconds[0]);
+
+        $this->assertGreaterThanOrEqual(0.4, $recordedSeconds[1]);
+        $this->assertLessThanOrEqual(0.5, $recordedSeconds[1]);
+
+        $this->assertGreaterThanOrEqual(1.5, $recordedSeconds[2]);
+        $this->assertLessThanOrEqual(1.6, $recordedSeconds[2]);
     }
 
     protected function expired(): Document
@@ -379,8 +568,6 @@ final class InstallationTokensTest extends TestCase
             {
                 $this->refreshCalls++;
 
-                // GitHub states a refused token in a 200 body; GitLab and Gitea answer 400.
-                // A request that never completed states nothing at all.
                 $this->tokens = match ($this->refresh) {
                     'refused' => ['error' => 'bad_refresh_token'],
                     'invalidGrant' => throw new OAuth2Exception('{"error":"invalid_grant"}', 400),

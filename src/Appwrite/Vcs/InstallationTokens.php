@@ -5,6 +5,7 @@ namespace Appwrite\Vcs;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
+use Swoole\Coroutine;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -12,6 +13,12 @@ use Utopia\Database\Document;
 
 class InstallationTokens
 {
+    /** WAIT (40s) must exceed TTL so a waiter can detect and steal an abandoned lock. */
+    private const LOCK_WAIT_SECONDS = 40;
+
+    /** TTL is structurally derived as 2x the OAuth2 HTTP timeout (15s). */
+    private const LOCK_TTL_SECONDS = OAuth2::TIMEOUT * 2;
+
     /**
      * Refreshes an installation's token, resolving the OAuth2 client for its provider.
      */
@@ -54,21 +61,22 @@ class InstallationTokens
         $lock = 'installation-' . $installation->getId();
         $authorization = $dbForPlatform->getAuthorization();
         $acquired = false;
+        $deadline = \time() + $this->getLockWaitSeconds();
         $retries = 0;
 
-        while ($retries < 9) {
+        while (\time() < $deadline) {
             $retries++;
 
             try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock, 'lockedAt' => DateTime::now()])));
                 $acquired = true;
                 break;
             } catch (\Throwable $err) {
-                if ($retries >= 9) {
-                    Console::warning('Error creating vcs installation lock for ' . $installation->getId() . ': ' . $err->getMessage());
+                if ($this->tryStealExpiredLock($dbForPlatform, $authorization, $lock)) {
+                    continue;
                 }
 
-                \sleep(1);
+                $this->sleepWithBackoff($retries);
             }
         }
 
@@ -92,7 +100,11 @@ class InstallationTokens
 
             return $this->exchange($installation, $dbForPlatform, $oauth2);
         } finally {
-            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+            try {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+            } catch (\Throwable $err) {
+                Console::warning('Failed to release vcs installation lock for ' . $installation->getId() . ': ' . $err->getMessage());
+            }
         }
     }
 
@@ -123,7 +135,7 @@ class InstallationTokens
         $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
             'personalAccessToken' => $accessToken,
             'personalRefreshToken' => $oauth2->getRefreshToken(''),
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')),
         ]));
 
         if (empty($oauth2->getUserID($accessToken))) {
@@ -178,5 +190,56 @@ class InstallationTokens
         } catch (\Throwable) {
             return new Document();
         }
+    }
+
+    protected function tryStealExpiredLock(Database $dbForPlatform, mixed $authorization, string $lock): bool
+    {
+        try {
+            $document = $authorization->skip(
+                fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock)
+            );
+
+            if ($document->isEmpty()) {
+                return true;
+            }
+
+            $lockedAt = $document->getAttribute('lockedAt');
+            if (empty($lockedAt)) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+                Console::warning('Stole vcs installation lock with missing timestamp: ' . $lock);
+
+                return true;
+            }
+
+            $age = \time() - \strtotime($lockedAt);
+            if ($age < self::LOCK_TTL_SECONDS) {
+                return false;
+            }
+
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+            Console::warning('Stole expired vcs installation lock: ' . $lock);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function sleepWithBackoff(int $retries): void
+    {
+        $base = \min(0.2 * (2 ** \max(0, $retries - 1)), 1.5);
+        $jitter = \mt_rand(0, 100) / 1000;
+        $seconds = $base + $jitter;
+
+        if (\class_exists(Coroutine::class) && Coroutine::getCid() > 0) {
+            Coroutine::sleep($seconds);
+        } else {
+            \usleep((int) ($seconds * 1_000_000));
+        }
+    }
+
+    protected function getLockWaitSeconds(): int
+    {
+        return self::LOCK_WAIT_SECONDS;
     }
 }
