@@ -50,18 +50,6 @@ services:
       - ./src:/usr/src/code/src
     ports:
       - 9502:80
-  appwrite-worker-audits:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
   appwrite-worker-webhooks:
     build:
       context: .
@@ -113,6 +101,18 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+  appwrite-worker-jobs:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   appwrite-worker-screenshots:
     build:
       context: .
@@ -126,18 +126,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-worker-certificates:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-executions:
     build:
       context: .
       target: development
@@ -227,42 +215,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
   appwrite-task-interval:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-task-stats-resources:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-stats-resources:
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    image: appwrite-dev
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-  appwrite-worker-stats-usage:
     build:
       context: .
       target: development
@@ -379,6 +331,48 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  gitea:
+    profiles:
+      - gitea
+    image: gitea/gitea:1.21.5
+    container_name: appwrite-gitea
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 9515:3000
+    volumes:
+      - appwrite-gitea:/data
+      - ./dev/gitea/setup.sh:/setup.sh:ro
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA_ADMIN_USERNAME=${GITEA_ADMIN_USERNAME:-appwrite}
+      - GITEA_ADMIN_PASSWORD=${GITEA_ADMIN_PASSWORD:-password}
+      - GITEA_ADMIN_EMAIL=${GITEA_ADMIN_EMAIL:-gitea@appwrite.io}
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=false
+      - GITEA__repository__DEFAULT_BRANCH=main
+      - GITEA__webhook__ALLOWED_HOST_LIST=*
+      - GITEA__webhook__SKIP_TLS_VERIFY=true
+      - GITEA__webhook__DELIVER_TIMEOUT=10
+      - GITEA__server__ROOT_URL=http://gitea:3000/
+      - GITEA__server__LOCAL_ROOT_URL=http://gitea:3000/
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:3000/api/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
   appwrite-mongo-express:
     profiles:
       - mongodb
@@ -406,10 +400,11 @@ services:
       - gateway
     environment:
       - ADMINER_DESIGN=pepa-linha
-      - ADMINER_DEFAULT_SERVER=mariadb
-      - ADMINER_DEFAULT_USERNAME=root
-      - ADMINER_DEFAULT_PASSWORD=rootsecretpassword
-      - ADMINER_DEFAULT_DB=appwrite
+      - ADMINER_DEFAULT_SERVER=${_APP_DB_HOST:-postgresql}
+      - ADMINER_DEFAULT_DRIVER=${_APP_DB_ADAPTER:-postgresql}
+      - ADMINER_DEFAULT_USERNAME=${_APP_DB_USER}
+      - ADMINER_DEFAULT_PASSWORD=${_APP_DB_PASS}
+      - ADMINER_DEFAULT_DB=${_APP_DB_SCHEMA}
     configs:
       - source: adminer-index.php
         target: /var/www/html/index.php
@@ -490,9 +485,13 @@ services:
         aliases:
           - appwrite.test
   mariadb:
+    profiles:
+      - mariadb
     ports:
       - "9510:3306"
   mongodb:
+    profiles:
+      - mongodb
     ports:
       - "9511:27017"
   postgresql:
@@ -504,6 +503,14 @@ services:
   appwrite-embedding:
     ports:
       - "9505:3000"
+  clamav:
+    profiles:
+      - antivirus
+    image: clamav/clamav:1.4-debian
+    container_name: appwrite-clamav
+    restart: unless-stopped
+    networks:
+      - appwrite
 configs:
   redisinsight-connections.json:
     content: |
@@ -550,7 +557,8 @@ configs:
         if(!count($$_GET)) {
           $$_POST['auth'] = [
             'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
-            'driver' => 'server', /* seems to autodetect the driver from server settings */
+            /* Adminer calls the MySQL/MariaDB driver "server". */
+            'driver' => $$_ENV['ADMINER_DEFAULT_DRIVER'] === 'postgresql' ? 'pgsql' : 'server',
             'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
             'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
             'db' => $$_ENV['ADMINER_DEFAULT_DB'],
@@ -562,3 +570,5 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+volumes:
+  appwrite-gitea: null

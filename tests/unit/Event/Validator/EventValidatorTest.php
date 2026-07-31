@@ -29,6 +29,8 @@ final class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('users.torsten.update'));
         $this->assertTrue($this->object->isValid('users.torsten'));
         $this->assertTrue($this->object->isValid('users.*.update.email'));
+        $this->assertTrue($this->object->isValid('users.*.update.phone'));
+        $this->assertTrue($this->object->isValid('users.*.update.mfa'));
         $this->assertTrue($this->object->isValid('users.*.update'));
         $this->assertTrue($this->object->isValid('users.*'));
         $this->assertTrue($this->object->isValid('databases.books.tables.chapters.rows.prolog.create'));

@@ -161,7 +161,10 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
+                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                            ? "{$protocol}://{$hostname}/console/project-{$site['region']}-{$projectId}/sites/site-{$siteId}/deployments/deployment-{$site['deploymentId']}"
+                            : "{$protocol}://{$hostname}/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -209,7 +212,10 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                            ? "{$protocol}://{$hostname}/console/project-{$function['region']}-{$projectId}/functions/function-{$functionId}/deployment-{$function['deploymentId']}"
+                            : "{$protocol}://{$hostname}/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }

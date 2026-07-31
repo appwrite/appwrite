@@ -33,6 +33,10 @@ return [
     'databases.create' => true,
     'databases.createCollection' => true,
     'databases.createDocument' => true,
+    // Databases — dedicated
+    'mysql.create' => true,
+    'postgresql.create' => true,
+    'mongo.create' => true,
 
     // Storage
     'storage.createBucket' => true,

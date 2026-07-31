@@ -71,6 +71,46 @@ class Context
         return '';
     }
 
+    public function setService(string $service): self
+    {
+        return $this;
+    }
+
+    public function getService(): string
+    {
+        return '';
+    }
+
+    public function setResource(string $resource): self
+    {
+        return $this;
+    }
+
+    public function getResource(): string
+    {
+        return '';
+    }
+
+    public function setResourceId(string $resourceId): self
+    {
+        return $this;
+    }
+
+    public function getResourceId(): string
+    {
+        return '';
+    }
+
+    public function setResourceInternalId(string $resourceInternalId): self
+    {
+        return $this;
+    }
+
+    public function getResourceInternalId(): string
+    {
+        return '';
+    }
+
     /**
      * Reset the context
      */
