@@ -1842,8 +1842,6 @@ $platformCollections = [
                 '$id' => ID::custom('personalAccessToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                // Past the varchar ceiling (16381), this stores as TEXT --
-                // headroom for any provider's token, not just today's longest.
                 'size' => Database::MAX_TEXT_BYTES,
                 'signed' => true,
                 'required' => false,
