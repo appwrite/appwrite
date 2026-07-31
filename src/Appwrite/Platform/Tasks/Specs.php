@@ -234,6 +234,12 @@ class Specs extends Action
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
+                    'in' => 'header',
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
@@ -325,6 +331,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Key',
                     'description' => 'Your secret API key',
+                    'in' => 'header',
+                ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
                     'in' => 'header',
                 ],
                 'JWT' => [
