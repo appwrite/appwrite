@@ -200,6 +200,8 @@ final class MigrationVersionsTest extends TestCase
         $database->createCollection('functions');
         $database->createCollection('sites');
 
+        $database->createCollection('vcsCommentLocks');
+
         $migration = new V25();
         $migration->setProject(
             new Document(['$id' => 'project', '$sequence' => '1']),
@@ -225,8 +227,44 @@ final class MigrationVersionsTest extends TestCase
                 $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
             }
 
-            $this->assertContains('providerBranches', $attributes);
-            $this->assertContains('providerPaths', $attributes);
+            foreach (['providerBranches', 'providerPaths'] as $id) {
+                $this->assertContains($id, $attributes);
+            }
         }
+    }
+
+    public function testV25MigratesVcsCommentLocksHolderIdIdempotently(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25VcsLocks')
+            ->setNamespace('migration_vcs_locks_' . \uniqid());
+        $database->create();
+        $database->createCollection('vcsCommentLocks');
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $migrateCollections = new \ReflectionMethod($migration, 'migrateCollections');
+        \ob_start();
+        try {
+            $migrateCollections->invoke($migration);
+            $migrateCollections->invoke($migration);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $vcsLocksAttributes = [];
+        foreach ($database->getCollection('vcsCommentLocks')->getAttribute('attributes', []) as $attribute) {
+            $vcsLocksAttributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+        $this->assertContains('holderId', $vcsLocksAttributes);
     }
 }
