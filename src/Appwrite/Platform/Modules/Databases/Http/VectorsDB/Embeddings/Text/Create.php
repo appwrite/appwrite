@@ -56,7 +56,7 @@ class Create extends CreateDocumentAction
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'vectorsDB',
+                    namespace: 'embeddings',
                     group: 'embeddings',
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
