@@ -214,7 +214,7 @@ class InstallationTokens
         try {
             return $dbForPlatform->getDocument('installations', $installation->getId());
         } catch (\Throwable) {
-            return new Document();
+            return new Document;
         }
     }
 
@@ -237,7 +237,7 @@ class InstallationTokens
             }
 
             $currentHolderId = $document->getAttribute('holderId');
-            $claimId = 'steal-' . \bin2hex(\random_bytes(8));
+            $claimId = 'steal-'.\bin2hex(\random_bytes(8));
 
             $authorization->skip(function () use ($dbForPlatform, $lock, $currentHolderId, $claimId) {
                 $current = $dbForPlatform->getDocument('vcsCommentLocks', $lock);
@@ -275,25 +275,11 @@ class InstallationTokens
     protected function releaseLock(Database $dbForPlatform, mixed $authorization, string $lock, string $holderId, string $installationId): void
     {
         try {
-            $releaseId = 'releasing-' . $holderId;
+            $current = $authorization->skip(fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock));
 
-            $authorization->skip(function () use ($dbForPlatform, $lock, $holderId, $releaseId) {
-                $current = $dbForPlatform->getDocument('vcsCommentLocks', $lock);
-                if ($current->isEmpty() || $current->getAttribute('holderId') !== $holderId) {
-                    return;
-                }
-                $dbForPlatform->updateDocument(
-                    'vcsCommentLocks',
-                    $lock,
-                    new Document(['holderId' => $releaseId])
-                );
-            });
-
-            $claimed = $authorization->skip(
-                fn () => $dbForPlatform->getDocument('vcsCommentLocks', $lock)
-            );
-
-            if ($claimed->isEmpty() || $claimed->getAttribute('holderId') !== $releaseId) {
+            if ($current->isEmpty() || $current->getAttribute('holderId') !== $holderId) {
+                // Someone else's lock now occupies this id (ours was stolen while we
+                // worked, or already released) — deleting it would drop a lock we don't own.
                 return;
             }
 

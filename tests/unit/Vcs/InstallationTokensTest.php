@@ -19,30 +19,30 @@ final class InstallationTokensTest extends TestCase
     protected function db(): Database
     {
         $db = $this->createStub(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         return $db;
     }
 
-    public function testUnexpiredTokenIsNotRefreshed(): void
+    public function test_unexpired_token_is_not_refreshed(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
             'personalAccessToken' => 'valid-token',
             'personalRefreshToken' => 'valid-refresh',
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, 3600),
         ]);
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+        $result = (new InstallationTokens)->refresh($installation, $this->db(), $oauth2);
 
         $this->assertSame('valid-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testMissingExpiryIsNotRefreshed(): void
+    public function test_missing_expiry_is_not_refreshed(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
@@ -53,13 +53,13 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+        $result = (new InstallationTokens)->refresh($installation, $this->db(), $oauth2);
 
         $this->assertSame('valid-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testInvalidExpiryForcesRefresh(): void
+    public function test_invalid_expiry_forces_refresh(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
@@ -69,19 +69,19 @@ final class InstallationTokensTest extends TestCase
         ]);
 
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
         $db->expects($this->once())->method('updateDocument')->willReturnArgument(2);
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
+        $result = (new InstallationTokens)->refresh($installation, $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testClearedInstallationThrowsWithoutCallingTheProvider(): void
+    public function test_cleared_installation_throws_without_calling_the_provider(): void
     {
         // The state clear() leaves behind. GitHub works from here on its app credentials, and the
         // providers that need the token fail at the adapter with a definite reason.
@@ -93,25 +93,25 @@ final class InstallationTokensTest extends TestCase
         ]);
 
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
         $db->expects($this->never())->method('updateDocument');
         $db->expects($this->never())->method('createDocument');
 
         $oauth2 = $this->fakeOAuth2();
 
         try {
-            (new InstallationTokens())->refresh($installation, $db, $oauth2);
+            (new InstallationTokens)->refresh($installation, $db, $oauth2);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
         }
     }
 
-    public function testExpiredTokenIsRefreshedAndPersisted(): void
+    public function test_expired_token_is_refreshed_and_persisted(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->once())
             ->method('updateDocument')
@@ -125,43 +125,43 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testFallsBackToIdentityWhenInstallationHasNoTokens(): void
+    public function test_falls_back_to_identity_when_installation_has_no_tokens(): void
     {
         $installation = new Document(['$id' => 'installation1']);
         $identity = new Document([
             'providerAccessToken' => 'identity-token',
             'providerRefreshToken' => 'identity-refresh',
-            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, 3600),
         ]);
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2, $identity);
+        $result = (new InstallationTokens)->refresh($installation, $this->db(), $oauth2, $identity);
 
         $this->assertSame('identity-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame('identity-refresh', $result->getAttribute('personalRefreshToken'));
         $this->assertSame($identity->getAttribute('providerAccessTokenExpiry'), $result->getAttribute('personalAccessTokenExpiry'));
     }
 
-    public function testMissingRefreshTokenThrowsClearError(): void
+    public function test_missing_refresh_token_throws_clear_error(): void
     {
         $installation = new Document([
             '$id' => 'installation1',
             'personalAccessToken' => 'stale-token',
             'personalRefreshToken' => null,
-            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, -3600),
         ]);
 
         $oauth2 = $this->fakeOAuth2();
 
         try {
-            (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+            (new InstallationTokens)->refresh($installation, $this->db(), $oauth2);
             $this->fail('Expected an Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
@@ -170,20 +170,20 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testFailedRefreshThrows(): void
+    public function test_failed_refresh_throws(): void
     {
         $oauth2 = $this->fakeOAuth2(refresh: 'throw');
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens())->refresh($this->expired(), $this->db(), $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $this->db(), $oauth2);
     }
 
-    public function testRotatedTokensPersistedEvenIfIdentityCheckFlakes(): void
+    public function test_rotated_tokens_persisted_even_if_identity_check_flakes(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         // Rotated tokens MUST be persisted immediately so the DB never holds an invalidated refresh token.
         $db->expects($this->once())
@@ -198,17 +198,17 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame('fresh-refresh', $result->getAttribute('personalRefreshToken'));
     }
 
-    public function testTransientUserIdFailureRetriesAndSucceeds(): void
+    public function test_transient_user_id_failure_retries_and_succeeds(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->once())
             ->method('updateDocument')
@@ -284,11 +284,11 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(2, $userIdCalls);
     }
 
-    public function testRefusedRefreshTokenIsCleared(): void
+    public function test_refused_refresh_token_is_cleared(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->once())
             ->method('updateDocument')
@@ -304,14 +304,14 @@ final class InstallationTokensTest extends TestCase
         $oauth2 = $this->fakeOAuth2(refresh: 'refused');
 
         $this->expectException(Exception::class);
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
     }
 
-    public function testInvalidGrantIsCleared(): void
+    public function test_invalid_grant_is_cleared(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->once())
             ->method('updateDocument')
@@ -325,55 +325,56 @@ final class InstallationTokensTest extends TestCase
         $oauth2 = $this->fakeOAuth2(refresh: 'invalidGrant');
 
         try {
-            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+            (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
         }
     }
 
-    public function testEmptyTokenResponseIsNotPersisted(): void
+    public function test_empty_token_response_is_not_persisted(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(refresh: 'empty');
 
         try {
-            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+            (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
         }
     }
 
-    public function testFailedRefreshCallIsNotPersisted(): void
+    public function test_failed_refresh_call_is_not_persisted(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
-        $db->method('getDocument')->willReturn(new Document());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('getDocument')->willReturn(new Document);
 
         $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2(refresh: 'throw');
 
         try {
-            (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+            (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
         }
     }
 
-    public function testTokenRefreshedByLockHolderIsReused(): void
+    public function test_token_refreshed_by_lock_holder_is_reused(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
-        $db->method('getDocument')
+        $db->expects($this->exactly(2))
+            ->method('getDocument')
             ->willReturnMap([
                 ['installations', 'installation1', new Document([
                     '$id' => 'installation1',
@@ -382,34 +383,25 @@ final class InstallationTokensTest extends TestCase
                     'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime, 3600),
                     '$updatedAt' => DateTime::now(),
                 ])],
-                ['vcsCommentLocks', 'installation-installation1', new Document()],
+                ['vcsCommentLocks', 'installation-installation1', new Document],
             ]);
         $db->expects($this->never())->method('updateDocument');
 
         $oauth2 = $this->fakeOAuth2();
 
-        $result = (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        $result = (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
         $this->assertSame(0, $oauth2->refreshCalls);
     }
 
-    public function testRefreshIsSerializedByLock(): void
+    public function test_refresh_is_serialized_by_lock(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
+        $db->method('updateDocument')->willReturnArgument(2);
 
-        $createdLock = new Document();
-        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock) {
-            if ($collection === 'vcsCommentLocks') {
-                foreach ($doc->getArrayCopy() as $k => $v) {
-                    $createdLock->setAttribute($k, $v);
-                }
-            }
-
-            return $doc;
-        });
-
+        $createdLock = null;
         $db->expects($this->once())
             ->method('createDocument')
             ->with('vcsCommentLocks', $this->callback(function (Document $lock) use (&$createdLock) {
@@ -423,10 +415,10 @@ final class InstallationTokensTest extends TestCase
 
         $db->method('getDocument')->willReturnCallback(function ($collection, $id) use (&$createdLock) {
             if ($collection === 'vcsCommentLocks') {
-                return $createdLock;
+                return $createdLock ?? new Document;
             }
 
-            return new Document();
+            return new Document;
         });
 
         $db->expects($this->once())
@@ -436,27 +428,17 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testLockIsReleasedWhenRefreshFails(): void
+    public function test_lock_is_released_when_refresh_fails(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
-        $createdLock = new Document();
-        $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock) {
-            if ($collection === 'vcsCommentLocks') {
-                foreach ($doc->getArrayCopy() as $k => $v) {
-                    $createdLock->setAttribute($k, $v);
-                }
-            }
-
-            return $doc;
-        });
-
+        $createdLock = null;
         $db->method('createDocument')->willReturnCallback(function ($collection, $doc) use (&$createdLock) {
             $createdLock = $doc;
 
@@ -465,10 +447,10 @@ final class InstallationTokensTest extends TestCase
 
         $db->method('getDocument')->willReturnCallback(function ($collection, $id) use (&$createdLock) {
             if ($collection === 'vcsCommentLocks') {
-                return $createdLock;
+                return $createdLock ?? new Document;
             }
 
-            return new Document();
+            return new Document;
         });
 
         $db->expects($this->once())
@@ -480,10 +462,10 @@ final class InstallationTokensTest extends TestCase
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Failed to refresh OAuth2 access token');
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
     }
 
-    public function testStolenLockIsNotDeletedByOriginalHolder(): void
+    public function test_stolen_lock_is_not_deleted_by_original_holder(): void
     {
         $db = $this->createMock(Database::class);
         $db->method('getAuthorization')->willReturn(new Authorization);
@@ -506,17 +488,17 @@ final class InstallationTokensTest extends TestCase
 
         $oauth2 = $this->fakeOAuth2();
 
-        (new InstallationTokens())->refresh($this->expired(), $db, $oauth2);
+        (new InstallationTokens)->refresh($this->expired(), $db, $oauth2);
 
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testStaleLockStealIsAbortedIfAlreadyReplaced(): void
+    public function test_stale_lock_steal_is_aborted_if_already_replaced(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -80);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime, -80);
         $initialStaleLock = new Document([
             '$id' => 'installation-installation1',
             'holderId' => 'original-holder-id',
@@ -537,7 +519,7 @@ final class InstallationTokensTest extends TestCase
                 return $calls === 1 ? $initialStaleLock : $replacedLock;
             }
 
-            return new Document();
+            return new Document;
         });
 
         // Ensure delete is aborted when re-read shows a different holderId
@@ -556,10 +538,10 @@ final class InstallationTokensTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function testStaleLockIsStolenAndRefreshed(): void
+    public function test_stale_lock_is_stolen_and_refreshed(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
         $createdLock = null;
         $calls = 0;
@@ -573,7 +555,7 @@ final class InstallationTokensTest extends TestCase
             return $doc;
         });
 
-        $staleLockedAt = DateTime::addSeconds(new \DateTime(), -80);
+        $staleLockedAt = DateTime::addSeconds(new \DateTime, -80);
         $staleLockDoc = new Document([
             '$id' => 'installation-installation1',
             '$createdAt' => $staleLockedAt,
@@ -584,13 +566,14 @@ final class InstallationTokensTest extends TestCase
                 return $createdLock ?? $staleLockDoc;
             }
 
-            return new Document();
+            return new Document;
         });
         $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $staleLockDoc) {
             $target = $createdLock ?? $staleLockDoc;
             foreach ($doc->getArrayCopy() as $k => $v) {
                 $target->setAttribute($k, $v);
             }
+
             return $target;
         });
 
@@ -607,10 +590,10 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testMalformedLockTimestampTriggersStrotimeSelfHealing(): void
+    public function test_malformed_lock_timestamp_triggers_strotime_self_healing(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
         $createdLock = null;
         $calls = 0;
@@ -634,13 +617,14 @@ final class InstallationTokensTest extends TestCase
                 return $createdLock ?? $malformedLockDoc;
             }
 
-            return new Document();
+            return new Document;
         });
         $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $malformedLockDoc) {
             $target = $createdLock ?? $malformedLockDoc;
             foreach ($doc->getArrayCopy() as $k => $v) {
                 $target->setAttribute($k, $v);
             }
+
             return $target;
         });
 
@@ -657,10 +641,10 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testMissingLockTimestampTriggersSteal(): void
+    public function test_missing_lock_timestamp_triggers_steal(): void
     {
         $db = $this->createMock(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
         $createdLock = null;
         $calls = 0;
@@ -684,13 +668,14 @@ final class InstallationTokensTest extends TestCase
                 return $createdLock ?? $missingLockDoc;
             }
 
-            return new Document();
+            return new Document;
         });
         $db->method('updateDocument')->willReturnCallback(function ($collection, $id, $doc) use (&$createdLock, $missingLockDoc) {
             $target = $createdLock ?? $missingLockDoc;
             foreach ($doc->getArrayCopy() as $k => $v) {
                 $target->setAttribute($k, $v);
             }
+
             return $target;
         });
 
@@ -707,17 +692,17 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
-    public function testLockWaitTimeoutThrowsResourceLocked(): void
+    public function test_lock_wait_timeout_throws_resource_locked(): void
     {
         $db = $this->createStub(Database::class);
-        $db->method('getAuthorization')->willReturn(new Authorization());
+        $db->method('getAuthorization')->willReturn(new Authorization);
 
         $db->method('createDocument')->willThrowException(new \RuntimeException('Lock collision'));
 
         $activeLockDoc = new Document([
             '$id' => 'installation-installation1',
             'holderId' => 'some-other-worker',
-            '$createdAt' => DateTime::addSeconds(new \DateTime(), -5),
+            '$createdAt' => DateTime::addSeconds(new \DateTime, -5),
         ]);
 
         $db->method('getDocument')->willReturnCallback(function ($collection, $id) use ($activeLockDoc) {
@@ -725,7 +710,7 @@ final class InstallationTokensTest extends TestCase
                 return $activeLockDoc;
             }
 
-            return new Document();
+            return new Document;
         });
 
         $oauth2 = $this->fakeOAuth2();
@@ -750,7 +735,7 @@ final class InstallationTokensTest extends TestCase
         }
     }
 
-    public function testSleepWithBackoffCalculatesExponentialDelayWithJitter(): void
+    public function test_sleep_with_backoff_calculates_exponential_delay_with_jitter(): void
     {
         $tokensService = new class extends InstallationTokens
         {
