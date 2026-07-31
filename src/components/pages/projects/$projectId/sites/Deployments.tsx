@@ -183,6 +183,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('gitlab')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+      const { label, Icon } = getVcsProvider('bitbucket')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
   if (deployment.type === 'git' || deployment.type === 'vcs') {
     if (deployment.providerRepositoryUrl || deployment.providerRepositoryId) {

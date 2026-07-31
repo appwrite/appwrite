@@ -13,7 +13,7 @@ const GIT_PROVIDERS: {
   { id: 'gitea', name: 'Gitea', icon: '/icons/gitea.svg', comingSoon: true },
   { id: 'forgejo', name: 'Forgejo', icon: '/icons/forgejo.svg', comingSoon: true },
   { id: 'gogs', name: 'Gogs', icon: '/icons/gogs.svg', comingSoon: true },
-  { id: 'bitbucket', name: 'Bitbucket', icon: '/icons/bitbucket.svg', comingSoon: true },
+  { id: 'bitbucket', name: 'Bitbucket', icon: '/icons/bitbucket.svg' },
 ]
 
 type SitesGitProvidersProps = {
