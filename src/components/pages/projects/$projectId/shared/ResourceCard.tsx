@@ -44,21 +44,28 @@ export const RESOURCE_CARD_MEDIA_SHELL_CLASSNAME = cn(
   RESOURCE_CARD_SHELL_CLASSNAME,
 )
 
+/**
+ * Resource list grids use container queries against the nearest `@container`
+ * (typically `#main-content`), so columns respond to content width, not the
+ * viewport. Do not rely on the layout-row `@container`, which includes sidebar
+ * width. Breakpoints mirror former viewport tokens: sm=640, lg=1024, xl=1280.
+ */
+
 /** Three-column resource list grid; children shrink so long titles truncate instead of widening the page. */
 export const RESOURCE_CARD_GRID_CLASSNAME =
-  'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0'
+  'grid min-w-0 gap-3 @[640px]:grid-cols-2 @[1024px]:grid-cols-3 [&>*]:min-w-0'
 
 /** Four-column resource list grid (e.g. sites). */
 export const RESOURCE_CARD_GRID_4_COL_CLASSNAME =
-  'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0'
+  'grid min-w-0 gap-3 @[640px]:grid-cols-2 @[1024px]:grid-cols-4 [&>*]:min-w-0'
 
 /** Two-column resource list grid (e.g. analytics websites). */
 export const RESOURCE_CARD_GRID_2_COL_CLASSNAME =
-  'grid min-w-0 gap-4 sm:grid-cols-2 [&>*]:min-w-0'
+  'grid min-w-0 gap-4 @[640px]:grid-cols-2 [&>*]:min-w-0'
 
 /** Responsive grid with xl third column (e.g. marketplace, function templates). */
 export const RESOURCE_CARD_GRID_WIDE_CLASSNAME =
-  'grid min-w-0 gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0'
+  'grid min-w-0 gap-4 grid-cols-1 @[640px]:grid-cols-2 @[1280px]:grid-cols-3 [&>*]:min-w-0'
 
 type ResourceCardMetadataItem = {
   label: string
