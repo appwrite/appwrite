@@ -11,15 +11,6 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
 use Captioning\Format\SubripFile;
-use DirectoryIterator;
-use DOMDocument;
-use FFMpeg\FFProbe;
-use Mhor\MediaInfo\MediaInfo;
-use Streaming\FFMpeg;
-use Streaming\Format\StreamFormat;
-use Streaming\Format\X264;
-use Streaming\Media;
-use Streaming\Representation;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
@@ -36,6 +27,18 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
+use Utopia\Video\Adapter\FFmpeg;
+use Utopia\Video\Encoder;
+use Utopia\Video\Format\X264;
+use Utopia\Video\Info;
+use Utopia\Video\Output\Dash;
+use Utopia\Video\Output\Hls;
+use Utopia\Video\Package;
+use Utopia\Video\Packager;
+use Utopia\Video\Progress;
+use Utopia\Video\Representation;
+use Utopia\Video\Tile;
+use Utopia\Video\Variant;
 
 /**
  * Consumes the `videos` queue: sprite timelines, subtitle packaging and
@@ -143,8 +146,10 @@ class Videos extends Action
             $file = $this->resolveFile($dbForProject, $video->getAttribute('bucketId', ''), $video->getAttribute('fileId', ''));
             $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
 
+            $encoder = $this->encoder();
+
             if (empty($video->getAttribute('duration'))) {
-                $video = $this->probe($dbForProject, $video, $file, $inPath);
+                $video = $this->probe($dbForProject, $video, $file, $inPath, $encoder);
             }
 
             if (empty($video->getAttribute('videoBitRate'))) {
@@ -180,67 +185,19 @@ class Videos extends Action
                 $dbForProject->deleteDocument('videos_previews', $preview->getId());
             }
 
-            $interval = 2;
-            $ranges = [
-                ['from' => 120, 'to' => 600, 'interval' => 5],
-                ['from' => 600, 'to' => 1800, 'interval' => 10],
-                ['from' => 1800, 'to' => 3600, 'interval' => 20],
-                ['from' => 3600, 'to' => 99999, 'interval' => 30],
-            ];
+            // Appwrite rewrites sheet URLs to preview endpoints, so skip the
+            // library-written VTT and render our own from cues().
+            $sheet = $encoder->tile(
+                $inPath,
+                \rtrim($workspace['outDir'], '/'),
+                (new Tile())->vtt(false)
+            );
 
-            $durationSec = ((int) $video->getAttribute('duration', 0)) / 1000;
-
-            foreach ($ranges as $range) {
-                if ($durationSec > $range['from'] && $durationSec <= $range['to']) {
-                    $interval = $range['interval'];
-                    break;
-                }
-            }
-
-            $thumbWidth = 160;
-            $thumbHeight = (int) \round($thumbWidth / ($width / $height));
-            $tile = '5x5';
-            $tileParts = \explode('x', $tile);
-            $cols = (int) $tileParts[0];
-            $rows = (int) $tileParts[1];
-
-            $stdout = '';
-            $stderr = '';
-            $cmd = \implode(' ', [
-                '/usr/bin/ffmpeg',
-                '-y',
-                '-i ' . \escapeshellarg($inPath),
-                '-hide_banner',
-                '-loglevel error',
-                '-vsync vfr',
-                '-vf ' . \escapeshellarg(
-                    'select=isnan(prev_selected_t)+gte(t-prev_selected_t\,' . $interval . '),'
-                    . 'scale=' . $thumbWidth . ':' . $thumbHeight . ',tile=' . $tile
-                ),
-                '-qscale:v 3',
-                \escapeshellarg($workspace['outDir'] . 'sprite%d.jpg'),
-            ]);
-
-            $code = Console::execute($cmd, '', $stdout, $stderr, 0);
-
-            if ($code !== 0) {
-                throw new \Exception('ffmpeg sprite extraction failed: ' . $stderr);
-            }
-
-            $cellsPerSheet = $cols * $rows;
-            $images = (int) \ceil(($durationSec / $interval) / $cellsPerSheet);
-            $data = "WEBVTT";
             $timelineDir = $deviceForVideos->getPath($video->getId()) . '/timeline/';
-            $counter = 0;
+            $urls = [];
 
-            for ($image = 1; $image <= $images; $image++) {
-                $localFile = $workspace['outDir'] . 'sprite' . $image . '.jpg';
-
-                if (!\is_file($localFile)) {
-                    break;
-                }
-
-                $fileName = 'sprite' . $image . '.jpg';
+            foreach ($sheet->images() as $localFile) {
+                $fileName = \basename($localFile);
                 $fullPath = $timelineDir . $fileName;
 
                 $preview = $dbForProject->createDocument('videos_previews', new Document([
@@ -259,23 +216,13 @@ class Videos extends Action
 
                 // Relative to /v1/videos/{videoId}/timeline so the player resolves
                 // to /v1/videos/{videoId}/previews/{previewId}.
-                $url = 'previews/' . $preview->getId();
-
-                for ($col = 0; $col < $cols; $col++) {
-                    for ($row = 0; $row < $rows; $row++) {
-                        $start = \gmdate('H:i:s', $counter * $interval);
-                        $end = \gmdate('H:i:s', ($counter + 1) * $interval);
-                        $data .= "\n" . $start . ' --> ' . $end . "\n"
-                            . $url . '#xywh=' . ($row * $thumbWidth) . ',' . ($col * $thumbHeight)
-                            . ',' . $thumbWidth . ',' . $thumbHeight;
-                        $counter++;
-                    }
-                }
+                $urls[$fileName] = 'previews/' . $preview->getId();
             }
 
-            if ($counter > 0) {
+            if (!empty($urls)) {
+                $vtt = $sheet->render(fn (string $file): string => $urls[$file] ?? $file);
                 $vttPath = $deviceForVideos->getPath($video->getId() . '/timeline') . '/timeline.vtt';
-                $deviceForVideos->write($vttPath, $data, 'text/vtt');
+                $deviceForVideos->write($vttPath, $vtt, 'text/vtt');
                 Console::info('Uploaded timeline vtt for video ' . $video->getId());
             }
         } finally {
@@ -445,22 +392,16 @@ class Videos extends Action
             );
             $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
 
+            $ffmpeg = new FFmpeg(threads: 4);
+            $packager = new Packager($ffmpeg);
+
             if (empty($video->getAttribute('duration'))) {
-                $video = $this->probe($dbForProject, $video, $file, $inPath);
+                $video = $this->probe($dbForProject, $video, $file, $inPath, new Encoder($ffmpeg));
             }
 
-            $ffprobe = FFProbe::create();
-            $ffmpeg = FFMpeg::create([
-                'timeout' => 0,
-                'ffmpeg.threads' => 4,
-            ]);
-
-            if (!$ffprobe->isValid($inPath)) {
+            if (!$packager->valid($inPath)) {
                 throw new \Exception('Not a valid media file: ' . $inPath);
             }
-
-            $media = $ffmpeg->open($inPath);
-            $outPath = $workspace['outDir'] . $video->getId();
 
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
@@ -473,13 +414,12 @@ class Videos extends Action
             );
             $this->notify($queueForRealtime, $project, $rendition, 'update');
 
-            $representation = (new Representation())
-                ->setKiloBitRate((int) $profile->getAttribute('videoBitRate'))
-                ->setAudioKiloBitRate((int) $profile->getAttribute('audioBitRate'))
-                ->setResize(
-                    (int) $profile->getAttribute('width'),
-                    (int) $profile->getAttribute('height')
-                );
+            $representation = new Representation(
+                width: (int) $profile->getAttribute('width'),
+                height: (int) $profile->getAttribute('height'),
+                video: (int) $profile->getAttribute('videoBitRate'),
+                audio: \max(1, (int) $profile->getAttribute('audioBitRate')),
+            );
 
             Console::info(
                 'Encoding video ' . $video->getId()
@@ -487,24 +427,42 @@ class Videos extends Action
                 . ' (' . $output . ')'
             );
 
-            $format = new X264();
-            $format->on('progress', function ($media, $format, $percentage) use ($dbForProject, $queueForRealtime, $project, &$rendition) {
-                if ($percentage % 3 !== 0) {
-                    return;
-                }
+            $format = (new X264())
+                ->crf(22)
+                ->bframes(3)
+                ->keyframe(2.0)
+                ->params(['-dn', '-sn']);
 
-                $rendition = $dbForProject->updateDocument(
-                    'videos_renditions',
-                    $rendition->getId(),
-                    new Document([
-                        'progress' => (string) $percentage,
-                    ])
-                );
-                $this->notify($queueForRealtime, $project, $rendition, 'update');
-            });
+            $target = $output === Base::OUTPUT_DASH
+                ? (new Dash())->template(false)->timeline(false)->segment(6)->manifests(false)
+                : (new Hls())->segment(6)->manifests(false);
 
-            $this->transcode($media, $format, $representation, $output, $outPath);
-            unset($media);
+            $package = $packager
+                ->open($inPath)
+                ->format($format)
+                ->add($representation)
+                ->output($target)
+                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, &$rendition) {
+                    if (!$progress instanceof Progress) {
+                        return;
+                    }
+
+                    $percentage = (int) \round($progress->percent);
+
+                    if ($percentage % 3 !== 0) {
+                        return;
+                    }
+
+                    $rendition = $dbForProject->updateDocument(
+                        'videos_renditions',
+                        $rendition->getId(),
+                        new Document([
+                            'progress' => (string) $percentage,
+                        ])
+                    );
+                    $this->notify($queueForRealtime, $project, $rendition, 'update');
+                })
+                ->pack(\rtrim($workspace['outDir'], '/'));
 
             $path = $deviceForVideos->getPath($video->getId())
                 . '/' . $rendition->getAttribute('name')
@@ -519,51 +477,13 @@ class Videos extends Action
                 $dbForProject->deleteDocument('videos_renditions_segments', $segment->getId());
             }
 
-            $metadata = [];
-            $targetDuration = null;
-
-            if ($output === Base::OUTPUT_HLS) {
-                // The fork passes master_pl_name=master.m3u8 to ffmpeg; variant
-                // playlists land as siblings named "{file}_%v_{height}p.m3u8".
-                $streams = $this->parseHlsMaster($workspace['outDir'] . 'master.m3u8');
-
-                foreach ($streams as $stream) {
-                    $playlist = $this->parseHlsPlaylist($workspace['outDir'] . $stream['path']);
-
-                    foreach ($playlist['segments'] as $segment) {
-                        $dbForProject->createDocument('videos_renditions_segments', new Document([
-                            'renditionId' => $rendition->getId(),
-                            'renditionInternalId' => $rendition->getSequence(),
-                            'streamId' => (int) $stream['id'],
-                            'fileName' => $segment['fileName'],
-                            'path' => $path,
-                            'duration' => $segment['duration'],
-                        ]));
-                    }
-
-                    if ($targetDuration === null && !empty($playlist['targetDuration'])) {
-                        $targetDuration = $playlist['targetDuration'];
-                    }
-                }
-
-                $metadata = ['hls' => $streams];
-            } else {
-                $mpdPath = $outPath . '.mpd';
-                $parsed = $this->parseMpd($mpdPath);
-
-                foreach ($parsed['segments'] as $segment) {
-                    $dbForProject->createDocument('videos_renditions_segments', new Document([
-                        'renditionId' => $rendition->getId(),
-                        'renditionInternalId' => $rendition->getSequence(),
-                        'streamId' => $segment['streamId'],
-                        'fileName' => $segment['fileName'],
-                        'path' => $path,
-                        'isInit' => $segment['isInit'],
-                    ]));
-                }
-
-                $metadata = ['mpd' => $parsed['metadata']];
-            }
+            [$metadata, $targetDuration] = $this->persistPackage(
+                $dbForProject,
+                $package,
+                $rendition,
+                $path,
+                $output
+            );
 
             $rendition = $dbForProject->updateDocument(
                 'videos_renditions',
@@ -579,8 +499,8 @@ class Videos extends Action
 
             Console::info('Rendition ' . $rendition->getId() . ' conversion done');
 
-            $storageBytes = $this->uploadDir(
-                $workspace['outDir'],
+            $storageBytes = $this->uploadFiles(
+                $package->files(),
                 $path,
                 $deviceForVideos,
                 function (int $index) use ($dbForProject, $queueForRealtime, $project, &$rendition, $path) {
@@ -767,51 +687,17 @@ class Videos extends Action
     }
 
     /**
-     * Probe the source with mediainfo and sparsely update the videos document.
+     * Probe the source and sparsely update the videos document.
      */
     private function probe(
         Database $dbForProject,
         Document $video,
         Document $file,
-        string $inPath
+        string $inPath,
+        ?Encoder $encoder = null
     ): Document {
-        $mediaInfo = new MediaInfo();
-        $container = $mediaInfo->getInfo($inPath);
-        $general = $container->getGeneral();
-
-        $attrs = [
-            'duration' => $general->has('duration') ? $general->get('duration')->getMilliseconds() : 0,
-            'format' => $general->has('format') ? $general->get('format')->getShortName() : '',
-        ];
-
-        foreach ($container->getVideos() as $track) {
-            $videoFormat = $track->has('format') ? $track->get('format')->getShortName() : '';
-            $attrs['height'] = $track->has('height') ? $track->get('height')->getAbsoluteValue() : 0;
-            $attrs['width'] = $track->has('width') ? $track->get('width')->getAbsoluteValue() : 0;
-            $attrs['aspectRatio'] = $track->has('display_aspect_ratio')
-                ? $track->get('display_aspect_ratio')->getTextValue()
-                : '';
-            $attrs['videoFormat'] = $videoFormat;
-            $attrs['videoFormatProfile'] = $track->has('format_profile') ? $track->get('format_profile') : '';
-            $attrs['videoFrameRate'] = $track->has('frame_rate')
-                ? (string) $track->get('frame_rate')->getAbsoluteValue()
-                : '';
-            $attrs['videoFrameRateMode'] = $track->has('frame_rate_mode')
-                ? $track->get('frame_rate_mode')->getFullName()
-                : '';
-            $attrs['videoBitRate'] = $track->has('bit_rate') ? $track->get('bit_rate')->getAbsoluteValue() : 0;
-            $attrs['videoCodec'] = $track->has('codec_id') ? (string) $track->get('codec_id') : $videoFormat;
-        }
-
-        foreach ($container->getAudios() as $track) {
-            $audioFormat = $track->has('format') ? (string) $track->get('format')->getShortName() : '';
-            $attrs['audioFormat'] = $audioFormat;
-            $attrs['audioSampleRate'] = $track->has('sampling_rate')
-                ? (string) $track->get('sampling_rate')->getAbsoluteValue()
-                : '';
-            $attrs['audioBitRate'] = $track->has('bit_rate') ? $track->get('bit_rate')->getAbsoluteValue() : 0;
-            $attrs['audioCodec'] = $track->has('codec_id') ? (string) $track->get('codec_id') : $audioFormat;
-        }
+        $info = ($encoder ?? $this->encoder())->probe($inPath);
+        $attrs = $this->attributes($info);
 
         Console::info(
             'Input video id: ' . $video->getId() . PHP_EOL
@@ -828,347 +714,157 @@ class Videos extends Action
         );
     }
 
-    private function transcode(
-        Media $media,
-        StreamFormat $format,
-        Representation $representation,
-        string $output,
-        string $outPath
-    ): void {
-        $additionalParams = [
-            '-dn',
-            '-sn',
-            '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1',
-            '-crf', '22',
-            '-bf', '3',
-            '-force_key_frames', 'expr:gte(t,n_forced*2)',
-        ];
-
-        $segmentSize = 6;
-
-        if ($output === Base::OUTPUT_DASH) {
-            // Playback serves each segment by document id, so keep the muxer on
-            // explicit <SegmentList>/<SegmentURL> tags (fork defaults are already
-            // 0; set them explicitly so a future default change cannot regress).
-            $media->dash()
-                ->setFormat($format)
-                ->setSegDuration($segmentSize)
-                ->setUseTemplate(0)
-                ->setUseTimeLine(0)
-                ->addRepresentation($representation)
-                ->setAdditionalParams($additionalParams)
-                ->save($outPath);
-            return;
-        }
-
-        $media->hls()
-            ->setFormat($format)
-            ->setHlsTime($segmentSize)
-            ->addRepresentation($representation)
-            ->setAdditionalParams($additionalParams)
-            ->save($outPath);
-    }
-
     /**
-     * Upload every file in $localDir to $remoteDir on the videos device.
+     * Map Utopia\Video\Info onto the videos collection attribute names.
      *
-     * @param callable(int):void|null $onFile
+     * @return array<string, mixed>
      */
-    private function uploadDir(
-        string $localDir,
-        string $remoteDir,
-        Device $deviceForVideos,
-        ?callable $onFile = null
-    ): int {
-        $bytes = 0;
-        $dir = new DirectoryIterator($localDir);
-
-        foreach ($dir as $fileinfo) {
-            if ($fileinfo->isDot() || !$fileinfo->isFile()) {
-                continue;
-            }
-
-            $localPath = $localDir . $fileinfo->getFilename();
-            $data = (new Local('/'))->read($localPath);
-            $bytes += \strlen($data);
-
-            Console::info('Uploading ' . $fileinfo->getFilename());
-            $deviceForVideos->write(
-                $remoteDir . $fileinfo->getFilename(),
-                $data,
-                \mime_content_type($localPath) ?: 'application/octet-stream'
-            );
-
-            if ($onFile !== null) {
-                $onFile($fileinfo->key());
-            }
-        }
-
-        return $bytes;
-    }
-
-    /**
-     * Parse an HLS master playlist into the metadata.hls[] shape the playback
-     * endpoint expects. Stream ids are assigned sequentially in order of
-     * appearance — the stream manifest route only accepts small integer ids.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function parseHlsMaster(string $path): array
+    private function attributes(Info $info): array
     {
-        $lines = @\file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-        if ($lines === false) {
-            throw new \Exception('Unable to open HLS master playlist: ' . $path);
-        }
-
-        $files = [];
-        $pending = null;
-
-        foreach ($lines as $line) {
-            $line = \trim($line);
-
-            if (\str_starts_with($line, '#EXT-X-MEDIA:')) {
-                $attr = $this->parseHlsAttributes(\substr($line, \strlen('#EXT-X-MEDIA:')));
-
-                if (($attr['TYPE'] ?? '') !== 'AUDIO' || empty($attr['URI'])) {
-                    continue;
-                }
-
-                $entry = [
-                    'id' => \count($files),
-                    'path' => \basename($attr['URI']),
-                    'type' => 'audio',
-                ];
-                if (!empty($attr['LANGUAGE'])) {
-                    $entry['language'] = $attr['LANGUAGE'];
-                }
-                if (!empty($attr['NAME'])) {
-                    $entry['name'] = $attr['NAME'];
-                }
-
-                $files[] = $entry;
-                continue;
-            }
-
-            if (\str_starts_with($line, '#EXT-X-STREAM-INF:')) {
-                $pending = $this->parseHlsAttributes(\substr($line, \strlen('#EXT-X-STREAM-INF:')));
-                continue;
-            }
-
-            if ($pending === null || $line === '' || \str_starts_with($line, '#')) {
-                continue;
-            }
-
-            // The URI line following #EXT-X-STREAM-INF; variant playlists are
-            // written as siblings of the master, so keep just the file name.
-            $entry = [
-                'id' => \count($files),
-                'path' => \basename($line),
-                'type' => 'video',
-            ];
-            if (!empty($pending['RESOLUTION'])) {
-                $entry['resolution'] = $pending['RESOLUTION'];
-            }
-            if (!empty($pending['BANDWIDTH'])) {
-                $entry['bandwidth'] = $pending['BANDWIDTH'];
-            }
-            if (!empty($pending['CODECS'])) {
-                $entry['codecs'] = $pending['CODECS'];
-            }
-
-            $files[] = $entry;
-            $pending = null;
-        }
-
-        return $files;
-    }
-
-    /**
-     * Split an M3U8 attribute list, keeping commas inside quoted values
-     * (e.g. CODECS="avc1.64001f,mp4a.40.2") intact.
-     *
-     * @return array<string, string>
-     */
-    private function parseHlsAttributes(string $list): array
-    {
-        $attributes = [];
-
-        if (\preg_match_all('/([A-Z0-9\-]+)=("[^"]*"|[^,]*)/', $list, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $attributes[$match[1]] = \trim($match[2], '"');
-            }
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * @return array{targetDuration: string|null, segments: array<int, array{fileName: string, duration: string}>}
-     */
-    private function parseHlsPlaylist(string $path): array
-    {
-        $segments = [];
-        $targetDuration = null;
-        $duration = null;
-        $handle = \fopen($path, 'r');
-
-        if ($handle === false) {
-            throw new \Exception('Unable to open HLS playlist: ' . $path);
-        }
-
-        try {
-            while (($line = \fgets($handle)) !== false) {
-                $line = \str_replace([',', "\r", "\n"], '', $line);
-
-                if (\str_contains($line, '#EXT-X-TARGETDURATION')) {
-                    $targetDuration = \str_replace('#EXT-X-TARGETDURATION:', '', $line);
-                }
-
-                if (\str_contains($line, '#EXTINF')) {
-                    $duration = \str_replace('#EXTINF:', '', $line);
-                }
-
-                if (\str_contains($line, '.ts') || \str_contains($line, '.vtt') || \str_contains($line, '.m4s')) {
-                    if ($duration !== null) {
-                        $segments[] = [
-                            'fileName' => $line,
-                            'duration' => $duration,
-                        ];
-                        $duration = null;
-                    }
-                }
-            }
-        } finally {
-            \fclose($handle);
-        }
+        $videoFormat = $info->videoFormat ?? '';
+        $audioFormat = $info->audioFormat ?? '';
 
         return [
-            'targetDuration' => $targetDuration,
-            'segments' => $segments,
+            'duration' => $info->milliseconds(),
+            'format' => $info->format,
+            'height' => $info->height ?? 0,
+            'width' => $info->width ?? 0,
+            'aspectRatio' => $info->ratio() ?? '',
+            'videoFormat' => $videoFormat,
+            'videoFormatProfile' => $info->videoProfile ?? '',
+            'videoFrameRate' => $info->fps !== null ? (string) $info->fps : '',
+            'videoFrameRateMode' => $info->fpsMode ?? '',
+            'videoBitRate' => $info->videoBitrate ?? 0,
+            'videoCodec' => $info->videoCodec ?? $videoFormat,
+            'audioFormat' => $audioFormat,
+            'audioSampleRate' => $info->sampleRate !== null ? (string) $info->sampleRate : '',
+            'audioBitRate' => $info->audioBitrate ?? 0,
+            'audioCodec' => $info->audioCodec ?? $audioFormat,
         ];
     }
 
     /**
-     * Parse an encoder-produced MPD into the structured metadata.mpd shape the
-     * DASH playback endpoint expects, plus a flat segment list for DB rows.
+     * Persist segment rows and build the metadata shape playback endpoints expect.
      *
-     * @return array{
-     *   metadata: array{attributes: array<string, string>, adaptations: array<int, array<string, mixed>>},
-     *   segments: array<int, array{isInit: int, streamId: int, fileName: string}>
-     * }
+     * @return array{0: array<string, mixed>, 1: string|null}
      */
-    private function parseMpd(string $path): array
+    private function persistPackage(
+        Database $dbForProject,
+        Package $package,
+        Document $rendition,
+        string $path,
+        string $output
+    ): array {
+        $targetDuration = null;
+        $streams = [];
+
+        foreach ($package->variants() as $index => $variant) {
+            $streamId = $index;
+            $streams[] = $this->streamMeta($variant, $streamId);
+
+            foreach ($variant->segments as $segment) {
+                $dbForProject->createDocument('videos_renditions_segments', new Document(\array_filter([
+                    'renditionId' => $rendition->getId(),
+                    'renditionInternalId' => $rendition->getSequence(),
+                    'streamId' => $streamId,
+                    'fileName' => $segment->file,
+                    'path' => $path,
+                    'duration' => $output === Base::OUTPUT_HLS && !$segment->init
+                        ? (string) $segment->duration
+                        : null,
+                    'isInit' => $segment->init ? 1 : 0,
+                ], fn ($value) => $value !== null)));
+            }
+
+            if ($targetDuration === null && $variant->target > 0) {
+                $targetDuration = (string) (int) \ceil($variant->target);
+            }
+        }
+
+        if ($output === Base::OUTPUT_HLS) {
+            $metaTarget = $package->metadata()['targetDuration'] ?? null;
+            if ($targetDuration === null && $metaTarget !== null && (float) $metaTarget > 0) {
+                $targetDuration = (string) (int) \ceil((float) $metaTarget);
+            }
+
+            return [['hls' => $streams], $targetDuration];
+        }
+
+        return [['mpd' => $this->mpdMeta($package)], $targetDuration];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function streamMeta(Variant $variant, int $streamId): array
     {
-        if (!\is_file($path)) {
-            throw new \Exception('DASH MPD not found: ' . $path);
-        }
-
-        $xml = new DOMDocument();
-        $previous = \libxml_use_internal_errors(true);
-
-        if (!$xml->load($path)) {
-            \libxml_clear_errors();
-            \libxml_use_internal_errors($previous);
-            throw new \Exception('Unable to parse DASH MPD: ' . $path);
-        }
-
-        \libxml_clear_errors();
-        \libxml_use_internal_errors($previous);
-
-        $mpd = $xml->documentElement;
-        if ($mpd === null) {
-            throw new \Exception('Empty DASH MPD: ' . $path);
-        }
-
-        $attrKeys = [
-            'profiles',
-            'type',
-            'mediaPresentationDuration',
-            'maxSegmentDuration',
-            'minBufferTime',
+        $entry = [
+            'id' => $streamId,
+            'type' => $variant->type,
         ];
+
+        if ($variant->playlist !== null) {
+            $entry['path'] = \basename($variant->playlist);
+        }
+        if ($variant->language !== null) {
+            $entry['language'] = $variant->language;
+            $entry['name'] = $variant->language;
+        }
+        if ($variant->resolution() !== null) {
+            $entry['resolution'] = $variant->resolution();
+        }
+        if ($variant->bandwidth > 0) {
+            $entry['bandwidth'] = (string) $variant->bandwidth;
+        }
+        if ($variant->codecs !== null) {
+            $entry['codecs'] = $variant->codecs;
+        }
+
+        return $entry;
+    }
+
+    /**
+     * Build the metadata.mpd shape the DASH playback endpoint expects.
+     *
+     * @return array{attributes: array<string, string>, adaptations: list<array<string, mixed>>}
+     */
+    private function mpdMeta(Package $package): array
+    {
+        $raw = $package->metadata();
         $attributes = [];
-        foreach ($attrKeys as $key) {
-            if ($mpd->hasAttribute($key)) {
-                $attributes[$key] = $mpd->getAttribute($key);
+
+        foreach (['profiles', 'type', 'mediaPresentationDuration', 'maxSegmentDuration', 'minBufferTime'] as $key) {
+            if (!empty($raw[$key])) {
+                $attributes[$key] = (string) $raw[$key];
             }
         }
 
         $adaptations = [];
-        $segments = [];
-        $streamId = 0;
 
-        foreach ($mpd->getElementsByTagName('AdaptationSet') as $adaptationNode) {
-            $adaptationAttrs = [];
-            foreach ([
-                'contentType',
-                'startWithSAP',
-                'segmentAlignment',
-                'bitstreamSwitching',
-                'frameRate',
-                'maxWidth',
-                'par',
-                'lang',
-            ] as $key) {
-                if ($adaptationNode->hasAttribute($key)) {
-                    $adaptationAttrs[$key] = $adaptationNode->getAttribute($key);
-                }
-            }
+        foreach ($package->variants() as $index => $variant) {
+            $representationAttrs = \array_filter([
+                'id' => $variant->id,
+                'mimeType' => $variant->mimeType,
+                'codecs' => $variant->codecs,
+                'bandwidth' => $variant->bandwidth > 0 ? (string) $variant->bandwidth : null,
+                'width' => $variant->width !== null ? (string) $variant->width : null,
+                'height' => $variant->height !== null ? (string) $variant->height : null,
+                'sar' => $variant->sar,
+                'audioSamplingRate' => $variant->sampleRate !== null ? (string) $variant->sampleRate : null,
+            ], fn ($value) => $value !== null && $value !== '');
 
-            $representationNode = $adaptationNode->getElementsByTagName('Representation')->item(0);
-            $representationAttrs = [];
-            $segmentListAttrs = [];
+            $segmentListAttrs = \array_filter([
+                'timescale' => $variant->timescale > 0 ? (string) $variant->timescale : null,
+                'startNumber' => $variant->startNumber > 0 ? (string) $variant->startNumber : null,
+            ], fn ($value) => $value !== null);
 
-            if ($representationNode !== null) {
-                foreach ([
-                    'id',
-                    'mimeType',
-                    'codecs',
-                    'bandwidth',
-                    'width',
-                    'height',
-                    'sar',
-                    'audioSamplingRate',
-                ] as $key) {
-                    if ($representationNode->hasAttribute($key)) {
-                        $representationAttrs[$key] = $representationNode->getAttribute($key);
-                    }
-                }
-
-                $segmentList = $representationNode->getElementsByTagName('SegmentList')->item(0);
-
-                if ($segmentList !== null) {
-                    foreach (['timescale', 'duration', 'startNumber'] as $key) {
-                        if ($segmentList->hasAttribute($key)) {
-                            $segmentListAttrs[$key] = $segmentList->getAttribute($key);
-                        }
-                    }
-
-                    foreach ($segmentList->getElementsByTagName('Initialization') as $init) {
-                        if ($init->hasAttribute('sourceURL')) {
-                            $segments[] = [
-                                'isInit' => 1,
-                                'streamId' => $streamId,
-                                'fileName' => $init->getAttribute('sourceURL'),
-                            ];
-                        }
-                    }
-
-                    foreach ($segmentList->getElementsByTagName('SegmentURL') as $segmentUrl) {
-                        if ($segmentUrl->hasAttribute('media')) {
-                            $segments[] = [
-                                'isInit' => 0,
-                                'streamId' => $streamId,
-                                'fileName' => $segmentUrl->getAttribute('media'),
-                            ];
-                        }
-                    }
-                }
-            }
+            $adaptationAttrs = \array_filter([
+                'contentType' => $variant->type,
+                'lang' => $variant->language,
+            ], fn ($value) => $value !== null && $value !== '');
 
             $adaptations[] = [
-                'id' => $streamId,
+                'id' => $index,
                 'attributes' => $adaptationAttrs,
                 'representation' => [
                     'attributes' => $representationAttrs,
@@ -1177,17 +873,56 @@ class Videos extends Action
                     ],
                 ],
             ];
-
-            $streamId++;
         }
 
         return [
-            'metadata' => [
-                'attributes' => $attributes,
-                'adaptations' => $adaptations,
-            ],
-            'segments' => $segments,
+            'attributes' => $attributes,
+            'adaptations' => $adaptations,
         ];
+    }
+
+    /**
+     * Upload packaged artifacts to the videos device.
+     *
+     * @param  list<string>  $files
+     * @param  callable(int):void|null  $onFile
+     */
+    private function uploadFiles(
+        array $files,
+        string $remoteDir,
+        Device $deviceForVideos,
+        ?callable $onFile = null
+    ): int {
+        $bytes = 0;
+        $local = new Local('/');
+
+        foreach ($files as $index => $localPath) {
+            if (!\is_file($localPath)) {
+                continue;
+            }
+
+            $data = $local->read($localPath);
+            $bytes += \strlen($data);
+            $fileName = \basename($localPath);
+
+            Console::info('Uploading ' . $fileName);
+            $deviceForVideos->write(
+                $remoteDir . $fileName,
+                $data,
+                \mime_content_type($localPath) ?: 'application/octet-stream'
+            );
+
+            if ($onFile !== null) {
+                $onFile($index);
+            }
+        }
+
+        return $bytes;
+    }
+
+    private function encoder(): Encoder
+    {
+        return new Encoder(new FFmpeg(threads: 4));
     }
 
     /**
