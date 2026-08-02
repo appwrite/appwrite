@@ -42,6 +42,7 @@ import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
+import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
@@ -520,6 +521,11 @@ const PublicCacheRoute = PublicCacheRouteImport.update({
 const PublicBlocksRoute = PublicBlocksRouteImport.update({
   id: '/blocks',
   path: '/blocks',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAssistantRoute = PublicAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
@@ -2604,6 +2610,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
+  '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
@@ -2950,6 +2957,7 @@ export interface FileRoutesByTo {
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
+  '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
@@ -3265,6 +3273,7 @@ export interface FileRoutesById {
   '/_marketing/terms': typeof MarketingTermsRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
+  '/_public/assistant': typeof PublicAssistantRoute
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
@@ -3616,6 +3625,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/example-protected-route'
     | '/account'
+    | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
@@ -3962,6 +3972,7 @@ export interface FileRouteTypes {
     | '/startups'
     | '/terms'
     | '/example-protected-route'
+    | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
@@ -4276,6 +4287,7 @@ export interface FileRouteTypes {
     | '/_marketing/terms'
     | '/_protected/example-protected-route'
     | '/_public/account'
+    | '/_public/assistant'
     | '/_public/blocks'
     | '/_public/cache'
     | '/_public/comps'
@@ -4856,6 +4868,13 @@ declare module '@tanstack/react-router' {
       path: '/blocks'
       fullPath: '/blocks'
       preLoaderRoute: typeof PublicBlocksRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/assistant': {
+      id: '/_public/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof PublicAssistantRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/account': {
@@ -8561,6 +8580,7 @@ const PublicProjectsProjectIdRouteWithChildren =
 
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
+  PublicAssistantRoute: typeof PublicAssistantRoute
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
@@ -8577,6 +8597,7 @@ interface PublicRouteChildren {
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
+  PublicAssistantRoute: PublicAssistantRoute,
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,

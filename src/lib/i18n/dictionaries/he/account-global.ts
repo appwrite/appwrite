@@ -424,6 +424,18 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'קבצים מצורפים מועלים ברקע. השליחה ממתינה עד שהם מוכנים.',
   'Collapse chat': 'כיווץ הצ׳אט',
   Agents: 'סוכנים',
+  Archive: 'ארכוב',
+  'Archive agent': 'ארכוב הסוכן',
+  'Agent archived': 'הסוכן הועבר לארכיון',
+  'Agent deleted': 'הסוכן נמחק',
+  'Agent updated': 'הסוכן עודכן',
+  'Agent title': 'כותרת הסוכן',
+  'Update agent': 'עדכון סוכן',
+  'Change the title for this agent.': 'שנו את הכותרת של הסוכן הזה.',
+  'This permanently deletes the agent and its messages.':
+    'פעולה זו מוחקת לצמיתות את הסוכן ואת ההודעות שלו.',
+  'Failed to archive agent': 'ארכוב הסוכן נכשל',
+  'Failed to update agent': 'עדכון הסוכן נכשל',
   'Copy message': 'העתקת ההודעה',
   'Expand chat': 'הרחבת הצ׳אט',
   'Delete agent': 'מחיקת הסוכן',
@@ -438,6 +450,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Fit image to screen': 'התאמת התמונה למסך',
   'How can I help you?': 'איך אפשר לעזור?',
   'What should we do next?': 'מה נעשה עכשיו?',
+  'Sign in to use the assistant': 'התחברו כדי להשתמש בעוזר',
+  'Create an account or sign in to chat with the Appwrite assistant about your projects.':
+    'צרו חשבון או התחברו כדי לשוחח עם עוזר Appwrite על הפרויקטים שלכם.',
+  'Sign in to ask a question...': 'התחברו כדי לשאול שאלה...',
+  'Back to Appwrite': 'חזרה ל-Appwrite',
   'MCP ready': 'MCP מוכן',
   'I can inspect your project, explain issues, suggest next steps, and run approved actions.':
     'אני יכול לבדוק את הפרויקט שלכם, להסביר בעיות, להציע צעדים הבאים ולהריץ פעולות מאושרות.',
@@ -458,6 +475,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'לא נמצא פרויקט נגיש להתחלת סוכן חדש.',
   'No agents yet.': 'אין עדיין סוכנים.',
   'No agents match your search.': 'לא נמצאו סוכנים התואמים לחיפוש.',
+  'No active agents.': 'אין סוכנים פעילים.',
+  'No active agents match your search.':
+    'לא נמצאו סוכנים פעילים התואמים לחיפוש.',
   'Search agents...': 'חיפוש סוכנים...',
   Open: 'פתיחה',
   'Press Enter to queue, Shift+Enter for new line':

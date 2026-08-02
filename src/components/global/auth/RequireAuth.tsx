@@ -31,6 +31,12 @@ function isAuthPage(pathname: string): boolean {
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
   if (pathname === '/init') return features.init
+  // Public fullscreen assistant (guest can view empty state + sign-in CTA).
+  if (pathname === '/assistant' || pathname.startsWith('/assistant/')) {
+    // Keep MCP OAuth callback under normal auth handling.
+    if (pathname.startsWith('/assistant/mcp/')) return false
+    return features.aiAssistant
+  }
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).
   if (pathname.startsWith('/debug/')) return true

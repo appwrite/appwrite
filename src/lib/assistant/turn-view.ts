@@ -108,7 +108,6 @@ export type AssistantConversationStatusTone =
   | 'queued'
   | 'failed'
   | 'stopped'
-  | 'archived'
 
 export function getAssistantConversationStatusTone(conversation?: {
   status?: string | null
@@ -119,11 +118,16 @@ export function getAssistantConversationStatusTone(conversation?: {
   const lockState = conversation.lockState?.toLowerCase() ?? ''
 
   if (status === 'failed' || status === 'error') return 'failed'
-  // Stopped/cancelled is idle for list UI (no status dot).
-  if (status === 'stopped' || status === 'cancelled' || status === 'canceled') {
+  // Idle for list UI (no status dot): stopped, cancelled, and archived
+  // (archived is already shown via the Archived section).
+  if (
+    status === 'stopped' ||
+    status === 'cancelled' ||
+    status === 'canceled' ||
+    status === 'archived'
+  ) {
     return 'ready'
   }
-  if (status === 'archived') return 'archived'
   if (status === 'queued' || status === 'pending') return 'queued'
   if (status === 'running' || lockState === 'locked') return 'running'
   return 'ready'
@@ -142,8 +146,6 @@ export function getAssistantConversationStatusLabel(
       return 'Failed'
     case 'stopped':
       return 'Stopped'
-    case 'archived':
-      return 'Archived'
     case 'ready':
     default:
       return 'Ready'
@@ -162,8 +164,6 @@ export function getAssistantConversationStatusDotClass(
       return 'bg-destructive'
     case 'stopped':
       return 'bg-amber-500'
-    case 'archived':
-      return 'bg-muted-foreground/30'
     case 'ready':
     default:
       return 'bg-muted-foreground/40'

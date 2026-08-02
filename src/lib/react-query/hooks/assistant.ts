@@ -14,25 +14,11 @@ import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
 export async function fetchAssistantConversations(search?: string) {
-  const queries = [Query.orderDesc('$updatedAt')]
   const trimmedSearch = search?.trim() || undefined
-
-  // Console SDK listConversations does not expose `search` yet; call the API
-  // directly so we can use the standard list search parameter.
-  const assistant = sdk.forConsole.assistant
-  const response = (await assistant.client.call(
-    'get',
-    new URL(`${assistant.client.config.endpoint}/assistant/conversations`),
-    {
-      'X-Appwrite-Project': assistant.client.config.project,
-      accept: 'application/json',
-    },
-    {
-      queries,
-      ...(trimmedSearch ? { search: trimmedSearch } : {}),
-    },
-  )) as Models.AssistantConversationList
-
+  const response = await sdk.forConsole.assistant.listConversations({
+    queries: [Query.orderDesc('$updatedAt')],
+    search: trimmedSearch,
+  })
   return response.conversations ?? []
 }
 
@@ -86,16 +72,22 @@ function toAssistantMessageContextPayload(context?: AssistantMessageContext) {
 
 export const ASSISTANT_ATTACHMENTS_BUCKET_ID = 'attachements'
 
-export function assistantConversationsQueryOptions(search?: string) {
+export function assistantConversationsQueryOptions(
+  search?: string,
+  options?: { enabled?: boolean },
+) {
   const normalizedSearch = search?.trim() || undefined
   const enabled =
-    isClientQueryEnabled && getActiveProfileFeatures().aiAssistant
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'conversations', normalizedSearch ?? ''],
     queryFn: () => fetchAssistantConversations(normalizedSearch),
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
     enabled,
+    retry: false,
   })
 }
 
@@ -150,8 +142,11 @@ export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
   })
 }
 
-export function useAssistantConversations(search?: string) {
-  return useQuery(assistantConversationsQueryOptions(search))
+export function useAssistantConversations(
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(assistantConversationsQueryOptions(search, options))
 }
 
 export function useAssistantMessages(
@@ -341,19 +336,24 @@ export async function fetchAssistantMcpConnections() {
   return response.mcps ?? []
 }
 
-export function assistantMcpConnectionsQueryOptions() {
+export function assistantMcpConnectionsQueryOptions(options?: {
+  enabled?: boolean
+}) {
   const enabled =
-    isClientQueryEnabled && getActiveProfileFeatures().aiAssistant
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: ['assistant', 'mcps'],
     queryFn: fetchAssistantMcpConnections,
     staleTime: DEFAULT_STALE_TIME,
     enabled,
+    retry: false,
   })
 }
 
-export function useAssistantMcpConnections() {
-  return useQuery(assistantMcpConnectionsQueryOptions())
+export function useAssistantMcpConnections(options?: { enabled?: boolean }) {
+  return useQuery(assistantMcpConnectionsQueryOptions(options))
 }
 
 export function useUpsertAssistantMcpConnection() {

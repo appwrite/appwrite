@@ -131,6 +131,7 @@ export function WizardLayout({
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
+  const rootRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   // Focus the first input or radio when the wizard opens (unless skipped for canvas-first wizards)
@@ -184,11 +185,20 @@ export function WizardLayout({
 
   /**
    * Handle ESC key to close wizard
-   * Only closes wizard if no Popover/Command/Dialog is open
+   * Only closes wizard if no Popover/Command/Dialog is open.
+   * Uses capture so Escape is consumed before parent surfaces (e.g. expanded
+   * assistant) also react to the same keypress. Only the topmost open wizard
+   * handles Escape so nested overlays (like an image preview) close first.
    */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        const openWizards = document.querySelectorAll('[data-wizard-layout]')
+        const topmostWizard = openWizards[openWizards.length - 1]
+        if (!rootRef.current || topmostWizard !== rootRef.current) {
+          return
+        }
+
         // Check if the event target is within an open Popover or Command component
         const target = event.target as HTMLElement
         const isInPopover = target.closest('[data-slot="popover-content"]')
@@ -216,12 +226,13 @@ export function WizardLayout({
         }
 
         event.preventDefault()
+        event.stopImmediatePropagation()
         handleClose()
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [handleClose])
   const containerClasses = fullscreen
     ? 'fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-background'
@@ -246,7 +257,7 @@ export function WizardLayout({
     : 'border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-4 py-4 sm:px-6'
 
   const wizardContent = (
-    <div className={containerClasses}>
+    <div ref={rootRef} data-wizard-layout="" className={containerClasses}>
       {/* Header */}
       <div className={headerClasses}>
         <div className={cn('mx-auto w-full', constrainWidth && maxWidth)}>

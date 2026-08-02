@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useLocation, useParams } from '@tanstack/react-router'
+import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
 import { startOfDay, subDays } from 'date-fns'
 import {
   ImageFormat,
@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Archive,
   ArrowUp,
   Circle,
   Copy,
@@ -62,6 +63,11 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Popover,
   PopoverContent,
@@ -108,6 +114,7 @@ import { AssistantConversationsResizableLayout } from '@/components/global/provi
 import { AssistantMessageDebugCard } from '@/components/global/providers/ai-chat/AssistantMessageDebugCard'
 import { AssistantTurnActivity } from '@/components/global/providers/ai-chat/AssistantTurnActivity'
 import { McpConnections } from '@/components/global/providers/ai-chat/McpConnections'
+import { AssistantConversationContextMenu } from '@/components/global/providers/ai-chat/AssistantConversationContextMenu'
 import { AssistantEmptyState } from '@/components/global/providers/ai-chat/AssistantEmptyState'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
@@ -1789,8 +1796,14 @@ function AssistantBubbleDebugControls({
   )
 }
 
-export function AIChatPanelContent() {
+export function AIChatPanelContent({
+  variant = 'pane',
+}: {
+  /** `page` = dedicated /assistant fullscreen surface (public + optional auth). */
+  variant?: 'pane' | 'page'
+} = {}) {
   const t = useT()
+  const navigate = useNavigate()
   const { closeChat, activeConversationId, setActiveConversationId } =
     useAIChat()
   const params = useParams({ strict: false }) as {
@@ -1799,6 +1812,7 @@ export function AIChatPanelContent() {
     teamId?: string
   }
   const location = useLocation()
+  const isPageVariant = variant === 'page'
   const isAssistantBlocked = useMemo(
     () => isAssistantBlockedPath(location.pathname),
     [location.pathname],
@@ -1871,6 +1885,9 @@ export function AIChatPanelContent() {
   const [conversationSearch, setConversationSearch] = useState('')
   const [debouncedConversationSearch, setDebouncedConversationSearch] =
     useState('')
+  const [collapsedConversationGroups, setCollapsedConversationGroups] =
+    useState<Set<string>>(() => new Set())
+  const [archivedSectionOpen, setArchivedSectionOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesContentRef = useRef<HTMLDivElement>(null)
@@ -1892,13 +1909,25 @@ export function AIChatPanelContent() {
     return () => window.clearTimeout(timer)
   }, [conversationSearch])
 
+  const { account, isAuthenticated, isLoading: authLoading } = useAuth()
+  const isGuest = !authLoading && !isAuthenticated
+  const interactionsDisabled = isGuest || authLoading
+  const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
+    useAIChatExpanded(account)
+  const effectiveExpanded = isPageVariant || isChatExpanded
+  const queryClient = useQueryClient()
+
   const {
     data: conversationsData,
     isLoading: conversationsLoading,
-  } = useAssistantConversations(debouncedConversationSearch || undefined)
+  } = useAssistantConversations(debouncedConversationSearch || undefined, {
+    enabled: isAuthenticated,
+  })
   const conversations: AssistantConversation[] = conversationsData ?? []
   const hasConversationSearch = debouncedConversationSearch.length > 0
-  const { data: mcpConnections = [] } = useAssistantMcpConnections()
+  const { data: mcpConnections = [] } = useAssistantMcpConnections({
+    enabled: isAuthenticated,
+  })
   const hasActiveMcp = useMemo(
     () =>
       mcpConnections.some(
@@ -1927,10 +1956,6 @@ export function AIChatPanelContent() {
     nonEmptyId(params.projectId) ??
     assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
-  const { account } = useAuth()
-  const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
-    useAIChatExpanded(account)
-  const queryClient = useQueryClient()
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
     nonEmptyId(params.orgId) ??
@@ -2388,6 +2413,7 @@ export function AIChatPanelContent() {
   }
 
   const handleCreateConversation = async () => {
+    if (interactionsDisabled) return
     const conversationProjectId = await resolveConversationProjectId()
     if (!conversationProjectId) {
       toast.error(t('No accessible project found to create an agent.'))
@@ -2407,17 +2433,56 @@ export function AIChatPanelContent() {
     }
   }
 
+  const selectNextConversation = (conversationId: string) => {
+    if (conversationId !== activeConversationId) return
+    const nextConversation = conversations.find(
+      (conversation) =>
+        conversation.$id !== conversationId &&
+        conversation.status?.toLowerCase() !== 'archived',
+    )
+    setActiveConversationId(nextConversation?.$id ?? null)
+  }
+
+  const handleArchiveConversation = async (conversationId: string) => {
+    if (interactionsDisabled) return
+    try {
+      await updateConversationMutation.mutateAsync({
+        conversationId,
+        status: 'archived',
+      })
+      selectNextConversation(conversationId)
+      toast.success(t('Agent archived'))
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to archive agent')))
+    }
+  }
+
+  const handleRenameConversation = async (
+    conversationId: string,
+    title: string,
+  ) => {
+    if (interactionsDisabled) return
+    try {
+      await updateConversationMutation.mutateAsync({
+        conversationId,
+        title,
+      })
+      toast.success(t('Agent updated'))
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to update agent')))
+      throw error
+    }
+  }
+
   const handleDeleteConversation = async (conversationId: string) => {
+    if (interactionsDisabled) return
     try {
       await deleteConversationMutation.mutateAsync(conversationId)
-      if (conversationId === activeConversationId) {
-        const nextConversation = conversations.find(
-          (c) => c.$id !== conversationId,
-        )
-        setActiveConversationId(nextConversation?.$id ?? null)
-      }
+      selectNextConversation(conversationId)
+      toast.success(t('Agent deleted'))
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to delete agent')))
+      throw error
     }
   }
 
@@ -2720,6 +2785,7 @@ export function AIChatPanelContent() {
   )
 
   const handleSend = async (content: string = input) => {
+    if (interactionsDisabled) return
     const trimmed = content.trim()
     if (
       !trimmed ||
@@ -3022,26 +3088,60 @@ export function AIChatPanelContent() {
     }
   }
 
+  const leaveAssistantPage = useCallback(() => {
+    void navigate({ to: '/', replace: false })
+  }, [navigate])
+
   const handleCloseChat = useCallback(() => {
+    if (isPageVariant) {
+      leaveAssistantPage()
+      return
+    }
     closeChat()
-  }, [closeChat])
+  }, [closeChat, isPageVariant, leaveAssistantPage])
 
   useEffect(() => {
-    if (!isChatExpanded) return
+    if (!isChatExpanded || isPageVariant) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        setIsChatExpanded(false)
-      }
+      if (event.key !== 'Escape') return
+      // Image previews and other wizard overlays own Escape first
+      if (document.querySelector('[data-wizard-layout]')) return
+      event.preventDefault()
+      setIsChatExpanded(false)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isChatExpanded, setIsChatExpanded])
+  }, [isChatExpanded, isPageVariant, setIsChatExpanded])
 
-  const conversationGroups = useMemo(
-    () => groupConversationsByTime(conversations),
+  const activeConversations = useMemo(
+    () =>
+      conversations.filter(
+        (conversation) => conversation.status?.toLowerCase() !== 'archived',
+      ),
     [conversations],
   )
+  const archivedConversations = useMemo(
+    () =>
+      conversations.filter(
+        (conversation) => conversation.status?.toLowerCase() === 'archived',
+      ),
+    [conversations],
+  )
+  const activeConversationGroups = useMemo(
+    () => groupConversationsByTime(activeConversations),
+    [activeConversations],
+  )
+  const toggleConversationGroup = useCallback((groupKey: string) => {
+    setCollapsedConversationGroups((current) => {
+      const next = new Set(current)
+      if (next.has(groupKey)) {
+        next.delete(groupKey)
+      } else {
+        next.add(groupKey)
+      }
+      return next
+    })
+  }, [])
 
   const renderConversationsSearch = () => (
     <div className="relative">
@@ -3053,9 +3153,148 @@ export function AIChatPanelContent() {
         placeholder={t('Search agents...')}
         className="h-8 border-border bg-background pe-2 ps-8 text-[12px]"
         aria-label={t('Search agents...')}
+        disabled={interactionsDisabled}
       />
     </div>
   )
+
+  const renderConversationRow = (
+    conversation: AssistantConversation,
+    options?: {
+      onSelect?: () => void
+      dense?: boolean
+    },
+  ) => {
+    const isActive = conversation.$id === activeConversationId
+    const isArchived = conversation.status?.toLowerCase() === 'archived'
+    const statusTone = getAssistantConversationStatusTone(conversation)
+    const statusLabel = t(getAssistantConversationStatusLabel(statusTone))
+    const isArchiving =
+      updateConversationMutation.isPending &&
+      updateConversationMutation.variables?.conversationId ===
+        conversation.$id &&
+      updateConversationMutation.variables?.status === 'archived'
+
+    return (
+      <AssistantConversationContextMenu
+        key={conversation.$id}
+        title={conversation.title || t('Untitled agent')}
+        disabled={interactionsDisabled}
+        isArchived={isArchived}
+        onRename={(title) =>
+          handleRenameConversation(conversation.$id, title)
+        }
+        onArchive={() => handleArchiveConversation(conversation.$id)}
+        onDelete={() => handleDeleteConversation(conversation.$id)}
+      >
+        <div
+          className={cn(
+            'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+            isActive
+              ? 'border-border bg-accent'
+              : 'hover:border-border hover:bg-accent/60',
+            options?.dense && 'py-1.5',
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setActiveConversationId(conversation.$id)
+              options?.onSelect?.()
+            }}
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-start"
+          >
+            <p className="min-w-0 truncate text-[12px] font-medium text-foreground">
+              {conversation.title || t('Untitled agent')}
+            </p>
+            {statusTone !== 'ready' ? (
+              <span
+                className={cn(
+                  'h-1.5 w-1.5 shrink-0 rounded-full',
+                  getAssistantConversationStatusDotClass(statusTone),
+                )}
+                title={statusLabel}
+                aria-label={statusLabel}
+                role="img"
+              />
+            ) : null}
+          </button>
+          {!isArchived ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className={cn(
+                'h-6 w-6 shrink-0 transition-opacity',
+                isArchiving
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100 disabled:opacity-0',
+              )}
+              onClick={(event) => {
+                event.stopPropagation()
+                void handleArchiveConversation(conversation.$id)
+              }}
+              disabled={interactionsDisabled || isArchiving}
+              aria-label={t('Archive agent')}
+            >
+              {isArchiving ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Archive className="h-3 w-3" />
+              )}
+            </Button>
+          ) : null}
+        </div>
+      </AssistantConversationContextMenu>
+    )
+  }
+
+  const renderConversationTimeGroups = (
+    groups: Array<{
+      label: ConversationTimeGroup
+      items: AssistantConversation[]
+    }>,
+    options?: {
+      onSelect?: () => void
+      dense?: boolean
+    },
+  ) =>
+    groups.map((group) => {
+      const groupKey = group.label
+      const isOpen = !collapsedConversationGroups.has(groupKey)
+      return (
+        <Collapsible
+          key={groupKey}
+          open={isOpen}
+          onOpenChange={() => toggleConversationGroup(groupKey)}
+        >
+          <div className="space-y-0.5">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
+                <ChevronDown
+                  className={cn(
+                    'h-3 w-3 shrink-0 transition-transform',
+                    !isOpen && '-rotate-90',
+                  )}
+                />
+                <span className="min-w-0 flex-1 truncate">{t(group.label)}</span>
+                <span className="tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                  {group.items.length}
+                </span>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-0.5">
+              {group.items.map((conversation) =>
+                renderConversationRow(conversation, options),
+              )}
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )
+    })
 
   const renderConversationsList = (options?: {
     onSelect?: () => void
@@ -3081,88 +3320,50 @@ export function AIChatPanelContent() {
       )
     }
     return (
-      <div className="space-y-3">
-        {conversationGroups.map((group) => (
-          <div key={group.label} className="space-y-0.5">
-            <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t(group.label)}
-            </p>
-            {group.items.map((conversation) => {
-              const isActive = conversation.$id === activeConversationId
-              const statusTone =
-                getAssistantConversationStatusTone(conversation)
-              const statusLabel = t(
-                getAssistantConversationStatusLabel(statusTone),
-              )
-              return (
-                <div
-                  key={conversation.$id}
-                  className={cn(
-                    'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
-                    isActive
-                      ? 'border-border bg-accent'
-                      : 'hover:border-border hover:bg-accent/60',
-                    options?.dense && 'py-1.5',
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveConversationId(conversation.$id)
-                      options?.onSelect?.()
-                    }}
-                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-start"
-                  >
-                    <p className="min-w-0 truncate text-[12px] font-medium text-foreground">
-                      {conversation.title || t('Untitled agent')}
-                    </p>
-                    {statusTone !== 'ready' ? (
-                      <span
-                        className={cn(
-                          'h-1.5 w-1.5 shrink-0 rounded-full',
-                          getAssistantConversationStatusDotClass(statusTone),
-                        )}
-                        title={statusLabel}
-                        aria-label={statusLabel}
-                        role="img"
-                      />
-                    ) : null}
-                  </button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className={cn(
-                      'h-6 w-6 shrink-0 transition-opacity',
-                      deleteConversationMutation.isPending &&
-                        deleteConversationMutation.variables ===
-                          conversation.$id
-                        ? 'opacity-100'
-                        : 'opacity-0 group-hover:opacity-100 disabled:opacity-0',
-                    )}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleDeleteConversation(conversation.$id)
-                    }}
-                    disabled={
-                      deleteConversationMutation.isPending &&
-                      deleteConversationMutation.variables === conversation.$id
-                    }
-                    aria-label={t('Delete agent')}
-                  >
-                    {deleteConversationMutation.isPending &&
-                    deleteConversationMutation.variables ===
-                      conversation.$id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3 w-3" />
-                    )}
-                  </Button>
-                </div>
-              )
-            })}
+      <div className="space-y-8">
+        {activeConversationGroups.length > 0 ? (
+          <div className="space-y-6">
+            {renderConversationTimeGroups(activeConversationGroups, options)}
           </div>
-        ))}
+        ) : archivedConversations.length > 0 ? (
+          <div className="px-1.5 py-1 text-[11px] text-muted-foreground">
+            {hasConversationSearch
+              ? t('No active agents match your search.')
+              : t('No active agents.')}
+          </div>
+        ) : null}
+
+        {archivedConversations.length > 0 ? (
+          <Collapsible
+            open={archivedSectionOpen}
+            onOpenChange={setArchivedSectionOpen}
+          >
+            <div className="space-y-0.5">
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                >
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 shrink-0 transition-transform',
+                      !archivedSectionOpen && '-rotate-90',
+                    )}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{t('Archived')}</span>
+                  <span className="tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                    {archivedConversations.length}
+                  </span>
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-0.5">
+                {archivedConversations.map((conversation) =>
+                  renderConversationRow(conversation, options),
+                )}
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        ) : null}
       </div>
     )
   }
@@ -3180,7 +3381,9 @@ export function AIChatPanelContent() {
           variant="ghost"
           className="h-8 w-8 shrink-0 p-0"
           onClick={handleCreateConversation}
-          disabled={createConversationMutation.isPending}
+          disabled={
+            interactionsDisabled || createConversationMutation.isPending
+          }
           aria-label={t('New agent')}
         >
           {createConversationMutation.isPending ? (
@@ -3199,10 +3402,20 @@ export function AIChatPanelContent() {
           type="button"
           variant="ghost"
           className="h-9 w-full justify-start gap-1.5 px-2 text-[13px] text-muted-foreground hover:text-foreground"
-          onClick={() => setIsChatExpanded(false)}
+          onClick={() => {
+            if (isPageVariant) {
+              leaveAssistantPage()
+              return
+            }
+            setIsChatExpanded(false)
+          }}
         >
           <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-          {t('Back to console')}
+          {isPageVariant
+            ? isAuthenticated
+              ? t('Back to console')
+              : t('Back to Appwrite')
+            : t('Back to console')}
         </Button>
       </div>
     </div>
@@ -3213,7 +3426,7 @@ export function AIChatPanelContent() {
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                {isChatExpanded ? (
+                {effectiveExpanded ? (
                   <p className="truncate px-1.5 text-[13px] font-semibold text-foreground">
                     {activeConversation?.title || t('New agent')}
                   </p>
@@ -3253,13 +3466,16 @@ export function AIChatPanelContent() {
                   </Popover>
                 )}
 
-                {!isChatExpanded ? (
+                {!effectiveExpanded ? (
                   <Button
                     type="button"
                     variant="ghost"
                     className="h-8 w-8 shrink-0 p-0"
                     onClick={handleCreateConversation}
-                    disabled={createConversationMutation.isPending}
+                    disabled={
+                      interactionsDisabled ||
+                      createConversationMutation.isPending
+                    }
                     aria-label={t('New agent')}
                   >
                     {createConversationMutation.isPending ? (
@@ -3294,22 +3510,24 @@ export function AIChatPanelContent() {
                   )}
                 </Button>
               ) : null}
-              <McpConnections />
-              <button
-                type="button"
-                onClick={() => setIsChatExpanded((current) => !current)}
-                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label={
-                  isChatExpanded ? t('Collapse chat') : t('Expand chat')
-                }
-                title={isChatExpanded ? t('Collapse chat') : t('Expand chat')}
-              >
-                {isChatExpanded ? (
-                  <Minimize2 className="h-3.5 w-3.5" />
-                ) : (
-                  <Maximize2 className="h-3.5 w-3.5" />
-                )}
-              </button>
+              {!interactionsDisabled ? <McpConnections /> : null}
+              {!isPageVariant ? (
+                <button
+                  type="button"
+                  onClick={() => setIsChatExpanded((current) => !current)}
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={
+                    isChatExpanded ? t('Collapse chat') : t('Expand chat')
+                  }
+                  title={isChatExpanded ? t('Collapse chat') : t('Expand chat')}
+                >
+                  {isChatExpanded ? (
+                    <Minimize2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Maximize2 className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={handleCloseChat}
@@ -3331,15 +3549,16 @@ export function AIChatPanelContent() {
               <div
                 className={cn(
                   'p-3',
-                  isChatExpanded && 'mx-auto w-full max-w-3xl',
+                  effectiveExpanded && 'mx-auto w-full max-w-3xl',
                   messages.length === 0 && 'flex min-h-full flex-col',
                 )}
               >
               {messages.length === 0 ? (
                 <AssistantEmptyState
-                  hasActiveMcp={hasActiveMcp}
+                  hasActiveMcp={hasActiveMcp && !isGuest}
                   suggestions={emptyStateSuggestions}
                   onSelectSuggestion={(question) => handleSend(t(question))}
+                  requireSignIn={isGuest}
                   sphereSize={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
                   activityRef={bubbleActivityRef}
                   colorMode={effectiveSphereColorMode}
@@ -3487,7 +3706,7 @@ export function AIChatPanelContent() {
             <div
               className={cn(
                 'p-3',
-                isChatExpanded && 'mx-auto w-full max-w-3xl',
+                effectiveExpanded && 'mx-auto w-full max-w-3xl',
               )}
             >
             {isDebugModeOpen && messages.length > 0 ? (
@@ -3820,23 +4039,27 @@ export function AIChatPanelContent() {
                   ref={inputRef}
                   value={input}
                   onChange={(e) => {
+                    if (interactionsDisabled) return
                     setInput(e.target.value)
                     if (messages.length === 0) {
                       registerTypingKeystroke()
                     }
                   }}
-                  onPaste={handleInputPaste}
-                  onKeyDown={handleKeyDown}
+                  onPaste={interactionsDisabled ? undefined : handleInputPaste}
+                  onKeyDown={interactionsDisabled ? undefined : handleKeyDown}
                   placeholder={
-                    editingMessageId
-                      ? t('Edit message...')
-                      : isConversationRunning || messageQueue.length > 0
-                        ? t('Add a follow-up')
-                        : t('Ask a question...')
+                    interactionsDisabled
+                      ? t('Sign in to ask a question...')
+                      : editingMessageId
+                        ? t('Edit message...')
+                        : isConversationRunning || messageQueue.length > 0
+                          ? t('Add a follow-up')
+                          : t('Ask a question...')
                   }
                   dir={isInputRtl ? 'rtl' : 'ltr'}
                   rows={1}
-                  className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  disabled={interactionsDisabled}
+                  className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     height: 'auto',
                     minHeight: '34px',
@@ -3851,11 +4074,15 @@ export function AIChatPanelContent() {
                   type="button"
                   onClick={handleAttachmentInputClick}
                   disabled={
-                    isWaitingForAttachments || Boolean(editingMessageId)
+                    interactionsDisabled ||
+                    isWaitingForAttachments ||
+                    Boolean(editingMessageId)
                   }
                   className={cn(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                    isWaitingForAttachments || editingMessageId
+                    interactionsDisabled ||
+                      isWaitingForAttachments ||
+                      editingMessageId
                       ? 'bg-muted text-muted-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
@@ -3867,7 +4094,10 @@ export function AIChatPanelContent() {
                   <button
                     type="button"
                     onClick={() => void handleStopConversation()}
-                    disabled={updateConversationMutation.isPending}
+                    disabled={
+                      interactionsDisabled ||
+                      updateConversationMutation.isPending
+                    }
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:text-muted-foreground"
                     aria-label={t('Stop')}
                   >
@@ -3882,6 +4112,7 @@ export function AIChatPanelContent() {
                   type="button"
                   onClick={() => void handleSend()}
                   disabled={
+                    interactionsDisabled ||
                     !input.trim() ||
                     isWaitingForAttachments ||
                     Boolean(editingMessageId && isConversationRunning) ||
@@ -3889,7 +4120,8 @@ export function AIChatPanelContent() {
                   }
                   className={cn(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                    input.trim() &&
+                    !interactionsDisabled &&
+                      input.trim() &&
                       !isWaitingForAttachments &&
                       !(editingMessageId && isConversationRunning) &&
                       (isConversationRunning || canSendWhileIdle)
@@ -3930,12 +4162,14 @@ export function AIChatPanelContent() {
     <div
       className={cn(
         'flex min-h-0 bg-background',
-        isChatExpanded
-          ? 'fixed inset-0 z-[125] h-[100dvh] max-h-[100dvh] w-full'
-          : 'h-full',
+        isPageVariant
+          ? 'h-full w-full'
+          : effectiveExpanded
+            ? 'fixed inset-0 z-[125] h-[100dvh] max-h-[100dvh] w-full'
+            : 'h-full',
       )}
     >
-      {isChatExpanded ? (
+      {effectiveExpanded ? (
         <AssistantConversationsResizableLayout sidebar={conversationsSidebar}>
           {chatMain}
         </AssistantConversationsResizableLayout>
