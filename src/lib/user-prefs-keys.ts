@@ -15,6 +15,8 @@ import {
   type GeneratorPanelVisibility,
 } from '@/lib/generator/panel-visibility'
 import {
+  AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX,
+  clampAIChatConversationsSidebarWidthPx,
   clampCliShellSessionsSidebarWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
@@ -1772,6 +1774,23 @@ export function mergeConnectProjectTabIntoPrefs(
 /** Full key: `console.aiChat.panelOpen` - panel open when true / `"true"`. */
 export const USER_PREFS_KEY_AI_CHAT_PANEL_OPEN = 'console.aiChat.panelOpen'
 
+/** Full key: `console.aiChat.expanded` - fullscreen chat when true / `"true"`. */
+export const USER_PREFS_KEY_AI_CHAT_EXPANDED = 'console.aiChat.expanded'
+
+/**
+ * Full key: `console.aiChat.activeConversationId` - last viewed assistant
+ * conversation id (empty string clears).
+ */
+export const USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID =
+  'console.aiChat.activeConversationId'
+
+/**
+ * Full key: `console.aiChat.conversationsWidthPx` - conversations sidebar width
+ * in fullscreen chat (string number, px).
+ */
+export const USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX =
+  'console.aiChat.conversationsWidthPx'
+
 /** Full key: `console.aiChat.panelWidthPx` - panel width in pixels (string number). */
 export const USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX =
   'console.aiChat.panelWidthPx'
@@ -1839,6 +1858,71 @@ export function mergeAIChatPanelOpenIntoPrefs(
   return {
     ...prefs,
     [USER_PREFS_KEY_AI_CHAT_PANEL_OPEN]: open,
+  }
+}
+
+export function parseAIChatExpanded(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_AI_CHAT_EXPANDED]) ?? false
+  )
+}
+
+export function mergeAIChatExpandedIntoPrefs(
+  prefs: UserPrefs,
+  expanded: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_EXPANDED]: expanded,
+  }
+}
+
+export function parseAIChatActiveConversationId(
+  prefs: UserPrefs | null | undefined,
+): string | null {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function mergeAIChatActiveConversationIdIntoPrefs(
+  prefs: UserPrefs,
+  conversationId: string | null,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]: conversationId?.trim() || '',
+  }
+}
+
+export function parseAIChatConversationsWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (Number.isFinite(n)) {
+    return clampAIChatConversationsSidebarWidthPx(n)
+  }
+  return AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX
+}
+
+export function mergeAIChatConversationsWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX]: String(
+      clampAIChatConversationsSidebarWidthPx(widthPx),
+    ),
   }
 }
 

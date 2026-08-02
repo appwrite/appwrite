@@ -135,6 +135,7 @@ import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_mar
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
+import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
@@ -1029,6 +1030,12 @@ const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
   path: '/auth/oauth2/failure',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthAssistantMcpCallbackRoute =
+  AuthAssistantMcpCallbackRouteImport.update({
+    id: '/assistant/mcp/callback',
+    path: '/assistant/mcp/callback',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   id: '/_api/init/ticket/$eventSlug',
   path: '/init/ticket/$eventSlug',
@@ -2654,6 +2661,7 @@ export interface FileRoutesByFullPath {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -2997,6 +3005,7 @@ export interface FileRoutesByTo {
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -3313,6 +3322,7 @@ export interface FileRoutesById {
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -3663,6 +3673,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -4006,6 +4017,7 @@ export interface FileRouteTypes {
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -4321,6 +4333,7 @@ export interface FileRouteTypes {
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
@@ -5494,6 +5507,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/oauth2/failure'
       fullPath: '/auth/oauth2/failure'
       preLoaderRoute: typeof AuthAuthOauth2FailureRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/assistant/mcp/callback': {
+      id: '/_auth/assistant/mcp/callback'
+      path: '/assistant/mcp/callback'
+      fullPath: '/assistant/mcp/callback'
+      preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_api/init/ticket/$eventSlug': {
@@ -7078,6 +7098,7 @@ interface AuthRouteChildren {
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
+  AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
   AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
 }
@@ -7093,6 +7114,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
+  AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
   AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
 }

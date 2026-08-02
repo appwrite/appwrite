@@ -305,6 +305,11 @@ function getStoredProfile(): ConsoleProfile | null {
   return null
 }
 
+/** Whether a debug localStorage profile override is active (vs env). */
+export function hasDebugProfileOverride(): boolean {
+  return getStoredProfile() !== null
+}
+
 /**
  * Returns the currently active console profile ID.
  * In debug mode, localStorage override (stored profile value) takes precedence over env var.

@@ -313,6 +313,9 @@ function invalidateAssistantQueries(
   queryClient: QueryClient,
   payload: Record<string, unknown> | null,
 ): void {
+  // Keep this module free of assistant UI imports (avoids SSR circular deps via
+  // routeTree → AIChat → @/lib/realtime → subscribe-project). Live merge for the
+  // chat panel happens in AIChat via applyAssistantRealtimePayload.
   const conversationId = payload?.conversationId as string | undefined
 
   queryClient.invalidateQueries({ queryKey: ['assistant', 'conversations'] })

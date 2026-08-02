@@ -10,6 +10,7 @@ import {
   type ConsentScopeModel,
   type TierScopes,
 } from '@/lib/oauth2/scopes'
+import { getEffectiveMcpEndpointUrl } from '@/lib/debug-mcp-endpoint'
 
 /**
  * MCP-grant detection and consent-time scope narrowing for the hosted Appwrite
@@ -27,12 +28,6 @@ import {
  * client gains nothing by claiming the MCP resource URI.
  */
 
-/** Resource URIs advertised by the hosted Appwrite MCP server. */
-export const DEFAULT_MCP_RESOURCE_URLS = [
-  'https://mcp.appwrite.io',
-  'https://mcp.appwrite.io/mcp',
-]
-
 /** Mirror of the authorization server's `scope` parameter length cap. */
 export const MAX_SCOPE_PARAM_LENGTH = 8192
 
@@ -43,20 +38,36 @@ export function normalizeResourceUrl(url: string): string {
 }
 
 /**
- * The MCP resource URIs this console recognizes. Defaults to the hosted MCP;
- * extendable via the comma-separated `VITE_MCP_RESOURCE_URLS` env var (e.g.
- * `http://localhost:8000/mcp` for local development).
+ * Expand a single MCP endpoint into the resource URI shapes the server may
+ * advertise (origin, `/mcp`, trailing-slash variants). Driven by
+ * `VITE_APPWRITE_MCP_URL` / debug MCP override via {@link getEffectiveMcpEndpointUrl}.
  */
-export function mcpResourceUrls(raw?: string | null): string[] {
-  const configured = (
-    raw ??
-    (import.meta.env.VITE_MCP_RESOURCE_URLS as string | undefined) ??
-    ''
-  )
-    .split(',')
-    .map(normalizeResourceUrl)
-    .filter((url) => url !== '')
-  return configured.length > 0 ? configured : DEFAULT_MCP_RESOURCE_URLS
+export function mcpResourceUrlsForEndpoint(mcpUrl: string): string[] {
+  const normalized = normalizeResourceUrl(mcpUrl)
+  if (!normalized) return []
+
+  const aliases = new Set<string>([normalized])
+  try {
+    const url = new URL(normalized)
+    aliases.add(url.origin)
+    const path = url.pathname.replace(/\/+$/, '') || '/'
+    if (path === '/') {
+      aliases.add(`${url.origin}/mcp`)
+    } else if (path === '/mcp') {
+      aliases.add(url.origin)
+    }
+  } catch {
+    // keep the normalized string only
+  }
+  return [...aliases]
+}
+
+/**
+ * MCP resource URIs this console recognizes for OAuth consent narrowing.
+ * Derived from the effective Appwrite MCP endpoint (one env var / debug override).
+ */
+export function mcpResourceUrls(): string[] {
+  return mcpResourceUrlsForEndpoint(getEffectiveMcpEndpointUrl())
 }
 
 /** Whether any of the grant's requested resources is a known MCP resource URI. */

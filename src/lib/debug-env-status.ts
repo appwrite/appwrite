@@ -142,9 +142,9 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Legal contact email override',
   },
   {
-    key: 'VITE_MCP_RESOURCE_URLS',
+    key: 'VITE_APPWRITE_MCP_URL',
     group: 'Other',
-    description: 'Extra MCP resource URLs',
+    description: 'Appwrite MCP endpoint (assistant + OAuth resource)',
   },
   {
     key: 'VITE_SITE_ORIGIN',
@@ -184,7 +184,7 @@ function readBuildTimePresence(): Record<string, boolean> {
     VITE_CONTACT_SALES_URL: isNonEmpty(import.meta.env.VITE_CONTACT_SALES_URL),
     VITE_COMPANY_NAME: isNonEmpty(import.meta.env.VITE_COMPANY_NAME),
     VITE_LEGAL_EMAIL: isNonEmpty(import.meta.env.VITE_LEGAL_EMAIL),
-    VITE_MCP_RESOURCE_URLS: isNonEmpty(import.meta.env.VITE_MCP_RESOURCE_URLS),
+    VITE_APPWRITE_MCP_URL: isNonEmpty(import.meta.env.VITE_APPWRITE_MCP_URL),
     VITE_SITE_ORIGIN: isNonEmpty(import.meta.env.VITE_SITE_ORIGIN),
     VITE_CONSTRUCTION: isNonEmpty(import.meta.env.VITE_CONSTRUCTION),
   }

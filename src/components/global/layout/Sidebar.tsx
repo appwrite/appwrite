@@ -34,31 +34,30 @@ import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
+import { ChevronLeft, X } from 'lucide-react'
 import {
-  LayoutDashboard,
-  Database,
-  Users,
-  Folder,
-  Zap,
-  MessageSquare,
-  Settings,
-  BarChart3,
-  Key,
-  ChevronLeft,
-  X,
-  Globe,
-  Plug,
-  Activity,
-  Shield,
-  ScanSearch,
-  Package,
-  FileText,
-  BarChart2,
-  AlertTriangle,
-  Radio,
-  ListTree,
-  type LucideIcon,
-} from 'lucide-react'
+  OverviewIcon,
+  AppsIcon,
+  ApiKeysIcon,
+  ExplorerIcon,
+  AuthIcon,
+  DatabasesIcon,
+  StorageIcon,
+  FunctionsIcon,
+  MessagingIcon,
+  SitesIcon,
+  DistributionIcon,
+  ActivityIcon,
+  RealtimeIcon,
+  LogsIcon,
+  UsageIcon,
+  AnalyticsIcon,
+  ErrorsIcon,
+  FirewallIcon,
+  AdvisorIcon,
+  SettingsIcon,
+  type SidebarNavIcon,
+} from './sidebar-nav-icons'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import {
   Tooltip,
@@ -75,7 +74,7 @@ import { useI18n } from '@/lib/i18n'
 interface NavItem {
   id: string
   label: string
-  icon: LucideIcon | 'imagine'
+  icon: SidebarNavIcon | 'imagine'
   path: string
   comingSoon?: boolean
 }
@@ -132,7 +131,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
   const overviewItem: NavItem = {
     id: 'overview',
     label: sidebarCopy.items.overview,
-    icon: LayoutDashboard,
+    icon: OverviewIcon,
     path: `/projects/${projectId}`,
   }
 
@@ -143,19 +142,19 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'apps',
           label: sidebarCopy.items.apps,
-          icon: Plug,
+          icon: AppsIcon,
           path: `/projects/${projectId}/apps`,
         },
         {
           id: 'api-keys',
           label: sidebarCopy.items.apiKeys,
-          icon: Key,
+          icon: ApiKeysIcon,
           path: `/projects/${projectId}/api-keys`,
         },
         {
           id: 'explorer',
           label: sidebarCopy.items.explorer,
-          icon: ListTree,
+          icon: ExplorerIcon,
           path: `/projects/${projectId}/explorer`,
         },
       ],
@@ -166,31 +165,31 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'auth',
           label: sidebarCopy.items.auth,
-          icon: Users,
+          icon: AuthIcon,
           path: `/projects/${projectId}/auth`,
         },
         {
           id: 'databases',
           label: sidebarCopy.items.databases,
-          icon: Database,
+          icon: DatabasesIcon,
           path: `/projects/${projectId}/databases`,
         },
         {
           id: 'storage',
           label: sidebarCopy.items.storage,
-          icon: Folder,
+          icon: StorageIcon,
           path: `/projects/${projectId}/storage/-`,
         },
         {
           id: 'functions',
           label: sidebarCopy.items.functions,
-          icon: Zap,
+          icon: FunctionsIcon,
           path: `/projects/${projectId}/functions`,
         },
         {
           id: 'messaging',
           label: sidebarCopy.items.messaging,
-          icon: MessageSquare,
+          icon: MessagingIcon,
           path: `/projects/${projectId}/messaging`,
         },
       ],
@@ -201,13 +200,13 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'sites',
           label: sidebarCopy.items.sites,
-          icon: Globe,
+          icon: SitesIcon,
           path: `/projects/${projectId}/sites`,
         },
         {
           id: 'stores',
           label: sidebarCopy.items.distribution,
-          icon: Package,
+          icon: DistributionIcon,
           path: `/projects/${projectId}/stores`,
           comingSoon: true,
         },
@@ -219,39 +218,39 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'activity',
           label: sidebarCopy.items.activity,
-          icon: Activity,
+          icon: ActivityIcon,
           path: `/projects/${projectId}/activity`,
         },
         {
           id: 'realtime',
           label: sidebarCopy.items.realtime,
-          icon: Radio,
+          icon: RealtimeIcon,
           path: `/projects/${projectId}/realtime`,
         },
         {
           id: 'logs',
           label: sidebarCopy.items.logs,
-          icon: FileText,
+          icon: LogsIcon,
           path: `/projects/${projectId}/logs`,
           comingSoon: true,
         },
         {
           id: 'usage',
           label: sidebarCopy.items.usage,
-          icon: BarChart3,
+          icon: UsageIcon,
           path: `/projects/${projectId}/usage`,
         },
         {
           id: 'analytics',
           label: sidebarCopy.items.analytics,
-          icon: BarChart2,
+          icon: AnalyticsIcon,
           path: `/projects/${projectId}/analytics`,
           comingSoon: true,
         },
         {
           id: 'errors',
           label: sidebarCopy.items.errors,
-          icon: AlertTriangle,
+          icon: ErrorsIcon,
           path: `/projects/${projectId}/errors`,
           comingSoon: true,
         },
@@ -263,13 +262,13 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
         {
           id: 'firewall',
           label: sidebarCopy.items.firewall,
-          icon: Shield,
+          icon: FirewallIcon,
           path: `/projects/${projectId}/firewall`,
         },
         {
           id: 'advisor',
           label: sidebarCopy.items.advisor,
-          icon: ScanSearch,
+          icon: AdvisorIcon,
           path: `/projects/${projectId}/advisor`,
           comingSoon: true,
         },
@@ -280,7 +279,7 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
   const settingsItem: NavItem = {
     id: 'settings',
     label: sidebarCopy.items.settings,
-    icon: Settings,
+    icon: SettingsIcon,
     path: `/projects/${projectId}/settings`,
   }
 
@@ -415,7 +414,7 @@ export function ConsoleSidebar({
           />
         )
       }
-      const Icon = item.icon as LucideIcon
+      const Icon = item.icon as SidebarNavIcon
       return (
         <Icon
           className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
@@ -424,7 +423,7 @@ export function ConsoleSidebar({
     }
 
     if (item.comingSoon) {
-      const Icon = item.icon as LucideIcon
+      const Icon = item.icon as SidebarNavIcon
       const buttonContent = (
         <span
           key={item.id}

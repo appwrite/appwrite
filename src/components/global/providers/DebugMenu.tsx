@@ -81,6 +81,8 @@ import {
   resetDebugProfileFeatureOverrides,
   resetDebugProfileFeatureOverride,
   getCanonicalProfileFeatures,
+  getEnvProfileId,
+  hasDebugProfileOverride,
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
 } from '@/lib/console-profiles'
@@ -90,6 +92,14 @@ import {
   type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
+import {
+  getEnvMcpEndpointUrl,
+  setDebugMcpEndpointOverride,
+  MCP_ENDPOINT_PRESETS,
+  type McpEndpointPresetId,
+} from '@/lib/debug-mcp-endpoint'
+import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
@@ -362,7 +372,10 @@ function renderDebugSubmenuItemRow(
       <span className="flex-1">
         <span className="block font-medium">{item.label}</span>
         {item.description && (
-          <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+          <span
+            className="mt-0.5 block break-all text-[11px] font-normal opacity-80"
+            title={item.description}
+          >
             {item.description}
           </span>
         )}
@@ -676,8 +689,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
   const languageCopy = DEBUG_MENU_LANGUAGE_COPY
   const { profileId, features } = useConsoleProfile()
-  const { preset: endpointPreset, customUrl: endpointCustomUrl } =
-    useDebugEndpoint()
+  const {
+    preset: endpointPreset,
+    customUrl: endpointCustomUrl,
+    effectiveUrl: endpointEffectiveUrl,
+    envUrl: endpointEnvUrl,
+  } = useDebugEndpoint()
+  const {
+    preset: mcpEndpointPreset,
+    customUrl: mcpEndpointCustomUrl,
+    effectiveUrl: mcpEndpointEffectiveUrl,
+  } = useDebugMcpEndpoint()
+  const profileFromOverride = hasDebugProfileOverride()
+  const envProfileId = getEnvProfileId()
   const navigate = useNavigate()
   const initLowPowerDecision = useInitLowPowerAnimationDecision()
   const [position, setPosition] = useState<DebugMenuPosition>(() =>
@@ -985,21 +1009,34 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Languages className="h-3 w-3" />,
     }))
 
-    const activeEndpointLabel = !endpointPreset
-      ? 'Use env var'
-      : endpointPreset === 'custom' && endpointCustomUrl
-        ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
-        : endpointPreset !== 'custom' &&
-            ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-          ? ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-              .label
-          : endpointPreset
+    const activeEndpointUrl = endpointEffectiveUrl ?? endpointEnvUrl ?? '—'
+    const activeEndpointBadge = !endpointPreset
+      ? 'Env'
+      : endpointPreset === 'custom'
+        ? 'Custom'
+        : ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+            ?.label ?? endpointPreset
+
+    const activeMcpEndpointUrl = mcpEndpointEffectiveUrl || getEnvMcpEndpointUrl()
+    const activeMcpEndpointBadge = !mcpEndpointPreset
+      ? 'Env'
+      : mcpEndpointPreset === 'custom'
+        ? 'Custom'
+        : MCP_ENDPOINT_PRESETS[
+            mcpEndpointPreset as keyof typeof MCP_ENDPOINT_PRESETS
+          ]?.label ?? mcpEndpointPreset
+
+    const activeProfileLabel = CONSOLE_PROFILES[profileId].label
+    const activeProfileBadge = profileFromOverride ? 'Override' : 'Env'
+    const activeProfileDescription = profileFromOverride
+      ? `${activeProfileLabel} (debug override)`
+      : `${activeProfileLabel} (VITE_CONSOLE_PROFILE → ${CONSOLE_PROFILES[envProfileId].label})`
 
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
         description: CONSOLE_PROFILES.cloud.description,
-        active: profileId === 'cloud',
+        active: profileFromOverride && profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
         onClick: () => {
           applyOverrideAndGoHome(() => setDebugProfileOverride('cloud'))
@@ -1008,7 +1045,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       {
         label: 'Self-hosted',
         description: CONSOLE_PROFILES['self-hosted'].description,
-        active: profileId === 'self-hosted',
+        active: profileFromOverride && profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
         onClick: () => {
           applyOverrideAndGoHome(() =>
@@ -1018,7 +1055,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
       {
         label: 'Use env var',
-        description: 'Reset to VITE_CONSOLE_PROFILE',
+        description: `Current env: ${CONSOLE_PROFILES[envProfileId].label}`,
+        active: !profileFromOverride,
         onClick: () => {
           applyOverrideAndGoHome(() => setDebugProfileOverride(null))
         },
@@ -1799,7 +1837,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         items: [
           {
             label: 'Console profile',
-            description: CONSOLE_PROFILES[profileId].description,
+            description: activeProfileDescription,
+            badge: activeProfileBadge,
             icon:
               profileId === 'cloud' ? (
                 <Cloud className="h-3 w-3" />
@@ -1815,9 +1854,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   Exclude<EndpointPresetId, 'custom'>,
                   (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
                 ][]
-              ).map(([id, { label, description }]) => ({
+              ).map(([id, { label, url, description }]) => ({
                 label,
-                description,
+                description: `${url} · ${description}`,
                 onClick: () => {
                   applyOverrideAndGoHome(() => setDebugEndpointOverride(id))
                 },
@@ -1826,13 +1865,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               })),
               {
                 label: 'Custom...',
-                description: 'Enter a custom API URL',
+                description:
+                  endpointPreset === 'custom' && endpointCustomUrl
+                    ? endpointCustomUrl
+                    : 'Enter a custom API URL',
                 onClick: () => {
                   const url = window.prompt(
                     'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
                     endpointPreset === 'custom' && endpointCustomUrl
                       ? endpointCustomUrl
-                      : 'http://localhost/v1',
+                      : activeEndpointUrl !== '—'
+                        ? activeEndpointUrl
+                        : 'http://localhost/v1',
                   )
                   if (url?.trim()) {
                     applyOverrideAndGoHome(() =>
@@ -1845,7 +1889,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
               {
                 label: 'Use env var',
-                description: 'Reset to VITE_APPWRITE_ENDPOINT',
+                description: endpointEnvUrl
+                  ? `VITE_APPWRITE_ENDPOINT → ${endpointEnvUrl}`
+                  : 'Reset to VITE_APPWRITE_ENDPOINT',
                 onClick: () => {
                   applyOverrideAndGoHome(() => setDebugEndpointOverride(null))
                 },
@@ -1855,9 +1901,68 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             ]
             return {
               label: 'Server endpoint',
-              description: `${activeEndpointLabel} (active)`,
+              description: activeEndpointUrl,
+              badge: activeEndpointBadge,
               icon: <Globe className="h-3 w-3" />,
               submenu: endpointOptions,
+            }
+          })(),
+          (() => {
+            const envMcpUrl = getEnvMcpEndpointUrl()
+            const mcpEndpointOptions: MenuItem[] = [
+              ...(
+                Object.entries(MCP_ENDPOINT_PRESETS) as [
+                  Exclude<McpEndpointPresetId, 'custom'>,
+                  (typeof MCP_ENDPOINT_PRESETS)[keyof typeof MCP_ENDPOINT_PRESETS],
+                ][]
+              ).map(([id, { label, url, description }]) => ({
+                label,
+                description: `${url} · ${description}`,
+                onClick: () => {
+                  setDebugMcpEndpointOverride(id)
+                  setIsOpen(false)
+                },
+                active: mcpEndpointPreset === id,
+                icon: <McpIcon className="h-3 w-3" />,
+              })),
+              {
+                label: 'Custom...',
+                description:
+                  mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                    ? mcpEndpointCustomUrl
+                    : 'Enter a custom MCP URL',
+                onClick: () => {
+                  const url = window.prompt(
+                    'Enter Appwrite MCP endpoint URL (e.g. http://localhost:8100/)',
+                    mcpEndpointPreset === 'custom' && mcpEndpointCustomUrl
+                      ? mcpEndpointCustomUrl
+                      : activeMcpEndpointUrl || 'http://localhost:8100/',
+                  )
+                  if (url?.trim()) {
+                    setDebugMcpEndpointOverride('custom', url.trim())
+                    setIsOpen(false)
+                  }
+                },
+                active: mcpEndpointPreset === 'custom',
+                icon: <McpIcon className="h-3 w-3" />,
+              },
+              {
+                label: 'Use env var',
+                description: `VITE_APPWRITE_MCP_URL → ${envMcpUrl}`,
+                onClick: () => {
+                  setDebugMcpEndpointOverride(null)
+                  setIsOpen(false)
+                },
+                active: !mcpEndpointPreset,
+                icon: <RotateCcw className="h-3 w-3" />,
+              },
+            ]
+            return {
+              label: 'MCP endpoint',
+              description: activeMcpEndpointUrl,
+              badge: activeMcpEndpointBadge,
+              icon: <McpIcon className="h-3 w-3" />,
+              submenu: mcpEndpointOptions,
             }
           })(),
         ],
@@ -1896,6 +2001,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.init,
     endpointPreset,
     endpointCustomUrl,
+    endpointEffectiveUrl,
+    endpointEnvUrl,
+    mcpEndpointPreset,
+    mcpEndpointCustomUrl,
+    mcpEndpointEffectiveUrl,
+    profileFromOverride,
+    envProfileId,
     initLowPowerDecision,
     overrides,
     banners.length,
@@ -2165,8 +2277,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 {item.icon}
                               </span>
                             )}
-                            <span className="flex-1 font-medium">
-                              {item.label}
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-medium">
+                                {item.label}
+                              </span>
+                              {item.description ? (
+                                <span
+                                  className="mt-0.5 block break-all text-[11px] font-normal opacity-80"
+                                  title={item.description}
+                                >
+                                  {item.description}
+                                </span>
+                              ) : null}
                             </span>
                             {item.badge !== undefined && (
                               <span className="flex-shrink-0 rounded-full bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--network-globe-edge)]">

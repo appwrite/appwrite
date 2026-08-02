@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useParams } from '@tanstack/react-router'
+import { startOfDay, subDays } from 'date-fns'
 import {
   ImageFormat,
   Query,
@@ -21,20 +22,28 @@ import { toast } from 'sonner'
 import {
   Check,
   ChevronsUpDown,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ArrowUp,
+  Circle,
   Copy,
   Paperclip,
   Loader2,
   Pencil,
   Plus,
+  RefreshCw,
+  Search,
   Send,
+  Square,
   Trash2,
   X,
   ZoomIn,
   ZoomOut,
   ExternalLink,
   Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import {
   ThinkingBubble,
@@ -52,6 +61,7 @@ import {
 } from '@/components/global/shared/ThinkingBubble'
 import { Slider } from '@/components/ui/slider'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
@@ -72,15 +82,21 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useAssistantConversations,
   useAssistantAttachmentFiles,
+  useAssistantMcpConnections,
   useAssistantMessages,
   ASSISTANT_MESSAGES_PAGE_SIZE,
+  fetchAssistantMessages,
   useCreateAssistantConversation,
   useCreateAssistantMessage,
   useDeleteAssistantConversation,
+  useUpdateAssistantConversation,
+  useUpdateAssistantMessage,
   useUploadAssistantAttachments,
   ASSISTANT_ATTACHMENTS_BUCKET_ID,
   useProject,
   consoleAccountQueryOptions,
+  useAIChatActiveConversationId,
+  useAIChatExpanded,
   useAIChatPanelOpen,
   type AssistantConversation,
   type AssistantMessage,
@@ -88,12 +104,34 @@ import {
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
+import { AssistantConversationsResizableLayout } from '@/components/global/providers/ai-chat/AssistantConversationsResizableLayout'
+import { AssistantMessageDebugCard } from '@/components/global/providers/ai-chat/AssistantMessageDebugCard'
+import { AssistantTurnActivity } from '@/components/global/providers/ai-chat/AssistantTurnActivity'
+import { McpConnections } from '@/components/global/providers/ai-chat/McpConnections'
+import { AssistantEmptyState } from '@/components/global/providers/ai-chat/AssistantEmptyState'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import { applyAssistantRealtimePayload } from '@/lib/assistant/realtime-cache'
+import {
+  buildTurnView,
+  getAssistantBubblePhase,
+  getAssistantConversationStatusDotClass,
+  getAssistantConversationStatusLabel,
+  getAssistantConversationStatusTone,
+  isAssistantConversationInFlight,
+  isAssistantMessageInFlight,
+  type AssistantBubblePhase,
+} from '@/lib/assistant/turn-view'
 import { useAvifSupport } from '@/lib/avif-support'
-import { registerConsoleRealtimeListener } from '@/lib/realtime'
+import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
+
+function nonEmptyId(value: string | null | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
 
 /** API may return projectId on conversations; SDK types omit optional fields at times. */
 function assistantConversationProjectId(
@@ -103,7 +141,7 @@ function assistantConversationProjectId(
   const extended = conversation as AssistantConversation & {
     projectId?: string | null
   }
-  return extended.projectId ?? undefined
+  return nonEmptyId(extended.projectId)
 }
 
 interface AIChatContextValue {
@@ -130,6 +168,60 @@ function isAssistantBlockedPath(pathname: string): boolean {
   return AUTH_ROUTE_PATHNAMES.has(pathname)
 }
 
+const CONVERSATION_TIME_GROUPS = [
+  'Today',
+  'Yesterday',
+  'Previous 7 days',
+  'Previous 30 days',
+  'Older',
+] as const
+
+type ConversationTimeGroup = (typeof CONVERSATION_TIME_GROUPS)[number]
+
+function getConversationTimeGroup(
+  dateValue: string | undefined,
+  now = new Date(),
+): ConversationTimeGroup {
+  const date = dateValue ? new Date(dateValue) : now
+  if (Number.isNaN(date.getTime())) return 'Older'
+
+  const day = startOfDay(date).getTime()
+  const today = startOfDay(now).getTime()
+  const yesterday = startOfDay(subDays(now, 1)).getTime()
+  const previous7 = startOfDay(subDays(now, 7)).getTime()
+  const previous30 = startOfDay(subDays(now, 30)).getTime()
+
+  if (day >= today) return 'Today'
+  if (day >= yesterday) return 'Yesterday'
+  if (day >= previous7) return 'Previous 7 days'
+  if (day >= previous30) return 'Previous 30 days'
+  return 'Older'
+}
+
+function groupConversationsByTime(
+  conversations: AssistantConversation[],
+): Array<{ label: ConversationTimeGroup; items: AssistantConversation[] }> {
+  const buckets = new Map<ConversationTimeGroup, AssistantConversation[]>()
+  for (const conversation of conversations) {
+    const label = getConversationTimeGroup(
+      conversation.$updatedAt || conversation.$createdAt,
+    )
+    const existing = buckets.get(label)
+    if (existing) {
+      existing.push(conversation)
+    } else {
+      buckets.set(label, [conversation])
+    }
+  }
+
+  return CONVERSATION_TIME_GROUPS.filter((label) => buckets.has(label)).map(
+    (label) => ({
+      label,
+      items: buckets.get(label) ?? [],
+    }),
+  )
+}
+
 export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const { activeContent, showAssistant, hideRightPane } = useConsoleRightPane()
@@ -147,9 +239,8 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     enabled: !isAssistantBlocked && isClientQueryEnabled,
   })
   const { isOpen, setIsOpen } = useAIChatPanelOpen(account)
-  const [activeConversationId, setActiveConversationId] = useState<
-    string | null
-  >(null)
+  const { activeConversationId, setActiveConversationId } =
+    useAIChatActiveConversationId(account)
   const hasRestoredOpenPrefRef = useRef(false)
 
   const openChat = useCallback(() => {
@@ -235,6 +326,14 @@ const suggestedQuestions = [
   'How do I deploy a function?',
 ]
 
+/** Action-oriented prompts when an enabled MCP server can run tools. */
+const mcpSuggestedQuestions = [
+  'List the databases and tables in this project',
+  'Show me Auth users created this week',
+  'What storage buckets do I have?',
+  'Create a todos table with title and done columns',
+]
+
 const PLACEHOLDER_TOKENS = [
   '{{APPWRITE_ENDPOINT}}',
   '{{APPWRITE_REGION}}',
@@ -287,22 +386,24 @@ function applyPlaceholderValues(
   return resolved
 }
 
-const AUTO_SCROLL_BOTTOM_THRESHOLD = 24
+/** Distance from bottom that still counts as "following" the conversation. */
+const AUTO_SCROLL_BOTTOM_THRESHOLD = 96
 
 interface AssistantMessageRowProps {
-  messageId: string
-  role: string
-  messageText: string
+  message: AssistantMessage
   messageAttachments?: string[]
   deferCodeBlocks: boolean
   placeholderCandidates: Partial<Record<PlaceholderToken, string[]>>
   copied: boolean
+  showDebug?: boolean
   onCopyMessage: (messageId: string, text: string) => void
   onStartEditResend: (
     messageId: string,
     text: string,
     attachmentIds: string[],
   ) => void
+  onRetry?: (messageId: string) => void
+  canRetry?: boolean
 }
 
 interface MessageAttachmentsProps {
@@ -317,6 +418,12 @@ interface ComposerPendingAttachment {
   size: number
   status: 'uploading' | 'ready' | 'failed'
   fileId?: string
+}
+
+interface QueuedComposerMessage {
+  id: string
+  content: string
+  attachmentIds: string[]
 }
 
 interface MessageAttachmentItem {
@@ -999,17 +1106,21 @@ function MessageAttachments({
 
 const AssistantMessageRow = memo(
   function AssistantMessageRow({
-    messageId,
-    role,
-    messageText,
+    message,
     messageAttachments,
     deferCodeBlocks,
     placeholderCandidates,
     copied,
+    showDebug = false,
     onCopyMessage,
     onStartEditResend,
+    onRetry,
+    canRetry = false,
   }: AssistantMessageRowProps) {
     const t = useT()
+    const messageId = message.$id
+    const role = message.role
+    const messageText = message.contentText || ''
     const isUserMessage = role.toLowerCase() === 'user'
     const isRtlMessage = useMemo(
       () => isRtlMessageText(messageText),
@@ -1081,6 +1192,14 @@ const AssistantMessageRow = memo(
                 attachmentIds={messageAttachments}
                 alignment={attachmentsAlignment}
               />
+              {showDebug ? (
+                <div className="mt-1 w-full">
+                  <AssistantMessageDebugCard
+                    message={message}
+                    align={alignRight ? 'end' : 'start'}
+                  />
+                </div>
+              ) : null}
               <div
                 dir="ltr"
                 className={cn(
@@ -1165,6 +1284,7 @@ const AssistantMessageRow = memo(
               className="max-w-[88%] cursor-default px-2.5 py-1.5 text-[13px] text-foreground"
             >
               <div className="space-y-2">
+                <AssistantTurnActivity message={message} />
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2">
                     <p className="mb-1.5 text-[11px] text-muted-foreground">
@@ -1210,10 +1330,18 @@ const AssistantMessageRow = memo(
                     </div>
                   </div>
                 )}
-                <StreamingMarkdown
-                  content={resolvedAssistantText}
-                  deferCodeBlocks={deferCodeBlocks}
-                />
+                {messageText.trim() ? (
+                  <StreamingMarkdown
+                    content={resolvedAssistantText}
+                    deferCodeBlocks={deferCodeBlocks}
+                  />
+                ) : null}
+                {showDebug ? (
+                  <AssistantMessageDebugCard
+                    message={message}
+                    align={alignRight ? 'end' : 'start'}
+                  />
+                ) : null}
                 <div
                   dir={isRtlMessage ? 'rtl' : 'ltr'}
                   className={cn(
@@ -1221,20 +1349,34 @@ const AssistantMessageRow = memo(
                   )}
                 >
                   {/* time ago hidden for now */}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => onCopyMessage(messageId, messageText)}
-                    aria-label={t('Copy message')}
-                  >
-                    {copied ? (
-                      <Check className="h-2.5 w-2.5" />
-                    ) : (
-                      <Copy className="h-2.5 w-2.5" />
-                    )}
-                  </Button>
+                  {messageText.trim() ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => onCopyMessage(messageId, messageText)}
+                      aria-label={t('Copy message')}
+                    >
+                      {copied ? (
+                        <Check className="h-2.5 w-2.5" />
+                      ) : (
+                        <Copy className="h-2.5 w-2.5" />
+                      )}
+                    </Button>
+                  ) : null}
+                  {canRetry && onRetry ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => onRetry(messageId)}
+                      aria-label={t('Retry')}
+                    >
+                      <RefreshCw className="h-2.5 w-2.5" />
+                    </Button>
+                  ) : null}
                   {/* time ago hidden for now */}
                 </div>
               </div>
@@ -1251,17 +1393,25 @@ const AssistantMessageRow = memo(
     )
   },
   (prev, next) =>
-    prev.messageId === next.messageId &&
-    prev.role === next.role &&
-    prev.messageText === next.messageText &&
+    prev.message === next.message &&
     prev.messageAttachments === next.messageAttachments &&
     prev.deferCodeBlocks === next.deferCodeBlocks &&
+    prev.canRetry === next.canRetry &&
+    prev.showDebug === next.showDebug &&
     prev.placeholderCandidates === next.placeholderCandidates &&
     prev.copied === next.copied,
 )
 
 const TYPING_IDLE_ACTIVITY = 0.15
 const THINKING_ACTIVITY = 0.55
+
+const BUBBLE_PHASE_ACTIVITY: Record<AssistantBubblePhase, number> = {
+  idle: TYPING_IDLE_ACTIVITY,
+  waiting: 0.48,
+  routing: 0.62,
+  working: 0.78,
+  answering: 0.42,
+}
 
 export type BubbleActivityDebugMode =
   | 'auto'
@@ -1284,20 +1434,20 @@ const DEBUG_MODE_ACTIVITY: Record<
 
 function useTypingSpeedActivity(
   isActive: boolean,
-  isThinking: boolean,
+  phase: AssistantBubblePhase,
   debugMode: BubbleActivityDebugMode = 'auto',
 ) {
   const activityRef = useRef(TYPING_IDLE_ACTIVITY)
   const lastKeystrokeRef = useRef<number | null>(null)
   /** Smoothed ms between keystrokes - lower means faster typing */
   const emaIntervalRef = useRef(320)
-  const isThinkingRef = useRef(isThinking)
+  const phaseRef = useRef(phase)
   const isActiveRef = useRef(isActive)
   const debugModeRef = useRef(debugMode)
 
   useEffect(() => {
-    isThinkingRef.current = isThinking
-  }, [isThinking])
+    phaseRef.current = phase
+  }, [phase])
 
   useEffect(() => {
     isActiveRef.current = isActive
@@ -1346,6 +1496,7 @@ function useTypingSpeedActivity(
         return
       }
 
+      const phaseActivity = BUBBLE_PHASE_ACTIVITY[phaseRef.current]
       const sinceLast =
         lastKeystrokeRef.current != null
           ? now - lastKeystrokeRef.current
@@ -1359,19 +1510,23 @@ function useTypingSpeedActivity(
 
       const interval = Math.max(emaIntervalRef.current, 45)
       const speedT = Math.min(1, Math.max(0, (260 - interval) / 165))
-      let target =
+      let typingTarget =
         TYPING_IDLE_ACTIVITY + speedT * (1.05 - TYPING_IDLE_ACTIVITY)
 
       if (sinceLast < 160) {
         const activeBoost = 1 + (1 - sinceLast / 160) * 0.4
-        target = Math.min(1.12, target * activeBoost)
+        typingTarget = Math.min(1.12, typingTarget * activeBoost)
       }
 
       if (sinceLast > 900) {
-        target = TYPING_IDLE_ACTIVITY
-      } else if (isThinkingRef.current) {
-        target = Math.max(target, THINKING_ACTIVITY)
+        typingTarget = TYPING_IDLE_ACTIVITY
       }
+
+      // During a live turn, phase activity owns the floor; typing can still lift it.
+      const target =
+        phaseRef.current === 'idle'
+          ? typingTarget
+          : Math.max(phaseActivity, sinceLast < 900 ? typingTarget * 0.35 : 0)
 
       const prev = activityRef.current
       const smoothRate = target >= prev ? 14 : 3.5
@@ -1428,9 +1583,8 @@ const SPHERE_SHAPE_DEBUG_MODES: Array<{
 ]
 
 const SPHERE_BASE_SIZES = {
+  /** Empty conversation placeholder only */
   empty: 220,
-  thinking: 72,
-  composer: 64,
 } as const
 
 function debugControlButtonClass(isActive: boolean) {
@@ -1443,6 +1597,8 @@ function debugControlButtonClass(isActive: boolean) {
 }
 
 function AssistantBubbleDebugControls({
+  expanded,
+  onExpandedChange,
   activityMode,
   onActivityModeChange,
   sizeScale,
@@ -1458,6 +1614,8 @@ function AssistantBubbleDebugControls({
   onParticleCountChange,
   onParticleCountAuto,
 }: {
+  expanded: boolean
+  onExpandedChange: (expanded: boolean) => void
   activityMode: BubbleActivityDebugMode
   onActivityModeChange: (mode: BubbleActivityDebugMode) => void
   sizeScale: number
@@ -1477,130 +1635,156 @@ function AssistantBubbleDebugControls({
   const sizePercent = Math.round(sizeScale * 100)
 
   return (
-    <div className="space-y-2 rounded-lg border border-purple-500/25 bg-purple-500/5 p-2.5">
-      <div>
-        <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-          Activity
-        </p>
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {BUBBLE_DEBUG_MODES.map(({ id, label }) => (
-            <Button
-              key={id}
-              type="button"
-              size="sm"
-              variant="outline"
-              className={debugControlButtonClass(activityMode === id)}
-              onClick={() => onActivityModeChange(id)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-            Size
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
-              {sizePercent}%
-              {sizeScaleOverride == null ? ' (default)' : ''}
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className={debugControlButtonClass(sizeScaleOverride == null)}
-              onClick={onSizeScaleDefault}
-            >
-              Default
-            </Button>
+    <div className="rounded-lg border border-purple-500/25 bg-purple-500/5">
+      <button
+        type="button"
+        onClick={() => onExpandedChange(!expanded)}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-2 px-2.5 py-2 text-start transition-colors hover:bg-purple-500/10"
+      >
+        <span className="min-w-0 flex-1 text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+          Bubble debug
+        </span>
+        {!expanded ? (
+          <span className="truncate text-[10px] tabular-nums text-purple-600/70 dark:text-purple-400/70">
+            {activityMode} · {sizePercent}% · {shapeMode}
+          </span>
+        ) : null}
+        {expanded ? (
+          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-purple-600/80 dark:text-purple-400/80" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-purple-600/80 dark:text-purple-400/80" />
+        )}
+      </button>
+      {expanded ? (
+        <div className="space-y-2 border-t border-purple-500/20 p-2.5 pt-2">
+          <div>
+            <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+              Activity
+            </p>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {BUBBLE_DEBUG_MODES.map(({ id, label }) => (
+                <Button
+                  key={id}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={debugControlButtonClass(activityMode === id)}
+                  onClick={() => onActivityModeChange(id)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+                Size
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
+                  {sizePercent}%
+                  {sizeScaleOverride == null ? ' (default)' : ''}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={debugControlButtonClass(sizeScaleOverride == null)}
+                  onClick={onSizeScaleDefault}
+                >
+                  Default
+                </Button>
+              </div>
+            </div>
+            <Slider
+              min={SPHERE_SIZE_SCALE_MIN}
+              max={SPHERE_SIZE_SCALE_MAX}
+              step={SPHERE_SIZE_SCALE_STEP}
+              value={[sizeScale]}
+              onValueChange={(values) => {
+                const next = values[0]
+                if (next != null) onSizeScaleChange(next)
+              }}
+              className={SPHERE_DEBUG_SLIDER_CLASS}
+            />
+          </div>
+          <div>
+            <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+              Color
+            </p>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {SPHERE_COLOR_DEBUG_MODES.map(({ id, label }) => (
+                <Button
+                  key={id}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={debugControlButtonClass(colorMode === id)}
+                  onClick={() => onColorModeChange(id)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+              Shape
+            </p>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {SPHERE_SHAPE_DEBUG_MODES.map(({ id, label }) => (
+                <Button
+                  key={id}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={debugControlButtonClass(shapeMode === id)}
+                  onClick={() => onShapeModeChange(id)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
+                Particles
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
+                  {particleSliderValue.toLocaleString()}
+                  {particleCountOverride == null ? ' (auto)' : ''}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={debugControlButtonClass(
+                    particleCountOverride == null,
+                  )}
+                  onClick={onParticleCountAuto}
+                >
+                  Auto
+                </Button>
+              </div>
+            </div>
+            <Slider
+              min={SPHERE_PARTICLE_COUNT_MIN}
+              max={SPHERE_PARTICLE_COUNT_MAX}
+              step={SPHERE_PARTICLE_COUNT_STEP}
+              value={[particleSliderValue]}
+              onValueChange={(values) => {
+                const next = values[0]
+                if (next != null) onParticleCountChange(next)
+              }}
+              className={SPHERE_DEBUG_SLIDER_CLASS}
+            />
           </div>
         </div>
-        <Slider
-          min={SPHERE_SIZE_SCALE_MIN}
-          max={SPHERE_SIZE_SCALE_MAX}
-          step={SPHERE_SIZE_SCALE_STEP}
-          value={[sizeScale]}
-          onValueChange={(values) => {
-            const next = values[0]
-            if (next != null) onSizeScaleChange(next)
-          }}
-          className={SPHERE_DEBUG_SLIDER_CLASS}
-        />
-      </div>
-      <div>
-        <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-          Color
-        </p>
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {SPHERE_COLOR_DEBUG_MODES.map(({ id, label }) => (
-            <Button
-              key={id}
-              type="button"
-              size="sm"
-              variant="outline"
-              className={debugControlButtonClass(colorMode === id)}
-              onClick={() => onColorModeChange(id)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-          Shape
-        </p>
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {SPHERE_SHAPE_DEBUG_MODES.map(({ id, label }) => (
-            <Button
-              key={id}
-              type="button"
-              size="sm"
-              variant="outline"
-              className={debugControlButtonClass(shapeMode === id)}
-              onClick={() => onShapeModeChange(id)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-purple-600/80 dark:text-purple-400/80">
-            Particles
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] tabular-nums text-purple-600 dark:text-purple-400">
-              {particleSliderValue.toLocaleString()}
-              {particleCountOverride == null ? ' (auto)' : ''}
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className={debugControlButtonClass(particleCountOverride == null)}
-              onClick={onParticleCountAuto}
-            >
-              Auto
-            </Button>
-          </div>
-        </div>
-        <Slider
-          min={SPHERE_PARTICLE_COUNT_MIN}
-          max={SPHERE_PARTICLE_COUNT_MAX}
-          step={SPHERE_PARTICLE_COUNT_STEP}
-          value={[particleSliderValue]}
-          onValueChange={(values) => {
-            const next = values[0]
-            if (next != null) onParticleCountChange(next)
-          }}
-          className={SPHERE_DEBUG_SLIDER_CLASS}
-        />
-      </div>
+      ) : null}
     </div>
   )
 }
@@ -1620,6 +1804,7 @@ export function AIChatPanelContent() {
     [location.pathname],
   )
   const { isDebugModeOpen } = useDebugMode()
+  const [bubbleDebugExpanded, setBubbleDebugExpanded] = useState(false)
   const [bubbleDebugMode, setBubbleDebugMode] =
     useState<BubbleActivityDebugMode>('auto')
   const [sphereSizeScaleOverride, setSphereSizeScaleOverride] =
@@ -1652,11 +1837,21 @@ export function AIChatPanelContent() {
     ? (sphereParticleCountOverride ?? undefined)
     : undefined
   const [input, setInput] = useState('')
+  const [messageQueue, setMessageQueue] = useState<QueuedComposerMessage[]>([])
+  const [messageQueueExpanded, setMessageQueueExpanded] = useState(true)
+  const [restoredQueueAttachmentIds, setRestoredQueueAttachmentIds] = useState<
+    string[]
+  >([])
+  const isDrainingQueueRef = useRef(false)
+  const queuePausedUntilIdleRef = useRef(false)
   const [messagesLimit, setMessagesLimit] = useState(
     ASSISTANT_MESSAGES_PAGE_SIZE,
   )
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const [isCopyingConversation, setIsCopyingConversation] = useState(false)
+  const [copiedConversation, setCopiedConversation] = useState(false)
+  const copiedConversationTimeoutRef = useRef<number | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingMessageAttachments, setEditingMessageAttachments] = useState<
     string[]
@@ -1673,27 +1868,52 @@ export function AIChatPanelContent() {
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
   const [conversationsPopoverOpen, setConversationsPopoverOpen] =
     useState(false)
+  const [conversationSearch, setConversationSearch] = useState('')
+  const [debouncedConversationSearch, setDebouncedConversationSearch] =
+    useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const messagesContentRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const copiedMessageTimeoutRef = useRef<number | null>(null)
   const previousConversationIdRef = useRef<string | null>(null)
-  const previousLatestMessageIdRef = useRef<string | null>(null)
   const shouldAutoScrollRef = useRef(true)
+  const isProgrammaticScrollRef = useRef(false)
+  const [isStickToBottom, setIsStickToBottom] = useState(true)
   const olderMessagesAnchorRef = useRef<{
     scrollTop: number
     scrollHeight: number
   } | null>(null)
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedConversationSearch(conversationSearch.trim())
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [conversationSearch])
+
   const {
     data: conversationsData,
     isLoading: conversationsLoading,
-    isFetching: conversationsFetching,
-  } = useAssistantConversations()
+  } = useAssistantConversations(debouncedConversationSearch || undefined)
   const conversations: AssistantConversation[] = conversationsData ?? []
+  const hasConversationSearch = debouncedConversationSearch.length > 0
+  const { data: mcpConnections = [] } = useAssistantMcpConnections()
+  const hasActiveMcp = useMemo(
+    () =>
+      mcpConnections.some(
+        (connection) => connection.hasTokens && connection.enabled,
+      ),
+    [mcpConnections],
+  )
+  const emptyStateSuggestions = hasActiveMcp
+    ? mcpSuggestedQuestions
+    : suggestedQuestions
   const createConversationMutation = useCreateAssistantConversation()
   const deleteConversationMutation = useDeleteAssistantConversation()
   const createMessageMutation = useCreateAssistantMessage()
+  const updateMessageMutation = useUpdateAssistantMessage()
+  const updateConversationMutation = useUpdateAssistantConversation()
   const uploadAssistantAttachmentsMutation = useUploadAssistantAttachments()
 
   const activeConversation = useMemo(
@@ -1704,13 +1924,19 @@ export function AIChatPanelContent() {
     [activeConversationId, conversations],
   )
   const contextProjectId =
-    params.projectId ?? assistantConversationProjectId(activeConversation)
+    nonEmptyId(params.projectId) ??
+    assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
   const { account } = useAuth()
+  const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
+    useAIChatExpanded(account)
   const queryClient = useQueryClient()
   const accountId = (account as { $id?: string } | undefined)?.$id ?? null
   const organizationId =
-    params.orgId ?? params.teamId ?? project?.teamId ?? null
+    nonEmptyId(params.orgId) ??
+    nonEmptyId(params.teamId) ??
+    nonEmptyId(project?.teamId) ??
+    null
   /** On project routes, team channel comes from project fetch - wait so we do not reconnect per layer. */
   const waitingForProjectTeam =
     Boolean(contextProjectId) &&
@@ -1746,21 +1972,39 @@ export function AIChatPanelContent() {
         response.payload && typeof response.payload === 'object'
           ? (response.payload as Record<string, unknown>)
           : null
+
+      // Merge message/tool/conversation payloads for live streaming; avoid refetch storms.
+      if (applyAssistantRealtimePayload(queryClient, response.events, payload)) {
+        return
+      }
+
+      const eventNames = response.events.map((eventName) =>
+        eventName.toLowerCase(),
+      )
+      const isConversationEvent = eventNames.some(
+        (eventName) =>
+          eventName.includes('assistantconversations') ||
+          eventName.includes('assistant.conversations'),
+      )
       const conversationId =
         typeof payload?.conversationId === 'string'
           ? payload.conversationId
-          : null
+          : typeof payload?.$id === 'string' && isConversationEvent
+            ? payload.$id
+            : null
 
-      queryClient.invalidateQueries({
-        queryKey: ['assistant', 'conversations'],
-      })
+      // Prefer cache merges above. Invalidate only as a last resort for unknown
+      // assistant payloads, and never broadcast-invalidate all message queries.
+      if (isConversationEvent || !conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: ['assistant', 'conversations'],
+        })
+      }
 
       if (conversationId) {
         queryClient.invalidateQueries({
           queryKey: ['assistant', 'messages', conversationId],
         })
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['assistant', 'messages'] })
       }
     }
 
@@ -1840,38 +2084,76 @@ export function AIChatPanelContent() {
   const latestMessageId = messages[messages.length - 1]?.$id
   const latestMessage = messages[messages.length - 1]
 
-  const isConversationRunning = useMemo(() => {
-    if (!activeConversation) return false
-    const status = activeConversation.status?.toLowerCase()
-    const lockState = activeConversation.lockState?.toLowerCase()
-    return status === 'running' || status === 'queued' || lockState === 'locked'
-  }, [activeConversation])
+  const isConversationRunning = useMemo(
+    () => isAssistantConversationInFlight(activeConversation),
+    [activeConversation],
+  )
 
-  const isLatestAssistantMessageRunning = useMemo(() => {
-    const latestAssistantMessage = [...messages]
-      .reverse()
-      .find((message) => message.role.toLowerCase() !== 'user')
-    const status = latestAssistantMessage?.status?.toLowerCase()
-    return (
-      status === 'running' ||
-      status === 'queued' ||
-      status === 'processing' ||
-      status === 'pending'
-    )
-  }, [messages])
+  const latestAssistantMessage = useMemo(
+    () =>
+      [...messages]
+        .reverse()
+        .find((message) => message.role.toLowerCase() !== 'user'),
+    [messages],
+  )
+
+  const activeAssistantMessageId =
+    activeConversation?.activeMessageId ||
+    (isAssistantMessageInFlight(latestAssistantMessage?.status)
+      ? latestAssistantMessage?.$id
+      : undefined)
+
+  const isLatestAssistantMessageRunning = useMemo(
+    () => isAssistantMessageInFlight(latestAssistantMessage?.status),
+    [latestAssistantMessage?.status],
+  )
 
   const waitingForAssistantReply =
     latestMessage?.role?.toLowerCase() === 'user' && isConversationRunning
 
+  const liveTurnView = useMemo(() => {
+    if (!latestAssistantMessage) return null
+    return buildTurnView(latestAssistantMessage)
+  }, [latestAssistantMessage])
+
+  const liveTurnStatusLabel = liveTurnView?.statusLabel
+
+  const isSending =
+    createMessageMutation.isPending || updateMessageMutation.isPending
+
   const isThinking =
-    createMessageMutation.isPending ||
+    isSending ||
     isLatestAssistantMessageRunning ||
     waitingForAssistantReply
+
+  const bubblePhase = useMemo(
+    () =>
+      getAssistantBubblePhase({
+        isConversationRunning: isConversationRunning || isSending,
+        isSending,
+        latestUserWaiting: waitingForAssistantReply,
+        message: latestAssistantMessage,
+        turn: liveTurnView,
+      }),
+    [
+      isConversationRunning,
+      isSending,
+      latestAssistantMessage,
+      liveTurnView,
+      waitingForAssistantReply,
+    ],
+  )
+
+  const canSendWhileIdle =
+    !isConversationRunning &&
+    !createMessageMutation.isPending &&
+    !updateMessageMutation.isPending &&
+    !updateConversationMutation.isPending
 
   const { activityRef: bubbleActivityRef, registerKeystroke: registerTypingKeystroke } =
     useTypingSpeedActivity(
       !isAssistantBlocked,
-      isThinking,
+      bubblePhase,
       bubbleDebugMode,
     )
 
@@ -1903,48 +2185,93 @@ export function AIChatPanelContent() {
     return distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD
   }, [])
 
-  const handleMessagesScroll = useCallback(() => {
+  const scrollMessagesToBottom = useCallback(() => {
     const container = messagesContainerRef.current
     if (!container) return
-    shouldAutoScrollRef.current = isNearBottom(container)
+
+    isProgrammaticScrollRef.current = true
+    container.scrollTop = container.scrollHeight
+
+    // Second pass after layout (markdown, tools, images) settles.
+    requestAnimationFrame(() => {
+      const el = messagesContainerRef.current
+      if (el && shouldAutoScrollRef.current) {
+        el.scrollTop = el.scrollHeight
+      }
+      requestAnimationFrame(() => {
+        isProgrammaticScrollRef.current = false
+      })
+    })
+  }, [])
+
+  const pinToBottom = useCallback(() => {
+    shouldAutoScrollRef.current = true
+    setIsStickToBottom(true)
+    scrollMessagesToBottom()
+  }, [scrollMessagesToBottom])
+
+  const handleMessagesScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return
+    if (olderMessagesAnchorRef.current) return
+
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const nearBottom = isNearBottom(container)
+    shouldAutoScrollRef.current = nearBottom
+    setIsStickToBottom(nearBottom)
   }, [isNearBottom])
 
   useLayoutEffect(() => {
     const conversationId = activeConversationId ?? null
-    const currentLatestMessageId = latestMessageId ?? null
     const conversationChanged =
       previousConversationIdRef.current !== conversationId
 
     if (olderMessagesAnchorRef.current && messagesContainerRef.current) {
       const { scrollTop, scrollHeight } = olderMessagesAnchorRef.current
       const newScrollHeight = messagesContainerRef.current.scrollHeight
+      isProgrammaticScrollRef.current = true
       messagesContainerRef.current.scrollTop =
         scrollTop + (newScrollHeight - scrollHeight)
       olderMessagesAnchorRef.current = null
-    } else {
-      const latestMessageChanged =
-        previousLatestMessageIdRef.current !== currentLatestMessageId
-
-      if (
-        currentLatestMessageId &&
-        (conversationChanged ||
-          (latestMessageChanged && shouldAutoScrollRef.current))
-      ) {
-        messagesEndRef.current?.scrollIntoView({
-          behavior: conversationChanged ? 'auto' : 'smooth',
-        })
-      }
+      requestAnimationFrame(() => {
+        isProgrammaticScrollRef.current = false
+      })
+    } else if (conversationChanged) {
+      shouldAutoScrollRef.current = true
+      setIsStickToBottom(true)
+      scrollMessagesToBottom()
+    } else if (
+      latestMessageId &&
+      shouldAutoScrollRef.current &&
+      messages.length > 0
+    ) {
+      // New message while pinned (e.g. user send or first assistant token).
+      scrollMessagesToBottom()
     }
 
     previousConversationIdRef.current = conversationId
-    previousLatestMessageIdRef.current = currentLatestMessageId
-  }, [activeConversationId, latestMessageId, messages.length])
+  }, [
+    activeConversationId,
+    latestMessageId,
+    messages.length,
+    scrollMessagesToBottom,
+  ])
 
-  useLayoutEffect(() => {
-    // During generation, follow the latest content unless the user scrolled away.
-    if (!isThinking || !shouldAutoScrollRef.current) return
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
-  }, [isThinking, latestMessage?.contentText, messages.length])
+  // Follow height growth (streaming text, tools, subagents) while pinned.
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    const content = messagesContentRef.current
+    if (!container || !content || messages.length === 0) return
+
+    const observer = new ResizeObserver(() => {
+      if (!shouldAutoScrollRef.current) return
+      if (olderMessagesAnchorRef.current) return
+      scrollMessagesToBottom()
+    })
+    observer.observe(content)
+    return () => observer.disconnect()
+  }, [messages.length, scrollMessagesToBottom])
 
   // Focus input when panel content mounts
   useEffect(() => {
@@ -1956,6 +2283,9 @@ export function AIChatPanelContent() {
       if (copiedMessageTimeoutRef.current !== null) {
         window.clearTimeout(copiedMessageTimeoutRef.current)
       }
+      if (copiedConversationTimeoutRef.current !== null) {
+        window.clearTimeout(copiedConversationTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -1963,16 +2293,21 @@ export function AIChatPanelContent() {
     pendingAttachmentsRef.current = pendingAttachments
   }, [pendingAttachments])
 
-  // Pick initial conversation if none is selected
+  // Restore or pick a conversation once account prefs + list are ready.
+  // Keep the current selection while searching even if it is filtered out.
   useEffect(() => {
-    if (
-      activeConversationId &&
-      conversations.some(
-        (conversation: AssistantConversation) =>
-          conversation.$id === activeConversationId,
-      )
-    ) {
-      return
+    if (!account || conversationsLoading) return
+
+    if (activeConversationId) {
+      if (hasConversationSearch) return
+      if (
+        conversations.some(
+          (conversation: AssistantConversation) =>
+            conversation.$id === activeConversationId,
+        )
+      ) {
+        return
+      }
     }
 
     if (conversations.length > 0) {
@@ -1980,16 +2315,31 @@ export function AIChatPanelContent() {
       return
     }
 
-    setActiveConversationId(null)
-  }, [activeConversationId, conversations, setActiveConversationId])
+    if (!hasConversationSearch) {
+      setActiveConversationId(null)
+    }
+  }, [
+    account,
+    activeConversationId,
+    conversations,
+    conversationsLoading,
+    hasConversationSearch,
+    setActiveConversationId,
+  ])
 
   useEffect(() => {
     setMessagesLimit(ASSISTANT_MESSAGES_PAGE_SIZE)
+    setMessageQueue([])
+    setMessageQueueExpanded(true)
+    setRestoredQueueAttachmentIds([])
+    isDrainingQueueRef.current = false
+    queuePausedUntilIdleRef.current = false
   }, [activeConversationId])
 
   useEffect(() => {
     // Start each conversation in follow mode.
     shouldAutoScrollRef.current = true
+    setIsStickToBottom(true)
   }, [activeConversationId])
 
   useEffect(() => {
@@ -2000,7 +2350,7 @@ export function AIChatPanelContent() {
 
   const resolveConversationProjectId = async (): Promise<string | null> => {
     const directContextProjectId =
-      params.projectId ??
+      nonEmptyId(params.projectId) ??
       assistantConversationProjectId(activeConversation) ??
       assistantConversationProjectId(conversations[0])
     if (directContextProjectId) return directContextProjectId
@@ -2040,20 +2390,20 @@ export function AIChatPanelContent() {
   const handleCreateConversation = async () => {
     const conversationProjectId = await resolveConversationProjectId()
     if (!conversationProjectId) {
-      toast.error(t('No accessible project found to create a conversation.'))
+      toast.error(t('No accessible project found to create an agent.'))
       return
     }
 
     try {
       const conversation = await createConversationMutation.mutateAsync({
         projectId: conversationProjectId,
-        title: 'New conversation',
+        title: 'New agent',
       })
       setActiveConversationId(conversation.$id)
       setConversationsPopoverOpen(false)
       focusInput()
     } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to create conversation')))
+      toast.error(getErrorMessage(error, t('Failed to create agent')))
     }
   }
 
@@ -2067,7 +2417,7 @@ export function AIChatPanelContent() {
         setActiveConversationId(nextConversation?.$id ?? null)
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to delete conversation')))
+      toast.error(getErrorMessage(error, t('Failed to delete agent')))
     }
   }
 
@@ -2088,7 +2438,8 @@ export function AIChatPanelContent() {
       setPendingAttachments((previous) => [...previous, pendingAttachment])
 
       const contextForUploadProjectId =
-        params.projectId ?? assistantConversationProjectId(activeConversation)
+        nonEmptyId(params.projectId) ??
+        assistantConversationProjectId(activeConversation)
       const uploadPromise = uploadAssistantAttachmentsMutation
         .mutateAsync({
           files: [file],
@@ -2186,46 +2537,204 @@ export function AIChatPanelContent() {
     )
   }, [])
 
+  const waitForPendingAttachmentUploads = useCallback(async () => {
+    if (
+      !pendingAttachmentsRef.current.some(
+        (attachment) => attachment.status === 'uploading',
+      )
+    ) {
+      return
+    }
+    setIsWaitingForAttachments(true)
+    const uploadPromises = pendingAttachmentsRef.current
+      .filter((attachment) => attachment.status === 'uploading')
+      .map((attachment) => uploadTasksRef.current.get(attachment.localId))
+      .filter((promise): promise is Promise<void> => !!promise)
+    await Promise.allSettled(uploadPromises)
+    setIsWaitingForAttachments(false)
+  }, [])
+
+  const collectReadyAttachmentIds = useCallback(() => {
+    return pendingAttachmentsRef.current
+      .filter(
+        (
+          attachment,
+        ): attachment is ComposerPendingAttachment & { fileId: string } =>
+          attachment.status === 'ready' && !!attachment.fileId,
+      )
+      .map((attachment) => attachment.fileId)
+  }, [])
+
+  const submitComposerMessage = useCallback(
+    async ({
+      content,
+      attachmentIds,
+      editingId,
+    }: {
+      content: string
+      attachmentIds: string[]
+      editingId?: string | null
+    }) => {
+      const trimmed = content.trim()
+      if (!trimmed) return false
+
+      const conversationProjectId = await resolveConversationProjectId()
+      if (!activeConversationId && !conversationProjectId) {
+        toast.error(
+          t('No accessible project found to start a new agent.'),
+        )
+        return false
+      }
+
+      shouldAutoScrollRef.current = true
+      setIsStickToBottom(true)
+      scrollMessagesToBottom()
+
+      let conversationId = activeConversationId
+
+      try {
+        if (!conversationId) {
+          if (!conversationProjectId) return false
+          const createdConversation =
+            await createConversationMutation.mutateAsync({
+              projectId: conversationProjectId,
+              title: makeConversationTitle(trimmed),
+            })
+          conversationId = createdConversation.$id
+          setActiveConversationId(createdConversation.$id)
+        }
+        if (!conversationId) return false
+
+        const messageContext = {
+          contextTeamId:
+            nonEmptyId(params.orgId) ??
+            nonEmptyId(params.teamId) ??
+            nonEmptyId(project?.teamId),
+          contextProjectId:
+            nonEmptyId(conversationProjectId) ??
+            nonEmptyId(params.projectId) ??
+            assistantConversationProjectId(activeConversation),
+          contextOrganizationId:
+            nonEmptyId(params.orgId) ??
+            nonEmptyId(params.teamId) ??
+            nonEmptyId(project?.teamId),
+          contextPagePath: location.pathname,
+          contextPageTitle:
+            typeof document !== 'undefined' ? document.title : undefined,
+          contextPageUrl:
+            typeof window !== 'undefined' ? window.location.href : undefined,
+        }
+
+        if (editingId) {
+          setEditingMessageId(null)
+          setEditingMessageAttachments([])
+          await updateMessageMutation.mutateAsync({
+            conversationId,
+            messageId: editingId,
+            contentText: trimmed,
+            context: messageContext,
+            attachments: attachmentIds,
+          })
+        } else {
+          await createMessageMutation.mutateAsync({
+            conversationId,
+            contentText: trimmed,
+            context: messageContext,
+            attachments: attachmentIds,
+            continueRun: true,
+          })
+        }
+
+        return true
+      } catch (error) {
+        toast.error(getErrorMessage(error, t('Failed to send message')))
+        return false
+      }
+    },
+    [
+      activeConversation,
+      activeConversationId,
+      createConversationMutation,
+      createMessageMutation,
+      location.pathname,
+      params.orgId,
+      params.projectId,
+      params.teamId,
+      project?.teamId,
+      scrollMessagesToBottom,
+      setActiveConversationId,
+      t,
+      updateMessageMutation,
+    ],
+  )
+
+  const enqueueComposerMessage = useCallback(
+    (content: string, attachmentIds: string[]) => {
+      const trimmed = content.trim()
+      if (!trimmed) return
+
+      const queued: QueuedComposerMessage = {
+        id:
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `queue-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        content: trimmed,
+        attachmentIds,
+      }
+      setMessageQueue((current) => [...current, queued])
+    },
+    [],
+  )
+
+  const handleRemoveQueuedMessage = useCallback((queueId: string) => {
+    setMessageQueue((current) =>
+      current.filter((message) => message.id !== queueId),
+    )
+  }, [])
+
+  const handlePromoteQueuedMessage = useCallback((queueId: string) => {
+    setMessageQueue((current) => {
+      const item = current.find((message) => message.id === queueId)
+      if (!item) return current
+      return [item, ...current.filter((message) => message.id !== queueId)]
+    })
+  }, [])
+
+  const handleEditQueuedMessage = useCallback(
+    (queueId: string) => {
+      const item = messageQueue.find((message) => message.id === queueId)
+      if (!item) return
+
+      setMessageQueue((current) =>
+        current.filter((message) => message.id !== queueId),
+      )
+      setEditingMessageId(null)
+      setEditingMessageAttachments([])
+      setPendingAttachments([])
+      setComposerImageOrientations({})
+      setRestoredQueueAttachmentIds(item.attachmentIds)
+      setInput(item.content)
+      focusInput(true)
+    },
+    [focusInput, messageQueue],
+  )
+
   const handleSend = async (content: string = input) => {
     const trimmed = content.trim()
-    if (!trimmed || createMessageMutation.isPending || isWaitingForAttachments)
-      return
-    const conversationProjectId = await resolveConversationProjectId()
-    if (!activeConversationId && !conversationProjectId) {
-      toast.error(t('No accessible project found to start a new conversation.'))
+    if (
+      !trimmed ||
+      createMessageMutation.isPending ||
+      updateMessageMutation.isPending ||
+      isWaitingForAttachments
+    ) {
       return
     }
 
-    setInput('')
-
-    let conversationId = activeConversationId
+    // Editing always sends immediately (and is blocked while a run is active).
+    if (editingMessageId && isConversationRunning) return
 
     try {
-      if (!conversationId) {
-        if (!conversationProjectId) return
-        const createdConversation =
-          await createConversationMutation.mutateAsync({
-            projectId: conversationProjectId,
-            title: makeConversationTitle(trimmed),
-          })
-        conversationId = createdConversation.$id
-        setActiveConversationId(createdConversation.$id)
-      }
-      if (!conversationId) return
-
-      if (
-        pendingAttachmentsRef.current.some(
-          (attachment) => attachment.status === 'uploading',
-        )
-      ) {
-        setIsWaitingForAttachments(true)
-        const uploadPromises = pendingAttachmentsRef.current
-          .filter((attachment) => attachment.status === 'uploading')
-          .map((attachment) => uploadTasksRef.current.get(attachment.localId))
-          .filter((promise): promise is Promise<void> => !!promise)
-        await Promise.allSettled(uploadPromises)
-        setIsWaitingForAttachments(false)
-      }
+      await waitForPendingAttachmentUploads()
 
       const failedAttachments = pendingAttachmentsRef.current.filter(
         (attachment) => attachment.status === 'failed',
@@ -2237,54 +2746,128 @@ export function AIChatPanelContent() {
         return
       }
 
-      const pendingAttachmentIds = pendingAttachmentsRef.current
-        .filter(
-          (
-            attachment,
-          ): attachment is ComposerPendingAttachment & { fileId: string } =>
-            attachment.status === 'ready' && !!attachment.fileId,
-        )
-        .map((attachment) => attachment.fileId)
-
-      const attachmentIds = editingMessageId
+      const pendingAttachmentIds = collectReadyAttachmentIds()
+      const editingId = editingMessageId
+      const attachmentIds = editingId
         ? Array.from(
             new Set([...editingMessageAttachments, ...pendingAttachmentIds]),
           )
-        : pendingAttachmentIds
+        : Array.from(
+            new Set([...restoredQueueAttachmentIds, ...pendingAttachmentIds]),
+          )
 
-      if (editingMessageId) {
-        setEditingMessageId(null)
-        setEditingMessageAttachments([])
+      // While a turn is running, queue follow-ups instead of dropping them.
+      if (isConversationRunning && !editingId) {
+        enqueueComposerMessage(trimmed, attachmentIds)
+        setInput('')
+        setPendingAttachments([])
+        setComposerImageOrientations({})
+        setRestoredQueueAttachmentIds([])
+        setMessageQueueExpanded(true)
+        if (inputRef.current) {
+          inputRef.current.style.height = 'auto'
+        }
+        return
       }
 
-      await createMessageMutation.mutateAsync({
-        conversationId,
-        contentText: trimmed,
-        context: {
-          contextTeamId: params.orgId ?? params.teamId ?? project?.teamId,
-          contextProjectId:
-            params.projectId ?? assistantConversationProjectId(activeConversation),
-          contextOrganizationId:
-            params.orgId ?? params.teamId ?? project?.teamId,
-          contextPagePath: location.pathname,
-          contextPageTitle:
-            typeof document !== 'undefined' ? document.title : undefined,
-          contextPageUrl:
-            typeof window !== 'undefined' ? window.location.href : undefined,
-        },
-        attachments: attachmentIds,
-        continueRun: true,
+      setInput('')
+      const sent = await submitComposerMessage({
+        content: trimmed,
+        attachmentIds,
+        editingId,
       })
-
-      setPendingAttachments([])
-      setComposerImageOrientations({})
+      if (sent) {
+        setPendingAttachments([])
+        setComposerImageOrientations({})
+        setRestoredQueueAttachmentIds([])
+        if (inputRef.current) {
+          inputRef.current.style.height = 'auto'
+        }
+      } else {
+        setInput(trimmed)
+      }
     } catch (error) {
-      // Keep selected attachments in place when message send fails.
       toast.error(getErrorMessage(error, t('Failed to send message')))
     } finally {
       setIsWaitingForAttachments(false)
     }
   }
+
+  // Drain queued follow-ups once the active turn becomes idle.
+  useEffect(() => {
+    if (isDrainingQueueRef.current) return
+    if (
+      createMessageMutation.isPending ||
+      updateMessageMutation.isPending ||
+      isWaitingForAttachments ||
+      editingMessageId
+    ) {
+      return
+    }
+
+    // After a successful drain/send, wait until that turn finishes before the next.
+    if (queuePausedUntilIdleRef.current) {
+      if (isConversationRunning) return
+      queuePausedUntilIdleRef.current = false
+    }
+
+    if (isConversationRunning) return
+    if (messageQueue.length === 0) return
+
+    const next = messageQueue[0]
+    isDrainingQueueRef.current = true
+    setMessageQueue((current) => current.slice(1))
+
+    void (async () => {
+      const sent = await submitComposerMessage({
+        content: next.content,
+        attachmentIds: next.attachmentIds,
+      })
+      if (!sent) {
+        setMessageQueue((current) => [next, ...current])
+        isDrainingQueueRef.current = false
+        return
+      }
+      queuePausedUntilIdleRef.current = true
+      isDrainingQueueRef.current = false
+    })()
+  }, [
+    createMessageMutation.isPending,
+    editingMessageId,
+    isConversationRunning,
+    isWaitingForAttachments,
+    messageQueue,
+    submitComposerMessage,
+    updateMessageMutation.isPending,
+  ])
+
+  const handleStopConversation = useCallback(async () => {
+    if (!activeConversationId || updateConversationMutation.isPending) return
+    try {
+      await updateConversationMutation.mutateAsync({
+        conversationId: activeConversationId,
+        controlType: 'stop',
+      })
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to stop response')))
+    }
+  }, [activeConversationId, t, updateConversationMutation])
+
+  const handleRetryMessage = useCallback(
+    async (messageId: string) => {
+      if (!activeConversationId || updateConversationMutation.isPending) return
+      try {
+        await updateConversationMutation.mutateAsync({
+          conversationId: activeConversationId,
+          controlType: 'retry',
+          retryFromMessageId: messageId,
+        })
+      } catch (error) {
+        toast.error(getErrorMessage(error, t('Failed to retry response')))
+      }
+    },
+    [activeConversationId, t, updateConversationMutation],
+  )
 
   const handleCopyMessage = useCallback(
     async (messageId: string, text: string) => {
@@ -2306,8 +2889,91 @@ export function AIChatPanelContent() {
     [t],
   )
 
+  const handleCopyConversationDebug = useCallback(async () => {
+    if (!activeConversationId || isCopyingConversation) return
+
+    setIsCopyingConversation(true)
+    try {
+      const fetchLimit = Math.min(
+        Math.max(totalMessages, messages.length, ASSISTANT_MESSAGES_PAGE_SIZE),
+        1000,
+      )
+      const { messages: listedMessages, total } = await fetchAssistantMessages(
+        activeConversationId,
+        fetchLimit,
+      )
+
+      const messagesForExport = await Promise.all(
+        listedMessages.map(async (message) => {
+          let fullMessage = message
+          if (message.role !== 'user') {
+            try {
+              fullMessage = await sdk.forConsole.assistant.getMessage({
+                conversationId: activeConversationId,
+                messageId: message.$id,
+              })
+            } catch {
+              // Keep list payload if getMessage fails.
+            }
+          }
+
+          return {
+            message: fullMessage,
+            turn:
+              fullMessage.role === 'user' ? null : buildTurnView(fullMessage),
+          }
+        }),
+      )
+
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        source: 'console-ai-chat-debug',
+        conversation: activeConversation ?? { $id: activeConversationId },
+        messages: messagesForExport,
+        meta: {
+          total,
+          exportedCount: messagesForExport.length,
+          truncated: total > messagesForExport.length,
+          activeConversationId,
+          activeMessageId: activeConversation?.activeMessageId ?? null,
+          conversationStatus: activeConversation?.status ?? null,
+          contextProjectId: contextProjectId ?? null,
+          organizationId,
+          pagePath: location.pathname,
+          pageUrl:
+            typeof window !== 'undefined' ? window.location.href : null,
+        },
+      }
+
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+      setCopiedConversation(true)
+      if (copiedConversationTimeoutRef.current !== null) {
+        window.clearTimeout(copiedConversationTimeoutRef.current)
+      }
+      copiedConversationTimeoutRef.current = window.setTimeout(() => {
+        setCopiedConversation(false)
+      }, 1500)
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, 'Failed to copy conversation JSON'),
+      )
+    } finally {
+      setIsCopyingConversation(false)
+    }
+  }, [
+    activeConversation,
+    activeConversationId,
+    contextProjectId,
+    isCopyingConversation,
+    location.pathname,
+    messages.length,
+    organizationId,
+    totalMessages,
+  ])
+
   const handleStartEditResend = useCallback(
     (messageId: string, text: string, attachmentIds: string[]) => {
+      if (isConversationRunning) return
       setEditingMessageId(messageId)
       setEditingMessageAttachments(attachmentIds)
       setPendingAttachments([])
@@ -2315,7 +2981,7 @@ export function AIChatPanelContent() {
       setInput(text)
       focusInput(true)
     },
-    [focusInput],
+    [focusInput, isConversationRunning],
   )
 
   const handleCancelEditResend = useCallback(() => {
@@ -2356,265 +3022,479 @@ export function AIChatPanelContent() {
     }
   }
 
+  const handleCloseChat = useCallback(() => {
+    closeChat()
+  }, [closeChat])
+
+  useEffect(() => {
+    if (!isChatExpanded) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setIsChatExpanded(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isChatExpanded, setIsChatExpanded])
+
+  const conversationGroups = useMemo(
+    () => groupConversationsByTime(conversations),
+    [conversations],
+  )
+
+  const renderConversationsSearch = () => (
+    <div className="relative">
+      <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        value={conversationSearch}
+        onChange={(event) => setConversationSearch(event.target.value)}
+        placeholder={t('Search agents...')}
+        className="h-8 border-border bg-background pe-2 ps-8 text-[12px]"
+        aria-label={t('Search agents...')}
+      />
+    </div>
+  )
+
+  const renderConversationsList = (options?: {
+    onSelect?: () => void
+    dense?: boolean
+  }) => {
+    // Only block on the initial load. Background refetches (realtime invalidation)
+    // must keep the existing list mounted to avoid flicker.
+    if (conversationsLoading && conversations.length === 0) {
+      return (
+        <div className="flex items-center gap-1.5 px-1.5 py-2 text-[11px] text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          {t('Loading agents...')}
+        </div>
+      )
+    }
+    if (conversations.length === 0) {
+      return (
+        <div className="px-1.5 py-2 text-[11px] text-muted-foreground">
+          {hasConversationSearch
+            ? t('No agents match your search.')
+            : t('No agents yet.')}
+        </div>
+      )
+    }
+    return (
+      <div className="space-y-3">
+        {conversationGroups.map((group) => (
+          <div key={group.label} className="space-y-0.5">
+            <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t(group.label)}
+            </p>
+            {group.items.map((conversation) => {
+              const isActive = conversation.$id === activeConversationId
+              const statusTone =
+                getAssistantConversationStatusTone(conversation)
+              const statusLabel = t(
+                getAssistantConversationStatusLabel(statusTone),
+              )
+              return (
+                <div
+                  key={conversation.$id}
+                  className={cn(
+                    'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+                    isActive
+                      ? 'border-border bg-accent'
+                      : 'hover:border-border hover:bg-accent/60',
+                    options?.dense && 'py-1.5',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveConversationId(conversation.$id)
+                      options?.onSelect?.()
+                    }}
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-start"
+                  >
+                    <p className="min-w-0 truncate text-[12px] font-medium text-foreground">
+                      {conversation.title || t('Untitled agent')}
+                    </p>
+                    {statusTone !== 'ready' ? (
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 shrink-0 rounded-full',
+                          getAssistantConversationStatusDotClass(statusTone),
+                        )}
+                        title={statusLabel}
+                        aria-label={statusLabel}
+                        role="img"
+                      />
+                    ) : null}
+                  </button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className={cn(
+                      'h-6 w-6 shrink-0 transition-opacity',
+                      deleteConversationMutation.isPending &&
+                        deleteConversationMutation.variables ===
+                          conversation.$id
+                        ? 'opacity-100'
+                        : 'opacity-0 group-hover:opacity-100 disabled:opacity-0',
+                    )}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleDeleteConversation(conversation.$id)
+                    }}
+                    disabled={
+                      deleteConversationMutation.isPending &&
+                      deleteConversationMutation.variables === conversation.$id
+                    }
+                    aria-label={t('Delete agent')}
+                  >
+                    {deleteConversationMutation.isPending &&
+                    deleteConversationMutation.variables ===
+                      conversation.$id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   if (isAssistantBlocked) return null
 
-  return (
-    <div className="flex h-full min-h-0">
-      <div className="flex min-w-0 flex-1 flex-col">
+  const conversationsSidebar = (
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+        <p className="truncate text-[13px] font-semibold text-foreground">
+          {t('Agents')}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 w-8 shrink-0 p-0"
+          onClick={handleCreateConversation}
+          disabled={createConversationMutation.isPending}
+          aria-label={t('New agent')}
+        >
+          {createConversationMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Plus className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="mb-5">{renderConversationsSearch()}</div>
+        {renderConversationsList({ dense: true })}
+      </div>
+      <div className="shrink-0 border-t border-border bg-background p-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-9 w-full justify-start gap-1.5 px-2 text-[13px] text-muted-foreground hover:text-foreground"
+          onClick={() => setIsChatExpanded(false)}
+        >
+          <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
+          {t('Back to console')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const chatMain = (
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                <Popover
-                  open={conversationsPopoverOpen}
-                  onOpenChange={setConversationsPopoverOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-8 max-w-[248px] justify-start px-1.5 text-start"
-                    >
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <div className="min-w-0">
-                          <p className="truncate text-[13px] font-semibold text-foreground">
-                            {activeConversation?.title || t('New conversation')}
-                          </p>
+                {isChatExpanded ? (
+                  <p className="truncate px-1.5 text-[13px] font-semibold text-foreground">
+                    {activeConversation?.title || t('New agent')}
+                  </p>
+                ) : (
+                  <Popover
+                    open={conversationsPopoverOpen}
+                    onOpenChange={setConversationsPopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-8 max-w-[248px] justify-start px-1.5 text-start"
+                      >
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold text-foreground">
+                              {activeConversation?.title || t('New agent')}
+                            </p>
+                          </div>
+                          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         </div>
-                        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent align="start" className="w-[300px] p-0">
+                      <div className="max-h-[300px] overflow-y-auto p-1.5">
+                        <p className="mb-1.5 px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                          {t('Agents')}
+                        </p>
+                        <div className="mb-5">{renderConversationsSearch()}</div>
+                        {renderConversationsList({
+                          onSelect: () => setConversationsPopoverOpen(false),
+                        })}
                       </div>
-                    </Button>
-                  </PopoverTrigger>
+                    </PopoverContent>
+                  </Popover>
+                )}
 
-                  <PopoverContent align="start" className="w-[300px] p-0">
-                    <div className="border-b border-border px-2 py-1.5">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('Conversations')}
-                      </p>
-                    </div>
-
-                    <div className="max-h-[300px] overflow-y-auto p-1.5">
-                      {conversationsLoading || conversationsFetching ? (
-                        <div className="flex items-center gap-1.5 px-1.5 py-2 text-[11px] text-muted-foreground">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          {t('Loading conversations...')}
-                        </div>
-                      ) : conversations.length === 0 ? (
-                        <div className="px-1.5 py-2 text-[11px] text-muted-foreground">
-                          {t('No conversations yet.')}
-                        </div>
-                      ) : (
-                        <div className="space-y-0.5">
-                          {conversations.map(
-                            (conversation: AssistantConversation) => {
-                              const isActive =
-                                conversation.$id === activeConversationId
-                              return (
-                                <div
-                                  key={conversation.$id}
-                                  className={cn(
-                                    'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
-                                    isActive
-                                      ? 'border-border bg-accent'
-                                      : 'hover:border-border hover:bg-accent/60',
-                                  )}
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setActiveConversationId(conversation.$id)
-                                      setConversationsPopoverOpen(false)
-                                    }}
-                                    className="min-w-0 flex-1 cursor-pointer text-start"
-                                  >
-                                    <p className="truncate text-[12px] font-medium text-foreground">
-                                      {conversation.title ||
-                                        t('Untitled conversation')}
-                                    </p>
-                                  </button>
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                                    onClick={(event) => {
-                                      event.stopPropagation()
-                                      handleDeleteConversation(conversation.$id)
-                                    }}
-                                    disabled={
-                                      deleteConversationMutation.isPending
-                                    }
-                                    aria-label={t('Delete conversation')}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )
-                            },
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-8 w-8 shrink-0 p-0"
-                  onClick={handleCreateConversation}
-                  disabled={createConversationMutation.isPending}
-                >
-                  {createConversationMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                {!isChatExpanded ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0 p-0"
+                    onClick={handleCreateConversation}
+                    disabled={createConversationMutation.isPending}
+                    aria-label={t('New agent')}
+                  >
+                    {createConversationMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {isDebugModeOpen && activeConversationId ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-purple-600 hover:bg-purple-500/10 hover:text-purple-700 disabled:text-purple-600/40 dark:text-purple-400 dark:hover:bg-purple-500/15 dark:hover:text-purple-300 dark:disabled:text-purple-400/40"
+                  onClick={() => {
+                    void handleCopyConversationDebug()
+                  }}
+                  disabled={isCopyingConversation || messages.length === 0}
+                  aria-label="Copy conversation JSON"
+                  title="Copy conversation JSON"
+                >
+                  {isCopyingConversation ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : copiedConversation ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              ) : null}
+              <McpConnections />
               <button
-                onClick={closeChat}
+                type="button"
+                onClick={() => setIsChatExpanded((current) => !current)}
                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={
+                  isChatExpanded ? t('Collapse chat') : t('Expand chat')
+                }
+                title={isChatExpanded ? t('Collapse chat') : t('Expand chat')}
+              >
+                {isChatExpanded ? (
+                  <Minimize2 className="h-3.5 w-3.5" />
+                ) : (
+                  <Maximize2 className="h-3.5 w-3.5" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseChat}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={t('Close')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          <div
-            ref={messagesContainerRef}
-            onScroll={handleMessagesScroll}
-            className="min-h-0 flex-1 overflow-y-auto p-3"
-          >
-            {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center">
-                <ThinkingBubble
-                  size={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+          <div className="relative min-h-0 flex-1">
+            <div
+              ref={messagesContainerRef}
+              onScroll={handleMessagesScroll}
+              className="h-full overflow-y-auto"
+            >
+              <div
+                className={cn(
+                  'p-3',
+                  isChatExpanded && 'mx-auto w-full max-w-3xl',
+                  messages.length === 0 && 'flex min-h-full flex-col',
+                )}
+              >
+              {messages.length === 0 ? (
+                <AssistantEmptyState
+                  hasActiveMcp={hasActiveMcp}
+                  suggestions={emptyStateSuggestions}
+                  onSelectSuggestion={(question) => handleSend(t(question))}
+                  sphereSize={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
                   activityRef={bubbleActivityRef}
                   colorMode={effectiveSphereColorMode}
                   shapeMode={effectiveSphereShapeMode}
                   particleCount={effectiveSphereParticleCount}
-                  className="mb-4"
-                />
-                <h3 className="mb-2 text-center text-lg font-semibold text-foreground">
-                  {t('How can I help you?')}
-                </h3>
-                <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                  {t(
-                    'I can inspect your project, explain issues, suggest next steps, and run approved actions.',
-                  )}
-                </p>
-                {isDebugModeOpen ? (
-                  <div className="mb-6 w-full max-w-md">
-                    <AssistantBubbleDebugControls
-                      activityMode={bubbleDebugMode}
-                      onActivityModeChange={setBubbleDebugMode}
-                      sizeScale={effectiveSphereSizeScale}
-                      sizeScaleOverride={sphereSizeScaleOverride}
-                      onSizeScaleChange={setSphereSizeScaleOverride}
-                      onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
-                      colorMode={sphereColorMode}
-                      onColorModeChange={setSphereColorMode}
-                      shapeMode={sphereShapeMode}
-                      onShapeModeChange={setSphereShapeMode}
-                      particleCountOverride={sphereParticleCountOverride}
-                      autoParticleCount={sphereAutoParticleCount}
-                      onParticleCountChange={setSphereParticleCountOverride}
-                      onParticleCountAuto={() =>
-                        setSphereParticleCountOverride(null)
-                      }
-                    />
-                  </div>
-                ) : null}
-                <div className="w-full max-w-md space-y-2">
-                  {suggestedQuestions.map((question) => (
-                    <button
-                      key={question}
-                      onClick={() => handleSend(t(question))}
-                      className="w-full rounded-lg border border-border bg-card p-3 text-start text-sm text-foreground transition-colors hover:bg-accent"
-                    >
-                      {t(question)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {hasOlderMessages ? (
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={isFetchingMessages || isLoadingOlderMessages}
-                      className="h-7 px-2 text-[11px] text-muted-foreground"
-                      onClick={handleLoadOlderMessages}
-                    >
-                      {isLoadingOlderMessages ? (
-                        <>
-                          <Loader2 className="me-1 h-3 w-3 animate-spin" />
-                          {t('Loading older messages...')} {/* pragma: allowlist secret */}
-                        </>
-                      ) : (
-                        t('Load older messages') // pragma: allowlist secret
-                      )}
-                    </Button>
-                  </div>
-                ) : null}
-                {messages.map((message: AssistantMessage) => {
-                  const messageText = message.contentText || ''
-                  const messageAttachments = getMessageAttachments(message)
-                  const isUserMessage = message.role.toLowerCase() === 'user'
-
-                  // Avoid duplicate AI placeholders: when the backend created an empty
-                  // assistant message during generation, we only show the "Thinking..."
-                  // row below (single AI response state).
-                  if (!isUserMessage && !messageText.trim()) {
-                    return null
-                  }
-
-                  return (
-                    <AssistantMessageRow
-                      key={message.$id}
-                      messageId={message.$id}
-                      role={message.role}
-                      messageText={messageText}
-                      messageAttachments={messageAttachments}
-                      placeholderCandidates={placeholderCandidates}
-                      copied={copiedMessageId === message.$id}
-                      onCopyMessage={handleCopyMessage}
-                      onStartEditResend={handleStartEditResend}
-                      deferCodeBlocks={
-                        isThinking && message.$id === latestMessageId
-                      }
-                    />
-                  )
-                })}
-                {isThinking && (
-                  <div className="flex">
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-muted-foreground">
-                      <ThinkingBubble
-                        size={getSphereRenderSize(SPHERE_BASE_SIZES.thinking)}
-                        activityRef={bubbleActivityRef}
-                        colorMode={effectiveSphereColorMode}
-                        shapeMode={effectiveSphereShapeMode}
-                        particleCount={effectiveSphereParticleCount}
-                        centered={false}
+                  debugSlot={
+                    isDebugModeOpen ? (
+                      <AssistantBubbleDebugControls
+                        expanded={bubbleDebugExpanded}
+                        onExpandedChange={setBubbleDebugExpanded}
+                        activityMode={bubbleDebugMode}
+                        onActivityModeChange={setBubbleDebugMode}
+                        sizeScale={effectiveSphereSizeScale}
+                        sizeScaleOverride={sphereSizeScaleOverride}
+                        onSizeScaleChange={setSphereSizeScaleOverride}
+                        onSizeScaleDefault={() =>
+                          setSphereSizeScaleOverride(null)
+                        }
+                        colorMode={sphereColorMode}
+                        onColorModeChange={setSphereColorMode}
+                        shapeMode={sphereShapeMode}
+                        onShapeModeChange={setSphereShapeMode}
+                        particleCountOverride={sphereParticleCountOverride}
+                        autoParticleCount={sphereAutoParticleCount}
+                        onParticleCountChange={setSphereParticleCountOverride}
+                        onParticleCountAuto={() =>
+                          setSphereParticleCountOverride(null)
+                        }
                       />
-                      <span>{t('Thinking...')}</span>
+                    ) : null
+                  }
+                />
+              ) : (
+                <div ref={messagesContentRef} className="space-y-3">
+                  {hasOlderMessages ? (
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={isFetchingMessages || isLoadingOlderMessages}
+                        className="h-7 px-2 text-[11px] text-muted-foreground"
+                        onClick={handleLoadOlderMessages}
+                      >
+                        {isLoadingOlderMessages ? (
+                          <>
+                            <Loader2 className="me-1 h-3 w-3 animate-spin" />
+                            {t('Loading older messages...')}{' '}
+                            {/* pragma: allowlist secret */}
+                          </>
+                        ) : (
+                          t('Load older messages') // pragma: allowlist secret
+                        )}
+                      </Button>
                     </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
+                  ) : null}
+                  {messages.map((message: AssistantMessage) => {
+                    const messageText = message.contentText || ''
+                    const messageAttachments = getMessageAttachments(message)
+                    const isUserMessage = message.role.toLowerCase() === 'user'
+                    const isLiveAssistant =
+                      !isUserMessage &&
+                      (message.$id === activeAssistantMessageId ||
+                        isAssistantMessageInFlight(message.status))
+                    const turn = isUserMessage ? null : buildTurnView(message)
+                    const hasTurnChrome =
+                      !!turn &&
+                      (!!turn.statusLabel ||
+                        !!turn.route?.agent ||
+                        turn.agents.length > 0 ||
+                        turn.toolOrder.length > 0 ||
+                        !!turn.error)
+
+                    // Hide empty completed assistant shells with no activity chrome.
+                    if (
+                      !isUserMessage &&
+                      !messageText.trim() &&
+                      !isLiveAssistant &&
+                      !hasTurnChrome
+                    ) {
+                      return null
+                    }
+
+                    const messageStatus = message.status?.toLowerCase()
+                    const canRetryMessage =
+                      !isConversationRunning &&
+                      !isUserMessage &&
+                      (messageStatus === 'failed' ||
+                        messageStatus === 'stopped' ||
+                        activeConversation?.status?.toLowerCase() ===
+                          'failed' ||
+                        activeConversation?.status?.toLowerCase() ===
+                          'stopped')
+
+                    return (
+                      <AssistantMessageRow
+                        key={message.$id}
+                        message={message}
+                        messageAttachments={messageAttachments}
+                        placeholderCandidates={placeholderCandidates}
+                        copied={copiedMessageId === message.$id}
+                        showDebug={isDebugModeOpen}
+                        onCopyMessage={handleCopyMessage}
+                        onStartEditResend={handleStartEditResend}
+                        onRetry={handleRetryMessage}
+                        canRetry={canRetryMessage}
+                        deferCodeBlocks={
+                          isThinking && message.$id === latestMessageId
+                        }
+                      />
+                    )
+                  })}
+                  {isThinking &&
+                  !latestAssistantMessage &&
+                  waitingForAssistantReply ? (
+                    <div className="flex">
+                      <div className="mb-2 flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>{liveTurnStatusLabel || t('Thinking...')}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
               </div>
-            )}
+            </div>
+            {!isStickToBottom && messages.length > 0 ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="pointer-events-auto h-8 gap-1.5 rounded-full border border-border bg-background/95 px-3 text-[12px] shadow-md backdrop-blur-sm"
+                  onClick={pinToBottom}
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                  {t('Jump to latest')}
+                </Button>
+              </div>
+            ) : null}
           </div>
 
-          <div className="shrink-0 border-t border-border p-3">
+          <div className="shrink-0 border-t border-border">
+            <div
+              className={cn(
+                'p-3',
+                isChatExpanded && 'mx-auto w-full max-w-3xl',
+              )}
+            >
             {isDebugModeOpen && messages.length > 0 ? (
               <div className="mb-3">
                 <AssistantBubbleDebugControls
+                  expanded={bubbleDebugExpanded}
+                  onExpandedChange={setBubbleDebugExpanded}
                   activityMode={bubbleDebugMode}
                   onActivityModeChange={setBubbleDebugMode}
                   sizeScale={effectiveSphereSizeScale}
@@ -2740,178 +3620,328 @@ export function AIChatPanelContent() {
                 </div>
               </div>
             ) : null}
-            {pendingAttachments.length > 0 ? (
-              <div className="mb-2 overflow-x-auto">
-                <div className="flex min-w-max flex-nowrap gap-1.5 pb-1">
-                  {orderedPendingAttachments.map((attachment) => (
-                    <div
-                      key={attachment.localId}
-                      className="w-40 shrink-0 rounded-md border border-border bg-muted/20 p-1.5"
-                    >
-                      {attachment.mimeType.startsWith('image/') &&
-                      attachment.fileId ? (
-                        <img
-                          src={sdk.forConsole.storage.getFilePreview({
-                            bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
-                            fileId: attachment.fileId,
-                            height: 240,
-                            output: composerAvifSupported
-                              ? ImageFormat.Avif
-                              : undefined,
-                          })}
-                          alt={attachment.name}
-                          onLoad={(event) => {
-                            const image =
-                              event.currentTarget as HTMLImageElement
-                            const orientation =
-                              image.naturalHeight > image.naturalWidth
-                                ? 'portrait'
-                                : 'landscape'
-                            setComposerImageOrientations((previous) =>
-                              previous[attachment.localId] === orientation
-                                ? previous
-                                : {
-                                    ...previous,
-                                    [attachment.localId]: orientation,
-                                  },
-                            )
-                          }}
-                          className={cn(
-                            'mb-1 w-full rounded object-cover',
-                            getPreviewAspectClass(
-                              composerImageOrientations[attachment.localId] ===
-                                'portrait',
-                            ),
-                          )}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="mb-1 flex aspect-video w-full items-center justify-center rounded bg-muted/40">
-                          <Paperclip className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex items-start gap-1.5">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[11px] font-medium text-foreground">
-                            {attachment.name}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {attachment.status === 'uploading'
-                              ? t('Uploading...')
-                              : attachment.status === 'failed'
-                                ? t('Upload failed')
-                                : (formatAttachmentSize(attachment.size) ??
-                                  t('Ready'))}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleRemoveAttachment(attachment.localId)
-                          }
-                          className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          aria-label={`${t('Remove')} ${attachment.name}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
+            <div className="overflow-hidden rounded-md border border-border bg-card">
+              {messageQueue.length > 0 ? (
+                <div className="border-b border-border">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMessageQueueExpanded((current) => !current)
+                    }
+                    className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-start text-[12px] text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  >
+                    {messageQueueExpanded ? (
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                    )}
+                    <span className="tabular-nums font-medium text-foreground">
+                      {messageQueue.length}
+                    </span>
+                    <span>{t('Queued')}</span>
+                  </button>
+                  {messageQueueExpanded ? (
+                    <div className="pb-1">
+                      {messageQueue.map((queued, index) => {
+                        const queueNumber =
+                          index + 1 + (isConversationRunning ? 1 : 0)
+                        return (
+                          <div
+                            key={queued.id}
+                            className="group/queue flex items-center gap-2 px-2.5 py-1 hover:bg-muted/30"
+                          >
+                            <Circle className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                            <span className="w-4 shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                              {queueNumber}
+                            </span>
+                            <p className="min-w-0 flex-1 truncate text-[12px] text-foreground">
+                              {queued.content}
+                            </p>
+                            {queued.attachmentIds.length > 0 ? (
+                              <span
+                                className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground"
+                                title={t('Attachment')}
+                              >
+                                <Paperclip className="h-3 w-3" />
+                                {queued.attachmentIds.length}
+                              </span>
+                            ) : null}
+                            <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/queue:opacity-100 group-focus-within/queue:opacity-100">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditQueuedMessage(queued.id)
+                                }
+                                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                aria-label={t('Edit queued message')}
+                                title={t('Edit queued message')}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handlePromoteQueuedMessage(queued.id)
+                                }
+                                disabled={index === 0}
+                                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-30"
+                                aria-label={t('Send next')}
+                                title={t('Send next')}
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveQueuedMessage(queued.id)
+                                }
+                                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                aria-label={t('Remove from queue')}
+                                title={t('Remove from queue')}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                  ))}
+                  ) : null}
                 </div>
-              </div>
-            ) : null}
-            <div className="flex items-end gap-1.5 rounded-md border border-border bg-card p-1.5">
-              {messages.length > 0 ? (
-                <ThinkingBubble
-                  size={getSphereRenderSize(SPHERE_BASE_SIZES.composer)}
-                  activityRef={bubbleActivityRef}
-                  colorMode={effectiveSphereColorMode}
-                  shapeMode={effectiveSphereShapeMode}
-                  particleCount={effectiveSphereParticleCount}
-                  centered={false}
-                  className="mb-0.5 shrink-0"
-                />
               ) : null}
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleAttachmentFileChange}
-              />
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value)
-                  registerTypingKeystroke()
-                }}
-                onPaste={handleInputPaste}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  editingMessageId ? t('Edit message...') : t('Ask a question...')
-                }
-                dir={isInputRtl ? 'rtl' : 'ltr'}
-                rows={1}
-                className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
-                style={{
-                  height: 'auto',
-                  minHeight: '34px',
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement
-                  target.style.height = 'auto'
-                  target.style.height = `${Math.min(target.scrollHeight, 128)}px`
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAttachmentInputClick}
-                disabled={
-                  createMessageMutation.isPending || isWaitingForAttachments
-                }
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                  createMessageMutation.isPending || isWaitingForAttachments
-                    ? 'bg-muted text-muted-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
-                aria-label={t('Attach files')}
-              >
-                <Paperclip className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() => handleSend()}
-                disabled={
-                  !input.trim() ||
-                  createMessageMutation.isPending ||
-                  isWaitingForAttachments
-                }
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                  input.trim() &&
-                    !createMessageMutation.isPending &&
-                    !isWaitingForAttachments
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-muted text-muted-foreground',
-                )}
-              >
-                {createMessageMutation.isPending ||
-                isWaitingForAttachments ||
-                hasUploadingAttachments ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Send className="h-3.5 w-3.5" />
-                )}
-              </button>
+              {pendingAttachments.length > 0 ? (
+                <div className="border-b border-border px-2 py-2">
+                  <div className="overflow-x-auto">
+                    <div className="flex min-w-max flex-nowrap gap-1.5">
+                      {orderedPendingAttachments.map((attachment) => (
+                        <div
+                          key={attachment.localId}
+                          className="w-40 shrink-0 rounded-md border border-border bg-muted/20 p-1.5"
+                        >
+                          {attachment.mimeType.startsWith('image/') &&
+                          attachment.fileId ? (
+                            <img
+                              src={sdk.forConsole.storage.getFilePreview({
+                                bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
+                                fileId: attachment.fileId,
+                                height: 240,
+                                output: composerAvifSupported
+                                  ? ImageFormat.Avif
+                                  : undefined,
+                              })}
+                              alt={attachment.name}
+                              onLoad={(event) => {
+                                const image =
+                                  event.currentTarget as HTMLImageElement
+                                const orientation =
+                                  image.naturalHeight > image.naturalWidth
+                                    ? 'portrait'
+                                    : 'landscape'
+                                setComposerImageOrientations((previous) =>
+                                  previous[attachment.localId] === orientation
+                                    ? previous
+                                    : {
+                                        ...previous,
+                                        [attachment.localId]: orientation,
+                                      },
+                                )
+                              }}
+                              className={cn(
+                                'mb-1 w-full rounded object-cover',
+                                getPreviewAspectClass(
+                                  composerImageOrientations[
+                                    attachment.localId
+                                  ] === 'portrait',
+                                ),
+                              )}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="mb-1 flex aspect-video w-full items-center justify-center rounded bg-muted/40">
+                              <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex items-start gap-1.5">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[11px] font-medium text-foreground">
+                                {attachment.name}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {attachment.status === 'uploading'
+                                  ? t('Uploading...')
+                                  : attachment.status === 'failed'
+                                    ? t('Upload failed')
+                                    : (formatAttachmentSize(attachment.size) ??
+                                      t('Ready'))}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveAttachment(attachment.localId)
+                              }
+                              className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                              aria-label={`${t('Remove')} ${attachment.name}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {restoredQueueAttachmentIds.length > 0 ? (
+                <div className="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                  <Paperclip className="h-3 w-3 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {restoredQueueAttachmentIds.length} {t('Attachment')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRestoredQueueAttachmentIds([])}
+                    className="rounded p-0.5 transition-colors hover:bg-accent hover:text-foreground"
+                    aria-label={t('Remove')}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : null}
+              <div className="flex items-end gap-1.5 p-1.5">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleAttachmentFileChange}
+                />
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value)
+                    if (messages.length === 0) {
+                      registerTypingKeystroke()
+                    }
+                  }}
+                  onPaste={handleInputPaste}
+                  onKeyDown={handleKeyDown}
+                  placeholder={
+                    editingMessageId
+                      ? t('Edit message...')
+                      : isConversationRunning || messageQueue.length > 0
+                        ? t('Add a follow-up')
+                        : t('Ask a question...')
+                  }
+                  dir={isInputRtl ? 'rtl' : 'ltr'}
+                  rows={1}
+                  className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  style={{
+                    height: 'auto',
+                    minHeight: '34px',
+                  }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement
+                    target.style.height = 'auto'
+                    target.style.height = `${Math.min(target.scrollHeight, 128)}px`
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAttachmentInputClick}
+                  disabled={
+                    isWaitingForAttachments || Boolean(editingMessageId)
+                  }
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                    isWaitingForAttachments || editingMessageId
+                      ? 'bg-muted text-muted-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  )}
+                  aria-label={t('Attach files')}
+                >
+                  <Paperclip className="h-3.5 w-3.5" />
+                </button>
+                {isConversationRunning ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleStopConversation()}
+                    disabled={updateConversationMutation.isPending}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:text-muted-foreground"
+                    aria-label={t('Stop')}
+                  >
+                    {updateConversationMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Square className="h-3.5 w-3.5 fill-current" />
+                    )}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void handleSend()}
+                  disabled={
+                    !input.trim() ||
+                    isWaitingForAttachments ||
+                    Boolean(editingMessageId && isConversationRunning) ||
+                    (!isConversationRunning && !canSendWhileIdle)
+                  }
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                    input.trim() &&
+                      !isWaitingForAttachments &&
+                      !(editingMessageId && isConversationRunning) &&
+                      (isConversationRunning || canSendWhileIdle)
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground',
+                  )}
+                  aria-label={
+                    isConversationRunning ? t('Add to queue') : t('Send')
+                  }
+                >
+                  {createMessageMutation.isPending ||
+                  updateMessageMutation.isPending ||
+                  isWaitingForAttachments ||
+                  hasUploadingAttachments ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
               {hasUploadingAttachments
-                ? t('Attachments upload in background. Sending waits until they are ready.')
-                : t('Press Enter to send, Shift+Enter for new line')}
+                ? t(
+                    'Attachments upload in background. Sending waits until they are ready.',
+                  )
+                : isConversationRunning
+                  ? t('Press Enter to queue, Shift+Enter for new line')
+                  : t('Press Enter to send, Shift+Enter for new line')}
             </p>
+            </div>
           </div>
-        </div>
+          </div>
+      </div>
+  )
+
+  return (
+    <div
+      className={cn(
+        'flex min-h-0 bg-background',
+        isChatExpanded
+          ? 'fixed inset-0 z-[125] h-[100dvh] max-h-[100dvh] w-full'
+          : 'h-full',
+      )}
+    >
+      {isChatExpanded ? (
+        <AssistantConversationsResizableLayout sidebar={conversationsSidebar}>
+          {chatMain}
+        </AssistantConversationsResizableLayout>
+      ) : (
+        chatMain
+      )}
     </div>
   )
 }
@@ -2923,7 +3953,7 @@ export function AIChatPanel() {
 
 function makeConversationTitle(text: string): string {
   const cleanText = text.trim().replace(/\s+/g, ' ')
-  if (!cleanText) return 'New conversation'
+  if (!cleanText) return 'New agent'
   return cleanText.length > 42 ? `${cleanText.slice(0, 42)}...` : cleanText
 }
 

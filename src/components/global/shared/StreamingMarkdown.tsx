@@ -8,6 +8,19 @@ import {
   resolveFenceCodeLanguage,
   resolveFenceCodeLabel,
 } from '@/lib/code-language'
+import { DOCS_TABLE_CELL_TEXT_CLASS } from '@/lib/docs/prose-typography'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
+/** Matches docs Markdoc table headers (`MarkdocTableHead`). */
+const MARKDOWN_TABLE_HEAD_CLASS =
+  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-normal'
 
 interface StreamingMarkdownProps {
   content: string
@@ -78,7 +91,7 @@ export function StreamingMarkdown({
   return (
     <div
       className={cn(
-        'text-[13px] leading-snug break-words [&_p]:my-0 [&_p+p]:mt-2.5 [&_h1]:mb-2 [&_h1]:mt-2.5 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-2.5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-1.5 [&_h3]:mt-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:ps-4 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:ps-4 [&_li]:my-0.5 prose-links-neutral [&_blockquote]:my-1.5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-2.5 [&_table]:my-1.5 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:px-1.5 [&_th]:py-1 [&_th]:text-start [&_td]:border [&_td]:border-border [&_td]:px-1.5 [&_td]:py-1',
+        'text-[13px] leading-snug break-words [&_p]:my-0 [&_p+p]:mt-2.5 [&_h1]:mb-2 [&_h1]:mt-2.5 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-2.5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-1.5 [&_h3]:mt-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:ps-4 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:ps-4 [&_li]:my-0.5 prose-links-neutral [&_blockquote]:my-1.5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-2.5',
         className,
       )}
     >
@@ -97,6 +110,50 @@ export function StreamingMarkdown({
               >
                 {children}
               </a>
+            )
+          },
+          table({ children }) {
+            return (
+              <div className="not-prose my-3 w-full overflow-hidden rounded-lg border border-border bg-card/50">
+                <Table withScrollContainer>{children}</Table>
+              </div>
+            )
+          },
+          thead({ children }) {
+            return (
+              <TableHeader className="[&_tr]:border-b [&_tr]:border-border [&_tr]:hover:bg-transparent">
+                {children}
+              </TableHeader>
+            )
+          },
+          tbody({ children }) {
+            return <TableBody>{children}</TableBody>
+          },
+          tr({ children }) {
+            return (
+              <TableRow className="border-b border-border hover:bg-muted/30">
+                {children}
+              </TableRow>
+            )
+          },
+          th({ children }) {
+            return (
+              <TableHead className={MARKDOWN_TABLE_HEAD_CLASS}>
+                {children}
+              </TableHead>
+            )
+          },
+          td({ children }) {
+            return (
+              <TableCell
+                className={cn(
+                  'px-4 py-3 align-top whitespace-normal',
+                  DOCS_TABLE_CELL_TEXT_CLASS,
+                  '[&_strong]:font-semibold [&_strong]:text-foreground',
+                )}
+              >
+                {children}
+              </TableCell>
             )
           },
           hr() {

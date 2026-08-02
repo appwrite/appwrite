@@ -77,6 +77,9 @@ import {
   hasBuildNotificationsOptedOutPref,
   hasCliShellHeightPref,
   hasStorageFilesTablePaneWidthPref,
+  mergeAIChatActiveConversationIdIntoPrefs,
+  mergeAIChatConversationsWidthPxIntoPrefs,
+  mergeAIChatExpandedIntoPrefs,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
   mergeRightPaneWidthPxIntoPrefs,
@@ -101,6 +104,9 @@ import {
   serializeCliShellSessionsState,
   type PersistedCliShellSessionsState,
   mergeStorageFilesTablePaneWidthPxIntoPrefs,
+  parseAIChatActiveConversationId,
+  parseAIChatConversationsWidthPx,
+  parseAIChatExpanded,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
   parseRightPaneWidthPx,
@@ -2110,6 +2116,220 @@ export function useAIChatPanelOpen(
   )
 
   return { isOpen, setIsOpen }
+}
+
+/**
+ * AI assistant fullscreen/expanded state (`console.aiChat.expanded`).
+ */
+export function useAIChatExpanded(account: ConsoleAccountCache | undefined) {
+  const queryClient = useQueryClient()
+
+  const isExpanded = parseAIChatExpanded(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatExpandedIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-expanded',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatExpandedIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setIsExpanded = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue = typeof value === 'function' ? value(isExpanded) : value
+      if (!account) return
+      updateMutation.mutate(nextValue)
+    },
+    [account, isExpanded, updateMutation],
+  )
+
+  return { isExpanded, setIsExpanded }
+}
+
+/**
+ * Last viewed AI assistant conversation (`console.aiChat.activeConversationId`).
+ */
+export function useAIChatActiveConversationId(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const activeConversationId = parseAIChatActiveConversationId(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string | null) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatActiveConversationIdIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-active-conversation',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatActiveConversationIdIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setActiveConversationId = useCallback(
+    (value: string | null | ((prev: string | null) => string | null)) => {
+      const nextValue =
+        typeof value === 'function' ? value(activeConversationId) : value
+      const normalized =
+        typeof nextValue === 'string' && nextValue.trim()
+          ? nextValue.trim()
+          : null
+      if (normalized === activeConversationId) return
+      if (!account) return
+      updateMutation.mutate(normalized)
+    },
+    [account, activeConversationId, updateMutation],
+  )
+
+  return { activeConversationId, setActiveConversationId }
+}
+
+const AI_CHAT_CONVERSATIONS_WIDTH_PERSIST_DEBOUNCE_MS = 250
+
+/**
+ * AI assistant conversations sidebar width
+ * (`console.aiChat.conversationsWidthPx`). Debounces writes while resizing.
+ */
+export function useAIChatConversationsWidth(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const widthPx = parseAIChatConversationsWidthPx(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: number) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatConversationsWidthPxIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-conversations-width',
+      )
+    },
+    onMutate: async (value) => {
+      const patch = mergeAIChatConversationsWidthPxIntoPrefs(
+        (account?.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const persistSidebarWidthPx = useCallback(
+    (value: number) => {
+      if (!account) return
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+      const patch = mergeAIChatConversationsWidthPxIntoPrefs(
+        (account.prefs ?? {}) as UserPrefs,
+        value,
+      )
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: { ...current.prefs, ...patch },
+              }
+            : current,
+      )
+      persistTimerRef.current = setTimeout(() => {
+        persistTimerRef.current = null
+        updateMutation.mutate(value)
+      }, AI_CHAT_CONVERSATIONS_WIDTH_PERSIST_DEBOUNCE_MS)
+    },
+    [account, queryClient, updateMutation],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current !== null) {
+        clearTimeout(persistTimerRef.current)
+      }
+    }
+  }, [])
+
+  return { widthPx, persistSidebarWidthPx }
 }
 
 /**
