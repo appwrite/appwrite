@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -12,7 +13,6 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Functions\StartCommand;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -416,10 +416,7 @@ class Create extends Base
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = StartCommand::resolve(
-                $runtime['startCommand'],
-                $deployment->getAttribute('startCommand', '')
-            );
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
             $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";

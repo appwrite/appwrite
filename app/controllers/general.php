@@ -7,12 +7,12 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Functions\StartCommand;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -570,10 +570,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            $startCommand = StartCommand::resolve(
-                $startCommand,
-                $deployment->getAttribute('startCommand', '')
-            );
+            $startCommand = Deployments::startCommand($deployment, $startCommand);
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
