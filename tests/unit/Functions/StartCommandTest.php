@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Functions;
 
 use Appwrite\Functions\StartCommand;
 use PHPUnit\Framework\TestCase;
 
-class StartCommandTest extends TestCase
+final class StartCommandTest extends TestCase
 {
     public function testEmptyDeploymentUsesDefault(): void
     {
