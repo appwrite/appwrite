@@ -418,7 +418,6 @@ export function DeploymentListRowContextMenu({
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

@@ -380,7 +380,6 @@ export function PostgresSchemaEnumsPanel({
               {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

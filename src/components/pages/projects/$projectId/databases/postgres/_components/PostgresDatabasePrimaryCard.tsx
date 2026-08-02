@@ -432,7 +432,6 @@ export function PostgresDatabasePrimaryCard({
                   )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="border-t border-border" />
           <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel disabled={failoverMutation.isPending}>
               {t('Cancel')}

@@ -90,7 +90,6 @@ export function CoverPropertiesPanel({
               and export format stay the same.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="border-t border-border" />
           <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
             <AlertDialogAction
