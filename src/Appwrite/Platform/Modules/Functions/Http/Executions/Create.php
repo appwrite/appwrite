@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\StartCommand;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -415,11 +416,10 @@ class Create extends Base
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
-            }
+            $command = StartCommand::resolve(
+                $runtime['startCommand'],
+                $deployment->getAttribute('startCommand', '')
+            );
 
             $source = $deployment->getAttribute('buildPath', '');
             $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";

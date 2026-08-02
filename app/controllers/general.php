@@ -12,6 +12,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\StartCommand;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -569,9 +570,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $startCommand = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
-            }
+            $startCommand = StartCommand::resolve(
+                $startCommand,
+                $deployment->getAttribute('startCommand', '')
+            );
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
