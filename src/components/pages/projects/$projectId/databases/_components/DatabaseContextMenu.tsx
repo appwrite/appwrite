@@ -10,14 +10,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import {
   Copy,
   Link2,
   FileJson,
@@ -59,6 +51,7 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { useT } from '@/lib/i18n/translate'
 
 type DatabaseContextMenuDatabase = {
@@ -277,34 +270,22 @@ export function DatabaseContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete database')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Are you sure you want to delete this database? This action cannot be undone.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Delete')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmNameDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete database"
+        description={
+          <>
+            {t(
+              'Are you sure you want to delete this database? This action cannot be undone.',
+            )}
+          </>
+        }
+        confirmValue={database.name?.trim() || database.$id}
+        confirmPlaceholder="Enter database name"
+        onConfirm={handleDelete}
+        isConfirming={deleteMutation.isPending}
+      />
     </>
   )
 }

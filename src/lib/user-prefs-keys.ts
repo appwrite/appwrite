@@ -1905,14 +1905,18 @@ export function mergeAIChatActiveConversationIdIntoPrefs(
   }
 }
 
+const EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS: string[] = []
+
 export function parseAIChatPinnedConversationIds(
   prefs: UserPrefs | null | undefined,
 ): string[] {
   const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS]
-  if (typeof raw !== 'string' || !raw.trim()) return []
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
+  }
   try {
     const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed)) return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
     const seen = new Set<string>()
     const ids: string[] = []
     for (const entry of parsed) {
@@ -1922,9 +1926,9 @@ export function parseAIChatPinnedConversationIds(
       seen.add(id)
       ids.push(id)
     }
-    return ids
+    return ids.length > 0 ? ids : EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
   } catch {
-    return []
+    return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
   }
 }
 

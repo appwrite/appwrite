@@ -58,7 +58,10 @@ export function AssistantRenameDialog({
         onOpenChange(true)
       }}
     >
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className="z-[140] sm:max-w-md p-0"
+        overlayClassName="z-[140]"
+      >
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>{t('Update agent')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

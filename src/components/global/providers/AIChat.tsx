@@ -97,6 +97,7 @@ import {
   ASSISTANT_MESSAGES_PAGE_SIZE,
   fetchAssistantMessages,
   useCreateAssistantConversation,
+  useAssistantModels,
   useCreateAssistantMessage,
   useDeleteAssistantConversation,
   useUpdateAssistantConversation,
@@ -109,14 +110,20 @@ import {
   useAIChatExpanded,
   useAIChatPanelOpen,
   useAIChatPinnedConversationIds,
+  type AssistantAutomation,
   type AssistantConversation,
   type AssistantMessage,
+  type AssistantModel,
 } from '@/lib/react-query/hooks'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
+import { AssistantAutomationForm } from '@/components/global/providers/ai-chat/AssistantAutomationForm'
+import { AssistantAutomationsPanel } from '@/components/global/providers/ai-chat/AssistantAutomationsPanel'
 import { AssistantConversationsResizableLayout } from '@/components/global/providers/ai-chat/AssistantConversationsResizableLayout'
 import { AssistantMessageDebugCard } from '@/components/global/providers/ai-chat/AssistantMessageDebugCard'
+import { AssistantModelForm } from '@/components/global/providers/ai-chat/AssistantModelForm'
+import { AssistantModelPicker } from '@/components/global/providers/ai-chat/AssistantModelPicker'
 import { AssistantTurnActivity } from '@/components/global/providers/ai-chat/AssistantTurnActivity'
 import { McpConnections } from '@/components/global/providers/ai-chat/McpConnections'
 import { AssistantConversationContextMenu } from '@/components/global/providers/ai-chat/AssistantConversationContextMenu'
@@ -128,6 +135,7 @@ import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { applyAssistantRealtimePayload } from '@/lib/assistant/realtime-cache'
+import { resolveAssistantModelTemp } from '@/lib/assistant/model-providers'
 import {
   buildTurnView,
   getAssistantBubblePhase,
@@ -140,6 +148,8 @@ import {
 } from '@/lib/assistant/turn-view'
 import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
+
+const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
 
 function nonEmptyId(value: string | null | undefined): string | undefined {
   if (typeof value !== 'string') return undefined
@@ -1183,7 +1193,7 @@ const AssistantMessageRow = memo(
     }, [messageText])
 
     return (
-      <div className="group/message cursor-default space-y-1.5">
+      <div className="group/message cursor-default space-y-2">
         <div
           className={cn('flex', alignRight ? 'justify-end' : 'justify-start')}
         >
@@ -1197,7 +1207,7 @@ const AssistantMessageRow = memo(
               <div
                 dir={isRtlMessage ? 'rtl' : 'ltr'}
                 className={cn(
-                  'inline-block max-w-full cursor-default rounded-md bg-primary px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
+                  'inline-block max-w-full cursor-default rounded-lg bg-primary px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
                 )}
               >
                 {messageText}
@@ -1295,20 +1305,20 @@ const AssistantMessageRow = memo(
           ) : (
             <div
               dir={isRtlMessage ? 'rtl' : 'ltr'}
-              className="max-w-[88%] cursor-default px-2.5 py-1.5 text-[13px] text-foreground"
+              className="max-w-[88%] cursor-default px-3 py-2 text-[13px] leading-relaxed text-foreground"
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <AssistantTurnActivity message={message} />
                 {unresolvedSelectableTokens.length > 0 && (
-                  <div className="rounded-md border border-border bg-muted/20 p-2">
-                    <p className="mb-1.5 text-[11px] text-muted-foreground">
+                  <div className="rounded-md border border-border bg-muted/20 p-2.5">
+                    <p className="mb-2 text-[12px] text-muted-foreground">
                       {t('Select values for placeholders')}
                     </p>
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {unresolvedSelectableTokens.map((token) => (
                         <div
                           key={token}
-                          className="flex items-center gap-2 text-[12px]"
+                          className="flex items-center gap-2 text-[13px]"
                         >
                           <span className="w-[122px] shrink-0 text-muted-foreground">
                             {t(PLACEHOLDER_LABELS[token])}
@@ -1322,7 +1332,7 @@ const AssistantMessageRow = memo(
                               }))
                             }
                           >
-                            <SelectTrigger className="h-8 min-w-0 flex-1 text-[12px]">
+                            <SelectTrigger className="h-9 min-w-0 flex-1 text-[13px]">
                               <SelectValue placeholder={token} />
                             </SelectTrigger>
                             <SelectContent>
@@ -1331,7 +1341,7 @@ const AssistantMessageRow = memo(
                                   <SelectItem
                                     key={`${token}-${option}`}
                                     value={option}
-                                    className="text-[12px]"
+                                    className="text-[13px]"
                                   >
                                     {option}
                                   </SelectItem>
@@ -1910,6 +1920,19 @@ export function AIChatPanelContent({
   const [archivedSectionOpen, setArchivedSectionOpen] = useState(false)
   const [pinnedSectionOpen, setPinnedSectionOpen] = useState(true)
   const [headerRenameOpen, setHeaderRenameOpen] = useState(false)
+  const [selectedModelId, setSelectedModelId] = useState('')
+  const [automationEditor, setAutomationEditor] = useState<
+    | { mode: 'closed' }
+    | { mode: 'create' }
+    | { mode: 'edit'; automation: AssistantAutomation }
+  >({ mode: 'closed' })
+  const [modelEditor, setModelEditor] = useState<
+    | { mode: 'closed' }
+    | { mode: 'create' }
+    | { mode: 'edit'; model: AssistantModel }
+  >({ mode: 'closed' })
+  const isAutomationEditorOpen = automationEditor.mode !== 'closed'
+  const isModelEditorOpen = modelEditor.mode !== 'closed'
   const [pinnedDragId, setPinnedDragId] = useState<string | null>(null)
   const [pinnedDragOverId, setPinnedDragOverId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -1934,7 +1957,8 @@ export function AIChatPanelContent({
   }, [conversationSearch])
 
   const { account, isAuthenticated, isLoading: authLoading } = useAuth()
-  const isGuest = !authLoading && !isAuthenticated
+  const authReady = !authLoading
+  const isGuest = authReady && !isAuthenticated
   const interactionsDisabled = isGuest || authLoading
   const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
     useAIChatExpanded(account)
@@ -1953,11 +1977,21 @@ export function AIChatPanelContent({
   } = useAssistantConversations(debouncedConversationSearch || undefined, {
     enabled: isAuthenticated,
   })
-  const conversations: AssistantConversation[] = conversationsData ?? []
+  const conversations: AssistantConversation[] = useMemo(
+    () => conversationsData ?? EMPTY_ASSISTANT_CONVERSATIONS,
+    [conversationsData],
+  )
   const hasConversationSearch = debouncedConversationSearch.length > 0
-  const { data: mcpConnections = [] } = useAssistantMcpConnections({
-    enabled: isAuthenticated,
-  })
+  const conversationsReady =
+    !authReady ||
+    !isAuthenticated ||
+    !(conversationsLoading && conversations.length === 0)
+  const { data: mcpConnections = [], isLoading: mcpConnectionsLoading } =
+    useAssistantMcpConnections({
+      enabled: isAuthenticated,
+    })
+  const mcpReady =
+    !authReady || !isAuthenticated || !mcpConnectionsLoading
   const hasActiveMcp = useMemo(
     () =>
       mcpConnections.some(
@@ -1974,6 +2008,9 @@ export function AIChatPanelContent({
   const updateMessageMutation = useUpdateAssistantMessage()
   const updateConversationMutation = useUpdateAssistantConversation()
   const uploadAssistantAttachmentsMutation = useUploadAssistantAttachments()
+  const { data: assistantModels = [] } = useAssistantModels({
+    enabled: isAuthenticated,
+  })
 
   const activeConversation = useMemo(
     () =>
@@ -1982,6 +2019,20 @@ export function AIChatPanelContent({
       ),
     [activeConversationId, conversations],
   )
+
+  const resolveModelTempForSelection = useCallback(
+    (modelId?: string | null) => {
+      if (!modelId) return resolveAssistantModelTemp(null)
+      const match = assistantModels.find((model) => model.$id === modelId)
+      return resolveAssistantModelTemp(match?.model ?? null)
+    },
+    [assistantModels],
+  )
+
+  useEffect(() => {
+    setSelectedModelId(activeConversation?.modelId || '')
+  }, [activeConversationId, activeConversation?.modelId])
+
   const contextProjectId =
     nonEmptyId(params.projectId) ??
     assistantConversationProjectId(activeConversation)
@@ -2128,11 +2179,22 @@ export function AIChatPanelContent({
     project?.teamId,
   ])
 
-  const { data: messagesData, isFetching: isFetchingMessages } =
-    useAssistantMessages(activeConversationId, messagesLimit)
+  const {
+    data: messagesData,
+    isFetching: isFetchingMessages,
+    isLoading: messagesLoading,
+  } = useAssistantMessages(activeConversationId, messagesLimit)
   const messages: AssistantMessage[] = messagesData?.messages ?? []
   const totalMessages = messagesData?.total ?? messages.length
   const hasOlderMessages = totalMessages > messages.length
+  const messagesReady =
+    !activeConversationId || !(messagesLoading && messages.length === 0)
+  // Hold list/empty UI until auth + list data is ready so public /assistant does
+  // not flash "No agents" / sign-in for signed-in users. MCP only gates empty.
+  const assistantListReady = authReady && conversationsReady
+  const assistantThreadReady = assistantListReady && messagesReady
+  const assistantEmptyReady =
+    assistantThreadReady && (!isAuthenticated || mcpReady)
   const { data: editingAttachmentFilesData } = useAssistantAttachmentFiles(
     editingMessageAttachments,
   )
@@ -2274,7 +2336,9 @@ export function AIChatPanelContent({
 
     const nearBottom = isNearBottom(container)
     shouldAutoScrollRef.current = nearBottom
-    setIsStickToBottom(nearBottom)
+    setIsStickToBottom((current) =>
+      current === nearBottom ? current : nearBottom,
+    )
   }, [isNearBottom])
 
   useLayoutEffect(() => {
@@ -2454,12 +2518,34 @@ export function AIChatPanelContent({
       const conversation = await createConversationMutation.mutateAsync({
         projectId: conversationProjectId,
         title: 'New agent',
+        modelId: selectedModelId || undefined,
+        modelTemp: resolveModelTempForSelection(selectedModelId),
       })
+      closeAutomationEditor()
+      closeModelEditor()
       setActiveConversationId(conversation.$id)
       setConversationsPopoverOpen(false)
       focusInput()
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to create agent')))
+    }
+  }
+
+  const handleSelectModel = async (modelId: string) => {
+    if (interactionsDisabled) return
+    const previousModelId = selectedModelId
+    setSelectedModelId(modelId)
+    if (!activeConversationId) return
+    if ((activeConversation?.modelId || '') === modelId) return
+    try {
+      await updateConversationMutation.mutateAsync({
+        conversationId: activeConversationId,
+        modelId,
+        modelTemp: resolveModelTempForSelection(modelId),
+      })
+    } catch (error) {
+      setSelectedModelId(previousModelId)
+      toast.error(getErrorMessage(error, t('Failed to update model')))
     }
   }
 
@@ -2695,11 +2781,35 @@ export function AIChatPanelContent({
             await createConversationMutation.mutateAsync({
               projectId: conversationProjectId,
               title: makeConversationTitle(trimmed),
+              modelId: selectedModelId || undefined,
+              modelTemp: resolveModelTempForSelection(selectedModelId),
             })
           conversationId = createdConversation.$id
           setActiveConversationId(createdConversation.$id)
         }
         if (!conversationId) return false
+
+        // Existing chats may still carry backend default temp 0.2, which
+        // reasoning models reject. Normalize before the run.
+        const conversationForTemp =
+          conversationId === activeConversation?.$id
+            ? activeConversation
+            : conversations.find(
+                (conversation) => conversation.$id === conversationId,
+              )
+        const expectedTemp = resolveModelTempForSelection(
+          conversationForTemp?.modelId || selectedModelId,
+        )
+        if (
+          conversationForTemp &&
+          typeof conversationForTemp.modelTemp === 'number' &&
+          conversationForTemp.modelTemp !== expectedTemp
+        ) {
+          await updateConversationMutation.mutateAsync({
+            conversationId,
+            modelTemp: expectedTemp,
+          })
+        }
 
         const messageContext = {
           contextTeamId:
@@ -2750,6 +2860,7 @@ export function AIChatPanelContent({
     [
       activeConversation,
       activeConversationId,
+      conversations,
       createConversationMutation,
       createMessageMutation,
       location.pathname,
@@ -2757,9 +2868,12 @@ export function AIChatPanelContent({
       params.projectId,
       params.teamId,
       project?.teamId,
+      resolveModelTempForSelection,
       scrollMessagesToBottom,
+      selectedModelId,
       setActiveConversationId,
       t,
+      updateConversationMutation,
       updateMessageMutation,
     ],
   )
@@ -3131,18 +3245,75 @@ export function AIChatPanelContent({
     closeChat()
   }, [closeChat, isPageVariant, leaveAssistantPage])
 
+  const closeAutomationEditor = useCallback(() => {
+    setAutomationEditor({ mode: 'closed' })
+  }, [])
+
+  const closeModelEditor = useCallback(() => {
+    setModelEditor({ mode: 'closed' })
+  }, [])
+
+  const openAutomationCreate = useCallback(() => {
+    setConversationsPopoverOpen(false)
+    setConversationsMenuTab('automations')
+    setModelEditor({ mode: 'closed' })
+    setAutomationEditor({ mode: 'create' })
+  }, [])
+
+  const openAutomationEdit = useCallback((automation: AssistantAutomation) => {
+    setConversationsPopoverOpen(false)
+    setConversationsMenuTab('automations')
+    setModelEditor({ mode: 'closed' })
+    setAutomationEditor({ mode: 'edit', automation })
+  }, [])
+
+  const openModelCreate = useCallback(() => {
+    setConversationsPopoverOpen(false)
+    setAutomationEditor({ mode: 'closed' })
+    setModelEditor({ mode: 'create' })
+  }, [])
+
+  const openModelEdit = useCallback((model: AssistantModel) => {
+    setConversationsPopoverOpen(false)
+    setAutomationEditor({ mode: 'closed' })
+    setModelEditor({ mode: 'edit', model })
+  }, [])
+
   useEffect(() => {
     if (!isChatExpanded || isPageVariant) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       // Image previews and other wizard overlays own Escape first
       if (document.querySelector('[data-wizard-layout]')) return
+      if (modelEditor.mode !== 'closed') {
+        event.preventDefault()
+        setModelEditor({ mode: 'closed' })
+        return
+      }
+      if (automationEditor.mode !== 'closed') {
+        event.preventDefault()
+        setAutomationEditor({ mode: 'closed' })
+        return
+      }
+      // Let open dialogs/alert-dialogs own Escape; do not collapse fullscreen.
+      const hasOpenModal = Boolean(
+        document.querySelector(
+          '[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]',
+        ),
+      )
+      if (hasOpenModal) return
       event.preventDefault()
       setIsChatExpanded(false)
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isChatExpanded, isPageVariant, setIsChatExpanded])
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [
+    automationEditor.mode,
+    isChatExpanded,
+    isPageVariant,
+    modelEditor.mode,
+    setIsChatExpanded,
+  ])
 
   const conversationById = useMemo(() => {
     const map = new Map<string, AssistantConversation>()
@@ -3273,17 +3444,21 @@ export function AIChatPanelContent({
 
   const renderConversationsMenuBody = (options?: {
     dense?: boolean
+    hideHeader?: boolean
+    hideCreateButton?: boolean
     onSelectConversation?: () => void
   }) => (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-14 min-h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
-        <ConsoleHeaderLogo
-          className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
-        />
-        <p className="truncate text-[13px] font-semibold text-foreground">
-          {t('Appwrite Agents')}
-        </p>
-      </div>
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      {options?.hideHeader ? null : (
+        <div className="flex h-14 min-h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
+          <ConsoleHeaderLogo
+            className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
+          />
+          <p className="truncate text-[13px] font-semibold text-foreground">
+            {t('Appwrite Agents')}
+          </p>
+        </div>
+      )}
       <Tabs
         value={conversationsMenuTab}
         onValueChange={(value) => {
@@ -3291,9 +3466,9 @@ export function AIChatPanelContent({
             setConversationsMenuTab(value)
           }
         }}
-        className="flex min-h-0 flex-1 flex-col gap-0"
+        className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
       >
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
           <TabsList className="mb-3 grid h-9 w-full grid-cols-2 shadow-none">
             <TabsTrigger value="agents" className="text-[12px]">
               {t('Agents')}
@@ -3307,7 +3482,9 @@ export function AIChatPanelContent({
             className="mt-0 data-[state=inactive]:hidden"
           >
             {renderConversationsSearch()}
-            <div className="my-8">{renderCreateAgentButton()}</div>
+            {options?.hideCreateButton ? null : (
+              <div className="my-8">{renderCreateAgentButton()}</div>
+            )}
             {renderConversationsList({
               dense: options?.dense,
               onSelect: options?.onSelectConversation,
@@ -3317,11 +3494,11 @@ export function AIChatPanelContent({
             value="automations"
             className="mt-0 data-[state=inactive]:hidden"
           >
-            <div className="flex min-h-[120px] items-center justify-center px-3 py-8">
-              <p className="text-center text-[12px] text-muted-foreground">
-                {t('No automations yet.')}
-              </p>
-            </div>
+            <AssistantAutomationsPanel
+              disabled={interactionsDisabled}
+              onCreate={openAutomationCreate}
+              onEdit={openAutomationEdit}
+            />
           </TabsContent>
         </div>
       </Tabs>
@@ -3438,6 +3615,8 @@ export function AIChatPanelContent({
           <button
             type="button"
             onClick={() => {
+              closeAutomationEditor()
+              closeModelEditor()
               setActiveConversationId(conversation.$id)
               options?.onSelect?.()
             }}
@@ -3547,15 +3726,9 @@ export function AIChatPanelContent({
     onSelect?: () => void
     dense?: boolean
   }) => {
-    // Only block on the initial load. Background refetches (realtime invalidation)
-    // must keep the existing list mounted to avoid flicker.
-    if (conversationsLoading && conversations.length === 0) {
-      return (
-        <div className="flex items-center gap-1.5 px-1.5 py-2 text-[11px] text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          {t('Loading agents...')}
-        </div>
-      )
+    // Stay blank until auth/list data is ready. No spinner and no empty copy.
+    if (!assistantListReady) {
+      return null
     }
     if (conversations.length === 0) {
       return (
@@ -3660,8 +3833,10 @@ export function AIChatPanelContent({
   if (isAssistantBlocked) return null
 
   const conversationsSidebar = (
-    <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="min-h-0 flex-1">{renderConversationsMenuBody({ dense: true })}</div>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {renderConversationsMenuBody({ dense: true })}
+      </div>
       <div className="shrink-0 border-t border-border bg-background p-2">
         <Button
           type="button"
@@ -3691,7 +3866,23 @@ export function AIChatPanelContent({
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                {effectiveExpanded ? (
+                {isModelEditorOpen ? (
+                  <div className="flex min-w-0 max-w-md items-center gap-1 px-1.5 py-1">
+                    <span className="truncate text-[13px] font-semibold text-foreground">
+                      {modelEditor.mode === 'edit'
+                        ? t('Update model')
+                        : t('Add model')}
+                    </span>
+                  </div>
+                ) : isAutomationEditorOpen ? (
+                  <div className="flex min-w-0 max-w-md items-center gap-1 px-1.5 py-1">
+                    <span className="truncate text-[13px] font-semibold text-foreground">
+                      {automationEditor.mode === 'edit'
+                        ? t('Update automation')
+                        : t('Create automation')}
+                    </span>
+                  </div>
+                ) : effectiveExpanded ? (
                   <button
                     type="button"
                     className="group flex min-w-0 max-w-full items-center gap-1 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-60"
@@ -3711,51 +3902,57 @@ export function AIChatPanelContent({
                     ) : null}
                   </button>
                 ) : (
-                  <Popover
-                    open={conversationsPopoverOpen}
-                    onOpenChange={setConversationsPopoverOpen}
-                  >
-                    <div className="flex min-w-0 items-center gap-0.5">
-                      <button
-                        type="button"
-                        className="group flex min-w-0 max-w-[200px] items-center gap-1 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-60"
-                        onClick={() => setHeaderRenameOpen(true)}
-                        disabled={
-                          interactionsDisabled ||
-                          !activeConversationId ||
-                          !activeConversation
-                        }
-                        aria-label={t('Update agent')}
-                      >
-                        <span className="truncate text-[13px] font-semibold text-foreground">
-                          {activeConversation?.title || t('New agent')}
-                        </span>
-                        {activeConversationId && activeConversation ? (
-                          <Pencil className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                        ) : null}
-                      </button>
+                  <div className="flex min-w-0 items-center gap-1">
+                    <Popover
+                      open={conversationsPopoverOpen}
+                      onOpenChange={setConversationsPopoverOpen}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           type="button"
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
+                          className="h-8 max-w-[200px] shrink gap-1.5 px-1.5"
                           aria-label={t('Agents')}
                         >
-                          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="truncate text-[13px] font-semibold text-foreground">
+                            {activeConversation?.title || t('New agent')}
+                          </span>
+                          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         </Button>
                       </PopoverTrigger>
-                    </div>
 
-                    <PopoverContent align="start" className="w-[300px] p-0">
-                      <div className="flex max-h-[360px] flex-col overflow-hidden">
-                        {renderConversationsMenuBody({
-                          onSelectConversation: () =>
-                            setConversationsPopoverOpen(false),
-                        })}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                      <PopoverContent align="start" className="w-[300px] p-0">
+                        <div className="flex max-h-[360px] flex-col overflow-hidden">
+                          {renderConversationsMenuBody({
+                            hideHeader: true,
+                            hideCreateButton: true,
+                            onSelectConversation: () =>
+                              setConversationsPopoverOpen(false),
+                          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => {
+                        void handleCreateConversation()
+                      }}
+                      disabled={
+                        interactionsDisabled ||
+                        createConversationMutation.isPending
+                      }
+                      aria-label={t('Create agent')}
+                    >
+                      {createConversationMutation.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Plus className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -3812,6 +4009,37 @@ export function AIChatPanelContent({
           </div>
 
           <div className="relative flex min-h-0 flex-1 flex-col">
+          {isModelEditorOpen ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <AssistantModelForm
+                model={
+                  modelEditor.mode === 'edit' ? modelEditor.model : null
+                }
+                disabled={interactionsDisabled}
+                onCancel={closeModelEditor}
+                onSaved={(model) => {
+                  setSelectedModelId(model.$id)
+                  closeModelEditor()
+                }}
+              />
+            </div>
+          ) : isAutomationEditorOpen ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <AssistantAutomationForm
+                automation={
+                  automationEditor.mode === 'edit'
+                    ? automationEditor.automation
+                    : null
+                }
+                disabled={interactionsDisabled}
+                resolveProjectId={resolveConversationProjectId}
+                onAddModel={openModelCreate}
+                onCancel={closeAutomationEditor}
+                onSaved={closeAutomationEditor}
+              />
+            </div>
+          ) : (
+          <>
           <div className="relative min-h-0 flex-1">
             <div
               ref={messagesContainerRef}
@@ -3820,51 +4048,53 @@ export function AIChatPanelContent({
             >
               <div
                 className={cn(
-                  'p-3',
+                  'p-4',
                   effectiveExpanded && 'mx-auto w-full max-w-3xl',
                   messages.length === 0 && 'flex min-h-full flex-col',
                 )}
               >
-              {messages.length === 0 ? (
-                <AssistantEmptyState
-                  hasActiveMcp={hasActiveMcp && !isGuest}
-                  suggestions={emptyStateSuggestions}
-                  onSelectSuggestion={(question) => handleSend(t(question))}
-                  requireSignIn={isGuest}
-                  sphereSize={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
-                  activityRef={bubbleActivityRef}
-                  colorMode={effectiveSphereColorMode}
-                  shapeMode={effectiveSphereShapeMode}
-                  particleCount={effectiveSphereParticleCount}
-                  debugSlot={
-                    isDebugModeOpen ? (
-                      <AssistantBubbleDebugControls
-                        expanded={bubbleDebugExpanded}
-                        onExpandedChange={setBubbleDebugExpanded}
-                        activityMode={bubbleDebugMode}
-                        onActivityModeChange={setBubbleDebugMode}
-                        sizeScale={effectiveSphereSizeScale}
-                        sizeScaleOverride={sphereSizeScaleOverride}
-                        onSizeScaleChange={setSphereSizeScaleOverride}
-                        onSizeScaleDefault={() =>
-                          setSphereSizeScaleOverride(null)
-                        }
-                        colorMode={sphereColorMode}
-                        onColorModeChange={setSphereColorMode}
-                        shapeMode={sphereShapeMode}
-                        onShapeModeChange={setSphereShapeMode}
-                        particleCountOverride={sphereParticleCountOverride}
-                        autoParticleCount={sphereAutoParticleCount}
-                        onParticleCountChange={setSphereParticleCountOverride}
-                        onParticleCountAuto={() =>
-                          setSphereParticleCountOverride(null)
-                        }
-                      />
-                    ) : null
-                  }
-                />
+              {!assistantThreadReady ? null : messages.length === 0 ? (
+                !assistantEmptyReady ? null : (
+                  <AssistantEmptyState
+                    hasActiveMcp={hasActiveMcp && !isGuest}
+                    suggestions={emptyStateSuggestions}
+                    onSelectSuggestion={(question) => handleSend(t(question))}
+                    requireSignIn={isGuest}
+                    sphereSize={getSphereRenderSize(SPHERE_BASE_SIZES.empty)}
+                    activityRef={bubbleActivityRef}
+                    colorMode={effectiveSphereColorMode}
+                    shapeMode={effectiveSphereShapeMode}
+                    particleCount={effectiveSphereParticleCount}
+                    debugSlot={
+                      isDebugModeOpen ? (
+                        <AssistantBubbleDebugControls
+                          expanded={bubbleDebugExpanded}
+                          onExpandedChange={setBubbleDebugExpanded}
+                          activityMode={bubbleDebugMode}
+                          onActivityModeChange={setBubbleDebugMode}
+                          sizeScale={effectiveSphereSizeScale}
+                          sizeScaleOverride={sphereSizeScaleOverride}
+                          onSizeScaleChange={setSphereSizeScaleOverride}
+                          onSizeScaleDefault={() =>
+                            setSphereSizeScaleOverride(null)
+                          }
+                          colorMode={sphereColorMode}
+                          onColorModeChange={setSphereColorMode}
+                          shapeMode={sphereShapeMode}
+                          onShapeModeChange={setSphereShapeMode}
+                          particleCountOverride={sphereParticleCountOverride}
+                          autoParticleCount={sphereAutoParticleCount}
+                          onParticleCountChange={setSphereParticleCountOverride}
+                          onParticleCountAuto={() =>
+                            setSphereParticleCountOverride(null)
+                          }
+                        />
+                      ) : null
+                    }
+                  />
+                )
               ) : (
-                <div ref={messagesContentRef} className="space-y-3">
+                <div ref={messagesContentRef} className="space-y-5">
                   {hasOlderMessages ? (
                     <div className="flex justify-center">
                       <Button
@@ -3872,7 +4102,7 @@ export function AIChatPanelContent({
                         variant="ghost"
                         size="sm"
                         disabled={isFetchingMessages || isLoadingOlderMessages}
-                        className="h-7 px-2 text-[11px] text-muted-foreground"
+                        className="h-8 px-2.5 text-[12px] text-muted-foreground"
                         onClick={handleLoadOlderMessages}
                       >
                         {isLoadingOlderMessages ? (
@@ -3947,8 +4177,8 @@ export function AIChatPanelContent({
                   !latestAssistantMessage &&
                   waitingForAssistantReply ? (
                     <div className="flex">
-                      <div className="mb-2 flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                      <div className="mb-2 flex items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         <span>{liveTurnStatusLabel || t('Thinking...')}</span>
                       </div>
                     </div>
@@ -3977,7 +4207,7 @@ export function AIChatPanelContent({
           <div className="shrink-0 border-t border-border">
             <div
               className={cn(
-                'p-3',
+                'p-4',
                 effectiveExpanded && 'mx-auto w-full max-w-3xl',
               )}
             >
@@ -4004,8 +4234,8 @@ export function AIChatPanelContent({
               </div>
             ) : null}
             {editingMessageId ? (
-              <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5">
-                <p className="truncate text-[11px] text-muted-foreground">
+              <div className="mb-3 flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2">
+                <p className="truncate text-[12px] text-muted-foreground">
                   {t('Editing message')}
                   {editingMessageAttachments.length > 0
                     ? ` (${editingMessageAttachments.length} ${editingMessageAttachments.length > 1 ? t('attachments selected') : t('attachment selected')})`
@@ -4015,7 +4245,7 @@ export function AIChatPanelContent({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-[11px]"
+                  className="h-7 px-2.5 text-[12px]"
                   onClick={handleCancelEditResend}
                 >
                   {t('Cancel')}
@@ -4299,7 +4529,7 @@ export function AIChatPanelContent({
                   </button>
                 </div>
               ) : null}
-              <div className="flex items-end gap-1.5 p-1.5">
+              <div className="flex items-end gap-2 p-2">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -4331,10 +4561,10 @@ export function AIChatPanelContent({
                   dir={isInputRtl ? 'rtl' : 'ltr'}
                   rows={1}
                   disabled={interactionsDisabled}
-                  className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[13px] leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     height: 'auto',
-                    minHeight: '34px',
+                    minHeight: '40px',
                   }}
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement
@@ -4351,7 +4581,7 @@ export function AIChatPanelContent({
                     Boolean(editingMessageId)
                   }
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                    'mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
                     interactionsDisabled ||
                       isWaitingForAttachments ||
                       editingMessageId
@@ -4370,7 +4600,7 @@ export function AIChatPanelContent({
                       interactionsDisabled ||
                       updateConversationMutation.isPending
                     }
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:text-muted-foreground"
+                    className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:text-muted-foreground"
                     aria-label={t('Stop')}
                   >
                     {updateConversationMutation.isPending ? (
@@ -4391,7 +4621,7 @@ export function AIChatPanelContent({
                     (!isConversationRunning && !canSendWhileIdle)
                   }
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                    'mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
                     !interactionsDisabled &&
                       input.trim() &&
                       !isWaitingForAttachments &&
@@ -4414,6 +4644,19 @@ export function AIChatPanelContent({
                   )}
                 </button>
               </div>
+              {!interactionsDisabled ? (
+                <div className="flex items-center border-t border-border px-1.5 py-1">
+                  <AssistantModelPicker
+                    value={selectedModelId}
+                    onChange={(modelId) => {
+                      void handleSelectModel(modelId)
+                    }}
+                    disabled={interactionsDisabled}
+                    onAddModel={openModelCreate}
+                    onEditModel={openModelEdit}
+                  />
+                </div>
+              ) : null}
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
               {hasUploadingAttachments
@@ -4426,6 +4669,8 @@ export function AIChatPanelContent({
             </p>
             </div>
           </div>
+          </>
+          )}
           </div>
       </div>
   )

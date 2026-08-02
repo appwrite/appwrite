@@ -31,15 +31,17 @@ export function ConsoleRightPaneProvider({ children }: { children: ReactNode }) 
     useState<ConsoleRightPaneContent | null>(null)
 
   const showDocs = useCallback(() => {
-    setActiveContent('docs')
+    setActiveContent((current) => (current === 'docs' ? current : 'docs'))
   }, [])
 
   const showAssistant = useCallback(() => {
-    setActiveContent('assistant')
+    setActiveContent((current) =>
+      current === 'assistant' ? current : 'assistant',
+    )
   }, [])
 
   const hideRightPane = useCallback(() => {
-    setActiveContent(null)
+    setActiveContent((current) => (current === null ? current : null))
   }, [])
 
   const value = useMemo(

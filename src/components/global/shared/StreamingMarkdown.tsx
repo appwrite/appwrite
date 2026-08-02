@@ -91,7 +91,7 @@ export function StreamingMarkdown({
   return (
     <div
       className={cn(
-        'text-[13px] leading-snug break-words [&_p]:my-0 [&_p+p]:mt-2.5 [&_h1]:mb-2 [&_h1]:mt-2.5 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:mt-2.5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-1.5 [&_h3]:mt-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-1.5 [&_ul]:list-disc [&_ul]:ps-4 [&_ol]:my-1.5 [&_ol]:list-decimal [&_ol]:ps-4 [&_li]:my-0.5 prose-links-neutral [&_blockquote]:my-1.5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-2.5',
+        'text-[13px] leading-relaxed break-words [&_p]:my-0 [&_p+p]:mt-3 [&_h1]:mb-2.5 [&_h1]:mt-3 [&_h1]:text-[16px] [&_h1]:font-semibold [&_h2]:mb-2.5 [&_h2]:mt-3 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-2.5 [&_h3]:text-[14px] [&_h3]:font-semibold [&_ul]:my-2 [&_ul]:list-disc [&_ul]:ps-4 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:ps-4 [&_li]:my-1 prose-links-neutral [&_blockquote]:my-2 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-3',
         className,
       )}
     >

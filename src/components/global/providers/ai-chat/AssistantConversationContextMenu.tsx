@@ -65,11 +65,17 @@ export function AssistantConversationContextMenu({
     openDialogAfterOverlayCloses(() => setDeleteOpen(true))
   }
 
+  const closeDeleteDialog = () => {
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteOpen(false)
+    })
+  }
+
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
       await onDelete()
-      closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
+      closeDeleteDialog()
     } finally {
       setIsDeleting(false)
     }
@@ -132,13 +138,16 @@ export function AssistantConversationContextMenu({
         open={deleteOpen}
         onOpenChange={(open) => {
           if (!open) {
-            closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
+            closeDeleteDialog()
             return
           }
           setDeleteOpen(true)
         }}
       >
-        <DialogContent className="sm:max-w-md p-0">
+        <DialogContent
+          className="z-[140] sm:max-w-md p-0"
+          overlayClassName="z-[140]"
+        >
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>{t('Delete agent')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
@@ -151,9 +160,7 @@ export function AssistantConversationContextMenu({
               type="button"
               variant="outline"
               disabled={isDeleting}
-              onClick={() =>
-                closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
-              }
+              onClick={closeDeleteDialog}
             >
               {t('Cancel')}
             </Button>

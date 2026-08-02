@@ -215,9 +215,14 @@ export function useCreateAssistantConversation() {
       title?: string
       modelName?: string
       modelTemp?: number
+      modelId?: string
     }) => {
-      const { projectId: _projectId, ...conversationParams } = params
-      return await sdk.forConsole.assistant.createConversation(conversationParams)
+      const { projectId: _projectId, modelTemp, ...conversationParams } = params
+      // Backend defaults to 0.2, which many current models reject (only temp=1).
+      return await sdk.forConsole.assistant.createConversation({
+        ...conversationParams,
+        modelTemp: modelTemp ?? 1,
+      })
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -326,6 +331,7 @@ export function useUpdateAssistantConversation() {
       retryFromMessageId?: string
       modelName?: string
       modelTemp?: number
+      modelId?: string
       lockReason?: string
     }) => {
       return await sdk.forConsole.assistant.updateConversation({
@@ -336,6 +342,7 @@ export function useUpdateAssistantConversation() {
         retryFromMessageId: params.retryFromMessageId,
         modelName: params.modelName,
         modelTemp: params.modelTemp,
+        modelId: params.modelId,
         lockReason: params.lockReason,
       })
     },
@@ -486,6 +493,241 @@ export function useDeleteAssistantMcpConnection() {
   })
 }
 
+export async function fetchAssistantModels() {
+  const response = await sdk.forConsole.assistant.listModels({
+    queries: [Query.orderDesc('$updatedAt')],
+  })
+  return response.models ?? []
+}
+
+export function assistantModelsQueryOptions(options?: { enabled?: boolean }) {
+  const enabled =
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: ['assistant', 'models'],
+    queryFn: fetchAssistantModels,
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+  })
+}
+
+export function useAssistantModels(options?: { enabled?: boolean }) {
+  return useQuery(assistantModelsQueryOptions(options))
+}
+
+export function useCreateAssistantModel() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      modelId?: string
+      name: string
+      provider: string
+      model: string
+      apiKey: string
+      baseUrl?: string
+      enabled?: boolean
+      status?: string
+    }) => {
+      return await sdk.forConsole.assistant.createModel({
+        // Server-side unique(); client ID.unique() can start with a digit and fail validation.
+        modelId: params.modelId?.trim() || 'unique()',
+        name: params.name,
+        provider: params.provider,
+        model: params.model,
+        apiKey: params.apiKey,
+        baseUrl: params.baseUrl?.trim() || undefined,
+        enabled: params.enabled ?? true,
+        status: params.status,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+    },
+  })
+}
+
+export function useUpdateAssistantModel() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      modelId: string
+      name?: string
+      provider?: string
+      model?: string
+      apiKey?: string
+      baseUrl?: string
+      enabled?: boolean
+      status?: string
+    }) => {
+      return await sdk.forConsole.assistant.updateModel({
+        modelId: params.modelId,
+        name: params.name,
+        provider: params.provider,
+        model: params.model,
+        apiKey: params.apiKey?.trim() ? params.apiKey : undefined,
+        baseUrl: params.baseUrl,
+        enabled: params.enabled,
+        status: params.status,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+    },
+  })
+}
+
+export function useDeleteAssistantModel() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (modelId: string) => {
+      return await sdk.forConsole.assistant.deleteModel({ modelId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+    },
+  })
+}
+
+export async function fetchAssistantAutomations(search?: string) {
+  const trimmedSearch = search?.trim() || undefined
+  const response = await sdk.forConsole.assistant.listAutomations({
+    queries: [
+      Query.orderDesc('$updatedAt'),
+      ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
+    ],
+  })
+  return response.automations ?? []
+}
+
+export function assistantAutomationsQueryOptions(
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  const normalizedSearch = search?.trim() || undefined
+  const enabled =
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: ['assistant', 'automations', normalizedSearch ?? ''],
+    queryFn: () => fetchAssistantAutomations(normalizedSearch),
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAssistantAutomations(
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(assistantAutomationsQueryOptions(search, options))
+}
+
+export function useCreateAssistantAutomation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      automationId?: string
+      name: string
+      prompt: string
+      schedule: string
+      titlePrefix?: string
+      modelId?: string
+      modelTemp?: number
+      contextTeamId?: string
+      contextProjectId?: string
+      contextOrganizationId?: string
+      contextPagePath?: string
+      contextPageTitle?: string
+      contextPageUrl?: string
+      attachments?: string[]
+      enabled?: boolean
+    }) => {
+      return await sdk.forConsole.assistant.createAutomation({
+        // Server-side unique(); client ID.unique() can start with a digit and fail validation.
+        automationId: params.automationId?.trim() || 'unique()',
+        name: params.name,
+        prompt: params.prompt,
+        schedule: params.schedule,
+        titlePrefix: params.titlePrefix,
+        modelId: params.modelId?.trim() || undefined,
+        // Same as conversations: backend 0.2 breaks models that only allow 1.
+        modelTemp: params.modelTemp ?? 1,
+        contextTeamId: params.contextTeamId,
+        contextProjectId: params.contextProjectId,
+        contextOrganizationId: params.contextOrganizationId,
+        contextPagePath: params.contextPagePath,
+        contextPageTitle: params.contextPageTitle,
+        contextPageUrl: params.contextPageUrl,
+        attachments: params.attachments,
+        enabled: params.enabled ?? true,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['assistant', 'automations'],
+      })
+    },
+  })
+}
+
+export function useUpdateAssistantAutomation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      automationId: string
+      name?: string
+      titlePrefix?: string
+      prompt?: string
+      modelId?: string
+      modelTemp?: number
+      contextTeamId?: string
+      contextProjectId?: string
+      contextOrganizationId?: string
+      contextPagePath?: string
+      contextPageTitle?: string
+      contextPageUrl?: string
+      attachments?: string[]
+      schedule?: string
+      enabled?: boolean
+    }) => {
+      return await sdk.forConsole.assistant.updateAutomation(params)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['assistant', 'automations'],
+      })
+    },
+  })
+}
+
+export function useDeleteAssistantAutomation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (automationId: string) => {
+      return await sdk.forConsole.assistant.deleteAutomation({ automationId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['assistant', 'automations'],
+      })
+    },
+  })
+}
+
 export type AssistantConversation = Models.AssistantConversation
 export type AssistantMessage = Models.AssistantMessage
 export type AssistantMcpConnection = Models.AssistantMcpConnection
+export type AssistantModel = Models.AssistantModel
+export type AssistantAutomation = Models.AssistantAutomation

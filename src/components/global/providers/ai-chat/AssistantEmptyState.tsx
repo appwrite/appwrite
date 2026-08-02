@@ -64,7 +64,7 @@ export function AssistantEmptyState({
               )}
             </p>
           ) : hasActiveMcp ? (
-            <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="mt-2 inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/40" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -99,13 +99,13 @@ export function AssistantEmptyState({
             </Button>
           </div>
         ) : (
-          <div className="mt-6 space-y-2">
+          <div className="mt-6 space-y-2.5">
             {suggestions.map((question) => (
               <button
                 key={question}
                 type="button"
                 onClick={() => onSelectSuggestion(question)}
-                className="w-full rounded-lg border border-transparent bg-muted/35 px-3 py-2.5 text-start text-sm text-foreground transition-colors hover:border-border hover:bg-muted/55"
+                className="w-full rounded-lg border border-transparent bg-muted/35 px-3.5 py-3 text-start text-sm leading-relaxed text-foreground transition-colors hover:border-border hover:bg-muted/55"
               >
                 {t(question)}
               </button>

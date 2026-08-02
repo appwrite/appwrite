@@ -2112,6 +2112,7 @@ export function useAIChatPanelOpen(
     (value: boolean | ((prev: boolean) => boolean)) => {
       const nextValue = typeof value === 'function' ? value(isOpen) : value
       if (!account) return
+      if (nextValue === isOpen) return
       updateMutation.mutate(nextValue)
     },
     [account, isOpen, updateMutation],
@@ -2169,6 +2170,7 @@ export function useAIChatExpanded(account: ConsoleAccountCache | undefined) {
     (value: boolean | ((prev: boolean) => boolean)) => {
       const nextValue = typeof value === 'function' ? value(isExpanded) : value
       if (!account) return
+      if (nextValue === isExpanded) return
       updateMutation.mutate(nextValue)
     },
     [account, isExpanded, updateMutation],

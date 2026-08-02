@@ -68,21 +68,21 @@ function ToolCallCard({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-md border border-border bg-muted/20">
-        <div className="flex w-full items-center gap-2 px-2.5 py-1.5">
+        <div className="flex w-full items-center gap-2 px-3 py-2">
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="flex min-w-0 flex-1 items-center gap-2 text-start"
             >
               {isRunning ? (
-                <Loader2 className="h-3 w-3 shrink-0 animate-spin text-muted-foreground" />
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
               ) : isError ? (
-                <AlertCircle className="h-3 w-3 shrink-0 text-destructive" />
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
               ) : (
-                <CheckCircle2 className="h-3 w-3 shrink-0 text-green-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
               )}
-              <Wrench className="h-3 w-3 shrink-0 fill-current text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
+              <Wrench className="h-3.5 w-3.5 shrink-0 fill-current text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
                 {tool.name}
               </span>
             </button>
@@ -111,28 +111,28 @@ function ToolCallCard({
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="overflow-hidden data-[state=open]:overflow-visible">
-          <div className="min-w-0 space-y-2 border-t border-border px-2.5 py-2">
+          <div className="min-w-0 space-y-2.5 border-t border-border px-3 py-2.5">
             {inputText ? (
               <div className="min-w-0">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('Input')}
                 </p>
-                <pre className="max-h-[min(70dvh,36rem)] overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words rounded bg-background/60 p-2 text-[11px] text-foreground">
+                <pre className="max-h-[min(70dvh,36rem)] overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words rounded bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
                   {inputText}
                 </pre>
               </div>
             ) : null}
             {outputText ? (
               <div className="min-w-0">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {isError ? t('Error') : t('Output')}
                 </p>
-                <pre className="max-h-[min(70dvh,36rem)] overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words rounded bg-background/60 p-2 text-[11px] text-foreground">
+                <pre className="max-h-[min(70dvh,36rem)] overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words rounded bg-background/60 p-2.5 text-[12px] leading-relaxed text-foreground">
                   {outputText}
                 </pre>
               </div>
             ) : isRunning ? (
-              <p className="text-[11px] text-muted-foreground">{t('Running...')}</p>
+              <p className="text-[12px] text-muted-foreground">{t('Running...')}</p>
             ) : null}
           </div>
         </CollapsibleContent>
@@ -179,24 +179,24 @@ function SubagentSection({
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-2 px-2.5 py-1.5 text-start"
+            className="flex w-full items-center gap-2 px-3 py-2 text-start"
             disabled={!hasBody && !open}
           >
             {open ? (
-              <Loader2 className="h-3 w-3 shrink-0 animate-spin text-muted-foreground" />
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
             ) : failed ? (
-              <AlertCircle className="h-3 w-3 shrink-0 text-destructive" />
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
             ) : (
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-green-600" />
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
             )}
-            <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
+            <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
               {t(getAssistantAgentLabel(agent))}
             </span>
             <Badge variant="info" className="text-[10px] shrink-0">
               {t('Subagent')}
             </Badge>
             {typeof toolCallCount === 'number' ? (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground">
                 {toolCallCount}{' '}
                 {toolCallCount === 1 ? t('tool call') : t('tool calls')}
               </span>
@@ -213,12 +213,14 @@ function SubagentSection({
         </CollapsibleTrigger>
         {hasBody ? (
           <CollapsibleContent>
-            <div className="space-y-1.5 border-t border-border px-2.5 py-2">
+            <div className="space-y-2 border-t border-border px-3 py-2.5">
               {summary ? (
-                <p className="text-[11px] text-muted-foreground">{summary}</p>
+                <p className="text-[12px] leading-relaxed text-muted-foreground">
+                  {summary}
+                </p>
               ) : null}
               {tools.length > 0 ? (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {tools.map((tool) => (
                     <ToolCallCard
                       key={
@@ -230,7 +232,7 @@ function SubagentSection({
                   ))}
                 </div>
               ) : open ? (
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-[12px] text-muted-foreground">
                   {t('Working...')}
                 </p>
               ) : null}
@@ -300,16 +302,16 @@ export function AssistantTurnActivity({
   }
 
   return (
-    <div className="mb-2 space-y-1.5">
+    <div className="mb-3 space-y-2">
       {showStatusLabel ? (
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin" />
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
           <span>{statusText}</span>
         </div>
       ) : null}
 
       {showRoute || turn.route?.reason ? (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           {showRoute ? (
             <Badge variant="info" className="text-[10px] shrink-0 gap-1">
               <Route className="h-2.5 w-2.5" />
@@ -317,7 +319,7 @@ export function AssistantTurnActivity({
             </Badge>
           ) : null}
           {turn.route?.reason ? (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[12px] leading-relaxed text-muted-foreground">
               {turn.route.reason}
             </span>
           ) : null}
@@ -337,7 +339,7 @@ export function AssistantTurnActivity({
       ))}
 
       {orphanTools.length > 0 ? (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {orphanTools.map((tool) => (
             <ToolCallCard
               key={tool.toolCallId || tool.id || `${tool.agent}-${tool.name}`}
@@ -348,7 +350,7 @@ export function AssistantTurnActivity({
       ) : null}
 
       {turn.error ? (
-        <div className="relative flex items-start gap-1.5 rounded-md border border-border bg-muted/20 px-2.5 py-1.5 pe-9 text-[12px] text-foreground">
+        <div className="relative flex items-start gap-2 rounded-md border border-border bg-muted/20 px-3 py-2 pe-9 text-[13px] leading-relaxed text-foreground">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
           <span className="min-w-0 flex-1 break-words">{turn.error}</span>
           <Button
