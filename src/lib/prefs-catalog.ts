@@ -22,6 +22,7 @@ import {
   USER_PREFS_KEY_AI_CHAT_EXPANDED,
   USER_PREFS_KEY_AI_CHAT_PANEL_OPEN,
   USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX,
+  USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS,
   USER_PREFS_KEY_API_EXPLORER_COLUMNS_LAYOUT,
   USER_PREFS_KEY_API_EXPLORER_EXPANDED_PRODUCT_GROUP,
   USER_PREFS_KEY_API_EXPLORER_RESPONSE_SPLIT_LAYOUT,
@@ -159,6 +160,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     scope: 'account',
     key: USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID,
     description: 'Last viewed AI assistant conversation id.',
+    category: 'Layout',
+  },
+  {
+    id: 'aiChatPinnedConversationIds',
+    scope: 'account',
+    key: USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS,
+    description:
+      'Pinned AI assistant conversation ids (JSON array; order is sort order).',
     category: 'Layout',
   },
   {

@@ -1785,6 +1785,13 @@ export const USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID =
   'console.aiChat.activeConversationId'
 
 /**
+ * Full key: `console.aiChat.pinnedConversationIds` - pinned assistant
+ * conversation ids as a JSON string array. Array order is the pin sort order.
+ */
+export const USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS =
+  'console.aiChat.pinnedConversationIds'
+
+/**
  * Full key: `console.aiChat.conversationsWidthPx` - conversations sidebar width
  * in fullscreen chat (string number, px).
  */
@@ -1895,6 +1902,47 @@ export function mergeAIChatActiveConversationIdIntoPrefs(
   return {
     ...prefs,
     [USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]: conversationId?.trim() || '',
+  }
+}
+
+export function parseAIChatPinnedConversationIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS]
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    const seen = new Set<string>()
+    const ids: string[] = []
+    for (const entry of parsed) {
+      if (typeof entry !== 'string') continue
+      const id = entry.trim()
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+    }
+    return ids
+  } catch {
+    return []
+  }
+}
+
+export function mergeAIChatPinnedConversationIdsIntoPrefs(
+  prefs: UserPrefs,
+  conversationIds: string[],
+): UserPrefs {
+  const seen = new Set<string>()
+  const ids: string[] = []
+  for (const entry of conversationIds) {
+    const id = entry.trim()
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    ids.push(id)
+  }
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS]: JSON.stringify(ids),
   }
 }
 

@@ -18,6 +18,9 @@ import {
   type RealtimeResponseEvent,
 } from '@appwrite.io/console'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
+import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
   Check,
@@ -73,6 +76,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -104,6 +108,7 @@ import {
   useAIChatActiveConversationId,
   useAIChatExpanded,
   useAIChatPanelOpen,
+  useAIChatPinnedConversationIds,
   type AssistantConversation,
   type AssistantMessage,
 } from '@/lib/react-query/hooks'
@@ -115,6 +120,8 @@ import { AssistantMessageDebugCard } from '@/components/global/providers/ai-chat
 import { AssistantTurnActivity } from '@/components/global/providers/ai-chat/AssistantTurnActivity'
 import { McpConnections } from '@/components/global/providers/ai-chat/McpConnections'
 import { AssistantConversationContextMenu } from '@/components/global/providers/ai-chat/AssistantConversationContextMenu'
+import { AssistantRenameDialog } from '@/components/global/providers/ai-chat/AssistantRenameDialog'
+import { ConversationResourceSummary } from '@/components/global/providers/ai-chat/ConversationResourceSummary'
 import { AssistantEmptyState } from '@/components/global/providers/ai-chat/AssistantEmptyState'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
@@ -1818,6 +1825,16 @@ export function AIChatPanelContent({
     [location.pathname],
   )
   const { isDebugModeOpen } = useDebugMode()
+  const [themeMounted, setThemeMounted] = useState(false)
+  const { theme, resolvedTheme } = useTheme()
+  useEffect(() => {
+    setThemeMounted(true)
+  }, [])
+  const headerLogoClassName = getConsoleHeaderLogoClass(
+    theme,
+    resolvedTheme,
+    themeMounted,
+  )
   const [bubbleDebugExpanded, setBubbleDebugExpanded] = useState(false)
   const [bubbleDebugMode, setBubbleDebugMode] =
     useState<BubbleActivityDebugMode>('auto')
@@ -1882,12 +1899,19 @@ export function AIChatPanelContent({
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
   const [conversationsPopoverOpen, setConversationsPopoverOpen] =
     useState(false)
+  const [conversationsMenuTab, setConversationsMenuTab] = useState<
+    'agents' | 'automations'
+  >('agents')
   const [conversationSearch, setConversationSearch] = useState('')
   const [debouncedConversationSearch, setDebouncedConversationSearch] =
     useState('')
   const [collapsedConversationGroups, setCollapsedConversationGroups] =
     useState<Set<string>>(() => new Set())
   const [archivedSectionOpen, setArchivedSectionOpen] = useState(false)
+  const [pinnedSectionOpen, setPinnedSectionOpen] = useState(true)
+  const [headerRenameOpen, setHeaderRenameOpen] = useState(false)
+  const [pinnedDragId, setPinnedDragId] = useState<string | null>(null)
+  const [pinnedDragOverId, setPinnedDragOverId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesContentRef = useRef<HTMLDivElement>(null)
@@ -1914,6 +1938,12 @@ export function AIChatPanelContent({
   const interactionsDisabled = isGuest || authLoading
   const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
     useAIChatExpanded(account)
+  const {
+    pinnedConversationIds,
+    setPinnedConversationIds,
+    pinConversation,
+    unpinConversation,
+  } = useAIChatPinnedConversationIds(account)
   const effectiveExpanded = isPageVariant || isChatExpanded
   const queryClient = useQueryClient()
 
@@ -2478,6 +2508,7 @@ export function AIChatPanelContent({
     if (interactionsDisabled) return
     try {
       await deleteConversationMutation.mutateAsync(conversationId)
+      unpinConversation(conversationId)
       selectNextConversation(conversationId)
       toast.success(t('Agent deleted'))
     } catch (error) {
@@ -3113,24 +3144,71 @@ export function AIChatPanelContent({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isChatExpanded, isPageVariant, setIsChatExpanded])
 
+  const conversationById = useMemo(() => {
+    const map = new Map<string, AssistantConversation>()
+    for (const conversation of conversations) {
+      map.set(conversation.$id, conversation)
+    }
+    return map
+  }, [conversations])
+
+  const pinnedConversations = useMemo(() => {
+    const items: AssistantConversation[] = []
+    for (const id of pinnedConversationIds) {
+      const conversation = conversationById.get(id)
+      if (conversation) items.push(conversation)
+    }
+    return items
+  }, [conversationById, pinnedConversationIds])
+
+  const pinnedIdSet = useMemo(
+    () => new Set(pinnedConversations.map((conversation) => conversation.$id)),
+    [pinnedConversations],
+  )
+
   const activeConversations = useMemo(
     () =>
       conversations.filter(
-        (conversation) => conversation.status?.toLowerCase() !== 'archived',
+        (conversation) =>
+          conversation.status?.toLowerCase() !== 'archived' &&
+          !pinnedIdSet.has(conversation.$id),
       ),
-    [conversations],
+    [conversations, pinnedIdSet],
   )
   const archivedConversations = useMemo(
     () =>
       conversations.filter(
-        (conversation) => conversation.status?.toLowerCase() === 'archived',
+        (conversation) =>
+          conversation.status?.toLowerCase() === 'archived' &&
+          !pinnedIdSet.has(conversation.$id),
       ),
-    [conversations],
+    [conversations, pinnedIdSet],
   )
   const activeConversationGroups = useMemo(
     () => groupConversationsByTime(activeConversations),
     [activeConversations],
   )
+
+  useEffect(() => {
+    // Only prune against the unfiltered list. Search results omit non-matching
+    // pinned agents and must not clear their pin preference.
+    if (!account || conversationsLoading || hasConversationSearch) return
+    const existingIds = new Set(
+      conversations.map((conversation) => conversation.$id),
+    )
+    const pruned = pinnedConversationIds.filter((id) => existingIds.has(id))
+    if (pruned.length !== pinnedConversationIds.length) {
+      setPinnedConversationIds(pruned)
+    }
+  }, [
+    account,
+    conversations,
+    conversationsLoading,
+    hasConversationSearch,
+    pinnedConversationIds,
+    setPinnedConversationIds,
+  ])
+
   const toggleConversationGroup = useCallback((groupKey: string) => {
     setCollapsedConversationGroups((current) => {
       const next = new Set(current)
@@ -3142,6 +3220,22 @@ export function AIChatPanelContent({
       return next
     })
   }, [])
+
+  const reorderPinnedConversations = useCallback(
+    (dragId: string, dropId: string) => {
+      if (dragId === dropId) return
+      setPinnedConversationIds((current) => {
+        const fromIndex = current.indexOf(dragId)
+        const toIndex = current.indexOf(dropId)
+        if (fromIndex < 0 || toIndex < 0) return current
+        const next = [...current]
+        const [moved] = next.splice(fromIndex, 1)
+        next.splice(toIndex, 0, moved)
+        return next
+      })
+    },
+    [setPinnedConversationIds],
+  )
 
   const renderConversationsSearch = () => (
     <div className="relative">
@@ -3158,15 +3252,93 @@ export function AIChatPanelContent({
     </div>
   )
 
+  const renderCreateAgentButton = () => (
+    <Button
+      type="button"
+      variant="outline"
+      className="h-8 shrink-0 gap-1.5 px-2.5 text-[12px]"
+      onClick={() => {
+        void handleCreateConversation()
+      }}
+      disabled={interactionsDisabled || createConversationMutation.isPending}
+    >
+      {createConversationMutation.isPending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Plus className="h-3.5 w-3.5" />
+      )}
+      {t('Create agent')}
+    </Button>
+  )
+
+  const renderConversationsMenuBody = (options?: {
+    dense?: boolean
+    onSelectConversation?: () => void
+  }) => (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-14 min-h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
+        <ConsoleHeaderLogo
+          className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
+        />
+        <p className="truncate text-[13px] font-semibold text-foreground">
+          {t('Appwrite Agents')}
+        </p>
+      </div>
+      <Tabs
+        value={conversationsMenuTab}
+        onValueChange={(value) => {
+          if (value === 'agents' || value === 'automations') {
+            setConversationsMenuTab(value)
+          }
+        }}
+        className="flex min-h-0 flex-1 flex-col gap-0"
+      >
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          <TabsList className="mb-3 grid h-9 w-full grid-cols-2 shadow-none">
+            <TabsTrigger value="agents" className="text-[12px]">
+              {t('Agents')}
+            </TabsTrigger>
+            <TabsTrigger value="automations" className="text-[12px]">
+              {t('Automations')}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="agents"
+            className="mt-0 data-[state=inactive]:hidden"
+          >
+            {renderConversationsSearch()}
+            <div className="my-8">{renderCreateAgentButton()}</div>
+            {renderConversationsList({
+              dense: options?.dense,
+              onSelect: options?.onSelectConversation,
+            })}
+          </TabsContent>
+          <TabsContent
+            value="automations"
+            className="mt-0 data-[state=inactive]:hidden"
+          >
+            <div className="flex min-h-[120px] items-center justify-center px-3 py-8">
+              <p className="text-center text-[12px] text-muted-foreground">
+                {t('No automations yet.')}
+              </p>
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
+  )
+
   const renderConversationRow = (
     conversation: AssistantConversation,
     options?: {
       onSelect?: () => void
       dense?: boolean
+      draggable?: boolean
     },
   ) => {
     const isActive = conversation.$id === activeConversationId
     const isArchived = conversation.status?.toLowerCase() === 'archived'
+    const isPinned = pinnedIdSet.has(conversation.$id)
     const statusTone = getAssistantConversationStatusTone(conversation)
     const statusLabel = t(getAssistantConversationStatusLabel(statusTone))
     const isArchiving =
@@ -3174,6 +3346,11 @@ export function AIChatPanelContent({
       updateConversationMutation.variables?.conversationId ===
         conversation.$id &&
       updateConversationMutation.variables?.status === 'archived'
+    const canDrag = Boolean(options?.draggable) && !interactionsDisabled
+    const isDragOver =
+      canDrag &&
+      pinnedDragOverId === conversation.$id &&
+      pinnedDragId !== conversation.$id
 
     return (
       <AssistantConversationContextMenu
@@ -3181,20 +3358,82 @@ export function AIChatPanelContent({
         title={conversation.title || t('Untitled agent')}
         disabled={interactionsDisabled}
         isArchived={isArchived}
+        isPinned={isPinned}
         onRename={(title) =>
           handleRenameConversation(conversation.$id, title)
         }
+        onPin={() => pinConversation(conversation.$id)}
+        onUnpin={() => unpinConversation(conversation.$id)}
         onArchive={() => handleArchiveConversation(conversation.$id)}
         onDelete={() => handleDeleteConversation(conversation.$id)}
       >
         <div
+          draggable={canDrag}
+          onDragStart={
+            canDrag
+              ? (event) => {
+                  setPinnedDragId(conversation.$id)
+                  event.dataTransfer.effectAllowed = 'move'
+                  event.dataTransfer.setData('text/plain', conversation.$id)
+                }
+              : undefined
+          }
+          onDragEnd={
+            canDrag
+              ? () => {
+                  setPinnedDragId(null)
+                  setPinnedDragOverId(null)
+                }
+              : undefined
+          }
+          onDragOver={
+            canDrag
+              ? (event) => {
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = 'move'
+                  setPinnedDragOverId(conversation.$id)
+                }
+              : undefined
+          }
+          onDragLeave={
+            canDrag
+              ? () => {
+                  setPinnedDragOverId((current) =>
+                    current === conversation.$id ? null : current,
+                  )
+                }
+              : undefined
+          }
+          onDrop={
+            canDrag
+              ? (event) => {
+                  event.preventDefault()
+                  const dragId =
+                    event.dataTransfer.getData('text/plain') || pinnedDragId
+                  if (dragId) {
+                    reorderPinnedConversations(dragId, conversation.$id)
+                  }
+                  setPinnedDragId(null)
+                  setPinnedDragOverId(null)
+                }
+              : undefined
+          }
           className={cn(
-            'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+            'group flex items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+            canDrag
+              ? 'cursor-grab active:cursor-grabbing'
+              : 'cursor-pointer',
             isActive
               ? 'border-border bg-accent'
               : 'hover:border-border hover:bg-accent/60',
+            isDragOver && 'border-primary bg-primary/10',
             options?.dense && 'py-1.5',
           )}
+          aria-label={
+            canDrag
+              ? `${conversation.title || t('Untitled agent')}, ${t('drag to reorder')}`
+              : undefined
+          }
         >
           <button
             type="button"
@@ -3202,22 +3441,28 @@ export function AIChatPanelContent({
               setActiveConversationId(conversation.$id)
               options?.onSelect?.()
             }}
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-start"
+            className={cn(
+              'flex min-w-0 flex-1 flex-col gap-0.5 text-start',
+              canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
+            )}
           >
-            <p className="min-w-0 truncate text-[12px] font-medium text-foreground">
-              {conversation.title || t('Untitled agent')}
-            </p>
-            {statusTone !== 'ready' ? (
-              <span
-                className={cn(
-                  'h-1.5 w-1.5 shrink-0 rounded-full',
-                  getAssistantConversationStatusDotClass(statusTone),
-                )}
-                title={statusLabel}
-                aria-label={statusLabel}
-                role="img"
-              />
-            ) : null}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
+                {conversation.title || t('Untitled agent')}
+              </span>
+              {statusTone !== 'ready' ? (
+                <span
+                  className={cn(
+                    'h-1.5 w-1.5 shrink-0 rounded-full',
+                    getAssistantConversationStatusDotClass(statusTone),
+                  )}
+                  title={statusLabel}
+                  aria-label={statusLabel}
+                  role="img"
+                />
+              ) : null}
+            </span>
+            <ConversationResourceSummary conversationId={conversation.$id} />
           </button>
           {!isArchived ? (
             <Button
@@ -3272,16 +3517,18 @@ export function AIChatPanelContent({
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                className="group flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
               >
-                <ChevronDown
-                  className={cn(
-                    'h-3 w-3 shrink-0 transition-transform',
-                    !isOpen && '-rotate-90',
-                  )}
-                />
-                <span className="min-w-0 flex-1 truncate">{t(group.label)}</span>
-                <span className="tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                <span className="inline-flex min-w-0 items-center gap-0.5">
+                  <span className="truncate">{t(group.label)}</span>
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 shrink-0 opacity-0 transition-all group-hover:opacity-100',
+                      !isOpen && '-rotate-90',
+                    )}
+                  />
+                </span>
+                <span className="ms-auto tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
                   {group.items.length}
                 </span>
               </button>
@@ -3321,17 +3568,57 @@ export function AIChatPanelContent({
     }
     return (
       <div className="space-y-8">
-        {activeConversationGroups.length > 0 ? (
-          <div className="space-y-6">
-            {renderConversationTimeGroups(activeConversationGroups, options)}
-          </div>
-        ) : archivedConversations.length > 0 ? (
-          <div className="px-1.5 py-1 text-[11px] text-muted-foreground">
-            {hasConversationSearch
-              ? t('No active agents match your search.')
-              : t('No active agents.')}
-          </div>
-        ) : null}
+        <div className="space-y-6">
+          {pinnedConversations.length > 0 ? (
+            <Collapsible
+              open={pinnedSectionOpen}
+              onOpenChange={setPinnedSectionOpen}
+            >
+              <div className="space-y-0.5">
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="group flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-0.5">
+                      <span className="truncate">{t('Pinned')}</span>
+                      <ChevronDown
+                        className={cn(
+                          'h-3 w-3 shrink-0 opacity-0 transition-all group-hover:opacity-100',
+                          !pinnedSectionOpen && '-rotate-90',
+                        )}
+                      />
+                    </span>
+                    <span className="ms-auto tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                      {pinnedConversations.length}
+                    </span>
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-0.5">
+                  {pinnedConversations.map((conversation) =>
+                    renderConversationRow(conversation, {
+                      ...options,
+                      draggable: true,
+                    }),
+                  )}
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          ) : null}
+
+          {activeConversationGroups.length > 0
+            ? renderConversationTimeGroups(activeConversationGroups, options)
+            : pinnedConversations.length === 0 &&
+                archivedConversations.length > 0
+              ? (
+                  <div className="px-1.5 py-1 text-[11px] text-muted-foreground">
+                    {hasConversationSearch
+                      ? t('No active agents match your search.')
+                      : t('No active agents.')}
+                  </div>
+                )
+              : null}
+        </div>
 
         {archivedConversations.length > 0 ? (
           <Collapsible
@@ -3342,16 +3629,18 @@ export function AIChatPanelContent({
               <CollapsibleTrigger asChild>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                  className="group flex w-full items-center gap-1 rounded-md px-1.5 py-1 text-start text-[10px] font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
                 >
-                  <ChevronDown
-                    className={cn(
-                      'h-3 w-3 shrink-0 transition-transform',
-                      !archivedSectionOpen && '-rotate-90',
-                    )}
-                  />
-                  <span className="min-w-0 flex-1 truncate">{t('Archived')}</span>
-                  <span className="tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                  <span className="inline-flex min-w-0 items-center gap-0.5">
+                    <span className="truncate">{t('Archived')}</span>
+                    <ChevronDown
+                      className={cn(
+                        'h-3 w-3 shrink-0 opacity-0 transition-all group-hover:opacity-100',
+                        !archivedSectionOpen && '-rotate-90',
+                      )}
+                    />
+                  </span>
+                  <span className="ms-auto tabular-nums text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80">
                     {archivedConversations.length}
                   </span>
                 </button>
@@ -3372,31 +3661,7 @@ export function AIChatPanelContent({
 
   const conversationsSidebar = (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <p className="truncate text-[13px] font-semibold text-foreground">
-          {t('Agents')}
-        </p>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 p-0"
-          onClick={handleCreateConversation}
-          disabled={
-            interactionsDisabled || createConversationMutation.isPending
-          }
-          aria-label={t('New agent')}
-        >
-          {createConversationMutation.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-        </Button>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        <div className="mb-5">{renderConversationsSearch()}</div>
-        {renderConversationsList({ dense: true })}
-      </div>
+      <div className="min-h-0 flex-1">{renderConversationsMenuBody({ dense: true })}</div>
       <div className="shrink-0 border-t border-border bg-background p-2">
         <Button
           type="button"
@@ -3427,64 +3692,71 @@ export function AIChatPanelContent({
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 {effectiveExpanded ? (
-                  <p className="truncate px-1.5 text-[13px] font-semibold text-foreground">
-                    {activeConversation?.title || t('New agent')}
-                  </p>
+                  <button
+                    type="button"
+                    className="group flex min-w-0 max-w-full items-center gap-1 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-60"
+                    onClick={() => setHeaderRenameOpen(true)}
+                    disabled={
+                      interactionsDisabled ||
+                      !activeConversationId ||
+                      !activeConversation
+                    }
+                    aria-label={t('Update agent')}
+                  >
+                    <span className="truncate text-[13px] font-semibold text-foreground">
+                      {activeConversation?.title || t('New agent')}
+                    </span>
+                    {activeConversationId && activeConversation ? (
+                      <Pencil className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    ) : null}
+                  </button>
                 ) : (
                   <Popover
                     open={conversationsPopoverOpen}
                     onOpenChange={setConversationsPopoverOpen}
                   >
-                    <PopoverTrigger asChild>
-                      <Button
+                    <div className="flex min-w-0 items-center gap-0.5">
+                      <button
                         type="button"
-                        variant="ghost"
-                        className="h-8 max-w-[248px] justify-start px-1.5 text-start"
+                        className="group flex min-w-0 max-w-[200px] items-center gap-1 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-60"
+                        onClick={() => setHeaderRenameOpen(true)}
+                        disabled={
+                          interactionsDisabled ||
+                          !activeConversationId ||
+                          !activeConversation
+                        }
+                        aria-label={t('Update agent')}
                       >
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <div className="min-w-0">
-                            <p className="truncate text-[13px] font-semibold text-foreground">
-                              {activeConversation?.title || t('New agent')}
-                            </p>
-                          </div>
-                          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        </div>
-                      </Button>
-                    </PopoverTrigger>
+                        <span className="truncate text-[13px] font-semibold text-foreground">
+                          {activeConversation?.title || t('New agent')}
+                        </span>
+                        {activeConversationId && activeConversation ? (
+                          <Pencil className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                        ) : null}
+                      </button>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          aria-label={t('Agents')}
+                        >
+                          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                    </div>
 
                     <PopoverContent align="start" className="w-[300px] p-0">
-                      <div className="max-h-[300px] overflow-y-auto p-1.5">
-                        <p className="mb-1.5 px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {t('Agents')}
-                        </p>
-                        <div className="mb-5">{renderConversationsSearch()}</div>
-                        {renderConversationsList({
-                          onSelect: () => setConversationsPopoverOpen(false),
+                      <div className="flex max-h-[360px] flex-col overflow-hidden">
+                        {renderConversationsMenuBody({
+                          onSelectConversation: () =>
+                            setConversationsPopoverOpen(false),
                         })}
                       </div>
                     </PopoverContent>
                   </Popover>
                 )}
-
-                {!effectiveExpanded ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-8 w-8 shrink-0 p-0"
-                    onClick={handleCreateConversation}
-                    disabled={
-                      interactionsDisabled ||
-                      createConversationMutation.isPending
-                    }
-                    aria-label={t('New agent')}
-                  >
-                    {createConversationMutation.isPending ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Plus className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -4176,6 +4448,16 @@ export function AIChatPanelContent({
       ) : (
         chatMain
       )}
+      {activeConversationId && activeConversation ? (
+        <AssistantRenameDialog
+          open={headerRenameOpen}
+          onOpenChange={setHeaderRenameOpen}
+          title={activeConversation.title || t('Untitled agent')}
+          onRename={(title) =>
+            handleRenameConversation(activeConversationId, title)
+          }
+        />
+      ) : null}
     </div>
   )
 }

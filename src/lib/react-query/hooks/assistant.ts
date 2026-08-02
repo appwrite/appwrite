@@ -9,7 +9,11 @@ import { ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { messageNeedsToolHydration } from '@/lib/assistant/resource-mutations'
 import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
+
+/** Cap getMessage hydration so list-row stats stay bounded. */
+const ASSISTANT_TOOL_HYDRATION_LIMIT = 8
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
@@ -37,6 +41,48 @@ export async function fetchAssistantMessages(
   return {
     messages,
     total: response.total ?? messages.length,
+  }
+}
+
+/**
+ * List messages and hydrate assistant turns that lack tools/timeline tool
+ * events (list payloads are often incomplete for mutation summaries).
+ */
+export async function fetchAssistantMessagesWithTools(
+  conversationId: string,
+  limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
+) {
+  const listed = await fetchAssistantMessages(conversationId, limit)
+
+  // Newest first for hydration priority, then restore chronological order.
+  const toHydrate = listed.messages
+    .map((message, index) => ({ message, index }))
+    .reverse()
+    .filter(({ message }) => messageNeedsToolHydration(message))
+    .slice(0, ASSISTANT_TOOL_HYDRATION_LIMIT)
+
+  const hydratedByIndex = new Map<number, Models.AssistantMessage>()
+  await Promise.all(
+    toHydrate.map(async ({ message, index }) => {
+      try {
+        const full = await sdk.forConsole.assistant.getMessage({
+          conversationId,
+          messageId: message.$id,
+        })
+        hydratedByIndex.set(index, full)
+      } catch {
+        // Keep list payload.
+      }
+    }),
+  )
+
+  const messages = listed.messages.map(
+    (message, index) => hydratedByIndex.get(index) ?? message,
+  )
+
+  return {
+    messages,
+    total: listed.total,
   }
 }
 export interface AssistantMessageContext {

@@ -82,6 +82,7 @@ import {
   mergeAIChatExpandedIntoPrefs,
   mergeAIChatPanelOpenIntoPrefs,
   mergeAIChatPanelWidthPxIntoPrefs,
+  mergeAIChatPinnedConversationIdsIntoPrefs,
   mergeRightPaneWidthPxIntoPrefs,
   mergeAuthPasswordStrengthComplianceOpenIntoPrefs,
   mergeApiExplorerColumnsLayoutIntoPrefs,
@@ -109,6 +110,7 @@ import {
   parseAIChatExpanded,
   parseAIChatPanelOpen,
   parseAIChatPanelWidthPx,
+  parseAIChatPinnedConversationIds,
   parseRightPaneWidthPx,
   parseAuthPasswordStrengthComplianceOpen,
   parseApiExplorerColumnsLayout,
@@ -2238,6 +2240,103 @@ export function useAIChatActiveConversationId(
   )
 
   return { activeConversationId, setActiveConversationId }
+}
+
+/**
+ * Pinned AI assistant conversation ids (`console.aiChat.pinnedConversationIds`).
+ * Array order is the pinned sort order.
+ */
+export function useAIChatPinnedConversationIds(
+  account: ConsoleAccountCache | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  const pinnedConversationIds = parseAIChatPinnedConversationIds(
+    account?.prefs as UserPrefs | undefined,
+  )
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: string[]) => {
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs(
+        mergeAIChatPinnedConversationIdsIntoPrefs(
+          (account.prefs ?? {}) as UserPrefs,
+          value,
+        ),
+        'ai-chat-pinned-conversations',
+      )
+    },
+    onMutate: async (value) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeAIChatPinnedConversationIdsIntoPrefs(
+                  (current.prefs ?? {}) as UserPrefs,
+                  value,
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+
+  const setPinnedConversationIds = useCallback(
+    (value: string[] | ((prev: string[]) => string[])) => {
+      const nextValue =
+        typeof value === 'function' ? value(pinnedConversationIds) : value
+      if (!account) return
+      const normalized = nextValue
+        .map((id) => id.trim())
+        .filter((id, index, all) => !!id && all.indexOf(id) === index)
+      if (
+        normalized.length === pinnedConversationIds.length &&
+        normalized.every((id, index) => id === pinnedConversationIds[index])
+      ) {
+        return
+      }
+      updateMutation.mutate(normalized)
+    },
+    [account, pinnedConversationIds, updateMutation],
+  )
+
+  const pinConversation = useCallback(
+    (conversationId: string) => {
+      const id = conversationId.trim()
+      if (!id) return
+      setPinnedConversationIds((current) =>
+        current.includes(id) ? current : [id, ...current],
+      )
+    },
+    [setPinnedConversationIds],
+  )
+
+  const unpinConversation = useCallback(
+    (conversationId: string) => {
+      const id = conversationId.trim()
+      if (!id) return
+      setPinnedConversationIds((current) =>
+        current.filter((entry) => entry !== id),
+      )
+    },
+    [setPinnedConversationIds],
+  )
+
+  return {
+    pinnedConversationIds,
+    setPinnedConversationIds,
+    pinConversation,
+    unpinConversation,
+  }
 }
 
 const AI_CHAT_CONVERSATIONS_WIDTH_PERSIST_DEBOUNCE_MS = 250

@@ -423,7 +423,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Attachments upload in background. Sending waits until they are ready.':
     'קבצים מצורפים מועלים ברקע. השליחה ממתינה עד שהם מוכנים.',
   'Collapse chat': 'כיווץ הצ׳אט',
+  'Appwrite Agents': 'Appwrite Agents',
   Agents: 'סוכנים',
+  Automations: 'אוטומציות',
+  'Create agent': 'יצירת סוכן',
+  'No automations yet.': 'אין עדיין אוטומציות.',
   Archive: 'ארכוב',
   'Archive agent': 'ארכוב הסוכן',
   'Agent archived': 'הסוכן הועבר לארכיון',
@@ -478,6 +482,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'No active agents.': 'אין סוכנים פעילים.',
   'No active agents match your search.':
     'לא נמצאו סוכנים פעילים התואמים לחיפוש.',
+  'Resources changed': 'משאבים שהשתנו',
+  updated: 'עודכנו',
   'Search agents...': 'חיפוש סוכנים...',
   Open: 'פתיחה',
   'Press Enter to queue, Shift+Enter for new line':

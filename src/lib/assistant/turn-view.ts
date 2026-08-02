@@ -62,6 +62,8 @@ export type AssistantMessageLike = Pick<
   | 'routeReason'
   | 'tools'
 > & {
+  role?: string
+  conversationId?: string
   timeline?: unknown
   timelineJson?: unknown
   errorCode?: string
