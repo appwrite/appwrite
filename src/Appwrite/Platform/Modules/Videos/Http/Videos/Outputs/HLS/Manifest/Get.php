@@ -80,45 +80,70 @@ class Get extends Base
         $streams = [];
         $seenAudioLanguages = [];
 
+        // Two passes: collect alternate-audio groups first so every video
+        // STREAM-INF can reference them, and so CODECS can drop muxed-audio
+        // entries that would make players expect audio inside the video playlist.
         foreach ($renditions as $rendition) {
             $metadata = $rendition->getAttribute('metadata', []);
 
             foreach ($metadata['hls'] ?? [] as $stream) {
-                $streamUri = $this->withProject(
-                    $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
-                    $project
-                );
-
-                if (($stream['type'] ?? '') === 'audio') {
-                    // One EXT-X-MEDIA entry per language: a multi-rendition ladder
-                    // repeats the same audio track at every video quality.
-                    $language = $stream['language'] ?? null;
-
-                    if ($language !== null && isset($seenAudioLanguages[$language])) {
-                        continue;
-                    }
-
-                    if ($language !== null) {
-                        $seenAudioLanguages[$language] = true;
-                    }
-
-                    $audios[] = [
-                        'name' => $stream['name'] ?? $language,
-                        'language' => $language,
-                        'uri' => $streamUri,
-                    ];
-
+                if (($stream['type'] ?? '') !== 'audio') {
                     continue;
+                }
+
+                // One EXT-X-MEDIA entry per language: a multi-rendition ladder
+                // repeats the same audio track at every video quality.
+                $language = $stream['language'] ?? null;
+
+                if ($language !== null && isset($seenAudioLanguages[$language])) {
+                    continue;
+                }
+
+                if ($language !== null) {
+                    $seenAudioLanguages[$language] = true;
+                }
+
+                $audios[] = [
+                    'name' => $stream['name'] ?? $language,
+                    'language' => $language,
+                    'uri' => $this->withProject(
+                        $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
+                        $project
+                    ),
+                ];
+            }
+        }
+
+        $hasAudioGroup = !empty($audios);
+
+        foreach ($renditions as $rendition) {
+            $metadata = $rendition->getAttribute('metadata', []);
+
+            foreach ($metadata['hls'] ?? [] as $stream) {
+                if (($stream['type'] ?? '') === 'audio') {
+                    continue;
+                }
+
+                $codecs = $stream['codecs'] ?? null;
+                if ($hasAudioGroup && \is_string($codecs)) {
+                    $parts = \array_values(\array_filter(
+                        \array_map('trim', \explode(',', $codecs)),
+                        fn (string $part) => $part !== '' && !\str_starts_with($part, 'mp4a')
+                    ));
+                    $codecs = empty($parts) ? null : \implode(',', $parts);
                 }
 
                 $streams[] = [
                     'bandwidth' => $stream['bandwidth'] ?? 0,
                     'resolution' => $stream['resolution'] ?? '',
                     'name' => $rendition->getAttribute('name', ''),
-                    'codecs' => $stream['codecs'] ?? null,
+                    'codecs' => $codecs,
                     'subs' => empty($subtitles) ? null : 'subs',
-                    'audio' => empty($audios) ? null : 'group_audio',
-                    'uri' => $streamUri,
+                    'audio' => $hasAudioGroup ? 'group_audio' : null,
+                    'uri' => $this->withProject(
+                        $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
+                        $project
+                    ),
                 ];
             }
         }

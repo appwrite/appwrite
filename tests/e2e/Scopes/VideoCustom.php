@@ -166,13 +166,13 @@ trait VideoCustom
     }
 
     /**
-     * Polls a rendition until it leaves the queue-side states.
+     * Polls a rendition until it leaves the queue-side states (`waiting`,
+     * `started`, `ended`, `uploading`) and settles on `ready` or `error`.
      *
-     * The videos worker currently stubs transcoding and settles every rendition
-     * on `error`, so this asserts only that a terminal state is reached — it
-     * stays correct once real encoding lands and renditions settle on `ready`.
+     * Encoding a multi-megabyte source can take minutes, so the default timeout
+     * is deliberately generous.
      */
-    public function waitForRenditionTerminalState(string $videoId, string $renditionId, int $timeout = 30): array
+    public function waitForRenditionTerminalState(string $videoId, string $renditionId, int $timeout = 300): array
     {
         $pending = ['waiting', 'started', 'ended', 'uploading'];
         $deadline = \time() + $timeout;
@@ -188,6 +188,61 @@ trait VideoCustom
 
             if (!\in_array($body['status'] ?? '', $pending, true)) {
                 return $body;
+            }
+
+            \usleep(500000);
+        }
+
+        return $body;
+    }
+
+    /**
+     * Polls until the sprite timeline WebVTT is available for a video.
+     */
+    public function waitForTimeline(string $videoId, int $timeout = 300): array
+    {
+        $deadline = \time() + $timeout;
+        $response = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            if (($response['headers']['status-code'] ?? 0) === 200) {
+                return $response;
+            }
+
+            \usleep(500000);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Polls a subtitle until it leaves `waiting`/`started` and settles.
+     */
+    public function waitForSubtitleTerminalState(string $videoId, string $subtitleId, int $timeout = 120): array
+    {
+        $pending = ['waiting', 'started'];
+        $deadline = \time() + $timeout;
+        $body = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            foreach ($response['body']['subtitles'] ?? [] as $subtitle) {
+                if (($subtitle['$id'] ?? '') === $subtitleId) {
+                    $body = $subtitle;
+                    if (!\in_array($subtitle['status'] ?? '', $pending, true)) {
+                        return $subtitle;
+                    }
+                    break;
+                }
             }
 
             \usleep(500000);

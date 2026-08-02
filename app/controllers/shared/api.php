@@ -19,6 +19,7 @@ use Appwrite\Functions\EventProcessor;
 use Appwrite\Locking\Lock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -715,6 +716,25 @@ Http::init()
                             route: $route,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Sprite previews inherit access from the video's source
+                    // bucket/file — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    $video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));
+
+                    if ($video->isEmpty()) {
+                        throw new Exception(Exception::VIDEO_NOT_FOUND);
+                    }
+
+                    VideosBase::assertFileAccess(
+                        $dbForProject,
+                        $authorization,
+                        $user,
+                        $video->getAttribute('bucketId', ''),
+                        $video->getAttribute('fileId', '')
+                    );
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');

@@ -247,16 +247,17 @@ class VideosCustomServerTest extends Scope
     }
 
     /**
-     * The sprite timeline is produced by the videos worker, whose ffmpeg path is
-     * stubbed, so it is expected to be absent rather than merely slow.
+     * The sprite timeline is produced asynchronously by the videos worker after
+     * createVideo enqueues a Timeline job.
      */
     #[Depends('testCreateVideo')]
-    public function testTimelineUnavailableWhileEncodingIsStubbed(string $videoId): void
+    public function testTimelineAvailable(string $videoId): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->headers());
+        $response = $this->waitForTimeline($videoId);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('video_timeline_not_found', $response['body']['type']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', $response['body']);
+        $this->assertMatchesRegularExpression('/previews\/[a-zA-Z0-9]+#xywh=\d+,\d+,\d+,\d+/', $response['body']);
     }
 
     // --------------------------------------------------------------- subtitles
@@ -320,6 +321,9 @@ class VideosCustomServerTest extends Scope
     #[Depends('testCreateSubtitle')]
     public function testListSubtitles(array $subtitle): array
     {
+        $body = $this->waitForSubtitleTerminalState($subtitle['videoId'], $subtitle['subtitleId']);
+        $this->assertEquals('ready', $body['status'], 'Subtitle did not become ready');
+
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $subtitle['videoId'] . '/subtitles', $this->headers());
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -374,7 +378,14 @@ class VideosCustomServerTest extends Scope
     public function testCreateRendition(string $videoId): array
     {
         $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
-        $profile = $profiles['body']['profiles'][0];
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -416,17 +427,18 @@ class VideosCustomServerTest extends Scope
 
     /**
      * The worker picks the job up off the `videos` queue and drives the document
-     * to a terminal state. With transcoding stubbed that state is `error`.
+     * to `ready` once packaging and upload finish.
      */
     #[Depends('testCreateRendition')]
     public function testRenditionReachesTerminalState(array $rendition): array
     {
         $body = $this->waitForRenditionTerminalState($rendition['videoId'], $rendition['renditionId']);
 
-        $this->assertContains($body['status'], ['ready', 'error'], 'Rendition never left the queue; is appwrite-worker-videos running?');
+        $this->assertEquals('ready', $body['status'], 'Rendition did not become ready; is appwrite-worker-videos running with ffmpeg?');
         $this->assertNotEmpty($body['startedAt']);
-        // Datetime, not the integer the pre-merge model declared.
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $body['startedAt']);
+        $this->assertNotEmpty($body['endedAt']);
+        $this->assertEquals('100', $body['progress']);
 
         return $rendition;
     }
@@ -475,12 +487,20 @@ class VideosCustomServerTest extends Scope
 
     /**
      * Playback surfaces exist and are routed, but resolve to 404 until a
-     * rendition reaches `ready`. Also covers the two extension-bearing master
-     * manifest paths kept for players that sniff the URI extension.
+     * rendition reaches `ready`. Uses a fresh video with no encode jobs so a
+     * sibling test that encodes the shared video cannot race this assertion.
+     * Also covers the two extension-bearing master manifest paths kept for
+     * players that sniff the URI extension.
      */
-    #[Depends('testCreateVideo')]
-    public function testPlaybackUnavailableWithoutReadyRendition(string $videoId): void
+    public function testPlaybackUnavailableWithoutReadyRendition(): void
     {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $videoId = $create['body']['$id'];
+
         foreach (['/videos/' . $videoId . '/outputs/hls/master.m3u8', '/videos/' . $videoId . '/outputs/dash/master.mpd'] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
             $this->assertEquals(404, $response['headers']['status-code'], $path);
@@ -507,18 +527,90 @@ class VideosCustomServerTest extends Scope
     }
 
     /**
-     * The manifest and segment bodies can only be asserted against real encoder
-     * output, which needs the ffmpeg pipeline in
-     * `Appwrite\Platform\Modules\Videos\Workers\Videos`.
+     * Asserts real encoder output: HLS master/variant playlists, DASH MPD
+     * structure, segment bytes, and the WebVTT sprite timeline.
      */
-    public function testEncodedPlaybackOutput(): void
+    #[Depends('testRenditionReachesTerminalState')]
+    public function testEncodedPlaybackOutput(array $rendition): void
     {
-        $this->markTestSkipped(
-            'Transcoding is stubbed pending the encoding-dependency decision; see the TODO in '
-            . 'src/Appwrite/Platform/Modules/Videos/Workers/Videos.php. Restoring it should add '
-            . 'assertions here for HLS master/variant playlists, DASH MPD structure, segment '
-            . 'bytes with Range support, and the WebVTT sprite timeline.'
+        $videoId = $rendition['videoId'];
+        $renditionId = $rendition['renditionId'];
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString('#EXTM3U', $master['body']);
+        $this->assertStringContainsString('#EXT-X-STREAM-INF', $master['body']);
+        $this->assertMatchesRegularExpression('#/videos/' . \preg_quote($videoId, '#') . '/outputs/hls/renditions/' . \preg_quote($renditionId, '#') . '/streams/\d+/playlist\.m3u8#', $master['body']);
+
+        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $matches) !== 1) {
+            $this->fail('HLS master playlist did not reference a stream playlist');
+        }
+        $streamId = $matches[1];
+
+        $variant = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->headers()
         );
+        $this->assertEquals(200, $variant['headers']['status-code']);
+        $this->assertStringContainsString('#EXT-X-TARGETDURATION', $variant['body']);
+        $this->assertStringContainsString('#EXTINF', $variant['body']);
+        $this->assertStringContainsString('#EXT-X-ENDLIST', $variant['body']);
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
+            $this->fail('HLS variant playlist did not reference a segment');
+        }
+        $segmentId = $segmentMatch[1];
+
+        $segment = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentId,
+            $this->headers()
+        );
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $this->assertNotEmpty($segment['body']);
+
+        // DASH ladder for the same video.
+        $profiles = $this->client->call(Client::METHOD_GET, '/videos/profiles', $this->headers());
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+
+        $dashCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'dash',
+        ]);
+        $this->assertEquals(202, $dashCreate['headers']['status-code']);
+        $dashRenditionId = $dashCreate['body']['$id'];
+        $dashBody = $this->waitForRenditionTerminalState($videoId, $dashRenditionId);
+        $this->assertEquals('ready', $dashBody['status']);
+
+        $mpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', $this->headers());
+        $this->assertEquals(200, $mpd['headers']['status-code']);
+        $this->assertStringContainsString('<MPD', $mpd['body']);
+        $this->assertStringContainsString('<AdaptationSet', $mpd['body']);
+        $this->assertStringContainsString('<SegmentList', $mpd['body']);
+        $this->assertStringContainsString('<Initialization', $mpd['body']);
+        $this->assertStringContainsString('<SegmentURL', $mpd['body']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', $timeline['body']);
+
+        if (\preg_match('~previews/([a-zA-Z0-9]+)#xywh=~', $timeline['body'], $previewMatch) === 1) {
+            $preview = $this->client->call(
+                Client::METHOD_GET,
+                '/videos/' . $videoId . '/previews/' . $previewMatch[1],
+                $this->headers()
+            );
+            $this->assertEquals(200, $preview['headers']['status-code']);
+            $this->assertNotEmpty($preview['body']);
+        }
     }
 
     // ------------------------------------------------------------------ delete

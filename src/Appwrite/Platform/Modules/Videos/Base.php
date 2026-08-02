@@ -109,13 +109,17 @@ abstract class Base extends UtopiaAction
      * Asserts the caller may read the bucket/file backing a video, and returns
      * the file document.
      *
+     * Static so the shared response-cache revalidation hook in
+     * `app/controllers/shared/api.php` can reuse the same check for cached
+     * sprite bytes without duplicating the permission logic.
+     *
      * This replaces the procedural `validateFilePermissions()` helper the legacy
      * controller declared at file scope. It mirrors
      * `Modules/Storage/Http/Buckets/Files/View/Get.php` — the legacy version
      * gated bucket access on `$mode !== APP_MODE_ADMIN` rather than on roles,
      * which let any admin-mode request through.
      */
-    protected function assertFileAccess(
+    public static function assertFileAccess(
         Database $dbForProject,
         Authorization $authorization,
         User $user,
@@ -162,7 +166,7 @@ abstract class Base extends UtopiaAction
     ): Document {
         $video = $this->getVideo($dbForProject, $authorization, $videoId);
 
-        $this->assertFileAccess(
+        self::assertFileAccess(
             $dbForProject,
             $authorization,
             $user,

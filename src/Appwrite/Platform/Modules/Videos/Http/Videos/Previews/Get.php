@@ -43,11 +43,9 @@ class Get extends Base
             ->label('scope', 'videos.read')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
-            // Deliberately not cached. The shared response cache re-validates
-            // permissions on a hit only when cache.resourceType starts with
-            // 'bucket/' (see app/controllers/shared/api.php), so caching under a
-            // 'video/' resource type would serve sprite bytes to anyone holding
-            // videos.read. Add a 'video' branch to that hook before enabling it.
+            ->label('cache', true)
+            ->label('cache.resourceType', 'video/{request.videoId}')
+            ->label('cache.resource', 'preview/{request.previewId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
@@ -114,7 +112,7 @@ class Get extends Base
         if (empty($output)) {
             // Sprite sheets are written as JPEG; only upgrade to webp when the client
             // actually advertises support for it.
-            $output = \str_contains($request->getHeader('accept', ''), 'image/webp') ? 'webp' : 'jpg';
+            $output = \str_contains($request->getHeaderLine('accept'), 'image/webp') ? 'webp' : 'jpg';
         }
 
         if (!\array_key_exists($output, $outputs)) {

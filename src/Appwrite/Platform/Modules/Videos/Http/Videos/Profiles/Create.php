@@ -35,6 +35,7 @@ class Create extends Base
             ->groups(['api', 'videos'])
             ->label('scope', 'videos.write')
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
+            ->label('event', 'videoProfiles.[profileId].create')
             ->label('audits.event', 'profile.create')
             ->label('audits.resource', 'videoProfile/{response.$id}')
             ->label('sdk', new Method(

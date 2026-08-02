@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Appwrite Videos player</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: #0b0d10;
+      color: #e8eaed;
+    }
+    main {
+      width: min(960px, 94vw);
+      display: grid;
+      gap: 1rem;
+      padding: 1.5rem 0;
+    }
+    h1 { font-size: 1.25rem; margin: 0; font-weight: 600; }
+    h2 { font-size: 0.95rem; margin: 0; font-weight: 600; opacity: 0.9; }
+    .panel {
+      display: grid;
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px solid #1c2128;
+      border-radius: 10px;
+      background: #111418;
+    }
+    .grid2 { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
+    .full { grid-column: 1 / -1; }
+    label {
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 6px;
+      border: 1px solid #2a3038;
+      background: #171a1f;
+      color: #e8eaed;
+      padding: 0.5rem 0.65rem;
+    }
+    button {
+      cursor: pointer;
+      background: #fd366e;
+      border-color: #fd366e;
+      color: #fff;
+      font-weight: 600;
+    }
+    button.secondary { background: transparent; color: #e8eaed; border-color: #2a3038; font-weight: 400; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .mono { font-family: ui-monospace, monospace; }
+    .muted { opacity: 0.55; font-size: 0.8rem; }
+    progress { width: min(28rem, 100%); accent-color: #fd366e; }
+    .rows { display: grid; gap: 0.4rem; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.75rem;
+      align-items: center;
+      font-size: 0.85rem;
+      font-family: ui-monospace, monospace;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+    .row--clickable {
+      cursor: pointer;
+    }
+    .row--clickable:hover {
+      background: #171a1f;
+      border-color: #2a3038;
+    }
+    .row--active {
+      background: #1a1520;
+      border-color: #fd366e55;
+      box-shadow: inset 3px 0 0 #fd366e;
+    }
+    .badge {
+      display: inline-block;
+      min-width: 5.5rem;
+      text-align: center;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #20262e;
+    }
+    .badge.ready { background: #14301f; color: #3dd68c; }
+    .badge.waiting, .badge.started, .badge.ended, .badge.uploading { background: #2a2410; color: #f5c542; }
+    .badge.error, .badge.missing { background: #301414; color: #ff8e8e; }
+    video {
+      width: 100%;
+      background: #000;
+      border-radius: 8px;
+      aspect-ratio: 16 / 9;
+    }
+    .timeline {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: #20262e;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .timeline.disabled { opacity: 0.35; pointer-events: none; }
+    .timeline__played {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: 999px;
+      background: #fd366e;
+    }
+    .thumb {
+      position: absolute;
+      bottom: 22px;
+      transform: translateX(-50%);
+      padding: 4px;
+      background: #000;
+      border: 1px solid #2a3038;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      display: none;
+      pointer-events: none;
+    }
+    .thumb.visible { display: block; }
+    .thumb__img { background-repeat: no-repeat; border-radius: 4px; }
+    .thumb__time {
+      margin-top: 4px;
+      text-align: center;
+      font: 0.75rem ui-monospace, monospace;
+      opacity: 0.85;
+    }
+    #sheetPanel {
+      display: none;
+      border-top: 1px solid #1c2128;
+      padding-top: 0.75rem;
+    }
+    #sheetPanel.open { display: block; }
+    #sheetPanel h2 { margin-bottom: 0.5rem; }
+    #sheet { max-width: 100%; border-radius: 8px; border: 1px solid #2a3038; }
+    #status { font-family: ui-monospace, monospace; font-size: 0.85rem; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Appwrite Videos player</h1>
+    <p class="muted">Authenticate with the Web SDK, enter a video ID, and the page polls the Videos API for rendition/sprite status and plays HLS when ready.</p>
+
+    <section class="panel">
+      <h2>Connection &amp; auth <span class="muted">(Appwrite Web SDK)</span></h2>
+      <div class="grid2">
+        <label>
+          API endpoint
+          <input id="endpoint" value="http://localhost/v1" required />
+        </label>
+        <label>
+          Project ID
+          <input id="projectId" placeholder="projectId" required autocomplete="off" />
+        </label>
+        <label>
+          Email <span class="muted">(optional — leave empty for anonymous)</span>
+          <input id="email" type="email" autocomplete="off" />
+        </label>
+        <label>
+          Password
+          <input id="password" type="password" autocomplete="off" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="loginBtn">Log in / anonymous</button>
+        <button type="button" class="secondary" id="signupBtn">Sign up + log in</button>
+        <button type="button" class="secondary" id="logoutBtn" disabled>Log out</button>
+        <span class="mono muted" id="authInfo">not authenticated</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Upload a video</h2>
+      <p class="muted">
+        Needs a Storage bucket that allows this user to <code>create</code> files.
+        If you don't have one, paste an API key with <code>buckets.write</code> and create a public source bucket.
+      </p>
+      <div class="grid2">
+        <label>
+          Storage bucket ID
+          <input id="bucketId" placeholder="bucketId" autocomplete="off" />
+        </label>
+        <label>
+          Video file
+          <input id="videoFile" type="file" accept="video/*" />
+        </label>
+        <label class="full">
+          API key <span class="muted">(optional — only to create a public bucket)</span>
+          <input id="apiKey" type="password" placeholder="standard API key with buckets.write + files.write" autocomplete="off" />
+        </label>
+        <label class="full">
+          HLS profile names
+          <input id="profileNames" value="360p, 480p, 720p" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="createBucketBtn" disabled>Create public bucket</button>
+        <button type="button" id="uploadBtn" disabled>Upload + create video</button>
+        <progress id="uploadProgress" value="0" max="100" hidden></progress>
+        <span class="mono muted" id="uploadInfo">authenticate first</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Video</h2>
+      <div class="grid2">
+        <label class="full">
+          Video ID
+          <input id="videoId" placeholder="videoId" required autocomplete="off" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="button" id="loadBtn" disabled>Load / watch</button>
+        <button type="button" class="secondary" id="stopBtn" disabled>Stop polling</button>
+        <span class="mono muted" id="pollInfo">idle</span>
+      </div>
+      <div class="rows" id="statusRows">
+        <div class="muted">Waiting for auth + video ID…</div>
+      </div>
+    </section>
+
+    <video id="player" controls playsinline muted></video>
+
+    <div class="timeline disabled" id="timeline" aria-label="Seek with sprite preview">
+      <div class="timeline__played" id="played"></div>
+      <div class="thumb" id="thumb">
+        <div class="thumb__img" id="thumbImg"></div>
+        <div class="thumb__time" id="thumbTime">0:00</div>
+      </div>
+    </div>
+
+    <p id="status">Idle</p>
+
+    <section id="sheetPanel" aria-label="Sprite sheet">
+      <h2>Sprite sheet</h2>
+      <img id="sheet" alt="Sprite sheet" />
+    </section>
+  </main>
+
+  <script type="module">
+    import Hls from 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/+esm';
+    import { Client, Account, Storage, ID, Permission, Role } from 'https://cdn.jsdelivr.net/npm/appwrite@17/+esm';
+
+    const POLL_MS = 3000;
+    const JWT_REFRESH_MS = 10 * 60 * 1000; // JWTs live 15 min; refresh early.
+    const STORAGE_KEY = 'aw-videos-player';
+
+    const $ = (id) => document.getElementById(id);
+    const authInfo = $('authInfo');
+    const statusRows = $('statusRows');
+    const pollInfo = $('pollInfo');
+    const statusEl = $('status');
+    const video = $('player');
+    const timeline = $('timeline');
+    const played = $('played');
+    const thumb = $('thumb');
+    const thumbImg = $('thumbImg');
+    const thumbTime = $('thumbTime');
+    const sheet = $('sheet');
+    const sheetPanel = $('sheetPanel');
+    const loginBtn = $('loginBtn');
+    const signupBtn = $('signupBtn');
+    const logoutBtn = $('logoutBtn');
+    const uploadBtn = $('uploadBtn');
+    const createBucketBtn = $('createBucketBtn');
+    const uploadProgress = $('uploadProgress');
+    const uploadInfo = $('uploadInfo');
+    const loadBtn = $('loadBtn');
+    const stopBtn = $('stopBtn');
+
+    let account = null;
+    let storage = null;
+    let currentUserId = '';
+    let jwt = '';
+    let jwtMintedAt = 0;
+    let pollTimer = null;
+    let hls = null;
+    let playingKey = null;
+    let selectedLevel = -1; // -1 = Auto
+    let cues = [];
+    let spriteReady = false;
+    let lastStatus = null; // last poll payload, so we can re-render after manifest loads
+    const spriteBlobs = new Map();
+
+    // Prefill from URL ?endpoint=&projectId=&videoId= or localStorage.
+    const params = new URLSearchParams(location.search);
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    for (const key of ['endpoint', 'projectId', 'videoId', 'bucketId']) {
+      $(key).value = params.get(key) || saved[key] || $(key).value || '';
+    }
+
+    function config() {
+      return {
+        endpoint: $('endpoint').value.replace(/\/$/, ''),
+        projectId: $('projectId').value.trim(),
+        videoId: $('videoId').value.trim(),
+        bucketId: $('bucketId').value.trim(),
+      };
+    }
+
+    function persistConfig() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config()));
+    }
+
+    function sdk() {
+      const cfg = config();
+      const client = new Client().setEndpoint(cfg.endpoint).setProject(cfg.projectId);
+      return {
+        account: new Account(client),
+        storage: new Storage(client),
+      };
+    }
+
+    async function mintJwt() {
+      const { jwt: token } = await account.createJWT();
+      jwt = token;
+      jwtMintedAt = Date.now();
+    }
+
+    async function ensureJwt() {
+      if (!account) throw new Error('authenticate first');
+      if (!jwt || Date.now() - jwtMintedAt > JWT_REFRESH_MS) {
+        await mintJwt();
+      }
+    }
+
+    async function setAuthenticated() {
+      await mintJwt();
+      const me = await account.get();
+      currentUserId = me.$id;
+      authInfo.textContent = `logged in as ${me.email || me.$id} (${me.email ? 'email' : 'anonymous'})`;
+      logoutBtn.disabled = false;
+      loadBtn.disabled = false;
+      uploadBtn.disabled = false;
+      createBucketBtn.disabled = false;
+      uploadInfo.textContent = 'ready';
+      persistConfig();
+    }
+
+    loginBtn.addEventListener('click', async () => {
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      loginBtn.disabled = true;
+      try {
+        ({ account, storage } = sdk());
+        if (email) {
+          await account.createEmailPasswordSession(email, password);
+        } else {
+          // Anonymous users are members too — they carry videos.read.
+          await account.createAnonymousSession();
+        }
+        await setAuthenticated();
+      } catch (err) {
+        authInfo.textContent = `auth failed: ${err.message}`;
+      } finally {
+        loginBtn.disabled = false;
+      }
+    });
+
+    signupBtn.addEventListener('click', async () => {
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      if (!email || !password) {
+        authInfo.textContent = 'signup needs email + password';
+        return;
+      }
+      signupBtn.disabled = true;
+      try {
+        ({ account, storage } = sdk());
+        await account.create(ID.unique(), email, password);
+        await account.createEmailPasswordSession(email, password);
+        await setAuthenticated();
+      } catch (err) {
+        authInfo.textContent = `signup failed: ${err.message}`;
+      } finally {
+        signupBtn.disabled = false;
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      stopPolling();
+      destroyPlayer();
+      try {
+        await account?.deleteSession('current');
+      } catch { /* session may already be gone */ }
+      account = null;
+      storage = null;
+      currentUserId = '';
+      jwt = '';
+      authInfo.textContent = 'not authenticated';
+      logoutBtn.disabled = true;
+      loadBtn.disabled = true;
+      uploadBtn.disabled = true;
+      createBucketBtn.disabled = true;
+      uploadInfo.textContent = 'authenticate first';
+    });
+
+    // Resume an existing session (SDK keeps it in cookies/localStorage).
+    (async () => {
+      const cfg = config();
+      if (!cfg.projectId) return;
+      try {
+        ({ account, storage } = sdk());
+        await account.get();
+        await setAuthenticated();
+      } catch {
+        account = null;
+      }
+    })();
+
+    function authHeaders() {
+      return {
+        'X-Appwrite-Project': config().projectId,
+        'X-Appwrite-JWT': jwt,
+      };
+    }
+
+    async function api(path, { accept = 'application/json' } = {}) {
+      await ensureJwt();
+      const res = await fetch(`${config().endpoint}${path}`, {
+        headers: { ...authHeaders(), Accept: accept },
+      });
+      if (res.status === 401) {
+        // JWT may have just expired — re-mint once and retry.
+        await mintJwt();
+        return api(path, { accept });
+      }
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        const err = new Error(`${res.status} ${path}${body ? `: ${body.slice(0, 160)}` : ''}`);
+        err.status = res.status;
+        throw err;
+      }
+      return accept.includes('json') ? res.json() : res.text();
+    }
+
+    async function apiPost(path, body) {
+      await ensureJwt();
+      const res = await fetch(`${config().endpoint}${path}`, {
+        method: 'POST',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const responseBody = await res.text().catch(() => '');
+        throw new Error(`${res.status} ${path}${responseBody ? `: ${responseBody.slice(0, 180)}` : ''}`);
+      }
+      return res.json();
+    }
+
+    async function createPublicBucket(apiKey) {
+      if (!apiKey) throw new Error('API key required to create a bucket (needs buckets.write)');
+      // Bucket create is a key-scoped console/server action — send the key directly.
+      const cfg = config();
+      const res = await fetch(`${cfg.endpoint}/storage/buckets`, {
+        method: 'POST',
+        headers: {
+          'X-Appwrite-Project': cfg.projectId,
+          'X-Appwrite-Key': apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          bucketId: ID.unique(),
+          name: 'Video sources',
+          fileSecurity: false,
+          // Public create/read so a logged-in (or anonymous) session can upload + the
+          // Videos API can assertFileAccess against the source file.
+          permissions: [
+            Permission.read(Role.any()),
+            Permission.create(Role.any()),
+            Permission.update(Role.any()),
+            Permission.delete(Role.any()),
+          ],
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`${res.status} create bucket${body ? `: ${body.slice(0, 180)}` : ''}`);
+      }
+      const bucket = await res.json();
+      $('bucketId').value = bucket.$id;
+      persistConfig();
+      return bucket.$id;
+    }
+
+    createBucketBtn.addEventListener('click', async () => {
+      const apiKey = $('apiKey').value.trim();
+      createBucketBtn.disabled = true;
+      try {
+        uploadInfo.textContent = 'creating public bucket…';
+        const bucketId = await createPublicBucket(apiKey);
+        uploadInfo.textContent = `bucket ready: ${bucketId}`;
+      } catch (err) {
+        uploadInfo.textContent = `bucket create failed: ${err.message}`;
+        console.error(err);
+      } finally {
+        createBucketBtn.disabled = false;
+      }
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      let bucketId = $('bucketId').value.trim();
+      const file = $('videoFile').files[0];
+      const apiKey = $('apiKey').value.trim();
+      const wantedProfiles = $('profileNames').value
+        .split(',')
+        .map((name) => name.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (!storage || !account) {
+        uploadInfo.textContent = 'authenticate first';
+        return;
+      }
+      if (!file) {
+        uploadInfo.textContent = 'video file is required';
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      uploadProgress.hidden = false;
+      uploadProgress.value = 0;
+
+      try {
+        if (!bucketId) {
+          if (!apiKey) {
+            throw new Error('bucket ID required (or paste an API key and we will create a public one)');
+          }
+          uploadInfo.textContent = 'creating public bucket…';
+          bucketId = await createPublicBucket(apiKey);
+        }
+
+        uploadInfo.textContent = `uploading ${file.name}…`;
+
+        // Public buckets (create("any")) accept the logged-in session. Private buckets
+        // that only allow specific roles will fail here — create a public one first.
+        const storedFile = await storage.createFile(
+          bucketId,
+          ID.unique(),
+          file,
+          [
+            Permission.read(Role.any()),
+            Permission.update(Role.user(currentUserId)),
+            Permission.delete(Role.user(currentUserId)),
+          ],
+          (progress) => {
+            const percent = progress?.progress
+              ?? (progress?.sizeUploaded && progress?.chunksTotal
+                ? (progress.chunksUploaded / progress.chunksTotal) * 100
+                : 0);
+            uploadProgress.value = Math.max(0, Math.min(100, Number(percent) || 0));
+            uploadInfo.textContent = `uploading ${file.name} · ${Math.round(uploadProgress.value)}%`;
+          }
+        );
+
+        uploadProgress.value = 100;
+        uploadInfo.textContent = 'source uploaded · creating video…';
+
+        const videoDoc = await apiPost('/videos', {
+          bucketId,
+          fileId: storedFile.$id,
+        });
+
+        // Push the new video into the watch form immediately.
+        $('videoId').value = videoDoc.$id;
+        persistConfig();
+        $('videoId').focus();
+        $('videoId').scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+        const profileList = await api('/videos/profiles');
+        const profiles = profileList.profiles || [];
+        const selected = profiles.filter((profile) =>
+          wantedProfiles.includes(String(profile.name || '').toLowerCase())
+        );
+
+        for (const profile of selected) {
+          uploadInfo.textContent = `queueing ${profile.name}…`;
+          await apiPost(`/videos/${videoDoc.$id}/renditions`, {
+            profileId: profile.$id,
+            output: 'hls',
+          });
+        }
+
+        const missing = wantedProfiles.filter((name) =>
+          !selected.some((profile) => String(profile.name || '').toLowerCase() === name)
+        );
+
+        uploadInfo.textContent = missing.length
+          ? `created ${videoDoc.$id}; missing profiles: ${missing.join(', ')}`
+          : `created ${videoDoc.$id}; queued ${selected.length} HLS renditions`;
+        startPolling();
+      } catch (err) {
+        const msg = String(err?.message || err);
+        uploadInfo.textContent = /No permissions provided for action 'create'/i.test(msg)
+          ? `upload failed: this bucket doesn't allow create for your user. Paste an API key → “Create public bucket”, then upload again.`
+          : `upload failed: ${msg}`;
+        console.error(err);
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+
+    function badge(status) {
+      const s = status || 'missing';
+      return `<span class="badge ${s}">${s}</span>`;
+    }
+
+    function levelForRendition(renditionId) {
+      if (!hls) return -1;
+      const needle = `/renditions/${renditionId}/`;
+      return hls.levels.findIndex((level) => {
+        const urls = Array.isArray(level.url) ? level.url : [level.url];
+        return urls.some((u) => String(u || '').includes(needle));
+      });
+    }
+
+    function renderStatus({ videoDoc, renditions, sprite }) {
+      const rows = [];
+      rows.push(`
+        <div class="row">
+          <span>video ${videoDoc?.$id || '—'}</span>
+          <span>${videoDoc ? `${videoDoc.width}×${videoDoc.height}` : ''}</span>
+          <span>${videoDoc ? `${Math.round((videoDoc.duration || 0) / 1000)}s` : ''}</span>
+        </div>
+      `);
+
+      // Always start on Auto; click a ready rendition to lock quality.
+      if (hls) {
+        const autoActive = selectedLevel < 0 ? ' row--active' : '';
+        rows.push(`
+          <div class="row row--clickable${autoActive}" data-action="auto">
+            <span>quality · Auto</span>
+            <span></span>
+            ${badge('ready')}
+          </div>
+        `);
+      }
+
+      if (!renditions.length) {
+        rows.push(`<div class="row"><span>renditions</span><span></span>${badge('missing')}</div>`);
+      } else {
+        for (const r of renditions) {
+          const progress = r.status === 'ready' ? '' : (r.progress ? `${r.progress}%` : '');
+          const ready = r.status === 'ready' && r.output === 'hls';
+          const level = ready ? levelForRendition(r.$id) : -1;
+          const clickable = ready && level >= 0;
+          const active = clickable && selectedLevel === level ? ' row--active' : '';
+          const attrs = clickable
+            ? ` class="row row--clickable${active}" data-action="level" data-level="${level}" data-rendition="${r.$id}"`
+            : ' class="row"';
+          rows.push(`
+            <div${attrs}>
+              <span>${r.output || '?'} · ${r.name || r.$id}</span>
+              <span>${progress}</span>
+              ${badge(r.status)}
+            </div>
+          `);
+        }
+      }
+
+      const spriteClickable = sprite.status === 'ready';
+      const spriteOpen = sheetPanel.classList.contains('open');
+      const spriteAttrs = spriteClickable
+        ? ` class="row row--clickable${spriteOpen ? ' row--active' : ''}" data-action="sprite"`
+        : ' class="row"';
+      rows.push(`
+        <div${spriteAttrs}>
+          <span>sprite / timeline${spriteOpen ? ' · showing sheet' : spriteClickable ? ' · click to show sheet' : ''}</span>
+          <span>${sprite.previewId ? `preview ${sprite.previewId}` : ''}</span>
+          ${badge(sprite.status)}
+        </div>
+      `);
+
+      statusRows.innerHTML = rows.join('');
+    }
+
+    statusRows.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-action]');
+      if (!row) return;
+      const action = row.dataset.action;
+      if (action === 'auto') {
+        selectLevel(-1);
+      } else if (action === 'level') {
+        selectLevel(Number(row.dataset.level));
+      } else if (action === 'sprite') {
+        toggleSpriteSheet();
+      }
+    });
+
+    function selectLevel(level) {
+      if (!hls) return;
+      selectedLevel = level;
+      hls.currentLevel = level; // -1 = Auto
+      if (level < 0) {
+        statusEl.textContent = 'Quality: Auto';
+      } else {
+        const lvl = hls.levels[level];
+        statusEl.textContent = `Quality locked: ${lvl?.height ?? '?'}p`;
+      }
+      // Auto-start after a rendition switch (restart if the video already ended).
+      if (video.ended) video.currentTime = 0;
+      video.play().catch(() => {});
+      // Re-render so the active highlight updates without waiting for the next poll.
+      const active = statusRows.querySelectorAll('.row--clickable[data-action="auto"], .row--clickable[data-action="level"]');
+      active.forEach((el) => el.classList.remove('row--active'));
+      if (level < 0) {
+        statusRows.querySelector('[data-action="auto"]')?.classList.add('row--active');
+      } else {
+        statusRows.querySelector(`[data-action="level"][data-level="${level}"]`)?.classList.add('row--active');
+      }
+    }
+
+    function toggleSpriteSheet() {
+      if (!spriteReady) return;
+      sheetPanel.classList.toggle('open');
+      const row = statusRows.querySelector('[data-action="sprite"]');
+      if (!row) return;
+      const open = sheetPanel.classList.contains('open');
+      row.classList.toggle('row--active', open);
+      const label = row.querySelector('span');
+      if (label) {
+        label.textContent = open
+          ? 'sprite / timeline · showing sheet'
+          : 'sprite / timeline · click to show sheet';
+      }
+    }
+
+    async function checkSprite(videoDoc) {
+      if (videoDoc?.previewId) {
+        return { status: 'ready', previewId: videoDoc.previewId };
+      }
+      try {
+        await api(`/videos/${config().videoId}/timeline`, { accept: 'text/vtt' });
+        return { status: 'ready', previewId: '' };
+      } catch (err) {
+        if (err.status === 404) return { status: 'waiting', previewId: '' };
+        throw err;
+      }
+    }
+
+    async function pollOnce() {
+      const cfg = config();
+      if (!cfg.videoId) return;
+
+      const videoDoc = await api(`/videos/${cfg.videoId}`);
+      const list = await api(`/videos/${cfg.videoId}/renditions`);
+      const renditions = list.renditions || [];
+      const sprite = await checkSprite(videoDoc);
+
+      renderStatus({ videoDoc, renditions, sprite });
+      lastStatus = { videoDoc, renditions, sprite };
+
+      const readyHls = renditions.filter((r) => r.output === 'hls' && r.status === 'ready');
+      pollInfo.textContent = `polled ${new Date().toLocaleTimeString()} · ${readyHls.length} ready / ${renditions.length} renditions`;
+
+      if (readyHls.length && playingKey !== `${cfg.projectId}:${cfg.videoId}`) {
+        await startPlayback(cfg);
+      }
+
+      if (sprite.status === 'ready' && !cues.length) {
+        await loadSprites();
+      }
+    }
+
+    async function startPlayback(cfg) {
+      if (!Hls.isSupported()) {
+        statusEl.textContent = 'This browser cannot play HLS via hls.js';
+        return;
+      }
+
+      destroyPlayer();
+
+      hls = new Hls({
+        enableWorker: false,
+        xhrSetup(xhr, url) {
+          if (String(url).startsWith('blob:')) return;
+          xhr.setRequestHeader('X-Appwrite-Project', cfg.projectId);
+          xhr.setRequestHeader('X-Appwrite-JWT', jwt);
+        },
+      });
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        // Always begin on Auto; ready rendition rows become the quality picker.
+        selectedLevel = -1;
+        hls.currentLevel = -1;
+        statusEl.textContent = `Playing master · Auto · ${data.levels?.length ?? 0} qualities`;
+        if (lastStatus) renderStatus(lastStatus);
+        video.play().catch(() => {
+          statusEl.textContent = 'Master loaded — press play';
+        });
+      });
+
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        const level = hls.levels[data.level];
+        const mode = selectedLevel < 0 ? 'Auto' : 'locked';
+        statusEl.textContent = `${mode}: ${level?.height ?? '?'}p · level ${data.level}`;
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        statusEl.textContent = `HLS error: ${data.type} / ${data.details}` + (data.fatal ? ' (fatal)' : '');
+        if (data.fatal && data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+      });
+
+      hls.attachMedia(video);
+      window.hlsDebug = hls; // demo tool: expose for console inspection
+
+      // Normalize master (absolute /v1 paths + codec fix) until the API image is rebuilt.
+      const text = normalizeMaster(
+        await api(`/videos/${cfg.videoId}/outputs/hls/master.m3u8`, { accept: 'application/x-mpegurl' }),
+        new URL(cfg.endpoint).origin
+      );
+      const blobUrl = URL.createObjectURL(new Blob([text], { type: 'application/vnd.apple.mpegurl' }));
+      hls.loadSource(blobUrl);
+      hls.on(Hls.Events.DESTROYING, () => URL.revokeObjectURL(blobUrl));
+
+      playingKey = `${cfg.projectId}:${cfg.videoId}`;
+    }
+
+    function normalizeMaster(text, apiOrigin) {
+      return text
+        .split('\n')
+        .map((line) => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('/v1/')) return apiOrigin + trimmed;
+          if (!trimmed.startsWith('#EXT-X-STREAM-INF:')) {
+            return line.replace(/URI="(\/v1\/[^"]+)"/g, `URI="${apiOrigin}$1"`);
+          }
+          line = line.replace(/BANDWIDTH="(\d+)"/g, 'BANDWIDTH=$1');
+          if (/,AUDIO=/.test(line)) {
+            line = line
+              .replace(/CODECS="([^"]*)"/, (_, codecs) => {
+                const kept = codecs.split(',').map((c) => c.trim()).filter((c) => c && !c.startsWith('mp4a'));
+                return kept.length ? `CODECS="${kept.join(',')}"` : '';
+              })
+              .replace(',,', ',')
+              .replace(':,', ':')
+              .replace(/,$/, '');
+          }
+          return line.trimEnd();
+        })
+        .join('\n');
+    }
+
+    function destroyPlayer() {
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      playingKey = null;
+      selectedLevel = -1;
+      video.removeAttribute('src');
+      video.load();
+    }
+
+    function hmsToSeconds(hms) {
+      const [h, m, s] = hms.split(':').map(Number);
+      return h * 3600 + m * 60 + s;
+    }
+
+    function parseTimeline(vtt) {
+      const out = [];
+      const lines = vtt.split('\n').map((l) => l.trim());
+      for (let i = 0; i < lines.length; i++) {
+        const time = lines[i].match(/^(\d{2}:\d{2}:\d{2})\s*-->\s*(\d{2}:\d{2}:\d{2})/);
+        if (!time) continue;
+        const m = (lines[i + 1] || '').match(/previews\/(\w+)#xywh=(\d+),(\d+),(\d+),(\d+)/);
+        if (!m) continue;
+        out.push({
+          start: hmsToSeconds(time[1]),
+          end: hmsToSeconds(time[2]),
+          previewId: m[1],
+          x: +m[2], y: +m[3], w: +m[4], h: +m[5],
+        });
+      }
+      return out;
+    }
+
+    async function spriteUrl(previewId) {
+      const cfg = config();
+      const key = `${cfg.projectId}:${previewId}`;
+      if (spriteBlobs.has(key)) return spriteBlobs.get(key);
+      await ensureJwt();
+      const res = await fetch(`${cfg.endpoint}/videos/${cfg.videoId}/previews/${previewId}`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(`preview ${previewId} ${res.status}`);
+      const objectUrl = URL.createObjectURL(await res.blob());
+      spriteBlobs.set(key, objectUrl);
+      return objectUrl;
+    }
+
+    async function loadSprites() {
+      try {
+        const vtt = await api(`/videos/${config().videoId}/timeline`, { accept: 'text/vtt' });
+        cues = parseTimeline(vtt);
+        if (!cues.length) return;
+        sheet.src = await spriteUrl(cues[0].previewId);
+        spriteReady = true;
+        // Scrub timeline works; the sheet itself stays hidden until the status row is clicked.
+        timeline.classList.remove('disabled');
+      } catch (err) {
+        console.warn('sprite load failed', err);
+      }
+    }
+
+    function cueForTime(t) {
+      if (!cues.length) return null;
+      return cues.find((c) => t >= c.start && t < c.end) || cues[cues.length - 1];
+    }
+
+    async function renderThumb(cue, clientX) {
+      if (!cue) return;
+      const url = await spriteUrl(cue.previewId);
+      thumbImg.style.width = `${cue.w}px`;
+      thumbImg.style.height = `${cue.h}px`;
+      thumbImg.style.backgroundImage = `url("${url}")`;
+      thumbImg.style.backgroundPosition = `-${cue.x}px -${cue.y}px`;
+      thumbImg.style.backgroundSize = 'auto';
+      const rect = timeline.getBoundingClientRect();
+      const half = cue.w / 2;
+      const clamped = Math.max(rect.left + half, Math.min(clientX, rect.right - half));
+      thumb.style.left = `${clamped - rect.left}px`;
+      thumbTime.textContent = formatTime(cue.start);
+      thumb.classList.add('visible');
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function timeFromPointer(clientX) {
+      const rect = timeline.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      return ratio * (video.duration || 0);
+    }
+
+    timeline.addEventListener('pointermove', (e) => {
+      renderThumb(cueForTime(timeFromPointer(e.clientX)), e.clientX);
+    });
+    timeline.addEventListener('pointerleave', () => thumb.classList.remove('visible'));
+    timeline.addEventListener('pointerdown', (e) => {
+      const t = timeFromPointer(e.clientX);
+      if (Number.isFinite(t)) video.currentTime = t;
+    });
+    video.addEventListener('timeupdate', () => {
+      if (!video.duration) return;
+      played.style.width = `${(video.currentTime / video.duration) * 100}%`;
+    });
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+      stopBtn.disabled = true;
+      pollInfo.textContent = 'idle';
+    }
+
+    function startPolling() {
+      stopPolling();
+      destroyPlayer();
+      cues = [];
+      spriteReady = false;
+      sheet.removeAttribute('src');
+      sheetPanel.classList.remove('open');
+      timeline.classList.add('disabled');
+      thumb.classList.remove('visible');
+
+      stopBtn.disabled = false;
+      statusEl.textContent = 'Polling…';
+      persistConfig();
+
+      const tick = async () => {
+        try {
+          await pollOnce();
+        } catch (err) {
+          statusEl.textContent = `Poll error: ${err.message}`;
+          console.error(err);
+        }
+      };
+      tick();
+      pollTimer = setInterval(tick, POLL_MS);
+    }
+
+    loadBtn.addEventListener('click', startPolling);
+    stopBtn.addEventListener('click', stopPolling);
+  </script>
+</body>
+</html>
