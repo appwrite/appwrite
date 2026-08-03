@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import {
+  resolveConnectBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -163,12 +164,19 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       ) {
         throw new Error('Installation and Repository are required')
       }
+      const providerBranch = await resolveConnectBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+        func.providerBranch ?? '',
+      )
+
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update(
         buildFunctionUpdateParams(func, {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
-          providerBranch: 'main',
+          providerBranch,
         }),
       )
     },

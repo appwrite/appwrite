@@ -102,7 +102,8 @@ export function RepositoryConfigView({
   const [siteName, setSiteName] = useState(formData.siteName || '')
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
-  const [branch, setBranch] = useState(formData.providerBranch || 'main')
+  // Empty so BranchSelector resolves it from the repository.
+  const [branch, setBranch] = useState(formData.providerBranch || '')
   const [rootDirectory, setRootDirectory] = useState(
     formData.providerRootDirectory || './',
   )

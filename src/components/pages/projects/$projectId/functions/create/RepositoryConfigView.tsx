@@ -119,7 +119,8 @@ export function RepositoryConfigView({
   const [runtime, setRuntime] = useState(formData.runtime || '')
   const [entrypoint, setEntrypoint] = useState('')
   const [commands, setCommands] = useState('')
-  const [branch, setBranch] = useState('main')
+  // Empty so BranchSelector resolves it from the repository.
+  const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])

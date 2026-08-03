@@ -132,7 +132,7 @@ export function CreateGitDeploymentModal({
       const providerRepositoryId = hasLinkedRepo
         ? resource.providerRepositoryId!
         : selectedRepositoryId
-      const ref = branch?.trim() || 'main'
+      const ref = branch.trim()
 
       if (!hasLinkedRepo && resourceType === 'function') {
         const func = resource as Models.Function
@@ -214,7 +214,7 @@ export function CreateGitDeploymentModal({
       toast.error(t('Please select an installation and repository'))
       return
     }
-    const ref = branch?.trim() || 'main'
+    const ref = branch.trim()
     if (!ref) {
       toast.error(t('Please select a branch'))
       return

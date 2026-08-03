@@ -152,8 +152,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       formData.repositoryOwner,
     ],
   )
+  // Empty until BranchSelector resolves the repository's default branch.
   const [connectBranch, setConnectBranch] = useState(
-    formData.providerBranch || 'main',
+    formData.providerBranch || '',
   )
   const [connectRootDir, setConnectRootDir] = useState(
     formData.providerRootDirectory || './',

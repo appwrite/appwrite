@@ -141,6 +141,56 @@ export async function fetchRepositoryBranches(
 }
 
 /**
+ * Resolve the branch to store when connecting a repository, mirroring the old
+ * console's connect(): keep the configured branch if the repository still has
+ * it, else main/master, else the first branch.
+ */
+export async function resolveConnectBranch(
+  projectId: string,
+  installationId: string,
+  providerRepositoryId: string,
+  currentBranch: string,
+): Promise<string> {
+  let nextBranch = currentBranch || 'main'
+
+  if (!projectId || !installationId || !providerRepositoryId) {
+    return nextBranch
+  }
+
+  try {
+    const projectSdk = sdk.forProject(projectId)
+    const all: Models.Branch[] = []
+    let offset = 0
+
+    while (true) {
+      const { branches, total } = await projectSdk.vcs.listRepositoryBranches({
+        installationId,
+        providerRepositoryId,
+        queries: [Query.limit(REPOSITORY_BRANCHES_LIMIT), Query.offset(offset)],
+      })
+      all.push(...branches)
+      if (all.length >= total || branches.length < REPOSITORY_BRANCHES_LIMIT) {
+        break
+      }
+      offset += REPOSITORY_BRANCHES_LIMIT
+    }
+
+    const sorted = sortRepositoryBranches(all)
+    nextBranch =
+      sorted.find((branch) => branch.name === currentBranch)?.name ??
+      sorted.find(
+        (branch) => branch.name === 'main' || branch.name === 'master',
+      )?.name ??
+      sorted[0]?.name ??
+      nextBranch
+  } catch {
+    // Ignore branch lookup failures; fall back to the configured branch.
+  }
+
+  return nextBranch
+}
+
+/**
  * Query function to fetch repositories for an installation
  */
 export async function fetchRepositories(
