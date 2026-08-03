@@ -613,9 +613,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               !domainValid ||
               createSiteMutation.isPending ||
               (gitConnection === 'now' &&
-                (!formData.providerRepositoryId ||
-                  !formData.installationId ||
-                  !connectBranch))
+                (!formData.providerRepositoryId || !formData.installationId))
             }
           >
             {t('Deploy')}

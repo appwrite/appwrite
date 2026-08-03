@@ -492,7 +492,6 @@ export function RepositoryConfigView({
               isDeploying ||
               !siteName ||
               !framework ||
-              !branch ||
               !domainValid ||
               createSiteMutation.isPending
             }

@@ -519,9 +519,7 @@ export function TemplateConfigView({
               !domain.trim() ||
               !domainValid ||
               (gitConnection === 'now' &&
-                (!formData.providerRepositoryId ||
-                  !formData.installationId ||
-                  !connectBranch))
+                (!formData.providerRepositoryId || !formData.installationId))
             }
           >
             {t('Create and deploy')}

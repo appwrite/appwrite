@@ -68,9 +68,7 @@ export function CreateGitDeploymentModal({
     resource.installationId && resource.providerRepositoryId,
   )
 
-  // Empty falls through to BranchSelector resolving the repository's default
-  // branch, rather than assuming a 'main' the repository may not have.
-  const [branch, setBranch] = useState(resource.providerBranch || '')
+  const [branch, setBranch] = useState(resource.providerBranch || 'main')
   const [activate, setActivate] = useState(true)
   const [selectedInstallationId, setSelectedInstallationId] = useState('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState('')

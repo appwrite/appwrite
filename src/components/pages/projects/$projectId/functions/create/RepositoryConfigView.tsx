@@ -429,7 +429,6 @@ export function RepositoryConfigView({
               isDeploying ||
               !functionName ||
               !runtime ||
-              !branch ||
               !domain.trim() ||
               !domainValid
             }

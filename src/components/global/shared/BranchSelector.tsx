@@ -127,27 +127,19 @@ export function BranchSelector({
   const isSearching = !!debouncedSearch && searchFetching
   const isLoadingList = debouncedSearch ? isSearching : initialLoading
 
-  // The repository's own default branch is authoritative — guessing 'main'
-  // silently pins deployments to a branch the repo may not have. Only when the
-  // provider doesn't report one do we take the first listed branch, which at
-  // least exists. Wait for the lookup to settle first, or the fallback wins the
-  // race and sticks (the first onChange fills `value` and ends the resolution).
+  // Mirrors the old console's productionBranchFieldset: resolve the branch from
+  // the repository's own default, falling back to 'main'. Console gates the
+  // whole fieldset on that lookup, so we wait for it to settle rather than
+  // letting the fallback land first and stick (the first onChange fills
+  // `value`, which ends the resolution).
   const defaultBranch = repository?.defaultBranch
 
   useEffect(() => {
     if (value) return
     if (hasRepository && repositoryPending) return
 
-    const resolved = defaultBranch || sortedInitialBranches[0]?.name
-    if (resolved) onChange(resolved)
-  }, [
-    defaultBranch,
-    hasRepository,
-    repositoryPending,
-    sortedInitialBranches,
-    value,
-    onChange,
-  ])
+    onChange(defaultBranch ?? 'main')
+  }, [defaultBranch, hasRepository, repositoryPending, value, onChange])
 
   const labelContent = (
     <>

@@ -20,6 +20,7 @@ import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildSiteUpdateParams,
+  resolveConnectBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -51,10 +52,6 @@ export function GitRepositoryCard({
   const t = useT()
   const queryClient = useQueryClient()
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
-  // Empty until BranchSelector resolves the repository's default branch, which
-  // the user can then change before connecting — the dialog previously offered
-  // no choice at all and always stored 'main'.
-  const [connectBranch, setConnectBranch] = useState('')
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
@@ -176,11 +173,13 @@ export function GitRepositoryCard({
       ) {
         throw new Error('Installation and Repository are required')
       }
-      if (!connectBranch) {
-        throw new Error('A branch is required to connect a repository')
-      }
+      const providerBranch = await resolveConnectBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+        site.providerBranch ?? '',
+      )
 
-      const providerBranch = connectBranch
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(
         buildSiteUpdateParams(site, {
@@ -300,10 +299,7 @@ export function GitRepositoryCard({
               open={connectDialogOpen}
               onOpenChange={(open) => {
                 setConnectDialogOpen(open)
-                if (open) {
-                  setSelectedRepositoryId('')
-                  setConnectBranch('')
-                }
+                if (open) setSelectedRepositoryId('')
               }}
             >
               <DialogTrigger asChild>
@@ -330,25 +326,12 @@ export function GitRepositoryCard({
                     selectedInstallationId={selectedInstallationId}
                     onInstallationChange={setSelectedInstallationId}
                     selectedRepositoryId={selectedRepositoryId}
-                    onRepositorySelect={(repo) => {
+                    onRepositorySelect={(repo) =>
                       setSelectedRepositoryId(repo.id)
-                      setConnectBranch('')
-                    }}
+                    }
                     mode="connect"
                     showCreateNewSiteLink
                   />
-                  {selectedInstallationId && selectedRepositoryId && (
-                    <div className="mt-4">
-                      <BranchSelector
-                        projectId={projectId ?? undefined}
-                        installationId={selectedInstallationId}
-                        providerRepositoryId={selectedRepositoryId}
-                        value={connectBranch}
-                        onChange={setConnectBranch}
-                        label={t('Production branch')}
-                      />
-                    </div>
-                  )}
                 </div>
                 <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
@@ -367,7 +350,6 @@ export function GitRepositoryCard({
                     disabled={
                       !selectedInstallationId ||
                       !selectedRepositoryId ||
-                      !connectBranch ||
                       connectRepositoryMutation.isPending
                     }
                   >

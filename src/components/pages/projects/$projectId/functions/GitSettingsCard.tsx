@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import {
+  resolveConnectBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -43,10 +44,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
-  // Empty until BranchSelector resolves the repository's default branch, which
-  // the user can then change before connecting — the dialog previously offered
-  // no choice at all and always stored 'main'.
-  const [connectBranch, setConnectBranch] = useState('')
 
   // Form state
   const [selectedBranch, setSelectedBranch] = useState(
@@ -167,11 +164,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       ) {
         throw new Error('Installation and Repository are required')
       }
-      if (!connectBranch) {
-        throw new Error('A branch is required to connect a repository')
-      }
+      const providerBranch = await resolveConnectBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+        func.providerBranch ?? '',
+      )
 
-      const providerBranch = connectBranch
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update(
         buildFunctionUpdateParams(func, {
@@ -289,10 +288,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
               open={connectDialogOpen}
               onOpenChange={(open) => {
                 setConnectDialogOpen(open)
-                if (open) {
-                  setSelectedRepositoryId('')
-                  setConnectBranch('')
-                }
+                if (open) setSelectedRepositoryId('')
               }}
             >
               <DialogTrigger asChild>
@@ -319,25 +315,12 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                     selectedInstallationId={selectedInstallationId}
                     onInstallationChange={setSelectedInstallationId}
                     selectedRepositoryId={selectedRepositoryId}
-                    onRepositorySelect={(repo) => {
+                    onRepositorySelect={(repo) =>
                       setSelectedRepositoryId(repo.id)
-                      setConnectBranch('')
-                    }}
+                    }
                     mode="connect"
                     detectionType="runtime"
                   />
-                  {selectedInstallationId && selectedRepositoryId && (
-                    <div className="mt-4">
-                      <BranchSelector
-                        projectId={projectId}
-                        installationId={selectedInstallationId}
-                        providerRepositoryId={selectedRepositoryId}
-                        value={connectBranch}
-                        onChange={setConnectBranch}
-                        label={t('Production branch')}
-                      />
-                    </div>
-                  )}
                 </div>
                 <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
@@ -356,7 +339,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                     disabled={
                       !selectedInstallationId ||
                       !selectedRepositoryId ||
-                      !connectBranch ||
                       connectRepositoryMutation.isPending
                     }
                   >
