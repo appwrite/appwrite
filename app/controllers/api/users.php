@@ -2130,8 +2130,9 @@ Http::patch('/v1/users/:userId/mfa/recovery-codes')
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
         $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
@@ -2202,7 +2203,9 @@ Http::put('/v1/users/:userId/mfa/recovery-codes')
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
         $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
