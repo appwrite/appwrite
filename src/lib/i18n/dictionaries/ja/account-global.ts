@@ -241,8 +241,17 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   // AI chat
   'Add a follow-up': 'フォローアップを追加',
   'Add to queue': 'キューに追加',
-  'Ask a question...': '質問を入力...',
+  'Ask anything, or tell me what to do...': '何でも聞いてください。またはやることを指示してください...',
   'Attach files': 'ファイルを添付',
+  'Voice input': '音声入力',
+  'Stop voice input': '音声入力を停止',
+  'Listening...': '聞いています...',
+  'Listening... Click the mic to stop':
+    '聞いています... マイクをクリックして停止',
+  'Microphone permission denied': 'マイクの許可が拒否されました',
+  'Voice input is not supported in this browser':
+    'このブラウザでは音声入力はサポートされていません',
+  'Could not start voice input': '音声入力を開始できませんでした',
   'attachment selected': '件の添付ファイルを選択',
   'attachments selected': '件の添付ファイルを選択',
   'Collapse chat': 'チャットを折りたたむ',
@@ -276,7 +285,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Sign in to use the agent': 'Agent を使うにはサインイン',
   'Create an account or sign in to chat with the Appwrite Agent about your projects.':
     'アカウントを作成するかサインインして、Appwrite Agent とプロジェクトについてチャットできます。',
-  'Sign in to ask a question...': 'サインインして質問する...',
+  'Sign in to chat with the agent...': 'サインインして Agent とチャット...',
   'Back to Appwrite': 'Appwrite に戻る',
   'MCP ready': 'MCP 準備完了',
   'Load older messages': '以前のメッセージを読み込む',

@@ -33,6 +33,8 @@ import {
   ArrowUp,
   Circle,
   Copy,
+  Mic,
+  MicOff,
   Paperclip,
   Loader2,
   Pencil,
@@ -141,6 +143,7 @@ import { AgentConversationContextMenu } from '@/components/global/providers/agen
 import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
 import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
 import { AgentEmptyState } from '@/components/global/providers/agent/AgentEmptyState'
+import { VoiceRecordingMeter } from '@/components/global/providers/agent/VoiceRecordingMeter'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
@@ -152,6 +155,13 @@ import {
   writeComposerDraft,
 } from '@/lib/assistant/composer-draft'
 import { resolveAssistantModelTemp } from '@/lib/assistant/model-providers'
+import {
+  isVoicePromptSupported,
+  startVoicePrompt,
+  VOICE_LEVEL_BAR_COUNT,
+  type VoicePromptSession,
+} from '@/lib/assistant/voice-prompt'
+import { getActiveLanguage } from '@/lib/i18n/active-language'
 import {
   buildTurnView,
   getAssistantBubblePhase,
@@ -2112,6 +2122,12 @@ export function AgentPanelContent({
   const messagesContentRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isVoiceListening, setIsVoiceListening] = useState(false)
+  const [isVoiceStarting, setIsVoiceStarting] = useState(false)
+  const [voiceSupported, setVoiceSupported] = useState(false)
+  const voiceSessionRef = useRef<VoicePromptSession | null>(null)
+  const voiceBaseTextRef = useRef('')
+  const voiceActiveRef = useRef(false)
   const copiedMessageTimeoutRef = useRef<number | null>(null)
   const previousConversationIdRef = useRef<string | null>(null)
   const shouldAutoScrollRef = useRef(true)
@@ -2131,6 +2147,11 @@ export function AgentPanelContent({
 
   // Restore per-conversation composer draft when switching agents (or on refresh).
   useEffect(() => {
+    voiceActiveRef.current = false
+    voiceSessionRef.current?.stop()
+    voiceSessionRef.current = null
+    setIsVoiceListening(false)
+    setIsVoiceStarting(false)
     skipDraftPersistRef.current = true
     const draft = readComposerDraft(activeConversationId)
     setInput(draft)
@@ -2142,6 +2163,18 @@ export function AgentPanelContent({
       skipDraftPersistRef.current = false
     })
   }, [activeConversationId])
+
+  useEffect(() => {
+    return () => {
+      voiceActiveRef.current = false
+      voiceSessionRef.current?.stop()
+      voiceSessionRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    setVoiceSupported(isVoicePromptSupported())
+  }, [])
 
   const { account, isAuthenticated, isLoading: authLoading } = useAuth()
   const authReady = !authLoading
@@ -2568,6 +2601,124 @@ export function AgentPanelContent({
       }
     }, 0)
   }, [])
+
+  const syncComposerTextareaHeight = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = '40px'
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 128)}px`
+  }, [])
+
+  const applyVoiceTranscript = useCallback(
+    (transcript: string, persistDraft: boolean) => {
+      // Ignore late recognition events after stop/send clears the session.
+      if (!voiceActiveRef.current) return
+      const base = voiceBaseTextRef.current.trimEnd()
+      const nextValue = [base, transcript.trim()].filter(Boolean).join(
+        base && transcript.trim() ? ' ' : '',
+      )
+      setInput(nextValue)
+      if (persistDraft && !editingMessageId && !skipDraftPersistRef.current) {
+        writeComposerDraft(activeConversationId, nextValue)
+      }
+      requestAnimationFrame(() => {
+        syncComposerTextareaHeight()
+      })
+    },
+    [activeConversationId, editingMessageId, syncComposerTextareaHeight],
+  )
+
+  const stopVoiceListening = useCallback(() => {
+    voiceActiveRef.current = false
+    voiceSessionRef.current?.stop()
+    voiceSessionRef.current = null
+    setIsVoiceListening(false)
+    setIsVoiceStarting(false)
+  }, [])
+
+  const getVoiceLevels = useCallback(() => {
+    return (
+      voiceSessionRef.current?.getLevels() ??
+      Array.from({ length: VOICE_LEVEL_BAR_COUNT }, () => 0)
+    )
+  }, [])
+
+  const handleToggleVoiceInput = useCallback(async () => {
+    if (interactionsDisabled) return
+
+    if (isVoiceListening || isVoiceStarting) {
+      stopVoiceListening()
+      return
+    }
+
+    if (!voiceSupported) {
+      toast.error(t('Voice input is not supported in this browser'))
+      return
+    }
+
+    setIsVoiceStarting(true)
+    voiceBaseTextRef.current = input
+    try {
+      const session = await startVoicePrompt({
+        lang: getActiveLanguage(),
+        onInterim: (transcript) => {
+          applyVoiceTranscript(transcript, false)
+        },
+        onFinal: (transcript) => {
+          applyVoiceTranscript(transcript, true)
+        },
+        onError: (error) => {
+          voiceActiveRef.current = false
+          toast.error(
+            t(
+              error.message === 'Microphone permission denied'
+                ? 'Microphone permission denied'
+                : 'Could not start voice input',
+            ),
+          )
+          voiceSessionRef.current = null
+          setIsVoiceListening(false)
+          setIsVoiceStarting(false)
+        },
+        onEnd: () => {
+          voiceActiveRef.current = false
+          voiceSessionRef.current = null
+          setIsVoiceListening(false)
+          setIsVoiceStarting(false)
+          focusInput(true)
+        },
+      })
+      voiceSessionRef.current = session
+      voiceActiveRef.current = true
+      setIsVoiceListening(true)
+      setIsVoiceStarting(false)
+    } catch (error) {
+      voiceActiveRef.current = false
+      const message =
+        error instanceof Error ? error.message : 'Could not start voice input'
+      toast.error(
+        t(
+          message === 'Microphone permission denied'
+            ? 'Microphone permission denied'
+            : message === 'Voice input is not supported in this browser'
+              ? 'Voice input is not supported in this browser'
+              : 'Could not start voice input',
+        ),
+      )
+      setIsVoiceListening(false)
+      setIsVoiceStarting(false)
+    }
+  }, [
+    applyVoiceTranscript,
+    focusInput,
+    input,
+    interactionsDisabled,
+    isVoiceListening,
+    isVoiceStarting,
+    stopVoiceListening,
+    t,
+    voiceSupported,
+  ])
 
   const updateMessagesCanScroll = useCallback(() => {
     const container = messagesContainerRef.current
@@ -3360,6 +3511,10 @@ export function AgentPanelContent({
 
     // Editing always sends immediately (and is blocked while a run is active).
     if (editingMessageId && isConversationRunning) return
+
+    // Stop voice first and ignore any late transcripts so they cannot refill the input.
+    stopVoiceListening()
+    voiceBaseTextRef.current = ''
 
     try {
       await waitForPendingAttachmentUploads()
@@ -5130,6 +5285,12 @@ export function AgentPanelContent({
                   </button>
                 </div>
               ) : null}
+              {isVoiceListening ? (
+                <VoiceRecordingMeter
+                  active={isVoiceListening}
+                  getLevels={getVoiceLevels}
+                />
+              ) : null}
               <div className="flex items-end gap-2 p-2">
                 <input
                   ref={fileInputRef}
@@ -5156,12 +5317,14 @@ export function AgentPanelContent({
                   onKeyDown={interactionsDisabled ? undefined : handleKeyDown}
                   placeholder={
                     interactionsDisabled
-                      ? t('Sign in to ask a question...')
-                      : editingMessageId
-                        ? t('Edit message...')
-                        : isConversationRunning || messageQueue.length > 0
-                          ? t('Add a follow-up')
-                          : t('Ask a question...')
+                      ? t('Sign in to chat with the agent...')
+                      : isVoiceListening
+                        ? t('Listening...')
+                        : editingMessageId
+                          ? t('Edit message...')
+                          : isConversationRunning || messageQueue.length > 0
+                            ? t('Add a follow-up')
+                            : t('Ask anything, or tell me what to do...')
                   }
                   dir={isInputRtl ? 'rtl' : 'ltr'}
                   rows={1}
@@ -5183,13 +5346,15 @@ export function AgentPanelContent({
                   disabled={
                     interactionsDisabled ||
                     isWaitingForAttachments ||
-                    Boolean(editingMessageId)
+                    Boolean(editingMessageId) ||
+                    isVoiceListening
                   }
                   className={cn(
                     'mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
                     interactionsDisabled ||
                       isWaitingForAttachments ||
-                      editingMessageId
+                      editingMessageId ||
+                      isVoiceListening
                       ? 'bg-muted text-muted-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
@@ -5197,6 +5362,35 @@ export function AgentPanelContent({
                 >
                   <Paperclip className="h-3.5 w-3.5" />
                 </button>
+                {voiceSupported ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleVoiceInput()}
+                    disabled={interactionsDisabled || isVoiceStarting}
+                    className={cn(
+                      'mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                      interactionsDisabled || isVoiceStarting
+                        ? 'bg-muted text-muted-foreground'
+                        : isVoiceListening
+                          ? 'bg-primary/10 text-primary hover:bg-primary/15'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                    aria-label={
+                      isVoiceListening
+                        ? t('Stop voice input')
+                        : t('Voice input')
+                    }
+                    aria-pressed={isVoiceListening}
+                  >
+                    {isVoiceStarting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : isVoiceListening ? (
+                      <MicOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Mic className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                ) : null}
                 {isConversationRunning ? (
                   <button
                     type="button"
@@ -5273,13 +5467,15 @@ export function AgentPanelContent({
                 </div>
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-              {hasUploadingAttachments
-                ? t(
-                    'Attachments upload in background. Sending waits until they are ready.',
-                  )
-                : isConversationRunning
-                  ? t('Press Enter to queue, Shift+Enter for new line')
-                  : t('Press Enter to send, Shift+Enter for new line')}
+              {isVoiceListening
+                ? t('Listening... Click the mic to stop')
+                : hasUploadingAttachments
+                  ? t(
+                      'Attachments upload in background. Sending waits until they are ready.',
+                    )
+                  : isConversationRunning
+                    ? t('Press Enter to queue, Shift+Enter for new line')
+                    : t('Press Enter to send, Shift+Enter for new line')}
             </p>
             </div>
           </div>

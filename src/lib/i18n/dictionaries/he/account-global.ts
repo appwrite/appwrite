@@ -415,8 +415,17 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   // AI chat
   'Add a follow-up': 'הוסיפו הודעת המשך',
   'Add to queue': 'הוספה לתור',
-  'Ask a question...': 'שאלו שאלה...',
+  'Ask anything, or tell me what to do...': 'שאלו כל דבר, או אמרו לי מה לעשות...',
   'Attach files': 'צירוף קבצים',
+  'Voice input': 'קלט קולי',
+  'Stop voice input': 'עצירת קלט קולי',
+  'Listening...': 'מקשיבים...',
+  'Listening... Click the mic to stop': 'מקשיבים... לחצו על המיקרופון כדי לעצור',
+  'Microphone permission denied': 'הרשאת המיקרופון נדחתה',
+  'Voice input is not supported in this browser':
+    'קלט קולי אינו נתמך בדפדפן זה',
+  'Could not start voice input': 'לא ניתן להתחיל קלט קולי',
+  'Sign in to chat with the agent...': 'התחברו כדי לשוחח עם הסוכן...',
   Attachment: 'קובץ מצורף',
   'attachment selected': 'קובץ מצורף נבחר',
   'attachments selected': 'קבצים מצורפים נבחרו',
@@ -534,7 +543,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Sign in to use the agent': 'התחברו כדי להשתמש ב-Agent',
   'Create an account or sign in to chat with the Appwrite Agent about your projects.':
     'צרו חשבון או התחברו כדי לשוחח עם Appwrite Agent על הפרויקטים שלכם.',
-  'Sign in to ask a question...': 'התחברו כדי לשאול שאלה...',
   'Back to Appwrite': 'חזרה ל-Appwrite',
   'MCP ready': 'MCP מוכן',
   'I can inspect your project, explain issues, suggest next steps, and run approved actions.':
