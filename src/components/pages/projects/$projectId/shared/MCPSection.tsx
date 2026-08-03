@@ -66,6 +66,9 @@ function jsonSnippet(value: unknown): string {
 
 const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
 
+const INLINE_CODE_CLASSES =
+  'rounded bg-muted px-1 py-0.5 font-mono text-[11.5px] text-foreground'
+
 const CLOUD_MCP_TOOLS: McpToolConfig[] = [
   {
     id: 'claude-code',
@@ -309,6 +312,17 @@ export function MCPSection({
         language={selectedTool.language}
         showCopy={false}
       />
+
+      {!isSelfHosted && selectedTool.id === 'claude-code' ? (
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          {t('Then authenticate: run')}{' '}
+          <code className={INLINE_CODE_CLASSES}>claude</code>
+          {t(', type')} <code className={INLINE_CODE_CLASSES}>/mcp</code>
+          {t(', select')} <code className={INLINE_CODE_CLASSES}>appwrite</code>
+          {t(', and choose')}{' '}
+          <span className="font-medium text-foreground">Authenticate</span>.
+        </p>
+      ) : null}
 
       {selectedTool.installUrl ? (
         <Button
