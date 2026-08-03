@@ -141,41 +141,6 @@ export async function fetchRepositoryBranches(
 }
 
 /**
- * Resolve the branch a newly connected repository should track.
- *
- * The repository's own default branch is authoritative. Only when the provider
- * doesn't report one do we take the first branch it lists — still a branch that
- * exists, unlike a hardcoded 'main', which pins the resource to a ref the repo
- * may not have and fails the source download with nothing to show for it.
- *
- * Returns '' when the repository reports no branches at all; callers must treat
- * that as a failure rather than substituting a name.
- */
-export async function resolveDefaultBranch(
-  projectId: string,
-  installationId: string,
-  providerRepositoryId: string,
-): Promise<string> {
-  const repository = await fetchRepository(
-    projectId,
-    installationId,
-    providerRepositoryId,
-  )
-
-  if (repository.defaultBranch) {
-    return repository.defaultBranch
-  }
-
-  const { branches } = await fetchRepositoryBranches(
-    projectId,
-    installationId,
-    providerRepositoryId,
-  )
-
-  return sortRepositoryBranches(branches)[0]?.name ?? ''
-}
-
-/**
  * Query function to fetch repositories for an installation
  */
 export async function fetchRepositories(
