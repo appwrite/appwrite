@@ -14,6 +14,7 @@ import { Upload, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
+import { formatDecimalBytes, toByteCount } from '@/lib/utils/byte-display-unit'
 
 interface UploadFileProps {
   open: boolean
@@ -94,9 +95,12 @@ export function UploadFile({
     // Check file size
     if (
       bucket?.maximumFileSize &&
-      fileToValidate.size > bucket.maximumFileSize
+      fileToValidate.size > toByteCount(bucket.maximumFileSize)
     ) {
-      const maxSizeMB = (bucket.maximumFileSize / (1000 * 1000)).toFixed(2)
+      const maxSizeMB = (
+        toByteCount(bucket.maximumFileSize) /
+        (1000 * 1000)
+      ).toFixed(2)
       return `${t('File size exceeds maximum of')} ${maxSizeMB} MB`
     }
 
@@ -180,12 +184,8 @@ export function UploadFile({
     })
   }
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1000
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  const formatFileSize = (bytes: number | bigint): string => {
+    return formatDecimalBytes(bytes)
   }
 
   return (

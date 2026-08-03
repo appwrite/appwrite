@@ -96,6 +96,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProject,
@@ -132,12 +133,8 @@ import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 function formatDuration(seconds: number): string {

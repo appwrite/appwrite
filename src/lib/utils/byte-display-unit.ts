@@ -7,6 +7,21 @@ import {
 export type DecimalByteUnit = 'bytes' | 'KB' | 'MB' | 'GB' | 'TB'
 export type BinaryByteUnit = 'bytes' | 'kb' | 'mb' | 'gb' | 'tb'
 
+/**
+ * Coerce API byte counts that may arrive as bigint (SDK json-bigint / int64).
+ * Arithmetic with mixed bigint/number throws; convert before formatting or math.
+ */
+export function toByteCount(
+  value: number | bigint | null | undefined,
+): number {
+  if (value == null) return 0
+  if (typeof value === 'bigint') {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  return Number.isFinite(value) ? value : 0
+}
+
 const DECIMAL_BYTE_SCALES: UnitScale<DecimalByteUnit>[] = [
   { unit: 'bytes', factor: 1 },
   { unit: 'KB', factor: 1_000 },
@@ -65,11 +80,12 @@ function formatByteDisplayValue(
   return `${parseFloat(value.toFixed(2))} ${unitLabel}`
 }
 
-export function formatDecimalBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+export function formatDecimalBytes(bytes: number | bigint): string {
+  const n = toByteCount(bytes)
+  if (n <= 0) return '0 B'
 
   const { value, unit } = pickUnitWithLargestReadableValue(
-    bytes,
+    n,
     DECIMAL_BYTE_SCALES,
   )
   const label = unit === 'bytes' ? 'B' : unit
@@ -77,12 +93,13 @@ export function formatDecimalBytes(bytes: number): string {
   return formatByteDisplayValue(value, label, unit === 'bytes')
 }
 
-export function formatBinaryBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return String(bytes)
-  if (bytes === 0) return '0 B'
+export function formatBinaryBytes(bytes: number | bigint): string {
+  const n = toByteCount(bytes)
+  if (n < 0) return String(bytes)
+  if (n === 0) return '0 B'
 
   const { value, unit } = pickUnitWithLargestReadableValue(
-    bytes,
+    n,
     BINARY_BYTE_SCALES,
   )
   const label = unit === 'bytes' ? 'B' : unit.toUpperCase()

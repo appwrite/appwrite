@@ -68,53 +68,54 @@ const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
 
 function getCloudMcpTools(t: Translator): McpToolConfig[] {
   return [
-  {
-    id: 'claude-code',
-    name: 'Claude Code',
-    iconPath: '/icons/claude.svg',
-    language: 'bash',
-    code: getMcpClaudeCodeInstallCommand(
-      t('select "appwrite", then "Authenticate"'),
-    ),
-  },
-  {
-    id: 'codex',
-    name: 'Codex',
-    iconPath: '/icons/chatgpt.svg',
-    language: 'bash',
-    code: MCP_CODEX_INSTALL_COMMAND,
-  },
-  {
-    id: 'cursor',
-    name: 'Cursor',
-    iconPath: '/icons/cursor-ai.svg',
-    language: 'json',
-    code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
-    installUrl: getCursorMcpInstallUrl(),
-  },
-  {
-    id: 'claude-desktop',
-    name: 'Claude Desktop',
-    iconPath: '/icons/claude.svg',
-    language: 'json',
-    code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
-  },
-  {
-    id: 'vscode',
-    name: 'VS Code',
-    iconPath: '/icons/vscode.svg',
-    language: 'json',
-    code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
-    installUrl: getVscodeMcpInstallUrl(),
-  },
-  {
-    id: 'opencode',
-    name: 'OpenCode',
-    iconPath: '/icons/opencode.svg',
-    language: 'json',
-    code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
-  },
-]
+    {
+      id: 'claude-code',
+      name: 'Claude Code',
+      iconPath: '/icons/claude.svg',
+      language: 'bash',
+      code: getMcpClaudeCodeInstallCommand(
+        t('select "appwrite", then "Authenticate"'),
+      ),
+    },
+    {
+      id: 'codex',
+      name: 'Codex',
+      iconPath: '/icons/chatgpt.svg',
+      language: 'bash',
+      code: MCP_CODEX_INSTALL_COMMAND,
+    },
+    {
+      id: 'cursor',
+      name: 'Cursor',
+      iconPath: '/icons/cursor-ai.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getCursorMcpInstallUrl(),
+    },
+    {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET),
+    },
+    {
+      id: 'vscode',
+      name: 'VS Code',
+      iconPath: '/icons/vscode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getVscodeMcpInstallUrl(),
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
+    },
+  ]
+}
 
 function getSelfHostedMcpTools(
   projectId: string,
@@ -201,8 +202,8 @@ export function MCPSection({
     () =>
       isSelfHosted
         ? getSelfHostedMcpTools(projectId, endpoint)
-        : CLOUD_MCP_TOOLS,
-    [isSelfHosted, projectId, endpoint],
+        : getCloudMcpTools(t),
+    [isSelfHosted, projectId, endpoint, t],
   )
 
   const selectedTool = useMemo(

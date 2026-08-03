@@ -26,6 +26,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { sdk, getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
   SITE_SCREENSHOTS_BUCKET_ID,
@@ -62,12 +63,8 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 interface DeployingViewProps {

@@ -793,8 +793,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to create collection': 'コレクションの作成に失敗しました',
   'Failed to delete tables': 'テーブルの削除に失敗しました',
   'Failed to delete collections': 'コレクションの削除に失敗しました',
-  'Created 50 tables': '50 テーブルを作成しました',
-  'Created 50 collections': '50 コレクションを作成しました',
   'Rows refreshed successfully': '行を更新しました',
   'Documents refreshed successfully': 'ドキュメントを更新しました',
   'Failed to refresh rows': '行の更新に失敗しました',
@@ -1323,8 +1321,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Collection is disabled': 'コレクションは無効です',
   'This table is currently disabled.': 'このテーブルは現在無効です。',
   'This collection is currently disabled.': 'このコレクションは現在無効です。',
-  'Debug: Create 50 tables': 'デバッグ: 50 テーブルを作成',
-  'Debug: Create 50 collections': 'デバッグ: 50 コレクションを作成',
   // Toasts and fragments
   'Database has been enabled': 'データベースを有効にしました',
   'Database has been disabled': 'データベースを無効にしました',

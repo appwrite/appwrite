@@ -822,8 +822,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to create collection': 'יצירת האוסף נכשלה',
   'Failed to delete tables': 'מחיקת הטבלאות נכשלה',
   'Failed to delete collections': 'מחיקת האוספים נכשלה',
-  'Created 50 tables': 'נוצרו 50 טבלאות',
-  'Created 50 collections': 'נוצרו 50 אוספים',
   'Rows refreshed successfully': 'השורות רועננו בהצלחה',
   'Documents refreshed successfully': 'המסמכים רועננו בהצלחה',
   'Failed to refresh rows': 'רענון השורות נכשל',
@@ -1441,8 +1439,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Collection is disabled': 'האוסף מושבת',
   'This table is currently disabled.': 'טבלה זו מושבתת כרגע.',
   'This collection is currently disabled.': 'אוסף זה מושבת כרגע.',
-  'Debug: Create 50 tables': 'Debug: יצירת 50 טבלאות',
-  'Debug: Create 50 collections': 'Debug: יצירת 50 אוספים',
 
   // Toasts and fragments
   'Database has been enabled': 'מסד הנתונים הופעל',

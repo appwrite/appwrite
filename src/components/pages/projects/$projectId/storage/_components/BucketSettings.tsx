@@ -30,7 +30,10 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Loader2, FolderOpen, X, Plus } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
-import { pickFormDecimalByteDisplayUnit } from '@/lib/utils/byte-display-unit'
+import {
+  pickFormDecimalByteDisplayUnit,
+  toByteCount,
+} from '@/lib/utils/byte-display-unit'
 import {
   Dialog,
   DialogContent,
@@ -68,14 +71,24 @@ export function BucketSettings() {
     if (!organizationPlan) return null
 
     const fileSize = organizationPlan?.fileSize
+    const fileSizeNumber =
+      fileSize == null
+        ? null
+        : typeof fileSize === 'bigint'
+          ? Number(fileSize)
+          : Number(fileSize)
 
     // -1 means unlimited
-    if (fileSize === -1 || fileSize === null || fileSize === undefined) {
+    if (
+      fileSizeNumber == null ||
+      !Number.isFinite(fileSizeNumber) ||
+      fileSizeNumber === -1
+    ) {
       return null
     }
 
     // Convert MB to bytes (using 1000 base)
-    return fileSize * 1000 * 1000
+    return fileSizeNumber * 1000 * 1000
   }, [organizationPlan])
 
   // State for form fields
@@ -108,8 +121,10 @@ export function BucketSettings() {
       setCompression(bucketCompression)
       setTransformations(bucket.transformations)
       // Pick the unit whose numeric value is smallest while still a whole integer
-      if (bucket.maximumFileSize > 0) {
-        const { value, unit } = pickFormDecimalByteDisplayUnit(bucket.maximumFileSize)
+      if (toByteCount(bucket.maximumFileSize) > 0) {
+        const { value, unit } = pickFormDecimalByteDisplayUnit(
+          toByteCount(bucket.maximumFileSize),
+        )
         setMaximumFileSize(value)
         setFileSizeUnit(unit)
       } else {
@@ -455,7 +470,7 @@ export function BucketSettings() {
   }, [fileSizeInBytes, maxFileSizeByPlan, t])
 
   const handleMaximumFileSizeUpdate = () => {
-    if (fileSizeInBytes !== bucket?.maximumFileSize) {
+    if (fileSizeInBytes !== toByteCount(bucket?.maximumFileSize)) {
       // Validate against plan limit
       if (fileSizeError) {
         toast.error(fileSizeError.message || t('File size exceeds plan limit'))
@@ -1016,7 +1031,7 @@ export function BucketSettings() {
               className="h-9 text-[13px]"
               disabled={
                 !bucket ||
-                Math.abs(fileSizeInBytes - bucket.maximumFileSize) < 1 ||
+                Math.abs(fileSizeInBytes - toByteCount(bucket.maximumFileSize)) < 1 ||
                 updateMaximumFileSizeMutation.isPending ||
                 fileSizeError !== null
               }
