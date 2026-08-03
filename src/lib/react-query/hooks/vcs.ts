@@ -141,12 +141,9 @@ export async function fetchRepositoryBranches(
 }
 
 /**
- * Resolve the branch to store when connecting a repository from settings.
- *
- * Mirrors the old console's updateRepository connect(): keep the branch already
- * configured if the repository still has it, otherwise prefer main/master, then
- * the first branch, and only fall back to the configured value when the lookup
- * fails outright.
+ * Resolve the branch to store when connecting a repository, mirroring the old
+ * console's connect(): keep the configured branch if the repository still has
+ * it, else main/master, else the first branch.
  */
 export async function resolveConnectBranch(
   projectId: string,

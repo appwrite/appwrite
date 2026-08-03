@@ -119,9 +119,7 @@ export function RepositoryConfigView({
   const [runtime, setRuntime] = useState(formData.runtime || '')
   const [entrypoint, setEntrypoint] = useState('')
   const [commands, setCommands] = useState('')
-  // Left empty on purpose — BranchSelector fills it from the repository's
-  // default branch. Seeding 'main' here suppressed that and pinned every
-  // function to 'main' whether or not the repo had one.
+  // Empty so BranchSelector resolves it from the repository.
   const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)

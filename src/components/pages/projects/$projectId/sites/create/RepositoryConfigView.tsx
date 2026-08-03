@@ -102,9 +102,7 @@ export function RepositoryConfigView({
   const [siteName, setSiteName] = useState(formData.siteName || '')
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
-  // Left empty on purpose — BranchSelector fills it from the repository's
-  // default branch. Seeding 'main' here suppressed that and pinned every site
-  // to 'main' whether or not the repo had one.
+  // Empty so BranchSelector resolves it from the repository.
   const [branch, setBranch] = useState(formData.providerBranch || '')
   const [rootDirectory, setRootDirectory] = useState(
     formData.providerRootDirectory || './',

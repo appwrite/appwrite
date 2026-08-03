@@ -127,11 +127,8 @@ export function BranchSelector({
   const isSearching = !!debouncedSearch && searchFetching
   const isLoadingList = debouncedSearch ? isSearching : initialLoading
 
-  // Mirrors the old console's productionBranchFieldset: resolve the branch from
-  // the repository's own default, falling back to 'main'. Console gates the
-  // whole fieldset on that lookup, so we wait for it to settle rather than
-  // letting the fallback land first and stick (the first onChange fills
-  // `value`, which ends the resolution).
+  // Same resolution as the old console's productionBranchFieldset, which waits
+  // on the repository lookup before falling back to 'main'.
   const defaultBranch = repository?.defaultBranch
 
   useEffect(() => {
