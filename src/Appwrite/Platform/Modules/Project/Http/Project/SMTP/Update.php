@@ -42,6 +42,7 @@ class Update extends Action
             ->desc('Update project SMTP configuration')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
+            ->label('limit', 'feature:customSmtp')
             // ->label('event', 'project.smtp.update')
             ->label('audits.event', 'project.smtp.update')
             ->label('audits.resource', 'project.smtp/{response.$id}')

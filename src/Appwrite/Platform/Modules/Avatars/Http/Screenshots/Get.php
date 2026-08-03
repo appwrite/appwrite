@@ -45,6 +45,7 @@ class Get extends Action
             ->desc('Get webpage screenshot')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('limit', 'usage:screenshotsGenerated')
             ->label('usage.metric', METRIC_AVATARS_SCREENSHOTS_GENERATED)
             ->label('abuse-limit', 60)
             ->label('cache', true)

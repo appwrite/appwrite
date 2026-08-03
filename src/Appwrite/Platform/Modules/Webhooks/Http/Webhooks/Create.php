@@ -44,6 +44,7 @@ class Create extends Action
             ->desc('Create webhook')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
+            ->label('limit', 'count:webhooks')
             ->label('event', 'webhooks.[webhookId].create')
             ->label('audits.event', 'webhook.create')
             ->label('audits.resource', 'webhook/{response.$id}')
