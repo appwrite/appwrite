@@ -63,7 +63,7 @@ export function ConversationResourceSummary({
   if (counts.updated > 0) {
     parts.push(
       <span key="updated" className="text-muted-foreground">
-        {`${counts.updated} ${t('updated')}`}
+        {`±${counts.updated}`}
       </span>,
     )
   }
