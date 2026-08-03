@@ -147,7 +147,7 @@ class Webhooks extends Action
 
         if (!$webhook->getAttribute('security', true)) {
             \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         }
 
         if (!empty($httpUser) && !empty($httpPass)) {

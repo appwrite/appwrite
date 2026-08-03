@@ -272,7 +272,10 @@ class X extends OAuth2
         if ($data === '' || $iv === '' || $tag === '') {
             return '';
         }
-
+        if (!is_string($data) || !is_string($iv) || !is_string($tag)) {
+                        return '';
+        }
+        
         $decodedData = $this->base64UrlDecode($data);
         $decodedIv = \hex2bin($iv);
         $decodedTag = \hex2bin($tag);
