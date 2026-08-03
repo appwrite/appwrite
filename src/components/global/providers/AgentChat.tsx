@@ -128,6 +128,7 @@ import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE, isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
+import { useEnsureAppwriteMcpConnected } from '@/lib/assistant/ensure-appwrite-mcp'
 import { AgentAutomationDetail } from '@/components/global/providers/agent/AgentAutomationDetail'
 import { AgentAutomationDrawer } from '@/components/global/providers/agent/AgentAutomationDrawer'
 import { AgentAutomationsPanel } from '@/components/global/providers/agent/AgentAutomationsPanel'
@@ -2245,8 +2246,14 @@ export function AgentPanelContent({
     !authReady ||
     !isAuthenticated ||
     !(conversationsLoading && conversations.length === 0)
-  const { data: mcpConnections = [] } = useAssistantMcpConnections({
-    enabled: isAuthenticated,
+  const { data: mcpConnections = [], isFetched: mcpConnectionsFetched } =
+    useAssistantMcpConnections({
+      enabled: isAuthenticated,
+    })
+  useEnsureAppwriteMcpConnected({
+    enabled: isAuthenticated && !isGuest,
+    connections: mcpConnections,
+    connectionsReady: mcpConnectionsFetched,
   })
   const hasActiveMcp = useMemo(
     () =>

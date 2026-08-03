@@ -2,7 +2,13 @@
  * Client-side OAuth (PKCE + dynamic client registration) for assistant MCP
  * connections. Tokens are stored via the Console assistant MCP SDK — never keep
  * access tokens in React state beyond the handoff.
+ *
+ * For the hosted Appwrite MCP server the console owns the authorization server,
+ * so {@link connectMcpOAuthSilently} can run authorize + approve via the Console
+ * SDK without a popup or consent redirect.
  */
+
+import { sdk } from '@/lib/appwrite/sdk'
 
 export const ASSISTANT_MCP_OAUTH_CALLBACK_PATH = '/agent/mcp/callback'
 export const ASSISTANT_MCP_OAUTH_MESSAGE_TYPE = 'assistant-mcp-oauth' as const
@@ -309,13 +315,63 @@ export type StartMcpOAuthConnectInput = {
   clientName?: string
 }
 
+const MCP_DEFAULT_SCOPES = [
+  'openid',
+  'profile',
+  'email',
+  'project:all',
+  'organization:all',
+] as const
+
+export function extractAuthorizationCodeFromRedirectUrl(
+  redirectUrl: string,
+  expectedState?: string,
+): string {
+  let url: URL
+  try {
+    url = new URL(
+      redirectUrl,
+      typeof window !== 'undefined' ? window.location.origin : undefined,
+    )
+  } catch {
+    throw new Error('Authorization redirect URL was invalid')
+  }
+
+  const error = url.searchParams.get('error')
+  if (error) {
+    throw new Error(
+      url.searchParams.get('error_description') ||
+        error ||
+        'Authorization was denied',
+    )
+  }
+
+  const code = url.searchParams.get('code')
+  if (!code) {
+    throw new Error('Authorization redirect did not include a code')
+  }
+
+  if (expectedState) {
+    const state = url.searchParams.get('state')
+    if (state !== expectedState) {
+      throw new Error('MCP OAuth state mismatch')
+    }
+  }
+
+  return code
+}
+
 /**
- * Discover AS + register a public PKCE client, then open the authorize URL
- * in a popup. Resolves with authorization code after the callback page posts back.
+ * Discover AS + register a public PKCE client and persist the pending session.
  */
-export async function startMcpOAuthConnect(
+export async function prepareMcpOAuthSession(
   input: StartMcpOAuthConnectInput,
-): Promise<{ code: string; session: McpOAuthPendingSession }> {
+): Promise<{
+  session: McpOAuthPendingSession
+  scope: string
+  codeChallenge: string
+  authorizationDetails: string
+}> {
   if (typeof window === 'undefined') {
     throw new Error('MCP OAuth can only run in the browser')
   }
@@ -344,15 +400,10 @@ export async function startMcpOAuthConnect(
     throw new Error('Authorization server does not support PKCE S256')
   }
 
-  const defaultScopes = [
-    'openid',
-    'profile',
-    'email',
-    'project:all',
-    'organization:all',
-  ]
   const scopeList =
-    input.scopes && input.scopes.length > 0 ? input.scopes : defaultScopes
+    input.scopes && input.scopes.length > 0
+      ? input.scopes
+      : [...MCP_DEFAULT_SCOPES]
   const scope = scopeList.join(' ')
 
   const client = await registerPublicClient({
@@ -364,6 +415,7 @@ export async function startMcpOAuthConnect(
   const state = randomUrlSafeString(24)
   const codeVerifier = randomUrlSafeString(64)
   const codeChallenge = await sha256Base64Url(codeVerifier)
+  const authorizationDetails = JSON.stringify(MCP_DEFAULT_AUTHORIZATION_DETAILS)
 
   const session: McpOAuthPendingSession = {
     mcpId: input.mcpId,
@@ -382,15 +434,85 @@ export async function startMcpOAuthConnect(
   }
   savePendingSession(session)
 
+  return { session, scope, codeChallenge, authorizationDetails }
+}
+
+/**
+ * Run the full Appwrite MCP OAuth connect without a popup or consent UI.
+ * Uses Console `oauth2.authorize` + `oauth2.approve` with the signed-in session.
+ */
+export async function connectMcpOAuthSilently(
+  input: StartMcpOAuthConnectInput,
+): Promise<{
+  mcpId: string
+  name: string
+  url: string
+  description?: string
+  tokens: McpOAuthTokenSet
+  clientInfo: McpOAuthClientInfo
+}> {
+  const { session, scope, codeChallenge, authorizationDetails } =
+    await prepareMcpOAuthSession(input)
+
+  try {
+    const authorizeResult = await sdk.forConsole.oauth2.authorize({
+      clientId: session.client.client_id,
+      redirectUri: session.redirectUri,
+      responseType: 'code',
+      scope,
+      state: session.state,
+      codeChallenge,
+      codeChallengeMethod: 'S256',
+      resource: session.resource,
+      authorizationDetails,
+    })
+
+    let redirectUrl = authorizeResult.redirectUrl?.trim() || ''
+    if (!redirectUrl) {
+      const grantId = authorizeResult.grantId?.trim()
+      if (!grantId) {
+        throw new Error('Authorization did not return a grant or redirect')
+      }
+      // Auto-approve: the agent is a first-party console surface and the user
+      // already authenticated into the console with these privileges.
+      const approveResult = await sdk.forConsole.oauth2.approve({ grantId })
+      redirectUrl = approveResult.redirectUrl?.trim() || ''
+    }
+
+    if (!redirectUrl) {
+      throw new Error('Authorization approve did not return a redirect URL')
+    }
+
+    const code = extractAuthorizationCodeFromRedirectUrl(
+      redirectUrl,
+      session.state,
+    )
+    return await completeMcpOAuthConnect({ code, session })
+  } catch (error) {
+    clearPendingMcpOAuthSession()
+    throw error
+  }
+}
+
+/**
+ * Discover AS + register a public PKCE client, then open the authorize URL
+ * in a popup. Resolves with authorization code after the callback page posts back.
+ */
+export async function startMcpOAuthConnect(
+  input: StartMcpOAuthConnectInput,
+): Promise<{ code: string; session: McpOAuthPendingSession }> {
+  const { session, scope, codeChallenge, authorizationDetails } =
+    await prepareMcpOAuthSession(input)
+
   const authorizeUrl = buildAuthorizeUrl({
-    authorizationEndpoint: asMeta.authorization_endpoint,
-    clientId: client.client_id,
-    redirectUri,
+    authorizationEndpoint: session.authorizationEndpoint,
+    clientId: session.client.client_id,
+    redirectUri: session.redirectUri,
     scope,
-    state,
+    state: session.state,
     codeChallenge,
-    resource,
-    authorizationDetails: JSON.stringify(MCP_DEFAULT_AUTHORIZATION_DETAILS),
+    resource: session.resource,
+    authorizationDetails,
   })
 
   const popup = window.open(

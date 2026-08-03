@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import {
   ASSISTANT_MCP_OAUTH_MESSAGE_TYPE,
   completeMcpOAuthConnect,
+  connectMcpOAuthSilently,
   readPendingMcpOAuthSession,
   startMcpOAuthConnect,
   type McpOAuthCallbackMessage,
@@ -162,6 +163,25 @@ function useMcpConnectionsController(options?: {
     onConnectedRef.current?.()
   }
 
+  const persistSilentResult = async () => {
+    const result = await connectMcpOAuthSilently(
+      getAppwriteAssistantMcpConnectInput(),
+    )
+    await upsertMutation.mutateAsync({
+      mcpId: result.mcpId,
+      name: result.name,
+      url: result.url,
+      description: result.description,
+      enabled: true,
+      status: 'connected',
+      tokens: JSON.stringify(result.tokens),
+      clientInfo: JSON.stringify(result.clientInfo),
+      exists: !!appwriteConnectionRef.current,
+    })
+    toast.success(t('Appwrite MCP connected'))
+    onConnectedRef.current?.()
+  }
+
   // Resume top-level redirect fallback (popup blocked → full-page OAuth).
   useEffect(() => {
     if (resumeAttemptedRef.current) return
@@ -205,6 +225,13 @@ function useMcpConnectionsController(options?: {
     if (isBusy) return
     setConnecting(true)
     try {
+      // Prefer silent first-party authorize + approve (no popup / consent UI).
+      try {
+        await persistSilentResult()
+        return
+      } catch {
+        // Fall back to popup OAuth when silent connect is unavailable.
+      }
       const { code } = await startMcpOAuthConnect(
         getAppwriteAssistantMcpConnectInput(),
       )
