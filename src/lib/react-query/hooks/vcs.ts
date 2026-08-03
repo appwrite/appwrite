@@ -153,28 +153,34 @@ export async function resolveConnectBranch(
 ): Promise<string> {
   let nextBranch = currentBranch || 'main'
 
+  if (!projectId || !installationId || !providerRepositoryId) {
+    return nextBranch
+  }
+
   try {
     const projectSdk = sdk.forProject(projectId)
     const all: Models.Branch[] = []
-    const limit = 100
     let offset = 0
 
-    for (;;) {
+    while (true) {
       const { branches, total } = await projectSdk.vcs.listRepositoryBranches({
         installationId,
         providerRepositoryId,
-        queries: [Query.limit(limit), Query.offset(offset)],
+        queries: [Query.limit(REPOSITORY_BRANCHES_LIMIT), Query.offset(offset)],
       })
       all.push(...branches)
-      if (all.length >= total || branches.length < limit) break
-      offset += limit
+      if (all.length >= total || branches.length < REPOSITORY_BRANCHES_LIMIT) {
+        break
+      }
+      offset += REPOSITORY_BRANCHES_LIMIT
     }
 
     const sorted = sortRepositoryBranches(all)
     nextBranch =
       sorted.find((branch) => branch.name === currentBranch)?.name ??
-      sorted.find((branch) => branch.name === 'main' || branch.name === 'master')
-        ?.name ??
+      sorted.find(
+        (branch) => branch.name === 'main' || branch.name === 'master',
+      )?.name ??
       sorted[0]?.name ??
       nextBranch
   } catch {
