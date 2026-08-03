@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react'
 import { Check, Copy, Download, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  MCP_CLAUDE_CODE_INSTALL_COMMAND,
   MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET,
   MCP_CODEX_INSTALL_COMMAND,
   MCP_EDITOR_CONFIG_SNIPPET,
   MCP_OPENCODE_CONFIG_SNIPPET,
   MCP_SELF_HOSTED_DOCS_URL,
   getCursorMcpInstallUrl,
+  getMcpClaudeCodeInstallCommand,
   getSelfHostedClaudeCodeInstallCommand,
   getSelfHostedCodexConfig,
   getSelfHostedMcpEditorConfig,
@@ -32,7 +32,7 @@ import {
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n/translate'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
   /** Current project ID (used to prefill self-hosted MCP env) */
@@ -66,13 +66,16 @@ function jsonSnippet(value: unknown): string {
 
 const MCP_MORE_TOOLS_DOCS_HREF = '/docs/tooling/ai/mcp-servers'
 
-const CLOUD_MCP_TOOLS: McpToolConfig[] = [
+function getCloudMcpTools(t: Translator): McpToolConfig[] {
+  return [
   {
     id: 'claude-code',
     name: 'Claude Code',
     iconPath: '/icons/claude.svg',
     language: 'bash',
-    code: MCP_CLAUDE_CODE_INSTALL_COMMAND,
+    code: getMcpClaudeCodeInstallCommand(
+      t('select "appwrite", then "Authenticate"'),
+    ),
   },
   {
     id: 'codex',
