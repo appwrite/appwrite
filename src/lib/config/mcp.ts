@@ -48,7 +48,13 @@ export const MCP_OPENCODE_CONFIG_SNIPPET = {
   },
 } as const
 
-export const MCP_CLAUDE_CODE_INSTALL_COMMAND = `claude mcp add ${MCP_SERVER_NAME} --transport http ${MCP_SERVER_URL}`
+/** `authenticateComment` is the localized trailing comment on the `/mcp` line. */
+export function getMcpClaudeCodeInstallCommand(
+  authenticateComment: string,
+): string {
+  return `claude mcp add ${MCP_SERVER_NAME} --transport http ${MCP_SERVER_URL}
+claude "/mcp" # ${authenticateComment}`
+}
 
 export const MCP_CODEX_INSTALL_COMMAND = `codex mcp add ${MCP_SERVER_NAME} --url ${MCP_SERVER_URL}`
 
