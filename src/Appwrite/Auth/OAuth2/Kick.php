@@ -10,7 +10,7 @@ use Appwrite\Auth\OAuth2;
 
 class Kick extends OAuth2
 {
-    private const PKCE_STATE_KEY = '_pkce';
+    use PKCE;
 
     /**
      * @var array
@@ -30,11 +30,6 @@ class Kick extends OAuth2
     ];
 
     /**
-     * @var string
-     */
-    private string $pkceVerifier = '';
-
-    /**
      * @return string
      */
     public function getName(): string
@@ -48,7 +43,7 @@ class Kick extends OAuth2
     public function getLoginURL(): string
     {
         $state = $this->state;
-        $state[self::PKCE_STATE_KEY] = $this->getPKCEVerifier();
+        $state = $this->withPKCEState($state);
 
         return 'https://id.kick.com/oauth/authorize?' . \http_build_query([
             'response_type' => 'code',
@@ -204,27 +199,6 @@ class Kick extends OAuth2
             return null;
         }
 
-        $verifier = $parsed[self::PKCE_STATE_KEY] ?? null;
-        if (\is_string($verifier)) {
-            $this->pkceVerifier = $verifier;
-        }
-
-        unset($parsed[self::PKCE_STATE_KEY]);
-
-        return $parsed;
-    }
-
-    private function getPKCEVerifier(): string
-    {
-        if ($this->pkceVerifier === '') {
-            $this->pkceVerifier = \rtrim(\strtr(\base64_encode(\random_bytes(64)), '+/', '-_'), '=');
-        }
-
-        return $this->pkceVerifier;
-    }
-
-    private function getPKCEChallenge(): string
-    {
-        return \rtrim(\strtr(\base64_encode(\hash('sha256', $this->getPKCEVerifier(), true)), '+/', '-_'), '=');
+        return $this->restorePKCEState($parsed);
     }
 }
