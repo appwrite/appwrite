@@ -119,7 +119,10 @@ export function RepositoryConfigView({
   const [runtime, setRuntime] = useState(formData.runtime || '')
   const [entrypoint, setEntrypoint] = useState('')
   const [commands, setCommands] = useState('')
-  const [branch, setBranch] = useState('main')
+  // Left empty on purpose — BranchSelector fills it from the repository's
+  // default branch. Seeding 'main' here suppressed that and pinned every
+  // function to 'main' whether or not the repo had one.
+  const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
@@ -426,6 +429,7 @@ export function RepositoryConfigView({
               isDeploying ||
               !functionName ||
               !runtime ||
+              !branch ||
               !domain.trim() ||
               !domainValid
             }

@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import {
+  resolveDefaultBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -163,12 +164,25 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       ) {
         throw new Error('Installation and Repository are required')
       }
+      // This dialog has no branch picker, so the branch is resolved from the
+      // repository itself. A hardcoded 'main' here left functions connected to a
+      // branch that never existed, which fails the build with no error at all.
+      const providerBranch = await resolveDefaultBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+      )
+
+      if (!providerBranch) {
+        throw new Error('Could not determine a branch for this repository')
+      }
+
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update(
         buildFunctionUpdateParams(func, {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
-          providerBranch: 'main',
+          providerBranch,
         }),
       )
     },

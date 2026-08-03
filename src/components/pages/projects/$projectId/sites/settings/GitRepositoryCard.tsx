@@ -20,6 +20,7 @@ import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildSiteUpdateParams,
+  resolveDefaultBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -172,12 +173,25 @@ export function GitRepositoryCard({
       ) {
         throw new Error('Installation and Repository are required')
       }
+      // This dialog has no branch picker, so the branch is resolved from the
+      // repository itself. A hardcoded 'main' here left sites connected to a
+      // branch that never existed, which fails the build with no error at all.
+      const providerBranch = await resolveDefaultBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+      )
+
+      if (!providerBranch) {
+        throw new Error('Could not determine a branch for this repository')
+      }
+
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(
         buildSiteUpdateParams(site, {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
-          providerBranch: 'main',
+          providerBranch,
         }),
       )
     },

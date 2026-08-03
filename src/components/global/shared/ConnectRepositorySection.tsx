@@ -94,7 +94,7 @@ export function ConnectRepositorySection({
   value,
   onValueChange,
   showBranchAndRoot = false,
-  branch = 'main',
+  branch = '',
   onBranchChange,
   rootDirectory = './',
   onRootDirectoryChange,

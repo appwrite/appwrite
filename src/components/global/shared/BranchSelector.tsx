@@ -33,6 +33,7 @@ import { ChevronDown, GitBranch, Info, Loader2 } from 'lucide-react'
 import {
   repositoryBranchesQueryOptions,
   sortRepositoryBranches,
+  useRepository,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -83,6 +84,12 @@ export function BranchSelector({
     if (!open) setSearch('')
   }, [open])
 
+  const { data: repository, isPending: repositoryPending } = useRepository(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
+
   const { data: initialBranchesData, isLoading: initialLoading } = useQuery({
     ...repositoryBranchesQueryOptions(
       projectId,
@@ -120,14 +127,27 @@ export function BranchSelector({
   const isSearching = !!debouncedSearch && searchFetching
   const isLoadingList = debouncedSearch ? isSearching : initialLoading
 
+  // The repository's own default branch is authoritative — guessing 'main'
+  // silently pins deployments to a branch the repo may not have. Only when the
+  // provider doesn't report one do we take the first listed branch, which at
+  // least exists. Wait for the lookup to settle first, or the fallback wins the
+  // race and sticks (the first onChange fills `value` and ends the resolution).
+  const defaultBranch = repository?.defaultBranch
+
   useEffect(() => {
-    if (sortedInitialBranches.length > 0 && !value) {
-      const defaultBranch = sortedInitialBranches.find(
-        (b) => b.name === 'main' || b.name === 'master',
-      )
-      onChange(defaultBranch?.name || sortedInitialBranches[0].name)
-    }
-  }, [sortedInitialBranches, value, onChange])
+    if (value) return
+    if (hasRepository && repositoryPending) return
+
+    const resolved = defaultBranch || sortedInitialBranches[0]?.name
+    if (resolved) onChange(resolved)
+  }, [
+    defaultBranch,
+    hasRepository,
+    repositoryPending,
+    sortedInitialBranches,
+    value,
+    onChange,
+  ])
 
   const labelContent = (
     <>

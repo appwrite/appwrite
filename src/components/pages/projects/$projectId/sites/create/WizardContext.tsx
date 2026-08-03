@@ -81,7 +81,7 @@ const defaultFormData: WizardFormData = {
   siteId: undefined,
   installationId: undefined,
   providerRepositoryId: undefined,
-  providerBranch: 'main',
+  providerBranch: '',
   providerRootDirectory: './',
   providerSilentMode: false,
   templateId: undefined,
