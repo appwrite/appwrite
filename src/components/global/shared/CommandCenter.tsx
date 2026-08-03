@@ -1549,6 +1549,7 @@ export function CommandCenter({
             isMobile={isMobile}
             showTerminalShortcuts={isProjectContext && !!onToggleTerminal}
             showSqlEditorShortcuts={isProjectContext}
+            showAgentShortcuts
             onBack={() => setPages([])}
             onClose={() => onOpenChange(false)}
             onKeyDown={handleKeyDown}

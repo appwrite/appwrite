@@ -35,6 +35,7 @@ const SHORTCUT_GROUP_ORDER = [
   'Navigation',
   'Create',
   'Actions',
+  'Agent',
   'SQL editor',
   'Terminal',
   'Help',

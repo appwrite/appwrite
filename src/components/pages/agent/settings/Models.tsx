@@ -5,6 +5,7 @@ import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModel
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getAssistantModelIconPath } from '@/lib/assistant/model-providers'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -67,6 +68,7 @@ export function Models() {
             size="sm"
             className="h-9 shrink-0 gap-1.5 text-[13px]"
             disabled={!isAuthenticated}
+            {...analyticsAttrs('create-agent-model')}
             onClick={() => setEditor({ mode: 'create' })}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -102,6 +104,7 @@ export function Models() {
                   type="button"
                   size="sm"
                   className="h-9 gap-1.5 text-[13px]"
+                  {...analyticsAttrs('create-agent-model')}
                   onClick={() => setEditor({ mode: 'create' })}
                 >
                   <Plus className="h-3.5 w-3.5" />

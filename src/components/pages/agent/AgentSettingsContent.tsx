@@ -4,6 +4,7 @@ import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
 import { Mcp } from '@/components/pages/agent/settings/Mcp'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { AGENT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/agent-settings-cards'
 import { useT } from '@/lib/i18n/translate'
 
@@ -57,6 +58,7 @@ export function AgentSettingsContent({
             className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={t('Back')}
             title={t('Back')}
+            {...analyticsAttrs('agent-back')}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
@@ -71,6 +73,7 @@ export function AgentSettingsContent({
             className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={t('Open in new tab')}
             title={t('Open in new tab')}
+            {...analyticsAttrs('agent-open-new-tab')}
           >
             <ExternalLink className="h-3.5 w-3.5" />
           </button>

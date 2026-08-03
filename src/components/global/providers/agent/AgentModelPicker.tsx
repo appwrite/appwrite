@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -111,6 +112,7 @@ export function AgentModelPicker({
             className,
           )}
           aria-label={t('Model')}
+          {...analyticsAttrs('agent-model-picker')}
         >
           {selectedModel ? (
             <ModelIcon
@@ -216,6 +218,7 @@ export function AgentModelPicker({
                 itemClassName,
               )}
               disabled={disabled}
+              {...analyticsAttrs('agent-manage-models')}
               onClick={() => {
                 setOpen(false)
                 onManageModels()

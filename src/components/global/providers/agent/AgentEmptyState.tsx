@@ -7,6 +7,7 @@ import {
 } from '@/components/global/shared/ThinkingBubble'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 
 type AgentEmptyStateProps = {
@@ -84,7 +85,11 @@ export function AgentEmptyState({
         {requireSignIn ? (
           <div className="mt-6 flex flex-col items-center gap-2">
             <Button asChild className="h-9 min-w-[160px] px-4 text-[13px]">
-              <Link to="/sign-in" search={{ redirect: '/agent' }}>
+              <Link
+                to="/sign-in"
+                search={{ redirect: '/agent' }}
+                {...analyticsAttrs('auth-sign-in')}
+              >
                 {t('Sign in')}
               </Link>
             </Button>
@@ -93,7 +98,11 @@ export function AgentEmptyState({
               variant="ghost"
               className="h-8 text-[12px] text-muted-foreground"
             >
-              <Link to="/sign-up" search={{ redirect: '/agent' }}>
+              <Link
+                to="/sign-up"
+                search={{ redirect: '/agent' }}
+                {...analyticsAttrs('auth-sign-up')}
+              >
                 {t('Create an account')}
               </Link>
             </Button>
@@ -106,6 +115,7 @@ export function AgentEmptyState({
                 type="button"
                 onClick={() => onSelectSuggestion(question)}
                 className="w-full rounded-lg border border-transparent bg-muted/35 px-3.5 py-3 text-start text-sm leading-relaxed text-foreground transition-colors hover:border-border hover:bg-muted/55"
+                {...analyticsAttrs('agent-suggestion')}
               >
                 {t(question)}
               </button>

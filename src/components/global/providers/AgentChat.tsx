@@ -38,12 +38,17 @@ import {
   Paperclip,
   Loader2,
   Pencil,
+  ThumbsDown,
+  ThumbsUp,
   Plus,
   RefreshCw,
   Search,
   Send,
   Square,
   Trash2,
+  Volume2,
+  VolumeOff,
+  VolumeX,
   X,
   ZoomIn,
   ZoomOut,
@@ -86,6 +91,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { cn } from '@/lib/utils'
 import {
   buildConsoleUrl,
@@ -109,7 +115,9 @@ import {
   useDeleteAssistantConversation,
   useUpdateAssistantConversation,
   useUpdateAssistantMessage,
+  useScoreAssistantMessage,
   useUploadAssistantAttachments,
+  type AssistantMessageScore,
   ASSISTANT_ATTACHMENTS_BUCKET_ID,
   useProject,
   useConsoleTeam,
@@ -165,6 +173,23 @@ import {
   VOICE_LEVEL_BAR_COUNT,
   type VoicePromptSession,
 } from '@/lib/assistant/voice-prompt'
+import {
+  isSpeechSynthesisSupported,
+  speakText,
+  stopSpeaking,
+} from '@/lib/assistant/speech-synthesis'
+import {
+  AGENT_FOCUS_COMPOSER_SHORTCUT_COMBOS,
+  AGENT_FOCUS_COMPOSER_SHORTCUT_RAW,
+  AGENT_NEW_AUTOMATION_SHORTCUT_COMBOS,
+  AGENT_NEW_SHORTCUT_COMBOS,
+  AGENT_NEW_SHORTCUT_RAW,
+} from '@/lib/assistant/agent-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import {
+  useKeyboardShortcut,
+  usePlatform,
+} from '@/hooks/use-keyboard-shortcuts'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import {
   buildTurnView,
@@ -181,6 +206,9 @@ import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { useConsoleProtocolEffects } from '@/hooks/use-console-protocol-effects'
 
 const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
+
+/** Prefer VolumeOff; VolumeX remains imported so flaky HMR cannot leave a dangling identifier. */
+const AgentSpeakStopIcon = VolumeOff ?? VolumeX
 
 function nonEmptyId(value: string | null | undefined): string | undefined {
   if (typeof value !== 'string') return undefined
@@ -358,7 +386,14 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
       return
     }
     openChat()
-  }, [activeContent, closeChat, isAgentBlocked, isConsolePath, isMarketingPage, openChat])
+  }, [
+    activeContent,
+    closeChat,
+    isAgentBlocked,
+    isConsolePath,
+    isMarketingPage,
+    openChat,
+  ])
 
   useEffect(() => {
     if (!isConsolePath || isMarketingPage) {
@@ -499,6 +534,13 @@ interface AssistantMessageRowProps {
   contextProjectId?: string | null
   organizationId?: string | null
   onCopyMessage: (messageId: string, text: string) => void
+  onSpeakMessage?: (messageId: string, text: string) => void
+  speaking?: boolean
+  onScoreMessage?: (
+    messageId: string,
+    score: AssistantMessageScore,
+  ) => void
+  scoring?: boolean
   onStartEditResend: (
     messageId: string,
     text: string,
@@ -1218,6 +1260,10 @@ const AssistantMessageRow = memo(
     contextProjectId,
     organizationId,
     onCopyMessage,
+    onSpeakMessage,
+    speaking = false,
+    onScoreMessage,
+    scoring = false,
     onStartEditResend,
     onRetry,
     canRetry = false,
@@ -1226,6 +1272,8 @@ const AssistantMessageRow = memo(
     const messageId = message.$id
     const role = message.role
     const messageText = message.contentText || ''
+    const messageScore =
+      message.score === 1 || message.score === -1 ? message.score : 0
     const isUserMessage = role.toLowerCase() === 'user'
     const isRtlMessage = useMemo(
       () => isRtlMessageText(messageText),
@@ -1308,7 +1356,7 @@ const AssistantMessageRow = memo(
               <div
                 dir="ltr"
                 className={cn(
-                  'mt-1 flex h-5 w-full items-center gap-0.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
+                  'mt-1 flex h-5 w-full items-center gap-2.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
                   alignRight ? 'justify-end' : 'justify-start',
                 )}
               >
@@ -1322,11 +1370,12 @@ const AssistantMessageRow = memo(
                       className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
                       aria-label={t('Copy message')}
+                      {...analyticsAttrs('agent-copy-message')}
                     >
                       {copied ? (
-                        <Check className="h-2.5 w-2.5" />
+                        <Check className="size-3.5" />
                       ) : (
-                        <Copy className="h-2.5 w-2.5" />
+                        <Copy className="size-3.5" />
                       )}
                     </Button>
                     <Button
@@ -1342,8 +1391,9 @@ const AssistantMessageRow = memo(
                         )
                       }
                       aria-label={t('Edit and resend message')}
+                      {...analyticsAttrs('agent-edit-resend')}
                     >
-                      <Pencil className="h-2.5 w-2.5" />
+                      <Pencil className="size-3.5" />
                     </Button>
                   </>
                 ) : (
@@ -1361,8 +1411,9 @@ const AssistantMessageRow = memo(
                         )
                       }
                       aria-label={t('Edit and resend message')}
+                      {...analyticsAttrs('agent-edit-resend')}
                     >
-                      <Pencil className="h-2.5 w-2.5" />
+                      <Pencil className="size-3.5" />
                     </Button>
                     <Button
                       type="button"
@@ -1371,11 +1422,12 @@ const AssistantMessageRow = memo(
                       className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
                       aria-label={t('Copy message')}
+                      {...analyticsAttrs('agent-copy-message')}
                     >
                       {copied ? (
-                        <Check className="h-2.5 w-2.5" />
+                        <Check className="size-3.5" />
                       ) : (
-                        <Copy className="h-2.5 w-2.5" />
+                        <Copy className="size-3.5" />
                       )}
                     </Button>
                   </>
@@ -1454,27 +1506,125 @@ const AssistantMessageRow = memo(
                   />
                 ) : null}
                 <div
-                  dir={isRtlMessage ? 'rtl' : 'ltr'}
+                  dir="ltr"
                   className={cn(
-                    'mt-1 flex h-5 w-full items-center justify-start gap-0.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
+                    'mt-1 flex h-5 w-full items-center justify-start gap-2.5 transition-opacity duration-150',
+                    messageScore !== 0 || speaking
+                      ? 'opacity-100 pointer-events-auto'
+                      : 'opacity-0 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
                   )}
                 >
                   {/* time ago hidden for now */}
                   {messageText.trim() ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
-                      onClick={() => onCopyMessage(messageId, messageText)}
-                      aria-label={t('Copy message')}
-                    >
-                      {copied ? (
-                        <Check className="h-2.5 w-2.5" />
-                      ) : (
-                        <Copy className="h-2.5 w-2.5" />
-                      )}
-                    </Button>
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => onCopyMessage(messageId, messageText)}
+                        aria-label={t('Copy message')}
+                        {...analyticsAttrs('agent-copy-message')}
+                      >
+                        {copied ? (
+                          <Check className="size-3.5" />
+                        ) : (
+                          <Copy className="size-3.5" />
+                        )}
+                      </Button>
+                      {onSpeakMessage ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className={cn(
+                            'h-4 w-4 p-0 hover:text-foreground',
+                            speaking
+                              ? 'text-foreground'
+                              : 'text-muted-foreground',
+                          )}
+                          onClick={() =>
+                            onSpeakMessage(messageId, resolvedAssistantText)
+                          }
+                          aria-label={
+                            speaking
+                              ? t('Stop reading aloud')
+                              : t('Read message aloud')
+                          }
+                          aria-pressed={speaking}
+                          {...analyticsAttrs('agent-speak-message')}
+                        >
+                          {speaking ? (
+                            <AgentSpeakStopIcon
+                              className="size-3.5"
+                              aria-hidden
+                            />
+                          ) : (
+                            <Volume2 className="size-3.5" aria-hidden />
+                          )}
+                        </Button>
+                      ) : null}
+                    </>
+                  ) : null}
+                  {onScoreMessage ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={scoring}
+                        className={cn(
+                          'h-4 w-4 p-0 hover:text-foreground',
+                          messageScore === 1
+                            ? 'text-foreground'
+                            : 'text-muted-foreground',
+                        )}
+                        onClick={() =>
+                          onScoreMessage(
+                            messageId,
+                            messageScore === 1 ? 0 : 1,
+                          )
+                        }
+                        aria-label={t('Thumbs up')}
+                        aria-pressed={messageScore === 1}
+                        {...analyticsAttrs('agent-thumbs-up')}
+                      >
+                        <ThumbsUp
+                          className={cn(
+                            'size-3.5',
+                            messageScore === 1 && 'fill-current',
+                          )}
+                        />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={scoring}
+                        className={cn(
+                          'h-4 w-4 p-0 hover:text-foreground',
+                          messageScore === -1
+                            ? 'text-foreground'
+                            : 'text-muted-foreground',
+                        )}
+                        onClick={() =>
+                          onScoreMessage(
+                            messageId,
+                            messageScore === -1 ? 0 : -1,
+                          )
+                        }
+                        aria-label={t('Thumbs down')}
+                        aria-pressed={messageScore === -1}
+                        {...analyticsAttrs('agent-thumbs-down')}
+                      >
+                        <ThumbsDown
+                          className={cn(
+                            'size-3.5',
+                            messageScore === -1 && 'fill-current',
+                          )}
+                        />
+                      </Button>
+                    </>
                   ) : null}
                   {canRetry && onRetry ? (
                     <Button
@@ -1484,8 +1634,9 @@ const AssistantMessageRow = memo(
                       className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onRetry(messageId)}
                       aria-label={t('Retry')}
+                      {...analyticsAttrs('agent-retry')}
                     >
-                      <RefreshCw className="h-2.5 w-2.5" />
+                      <RefreshCw className="size-3.5" />
                     </Button>
                   ) : null}
                   {/* time ago hidden for now */}
@@ -1510,7 +1661,9 @@ const AssistantMessageRow = memo(
     prev.canRetry === next.canRetry &&
     prev.showDebug === next.showDebug &&
     prev.placeholderCandidates === next.placeholderCandidates &&
-    prev.copied === next.copied,
+    prev.copied === next.copied &&
+    prev.speaking === next.speaking &&
+    prev.scoring === next.scoring,
 )
 
 const TYPING_IDLE_ACTIVITY = 0.15
@@ -1922,6 +2075,7 @@ export function AgentPanelContent({
   settingsSection?: AgentSettingsSectionId
 } = {}) {
   const t = useT()
+  const { isMac } = usePlatform()
   const navigate = useNavigate()
   const { closeChat, activeConversationId, setActiveConversationId } =
     useAgentChat()
@@ -2124,6 +2278,9 @@ export function AgentPanelContent({
   )
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(
+    null,
+  )
   const [isCopyingConversation, setIsCopyingConversation] = useState(false)
   const [copiedConversation, setCopiedConversation] = useState(false)
   const copiedConversationTimeoutRef = useRef<number | null>(null)
@@ -2269,6 +2426,7 @@ export function AgentPanelContent({
   const deleteConversationMutation = useDeleteAssistantConversation()
   const createMessageMutation = useCreateAssistantMessage()
   const updateMessageMutation = useUpdateAssistantMessage()
+  const scoreMessageMutation = useScoreAssistantMessage()
   const updateConversationMutation = useUpdateAssistantConversation()
   const uploadAssistantAttachmentsMutation = useUploadAssistantAttachments()
   const { data: assistantModels = [] } = useAssistantModels({
@@ -3014,8 +3172,14 @@ export function AgentPanelContent({
       if (copiedConversationTimeoutRef.current !== null) {
         window.clearTimeout(copiedConversationTimeoutRef.current)
       }
+      stopSpeaking()
     }
   }, [])
+
+  useEffect(() => {
+    stopSpeaking()
+    setSpeakingMessageId(null)
+  }, [activeConversationId])
 
   useEffect(() => {
     pendingAttachmentsRef.current = pendingAttachments
@@ -3186,6 +3350,9 @@ export function AgentPanelContent({
 
   const handleCreateConversation = async () => {
     if (interactionsDisabled) return
+    // Carry the current prompt into the new agent before the conversation
+    // switch restores drafts (otherwise the textarea would clear).
+    const carriedPrompt = inputRef.current?.value ?? input
     // New agents default to the project currently in view when on a project route.
     if (routeProjectId) {
       setSelectedContextProjectId(routeProjectId)
@@ -3204,15 +3371,105 @@ export function AgentPanelContent({
         modelId: selectedModelId || undefined,
         modelTemp: resolveModelTempForSelection(selectedModelId),
       })
+      writeComposerDraft(conversation.$id, carriedPrompt)
+      // Avoid leaving a duplicate draft under the empty-agent key.
+      if (!activeConversationId) {
+        clearComposerDraft(null)
+      }
       closeModelEditor()
       setActiveConversationId(conversation.$id)
       navigateToAgent(conversation.$id)
       setConversationsPopoverOpen(false)
-      focusInput()
+      focusInput(true)
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to create agent')))
     }
   }
+
+  const handleCreateConversationRef = useRef(handleCreateConversation)
+  handleCreateConversationRef.current = handleCreateConversation
+
+  const canCreateAgentShortcut =
+    !interactionsDisabled &&
+    isAgentsSection &&
+    !activeAutomationId &&
+    !createConversationMutation.isPending
+
+  const onNewAgentShortcut = useCallback(() => {
+    if (!canCreateAgentShortcut) return
+    void handleCreateConversationRef.current()
+  }, [canCreateAgentShortcut])
+
+  useKeyboardShortcut(AGENT_NEW_SHORTCUT_COMBOS[0], onNewAgentShortcut, {
+    enabled: canCreateAgentShortcut,
+    ignoreInputs: false,
+    capture: true,
+  })
+  useKeyboardShortcut(AGENT_NEW_SHORTCUT_COMBOS[1], onNewAgentShortcut, {
+    enabled: canCreateAgentShortcut,
+    ignoreInputs: false,
+    capture: true,
+  })
+
+  const canCreateAutomationShortcut = !interactionsDisabled
+
+  const onNewAutomationShortcut = useCallback(() => {
+    if (!canCreateAutomationShortcut) return
+    navigateToAutomations({ mode: 'create' })
+  }, [canCreateAutomationShortcut, navigateToAutomations])
+
+  useKeyboardShortcut(
+    AGENT_NEW_AUTOMATION_SHORTCUT_COMBOS[0],
+    onNewAutomationShortcut,
+    {
+      enabled: canCreateAutomationShortcut,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
+  useKeyboardShortcut(
+    AGENT_NEW_AUTOMATION_SHORTCUT_COMBOS[1],
+    onNewAutomationShortcut,
+    {
+      enabled: canCreateAutomationShortcut,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
+
+  const onFocusComposerShortcut = useCallback(() => {
+    if (interactionsDisabled) return
+    if (!isAgentsSection) return
+    focusInput(true)
+  }, [focusInput, interactionsDisabled, isAgentsSection])
+
+  useKeyboardShortcut(
+    AGENT_FOCUS_COMPOSER_SHORTCUT_COMBOS[0],
+    onFocusComposerShortcut,
+    {
+      enabled: !interactionsDisabled && isAgentsSection,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
+  useKeyboardShortcut(
+    AGENT_FOCUS_COMPOSER_SHORTCUT_COMBOS[1],
+    onFocusComposerShortcut,
+    {
+      enabled: !interactionsDisabled && isAgentsSection,
+      ignoreInputs: false,
+      capture: true,
+    },
+  )
+
+  const newAgentShortcutLabel = formatDisplayKeys(
+    AGENT_NEW_SHORTCUT_RAW,
+    isMac,
+  ).join('')
+  const focusComposerShortcutLabel = formatDisplayKeys(
+    AGENT_FOCUS_COMPOSER_SHORTCUT_RAW,
+    isMac,
+  ).join('')
 
   const handleSelectModel = async (modelId: string) => {
     if (interactionsDisabled) return
@@ -3805,6 +4062,57 @@ export function AgentPanelContent({
     [t],
   )
 
+  const handleSpeakMessage = useCallback(
+    (messageId: string, text: string) => {
+      if (!isSpeechSynthesisSupported()) {
+        toast.error(t('Text to speech is not supported in this browser'))
+        return
+      }
+      if (speakingMessageId === messageId) {
+        stopSpeaking()
+        setSpeakingMessageId(null)
+        return
+      }
+      const trimmed = text.trim()
+      if (!trimmed) return
+
+      setSpeakingMessageId(messageId)
+      speakText(trimmed, {
+        lang: getActiveLanguage(),
+        onEnd: () => {
+          setSpeakingMessageId((current) =>
+            current === messageId ? null : current,
+          )
+        },
+        onError: (error) => {
+          setSpeakingMessageId((current) =>
+            current === messageId ? null : current,
+          )
+          toast.error(
+            getErrorMessage(error, t('Failed to read message aloud')),
+          )
+        },
+      })
+    },
+    [speakingMessageId, t],
+  )
+
+  const handleScoreMessage = useCallback(
+    async (messageId: string, score: AssistantMessageScore) => {
+      if (!activeConversationId || scoreMessageMutation.isPending) return
+      try {
+        await scoreMessageMutation.mutateAsync({
+          conversationId: activeConversationId,
+          messageId,
+          score,
+        })
+      } catch (error) {
+        toast.error(getErrorMessage(error, t('Failed to score message')))
+      }
+    },
+    [activeConversationId, scoreMessageMutation, t],
+  )
+
   const handleCopyConversationDebug = useCallback(async () => {
     if (!activeConversationId || isCopyingConversation) return
 
@@ -4153,10 +4461,12 @@ export function AgentPanelContent({
       type="button"
       variant="outline"
       className="h-8 shrink-0 gap-1.5 px-2.5 text-[12px]"
+      {...analyticsAttrs('create-agent')}
       onClick={() => {
         void handleCreateConversation()
       }}
       disabled={interactionsDisabled || createConversationMutation.isPending}
+      title={`${t('Create agent')} (${newAgentShortcutLabel})`}
     >
       {createConversationMutation.isPending ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -4164,6 +4474,9 @@ export function AgentPanelContent({
         <Plus className="h-3.5 w-3.5" />
       )}
       {t('Create agent')}
+      <kbd className="ms-0.5 hidden rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
+        {newAgentShortcutLabel}
+      </kbd>
     </Button>
   )
 
@@ -4205,10 +4518,18 @@ export function AgentPanelContent({
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
           <TabsList className="mb-3 grid h-9 w-full grid-cols-2 shadow-none">
-            <TabsTrigger value="agents" className="w-full text-[12px]">
+            <TabsTrigger
+              value="agents"
+              className="w-full text-[12px]"
+              {...analyticsAttrs('agent-tab-agents')}
+            >
               {t('Agents')}
             </TabsTrigger>
-            <TabsTrigger value="automations" className="w-full text-[12px]">
+            <TabsTrigger
+              value="automations"
+              className="w-full text-[12px]"
+              {...analyticsAttrs('agent-tab-automations')}
+            >
               {t('Automations')}
             </TabsTrigger>
           </TabsList>
@@ -4598,6 +4919,7 @@ export function AgentPanelContent({
           type="button"
           variant="ghost"
           className="h-9 w-full justify-start gap-1.5 px-2 text-[13px] text-muted-foreground hover:text-foreground"
+          {...analyticsAttrs('agent-back')}
           onClick={() => {
             leaveAgentPage()
           }}
@@ -4693,6 +5015,7 @@ export function AgentPanelContent({
             className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label={t('Settings')}
             title={t('Settings')}
+            {...analyticsAttrs('agent-settings')}
           >
             <Settings className="h-3.5 w-3.5" />
           </button>
@@ -4704,6 +5027,7 @@ export function AgentPanelContent({
                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 aria-label={t('Open in new tab')}
                 title={t('Open in new tab')}
+                {...analyticsAttrs('agent-open-new-tab')}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
               </button>
@@ -4712,6 +5036,7 @@ export function AgentPanelContent({
                 onClick={handleCloseChat}
                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 aria-label={t('Close')}
+                {...analyticsAttrs('agent-close')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -4809,6 +5134,7 @@ export function AgentPanelContent({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 shrink-0"
+                        {...analyticsAttrs('create-agent')}
                         onClick={() => {
                           void handleCreateConversation()
                         }}
@@ -4817,6 +5143,7 @@ export function AgentPanelContent({
                           createConversationMutation.isPending
                         }
                         aria-label={t('Create agent')}
+                        title={`${t('Create agent')} (${newAgentShortcutLabel})`}
                       >
                         {createConversationMutation.isPending ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -4858,6 +5185,7 @@ export function AgentPanelContent({
                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 aria-label={t('Settings')}
                 title={t('Settings')}
+                {...analyticsAttrs('agent-settings')}
               >
                 <Settings className="h-3.5 w-3.5" />
               </button>
@@ -4869,6 +5197,7 @@ export function AgentPanelContent({
                     className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     aria-label={t('Open in new tab')}
                     title={t('Open in new tab')}
+                    {...analyticsAttrs('agent-open-new-tab')}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                   </button>
@@ -4877,6 +5206,7 @@ export function AgentPanelContent({
                     onClick={handleCloseChat}
                     className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     aria-label={t('Close')}
+                    {...analyticsAttrs('agent-close')}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -5027,6 +5357,9 @@ export function AgentPanelContent({
                           'failed' ||
                         activeConversation?.status?.toLowerCase() ===
                           'stopped')
+                    const canScoreMessage =
+                      !isUserMessage &&
+                      !isAssistantMessageInFlight(message.status)
 
                     return (
                       <AssistantMessageRow
@@ -5040,6 +5373,21 @@ export function AgentPanelContent({
                         contextProjectId={contextProjectId}
                         organizationId={organizationId}
                         onCopyMessage={handleCopyMessage}
+                        onSpeakMessage={
+                          !isUserMessage &&
+                          !isAssistantMessageInFlight(message.status)
+                            ? handleSpeakMessage
+                            : undefined
+                        }
+                        speaking={speakingMessageId === message.$id}
+                        onScoreMessage={
+                          canScoreMessage ? handleScoreMessage : undefined
+                        }
+                        scoring={
+                          scoreMessageMutation.isPending &&
+                          scoreMessageMutation.variables?.messageId ===
+                            message.$id
+                        }
                         onStartEditResend={handleStartEditResend}
                         onRetry={handleRetryMessage}
                         canRetry={canRetryMessage}
@@ -5455,6 +5803,7 @@ export function AgentPanelContent({
                   dir={isInputRtl ? 'rtl' : 'ltr'}
                   rows={1}
                   disabled={interactionsDisabled}
+                  title={`${t('Focus prompt')} (${focusComposerShortcutLabel})`}
                   className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[13px] leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     height: '40px',
@@ -5485,6 +5834,7 @@ export function AgentPanelContent({
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                   )}
                   aria-label={t('Attach files')}
+                  {...analyticsAttrs('agent-attach')}
                 >
                   <Paperclip className="h-3.5 w-3.5" />
                 </button>
@@ -5507,6 +5857,7 @@ export function AgentPanelContent({
                         : t('Voice input')
                     }
                     aria-pressed={isVoiceListening}
+                    {...analyticsAttrs('agent-voice')}
                   >
                     {isVoiceStarting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -5527,6 +5878,7 @@ export function AgentPanelContent({
                     }
                     className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent disabled:bg-muted disabled:text-muted-foreground"
                     aria-label={t('Stop')}
+                    {...analyticsAttrs('agent-stop')}
                   >
                     {updateConversationMutation.isPending ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -5558,6 +5910,7 @@ export function AgentPanelContent({
                   aria-label={
                     isConversationRunning ? t('Add to queue') : t('Send')
                   }
+                  {...analyticsAttrs('agent-send')}
                 >
                   {createMessageMutation.isPending ||
                   updateMessageMutation.isPending ||

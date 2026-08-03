@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
   closeDialogBeforeOverlayUnmount,
   openDialogAfterOverlayCloses,
@@ -26,6 +27,9 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { AGENT_NEW_AUTOMATION_SHORTCUT_RAW } from '@/lib/assistant/agent-shortcuts'
 import {
   useAssistantAutomations,
   useDeleteAssistantAutomation,
@@ -51,6 +55,11 @@ export function AgentAutomationsPanel({
   onEdit,
 }: AgentAutomationsPanelProps) {
   const t = useT()
+  const { isMac } = usePlatform()
+  const newAutomationShortcutLabel = formatDisplayKeys(
+    AGENT_NEW_AUTOMATION_SHORTCUT_RAW,
+    isMac,
+  ).join('')
   const [automationSearch, setAutomationSearch] = useState('')
   const [debouncedAutomationSearch, setDebouncedAutomationSearch] = useState('')
   const { data: automations = [], isLoading } = useAssistantAutomations(
@@ -113,11 +122,16 @@ export function AgentAutomationsPanel({
           type="button"
           variant="outline"
           className="h-8 shrink-0 gap-1.5 px-2.5 text-[12px]"
+          {...analyticsAttrs('create-agent-automation')}
           onClick={onCreate}
           disabled={disabled}
+          title={`${t('Create automation')} (${newAutomationShortcutLabel})`}
         >
           <Plus className="h-3.5 w-3.5" />
           {t('Create automation')}
+          <kbd className="ms-0.5 hidden rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
+            {newAutomationShortcutLabel}
+          </kbd>
         </Button>
       </div>
 

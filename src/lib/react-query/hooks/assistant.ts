@@ -370,6 +370,74 @@ export function useUpdateAssistantMessage() {
   })
 }
 
+/** Feedback score: `1` thumbs up, `-1` thumbs down, `0` clear. */
+export type AssistantMessageScore = 1 | -1 | 0
+
+export function useScoreAssistantMessage() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      conversationId: string
+      messageId: string
+      score: AssistantMessageScore
+    }) => {
+      return await sdk.forConsole.agent.updateMessage({
+        conversationId: params.conversationId,
+        messageId: params.messageId,
+        score: String(params.score),
+      })
+    },
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({
+        queryKey: ['agent', 'messages', params.conversationId],
+      })
+
+      const previous = queryClient.getQueriesData<{
+        messages: Models.AgentMessage[]
+        total: number
+      }>({ queryKey: ['agent', 'messages', params.conversationId] })
+
+      queryClient.setQueriesData<{
+        messages: Models.AgentMessage[]
+        total: number
+      }>({ queryKey: ['agent', 'messages', params.conversationId] }, (current) => {
+        if (!current) return current
+        return {
+          ...current,
+          messages: current.messages.map((message) =>
+            message.$id === params.messageId
+              ? { ...message, score: params.score }
+              : message,
+          ),
+        }
+      })
+
+      return { previous }
+    },
+    onError: (_error, params, context) => {
+      if (!context?.previous) return
+      for (const [queryKey, data] of context.previous) {
+        queryClient.setQueryData(queryKey, data)
+      }
+    },
+    onSuccess: (message) => {
+      queryClient.setQueriesData<{
+        messages: Models.AgentMessage[]
+        total: number
+      }>({ queryKey: ['agent', 'messages', message.conversationId] }, (current) => {
+        if (!current) return current
+        return {
+          ...current,
+          messages: current.messages.map((cached) =>
+            cached.$id === message.$id ? { ...cached, ...message } : cached,
+          ),
+        }
+      })
+    },
+  })
+}
+
 export function useUpdateAssistantConversation() {
   const queryClient = useQueryClient()
 

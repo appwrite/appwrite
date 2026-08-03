@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { McpIcon } from '@/components/global/shared/McpIcon'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -349,6 +350,7 @@ function McpConnectionsList({
               size="sm"
               className="h-9 gap-1.5 text-[13px]"
               disabled={isBusy}
+              {...analyticsAttrs('agent-mcp-connect')}
               onClick={() => void handleConnectAppwrite()}
             >
               {connecting || upsertPending ? (
@@ -447,6 +449,7 @@ function McpConnectionsList({
                     variant={connected ? 'outline' : 'default'}
                     className="h-7 px-2.5 text-[11px]"
                     disabled={isBusy}
+                    {...analyticsAttrs('agent-mcp-connect')}
                     onClick={() => void handleConnectAppwrite()}
                   >
                     {connecting || upsertPending ? (
@@ -467,6 +470,7 @@ function McpConnectionsList({
                     variant="outline"
                     className="h-7 px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
                     disabled={isBusy}
+                    {...analyticsAttrs('agent-mcp-disconnect')}
                     onClick={() => void handleDisconnect(item.id)}
                   >
                     <Trash2 className="me-1 h-3 w-3" />
