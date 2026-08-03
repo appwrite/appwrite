@@ -323,6 +323,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',

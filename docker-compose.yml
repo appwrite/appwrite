@@ -176,6 +176,7 @@ services:
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -299,6 +300,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
@@ -337,6 +339,7 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_CONSOLE_URL_SCHEME=root
@@ -402,6 +405,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
@@ -447,6 +451,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-builds:
@@ -488,6 +493,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
@@ -580,6 +586,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -610,6 +617,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -691,6 +699,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
@@ -736,6 +745,7 @@ services:
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
@@ -778,6 +788,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -821,6 +832,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -858,6 +870,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
       - _APP_SMS_PROJECTS_DENY_LIST
@@ -926,6 +939,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
@@ -948,6 +962,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -995,6 +1010,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -1038,6 +1054,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1077,6 +1094,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1116,6 +1134,7 @@ services:
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1

@@ -1,6 +1,6 @@
 <?php
 
-use Utopia\Span\Exporter;
+use Appwrite\Span\Factory as SpanExporterFactory;
 use Utopia\Span\Span;
 use Utopia\Span\Storage;
 use Utopia\System\System;
@@ -12,7 +12,7 @@ $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
 $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
 $traceEnabled = $traceProjectId !== '' || $traceFunctionId !== '';
 
-Span::setExporters(new Exporter\Pretty(sampler: function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
+$sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunctionId): bool {
     if (\str_starts_with($span->getAction(), 'listener.')) {
         return $span->getError() !== null;
     }
@@ -29,4 +29,6 @@ Span::setExporters(new Exporter\Pretty(sampler: function (Span $span) use ($trac
     }
 
     return true;
-}));
+};
+
+Span::setExporters(SpanExporterFactory::createExporter(sampler: $sampler));
