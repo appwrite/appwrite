@@ -16,14 +16,14 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
-import { AssistantRenameDialog } from '@/components/global/providers/ai-chat/AssistantRenameDialog'
+import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
 import {
   closeDialogBeforeOverlayUnmount,
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
-type AssistantConversationContextMenuProps = {
+type AgentConversationContextMenuProps = {
   title: string
   disabled?: boolean
   isArchived?: boolean
@@ -36,7 +36,7 @@ type AssistantConversationContextMenuProps = {
   onDelete: () => Promise<void> | void
 }
 
-export function AssistantConversationContextMenu({
+export function AgentConversationContextMenu({
   title,
   disabled = false,
   isArchived = false,
@@ -47,7 +47,7 @@ export function AssistantConversationContextMenu({
   onUnpin,
   onArchive,
   onDelete,
-}: AssistantConversationContextMenuProps) {
+}: AgentConversationContextMenuProps) {
   const t = useT()
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -127,7 +127,7 @@ export function AssistantConversationContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
-      <AssistantRenameDialog
+      <AgentRenameDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}
         title={title}

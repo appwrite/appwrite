@@ -47,7 +47,7 @@ export type ConsoleProfileFeatures = {
   oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
-  /** In-app AI assistant chat panel and header button */
+  /** In-app AI agent chat panel and header button */
   aiAssistant: boolean
   /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
   executionLogs: boolean
@@ -101,7 +101,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
-  aiAssistant: 'AI assistant',
+  aiAssistant: 'AI agent',
   executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',

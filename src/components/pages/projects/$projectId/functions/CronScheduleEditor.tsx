@@ -52,7 +52,13 @@ interface CronScheduleEditorProps {
   value: string
   onChange: (value: string) => void
   disabled?: boolean
+  /** When false, hides the Disabled (no schedule) preset. Defaults to true. */
+  allowDisabled?: boolean
+  /** Copy for the Disabled preset. Defaults to function schedule wording. */
+  disabledDescription?: string
 }
+
+const FALLBACK_SCHEDULE_PRESET: SchedulePreset = 'weekly-monday'
 
 // Preset categories
 type PresetCategory = 'frequent' | 'daily' | 'weekly' | 'monthly'
@@ -357,21 +363,58 @@ export function CronScheduleEditor({
   value,
   onChange,
   disabled,
+  allowDisabled = true,
+  disabledDescription = 'Function will not run on a schedule',
 }: CronScheduleEditorProps) {
   const t = useT()
   const [mode, setMode] = useState<'preset' | 'advanced'>('preset')
-  const [preset, setPreset] = useState<SchedulePreset>('disabled')
+  const [preset, setPreset] = useState<SchedulePreset>(
+    allowDisabled ? 'disabled' : FALLBACK_SCHEDULE_PRESET,
+  )
   const [customCron, setCustomCron] = useState('')
   const [popoverOpen, setPopoverOpen] = useState(false)
 
   const selectPreset = (nextPreset: SchedulePreset) => {
+    if (!allowDisabled && nextPreset === 'disabled') {
+      nextPreset = FALLBACK_SCHEDULE_PRESET
+    }
     setPreset(nextPreset)
     onChange(getCronFromPreset(nextPreset))
   }
 
+  // Sheet/Dialog RemoveScroll calls preventDefault on wheel for body-portaled
+  // popovers. A non-passive listener re-applies the delta to the list.
+  const [presetListEl, setPresetListEl] = useState<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!presetListEl || !popoverOpen) return
+    const onWheel = (event: globalThis.WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = presetListEl
+      if (scrollHeight <= clientHeight) return
+      const next = Math.min(
+        Math.max(scrollTop + event.deltaY, 0),
+        scrollHeight - clientHeight,
+      )
+      if (next === scrollTop) return
+      presetListEl.scrollTop = next
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    presetListEl.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      presetListEl.removeEventListener('wheel', onWheel)
+    }
+  }, [presetListEl, popoverOpen])
+
   // Sync internal editor state when the value prop changes externally.
   useEffect(() => {
     if (!value || !value.trim()) {
+      if (!allowDisabled) {
+        setPreset(FALLBACK_SCHEDULE_PRESET)
+        setMode('preset')
+        setCustomCron('')
+        onChange(getCronFromPreset(FALLBACK_SCHEDULE_PRESET))
+        return
+      }
       setPreset('disabled')
       setMode('preset')
       setCustomCron('')
@@ -387,7 +430,8 @@ export function CronScheduleEditor({
 
     setCustomCron(value)
     setMode('advanced')
-  }, [value])
+    // Intentionally omit onChange: parent handlers are often inline.
+  }, [value, allowDisabled])
 
   const validation = useMemo(() => {
     let currentValue = ''
@@ -428,13 +472,17 @@ export function CronScheduleEditor({
         currentValue = presetOption?.cron || ''
       }
 
-      let nextPreset: SchedulePreset = 'disabled'
+      let nextPreset: SchedulePreset = allowDisabled
+        ? 'disabled'
+        : FALLBACK_SCHEDULE_PRESET
       if (currentValue.trim()) {
         const matchingPreset = PRESET_OPTIONS.find(
           (p) => p.cron === currentValue,
         )
         if (matchingPreset) {
           nextPreset = matchingPreset.value
+        } else if (!allowDisabled) {
+          nextPreset = FALLBACK_SCHEDULE_PRESET
         }
       }
 
@@ -511,7 +559,7 @@ export function CronScheduleEditor({
             >
               {t('Schedule preset')}
             </Label>
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen} modal>
               <PopoverTrigger asChild>
                 <Button
                   id="schedule-preset"
@@ -528,35 +576,42 @@ export function CronScheduleEditor({
                   <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
+              <PopoverContent
+                className="flex max-h-[min(320px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] min-w-[280px] flex-col overflow-hidden p-0"
+                align="start"
+              >
+                <Command className="flex max-h-[min(320px,var(--radix-popover-content-available-height))] flex-col overflow-hidden">
                   <CommandInput
                     placeholder={t('Search presets...')}
                     className="h-9"
                   />
-                  <CommandList>
+                  <CommandList
+                    ref={setPresetListEl}
+                    className="min-h-0 max-h-[240px] flex-1 overflow-y-auto overscroll-contain"
+                  >
                     <CommandEmpty>{t('No preset found.')}</CommandEmpty>
 
-                    {/* Disabled */}
-                    <CommandGroup>
-                      <CommandItem
-                        value="disabled"
-                        onSelect={() => {
-                          selectPreset('disabled')
-                          setPopoverOpen(false)
-                        }}
-                        className="px-3 py-2.5"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] font-medium">
-                            {t('Disabled')}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground leading-tight">
-                            {t('Function will not run on a schedule')}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    </CommandGroup>
+                    {allowDisabled ? (
+                      <CommandGroup>
+                        <CommandItem
+                          value="disabled"
+                          onSelect={() => {
+                            selectPreset('disabled')
+                            setPopoverOpen(false)
+                          }}
+                          className="px-3 py-2.5"
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[13px] font-medium">
+                              {t('Disabled')}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground leading-tight">
+                              {t(disabledDescription)}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      </CommandGroup>
+                    ) : null}
 
                     {/* Frequent */}
                     <CommandGroup heading={t('Frequent')}>

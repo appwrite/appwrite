@@ -95,7 +95,7 @@ import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
-import { useAIChat } from '@/components/global/providers/AIChat'
+import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -293,7 +293,7 @@ export function ConsoleHeader({
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
-  const { toggleChat } = useAIChat()
+  const { toggleChat } = useAgentChat()
   const queryClient = useQueryClient()
   const {
     account,
@@ -1260,7 +1260,7 @@ export function ConsoleHeader({
                   <TooltipTrigger asChild>
                     <button
                       onClick={toggleChat}
-                      {...analyticsAttrs('ai-assistant-open')}
+                      {...analyticsAttrs('ai-agent-open')}
                       className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                     >
                       <Bot className="h-4 w-4" />

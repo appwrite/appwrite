@@ -157,6 +157,14 @@ interface ProjectSelectorProps {
   isMobile?: boolean
   /** When set (e.g. org overview layout), matches header create-org behavior */
   onCreateOrganization?: () => void
+  /**
+   * Select mode: choosing a project calls this instead of navigating to the
+   * project route. Used by the agent composer for context selection.
+   */
+  onProjectSelect?: (projectId: string) => void
+  /** Compact trigger for dense UI (e.g. agent composer footer). */
+  compact?: boolean
+  disabled?: boolean
 }
 
 export function ProjectSelector({
@@ -165,10 +173,14 @@ export function ProjectSelector({
   projectId,
   isMobile,
   onCreateOrganization,
+  onProjectSelect,
+  compact = false,
+  disabled = false,
 }: ProjectSelectorProps) {
   const t = useT()
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
+  const selectionMode = typeof onProjectSelect === 'function'
   const navigate = useNavigate()
   const { account } = useAuth()
   const [open, setOpen] = useState(false)
@@ -255,6 +267,12 @@ export function ProjectSelector({
 
   // Sync selected project when projectId prop changes
   useEffect(() => {
+    if (!projectId) {
+      if (selectionMode) {
+        setSelectedProject(null)
+      }
+      return
+    }
     if (currentProject) {
       setSelectedProject(currentProject)
       const team = teams.find((t) => t.$id === currentProject.teamId)
@@ -262,7 +280,7 @@ export function ProjectSelector({
         setSelectedTeam(team)
       }
     }
-  }, [currentProject, teams])
+  }, [currentProject, teams, projectId, selectionMode])
 
   // Reset project search when team (organization) changes
   useEffect(() => {
@@ -527,8 +545,15 @@ export function ProjectSelector({
   const handleSelectProject = (project: Project, event?: React.MouseEvent) => {
     // Only update state if it's a regular click (not Ctrl/Cmd click for new tab)
     // Middle-click and right-click "Open in new tab" won't trigger onClick, so we're safe
-    if (event && (event.ctrlKey || event.metaKey || event.shiftKey)) {
+    if (
+      !selectionMode &&
+      event &&
+      (event.ctrlKey || event.metaKey || event.shiftKey)
+    ) {
       return // Let the browser handle the link naturally (opens in new tab/window)
+    }
+    if (selectionMode && event) {
+      event.preventDefault()
     }
     setSelectedProject(project)
     // Update selected team to match the project's team when a project is clicked
@@ -537,6 +562,9 @@ export function ProjectSelector({
       setSelectedTeam(projectTeam)
     }
     setOpen(false)
+    if (selectionMode) {
+      onProjectSelect?.(project.$id)
+    }
   }
 
   const handleCreateOrganization = useCallback(() => {
@@ -592,6 +620,9 @@ export function ProjectSelector({
   ])
 
   useLayoutEffect(() => {
+    // Select-mode instances (agent composer) must not gate the fullscreen loader.
+    if (selectionMode) return
+
     if (!projectId) {
       resetInitialLoaderShellGate(INITIAL_LOADER_SHELL_GATE.projectSelector)
       return
@@ -601,7 +632,7 @@ export function ProjectSelector({
       INITIAL_LOADER_SHELL_GATE.projectSelector,
       isProjectSelectorShellReady,
     )
-  }, [projectId, isProjectSelectorShellReady])
+  }, [projectId, isProjectSelectorShellReady, selectionMode])
 
   // Do not reset the shell gate on unmount. Access-denied / not-found layouts
   // unmount this selector after releasing the gate; a cleanup reset would put
@@ -619,16 +650,65 @@ export function ProjectSelector({
     )
   }
 
-  if (!resolvedProject || !resolvedTeam) {
+  // Navigate mode requires a resolved project. Select mode can open with just a team.
+  if (!selectionMode && (!resolvedProject || !resolvedTeam)) {
     return null
   }
 
+  if (selectionMode && !resolvedTeam) {
+    if (orgsLoading) {
+      return (
+        <ProjectSelectorTriggerSkeleton
+          className={className}
+          isMobile={isMobile}
+          supportsMultiTenancy={supportsMultiTenancy}
+          isCloud={isCloud}
+        />
+      )
+    }
+    return null
+  }
+
+  if (!resolvedTeam) {
+    return null
+  }
+
+  const contentProps = {
+    selectedTeam: resolvedTeam,
+    onSelectTeam: handleSelectTeam,
+    selectedProject: resolvedProject,
+    handleSelectProject,
+    teamSearch,
+    setTeamSearch,
+    projectSearch,
+    setProjectSearch,
+    filteredTeams,
+    displayProjects: stableDisplayProjects,
+    pinnedProjectIds: stablePinnedIds,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    organizations,
+    isCloud,
+    supportsMultiTenancy,
+    currentProjectId: projectId,
+    billingFailureTeamId,
+    billingOrgReadonly,
+    onCreateProject: () => setCreateProjectDialogOpen(true),
+    onCreateOrganization: handleCreateOrganization,
+    prefetchTeamProjects,
+    selectionMode,
+  }
+
   if (collapsed) {
+    if (!resolvedProject) return null
     return (
       <>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
+              type="button"
+              disabled={disabled}
               {...analyticsAttrs('project-switcher')}
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent/80 cursor-pointer',
@@ -647,49 +727,30 @@ export function ProjectSelector({
               supportsMultiTenancy ? 'w-[520px]' : 'w-[320px]',
             )}
           >
-            <ProjectSelectorContent
-              selectedTeam={resolvedTeam}
-              onSelectTeam={handleSelectTeam}
-              selectedProject={resolvedProject}
-              handleSelectProject={handleSelectProject}
-              teamSearch={teamSearch}
-              setTeamSearch={setTeamSearch}
-              projectSearch={projectSearch}
-              setProjectSearch={setProjectSearch}
-              filteredTeams={filteredTeams}
-              displayProjects={stableDisplayProjects}
-              pinnedProjectIds={stablePinnedIds}
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              fetchNextPage={fetchNextPage}
-              organizations={organizations}
-              isCloud={isCloud}
-              supportsMultiTenancy={supportsMultiTenancy}
-              currentProjectId={projectId}
-              billingFailureTeamId={billingFailureTeamId}
-              billingOrgReadonly={billingOrgReadonly}
-              onCreateProject={() => setCreateProjectDialogOpen(true)}
-              onCreateOrganization={handleCreateOrganization}
-              prefetchTeamProjects={prefetchTeamProjects}
-            />
+            <ProjectSelectorContent {...contentProps} />
           </PopoverContent>
         </Popover>
 
-        <CreateProjectDialog
-          open={createProjectDialogOpen}
-          onOpenChange={setCreateProjectDialogOpen}
-          teamId={resolvedTeam.$id}
-          currentProjectsCount={projectsCount}
-        />
+        {!selectionMode ? (
+          <CreateProjectDialog
+            open={createProjectDialogOpen}
+            onOpenChange={setCreateProjectDialogOpen}
+            teamId={resolvedTeam.$id}
+            currentProjectsCount={projectsCount}
+          />
+        ) : null}
       </>
     )
   }
 
   // Mobile: use fullscreen Dialog
   if (isMobile) {
+    if (!resolvedProject) return null
     return (
       <>
         <button
+          type="button"
+          disabled={disabled}
           {...analyticsAttrs('project-switcher')}
           onClick={() => setOpen(true)}
           className={cn(
@@ -743,6 +804,7 @@ export function ProjectSelector({
                 {t('Select project')}
               </h2>
               <button
+                type="button"
                 onClick={() => setOpen(false)}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
@@ -751,40 +813,18 @@ export function ProjectSelector({
             </div>
 
             {/* Content */}
-            <MobileProjectSelectorContent
-              selectedTeam={resolvedTeam}
-              onSelectTeam={handleSelectTeam}
-              selectedProject={resolvedProject}
-              handleSelectProject={handleSelectProject}
-              teamSearch={teamSearch}
-              setTeamSearch={setTeamSearch}
-              projectSearch={projectSearch}
-              setProjectSearch={setProjectSearch}
-              filteredTeams={filteredTeams}
-              displayProjects={stableDisplayProjects}
-              pinnedProjectIds={stablePinnedIds}
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              fetchNextPage={fetchNextPage}
-              organizations={organizations}
-              isCloud={isCloud}
-              supportsMultiTenancy={supportsMultiTenancy}
-              currentProjectId={projectId}
-              billingFailureTeamId={billingFailureTeamId}
-              billingOrgReadonly={billingOrgReadonly}
-              onCreateProject={() => setCreateProjectDialogOpen(true)}
-              onCreateOrganization={handleCreateOrganization}
-              prefetchTeamProjects={prefetchTeamProjects}
-            />
+            <MobileProjectSelectorContent {...contentProps} />
           </DialogContent>
         </Dialog>
 
-        <CreateProjectDialog
-          open={createProjectDialogOpen}
-          onOpenChange={setCreateProjectDialogOpen}
-          teamId={resolvedTeam.$id}
-          currentProjectsCount={projectsCount}
-        />
+        {!selectionMode ? (
+          <CreateProjectDialog
+            open={createProjectDialogOpen}
+            onOpenChange={setCreateProjectDialogOpen}
+            teamId={resolvedTeam.$id}
+            currentProjectsCount={projectsCount}
+          />
+        ) : null}
       </>
     )
   }
@@ -794,49 +834,91 @@ export function ProjectSelector({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
+            type="button"
+            disabled={disabled}
             {...analyticsAttrs('project-switcher')}
             className={cn(
-              'flex h-9 max-w-full min-w-0 items-center gap-2 overflow-visible rounded-md px-2 py-1.5 text-start transition-colors hover:bg-accent cursor-pointer',
+              'flex max-w-full min-w-0 items-center overflow-visible rounded-md text-start transition-colors hover:bg-accent cursor-pointer disabled:pointer-events-none disabled:opacity-50',
+              compact
+                ? 'h-7 max-w-[200px] gap-1.5 px-2 py-1'
+                : 'h-9 gap-2 px-2 py-1.5',
               className,
             )}
           >
-            <InitialsAvatar name={resolvedProject.name} size="sm" />
+            {resolvedProject ? (
+              <InitialsAvatar
+                name={resolvedProject.name}
+                size={compact ? 'xs' : 'sm'}
+                className={compact ? 'h-3.5 w-3.5 text-[8px]' : undefined}
+              />
+            ) : (
+              <div
+                className={cn(
+                  'shrink-0 rounded-full bg-muted',
+                  compact ? 'h-3.5 w-3.5' : 'h-6 w-6',
+                )}
+                aria-hidden
+              />
+            )}
             <div className="min-w-0 flex flex-1 items-center gap-2 overflow-visible">
               <p
-                className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
+                className={cn(
+                  'min-w-0 flex-1 truncate font-medium',
+                  compact
+                    ? 'text-[11px] text-muted-foreground'
+                    : 'text-[13px] text-foreground',
+                )}
                 title={
-                  supportsMultiTenancy && orgDisplayName
-                    ? `${orgDisplayName} / ${resolvedProject.name}`
-                    : resolvedProject.name
+                  resolvedProject
+                    ? supportsMultiTenancy && orgDisplayName
+                      ? `${orgDisplayName} / ${resolvedProject.name}`
+                      : resolvedProject.name
+                    : undefined
                 }
               >
-                {supportsMultiTenancy ? (
-                  <>
-                    <span
-                      className={cn('shrink-0', !orgDisplayName && 'invisible')}
-                    >
-                      {truncateMiddle(orgDisplayName || 'Organization', 20)}
-                    </span>{' '}
-                    /{' '}
-                    {formatProjectNameForDisplay(
+                {resolvedProject ? (
+                  supportsMultiTenancy && !compact ? (
+                    <>
+                      <span
+                        className={cn(
+                          'shrink-0',
+                          !orgDisplayName && 'invisible',
+                        )}
+                      >
+                        {truncateMiddle(orgDisplayName || 'Organization', 20)}
+                      </span>{' '}
+                      /{' '}
+                      {formatProjectNameForDisplay(
+                        resolvedProject.name,
+                        PROJECT_NAME_DISPLAY_MAX_COMPACT,
+                      )}
+                    </>
+                  ) : (
+                    formatProjectNameForDisplay(
                       resolvedProject.name,
-                      PROJECT_NAME_DISPLAY_MAX_COMPACT,
-                    )}
-                  </>
-                ) : (
-                  formatProjectNameForDisplay(
-                    resolvedProject.name,
-                    PROJECT_NAME_DISPLAY_MAX_SELECTOR,
+                      compact
+                        ? PROJECT_NAME_DISPLAY_MAX_COMPACT
+                        : PROJECT_NAME_DISPLAY_MAX_SELECTOR,
+                    )
                   )
+                ) : (
+                  t('Select project')
                 )}
               </p>
-              <ProjectSelectorPlanBadgeSlot
-                isCloud={isCloud}
-                org={currentProjectOrg}
-                billingStress={!!billingFailureTeamId}
-              />
+              {!compact ? (
+                <ProjectSelectorPlanBadgeSlot
+                  isCloud={isCloud}
+                  org={currentProjectOrg}
+                  billingStress={!!billingFailureTeamId}
+                />
+              ) : null}
             </div>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <ChevronDown
+              className={cn(
+                'shrink-0 text-muted-foreground',
+                compact ? 'h-3 w-3 opacity-70' : 'h-3.5 w-3.5',
+              )}
+            />
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -848,41 +930,18 @@ export function ProjectSelector({
             supportsMultiTenancy ? 'w-[520px]' : 'w-[320px]',
           )}
         >
-          <ProjectSelectorContent
-            selectedTeam={resolvedTeam}
-            onSelectTeam={handleSelectTeam}
-            selectedProject={resolvedProject}
-            handleSelectProject={handleSelectProject}
-            teamSearch={teamSearch}
-            setTeamSearch={setTeamSearch}
-            projectSearch={projectSearch}
-            setProjectSearch={setProjectSearch}
-            filteredTeams={filteredTeams}
-            displayProjects={stableDisplayProjects}
-            pinnedProjectIds={stablePinnedIds}
-            isFetchingNextPage={isFetchingNextPage}
-            hasNextPage={hasNextPage}
-            fetchNextPage={fetchNextPage}
-            organizations={organizations}
-            isCloud={isCloud}
-            supportsMultiTenancy={supportsMultiTenancy}
-            currentProjectId={projectId}
-            billingFailureTeamId={billingFailureTeamId}
-            billingOrgReadonly={billingOrgReadonly}
-            onCreateProject={() => setCreateProjectDialogOpen(true)}
-            onCreateOrganization={handleCreateOrganization}
-            prefetchTeamProjects={prefetchTeamProjects}
-          />
+          <ProjectSelectorContent {...contentProps} />
         </PopoverContent>
       </Popover>
 
-      {/* Create Project Dialog */}
-      <CreateProjectDialog
-        open={createProjectDialogOpen}
-        onOpenChange={setCreateProjectDialogOpen}
-        teamId={resolvedTeam.$id}
-        currentProjectsCount={projectsCount}
-      />
+      {!selectionMode ? (
+        <CreateProjectDialog
+          open={createProjectDialogOpen}
+          onOpenChange={setCreateProjectDialogOpen}
+          teamId={resolvedTeam.$id}
+          currentProjectsCount={projectsCount}
+        />
+      ) : null}
     </>
   )
 }
@@ -914,6 +973,8 @@ interface ProjectSelectorContentProps {
   onCreateOrganization: () => void
   /** Preload pinned + paginated projects when the user hovers an organization row */
   prefetchTeamProjects: (teamId: string) => void
+  /** When true, project rows select via callback instead of navigating */
+  selectionMode?: boolean
 }
 
 function ProjectSelectorContent({
@@ -940,6 +1001,7 @@ function ProjectSelectorContent({
   onCreateProject,
   onCreateOrganization,
   prefetchTeamProjects,
+  selectionMode = false,
 }: ProjectSelectorContentProps) {
   const t = useT()
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
@@ -975,7 +1037,7 @@ function ProjectSelectorContent({
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  if (!selectedTeam || !selectedProject) {
+  if (!selectedTeam || (!selectedProject && !selectionMode)) {
     return (
       <div className="flex h-[300px] items-center justify-center">
         <div className="text-sm text-muted-foreground">{t('Loading...')}</div>
@@ -1060,20 +1122,21 @@ function ProjectSelectorContent({
             </div>
           </div>
 
-          {/* Create Organization - fixed at bottom */}
-          <div className="border-t border-border p-1.5">
-            <button
-              type="button"
-              {...analyticsAttrs('create-organization')}
-              onClick={onCreateOrganization}
-              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-                <Plus className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-[13px]">{t('Create Organization')}</span>
-            </button>
-          </div>
+          {!selectionMode ? (
+            <div className="border-t border-border p-1.5">
+              <button
+                type="button"
+                {...analyticsAttrs('create-organization')}
+                onClick={onCreateOrganization}
+                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-[13px]">{t('Create Organization')}</span>
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -1116,22 +1179,17 @@ function ProjectSelectorContent({
                 {displayProjects.map((project) => {
                   const isCurrentProject = project.$id === currentProjectId
                   const isPinned = pinnedSet.has(project.$id)
-                  return (
-                    <Link
-                      key={project.$id}
-                      to="/projects/$projectId"
-                      params={{ projectId: project.$id }}
-                      onClick={(e) => handleSelectProject(project, e)}
-                      className={cn(
-                        'group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-colors',
-                        selectedProject?.$id === project.$id
-                          ? 'bg-accent'
-                          : 'hover:bg-accent/50',
-                        isCurrentProject &&
-                          selectedProject?.$id !== project.$id &&
-                          'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
-                      )}
-                    >
+                  const rowClassName = cn(
+                    'group flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-colors',
+                    selectedProject?.$id === project.$id
+                      ? 'bg-accent'
+                      : 'hover:bg-accent/50',
+                    isCurrentProject &&
+                      selectedProject?.$id !== project.$id &&
+                      'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
+                  )
+                  const rowContent = (
+                    <>
                       <InitialsAvatar name={project.name} size="sm" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
                         <span
@@ -1167,6 +1225,29 @@ function ProjectSelectorContent({
                       {isPinned && (
                         <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       )}
+                    </>
+                  )
+                  if (selectionMode) {
+                    return (
+                      <button
+                        key={project.$id}
+                        type="button"
+                        onClick={(e) => handleSelectProject(project, e)}
+                        className={rowClassName}
+                      >
+                        {rowContent}
+                      </button>
+                    )
+                  }
+                  return (
+                    <Link
+                      key={project.$id}
+                      to="/projects/$projectId"
+                      params={{ projectId: project.$id }}
+                      onClick={(e) => handleSelectProject(project, e)}
+                      className={rowClassName}
+                    >
+                      {rowContent}
                     </Link>
                   )
                 })}
@@ -1183,20 +1264,21 @@ function ProjectSelectorContent({
           </div>
         </div>
 
-        {/* Create Project - fixed at bottom */}
-        <div className="border-t border-border p-1.5">
-          <button
-            type="button"
-            {...analyticsAttrs('create-project')}
-            onClick={onCreateProject}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-              <Plus className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[13px]">{t('Create Project')}</span>
-          </button>
-        </div>
+        {!selectionMode ? (
+          <div className="border-t border-border p-1.5">
+            <button
+              type="button"
+              {...analyticsAttrs('create-project')}
+              onClick={onCreateProject}
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                <Plus className="h-3.5 w-3.5" />
+              </div>
+              <span className="text-[13px]">{t('Create Project')}</span>
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -1227,6 +1309,7 @@ function MobileProjectSelectorContent({
   onCreateProject,
   onCreateOrganization,
   prefetchTeamProjects,
+  selectionMode = false,
 }: ProjectSelectorContentProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
@@ -1271,7 +1354,7 @@ function MobileProjectSelectorContent({
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, activeTab])
 
-  if (!selectedTeam || !selectedProject) {
+  if (!selectedTeam || (!selectedProject && !selectionMode)) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-sm text-muted-foreground">{t('Loading...')}</div>
@@ -1381,20 +1464,21 @@ function MobileProjectSelectorContent({
             </div>
           </div>
 
-          {/* Create Organization */}
-          <div className="border-t border-border p-2">
-            <button
-              type="button"
-              {...analyticsAttrs('create-organization')}
-              onClick={onCreateOrganization}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-                <Plus className="h-4 w-4" />
-              </div>
-              <span className="text-[14px]">{t('Create Organization')}</span>
-            </button>
-          </div>
+          {!selectionMode ? (
+            <div className="border-t border-border p-2">
+              <button
+                type="button"
+                {...analyticsAttrs('create-organization')}
+                onClick={onCreateOrganization}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                  <Plus className="h-4 w-4" />
+                </div>
+                <span className="text-[14px]">{t('Create Organization')}</span>
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -1445,22 +1529,17 @@ function MobileProjectSelectorContent({
                   {displayProjects.map((project) => {
                     const isCurrentProject = project.$id === currentProjectId
                     const isPinned = pinnedSet.has(project.$id)
-                    return (
-                      <Link
-                        key={project.$id}
-                        to="/projects/$projectId"
-                        params={{ projectId: project.$id }}
-                        onClick={(e) => handleSelectProject(project, e)}
-                        className={cn(
-                          'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start transition-colors',
-                          selectedProject?.$id === project.$id
-                            ? 'bg-accent'
-                            : 'hover:bg-accent/50',
-                          isCurrentProject &&
-                            selectedProject?.$id !== project.$id &&
-                            'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
-                        )}
-                      >
+                    const rowClassName = cn(
+                      'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start transition-colors',
+                      selectedProject?.$id === project.$id
+                        ? 'bg-accent'
+                        : 'hover:bg-accent/50',
+                      isCurrentProject &&
+                        selectedProject?.$id !== project.$id &&
+                        'bg-primary/10 hover:bg-primary/20 dark:bg-sidebar-accent dark:hover:bg-sidebar-accent/80',
+                    )
+                    const rowContent = (
+                      <>
                         <InitialsAvatar name={project.name} size="sm" />
                         <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
                           <span
@@ -1499,6 +1578,29 @@ function MobileProjectSelectorContent({
                         {selectedProject?.$id === project.$id && (
                           <Check className="h-4 w-4 shrink-0 text-foreground" />
                         )}
+                      </>
+                    )
+                    if (selectionMode) {
+                      return (
+                        <button
+                          key={project.$id}
+                          type="button"
+                          onClick={(e) => handleSelectProject(project, e)}
+                          className={rowClassName}
+                        >
+                          {rowContent}
+                        </button>
+                      )
+                    }
+                    return (
+                      <Link
+                        key={project.$id}
+                        to="/projects/$projectId"
+                        params={{ projectId: project.$id }}
+                        onClick={(e) => handleSelectProject(project, e)}
+                        className={rowClassName}
+                      >
+                        {rowContent}
                       </Link>
                     )
                   })}
@@ -1515,20 +1617,21 @@ function MobileProjectSelectorContent({
             </div>
           </div>
 
-          {/* Create Project */}
-          <div className="border-t border-border p-2">
-            <button
-              type="button"
-              {...analyticsAttrs('create-project')}
-              onClick={onCreateProject}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-                <Plus className="h-4 w-4" />
-              </div>
-              <span className="text-[14px]">{t('Create Project')}</span>
-            </button>
-          </div>
+          {!selectionMode ? (
+            <div className="border-t border-border p-2">
+              <button
+                type="button"
+                {...analyticsAttrs('create-project')}
+                onClick={onCreateProject}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                  <Plus className="h-4 w-4" />
+                </div>
+                <span className="text-[14px]">{t('Create Project')}</span>
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

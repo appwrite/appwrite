@@ -24,7 +24,7 @@ import {
   isLegacyTheme,
   LEGACY_ICON_SRC,
 } from '@/lib/legacy-theme-assets'
-import { AIChatProvider } from '@/components/global/providers/AIChat'
+import { AgentChatProvider } from '@/components/global/providers/AgentChat'
 import { DocsPreviewProvider } from '@/components/global/providers/DocsPreview'
 import {
   ConsoleRightPane,
@@ -458,7 +458,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           <DebugModeProvider>
                             <ConsoleRightPaneProvider>
                               {features.aiAssistant ? (
-                                <AIChatProvider>
+                                <AgentChatProvider>
                                   <DocsPreviewProvider>
                                     <PromoBannerProvider>
                                       <RootAppShell>{children}</RootAppShell>
@@ -467,7 +467,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                                       </ClientOnly>
                                     </PromoBannerProvider>
                                   </DocsPreviewProvider>
-                                </AIChatProvider>
+                                </AgentChatProvider>
                               ) : (
                                 <DocsPreviewProvider>
                                   <PromoBannerProvider>

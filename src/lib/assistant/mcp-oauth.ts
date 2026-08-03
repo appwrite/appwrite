@@ -4,7 +4,7 @@
  * access tokens in React state beyond the handoff.
  */
 
-export const ASSISTANT_MCP_OAUTH_CALLBACK_PATH = '/assistant/mcp/callback'
+export const ASSISTANT_MCP_OAUTH_CALLBACK_PATH = '/agent/mcp/callback'
 export const ASSISTANT_MCP_OAUTH_MESSAGE_TYPE = 'assistant-mcp-oauth' as const
 export const ASSISTANT_MCP_OAUTH_STORAGE_KEY = 'assistant.mcp.oauth.pending'
 
@@ -358,7 +358,7 @@ export async function startMcpOAuthConnect(
   const client = await registerPublicClient({
     registrationEndpoint: asMeta.registration_endpoint,
     redirectUri,
-    clientName: input.clientName || 'Appwrite Assistant',
+    clientName: input.clientName || 'Appwrite Agent',
   })
 
   const state = randomUrlSafeString(24)

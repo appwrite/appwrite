@@ -25,7 +25,7 @@ export const heCatalog: EnCatalog = {
         openWebsiteNavigation: 'פתח ניווט אתר',
         create: 'יצירה',
         connect: 'חיבור',
-        assistant: 'עוזר',
+        assistant: 'Agent',
         upgrade: 'שדרוג',
         signIn: 'התחברו',
         signUp: 'הירשמו',

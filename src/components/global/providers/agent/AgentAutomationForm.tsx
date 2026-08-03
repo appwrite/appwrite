@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,17 +6,27 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CronScheduleEditor } from '@/components/pages/projects/$projectId/functions/CronScheduleEditor'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   useAssistantModels,
   useCreateAssistantAutomation,
+  useDeleteAssistantAutomation,
   useUpdateAssistantAutomation,
   type AssistantAutomation,
 } from '@/lib/react-query/hooks'
@@ -33,10 +42,13 @@ type AutomationFormState = {
   enabled: boolean
 }
 
+/** Matches CronScheduleEditor `weekly-monday` ("Weekly on Monday"). */
+const DEFAULT_AUTOMATION_SCHEDULE = '0 0 * * 1'
+
 const emptyForm = (): AutomationFormState => ({
   name: '',
   prompt: '',
-  schedule: '0 9 * * 1',
+  schedule: DEFAULT_AUTOMATION_SCHEDULE,
   titlePrefix: '',
   modelId: '',
   enabled: true,
@@ -55,27 +67,30 @@ function formFromAutomation(
   }
 }
 
-export type AssistantAutomationFormProps = {
+export type AgentAutomationFormProps = {
   automation?: AssistantAutomation | null
   disabled?: boolean
   resolveProjectId?: () => Promise<string | null>
   onAddModel?: () => void
   onCancel: () => void
-  onSaved?: () => void
+  /** Called after create/update with the saved automation, or after delete with null. */
+  onSaved?: (automation?: AssistantAutomation | null) => void
 }
 
-export function AssistantAutomationForm({
+export function AgentAutomationForm({
   automation = null,
   disabled = false,
   resolveProjectId,
   onAddModel,
   onCancel,
   onSaved,
-}: AssistantAutomationFormProps) {
+}: AgentAutomationFormProps) {
   const t = useT()
   const { data: models = [] } = useAssistantModels({ enabled: !disabled })
   const createMutation = useCreateAssistantAutomation()
   const updateMutation = useUpdateAssistantAutomation()
+  const deleteMutation = useDeleteAssistantAutomation()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [form, setForm] = useState<AutomationFormState>(() =>
     automation ? formFromAutomation(automation) : emptyForm(),
   )
@@ -90,18 +105,35 @@ export function AssistantAutomationForm({
   )
 
   const isSaving = createMutation.isPending || updateMutation.isPending
+  const isDeleting = deleteMutation.isPending
   const canSave =
     form.name.trim().length > 0 &&
     form.prompt.trim().length > 0 &&
     form.schedule.trim().length > 0
   const isEditing = Boolean(automation?.$id)
 
+  const closeDeleteDialog = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
+  }
+
+  const handleDelete = async () => {
+    if (!automation?.$id || isDeleting || disabled) return
+    try {
+      await deleteMutation.mutateAsync(automation.$id)
+      toast.success(t('Automation deleted'))
+      closeDeleteDialog()
+      onSaved?.(null)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to delete automation')))
+    }
+  }
+
   const handleSave = async () => {
     if (!canSave || isSaving || disabled) return
     try {
       const projectId = resolveProjectId ? await resolveProjectId() : null
       if (isEditing && automation) {
-        await updateMutation.mutateAsync({
+        const updated = await updateMutation.mutateAsync({
           automationId: automation.$id,
           name: form.name.trim(),
           prompt: form.prompt.trim(),
@@ -112,8 +144,9 @@ export function AssistantAutomationForm({
           contextProjectId: projectId || undefined,
         })
         toast.success(t('Automation updated'))
+        onSaved?.(updated)
       } else {
-        await createMutation.mutateAsync({
+        const created = await createMutation.mutateAsync({
           name: form.name.trim(),
           prompt: form.prompt.trim(),
           schedule: form.schedule.trim(),
@@ -123,8 +156,8 @@ export function AssistantAutomationForm({
           contextProjectId: projectId || undefined,
         })
         toast.success(t('Automation created'))
+        onSaved?.(created)
       }
-      onSaved?.()
     } catch (error) {
       toast.error(
         getErrorMessage(
@@ -138,15 +171,14 @@ export function AssistantAutomationForm({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-4">
+        <div className="space-y-5 px-6 py-6">
           <p className="text-[13px] text-muted-foreground">
             {t(
               'Run a prompt on a schedule. Each run creates a new agent conversation.',
             )}
           </p>
-
           <div className="space-y-2">
             <Label htmlFor="automation-name">{t('Name')}</Label>
             <Input
@@ -181,25 +213,17 @@ export function AssistantAutomationForm({
               disabled={disabled}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="automation-schedule">{t('Schedule (cron)')}</Label>
-            <Input
-              id="automation-schedule"
-              value={form.schedule}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  schedule: event.target.value,
-                }))
-              }
-              placeholder="0 9 * * 1"
-              className="h-9 font-mono text-[13px]"
-              disabled={disabled}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              {t('Example: 0 9 * * 1 runs every Monday at 09:00 UTC.')}
-            </p>
-          </div>
+          <CronScheduleEditor
+            value={form.schedule}
+            onChange={(schedule) =>
+              setForm((current) => ({
+                ...current,
+                schedule,
+              }))
+            }
+            disabled={disabled}
+            allowDisabled={false}
+          />
           <div className="space-y-2">
             <Label htmlFor="automation-title-prefix">
               {t('Title prefix (optional)')}
@@ -273,35 +297,94 @@ export function AssistantAutomationForm({
               disabled={disabled}
             />
           </div>
+
+          {isEditing ? (
+            <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+              <div className="px-4 py-3">
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  {t('Delete automation')}
+                </h3>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {t('This permanently deletes the automation.')}{' '}
+                  {t('This action cannot be undone.')}
+                </p>
+              </div>
+              <div className="border-t border-destructive/20 px-4 py-3 bg-destructive/5">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={disabled || isDeleting || isSaving}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  {t('Delete')}
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-background p-2">
-        <div className="mx-auto flex h-9 w-full max-w-3xl items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9"
-            disabled={isSaving}
-            onClick={onCancel}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-9"
-            disabled={!canSave || isSaving || disabled}
-            onClick={() => void handleSave()}
-          >
-            {isSaving ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : null}
-            {isEditing ? t('Update') : t('Create')}
-          </Button>
-        </div>
+      <div className="flex shrink-0 items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
+        <Button
+          type="button"
+          disabled={!canSave || isSaving || isDeleting || disabled}
+          onClick={() => void handleSave()}
+        >
+          {isEditing ? t('Update') : t('Create')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSaving || isDeleting}
+          onClick={onCancel}
+        >
+          {t('Cancel')}
+        </Button>
       </div>
+
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDeleteDialog()
+            return
+          }
+          setDeleteOpen(true)
+        }}
+      >
+        <DialogContent
+          className="z-[140] sm:max-w-md p-0"
+          overlayClassName="z-[140]"
+        >
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>{t('Delete automation')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t('This permanently deletes the automation.')}{' '}
+              {t('This action cannot be undone.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={closeDeleteDialog}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={() => void handleDelete()}
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

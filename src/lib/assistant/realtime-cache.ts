@@ -134,6 +134,15 @@ function conversationsEqualForList(
   )
 }
 
+function isAutomationRunConversation(conversation: {
+  automationId?: string | null
+}): boolean {
+  return Boolean(
+    typeof conversation.automationId === 'string' &&
+      conversation.automationId.trim(),
+  )
+}
+
 export function mergeAssistantConversationIntoCache(
   queryClient: QueryClient,
   conversation: Models.AssistantConversation,
@@ -143,6 +152,12 @@ export function mergeAssistantConversationIntoCache(
     (old) => {
       if (!old) return old
       const index = old.findIndex((entry) => entry.$id === conversation.$id)
+      // Agents list must not include automation runs.
+      if (isAutomationRunConversation(conversation)) {
+        if (index < 0) return old
+        const next = old.filter((entry) => entry.$id !== conversation.$id)
+        return next.length === old.length ? old : next
+      }
       if (index >= 0) {
         const merged = { ...old[index], ...conversation }
         if (conversationsEqualForList(old[index], merged)) {
@@ -159,6 +174,28 @@ export function mergeAssistantConversationIntoCache(
       return sortConversationsByUpdatedAt([conversation, ...old])
     },
   )
+
+  // Re-hydrate list-row resource counters when a run finishes (tools may only
+  // be complete on the terminal conversation/message payloads).
+  const status = conversation.status?.toLowerCase() ?? ''
+  if (
+    status === 'ready' ||
+    status === 'completed' ||
+    status === 'failed' ||
+    status === 'error' ||
+    status === 'stopped' ||
+    status === 'cancelled' ||
+    status === 'canceled'
+  ) {
+    void queryClient.invalidateQueries({
+      queryKey: [
+        'assistant',
+        'conversation-resource-stats',
+        conversation.$id,
+      ],
+      exact: false,
+    })
+  }
 }
 
 /** Patch a conversation row (e.g. status) without requiring a full payload. */
@@ -235,27 +272,46 @@ export function removeAssistantConversationFromCache(
   queryClient.removeQueries({
     queryKey: ['assistant', 'messages', conversationId],
   })
+  queryClient.removeQueries({
+    queryKey: ['assistant', 'conversation-resource-stats', conversationId],
+  })
+}
+
+function applyMessagesCacheUpdate(
+  queryClient: QueryClient,
+  conversationId: string,
+  updater: (old: MessagesCache | undefined) => MessagesCache | undefined,
+): void {
+  queryClient.setQueriesData<MessagesCache | undefined>(
+    { queryKey: ['assistant', 'messages', conversationId], exact: false },
+    updater,
+  )
+  // List-row resource counters use a dedicated hydrated query; keep it in sync.
+  queryClient.setQueriesData<MessagesCache | undefined>(
+    {
+      queryKey: ['assistant', 'conversation-resource-stats', conversationId],
+      exact: false,
+    },
+    updater,
+  )
 }
 
 export function mergeAssistantMessageIntoCache(
   queryClient: QueryClient,
   message: Models.AssistantMessage,
 ): void {
-  queryClient.setQueriesData<MessagesCache | undefined>(
-    { queryKey: ['assistant', 'messages', message.conversationId], exact: false },
-    (old) => {
-      if (!old) {
-        return { messages: [message], total: 1 }
-      }
-      const previousLength = old.messages.length
-      const messages = upsertMessageInList(old.messages, message)
-      const added = messages.length - previousLength
-      return {
-        messages,
-        total: Math.max(old.total + added, messages.length),
-      }
-    },
-  )
+  applyMessagesCacheUpdate(queryClient, message.conversationId, (old) => {
+    if (!old) {
+      return { messages: [message], total: 1 }
+    }
+    const previousLength = old.messages.length
+    const messages = upsertMessageInList(old.messages, message)
+    const added = messages.length - previousLength
+    return {
+      messages,
+      total: Math.max(old.total + added, messages.length),
+    }
+  })
 }
 
 export function mergeAssistantToolIntoCache(
@@ -265,25 +321,7 @@ export function mergeAssistantToolIntoCache(
   const conversationId = tool.conversationId
   if (!conversationId) {
     // Fall back to scanning all message caches for this message id.
-    queryClient.setQueriesData<MessagesCache | undefined>(
-      { queryKey: ['assistant', 'messages'], exact: false },
-      (old) => {
-        if (!old?.messages?.length) return old
-        let changed = false
-        const messages = old.messages.map((message) => {
-          if (message.$id !== tool.messageId) return message
-          changed = true
-          return upsertToolOnMessage(message, tool)
-        })
-        return changed ? { ...old, messages } : old
-      },
-    )
-    return
-  }
-
-  queryClient.setQueriesData<MessagesCache | undefined>(
-    { queryKey: ['assistant', 'messages', conversationId], exact: false },
-    (old) => {
+    const updater = (old: MessagesCache | undefined) => {
       if (!old?.messages?.length) return old
       let changed = false
       const messages = old.messages.map((message) => {
@@ -292,8 +330,28 @@ export function mergeAssistantToolIntoCache(
         return upsertToolOnMessage(message, tool)
       })
       return changed ? { ...old, messages } : old
-    },
-  )
+    }
+    queryClient.setQueriesData<MessagesCache | undefined>(
+      { queryKey: ['assistant', 'messages'], exact: false },
+      updater,
+    )
+    queryClient.setQueriesData<MessagesCache | undefined>(
+      { queryKey: ['assistant', 'conversation-resource-stats'], exact: false },
+      updater,
+    )
+    return
+  }
+
+  applyMessagesCacheUpdate(queryClient, conversationId, (old) => {
+    if (!old?.messages?.length) return old
+    let changed = false
+    const messages = old.messages.map((message) => {
+      if (message.$id !== tool.messageId) return message
+      changed = true
+      return upsertToolOnMessage(message, tool)
+    })
+    return changed ? { ...old, messages } : old
+  })
 }
 
 /** Match both `assistant.messages` and compacted `assistantmessages` event forms. */
@@ -321,11 +379,20 @@ export function applyAssistantRealtimePayload(
   if (eventMatchesAssistantResource(eventNames, 'conversations')) {
     if (isDelete && typeof payload.$id === 'string') {
       removeAssistantConversationFromCache(queryClient, payload.$id)
+      void queryClient.invalidateQueries({
+        queryKey: ['assistant', 'automations'],
+        exact: false,
+      })
       return true
     }
     const conversation = asAssistantConversation(payload)
     if (conversation) {
       mergeAssistantConversationIntoCache(queryClient, conversation)
+      // Keep automation run lists in sync (conversations keyed by automationId).
+      void queryClient.invalidateQueries({
+        queryKey: ['assistant', 'automations'],
+        exact: false,
+      })
       return true
     }
   }

@@ -9,7 +9,7 @@ import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 
-type AssistantEmptyStateProps = {
+type AgentEmptyStateProps = {
   hasActiveMcp: boolean
   suggestions: string[]
   onSelectSuggestion: (question: string) => void
@@ -23,7 +23,7 @@ type AssistantEmptyStateProps = {
   requireSignIn?: boolean
 }
 
-export function AssistantEmptyState({
+export function AgentEmptyState({
   hasActiveMcp,
   suggestions,
   onSelectSuggestion,
@@ -34,7 +34,7 @@ export function AssistantEmptyState({
   particleCount,
   debugSlot,
   requireSignIn = false,
-}: AssistantEmptyStateProps) {
+}: AgentEmptyStateProps) {
   const t = useT()
 
   return (
@@ -52,7 +52,7 @@ export function AssistantEmptyState({
           </div>
           <h3 className="text-center text-lg font-semibold text-foreground">
             {requireSignIn
-              ? t('Sign in to use the assistant')
+              ? t('Sign in to use the agent')
               : hasActiveMcp
                 ? t('What should we do next?')
                 : t('How can I help you?')}
@@ -60,7 +60,7 @@ export function AssistantEmptyState({
           {requireSignIn ? (
             <p className="mt-2 max-w-sm text-center text-[13px] text-muted-foreground">
               {t(
-                'Create an account or sign in to chat with the Appwrite assistant about your projects.',
+                'Create an account or sign in to chat with the Appwrite Agent about your projects.',
               )}
             </p>
           ) : hasActiveMcp ? (
@@ -84,7 +84,7 @@ export function AssistantEmptyState({
         {requireSignIn ? (
           <div className="mt-6 flex flex-col items-center gap-2">
             <Button asChild className="h-9 min-w-[160px] px-4 text-[13px]">
-              <Link to="/sign-in" search={{ redirect: '/assistant' }}>
+              <Link to="/sign-in" search={{ redirect: '/agent' }}>
                 {t('Sign in')}
               </Link>
             </Button>
@@ -93,7 +93,7 @@ export function AssistantEmptyState({
               variant="ghost"
               className="h-8 text-[12px] text-muted-foreground"
             >
-              <Link to="/sign-up" search={{ redirect: '/assistant' }}>
+              <Link to="/sign-up" search={{ redirect: '/agent' }}>
                 {t('Create an account')}
               </Link>
             </Button>

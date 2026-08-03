@@ -11,19 +11,19 @@ import { Input } from '@/components/ui/input'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
-type AssistantRenameDialogProps = {
+type AgentRenameDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   onRename: (title: string) => Promise<void> | void
 }
 
-export function AssistantRenameDialog({
+export function AgentRenameDialog({
   open,
   onOpenChange,
   title,
   onRename,
-}: AssistantRenameDialogProps) {
+}: AgentRenameDialogProps) {
   const t = useT()
   const [draftTitle, setDraftTitle] = useState(title)
   const [isRenaming, setIsRenaming] = useState(false)

@@ -25,7 +25,7 @@ export const jaCatalog: EnCatalog = {
         openWebsiteNavigation: 'サイトナビゲーションを開く',
         create: '作成',
         connect: '接続',
-        assistant: 'アシスタント',
+        assistant: 'Agent',
         upgrade: 'アップグレード',
         signIn: 'サインイン',
         signUp: 'サインアップ',

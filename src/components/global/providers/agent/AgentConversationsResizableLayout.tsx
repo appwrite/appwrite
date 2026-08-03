@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils'
 
 const HANDLE_CLASS = verticalPanelResizeHandleClass('z-[45]')
 
-type AssistantConversationsResizableLayoutProps = {
+type AgentConversationsResizableLayoutProps = {
   sidebar: ReactNode
   children: ReactNode
   className?: string
@@ -41,11 +41,11 @@ type AssistantConversationsResizableLayoutProps = {
  * Conversations list + chat area with a draggable split, matching
  * `TableViewResizableLayout` / shared `ResizableHandle` styling.
  */
-export function AssistantConversationsResizableLayout({
+export function AgentConversationsResizableLayout({
   sidebar,
   children,
   className,
-}: AssistantConversationsResizableLayoutProps) {
+}: AgentConversationsResizableLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const firstPanelRef = useRef<ImperativePanelHandle>(null)
   const prevContainerWidthRef = useRef(0)

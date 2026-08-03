@@ -77,9 +77,9 @@ export function ConversationResourceSummary({
   }
 
   return (
-    <p
+    <span
       className={cn(
-        'truncate text-[11px] leading-tight text-muted-foreground',
+        'inline-flex min-w-0 items-center truncate text-[11px] leading-tight text-muted-foreground',
         className,
       )}
       title={t('Resources changed')}
@@ -92,6 +92,6 @@ export function ConversationResourceSummary({
           {part}
         </span>
       ))}
-    </p>
+    </span>
   )
 }

@@ -17,7 +17,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { ToolSiteFaviconStack } from '@/components/global/providers/ai-chat/ToolSiteFaviconStack'
+import { ToolSiteFaviconStack } from '@/components/global/providers/agent/ToolSiteFaviconStack'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -244,7 +244,7 @@ function SubagentSection({
   )
 }
 
-export function AssistantTurnActivity({
+export function AgentTurnActivity({
   message,
 }: {
   message: AssistantMessageLike

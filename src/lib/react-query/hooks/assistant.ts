@@ -10,20 +10,42 @@ import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { messageNeedsToolHydration } from '@/lib/assistant/resource-mutations'
-import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_STALE_TIME,
+  isClientQueryEnabled,
+} from './constants'
 
 /** Cap getMessage hydration so list-row stats stay bounded. */
 const ASSISTANT_TOOL_HYDRATION_LIMIT = 8
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
+function isAutomationRunConversation(conversation: {
+  automationId?: string | null
+}): boolean {
+  return Boolean(
+    typeof conversation.automationId === 'string' &&
+      conversation.automationId.trim(),
+  )
+}
+
 export async function fetchAssistantConversations(search?: string) {
   const trimmedSearch = search?.trim() || undefined
   const response = await sdk.forConsole.assistant.listConversations({
-    queries: [Query.orderDesc('$updatedAt')],
+    queries: [
+      // Agents list excludes automation runs (those appear under Automations).
+      Query.or([
+        Query.isNull('automationId'),
+        Query.equal('automationId', ''),
+      ]),
+      Query.orderDesc('$updatedAt'),
+    ],
     search: trimmedSearch,
   })
-  return response.conversations ?? []
+  return (response.conversations ?? []).filter(
+    (conversation) => !isAutomationRunConversation(conversation),
+  )
 }
 
 export async function fetchAssistantMessages(
@@ -135,6 +157,35 @@ export function assistantConversationsQueryOptions(
     enabled,
     retry: false,
   })
+}
+
+export async function fetchAssistantConversation(conversationId: string) {
+  return await sdk.forConsole.assistant.getConversation({ conversationId })
+}
+
+export function assistantConversationQueryOptions(
+  conversationId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
+  const enabled =
+    (options?.enabled ?? true) &&
+    !!conversationId &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: ['assistant', 'conversation', conversationId ?? ''],
+    queryFn: () => fetchAssistantConversation(conversationId!),
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+  })
+}
+
+export function useAssistantConversation(
+  conversationId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(assistantConversationQueryOptions(conversationId, options))
 }
 
 export function assistantMessagesQueryOptions(
@@ -603,6 +654,67 @@ export async function fetchAssistantAutomations(search?: string) {
     ],
   })
   return response.automations ?? []
+}
+
+/** Conversations created by a given automation (each scheduled run). */
+export async function fetchAssistantAutomationRuns(
+  automationId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  if (!automationId) return { runs: [], total: 0 }
+  const response = await sdk.forConsole.assistant.listConversations({
+    queries: [
+      Query.equal('automationId', automationId),
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
+  })
+  const runs = response.conversations ?? []
+  return {
+    runs,
+    total: response.total ?? runs.length,
+  }
+}
+
+export function assistantAutomationRunsQueryOptions(
+  automationId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  options?: { enabled?: boolean },
+) {
+  const enabled =
+    (options?.enabled ?? true) &&
+    !!automationId &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: [
+      'assistant',
+      'automations',
+      automationId ?? '',
+      'runs',
+      page,
+      limit,
+    ],
+    queryFn: () => fetchAssistantAutomationRuns(automationId!, page, limit),
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAssistantAutomationRuns(
+  automationId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(
+    assistantAutomationRunsQueryOptions(automationId, page, limit, options),
+  )
 }
 
 export function assistantAutomationsQueryOptions(

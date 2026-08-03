@@ -20,7 +20,7 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
-  'ai-assistant-open': 'AI Assistant Opened',
+  'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',

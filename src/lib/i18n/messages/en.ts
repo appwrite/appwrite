@@ -18,7 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
-        assistant: 'Assistant',
+        assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
         signUp: 'Sign up',

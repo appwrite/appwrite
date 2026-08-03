@@ -17,6 +17,11 @@ import {
 } from '@/lib/initial-loader/shell-gates'
 import { useInitialLoaderShellGatesReady } from '@/hooks/use-initial-loader-shell-gates'
 
+/** Fullscreen agent shell (no console chrome). Leaving it needs the branded loader. */
+function isAgentShellPath(pathname: string): boolean {
+  return pathname === '/agent' || pathname.startsWith('/agent/')
+}
+
 /**
  * True when any `['account','console', ...]` query is in error with HTTP 403.
  * Subscribes to the query cache so `/` can hide the fullscreen loader when the
@@ -170,6 +175,7 @@ export function useInitialLoader() {
   )
   const wasLoadingRef = useRef(shouldShowLoader)
   const hasCompletedInitialLoadRef = useRef(false)
+  const wasOnAgentShellRef = useRef(isAgentShellPath(location.pathname))
 
   // Use refs to track previous values and prevent unnecessary re-renders
   const prevIsFetchingRef = useRef(isFetching)
@@ -193,7 +199,23 @@ export function useInitialLoader() {
   }, [location.pathname])
 
   useEffect(() => {
-    // If initial load has already completed, never show loader again
+    const onAgentShell = isAgentShellPath(location.pathname)
+    const leftAgentShell = wasOnAgentShellRef.current && !onAgentShell
+    wasOnAgentShellRef.current = onAgentShell
+
+    // Agent is a chrome-less shell and is not a `shouldShowLoader` route, so
+    // visiting it marks initial load complete. Leaving for console (Back to
+    // console → `/` → org) must show the branded loader again or header/sidebar
+    // remount while data settles and the page layout-shifts.
+    if (leftAgentShell && shouldShowLoader) {
+      hasCompletedInitialLoadRef.current = false
+      setIsLoading(true)
+      wasLoadingRef.current = true
+      startTimeRef.current = Date.now()
+    }
+
+    // After the first console paint, skip the loader for in-console navigations.
+    // Exception: leaving the agent shell (handled above) re-arms it.
     if (hasCompletedInitialLoadRef.current) {
       return
     }
@@ -210,7 +232,7 @@ export function useInitialLoader() {
         isFetching === 0 &&
         isMutating === 0
       ) {
-        // For other public routes, mark complete when idle
+        // For other public routes (including /agent), mark complete when idle
         hasCompletedInitialLoadRef.current = true
       }
       if (wasLoadingRef.current) {

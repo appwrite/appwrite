@@ -47,7 +47,7 @@ import {
   ZoomOut,
   ExternalLink,
   Maximize2,
-  Minimize2,
+  Settings,
 } from 'lucide-react'
 import {
   ThinkingBubble,
@@ -85,12 +85,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import {
+  buildConsoleUrl,
+  openInNewTab,
+} from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StreamingMarkdown } from '@/components/global/shared/StreamingMarkdown'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useAssistantConversations,
+  useAssistantConversation,
   useAssistantAttachmentFiles,
   useAssistantMcpConnections,
   useAssistantMessages,
@@ -107,9 +112,9 @@ import {
   useProject,
   consoleAccountQueryOptions,
   useAIChatActiveConversationId,
-  useAIChatExpanded,
   useAIChatPanelOpen,
   useAIChatPinnedConversationIds,
+  useAssistantAutomations,
   type AssistantAutomation,
   type AssistantConversation,
   type AssistantMessage,
@@ -118,23 +123,33 @@ import {
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
-import { AssistantAutomationForm } from '@/components/global/providers/ai-chat/AssistantAutomationForm'
-import { AssistantAutomationsPanel } from '@/components/global/providers/ai-chat/AssistantAutomationsPanel'
-import { AssistantConversationsResizableLayout } from '@/components/global/providers/ai-chat/AssistantConversationsResizableLayout'
-import { AssistantMessageDebugCard } from '@/components/global/providers/ai-chat/AssistantMessageDebugCard'
-import { AssistantModelForm } from '@/components/global/providers/ai-chat/AssistantModelForm'
-import { AssistantModelPicker } from '@/components/global/providers/ai-chat/AssistantModelPicker'
-import { AssistantTurnActivity } from '@/components/global/providers/ai-chat/AssistantTurnActivity'
-import { McpConnections } from '@/components/global/providers/ai-chat/McpConnections'
-import { AssistantConversationContextMenu } from '@/components/global/providers/ai-chat/AssistantConversationContextMenu'
-import { AssistantRenameDialog } from '@/components/global/providers/ai-chat/AssistantRenameDialog'
-import { ConversationResourceSummary } from '@/components/global/providers/ai-chat/ConversationResourceSummary'
-import { AssistantEmptyState } from '@/components/global/providers/ai-chat/AssistantEmptyState'
+import { AgentAutomationDetail } from '@/components/global/providers/agent/AgentAutomationDetail'
+import { AgentAutomationDrawer } from '@/components/global/providers/agent/AgentAutomationDrawer'
+import { AgentAutomationsPanel } from '@/components/global/providers/agent/AgentAutomationsPanel'
+import {
+  AgentSettingsContent,
+  type AgentSettingsSectionId,
+} from '@/components/pages/agent/AgentSettingsContent'
+import { AgentConversationsResizableLayout } from '@/components/global/providers/agent/AgentConversationsResizableLayout'
+import { AgentMessageDebugCard } from '@/components/global/providers/agent/AgentMessageDebugCard'
+import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModelDrawer'
+import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
+import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
+import { AgentTurnActivity } from '@/components/global/providers/agent/AgentTurnActivity'
+import { AgentConversationContextMenu } from '@/components/global/providers/agent/AgentConversationContextMenu'
+import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
+import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
+import { AgentEmptyState } from '@/components/global/providers/agent/AgentEmptyState'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { applyAssistantRealtimePayload } from '@/lib/assistant/realtime-cache'
+import {
+  clearComposerDraft,
+  readComposerDraft,
+  writeComposerDraft,
+} from '@/lib/assistant/composer-draft'
 import { resolveAssistantModelTemp } from '@/lib/assistant/model-providers'
 import {
   buildTurnView,
@@ -168,7 +183,14 @@ function assistantConversationProjectId(
   return nonEmptyId(extended.projectId)
 }
 
-interface AIChatContextValue {
+function assistantConversationAutomationId(
+  conversation: AssistantConversation | undefined | null,
+): string | undefined {
+  if (!conversation) return undefined
+  return nonEmptyId(conversation.automationId)
+}
+
+interface AgentChatContextValue {
   isOpen: boolean
   activeConversationId: string | null
   openChat: () => void
@@ -177,7 +199,7 @@ interface AIChatContextValue {
   setActiveConversationId: (conversationId: string | null) => void
 }
 
-const AIChatContext = createContext<AIChatContextValue | null>(null)
+const AgentChatContext = createContext<AgentChatContextValue | null>(null)
 const AUTH_ROUTE_PATHNAMES = new Set([
   '/sign-in',
   '/sign-up',
@@ -188,7 +210,7 @@ const AUTH_ROUTE_PATHNAMES = new Set([
   '/verify-email',
 ])
 
-function isAssistantBlockedPath(pathname: string): boolean {
+function isAgentBlockedPath(pathname: string): boolean {
   return AUTH_ROUTE_PATHNAMES.has(pathname)
 }
 
@@ -246,11 +268,11 @@ function groupConversationsByTime(
   )
 }
 
-export function AIChatProvider({ children }: { children: React.ReactNode }) {
+export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const { activeContent, showAssistant, hideRightPane } = useConsoleRightPane()
-  const isAssistantBlocked = useMemo(
-    () => isAssistantBlockedPath(location.pathname),
+  const { activeContent, showAgent, hideRightPane } = useConsoleRightPane()
+  const isAgentBlocked = useMemo(
+    () => isAgentBlockedPath(location.pathname),
     [location.pathname],
   )
   const isMarketingPage = useIsMarketingPage()
@@ -260,7 +282,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   )
   const { data: account } = useQuery({
     ...consoleAccountQueryOptions(),
-    enabled: !isAssistantBlocked && isClientQueryEnabled,
+    enabled: !isAgentBlocked && isClientQueryEnabled,
   })
   const { isOpen, setIsOpen } = useAIChatPanelOpen(account)
   const { activeConversationId, setActiveConversationId } =
@@ -268,51 +290,51 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const hasRestoredOpenPrefRef = useRef(false)
 
   const openChat = useCallback(() => {
-    if (isAssistantBlocked || isMarketingPage || !isConsolePath) return
-    showAssistant()
+    if (isAgentBlocked || isMarketingPage || !isConsolePath) return
+    showAgent()
     setIsOpen(true)
-  }, [isAssistantBlocked, isConsolePath, isMarketingPage, setIsOpen, showAssistant])
+  }, [isAgentBlocked, isConsolePath, isMarketingPage, setIsOpen, showAgent])
   const closeChat = useCallback(() => {
     setIsOpen(false)
     hideRightPane()
   }, [hideRightPane, setIsOpen])
   const toggleChat = useCallback(() => {
-    if (isAssistantBlocked || isMarketingPage || !isConsolePath) return
-    if (activeContent === 'assistant') {
+    if (isAgentBlocked || isMarketingPage || !isConsolePath) return
+    if (activeContent === 'agent') {
       closeChat()
       return
     }
     openChat()
-  }, [activeContent, closeChat, isAssistantBlocked, isConsolePath, isMarketingPage, openChat])
+  }, [activeContent, closeChat, isAgentBlocked, isConsolePath, isMarketingPage, openChat])
 
   useEffect(() => {
     if (!isConsolePath || isMarketingPage) {
       if (isOpen) {
         setIsOpen(false)
       }
-      if (activeContent === 'assistant') {
+      if (activeContent === 'agent') {
         hideRightPane()
       }
     }
   }, [activeContent, hideRightPane, isConsolePath, isMarketingPage, isOpen, setIsOpen])
 
   useEffect(() => {
-    if (isAssistantBlocked && isOpen) {
+    if (isAgentBlocked && isOpen) {
       setIsOpen(false)
       hideRightPane()
     }
-  }, [hideRightPane, isAssistantBlocked, isOpen, setIsOpen])
+  }, [hideRightPane, isAgentBlocked, isOpen, setIsOpen])
 
   useEffect(() => {
-    if (hasRestoredOpenPrefRef.current || !account || isAssistantBlocked || !isOpen) {
+    if (hasRestoredOpenPrefRef.current || !account || isAgentBlocked || !isOpen) {
       return
     }
     hasRestoredOpenPrefRef.current = true
-    showAssistant()
-  }, [account, isAssistantBlocked, isOpen, showAssistant])
+    showAgent()
+  }, [account, isAgentBlocked, isOpen, showAgent])
 
   return (
-    <AIChatContext.Provider
+    <AgentChatContext.Provider
       value={{
         isOpen,
         activeConversationId,
@@ -323,12 +345,12 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </AIChatContext.Provider>
+    </AgentChatContext.Provider>
   )
 }
 
-export function useAIChat() {
-  const context = useContext(AIChatContext)
+export function useAgentChat() {
+  const context = useContext(AgentChatContext)
   if (!context) {
     // Return no-op functions if used outside provider
     return {
@@ -1218,7 +1240,7 @@ const AssistantMessageRow = memo(
               />
               {showDebug ? (
                 <div className="mt-1 w-full">
-                  <AssistantMessageDebugCard
+                  <AgentMessageDebugCard
                     message={message}
                     align={alignRight ? 'end' : 'start'}
                   />
@@ -1308,7 +1330,7 @@ const AssistantMessageRow = memo(
               className="max-w-[88%] cursor-default px-3 py-2 text-[13px] leading-relaxed text-foreground"
             >
               <div className="space-y-3">
-                <AssistantTurnActivity message={message} />
+                <AgentTurnActivity message={message} />
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2.5">
                     <p className="mb-2 text-[12px] text-muted-foreground">
@@ -1361,7 +1383,7 @@ const AssistantMessageRow = memo(
                   />
                 ) : null}
                 {showDebug ? (
-                  <AssistantMessageDebugCard
+                  <AgentMessageDebugCard
                     message={message}
                     align={alignRight ? 'end' : 'start'}
                   />
@@ -1813,16 +1835,31 @@ function AssistantBubbleDebugControls({
   )
 }
 
-export function AIChatPanelContent({
+export type AgentSurfaceSection = 'agents' | 'automations' | 'settings'
+
+export function AgentPanelContent({
   variant = 'pane',
+  section: sectionProp,
+  routeAgentId,
+  routeAutomationId,
+  automationMode: automationModeProp,
+  settingsSection: settingsSectionProp,
 }: {
-  /** `page` = dedicated /assistant fullscreen surface (public + optional auth). */
+  /** `page` = dedicated /agent route; `pane` = console right pane (same UI). */
   variant?: 'pane' | 'page'
+  /** Controlled section (page routes). Pane manages this locally when omitted. */
+  section?: AgentSurfaceSection
+  /** Active agent (conversation) id from `/agent/$agentId`. */
+  routeAgentId?: string
+  /** Active automation id from `/agent/automations/$automationId`. */
+  routeAutomationId?: string
+  automationMode?: 'list' | 'create' | 'detail'
+  settingsSection?: AgentSettingsSectionId
 } = {}) {
   const t = useT()
   const navigate = useNavigate()
   const { closeChat, activeConversationId, setActiveConversationId } =
-    useAIChat()
+    useAgentChat()
   const params = useParams({ strict: false }) as {
     projectId?: string
     orgId?: string
@@ -1830,8 +1867,139 @@ export function AIChatPanelContent({
   }
   const location = useLocation()
   const isPageVariant = variant === 'page'
-  const isAssistantBlocked = useMemo(
-    () => isAssistantBlockedPath(location.pathname),
+  const [paneSection, setPaneSection] = useState<AgentSurfaceSection>('agents')
+  const [paneSettingsSection, setPaneSettingsSection] =
+    useState<AgentSettingsSectionId>('models')
+  const [automationEditor, setAutomationEditor] = useState<
+    | { mode: 'closed' }
+    | { mode: 'create' }
+    | { mode: 'edit'; automation: AssistantAutomation }
+  >({ mode: 'closed' })
+  const [modelEditor, setModelEditor] = useState<
+    | { mode: 'closed' }
+    | { mode: 'create' }
+    | { mode: 'edit'; model: AssistantModel }
+  >({ mode: 'closed' })
+  const [pendingPaneAutomationId, setPendingPaneAutomationId] = useState<
+    string | null
+  >(null)
+  /** Pane-only: selected automation for the runs detail view. */
+  const [paneDetailAutomationId, setPaneDetailAutomationId] = useState<
+    string | null
+  >(null)
+  /**
+   * Automation id for the open conversation when it is a run. Kept immediately
+   * on select so nav/header do not wait on getConversation.
+   */
+  const [runAutomationContextId, setRunAutomationContextId] = useState<
+    string | null
+  >(null)
+  const section = sectionProp ?? paneSection
+  const settingsSection = settingsSectionProp ?? paneSettingsSection
+  const isAgentsSection = section === 'agents'
+  const isAutomationsSection = section === 'automations'
+  const isSettingsSection = section === 'settings'
+  const isPageAgentsSection = isPageVariant && isAgentsSection
+  const isModelEditorOpen = modelEditor.mode !== 'closed'
+  const detailAutomationId = isPageVariant
+    ? automationModeProp === 'detail'
+      ? (routeAutomationId ?? null)
+      : null
+    : paneDetailAutomationId
+
+  const navigateToAgent = useCallback(
+    (
+      agentId: string | null,
+      options?: { replace?: boolean; keepAutomationsNav?: boolean },
+    ) => {
+      if (!isPageVariant) {
+        setPaneSection(options?.keepAutomationsNav ? 'automations' : 'agents')
+        setAutomationEditor({ mode: 'closed' })
+        setPendingPaneAutomationId(null)
+        return
+      }
+      if (agentId) {
+        void navigate({
+          to: '/agent/$agentId',
+          params: { agentId },
+          replace: options?.replace,
+        })
+        return
+      }
+      void navigate({ to: '/agent', replace: options?.replace })
+    },
+    [isPageVariant, navigate],
+  )
+
+  const navigateToAutomations = useCallback(
+    (
+      next?:
+        | { mode: 'list' }
+        | { mode: 'create' }
+        | { mode: 'detail'; automationId: string },
+      options?: { replace?: boolean },
+    ) => {
+      const target = next ?? { mode: 'list' as const }
+      // Leave any open automation-run chat so the automations list/detail can show.
+      setActiveConversationId(null)
+      setRunAutomationContextId(null)
+      if (!isPageVariant) {
+        setPaneSection('automations')
+        if (target.mode === 'create') {
+          setPendingPaneAutomationId(null)
+          setAutomationEditor({ mode: 'create' })
+        } else if (target.mode === 'detail') {
+          setPaneDetailAutomationId(target.automationId)
+          setAutomationEditor({ mode: 'closed' })
+        } else {
+          setPendingPaneAutomationId(null)
+          setPaneDetailAutomationId(null)
+          setAutomationEditor({ mode: 'closed' })
+        }
+        return
+      }
+      if (target.mode === 'create') {
+        void navigate({
+          to: '/agent/automations/create',
+          replace: options?.replace,
+        })
+        return
+      }
+      if (target.mode === 'detail') {
+        void navigate({
+          to: '/agent/automations/$automationId',
+          params: { automationId: target.automationId },
+          replace: options?.replace,
+        })
+        return
+      }
+      void navigate({ to: '/agent/automations', replace: options?.replace })
+    },
+    [isPageVariant, navigate],
+  )
+
+  const navigateToSettings = useCallback(
+    (next: AgentSettingsSectionId = 'models', options?: { replace?: boolean }) => {
+      if (!isPageVariant) {
+        setPaneSection('settings')
+        setPaneSettingsSection(next)
+        setAutomationEditor({ mode: 'closed' })
+        setModelEditor({ mode: 'closed' })
+        setPendingPaneAutomationId(null)
+        return
+      }
+      void navigate({
+        to:
+          next === 'mcp'
+            ? '/agent/settings/mcp'
+            : '/agent/settings/models',
+        replace: options?.replace,
+      })
+    },
+    [isPageVariant, navigate],
+  )
+  const isAgentBlocked = useMemo(
+    () => isAgentBlockedPath(location.pathname),
     [location.pathname],
   )
   const { isDebugModeOpen } = useDebugMode()
@@ -1878,6 +2046,7 @@ export function AIChatPanelContent({
     ? (sphereParticleCountOverride ?? undefined)
     : undefined
   const [input, setInput] = useState('')
+  const skipDraftPersistRef = useRef(false)
   const [messageQueue, setMessageQueue] = useState<QueuedComposerMessage[]>([])
   const [messageQueueExpanded, setMessageQueueExpanded] = useState(true)
   const [restoredQueueAttachmentIds, setRestoredQueueAttachmentIds] = useState<
@@ -1921,18 +2090,7 @@ export function AIChatPanelContent({
   const [pinnedSectionOpen, setPinnedSectionOpen] = useState(true)
   const [headerRenameOpen, setHeaderRenameOpen] = useState(false)
   const [selectedModelId, setSelectedModelId] = useState('')
-  const [automationEditor, setAutomationEditor] = useState<
-    | { mode: 'closed' }
-    | { mode: 'create' }
-    | { mode: 'edit'; automation: AssistantAutomation }
-  >({ mode: 'closed' })
-  const [modelEditor, setModelEditor] = useState<
-    | { mode: 'closed' }
-    | { mode: 'create' }
-    | { mode: 'edit'; model: AssistantModel }
-  >({ mode: 'closed' })
-  const isAutomationEditorOpen = automationEditor.mode !== 'closed'
-  const isModelEditorOpen = modelEditor.mode !== 'closed'
+  const [selectedContextProjectId, setSelectedContextProjectId] = useState('')
   const [pinnedDragId, setPinnedDragId] = useState<string | null>(null)
   const [pinnedDragOverId, setPinnedDragOverId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -1945,6 +2103,7 @@ export function AIChatPanelContent({
   const shouldAutoScrollRef = useRef(true)
   const isProgrammaticScrollRef = useRef(false)
   const [isStickToBottom, setIsStickToBottom] = useState(true)
+  const [messagesCanScroll, setMessagesCanScroll] = useState(false)
   const olderMessagesAnchorRef = useRef<{
     scrollTop: number
     scrollHeight: number
@@ -1956,19 +2115,32 @@ export function AIChatPanelContent({
     return () => window.clearTimeout(timer)
   }, [conversationSearch])
 
+  // Restore per-conversation composer draft when switching agents (or on refresh).
+  useEffect(() => {
+    skipDraftPersistRef.current = true
+    const draft = readComposerDraft(activeConversationId)
+    setInput(draft)
+    requestAnimationFrame(() => {
+      const el = inputRef.current
+      if (!el) return
+      el.style.height = 'auto'
+      el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+      skipDraftPersistRef.current = false
+    })
+  }, [activeConversationId])
+
   const { account, isAuthenticated, isLoading: authLoading } = useAuth()
   const authReady = !authLoading
   const isGuest = authReady && !isAuthenticated
   const interactionsDisabled = isGuest || authLoading
-  const { isExpanded: isChatExpanded, setIsExpanded: setIsChatExpanded } =
-    useAIChatExpanded(account)
   const {
     pinnedConversationIds,
     setPinnedConversationIds,
     pinConversation,
     unpinConversation,
   } = useAIChatPinnedConversationIds(account)
-  const effectiveExpanded = isPageVariant || isChatExpanded
+  /** Sidebar + wide layout only on the dedicated `/agent` page (pane stays docked). */
+  const effectiveExpanded = isPageVariant
   const queryClient = useQueryClient()
 
   const {
@@ -1986,12 +2158,9 @@ export function AIChatPanelContent({
     !authReady ||
     !isAuthenticated ||
     !(conversationsLoading && conversations.length === 0)
-  const { data: mcpConnections = [], isLoading: mcpConnectionsLoading } =
-    useAssistantMcpConnections({
-      enabled: isAuthenticated,
-    })
-  const mcpReady =
-    !authReady || !isAuthenticated || !mcpConnectionsLoading
+  const { data: mcpConnections = [] } = useAssistantMcpConnections({
+    enabled: isAuthenticated,
+  })
   const hasActiveMcp = useMemo(
     () =>
       mcpConnections.some(
@@ -2012,13 +2181,42 @@ export function AIChatPanelContent({
     enabled: isAuthenticated,
   })
 
-  const activeConversation = useMemo(
+  const conversationFromList = useMemo(
     () =>
       conversations.find(
         (conversation) => conversation.$id === activeConversationId,
       ),
     [activeConversationId, conversations],
   )
+  // Automation runs are excluded from the agents list; fetch by id when needed.
+  const { data: fetchedActiveConversation } = useAssistantConversation(
+    activeConversationId && !conversationFromList
+      ? activeConversationId
+      : null,
+    { enabled: isAuthenticated },
+  )
+  const activeConversation =
+    conversationFromList ?? fetchedActiveConversation ?? undefined
+  const conversationAutomationId =
+    assistantConversationAutomationId(activeConversation)
+  const activeAutomationId =
+    conversationAutomationId ??
+    (activeConversationId ? runAutomationContextId : null)
+
+  useEffect(() => {
+    if (!activeConversationId) {
+      setRunAutomationContextId(null)
+      return
+    }
+    if (conversationAutomationId) {
+      setRunAutomationContextId(conversationAutomationId)
+      return
+    }
+    // Conversation loaded and is not an automation run.
+    if (activeConversation) {
+      setRunAutomationContextId(null)
+    }
+  }, [activeConversation, activeConversationId, conversationAutomationId])
 
   const resolveModelTempForSelection = useCallback(
     (modelId?: string | null) => {
@@ -2034,6 +2232,7 @@ export function AIChatPanelContent({
   }, [activeConversationId, activeConversation?.modelId])
 
   const contextProjectId =
+    nonEmptyId(selectedContextProjectId) ??
     nonEmptyId(params.projectId) ??
     assistantConversationProjectId(activeConversation)
   const { project, isLoading: projectLoading } = useProject(contextProjectId)
@@ -2189,12 +2388,66 @@ export function AIChatPanelContent({
   const hasOlderMessages = totalMessages > messages.length
   const messagesReady =
     !activeConversationId || !(messagesLoading && messages.length === 0)
+
+  const routeProjectId = nonEmptyId(params.projectId)
+
+  // Sync picker when switching agents / route project only. Do not reset on
+  // activeConversation object updates (e.g. after sending a message).
+  useEffect(() => {
+    const fromConversation = assistantConversationProjectId(activeConversation)
+
+    // New agent (no conversation yet): default to the project currently in view.
+    if (!activeConversationId) {
+      if (routeProjectId) {
+        setSelectedContextProjectId(routeProjectId)
+      }
+      return
+    }
+
+    if (fromConversation) {
+      setSelectedContextProjectId(fromConversation)
+      return
+    }
+
+    // Conversation has no project yet: fall back to the project in view.
+    if (routeProjectId) {
+      setSelectedContextProjectId(routeProjectId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally sync only on id/route change
+  }, [activeConversationId, routeProjectId])
+
+  useEffect(() => {
+    if (selectedContextProjectId) return
+    if (routeProjectId) {
+      setSelectedContextProjectId(routeProjectId)
+      return
+    }
+    const fromConversation = assistantConversationProjectId(activeConversation)
+    if (fromConversation) {
+      setSelectedContextProjectId(fromConversation)
+      return
+    }
+    const fromLastUserMessage = [...messages]
+      .reverse()
+      .find(
+        (message) =>
+          message.role === 'user' && nonEmptyId(message.contextProjectId),
+      )?.contextProjectId
+    if (fromLastUserMessage) {
+      setSelectedContextProjectId(fromLastUserMessage)
+    }
+  }, [
+    activeConversation,
+    messages,
+    routeProjectId,
+    selectedContextProjectId,
+  ])
   // Hold list/empty UI until auth + list data is ready so public /assistant does
   // not flash "No agents" / sign-in for signed-in users. MCP only gates empty.
   const assistantListReady = authReady && conversationsReady
   const assistantThreadReady = assistantListReady && messagesReady
-  const assistantEmptyReady =
-    assistantThreadReady && (!isAuthenticated || mcpReady)
+  // Don't block empty state on MCP — badge updates when connections resolve.
+  const assistantEmptyReady = assistantThreadReady
   const { data: editingAttachmentFilesData } = useAssistantAttachmentFiles(
     editingMessageAttachments,
   )
@@ -2269,7 +2522,7 @@ export function AIChatPanelContent({
 
   const { activityRef: bubbleActivityRef, registerKeystroke: registerTypingKeystroke } =
     useTypingSpeedActivity(
-      !isAssistantBlocked,
+      !isAgentBlocked,
       bubblePhase,
       bubbleDebugMode,
     )
@@ -2296,6 +2549,19 @@ export function AIChatPanelContent({
     }, 0)
   }, [])
 
+  const updateMessagesCanScroll = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container) {
+      setMessagesCanScroll(false)
+      return
+    }
+    // A couple of pixels of slack so sub-pixel layout doesn't flicker the shadow.
+    const canScroll = container.scrollHeight > container.clientHeight + 2
+    setMessagesCanScroll((current) =>
+      current === canScroll ? current : canScroll,
+    )
+  }, [])
+
   const isNearBottom = useCallback((container: HTMLDivElement) => {
     const distanceFromBottom =
       container.scrollHeight - (container.scrollTop + container.clientHeight)
@@ -2317,9 +2583,10 @@ export function AIChatPanelContent({
       }
       requestAnimationFrame(() => {
         isProgrammaticScrollRef.current = false
+        updateMessagesCanScroll()
       })
     })
-  }, [])
+  }, [updateMessagesCanScroll])
 
   const pinToBottom = useCallback(() => {
     shouldAutoScrollRef.current = true
@@ -2339,7 +2606,8 @@ export function AIChatPanelContent({
     setIsStickToBottom((current) =>
       current === nearBottom ? current : nearBottom,
     )
-  }, [isNearBottom])
+    updateMessagesCanScroll()
+  }, [isNearBottom, updateMessagesCanScroll])
 
   useLayoutEffect(() => {
     const conversationId = activeConversationId ?? null
@@ -2381,16 +2649,29 @@ export function AIChatPanelContent({
   useEffect(() => {
     const container = messagesContainerRef.current
     const content = messagesContentRef.current
-    if (!container || !content || messages.length === 0) return
+    if (!container || !content) {
+      setMessagesCanScroll(false)
+      return
+    }
 
-    const observer = new ResizeObserver(() => {
+    const syncOverflow = () => {
+      updateMessagesCanScroll()
       if (!shouldAutoScrollRef.current) return
       if (olderMessagesAnchorRef.current) return
+      if (messages.length === 0) return
       scrollMessagesToBottom()
-    })
+    }
+
+    syncOverflow()
+    const observer = new ResizeObserver(syncOverflow)
     observer.observe(content)
+    observer.observe(container)
     return () => observer.disconnect()
-  }, [messages.length, scrollMessagesToBottom])
+  }, [
+    messages.length,
+    scrollMessagesToBottom,
+    updateMessagesCanScroll,
+  ])
 
   // Focus input when panel content mounts
   useEffect(() => {
@@ -2412,10 +2693,92 @@ export function AIChatPanelContent({
     pendingAttachmentsRef.current = pendingAttachments
   }, [pendingAttachments])
 
+  const { data: automationsList = [] } = useAssistantAutomations(
+    undefined,
+    { enabled: isAuthenticated },
+  )
+  const parentAutomation = useMemo(() => {
+    if (!activeAutomationId) return null
+    return (
+      automationsList.find((item) => item.$id === activeAutomationId) ?? null
+    )
+  }, [activeAutomationId, automationsList])
+
+  // Keep sidebar tab aligned with section; automation runs keep the Automations tab.
+  useEffect(() => {
+    if (section === 'automations' || activeAutomationId) {
+      setConversationsMenuTab('automations')
+      return
+    }
+    if (section === 'agents') {
+      setConversationsMenuTab('agents')
+    }
+  }, [activeAutomationId, section])
+
+  // Page URL → create drawer only. Detail is route-driven; edit is local drawer state.
+  useEffect(() => {
+    if (!isPageVariant || section !== 'automations') return
+    if (automationModeProp === 'create') {
+      setAutomationEditor({ mode: 'create' })
+      return
+    }
+    // Leaving /create closes the create drawer without wiping an open edit drawer.
+    setAutomationEditor((current) =>
+      current.mode === 'create' ? { mode: 'closed' } : current,
+    )
+  }, [automationModeProp, isPageVariant, section])
+
+  // Pane: resolve pending automation id once the list is available (open detail).
+  useEffect(() => {
+    if (isPageVariant || !pendingPaneAutomationId) return
+    const automation = automationsList.find(
+      (item) => item.$id === pendingPaneAutomationId,
+    )
+    if (!automation) return
+    setPaneDetailAutomationId(automation.$id)
+    setPaneSection('automations')
+    setAutomationEditor({ mode: 'closed' })
+    setPendingPaneAutomationId(null)
+  }, [automationsList, isPageVariant, pendingPaneAutomationId])
+
+  // Keep page route param and active conversation selection in sync.
+  useEffect(() => {
+    if (!isPageAgentsSection) return
+    if (routeAgentId) {
+      if (routeAgentId !== activeConversationId) {
+        setActiveConversationId(routeAgentId)
+      }
+      return
+    }
+    if (activeConversationId) {
+      navigateToAgent(activeConversationId, { replace: true })
+    }
+  }, [
+    activeConversationId,
+    isPageAgentsSection,
+    navigateToAgent,
+    routeAgentId,
+    setActiveConversationId,
+  ])
+
   // Restore or pick a conversation once account prefs + list are ready.
   // Keep the current selection while searching even if it is filtered out.
   useEffect(() => {
     if (!account || conversationsLoading) return
+
+    // Page routes with an explicit agent id own selection via the URL.
+    if (isPageAgentsSection && routeAgentId) {
+      const exists = conversations.some(
+        (conversation: AssistantConversation) =>
+          conversation.$id === routeAgentId,
+      )
+      if (!exists && !hasConversationSearch) {
+        const fallbackId = conversations[0]?.$id ?? null
+        setActiveConversationId(fallbackId)
+        navigateToAgent(fallbackId, { replace: true })
+      }
+      return
+    }
 
     if (activeConversationId) {
       if (hasConversationSearch) return
@@ -2430,12 +2793,19 @@ export function AIChatPanelContent({
     }
 
     if (conversations.length > 0) {
-      setActiveConversationId(conversations[0].$id)
+      const nextId = conversations[0].$id
+      setActiveConversationId(nextId)
+      if (isPageAgentsSection) {
+        navigateToAgent(nextId, { replace: true })
+      }
       return
     }
 
     if (!hasConversationSearch) {
       setActiveConversationId(null)
+      if (isPageAgentsSection) {
+        navigateToAgent(null, { replace: true })
+      }
     }
   }, [
     account,
@@ -2443,6 +2813,9 @@ export function AIChatPanelContent({
     conversations,
     conversationsLoading,
     hasConversationSearch,
+    isPageAgentsSection,
+    navigateToAgent,
+    routeAgentId,
     setActiveConversationId,
   ])
 
@@ -2468,10 +2841,16 @@ export function AIChatPanelContent({
   }, [isFetchingMessages, isLoadingOlderMessages])
 
   const resolveConversationProjectId = async (): Promise<string | null> => {
-    const directContextProjectId =
-      nonEmptyId(params.projectId) ??
-      assistantConversationProjectId(activeConversation) ??
-      assistantConversationProjectId(conversations[0])
+    // New agents prefer the project currently in view; existing agents prefer
+    // the composer selection / conversation project.
+    const directContextProjectId = !activeConversationId
+      ? (routeProjectId ??
+        nonEmptyId(selectedContextProjectId) ??
+        assistantConversationProjectId(conversations[0]))
+      : (nonEmptyId(selectedContextProjectId) ??
+        routeProjectId ??
+        assistantConversationProjectId(activeConversation) ??
+        assistantConversationProjectId(conversations[0]))
     if (directContextProjectId) return directContextProjectId
 
     try {
@@ -2508,7 +2887,12 @@ export function AIChatPanelContent({
 
   const handleCreateConversation = async () => {
     if (interactionsDisabled) return
-    const conversationProjectId = await resolveConversationProjectId()
+    // New agents default to the project currently in view when on a project route.
+    if (routeProjectId) {
+      setSelectedContextProjectId(routeProjectId)
+    }
+    const conversationProjectId =
+      routeProjectId ?? (await resolveConversationProjectId())
     if (!conversationProjectId) {
       toast.error(t('No accessible project found to create an agent.'))
       return
@@ -2521,9 +2905,9 @@ export function AIChatPanelContent({
         modelId: selectedModelId || undefined,
         modelTemp: resolveModelTempForSelection(selectedModelId),
       })
-      closeAutomationEditor()
       closeModelEditor()
       setActiveConversationId(conversation.$id)
+      navigateToAgent(conversation.$id)
       setConversationsPopoverOpen(false)
       focusInput()
     } catch (error) {
@@ -2556,7 +2940,9 @@ export function AIChatPanelContent({
         conversation.$id !== conversationId &&
         conversation.status?.toLowerCase() !== 'archived',
     )
-    setActiveConversationId(nextConversation?.$id ?? null)
+    const nextId = nextConversation?.$id ?? null
+    setActiveConversationId(nextId)
+    navigateToAgent(nextId)
   }
 
   const handleArchiveConversation = async (conversationId: string) => {
@@ -2768,6 +3154,17 @@ export function AIChatPanelContent({
         return false
       }
 
+      const messageProjectId =
+        nonEmptyId(selectedContextProjectId) ??
+        nonEmptyId(conversationProjectId) ??
+        nonEmptyId(params.projectId) ??
+        assistantConversationProjectId(activeConversation)
+
+      // Keep the composer project selection after send (seed if empty).
+      if (messageProjectId && messageProjectId !== selectedContextProjectId) {
+        setSelectedContextProjectId(messageProjectId)
+      }
+
       shouldAutoScrollRef.current = true
       setIsStickToBottom(true)
       scrollMessagesToBottom()
@@ -2786,6 +3183,7 @@ export function AIChatPanelContent({
             })
           conversationId = createdConversation.$id
           setActiveConversationId(createdConversation.$id)
+          navigateToAgent(createdConversation.$id)
         }
         if (!conversationId) return false
 
@@ -2816,10 +3214,7 @@ export function AIChatPanelContent({
             nonEmptyId(params.orgId) ??
             nonEmptyId(params.teamId) ??
             nonEmptyId(project?.teamId),
-          contextProjectId:
-            nonEmptyId(conversationProjectId) ??
-            nonEmptyId(params.projectId) ??
-            assistantConversationProjectId(activeConversation),
+          contextProjectId: messageProjectId,
           contextOrganizationId:
             nonEmptyId(params.orgId) ??
             nonEmptyId(params.teamId) ??
@@ -2870,6 +3265,7 @@ export function AIChatPanelContent({
       project?.teamId,
       resolveModelTempForSelection,
       scrollMessagesToBottom,
+      selectedContextProjectId,
       selectedModelId,
       setActiveConversationId,
       t,
@@ -2924,9 +3320,10 @@ export function AIChatPanelContent({
       setComposerImageOrientations({})
       setRestoredQueueAttachmentIds(item.attachmentIds)
       setInput(item.content)
+      writeComposerDraft(activeConversationId, item.content)
       focusInput(true)
     },
-    [focusInput, messageQueue],
+    [activeConversationId, focusInput, messageQueue],
   )
 
   const handleSend = async (content: string = input) => {
@@ -2971,6 +3368,7 @@ export function AIChatPanelContent({
       if (isConversationRunning && !editingId) {
         enqueueComposerMessage(trimmed, attachmentIds)
         setInput('')
+        clearComposerDraft(activeConversationId)
         setPendingAttachments([])
         setComposerImageOrientations({})
         setRestoredQueueAttachmentIds([])
@@ -2982,6 +3380,7 @@ export function AIChatPanelContent({
       }
 
       setInput('')
+      clearComposerDraft(activeConversationId)
       const sent = await submitComposerMessage({
         content: trimmed,
         attachmentIds,
@@ -2996,6 +3395,9 @@ export function AIChatPanelContent({
         }
       } else {
         setInput(trimmed)
+        if (!editingId) {
+          writeComposerDraft(activeConversationId, trimmed)
+        }
       }
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to send message')))
@@ -3200,8 +3602,17 @@ export function AIChatPanelContent({
     setEditingMessageAttachments([])
     setPendingAttachments([])
     setComposerImageOrientations({})
-    setInput('')
-  }, [])
+    skipDraftPersistRef.current = true
+    const draft = readComposerDraft(activeConversationId)
+    setInput(draft)
+    requestAnimationFrame(() => {
+      const el = inputRef.current
+      if (!el) return
+      el.style.height = 'auto'
+      el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+      skipDraftPersistRef.current = false
+    })
+  }, [activeConversationId])
 
   const handleLoadOlderMessages = useCallback(() => {
     if (!hasOlderMessages || isFetchingMessages || isLoadingOlderMessages)
@@ -3233,38 +3644,42 @@ export function AIChatPanelContent({
     }
   }
 
-  const leaveAssistantPage = useCallback(() => {
+  const leaveAgentPage = useCallback(() => {
     void navigate({ to: '/', replace: false })
   }, [navigate])
 
   const handleCloseChat = useCallback(() => {
     if (isPageVariant) {
-      leaveAssistantPage()
+      leaveAgentPage()
       return
     }
     closeChat()
-  }, [closeChat, isPageVariant, leaveAssistantPage])
+  }, [closeChat, isPageVariant, leaveAgentPage])
 
   const closeAutomationEditor = useCallback(() => {
+    const wasCreate = automationEditor.mode === 'create'
     setAutomationEditor({ mode: 'closed' })
-  }, [])
+    setPendingPaneAutomationId(null)
+    // Create lives on its own route; edit drawer closes in place on detail.
+    if (isPageVariant && wasCreate) {
+      if (routeAutomationId) {
+        void navigate({
+          to: '/agent/automations/$automationId',
+          params: { automationId: routeAutomationId },
+        })
+        return
+      }
+      void navigate({ to: '/agent/automations' })
+    }
+  }, [
+    automationEditor.mode,
+    isPageVariant,
+    navigate,
+    routeAutomationId,
+  ])
 
   const closeModelEditor = useCallback(() => {
     setModelEditor({ mode: 'closed' })
-  }, [])
-
-  const openAutomationCreate = useCallback(() => {
-    setConversationsPopoverOpen(false)
-    setConversationsMenuTab('automations')
-    setModelEditor({ mode: 'closed' })
-    setAutomationEditor({ mode: 'create' })
-  }, [])
-
-  const openAutomationEdit = useCallback((automation: AssistantAutomation) => {
-    setConversationsPopoverOpen(false)
-    setConversationsMenuTab('automations')
-    setModelEditor({ mode: 'closed' })
-    setAutomationEditor({ mode: 'edit', automation })
   }, [])
 
   const openModelCreate = useCallback(() => {
@@ -3273,47 +3688,54 @@ export function AIChatPanelContent({
     setModelEditor({ mode: 'create' })
   }, [])
 
-  const openModelEdit = useCallback((model: AssistantModel) => {
-    setConversationsPopoverOpen(false)
-    setAutomationEditor({ mode: 'closed' })
-    setModelEditor({ mode: 'edit', model })
-  }, [])
+  const getAgentSurfacePath = useCallback(() => {
+    if (section === 'settings') {
+      return settingsSection === 'mcp'
+        ? '/agent/settings/mcp'
+        : '/agent/settings/models'
+    }
+    if (section === 'automations') {
+      if (automationEditor.mode === 'create') return '/agent/automations/create'
+      if (detailAutomationId) {
+        return `/agent/automations/${detailAutomationId}`
+      }
+      return '/agent/automations'
+    }
+    if (activeConversationId) return `/agent/${activeConversationId}`
+    return '/agent'
+  }, [
+    activeConversationId,
+    automationEditor.mode,
+    detailAutomationId,
+    section,
+    settingsSection,
+  ])
+
+  const handleOpenInNewTab = useCallback(() => {
+    openInNewTab(buildConsoleUrl(getAgentSurfacePath()))
+  }, [getAgentSurfacePath])
 
   useEffect(() => {
-    if (!isChatExpanded || isPageVariant) return
+    if (isPageVariant) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      // Image previews and other wizard overlays own Escape first
+      // Drawers, image previews, and wizard overlays own Escape first.
       if (document.querySelector('[data-wizard-layout]')) return
-      if (modelEditor.mode !== 'closed') {
-        event.preventDefault()
-        setModelEditor({ mode: 'closed' })
-        return
-      }
-      if (automationEditor.mode !== 'closed') {
-        event.preventDefault()
-        setAutomationEditor({ mode: 'closed' })
-        return
-      }
-      // Let open dialogs/alert-dialogs own Escape; do not collapse fullscreen.
-      const hasOpenModal = Boolean(
+      if (
         document.querySelector(
-          '[data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]',
-        ),
-      )
-      if (hasOpenModal) return
-      event.preventDefault()
-      setIsChatExpanded(false)
+          '[data-slot="sheet-content"][data-state="open"], [data-slot="dialog-content"][data-state="open"], [data-slot="alert-dialog-content"][data-state="open"]',
+        )
+      ) {
+        return
+      }
+      if (paneSection === 'settings') {
+        event.preventDefault()
+        setPaneSection('agents')
+      }
     }
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [
-    automationEditor.mode,
-    isChatExpanded,
-    isPageVariant,
-    modelEditor.mode,
-    setIsChatExpanded,
-  ])
+  }, [isPageVariant, paneSection])
 
   const conversationById = useMemo(() => {
     const map = new Map<string, AssistantConversation>()
@@ -3455,25 +3877,35 @@ export function AIChatPanelContent({
             className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
           />
           <p className="truncate text-[13px] font-semibold text-foreground">
-            {t('Appwrite Agents')}
+            {t('Appwrite Agent')}
           </p>
         </div>
       )}
       <Tabs
         value={conversationsMenuTab}
         onValueChange={(value) => {
-          if (value === 'agents' || value === 'automations') {
-            setConversationsMenuTab(value)
+          if (value !== 'agents' && value !== 'automations') return
+          if (value === 'automations') {
+            navigateToAutomations({ mode: 'list' })
+            return
           }
+          // Leaving an automation-run chat returns to the Agents list.
+          if (activeAutomationId) {
+            setActiveConversationId(null)
+            setRunAutomationContextId(null)
+            navigateToAgent(null)
+            return
+          }
+          navigateToAgent(isPageVariant ? activeConversationId : null)
         }}
         className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
           <TabsList className="mb-3 grid h-9 w-full grid-cols-2 shadow-none">
-            <TabsTrigger value="agents" className="text-[12px]">
+            <TabsTrigger value="agents" className="w-full text-[12px]">
               {t('Agents')}
             </TabsTrigger>
-            <TabsTrigger value="automations" className="text-[12px]">
+            <TabsTrigger value="automations" className="w-full text-[12px]">
               {t('Automations')}
             </TabsTrigger>
           </TabsList>
@@ -3494,10 +3926,26 @@ export function AIChatPanelContent({
             value="automations"
             className="mt-0 data-[state=inactive]:hidden"
           >
-            <AssistantAutomationsPanel
+            <AgentAutomationsPanel
               disabled={interactionsDisabled}
-              onCreate={openAutomationCreate}
-              onEdit={openAutomationEdit}
+              selectedAutomationId={
+                detailAutomationId ?? activeAutomationId ?? null
+              }
+              onCreate={() => {
+                navigateToAutomations({ mode: 'create' })
+              }}
+              onSelect={(automation) => {
+                navigateToAutomations({
+                  mode: 'detail',
+                  automationId: automation.$id,
+                })
+              }}
+              onEdit={(automation) => {
+                navigateToAutomations({
+                  mode: 'detail',
+                  automationId: automation.$id,
+                })
+              }}
             />
           </TabsContent>
         </div>
@@ -3530,7 +3978,7 @@ export function AIChatPanelContent({
       pinnedDragId !== conversation.$id
 
     return (
-      <AssistantConversationContextMenu
+      <AgentConversationContextMenu
         key={conversation.$id}
         title={conversation.title || t('Untitled agent')}
         disabled={interactionsDisabled}
@@ -3545,7 +3993,23 @@ export function AIChatPanelContent({
         onDelete={() => handleDeleteConversation(conversation.$id)}
       >
         <div
+          role="button"
+          tabIndex={0}
           draggable={canDrag}
+          onClick={() => {
+            closeModelEditor()
+            setActiveConversationId(conversation.$id)
+            navigateToAgent(conversation.$id)
+            options?.onSelect?.()
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            closeModelEditor()
+            setActiveConversationId(conversation.$id)
+            navigateToAgent(conversation.$id)
+            options?.onSelect?.()
+          }}
           onDragStart={
             canDrag
               ? (event) => {
@@ -3596,7 +4060,7 @@ export function AIChatPanelContent({
               : undefined
           }
           className={cn(
-            'group flex items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+            'group flex w-full items-center gap-1 rounded-md border border-transparent px-1.5 py-1 text-start transition-colors',
             canDrag
               ? 'cursor-grab active:cursor-grabbing'
               : 'cursor-pointer',
@@ -3609,40 +4073,29 @@ export function AIChatPanelContent({
           aria-label={
             canDrag
               ? `${conversation.title || t('Untitled agent')}, ${t('drag to reorder')}`
-              : undefined
+              : conversation.title || t('Untitled agent')
           }
         >
-          <button
-            type="button"
-            onClick={() => {
-              closeAutomationEditor()
-              closeModelEditor()
-              setActiveConversationId(conversation.$id)
-              options?.onSelect?.()
-            }}
-            className={cn(
-              'flex min-w-0 flex-1 flex-col gap-0.5 text-start',
-              canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
-                {conversation.title || t('Untitled agent')}
-              </span>
-              {statusTone !== 'ready' ? (
-                <span
-                  className={cn(
-                    'h-1.5 w-1.5 shrink-0 rounded-full',
-                    getAssistantConversationStatusDotClass(statusTone),
-                  )}
-                  title={statusLabel}
-                  aria-label={statusLabel}
-                  role="img"
-                />
-              ) : null}
+          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+            <span className="min-w-0 truncate text-[12px] font-medium text-foreground">
+              {conversation.title || t('Untitled agent')}
             </span>
-            <ConversationResourceSummary conversationId={conversation.$id} />
-          </button>
+            {statusTone !== 'ready' ? (
+              <span
+                className={cn(
+                  'h-1.5 w-1.5 shrink-0 rounded-full',
+                  getAssistantConversationStatusDotClass(statusTone),
+                )}
+                title={statusLabel}
+                aria-label={statusLabel}
+                role="img"
+              />
+            ) : null}
+            <ConversationResourceSummary
+              conversationId={conversation.$id}
+              className="shrink-0"
+            />
+          </div>
           {!isArchived ? (
             <Button
               type="button"
@@ -3669,7 +4122,7 @@ export function AIChatPanelContent({
             </Button>
           ) : null}
         </div>
-      </AssistantConversationContextMenu>
+      </AgentConversationContextMenu>
     )
   }
 
@@ -3830,7 +4283,7 @@ export function AIChatPanelContent({
     )
   }
 
-  if (isAssistantBlocked) return null
+  if (isAgentBlocked) return null
 
   const conversationsSidebar = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
@@ -3843,21 +4296,151 @@ export function AIChatPanelContent({
           variant="ghost"
           className="h-9 w-full justify-start gap-1.5 px-2 text-[13px] text-muted-foreground hover:text-foreground"
           onClick={() => {
-            if (isPageVariant) {
-              leaveAssistantPage()
-              return
-            }
-            setIsChatExpanded(false)
+            leaveAgentPage()
           }}
         >
           <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-          {isPageVariant
-            ? isAuthenticated
-              ? t('Back to console')
-              : t('Back to Appwrite')
-            : t('Back to console')}
+          {isAuthenticated ? t('Back to console') : t('Back to Appwrite')}
         </Button>
       </div>
+    </div>
+  )
+
+  if (isSettingsSection) {
+    return (
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-col bg-background">
+        {isPageVariant ? (
+          <AgentConversationsResizableLayout sidebar={conversationsSidebar}>
+            <AgentSettingsContent
+              section={settingsSection}
+              onSectionChange={(next) => {
+                navigateToSettings(next)
+              }}
+              onBack={() => {
+                navigateToAgent(activeConversationId)
+              }}
+            />
+          </AgentConversationsResizableLayout>
+        ) : (
+          <AgentSettingsContent
+            section={settingsSection}
+            onSectionChange={(next) => {
+              navigateToSettings(next)
+            }}
+            onBack={() => {
+              navigateToAgent(null)
+            }}
+            onOpenInNewTab={handleOpenInNewTab}
+          />
+        )}
+      </div>
+    )
+  }
+
+  const selectedAutomation =
+    automationsList.find((item) => item.$id === detailAutomationId) ?? null
+
+  const automationHeaderTitle =
+    selectedAutomation?.name ||
+    (detailAutomationId ? t('Untitled automation') : t('Automations'))
+
+  const automationsMain = (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
+        <div className="min-w-0">
+          {isPageVariant ? (
+            <span className="truncate px-1.5 text-[13px] font-semibold text-foreground">
+              {automationHeaderTitle}
+            </span>
+          ) : (
+            <Popover
+              open={conversationsPopoverOpen}
+              onOpenChange={setConversationsPopoverOpen}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 max-w-[220px] shrink gap-1.5 px-1.5"
+                  aria-label={t('Automations')}
+                >
+                  <span className="truncate text-[13px] font-semibold text-foreground">
+                    {automationHeaderTitle}
+                  </span>
+                  <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-[300px] p-0">
+                <div className="flex max-h-[360px] flex-col overflow-hidden">
+                  {renderConversationsMenuBody({
+                    hideHeader: true,
+                    hideCreateButton: true,
+                    onSelectConversation: () =>
+                      setConversationsPopoverOpen(false),
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => navigateToSettings('models')}
+            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={t('Settings')}
+            title={t('Settings')}
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
+          {!isPageVariant ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-[12px]"
+                onClick={handleOpenInNewTab}
+              >
+                <ExternalLink className="me-1.5 h-3.5 w-3.5" />
+                {t('Open in new tab')}
+              </Button>
+              <button
+                type="button"
+                onClick={handleCloseChat}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={t('Close')}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
+      <AgentAutomationDetail
+        automation={selectedAutomation}
+        disabled={interactionsDisabled}
+        selectedRunId={activeConversationId}
+        defaultTab="settings"
+        onAddModel={() => navigateToSettings('models')}
+        onDeleted={() => navigateToAutomations({ mode: 'list' })}
+        onSelectRun={(conversation) => {
+          const runAutomationId =
+            assistantConversationAutomationId(conversation)
+          if (runAutomationId) {
+            setRunAutomationContextId(runAutomationId)
+            setPaneDetailAutomationId(runAutomationId)
+            queryClient.setQueryData(
+              ['assistant', 'conversation', conversation.$id],
+              conversation,
+            )
+          }
+          setConversationsPopoverOpen(false)
+          closeModelEditor()
+          setActiveConversationId(conversation.$id)
+          navigateToAgent(conversation.$id, { keepAutomationsNav: true })
+        }}
+      />
     </div>
   )
 
@@ -3866,23 +4449,7 @@ export function AIChatPanelContent({
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                {isModelEditorOpen ? (
-                  <div className="flex min-w-0 max-w-md items-center gap-1 px-1.5 py-1">
-                    <span className="truncate text-[13px] font-semibold text-foreground">
-                      {modelEditor.mode === 'edit'
-                        ? t('Update model')
-                        : t('Add model')}
-                    </span>
-                  </div>
-                ) : isAutomationEditorOpen ? (
-                  <div className="flex min-w-0 max-w-md items-center gap-1 px-1.5 py-1">
-                    <span className="truncate text-[13px] font-semibold text-foreground">
-                      {automationEditor.mode === 'edit'
-                        ? t('Update automation')
-                        : t('Create automation')}
-                    </span>
-                  </div>
-                ) : effectiveExpanded ? (
+                {effectiveExpanded ? (
                   <button
                     type="button"
                     className="group flex min-w-0 max-w-full items-center gap-1 rounded-md px-1.5 py-1 text-start transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-60"
@@ -3912,7 +4479,9 @@ export function AIChatPanelContent({
                           type="button"
                           variant="ghost"
                           className="h-8 max-w-[200px] shrink gap-1.5 px-1.5"
-                          aria-label={t('Agents')}
+                          aria-label={
+                            activeAutomationId ? t('Automations') : t('Agents')
+                          }
                         >
                           <span className="truncate text-[13px] font-semibold text-foreground">
                             {activeConversation?.title || t('New agent')}
@@ -3932,26 +4501,28 @@ export function AIChatPanelContent({
                         </div>
                       </PopoverContent>
                     </Popover>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => {
-                        void handleCreateConversation()
-                      }}
-                      disabled={
-                        interactionsDisabled ||
-                        createConversationMutation.isPending
-                      }
-                      aria-label={t('Create agent')}
-                    >
-                      {createConversationMutation.isPending ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Plus className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
+                    {!activeAutomationId ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => {
+                          void handleCreateConversation()
+                        }}
+                        disabled={
+                          interactionsDisabled ||
+                          createConversationMutation.isPending
+                        }
+                        aria-label={t('Create agent')}
+                      >
+                        {createConversationMutation.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Plus className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -3979,67 +4550,68 @@ export function AIChatPanelContent({
                   )}
                 </Button>
               ) : null}
-              {!interactionsDisabled ? <McpConnections /> : null}
-              {!isPageVariant ? (
-                <button
-                  type="button"
-                  onClick={() => setIsChatExpanded((current) => !current)}
-                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  aria-label={
-                    isChatExpanded ? t('Collapse chat') : t('Expand chat')
-                  }
-                  title={isChatExpanded ? t('Collapse chat') : t('Expand chat')}
-                >
-                  {isChatExpanded ? (
-                    <Minimize2 className="h-3.5 w-3.5" />
-                  ) : (
-                    <Maximize2 className="h-3.5 w-3.5" />
-                  )}
-                </button>
-              ) : null}
               <button
                 type="button"
-                onClick={handleCloseChat}
+                onClick={() => navigateToSettings('models')}
                 className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label={t('Close')}
+                aria-label={t('Settings')}
+                title={t('Settings')}
               >
-                <X className="h-3.5 w-3.5" />
+                <Settings className="h-3.5 w-3.5" />
               </button>
+              {!isPageVariant ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-[12px]"
+                    onClick={handleOpenInNewTab}
+                  >
+                    <ExternalLink className="me-1.5 h-3.5 w-3.5" />
+                    {t('Open in new tab')}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={handleCloseChat}
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-label={t('Close')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              ) : null}
             </div>
           </div>
 
+          {activeAutomationId ? (
+            <div className="shrink-0 border-b border-border bg-muted/30">
+              <div className="mx-auto flex w-full max-w-3xl items-center px-4 py-2 sm:px-6">
+                <button
+                  type="button"
+                  className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-md text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => {
+                    navigateToAutomations({
+                      mode: 'detail',
+                      automationId: activeAutomationId,
+                    })
+                  }}
+                  aria-label={t('Back to automation')}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">
+                    <span>{t('Automation')}</span>
+                    <span className="mx-1 text-muted-foreground/70">/</span>
+                    <span className="font-medium text-foreground">
+                      {parentAutomation?.name || t('Untitled automation')}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="relative flex min-h-0 flex-1 flex-col">
-          {isModelEditorOpen ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <AssistantModelForm
-                model={
-                  modelEditor.mode === 'edit' ? modelEditor.model : null
-                }
-                disabled={interactionsDisabled}
-                onCancel={closeModelEditor}
-                onSaved={(model) => {
-                  setSelectedModelId(model.$id)
-                  closeModelEditor()
-                }}
-              />
-            </div>
-          ) : isAutomationEditorOpen ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <AssistantAutomationForm
-                automation={
-                  automationEditor.mode === 'edit'
-                    ? automationEditor.automation
-                    : null
-                }
-                disabled={interactionsDisabled}
-                resolveProjectId={resolveConversationProjectId}
-                onAddModel={openModelCreate}
-                onCancel={closeAutomationEditor}
-                onSaved={closeAutomationEditor}
-              />
-            </div>
-          ) : (
-          <>
           <div className="relative min-h-0 flex-1">
             <div
               ref={messagesContainerRef}
@@ -4055,7 +4627,7 @@ export function AIChatPanelContent({
               >
               {!assistantThreadReady ? null : messages.length === 0 ? (
                 !assistantEmptyReady ? null : (
-                  <AssistantEmptyState
+                  <AgentEmptyState
                     hasActiveMcp={hasActiveMcp && !isGuest}
                     suggestions={emptyStateSuggestions}
                     onSelectSuggestion={(question) => handleSend(t(question))}
@@ -4202,9 +4774,15 @@ export function AIChatPanelContent({
                 </Button>
               </div>
             ) : null}
+            {messagesCanScroll && !isStickToBottom ? (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute bottom-0 left-1/2 z-[5] h-4 w-[min(420px,70%)] -translate-x-1/2 translate-y-1/4 rounded-[100%] bg-foreground/[0.045] blur-2xl dark:bg-black/28"
+              />
+            ) : null}
           </div>
 
-          <div className="shrink-0 border-t border-border">
+          <div className="relative z-10 shrink-0 bg-background">
             <div
               className={cn(
                 'p-4',
@@ -4542,7 +5120,11 @@ export function AIChatPanelContent({
                   value={input}
                   onChange={(e) => {
                     if (interactionsDisabled) return
-                    setInput(e.target.value)
+                    const nextValue = e.target.value
+                    setInput(nextValue)
+                    if (!editingMessageId && !skipDraftPersistRef.current) {
+                      writeComposerDraft(activeConversationId, nextValue)
+                    }
                     if (messages.length === 0) {
                       registerTypingKeystroke()
                     }
@@ -4645,15 +5227,22 @@ export function AIChatPanelContent({
                 </button>
               </div>
               {!interactionsDisabled ? (
-                <div className="flex items-center border-t border-border px-1.5 py-1">
-                  <AssistantModelPicker
+                <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
+                  <AgentModelPicker
                     value={selectedModelId}
                     onChange={(modelId) => {
                       void handleSelectModel(modelId)
                     }}
                     disabled={interactionsDisabled}
-                    onAddModel={openModelCreate}
-                    onEditModel={openModelEdit}
+                    onManageModels={() => navigateToSettings('models')}
+                  />
+                  <ProjectSelector
+                    projectId={
+                      selectedContextProjectId || routeProjectId || undefined
+                    }
+                    onProjectSelect={setSelectedContextProjectId}
+                    compact
+                    disabled={interactionsDisabled}
                   />
                 </div>
               ) : null}
@@ -4669,32 +5258,60 @@ export function AIChatPanelContent({
             </p>
             </div>
           </div>
-          </>
-          )}
           </div>
       </div>
   )
 
+  // Keep chat visible for automation runs while the Automations nav stays active.
+  const viewingAutomationRun =
+    Boolean(activeConversationId) && Boolean(activeAutomationId)
+  const mainPanel =
+    isAutomationsSection && !viewingAutomationRun ? automationsMain : chatMain
+
   return (
-    <div
-      className={cn(
-        'flex min-h-0 bg-background',
-        isPageVariant
-          ? 'h-full w-full'
-          : effectiveExpanded
-            ? 'fixed inset-0 z-[125] h-[100dvh] max-h-[100dvh] w-full'
-            : 'h-full',
-      )}
-    >
-      {effectiveExpanded ? (
-        <AssistantConversationsResizableLayout sidebar={conversationsSidebar}>
-          {chatMain}
-        </AssistantConversationsResizableLayout>
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col bg-background">
+      {isPageVariant ? (
+        <AgentConversationsResizableLayout sidebar={conversationsSidebar}>
+          {mainPanel}
+        </AgentConversationsResizableLayout>
       ) : (
-        chatMain
+        mainPanel
       )}
+      <AgentModelDrawer
+        open={isModelEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) closeModelEditor()
+        }}
+        model={modelEditor.mode === 'edit' ? modelEditor.model : null}
+        disabled={interactionsDisabled}
+        onSaved={(model) => {
+          if (model?.$id) setSelectedModelId(model.$id)
+        }}
+      />
+      <AgentAutomationDrawer
+        open={automationEditor.mode === 'create'}
+        onOpenChange={(open) => {
+          if (!open) closeAutomationEditor()
+        }}
+        automation={null}
+        disabled={interactionsDisabled}
+        resolveProjectId={resolveConversationProjectId}
+        onAddModel={openModelCreate}
+        onSaved={(saved) => {
+          setAutomationEditor({ mode: 'closed' })
+          setPendingPaneAutomationId(null)
+          if (!saved?.$id) {
+            navigateToAutomations({ mode: 'list' })
+            return
+          }
+          navigateToAutomations(
+            { mode: 'detail', automationId: saved.$id },
+            { replace: true },
+          )
+        }}
+      />
       {activeConversationId && activeConversation ? (
-        <AssistantRenameDialog
+        <AgentRenameDialog
           open={headerRenameOpen}
           onOpenChange={setHeaderRenameOpen}
           title={activeConversation.title || t('Untitled agent')}
@@ -4707,8 +5324,8 @@ export function AIChatPanelContent({
   )
 }
 
-/** @deprecated Use {@link ConsoleRightPane} with {@link AIChatPanelContent}. */
-export function AIChatPanel() {
+/** @deprecated Use {@link ConsoleRightPane} with {@link AgentPanelContent}. */
+export function AgentPanel() {
   return null
 }
 

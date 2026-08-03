@@ -29,6 +29,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'init',
   'generator',
   'assistant',
+  'agent',
 ])
 
 function isConsoleAreaPath(pathname: string): boolean {

@@ -1623,8 +1623,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'Usage & analytics',
               ),
               createDebugFeatureFlagItem(
-                'AI assistant',
-                'In-app AI assistant chat panel and header button.',
+                'AI agent',
+                'In-app AI agent chat panel and header button.',
                 'showAIAssistant',
                 overrides.showAIAssistant,
                 (checked) => {

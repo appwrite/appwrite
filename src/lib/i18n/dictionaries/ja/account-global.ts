@@ -273,9 +273,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Fit image to screen': '画像を画面に合わせる',
   'How can I help you?': '何をお手伝いしましょうか?',
   'What should we do next?': '次に何をしましょうか?',
-  'Sign in to use the assistant': 'アシスタントを使うにはサインイン',
-  'Create an account or sign in to chat with the Appwrite assistant about your projects.':
-    'アカウントを作成するかサインインして、Appwrite アシスタントとプロジェクトについてチャットできます。',
+  'Sign in to use the agent': 'Agent を使うにはサインイン',
+  'Create an account or sign in to chat with the Appwrite Agent about your projects.':
+    'アカウントを作成するかサインインして、Appwrite Agent とプロジェクトについてチャットできます。',
   'Sign in to ask a question...': 'サインインして質問する...',
   'Back to Appwrite': 'Appwrite に戻る',
   'MCP ready': 'MCP 準備完了',
@@ -324,11 +324,30 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Zoom out': '縮小',
   MCP: 'MCP',
   'MCP connections': 'MCP 接続',
-  'Servers available to the assistant':
-    'アシスタントが利用できるサーバー',
+  'No MCP connections': 'MCP 接続はありません',
+  'Connect Appwrite MCP to give the agent tools for your projects.':
+    'Appwrite MCP を接続すると、Agent がプロジェクト向けのツールを利用できます。',
+  'Servers available to the agent': 'Agent が利用できるサーバー',
   'Appwrite MCP': 'Appwrite MCP',
-  'Let the assistant take actions in your Appwrite projects through the hosted MCP server.':
-    'ホストされた MCP サーバー経由で、アシスタントが Appwrite プロジェクトで操作できるようにします。',
+  'Let the agent take actions in your Appwrite projects through the hosted MCP server.':
+    'ホストされた MCP サーバー経由で、Agent が Appwrite プロジェクトで操作できるようにします。',
+  'Open MCP settings': 'MCP 設定を開く',
+  'Select an automation': 'オートメーションを選択',
+  'Choose an automation from the list, or create a new one to run on a schedule.':
+    'リストからオートメーションを選ぶか、スケジュール実行用の新しいオートメーションを作成します。',
+  'Add custom LLM providers and API keys for the Appwrite Agent.':
+    'Appwrite Agent 用のカスタム LLM プロバイダーと API キーを追加します。',
+  'Sign in to manage models.': 'モデルを管理するにはサインインしてください。',
+  'Sign in to manage MCP connections.':
+    'MCP 接続を管理するにはサインインしてください。',
+  'No custom models yet. The Appwrite default model is always available.':
+    'カスタムモデルはまだありません。Appwrite のデフォルトモデルは常に利用できます。',
+  'This permanently deletes the model credentials.':
+    'この操作によりモデルのアクセス資格情報が完全に削除されます。',
+  'Delete model': 'モデルを削除',
+  'Model deleted': 'モデルを削除しました',
+  'Failed to delete model': 'モデルの削除に失敗しました',
+  'Failed to resolve project': 'プロジェクトの解決に失敗しました',
   'Appwrite MCP connected': 'Appwrite MCP を接続しました',
   'Appwrite MCP disconnected': 'Appwrite MCP を切断しました',
   'MCP disconnected': 'MCP を切断しました',
@@ -727,9 +746,11 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Enable: '有効化',
   Explore: '探索',
   Attachment: '添付ファイル',
-  'Appwrite Agents': 'Appwrite Agents',
+  'Appwrite Agent': 'Appwrite Agent',
   Agents: 'エージェント',
   Automations: 'オートメーション',
+  Automation: 'オートメーション',
+  'Back to automation': 'オートメーションに戻る',
   'Create agent': 'エージェントを作成',
   'No automations yet.': 'オートメーションはまだありません。',
   'Search automations...': 'オートメーションを検索...',
@@ -740,14 +761,39 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Automation created': 'オートメーションを作成しました',
   'Automation updated': 'オートメーションを更新しました',
   'Automation deleted': 'オートメーションを削除しました',
+  'Delete automation': 'オートメーションを削除',
+  'This permanently deletes the automation.':
+    'このオートメーションは完全に削除されます。',
   'Failed to create automation': 'オートメーションの作成に失敗しました',
   'Failed to update automation': 'オートメーションの更新に失敗しました',
   'Failed to delete automation': 'オートメーションの削除に失敗しました',
   'Untitled automation': '無題のオートメーション',
   'Custom model': 'カスタムモデル',
   'Last run': '前回の実行',
+  Runs: '実行履歴',
+  runs: '実行',
+  'Run history': '実行履歴',
+  Triggers: 'トリガー',
+  'Agent instructions': 'エージェント指示',
+  By: '作成者',
+  Succeeded: '成功',
+  Scheduled: 'スケジュール',
+  Trigger: 'トリガー',
+  Triggered: '実行日時',
+  Duration: '所要時間',
+  'Successful · 24h': '成功 · 24時間',
+  'Failed · 24h': '失敗 · 24時間',
+  'Successful · 7d': '成功 · 7日',
+  'Failed · 7d': '失敗 · 7日',
+  'Automation enabled': 'オートメーションを有効にしました',
+  'Automation paused': 'オートメーションを一時停止しました',
+  'No runs yet.': 'まだ実行がありません。',
+  'Runs appear here after this automation executes.':
+    'このオートメーションが実行されると、ここに表示されます。',
   'Run a prompt on a schedule. Each run creates a new agent conversation.':
     'スケジュールでプロンプトを実行します。実行ごとに新しいエージェント会話が作成されます。',
+  'Automation will not run on a schedule':
+    'オートメーションはスケジュールで実行されません',
   'Weekly project review': '週次プロジェクトレビュー',
   Prompt: 'プロンプト',
   'Summarize project activity and suggest next steps.':

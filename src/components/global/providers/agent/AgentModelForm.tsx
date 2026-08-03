@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Cpu, Loader2 } from 'lucide-react'
+import { Cpu } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -12,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
@@ -27,6 +35,7 @@ import {
 } from '@/lib/assistant/model-providers'
 import {
   useCreateAssistantModel,
+  useDeleteAssistantModel,
   useUpdateAssistantModel,
   type AssistantModel,
 } from '@/lib/react-query/hooks'
@@ -117,22 +126,25 @@ function ModelIcon({
   )
 }
 
-export type AssistantModelFormProps = {
+export type AgentModelFormProps = {
   model?: AssistantModel | null
   disabled?: boolean
   onCancel: () => void
-  onSaved?: (model: AssistantModel) => void
+  /** Called after create/update with the saved model, or after delete with null. */
+  onSaved?: (model?: AssistantModel | null) => void
 }
 
-export function AssistantModelForm({
+export function AgentModelForm({
   model = null,
   disabled = false,
   onCancel,
   onSaved,
-}: AssistantModelFormProps) {
+}: AgentModelFormProps) {
   const t = useT()
   const createMutation = useCreateAssistantModel()
   const updateMutation = useUpdateAssistantModel()
+  const deleteMutation = useDeleteAssistantModel()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [form, setForm] = useState<ModelFormState>(() =>
     model ? formFromModel(model) : emptyForm(),
   )
@@ -154,6 +166,23 @@ export function AssistantModelForm({
 
   const isEditing = Boolean(model?.$id)
   const isSaving = createMutation.isPending || updateMutation.isPending
+  const isDeleting = deleteMutation.isPending
+
+  const closeDeleteDialog = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
+  }
+
+  const handleDelete = async () => {
+    if (!model?.$id || isDeleting || disabled) return
+    try {
+      await deleteMutation.mutateAsync(model.$id)
+      toast.success(t('Model deleted'))
+      closeDeleteDialog()
+      onSaved?.(null)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to delete model')))
+    }
+  }
   const providerModels = useMemo(
     () => getAssistantProviderModels(form.provider),
     [form.provider],
@@ -220,7 +249,7 @@ export function AssistantModelForm({
   }
 
   const handleSave = async () => {
-    if (!canSave || isSaving || disabled) return
+    if (!canSave || isSaving || isDeleting || disabled) return
     try {
       if (isEditing && model) {
         const updated = await updateMutation.mutateAsync({
@@ -257,12 +286,28 @@ export function AssistantModelForm({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-4">
+        <div className="space-y-5 px-6 py-6">
           <p className="text-[13px] text-muted-foreground">
             {t('Configure the provider, model ID, and API key.')}
           </p>
+          <div className="space-y-2">
+            <Label htmlFor="assistant-model-name">{t('Name')}</Label>
+            <Input
+              id="assistant-model-name"
+              value={form.name}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
+              }
+              placeholder={t('My OpenAI key')}
+              className="h-9 text-[13px]"
+              disabled={disabled}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label>{t('Provider')}</Label>
@@ -367,23 +412,6 @@ export function AssistantModelForm({
               ) : null}
 
               <div className="space-y-2">
-                <Label htmlFor="assistant-model-name">{t('Display name')}</Label>
-                <Input
-                  id="assistant-model-name"
-                  value={form.name}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder={t('My OpenAI key')}
-                  className="h-9 text-[13px]"
-                  disabled={disabled}
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="assistant-model-api-key">{t('API key')}</Label>
                 <Input
                   id="assistant-model-api-key"
@@ -433,54 +461,113 @@ export function AssistantModelForm({
                 />
               </div>
             </div>
-            <div className="border-t border-border" />
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div>
-                <p className="text-[13px] font-medium text-foreground">
-                  {t('Enabled')}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {t('Allow this model in the agent composer.')}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
+            <div>
+              <p className="text-[13px] font-medium text-foreground">
+                {t('Enabled')}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {t('Allow this model in the agent composer.')}
+              </p>
+            </div>
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(checked) =>
+                setForm((current) => ({ ...current, enabled: checked }))
+              }
+              disabled={disabled}
+            />
+          </div>
+
+          {isEditing ? (
+            <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+              <div className="px-4 py-3">
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  {t('Delete model')}
+                </h3>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {t('This permanently deletes the model credentials.')}{' '}
+                  {t('This action cannot be undone.')}
                 </p>
               </div>
-              <Switch
-                checked={form.enabled}
-                onCheckedChange={(checked) =>
-                  setForm((current) => ({ ...current, enabled: checked }))
-                }
-                disabled={disabled}
-              />
+              <div className="border-t border-destructive/20 px-4 py-3 bg-destructive/5">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  disabled={disabled || isDeleting || isSaving}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  {t('Delete')}
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-background p-2">
-        <div className="mx-auto flex h-9 w-full max-w-3xl items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9"
-            disabled={isSaving}
-            onClick={onCancel}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-9"
-            disabled={!canSave || isSaving || disabled}
-            onClick={() => void handleSave()}
-          >
-            {isSaving ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : null}
-            {isEditing ? t('Update') : t('Create')}
-          </Button>
-        </div>
+      <div className="flex shrink-0 items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
+        <Button
+          type="button"
+          disabled={!canSave || isSaving || isDeleting || disabled}
+          onClick={() => void handleSave()}
+        >
+          {isEditing ? t('Update') : t('Create')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSaving || isDeleting}
+          onClick={onCancel}
+        >
+          {t('Cancel')}
+        </Button>
       </div>
+
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDeleteDialog()
+            return
+          }
+          setDeleteOpen(true)
+        }}
+      >
+        <DialogContent
+          className="z-[140] sm:max-w-md p-0"
+          overlayClassName="z-[140]"
+        >
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>{t('Delete model')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t('This permanently deletes the model credentials.')}{' '}
+              {t('This action cannot be undone.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={closeDeleteDialog}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={() => void handleDelete()}
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

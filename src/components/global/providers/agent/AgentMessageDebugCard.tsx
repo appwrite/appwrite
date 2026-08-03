@@ -68,7 +68,7 @@ function MetaChip({ children }: { children: ReactNode }) {
   )
 }
 
-export function AssistantMessageDebugCard({
+export function AgentMessageDebugCard({
   message,
   align = 'start',
 }: {

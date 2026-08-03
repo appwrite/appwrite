@@ -10,7 +10,7 @@ export const APPWRITE_ASSISTANT_MCP_ID = MCP_SERVER_NAME
 export const APPWRITE_ASSISTANT_MCP_NAME = 'Appwrite MCP'
 
 export const APPWRITE_ASSISTANT_MCP_DESCRIPTION =
-  'Let the assistant take actions in your Appwrite projects through the hosted MCP server.'
+  'Let the agent take actions in your Appwrite projects through the hosted MCP server.'
 
 /**
  * Env / hosted default MCP URL (ignores debug override). Prefer
@@ -42,6 +42,6 @@ export function getAppwriteAssistantMcpConnectInput() {
     url,
     description: APPWRITE_ASSISTANT_MCP_DESCRIPTION,
     resource: url,
-    clientName: 'Appwrite Assistant',
+    clientName: 'Appwrite Agent',
   }
 }
