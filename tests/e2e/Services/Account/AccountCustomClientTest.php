@@ -4609,5 +4609,20 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $session['headers']['status-code']);
         $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
+
+        \sleep(3); // Small delay to ensure expiry can expand
+
+        $session = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals($sessionId, $session['body']['$id']);
+        $this->assertNotEmpty($session['body']['expire']);
+
+        $this->assertGreaterThan(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
     }
 }
