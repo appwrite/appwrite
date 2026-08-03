@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -408,17 +409,17 @@ class Create extends Base
         ]);
 
         /** Execute function */
+        $executionResponse = [
+            'headers' => [],
+            'body' => '',
+        ];
+
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
-            }
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
-            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),

@@ -30,21 +30,14 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
-    public const MODEL_USAGE_DATABASES = 'usageDatabases';
-    public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
     public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
     public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
     public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
-    public const MODEL_USAGE_TABLE = 'usageTable';
-    public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_PRESENCE = 'usagePresence';
-    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
-    public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITES = 'usageSites';
     public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
@@ -202,6 +195,8 @@ class Response extends SwooleResponse
     public const MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST = 'providerRepositoryFrameworkList';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME = 'providerRepositoryRuntime';
     public const MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST = 'providerRepositoryRuntimeList';
+    public const MODEL_VCS_NAMESPACE = 'vcsNamespace';
+    public const MODEL_VCS_NAMESPACE_LIST = 'vcsNamespaceList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';

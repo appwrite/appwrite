@@ -205,8 +205,9 @@ class Increment extends Action
         );
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->dynamic($document, $this->getResponseModel());
 

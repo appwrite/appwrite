@@ -347,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',
@@ -1210,6 +1215,11 @@ return [
         'name' => Exception::KEY_ALREADY_EXISTS,
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,

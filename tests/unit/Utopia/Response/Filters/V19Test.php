@@ -209,37 +209,6 @@ final class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function projectProvider(): \Iterator
-    {
-        yield 'remove devKeys field' => [
-            [
-                'devKeys' => ['key1', 'key2'],
-                'name' => 'test-project',
-            ],
-            [
-                'name' => 'test-project',
-            ]
-        ];
-        yield 'handle content without devKeys' => [
-            [
-                'name' => 'test-project',
-            ],
-            [
-                'name' => 'test-project',
-            ]
-        ];
-    }
-
-    #[DataProvider('projectProvider')]
-    public function testProject(array $content, array $expected): void
-    {
-        $model = Response::MODEL_PROJECT;
-
-        $result = $this->filter->parse($content, $model);
-
-        $this->assertEquals($expected, $result);
-    }
-
     public static function providerRepositoryProvider(): \Iterator
     {
         yield 'remove runtime field' => [

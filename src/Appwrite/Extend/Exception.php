@@ -108,6 +108,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
     public const string USER_DELETION_PROHIBITED = 'user_deletion_prohibited';
@@ -334,6 +335,9 @@ class Exception extends \Exception
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
     public const string KEY_ALREADY_EXISTS = 'key_already_exists';
+
+    /** Dev Keys */
+    public const string DEV_KEY_GONE = 'dev_key_gone';
 
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';

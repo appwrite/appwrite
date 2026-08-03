@@ -125,11 +125,16 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $contentType = $type === 'source' ? 'application/gzip' : 'application/octet-stream';
+        $filename = $type === 'source'
+            ? $deploymentId . '-source.tar.gz'
+            : $deploymentId . '-output-' . \basename($path);
+
         $response
-            ->setContentType('application/gzip')
+            ->setContentType($contentType)
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeaderLine('range');
@@ -153,14 +158,14 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($device->read($path, $start, ($end - $start + 1)));
+            $response->send((string) $device->read($path, $start, ($end - $start + 1)));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $device->read(
+                    (string) $device->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -169,7 +174,7 @@ class Get extends Action
                 );
             }
         } else {
-            $response->send($device->read($path));
+            $response->send((string) $device->read($path));
         }
     }
 }

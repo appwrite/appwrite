@@ -190,7 +190,7 @@ final class FunctionsCustomServerTest extends Scope
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
         $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
-        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $function = $this->createFunction([
             'functionId' => ID::unique(),
@@ -1027,7 +1027,7 @@ final class FunctionsCustomServerTest extends Scope
                 'entrypoint' => 'index.js',
                 'code' => $curlFile,
                 'activate' => true,
-                'commands' => 'cp blue.mp4 copy.mp4 && ls -al' // +7MB buildSize
+                'commands' => 'head -c 12582912 /dev/urandom > random.bin && ls -al' // +12MB unique, incompressible: survives squashfs dedup and any compressor
             ]);
             $counter++;
             $id = $largeTag['body']['$id'];
@@ -1050,7 +1050,7 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
-            $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
+            $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video + 12MB incompressible sample; compression/dedup-agnostic
         }, 120000, 500);
     }
 

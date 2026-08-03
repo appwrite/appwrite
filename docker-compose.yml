@@ -74,7 +74,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
       - appwrite-geo
     environment:
@@ -104,6 +104,7 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -170,12 +171,12 @@ services:
       - _APP_DOMAIN_SITES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_BUILDS_BACKEND
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -197,6 +198,15 @@ services:
       - _APP_VCS_GITHUB_WEBHOOK_SECRET
       - _APP_VCS_GITHUB_CLIENT_SECRET
       - _APP_VCS_GITHUB_CLIENT_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
@@ -218,12 +228,14 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/vibes:0.3.16
+    image: appwrite/new:0.3.32
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - APPWRITE_ENDPOINT_SAME_ORIGIN=true
+      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -261,7 +273,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -288,6 +300,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
       - _APP_POOL_ADAPTER=swoole
@@ -305,7 +318,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -326,8 +339,10 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_CONSOLE_URL_SCHEME=root
   appwrite-worker-deletes:
     entrypoint: worker-deletes
     logging:
@@ -341,7 +356,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -390,6 +405,7 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
@@ -409,7 +425,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -435,6 +451,7 @@ services:
       - _APP_DB_USER_VECTORSDB
       - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-builds:
@@ -454,7 +471,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -476,9 +493,19 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_GITLAB_CLIENT_ID
+      - _APP_VCS_GITLAB_CLIENT_SECRET
+      - _APP_VCS_GITLAB_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -490,6 +517,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -515,7 +543,6 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DOMAIN_SITES
-      - _APP_BUILDS_BACKEND
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
@@ -538,7 +565,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -559,6 +586,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -578,7 +606,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
@@ -589,6 +617,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -638,7 +667,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
@@ -670,6 +699,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
@@ -684,7 +714,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -715,6 +745,7 @@ services:
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_LOGGING_PROVIDER
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
@@ -730,7 +761,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -757,6 +788,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -775,7 +807,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -800,6 +832,7 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
@@ -837,6 +870,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
       - _APP_SMS_PROJECTS_DENY_LIST
@@ -879,7 +913,7 @@ services:
       - appwrite-imports:/storage/imports:rw
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -905,6 +939,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
@@ -912,7 +947,7 @@ services:
       - _APP_MIGRATION_HOST
   appwrite-task-maintenance:
     entrypoint: maintenance
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -923,10 +958,11 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -959,7 +995,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-interval:
     entrypoint: interval
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -970,10 +1006,11 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_DOMAIN
@@ -1001,7 +1038,7 @@ services:
 
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1012,11 +1049,12 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1040,7 +1078,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1051,11 +1089,12 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1079,7 +1118,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
-    restart: on-failure:3
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -1090,11 +1129,12 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
       - _APP_ENV
+      - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
@@ -1118,7 +1158,7 @@ services:
       - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.2
+    image: appwrite/browser:0.3.3
     networks:
       - appwrite
 
@@ -1151,7 +1191,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.25.2
+    image: openruntimes/executor:0.25.4
     restart: unless-stopped
     networks:
       - appwrite
@@ -1162,8 +1202,6 @@ services:
       - appwrite-sites:/storage/sites:rw
       - /tmp:/tmp:rw
     environment:
-      - OPR_EXECUTOR_CONNECTION_STORAGE=local://localhost
-      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
       - OPR_EXECUTOR_IMAGES=$_APP_EXECUTOR_IMAGES
       - OPR_EXECUTOR_INACTIVE_THRESHOLD=$_APP_COMPUTE_INACTIVE_THRESHOLD
       - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_COMPUTE_MAINTENANCE_INTERVAL
@@ -1176,28 +1214,8 @@ services:
       - OPR_EXECUTOR_RUNTIME_VERSIONS=v5
       - OPEN_RUNTIMES_NFT=$_APP_OPEN_RUNTIMES_NFT
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-      - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
-      - OPR_EXECUTOR_STORAGE_S3_ACCESS_KEY=$_APP_STORAGE_S3_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_S3_SECRET=$_APP_STORAGE_S3_SECRET
-      - OPR_EXECUTOR_STORAGE_S3_REGION=$_APP_STORAGE_S3_REGION
-      - OPR_EXECUTOR_STORAGE_S3_BUCKET=$_APP_STORAGE_S3_BUCKET
-      - OPR_EXECUTOR_STORAGE_S3_ENDPOINT=$_APP_STORAGE_S3_ENDPOINT
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_ACCESS_KEY=$_APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_SECRET=$_APP_STORAGE_DO_SPACES_SECRET
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_REGION=$_APP_STORAGE_DO_SPACES_REGION
-      - OPR_EXECUTOR_STORAGE_DO_SPACES_BUCKET=$_APP_STORAGE_DO_SPACES_BUCKET
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_ACCESS_KEY=$_APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_SECRET=$_APP_STORAGE_BACKBLAZE_SECRET
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_REGION=$_APP_STORAGE_BACKBLAZE_REGION
-      - OPR_EXECUTOR_STORAGE_BACKBLAZE_BUCKET=$_APP_STORAGE_BACKBLAZE_BUCKET
-      - OPR_EXECUTOR_STORAGE_LINODE_ACCESS_KEY=$_APP_STORAGE_LINODE_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_LINODE_SECRET=$_APP_STORAGE_LINODE_SECRET
-      - OPR_EXECUTOR_STORAGE_LINODE_REGION=$_APP_STORAGE_LINODE_REGION
-      - OPR_EXECUTOR_STORAGE_LINODE_BUCKET=$_APP_STORAGE_LINODE_BUCKET
-      - OPR_EXECUTOR_STORAGE_WASABI_ACCESS_KEY=$_APP_STORAGE_WASABI_ACCESS_KEY
-      - OPR_EXECUTOR_STORAGE_WASABI_SECRET=$_APP_STORAGE_WASABI_SECRET
-      - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
-      - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
+      - OPR_EXECUTOR_CONNECTION_STORAGE=${_APP_EXECUTOR_CONNECTION_STORAGE:-local://localhost}
+      - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
     healthcheck:
       test:
         - CMD-SHELL
@@ -1216,7 +1234,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.4.3
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.18.0
     restart: unless-stopped
     user: root
     networks:
@@ -1227,7 +1245,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - ORCHESTRATOR_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.4.3
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.18.0
 
   mariadb:
     image: mariadb:10.11
@@ -1267,7 +1285,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    restart: on-failure:3
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -1290,7 +1308,7 @@ services:
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
               const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
                 quit(0);
               }
             } catch (e) {}
