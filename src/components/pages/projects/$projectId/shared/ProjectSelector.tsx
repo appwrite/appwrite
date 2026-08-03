@@ -125,6 +125,53 @@ function ProjectSelectorTriggerSkeleton({
   )
 }
 
+/** Static trigger stand-in when logged out / no project context (no pulse loader). */
+function ProjectSelectorIdlePlaceholder({
+  className,
+  compact = false,
+  label,
+}: {
+  className?: string
+  compact?: boolean
+  label: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex max-w-full min-w-0 items-center overflow-visible rounded-md text-start opacity-50',
+        compact
+          ? 'h-7 max-w-[200px] gap-1.5 px-2 py-1'
+          : 'h-9 gap-2 px-2 py-1.5',
+        className,
+      )}
+      aria-hidden
+    >
+      <div
+        className={cn(
+          'shrink-0 rounded-full bg-muted',
+          compact ? 'h-3.5 w-3.5' : 'h-6 w-6',
+        )}
+      />
+      <p
+        className={cn(
+          'min-w-0 flex-1 truncate font-medium',
+          compact
+            ? 'text-[11px] text-muted-foreground'
+            : 'text-[13px] text-muted-foreground',
+        )}
+      >
+        {label}
+      </p>
+      <ChevronDown
+        className={cn(
+          'shrink-0 text-muted-foreground',
+          compact ? 'h-3 w-3 opacity-70' : 'h-3.5 w-3.5',
+        )}
+      />
+    </div>
+  )
+}
+
 function ProjectSelectorPlanBadgeSlot({
   isCloud,
   org,
@@ -200,7 +247,7 @@ export function ProjectSelector({
   const supportsMultiTenancy = features.multiTenancy
   const selectionMode = typeof onProjectSelect === 'function'
   const navigate = useNavigate()
-  const { account } = useAuth()
+  const { account, isAuthenticated, isFetched: authFetched } = useAuth()
   const [open, setOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
@@ -675,14 +722,35 @@ export function ProjectSelector({
   }
 
   if (selectionMode && !resolvedTeam) {
+    // Logged out (or auth settled with no orgs): static placeholder, not a loader.
+    if (authFetched && !isAuthenticated) {
+      return (
+        <ProjectSelectorIdlePlaceholder
+          className={className}
+          compact={compact}
+          label={t('Select project')}
+        />
+      )
+    }
+
     // Keep composer footer height stable while orgs/project context resolve.
+    if (orgsLoading || !authFetched) {
+      return (
+        <ProjectSelectorTriggerSkeleton
+          className={className}
+          isMobile={isMobile}
+          supportsMultiTenancy={supportsMultiTenancy}
+          isCloud={isCloud}
+          compact={compact}
+        />
+      )
+    }
+
     return (
-      <ProjectSelectorTriggerSkeleton
+      <ProjectSelectorIdlePlaceholder
         className={className}
-        isMobile={isMobile}
-        supportsMultiTenancy={supportsMultiTenancy}
-        isCloud={isCloud}
         compact={compact}
+        label={t('Select project')}
       />
     )
   }

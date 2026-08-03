@@ -6,7 +6,12 @@
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
 
-export type EndpointPresetId = 'production' | 'stage' | 'localhost' | 'custom'
+export type EndpointPresetId =
+  | 'production'
+  | 'stage'
+  | 'localhost'
+  | 'oss'
+  | 'custom'
 
 export const ENDPOINT_PRESETS: Record<
   Exclude<EndpointPresetId, 'custom'>,
@@ -26,6 +31,11 @@ export const ENDPOINT_PRESETS: Record<
     label: 'Localhost',
     url: 'http://localhost/v1',
     description: 'Local Appwrite instance',
+  },
+  oss: {
+    label: 'OSS',
+    url: 'https://oss.appwrite.org/v1',
+    description: 'Permanent self-hosted (AWS)',
   },
 }
 
