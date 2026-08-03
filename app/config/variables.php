@@ -207,7 +207,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,

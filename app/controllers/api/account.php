@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Phrase;
+use Appwrite\Auth\Validator\EmailWhitelist;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
@@ -321,7 +322,7 @@ Http::post('/v1/account')
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails) && !\in_array(strtoupper($email), $whitelistEmails)) {
+            if (!empty($whitelistEmails) && !(new EmailWhitelist($whitelistEmails))->isValid($email)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
