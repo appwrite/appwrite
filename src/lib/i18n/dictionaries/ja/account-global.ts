@@ -892,4 +892,23 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'unread notifications': '件の未読通知',
   Unread: '未読',
   'Refreshing...': '更新中...',
+
+  // Agent console protocol surfaces
+  '1 result': '1 件の結果',
+  results: '件の結果',
+  'Filter...': 'フィルター...',
+  'No results match your filter': 'フィルターに一致する結果はありません',
+  Showing: '表示中',
+  of: '/',
+  'View all': 'すべて表示',
+  'Search docs': 'ドキュメントを検索',
+  'Contact support': 'サポートに問い合わせ',
+  'Connect MCP': 'MCP に接続',
+  'Open in Console': 'コンソールで開く',
+  'Open docs': 'ドキュメントを開く',
+  'Open agent': 'エージェントを開く',
+  'Close panel': 'パネルを閉じる',
+  'Switch to dark mode': 'ダークモードに切り替え',
+  'Switch to light mode': 'ライトモードに切り替え',
+  'Use system theme': 'システムテーマを使用',
 }

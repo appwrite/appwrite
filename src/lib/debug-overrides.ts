@@ -434,9 +434,45 @@ export function subscribeToDebugOverrides(
   }
 }
 
+/**
+ * Defaults used for SSR and the first client render (no localStorage).
+ * Keeps hydration markup identical; persisted overrides apply after mount.
+ */
+export function getDefaultDebugOverrides(): DebugOverrides {
+  return {
+    showNativeAppBar: false,
+    showAIAssistant: false,
+    showActivityChart: false,
+    showSuccessTeamCard: false,
+    mockCloudStatusAlert: 'live',
+    showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
+    showFunctionsLocalEditor: false,
+    showConstruction: getShowConstructionDefault(),
+    mockInitCurrentDay: null,
+    mockInitTicketType: null,
+    previewInitReactionConfetti: false,
+    initLowPowerAnimations: 'auto',
+    userOs: 'auto',
+    disableUsageBreakdownQueries: false,
+    disableOverviewBandwidthChart: false,
+    disableOverviewRequestsChart: false,
+    disableOverviewStorageChart: false,
+    disableOverviewExecutionsChart: false,
+    disableOverviewComputeChart: false,
+    unlockOnboardingLocks: false,
+    previewOnboardingComplete: false,
+    previewCommunitySupportWizard: false,
+    pageDirection: 'ltr',
+    language: 'en',
+  }
+}
+
 export function useDebugOverrides(): DebugOverrides {
-  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  // Do not read localStorage during useState init — that diverges from SSR and
+  // remounts the app shell (visible as a white flash).
+  const [overrides, setOverrides] = useState(getDefaultDebugOverrides)
   useEffect(() => {
+    setOverrides(loadDebugOverrides())
     return subscribeToDebugOverrides(setOverrides)
   }, [])
   return overrides

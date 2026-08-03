@@ -136,6 +136,7 @@ import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModel
 import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { AgentTurnActivity } from '@/components/global/providers/agent/AgentTurnActivity'
+import { AgentConsoleSurfaces } from '@/components/global/providers/agent/AgentConsoleSurfaces'
 import { AgentConversationContextMenu } from '@/components/global/providers/agent/AgentConversationContextMenu'
 import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
 import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
@@ -163,6 +164,7 @@ import {
 } from '@/lib/assistant/turn-view'
 import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
+import { useConsoleProtocolEffects } from '@/hooks/use-console-protocol-effects'
 
 const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
 
@@ -442,6 +444,9 @@ interface AssistantMessageRowProps {
   placeholderCandidates: Partial<Record<PlaceholderToken, string[]>>
   copied: boolean
   showDebug?: boolean
+  openResourceInNewTab?: boolean
+  contextProjectId?: string | null
+  organizationId?: string | null
   onCopyMessage: (messageId: string, text: string) => void
   onStartEditResend: (
     messageId: string,
@@ -1158,6 +1163,9 @@ const AssistantMessageRow = memo(
     placeholderCandidates,
     copied,
     showDebug = false,
+    openResourceInNewTab = false,
+    contextProjectId,
+    organizationId,
     onCopyMessage,
     onStartEditResend,
     onRetry,
@@ -1331,6 +1339,12 @@ const AssistantMessageRow = memo(
             >
               <div className="space-y-3">
                 <AgentTurnActivity message={message} />
+                <AgentConsoleSurfaces
+                  message={message}
+                  openInNewTab={openResourceInNewTab}
+                  projectId={contextProjectId}
+                  organizationId={organizationId}
+                />
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2.5">
                     <p className="mb-2 text-[12px] text-muted-foreground">
@@ -2123,8 +2137,8 @@ export function AgentPanelContent({
     requestAnimationFrame(() => {
       const el = inputRef.current
       if (!el) return
-      el.style.height = 'auto'
-      el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+      el.style.height = '40px'
+      el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 128)}px`
       skipDraftPersistRef.current = false
     })
   }, [activeConversationId])
@@ -2388,6 +2402,12 @@ export function AgentPanelContent({
   const hasOlderMessages = totalMessages > messages.length
   const messagesReady =
     !activeConversationId || !(messagesLoading && messages.length === 0)
+
+  useConsoleProtocolEffects(messages, {
+    conversationId: activeConversationId,
+    projectId: contextProjectId,
+    organizationId,
+  })
 
   const routeProjectId = nonEmptyId(params.projectId)
 
@@ -3608,8 +3628,8 @@ export function AgentPanelContent({
     requestAnimationFrame(() => {
       const el = inputRef.current
       if (!el) return
-      el.style.height = 'auto'
-      el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+      el.style.height = '40px'
+      el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 128)}px`
       skipDraftPersistRef.current = false
     })
   }, [activeConversationId])
@@ -4735,6 +4755,9 @@ export function AgentPanelContent({
                         placeholderCandidates={placeholderCandidates}
                         copied={copiedMessageId === message.$id}
                         showDebug={isDebugModeOpen}
+                        openResourceInNewTab={isPageVariant}
+                        contextProjectId={contextProjectId}
+                        organizationId={organizationId}
                         onCopyMessage={handleCopyMessage}
                         onStartEditResend={handleStartEditResend}
                         onRetry={handleRetryMessage}
@@ -5145,13 +5168,13 @@ export function AgentPanelContent({
                   disabled={interactionsDisabled}
                   className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[13px] leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
-                    height: 'auto',
+                    height: '40px',
                     minHeight: '40px',
                   }}
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement
-                    target.style.height = 'auto'
-                    target.style.height = `${Math.min(target.scrollHeight, 128)}px`
+                    target.style.height = '40px'
+                    target.style.height = `${Math.min(Math.max(target.scrollHeight, 40), 128)}px`
                   }}
                 />
                 <button
@@ -5226,15 +5249,18 @@ export function AgentPanelContent({
                   )}
                 </button>
               </div>
-              {!interactionsDisabled ? (
-                <div className="flex items-center gap-1 border-t border-border px-1.5 py-1">
+              <div className="flex min-h-9 items-center gap-1 border-t border-border px-1.5 py-1">
                   <AgentModelPicker
                     value={selectedModelId}
                     onChange={(modelId) => {
                       void handleSelectModel(modelId)
                     }}
                     disabled={interactionsDisabled}
-                    onManageModels={() => navigateToSettings('models')}
+                    onManageModels={
+                      interactionsDisabled
+                        ? undefined
+                        : () => navigateToSettings('models')
+                    }
                   />
                   <ProjectSelector
                     projectId={
@@ -5245,7 +5271,6 @@ export function AgentPanelContent({
                     disabled={interactionsDisabled}
                   />
                 </div>
-              ) : null}
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
               {hasUploadingAttachments

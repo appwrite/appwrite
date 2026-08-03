@@ -14,6 +14,7 @@ import {
   valueToInlineEditString,
   type RowCellValue,
 } from '@/lib/database-row-inline-edits'
+import { BlurredSensitiveText } from '@/components/global/shared/BlurredSensitiveText'
 import { useTableRowsEditSession } from './TableRowsEditSession'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { Input } from '@/components/ui/input'
@@ -289,17 +290,15 @@ export function InlineTableCell({
           onCellMouseDown?.(event)
         }}
       >
-        <span
+        <BlurredSensitiveText
+          value={display}
+          blurred={blurEncryptedValue}
           className={cn(
             'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
             isNull ? 'text-foreground/60' : 'text-foreground',
-            blurEncryptedValue &&
-              'select-none blur-[5px] transition-[filter] duration-150',
           )}
           dir={dir}
-        >
-          {display}
-        </span>
+        />
       </div>
     )
   }
@@ -457,18 +456,16 @@ export function InlineTableCell({
         onCellMouseDown?.(event)
       }}
     >
-      <span
+      <BlurredSensitiveText
+        value={display}
+        blurred={blurEncryptedValue}
         className={cn(
           'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
           isNull ? 'text-foreground/60' : 'text-foreground',
           isEdited && 'font-medium text-amber-950 dark:text-amber-50',
-          blurEncryptedValue &&
-            'select-none blur-[5px] transition-[filter] duration-150',
         )}
         dir={dir}
-      >
-        {display}
-      </span>
+      />
     </div>
   )
 }

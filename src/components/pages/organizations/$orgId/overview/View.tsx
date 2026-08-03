@@ -155,6 +155,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
+import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
@@ -745,6 +746,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const openOrgShortcutsHelp = useCallback(() => {
     setCommandCenterInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
+  }, [])
+
+  // Agent pane is a sibling of this page; register so console protocol can open CC.
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setCommandCenterInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   useGlobalCommandShortcuts({
@@ -1507,6 +1516,40 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       : !supportsAdditionalMembers
         ? t('Member limit reached for your plan.')
         : undefined
+
+  // Agent console protocol: invite=member opens the invite dialog.
+  useEffect(() => {
+    const shouldInvite =
+      typeof search === 'object' &&
+      'invite' in search &&
+      (search as { invite?: string }).invite === 'member'
+    if (
+      !shouldInvite ||
+      organizationsLoading ||
+      inviteDialogOpen ||
+      inviteDisabled
+    ) {
+      return
+    }
+    setInviteDialogOpen(true)
+    navigate({
+      to: location.pathname,
+      search: (prev: Record<string, unknown>) => {
+        if (!prev || typeof prev !== 'object') return {}
+        const newSearch = { ...(prev as Record<string, unknown>) }
+        delete newSearch.invite
+        return Object.keys(newSearch).length === 0 ? {} : newSearch
+      },
+      replace: true,
+    })
+  }, [
+    inviteDialogOpen,
+    inviteDisabled,
+    location.pathname,
+    navigate,
+    organizationsLoading,
+    search,
+  ])
 
   // Calculate member limit
   // Check both addons.seats and plan.members field

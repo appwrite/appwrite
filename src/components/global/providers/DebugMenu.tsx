@@ -677,7 +677,7 @@ function TableCell({ className, ...props }: ComponentProps<'td'>) {
 }
 
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
-  const { isDebugModeOpen: isVisible } = useDebugMode()
+  const { isDebugModeOpen: isVisible, closeDebugMode } = useDebugMode()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
@@ -2059,32 +2059,59 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       }}
     >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip open={isDragging ? false : undefined}>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
+        <div className="relative">
+          <Tooltip open={isDragging ? false : undefined}>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    'relative flex h-11 w-11 select-none items-center justify-center overflow-hidden rounded-xl bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--background))] shadow-sm transition-colors',
+                    'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--background))]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
+                  )}
+                  aria-label="Debug menu"
+                  onPointerDown={handleDragPointerDown}
+                  onPointerMove={handleDragPointerMove}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={finishDrag}
+                  onClick={handleDragClick}
+                  onDragStart={(event) => event.preventDefault()}
+                >
+                  <DebugMenuBrandMark className="relative z-10 text-foreground" />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side={tooltipSide} sideOffset={8}>
+              Debug menu
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setIsOpen(false)
+                  closeDebugMode()
+                }}
                 className={cn(
-                  'relative flex h-11 w-11 select-none items-center justify-center overflow-hidden rounded-xl bg-[color-mix(in_srgb,var(--network-globe-edge)_22%,var(--background))] shadow-sm transition-colors',
-                  'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_30%,var(--background))]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                  isDragging ? 'cursor-grabbing touch-none' : 'cursor-grab',
+                  'absolute -end-1.5 -top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full',
+                  'border border-border bg-background text-muted-foreground shadow-sm',
+                  'hover:bg-muted hover:text-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/30',
                 )}
-                aria-label="Debug menu"
-                onPointerDown={handleDragPointerDown}
-                onPointerMove={handleDragPointerMove}
-                onPointerUp={finishDrag}
-                onPointerCancel={finishDrag}
-                onClick={handleDragClick}
-                onDragStart={(event) => event.preventDefault()}
+                aria-label="Close debug mode"
               >
-                <DebugMenuBrandMark className="relative z-10 text-foreground" />
+                <X className="h-3 w-3" />
               </button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent side={tooltipSide} sideOffset={8}>
-            Debug menu
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent side={tooltipSide} sideOffset={8}>
+              Close debug mode
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <PopoverContent
           dir="ltr"
           lang="en"
@@ -2124,9 +2151,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     <ChevronLeft className="h-4 w-4 text-[var(--network-globe-edge)]" />
                   </button>
                 )}
-                <span className="text-[13px] font-semibold text-foreground">
+                <span className="min-w-0 flex-1 text-[13px] font-semibold text-foreground">
                   {currentSubmenu ? currentSubmenu.title : 'Debug'}
                 </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false)
+                        closeDebugMode()
+                      }}
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
+                      aria-label="Close debug mode"
+                    >
+                      <X className="h-4 w-4 text-[var(--network-globe-edge)]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">Close debug mode</TooltipContent>
+                </Tooltip>
               </div>
             </div>
             {isFeatureFlagsSubmenu ? (

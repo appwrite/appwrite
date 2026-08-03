@@ -75,12 +75,30 @@ function ProjectSelectorTriggerSkeleton({
   isMobile,
   supportsMultiTenancy,
   isCloud,
+  compact = false,
 }: {
   className?: string
   isMobile?: boolean
   supportsMultiTenancy: boolean
   isCloud: boolean
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          'flex h-7 max-w-[200px] min-w-0 items-center gap-1.5 rounded-md px-2 py-1',
+          className,
+        )}
+        aria-hidden
+      >
+        <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div className="h-3 w-20 max-w-full animate-pulse rounded bg-muted" />
+        <div className="h-3 w-3 shrink-0 animate-pulse rounded bg-muted" />
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -646,6 +664,7 @@ export function ProjectSelector({
         isMobile={isMobile}
         supportsMultiTenancy={supportsMultiTenancy}
         isCloud={isCloud}
+        compact={compact}
       />
     )
   }
@@ -656,17 +675,16 @@ export function ProjectSelector({
   }
 
   if (selectionMode && !resolvedTeam) {
-    if (orgsLoading) {
-      return (
-        <ProjectSelectorTriggerSkeleton
-          className={className}
-          isMobile={isMobile}
-          supportsMultiTenancy={supportsMultiTenancy}
-          isCloud={isCloud}
-        />
-      )
-    }
-    return null
+    // Keep composer footer height stable while orgs/project context resolve.
+    return (
+      <ProjectSelectorTriggerSkeleton
+        className={className}
+        isMobile={isMobile}
+        supportsMultiTenancy={supportsMultiTenancy}
+        isCloud={isCloud}
+        compact={compact}
+      />
+    )
   }
 
   if (!resolvedTeam) {

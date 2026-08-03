@@ -22,6 +22,7 @@ import { captureExceptionWithContext } from '@/components/global/providers/Sentr
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { getToolVisualSites } from '@/lib/assistant/tool-sites'
+import { isConsoleToolName } from '@/lib/assistant/console-protocol'
 import {
   buildTurnView,
   getAssistantAgentLabel,
@@ -32,6 +33,10 @@ import {
   type TurnToolView,
   type TurnView,
 } from '@/lib/assistant/turn-view'
+
+function visibleTools(tools: TurnToolView[]): TurnToolView[] {
+  return tools.filter((tool) => !isConsoleToolName(tool.name))
+}
 
 /** Avoid duplicate Sentry events when the same assistant error remounts. */
 const reportedAssistantErrors = new Set<string>()
@@ -158,8 +163,12 @@ function SubagentSection({
 }) {
   const t = useT()
   const [expanded, setExpanded] = useState(open)
-  const tools = toolsForAgent(turn, agent)
+  const tools = visibleTools(toolsForAgent(turn, agent))
   const hasBody = !!summary || tools.length > 0 || open
+  const displayToolCallCount =
+    typeof toolCallCount === 'number'
+      ? Math.min(toolCallCount, tools.length || toolCallCount)
+      : tools.length || undefined
 
   // Follow the live turn: expand while the agent is working, collapse when it ends
   // so we never flash an empty "No tool calls" body.
@@ -195,10 +204,11 @@ function SubagentSection({
             <Badge variant="info" className="text-[10px] shrink-0">
               {t('Subagent')}
             </Badge>
-            {typeof toolCallCount === 'number' ? (
+            {typeof displayToolCallCount === 'number' &&
+            displayToolCallCount > 0 ? (
               <span className="text-[11px] text-muted-foreground">
-                {toolCallCount}{' '}
-                {toolCallCount === 1 ? t('tool call') : t('tool calls')}
+                {displayToolCallCount}{' '}
+                {displayToolCallCount === 1 ? t('tool call') : t('tool calls')}
               </span>
             ) : null}
             {hasBody ? (
@@ -253,7 +263,7 @@ export function AgentTurnActivity({
   const turn = useMemo(() => buildTurnView(message), [message])
   const [copiedError, setCopiedError] = useState(false)
   const inFlight = isAssistantMessageInFlight(message.status)
-  const orphanTools = unscopedTools(turn)
+  const orphanTools = visibleTools(unscopedTools(turn))
   const routeAgent = turn.route?.agent
   const showRoute =
     !!routeAgent && routeAgent !== 'FINISH' && routeAgent !== 'supervisor'

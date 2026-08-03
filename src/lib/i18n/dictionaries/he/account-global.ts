@@ -1009,4 +1009,23 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'unread notifications': 'התראות שלא נקראו',
   Unread: 'לא נקרא',
   'Refreshing...': 'מרענן...',
+
+  // Agent console protocol surfaces
+  '1 result': 'תוצאה אחת',
+  results: 'תוצאות',
+  'Filter...': 'סינון...',
+  'No results match your filter': 'אין תוצאות התואמות לסינון',
+  Showing: 'מציג',
+  of: 'מתוך',
+  'View all': 'הצגת הכול',
+  'Search docs': 'חיפוש בדוקומנטציה',
+  'Contact support': 'פנייה לתמיכה',
+  'Connect MCP': 'חיבור MCP',
+  'Open in Console': 'פתיחה בקונסול',
+  'Open docs': 'פתיחת דוקומנטציה',
+  'Open agent': 'פתיחת הסוכן',
+  'Close panel': 'סגירת החלונית',
+  'Switch to dark mode': 'מעבר למצב כהה',
+  'Switch to light mode': 'מעבר למצב בהיר',
+  'Use system theme': 'שימוש בערכת הנושא של המערכת',
 }

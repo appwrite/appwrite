@@ -4,6 +4,10 @@ import {
   type AssistantMessageLike,
   type TurnToolView,
 } from '@/lib/assistant/turn-view'
+import {
+  isConsoleToolName,
+  parseConsoleEnvelope,
+} from '@/lib/assistant/console-protocol'
 
 export type ResourceMutationKind = 'create' | 'update' | 'delete'
 
@@ -19,6 +23,7 @@ const META_TOOLS = new Set([
   'appwrite_get_context',
   'appwrite_search_docs',
   'appwrite_list_tools',
+  'console',
 ])
 
 const CREATE_VERBS = new Set(['create', 'add', 'insert', 'upload', 'new'])
@@ -231,6 +236,22 @@ export function countResourceMutationsFromTools(
 
   for (const tool of tools) {
     if (!shouldCountTool(tool)) continue
+
+    // Prefer explicit console protocol `resource` mutations over MCP name heuristics.
+    if (isConsoleToolName(tool.name)) {
+      const envelope = parseConsoleEnvelope(tool.output)
+      if (!envelope) continue
+      for (const action of envelope.actions) {
+        if (!action || typeof action !== 'object') continue
+        if ((action as { type?: string }).type !== 'resource') continue
+        const mutation = (action as { mutation?: string }).mutation
+        if (mutation === 'create') counts.created += 1
+        else if (mutation === 'update') counts.updated += 1
+        else if (mutation === 'delete') counts.deleted += 1
+      }
+      continue
+    }
+
     const kind = classifyResourceMutation(resolveCatalogToolName(tool))
     if (kind === 'create') counts.created += 1
     else if (kind === 'update') counts.updated += 1

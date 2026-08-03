@@ -1,8 +1,13 @@
+'use client'
+
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
 /**
  * Vite DEV construction-tape strip. Rendered at the root shell so it spans the
  * full viewport width above both the main column and the console right pane.
+ *
+ * `useDebugOverrides` is hydration-safe (storage applies after mount), so this
+ * can read `showConstruction` directly during render.
  */
 export function DevConstructionStripe() {
   const { showConstruction } = useDebugOverrides()
