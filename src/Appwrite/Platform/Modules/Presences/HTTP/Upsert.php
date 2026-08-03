@@ -97,7 +97,7 @@ class Upsert extends PlatformAction
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', '', new Text(Database::LENGTH_KEY), 'Presence status.', false)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('expiresAt', null, new DatetimeValidator(
+            ->param('expiresAt', null, fn () => new DatetimeValidator(
                 new \DateTime(),
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true

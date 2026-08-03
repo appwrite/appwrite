@@ -91,18 +91,25 @@ final class AvatarsTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+                // Same URL as REST AvatarsBase::testGetImage (Google logo fetches flake in CI)
+                'url' => 'https://appwrite.io/images/open-graph/website.avif',
             ],
         ];
 
-        $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+        /**
+         * Wrapped in assertEventually to handle transient external URL failures
+         */
+        $image = null;
+        $this->assertEventually(function () use ($projectId, $graphQLPayload, &$image) {
+            $image = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(200, $image['headers']['status-code']);
-        $this->assertNotEmpty($image['body']);
-        $this->assertStringContainsString('image/', (string) $image['headers']['content-type']);
+            $this->assertEquals(200, $image['headers']['status-code']);
+            $this->assertNotEmpty($image['body']);
+            $this->assertStringContainsString('image/', (string) $image['headers']['content-type']);
+        }, 30_000, 2_000);
 
         return $image['body'];
     }

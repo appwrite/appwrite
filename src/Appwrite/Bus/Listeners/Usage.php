@@ -64,15 +64,14 @@ class Usage extends Listener
         $mbSeconds = (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $duration * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
 
         $context = (new Context())
+            ->setResource(rtrim($resourceType, 's'))
+            ->setResourceInternalId((string) $resourceInternalId)
             ->addMetric(METRIC_EXECUTIONS, 1)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
             ->addMetric(METRIC_EXECUTIONS_COMPUTE, $compute)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), $compute)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), $compute)
             ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $mbSeconds)
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), $mbSeconds)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), $mbSeconds);
+            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), $mbSeconds);
 
         $message = new UsageMessage(
             project: $project,
@@ -97,14 +96,13 @@ class Usage extends Listener
         $outbound = $event->response->getSize();
 
         if ($deployment->getAttribute('resourceType') === 'sites') {
-            $siteInternalId = $deployment->getAttribute('resourceInternalId', '');
+            $siteInternalId = (string) $deployment->getAttribute('resourceInternalId', '');
             $usage
+                ->setResource('site')
+                ->setResourceInternalId($siteInternalId)
                 ->addMetric(METRIC_SITES_REQUESTS, 1)
                 ->addMetric(METRIC_SITES_INBOUND, $inbound)
-                ->addMetric(METRIC_SITES_OUTBOUND, $outbound)
-                ->addMetric(str_replace('{siteInternalId}', $siteInternalId, METRIC_SITES_ID_REQUESTS), 1)
-                ->addMetric(str_replace('{siteInternalId}', $siteInternalId, METRIC_SITES_ID_INBOUND), $inbound)
-                ->addMetric(str_replace('{siteInternalId}', $siteInternalId, METRIC_SITES_ID_OUTBOUND), $outbound);
+                ->addMetric(METRIC_SITES_OUTBOUND, $outbound);
         } else {
             $usage
                 ->addMetric(METRIC_NETWORK_REQUESTS, 1)

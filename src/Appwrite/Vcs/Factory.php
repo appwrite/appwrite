@@ -2,6 +2,7 @@
 
 namespace Appwrite\Vcs;
 
+use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -57,7 +58,7 @@ class Factory
 
         $adapter = new ($this->registry[$key]['adapter'])($this->cache);
 
-        $endpoint = $this->getEnv($key, 'endpoint');
+        $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
         }
@@ -92,6 +93,27 @@ class Factory
     public function getWebhookSecret(string $key): string
     {
         return $this->getEnv($key, 'webhookSecret');
+    }
+
+    public function oauth2FromProvider(string $key): OAuth2
+    {
+        $builder = $this->registry[$key]['oauth2'] ?? null;
+
+        if (!\is_callable($builder)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $key);
+        }
+
+        $clientId = $this->getEnv($key, 'clientId');
+        $clientSecret = $this->getEnv($key, 'clientSecret');
+        $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
+
+        $oauth2 = $builder($clientId, $clientSecret, $endpoint);
+
+        if (!$oauth2 instanceof OAuth2) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider "' . $key . '" oauth2 builder returned an invalid client');
+        }
+
+        return $oauth2;
     }
 
     protected function getEnv(string $key, string $name): string

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -78,7 +78,7 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Backend $deployments,
+        Deployments $deployments,
         Device $deviceForFunctions,
         VcsFactory $vcsFactory,
     ) {
@@ -112,7 +112,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+            $deviceForFunctions->copy($path, $destination);
         }
 
         // Cloning the source deployment's attributes onto the new one, with
@@ -134,6 +134,9 @@ class Create extends Action
             'buildSize' => null,
             'buildPath' => '',
             'buildLogs' => '',
+            // Not inherited: a redeploy always goes live, and the source's own
+            // flag is unset by deactivateOthers() once anything newer builds.
+            'activate' => true,
         ]);
 
         if ($hasSource) {
@@ -154,14 +157,14 @@ class Create extends Action
                 $deployment->getAttribute('providerRootDirectory', ''),
             );
         } else {
-            // Public template repo: providerBranch holds the resolved ref
-            // (branch, tag, or commit — see Deployments/Template/Create).
+            // Public template repo: providerBranch holds the resolved ref,
+            // fetched commit-style since a branch-type clone breaks on tags.
             $deployment = $deployments->createFromRef(
                 $function,
                 $deployment,
                 $owner,
                 $repository,
-                GitHub::CLONE_TYPE_BRANCH,
+                GitHub::CLONE_TYPE_COMMIT,
                 $deployment->getAttribute('providerBranch', ''),
                 $deployment->getAttribute('providerRootDirectory', ''),
             );

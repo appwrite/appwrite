@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -21,7 +22,6 @@ use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
@@ -106,7 +106,7 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        Backend $deployments,
+        Deployments $deployments,
         array $plan,
         Authorization $authorization,
         callable $locks
@@ -236,7 +236,7 @@ class Create extends Action
                 }
 
                 if ($deployment->isEmpty()) {
-                    $deviceForFunctions->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+                    $deviceForFunctions->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
                         $deployment = $deployments->upload($function, $deployment->setAttributes([
@@ -266,7 +266,14 @@ class Create extends Action
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->uploadChunk($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->upload(
+            $deviceForLocal->read($fileTmpName),
+            $path,
+            $metadata['content_type'] ?? '',
+            $chunk,
+            $chunks,
+            $metadata
+        );
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -295,7 +302,7 @@ class Create extends Action
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
-                    $deviceForFunctions->finalizeUpload($path, $chunks, $metadata);
+                    $deviceForFunctions->finalize($path, $chunks, $metadata);
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -93,7 +93,7 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
-        Backend $deployments,
+        Deployments $deployments,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);

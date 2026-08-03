@@ -47,7 +47,7 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
@@ -296,7 +296,7 @@ class Messaging extends Action
 
         // Delete any attachments that were downloaded to local storage
         if ($providerType === MESSAGE_TYPE_EMAIL) {
-            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
+            if ($deviceForFiles->getType() === DeviceType::Local) {
                 return;
             }
 
@@ -1007,8 +1007,8 @@ class Messaging extends Action
                     $contentType = $file->getAttribute('mimeType');
                 }
 
-                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
-                    $deviceForFiles->transfer($path, $path, $this->getLocalDevice($project));
+                if ($deviceForFiles->getType() !== DeviceType::Local) {
+                    $deviceForFiles->copy($path, $path, $this->getLocalDevice($project));
                 }
 
                 $attachment = new Attachment(

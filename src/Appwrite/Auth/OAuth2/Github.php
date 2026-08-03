@@ -235,7 +235,7 @@ class Github extends OAuth2
         return $this->user;
     }
 
-    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    public function createRepository(string $accessToken, string $repositoryName, bool $private, string $namespaceId = ''): array
     {
         $repository = $this->request('POST', 'https://api.github.com/user/repos', ['Authorization: token ' . \urlencode($accessToken)], \json_encode([
             'name' => $repositoryName,

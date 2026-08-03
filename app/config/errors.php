@@ -1216,6 +1216,11 @@ return [
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::DEV_KEY_GONE => [
+        'name' => Exception::DEV_KEY_GONE,
+        'description' => 'Dev key creation is no longer available.',
+        'code' => 410,
+    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',

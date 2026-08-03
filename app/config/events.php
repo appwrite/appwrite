@@ -89,6 +89,21 @@ return [
             'prefs' => [
                 '$description' => 'This event triggers when a user\'s preferences is updated.',
             ],
+            'phone' => [
+                '$description' => 'This event triggers when a user\'s phone number is updated.',
+            ],
+            'mfa' => [
+                '$description' => 'This event triggers when a user\'s MFA configuration is updated.',
+            ],
+            'labels' => [
+                '$description' => 'This event triggers when a user\'s labels are updated.',
+            ],
+            'verification' => [
+                '$description' => 'This event triggers when a user\'s verification status is updated.',
+            ],
+            'impersonator' => [
+                '$description' => 'This event triggers when a user\'s impersonator capability is updated.',
+            ],
         ]
     ],
     'databases' => [

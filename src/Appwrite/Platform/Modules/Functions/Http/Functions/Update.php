@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -153,7 +153,7 @@ class Update extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Backend $deployments,
+        Deployments $deployments,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
@@ -329,7 +329,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform, deployments: $deployments);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $deployments, $platform);
         }
 
         // Inform scheduler if function is still active

@@ -543,7 +543,7 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback('en');
 
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');

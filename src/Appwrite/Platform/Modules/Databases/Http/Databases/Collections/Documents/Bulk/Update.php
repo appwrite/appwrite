@@ -224,8 +224,9 @@ class Update extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $modified));
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,

@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Installations\Repositories;
 
-use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -16,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -54,6 +51,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
+            ->param('providerNamespace', '', new Text(256), 'Namespace of the git repository. Defaults to the installation\'s own namespace.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('user')
@@ -66,6 +64,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
+        string $providerNamespace,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Document $user,
@@ -81,7 +80,11 @@ class Create extends Action
         $provider = $installation->getAttribute('provider', 'github');
 
         if ($installation->getAttribute('personal', false) === true) {
-            $oauth2 = $this->createOAuth2($provider);
+            $oauth2 = $vcsFactory->oauth2FromProvider($provider);
+
+            if (!\method_exists($oauth2, 'createRepository')) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider does not support repository creation: ' . $provider);
+            }
 
             $identity = null;
             if ($provider === 'github' && (empty($installation->getAttribute('personalAccessToken')) || empty($installation->getAttribute('personalRefreshToken')) || empty($installation->getAttribute('personalAccessTokenExpiry')))) {
@@ -98,14 +101,18 @@ class Create extends Action
             $accessToken = $installation->getAttribute('personalAccessToken');
 
             try {
-                $repository = $oauth2->createRepository($accessToken, $name, $private);
+                if (!empty($providerNamespace)) {
+                    $repository = $oauth2->createRepository($accessToken, $name, $private, $providerNamespace);
+                } else {
+                    $repository = $oauth2->createRepository($accessToken, $name, $private);
+                }
             } catch (\Throwable $exception) {
                 throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "VCS provider failed to process the request: " . $exception->getMessage());
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $vcs = $vcsFactory->fromInstallation($installation);
-            $owner = $vcs->getOwnerName($providerInstallationId);
+            $owner = !empty($providerNamespace) ? $providerNamespace : $vcs->getOwnerName($providerInstallationId);
 
             try {
                 $repository = $vcs->createRepository($owner, $name, $private);
@@ -134,21 +141,5 @@ class Create extends Action
         $repository['authorized'] = true;
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
-    }
-
-    protected function createOAuth2(string $provider): OAuth2Github|OAuth2Gitea
-    {
-        if ($provider === 'github') {
-            return new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-        }
-
-        if ($provider === 'gitea') {
-            $oauth2 = new OAuth2Gitea(System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITEA_CLIENT_SECRET', ''), "");
-            $oauth2->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', ''));
-
-            return $oauth2;
-        }
-
-        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $provider);
     }
 }

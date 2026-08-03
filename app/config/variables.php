@@ -207,7 +207,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -318,6 +318,15 @@ return [
                 'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -989,17 +998,17 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_BUILDS_BACKEND',
-                'description' => 'Backend that builds manual-upload function deployments: "executor" (default; the open-runtimes executor, via the Builds worker) or "orchestrator" (the open-runtimes jobs-service, submitted in the request flow). Other build flows always use the executor.',
-                'introduction' => '1.9.0',
-                'default' => 'executor',
+                'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'introduction' => '1.9.5',
+                'default' => 'local://localhost',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by. Only used when _APP_BUILDS_BACKEND is "orchestrator".',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -1305,6 +1314,33 @@ return [
             [
                 'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
                 'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_ID',
+                'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_SECRET',
+                'description' => 'GitLab OAuth2 application client secret. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming GitLab webhook payloads.',
                 'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,

@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Platform\Enum;
 use Utopia\Validator;
@@ -85,6 +86,7 @@ class OpenAPI3 extends Format
             'Project' => '<YOUR_PROJECT_ID>',
             'ProjectPath' => '<YOUR_PROJECT_ID>',
             'Key' => '<YOUR_API_KEY>',
+            'Organization' => '<YOUR_ORGANIZATION_ID>',
             'JWT' => '<YOUR_JWT>',
             'Locale' => 'en',
             'Mode' => '',
@@ -421,10 +423,7 @@ class OpenAPI3 extends Format
 
             $parameterNodes = [];
 
-            $parameters = \array_merge(
-                $route->getParams(),
-                $sdk->getAdditionalParameters(),
-            );
+            $parameters = $this->getMethodParameters($route, $sdk);
 
             foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {
@@ -459,12 +458,10 @@ class OpenAPI3 extends Format
 
                 $class = \get_class($validator);
 
-                $base = \get_parent_class($class);
-
-                switch ($base) {
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                        $class = $base;
-                        break;
+                // Every Queries validator serialises to an array of query strings, so
+                // normalise the whole hierarchy instead of enumerating each subclass.
+                if (\is_subclass_of($class, Queries::class)) {
+                    $class = Queries::class;
                 }
 
                 if ($class === \Utopia\Validator\AnyOf::class) {
@@ -576,7 +573,7 @@ class OpenAPI3 extends Format
                         $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
-                    case \Utopia\Storage\Validator\File::class:
+                    case \Appwrite\Utopia\Request\Validator\File::class:
                         $consumes = ['multipart/form-data'];
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'binary';
@@ -591,36 +588,7 @@ class OpenAPI3 extends Format
                             $node['schema']['x-example'] = $param['example'];
                         }
                         break;
-                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Attributes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Buckets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Identities::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Branches::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Messages::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Migrations::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Projects::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Providers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Rules::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Subscribers::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Targets::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Topics::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
-                    case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
-                    case \Utopia\Database\Validator\Queries::class:
-                    case \Utopia\Database\Validator\Queries\Document::class:
-                    case \Utopia\Database\Validator\Queries\Documents::class:
+                    case Queries::class:
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',

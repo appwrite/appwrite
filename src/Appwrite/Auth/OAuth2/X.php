@@ -3,8 +3,6 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Appwrite\OpenSSL\OpenSSL;
-use Utopia\System\System;
 
 // Reference Material
 // https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code
@@ -12,7 +10,7 @@ use Utopia\System\System;
 
 class X extends OAuth2
 {
-    private const PKCE_STATE_KEY = '_pkce';
+    use PKCE;
 
     /**
      * @var array
@@ -35,11 +33,6 @@ class X extends OAuth2
     ];
 
     /**
-     * @var string
-     */
-    private string $pkceVerifier = '';
-
-    /**
      * @return string
      */
     public function getName(): string
@@ -50,7 +43,7 @@ class X extends OAuth2
     public function getLoginURL(): string
     {
         $state = $this->state;
-        $state[self::PKCE_STATE_KEY] = $this->encryptPKCEVerifier($this->getPKCEVerifier());
+        $state = $this->withPKCEState($state);
 
         return 'https://x.com/i/oauth2/authorize?' . \http_build_query([
             'response_type' => 'code',
@@ -198,15 +191,7 @@ class X extends OAuth2
             return null;
         }
 
-        $pkce = $parsed[self::PKCE_STATE_KEY] ?? null;
-
-        if (\is_array($pkce)) {
-            $this->pkceVerifier = $this->decryptPKCEVerifier($pkce);
-        }
-
-        unset($parsed[self::PKCE_STATE_KEY]);
-
-        return $parsed;
+        return $this->restorePKCEState($parsed);
     }
 
     /**
@@ -229,92 +214,4 @@ class X extends OAuth2
 
         return \is_array($decoded) ? $decoded : [];
     }
-
-    private function getPKCEVerifier(): string
-    {
-        if ($this->pkceVerifier === '') {
-            $this->pkceVerifier = $this->base64UrlEncode(\random_bytes(64));
-        }
-
-        return $this->pkceVerifier;
-    }
-
-    private function getPKCEChallenge(): string
-    {
-        return $this->base64UrlEncode(\hash('sha256', $this->getPKCEVerifier(), true));
-    }
-
-    private function encryptPKCEVerifier(string $verifier): array
-    {
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $key = $this->getPKCEStateKey();
-        $tag = null;
-
-        $data = OpenSSL::encrypt($verifier, OpenSSL::CIPHER_AES_128_GCM, $key, OPENSSL_RAW_DATA, $iv, $tag);
-
-        if ($data === false || $tag === null) {
-            throw new \Exception('Failed to encrypt PKCE verifier.');
-        }
-
-        return [
-            'data' => $this->base64UrlEncode($data),
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-        ];
-    }
-
-    private function decryptPKCEVerifier(array $payload): string
-    {
-        $data = $payload['data'] ?? '';
-        $iv = $payload['iv'] ?? '';
-        $tag = $payload['tag'] ?? '';
-
-        if ($data === '' || $iv === '' || $tag === '') {
-            return '';
-        }
-
-        $decodedData = $this->base64UrlDecode($data);
-        $decodedIv = \hex2bin($iv);
-        $decodedTag = \hex2bin($tag);
-
-        if ($decodedData === false || $decodedIv === false || $decodedTag === false) {
-            return '';
-        }
-
-        return OpenSSL::decrypt(
-            $decodedData,
-            OpenSSL::CIPHER_AES_128_GCM,
-            $this->getPKCEStateKey(),
-            OPENSSL_RAW_DATA,
-            $decodedIv,
-            $decodedTag
-        ) ?: '';
-    }
-
-    private function getPKCEStateKey(): string
-    {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-
-        if ($key === '') {
-            throw new \Exception('X OAuth2 requires _APP_OPENSSL_KEY_V1 to encrypt PKCE state.');
-        }
-
-        return $key;
-    }
-
-    private function base64UrlEncode(string $value): string
-    {
-        return \rtrim(\strtr(\base64_encode($value), '+/', '-_'), '=');
-    }
-
-    private function base64UrlDecode(string $value): string|false
-    {
-        $padding = \strlen($value) % 4;
-        if ($padding > 0) {
-            $value .= \str_repeat('=', 4 - $padding);
-        }
-
-        return \base64_decode(\strtr($value, '-_', '+/'), true);
-    }
-
 }

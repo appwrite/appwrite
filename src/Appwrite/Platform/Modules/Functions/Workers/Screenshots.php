@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -136,9 +137,6 @@ class Screenshots extends Action
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
                     str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
                 ],
                 'bannerDisabled' => true,
                 'projectCheckDisabled' => true,
@@ -174,7 +172,7 @@ class Screenshots extends Action
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
                 $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                $success = $deviceForFiles->write($path, $screenshot, $mimeType);
+                $success = $deviceForFiles->write($path, new Stream($screenshot), $mimeType);
 
                 if (!$success) {
                     throw new \Exception("Screenshot failed to save");
