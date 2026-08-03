@@ -3,7 +3,7 @@
 namespace Appwrite\Span;
 
 use Closure;
-use Utopia\Span\Exporter;
+use Utopia\Span\Exporter\Exporter;
 use Utopia\Span\Exporter\Pretty;
 use Utopia\Span\Exporter\Stdout;
 use Utopia\Span\Span;

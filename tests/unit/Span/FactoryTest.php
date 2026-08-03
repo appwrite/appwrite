@@ -11,20 +11,23 @@ use Utopia\Span\Exporter\Stdout;
 
 final class FactoryTest extends TestCase
 {
-    private ?string $previousFormat = null;
+    private bool $hadFormat = false;
+
+    private string $previousFormat = '';
 
     protected function setUp(): void
     {
-        $this->previousFormat = \getenv('_APP_LOGGING_FORMAT');
-        if ($this->previousFormat !== false) {
-            \putenv('_APP_LOGGING_FORMAT');
-            unset($_ENV['_APP_LOGGING_FORMAT'], $_SERVER['_APP_LOGGING_FORMAT']);
-        }
+        $previous = \getenv('_APP_LOGGING_FORMAT');
+        $this->hadFormat = $previous !== false;
+        $this->previousFormat = $previous === false ? '' : $previous;
+
+        \putenv('_APP_LOGGING_FORMAT');
+        unset($_ENV['_APP_LOGGING_FORMAT'], $_SERVER['_APP_LOGGING_FORMAT']);
     }
 
     protected function tearDown(): void
     {
-        if ($this->previousFormat === false || $this->previousFormat === null) {
+        if (!$this->hadFormat) {
             \putenv('_APP_LOGGING_FORMAT');
             unset($_ENV['_APP_LOGGING_FORMAT'], $_SERVER['_APP_LOGGING_FORMAT']);
             return;
