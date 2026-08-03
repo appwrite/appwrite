@@ -1,6 +1,7 @@
 <?php
 
-use Appwrite\Span\Factory as SpanExporterFactory;
+use Utopia\Span\Exporter\Pretty;
+use Utopia\Span\Exporter\Stdout;
 use Utopia\Span\Span;
 use Utopia\Span\Storage;
 use Utopia\System\System;
@@ -31,4 +32,11 @@ $sampler = function (Span $span) use ($traceEnabled, $traceProjectId, $traceFunc
     return true;
 };
 
-Span::setExporters(SpanExporterFactory::createExporter(sampler: $sampler));
+// `_APP_LOGGING_FORMAT`: `pretty` (default) for multi-line terminal output;
+// `json` for one NDJSON object per span (log aggregators).
+$loggingFormat = \strtolower(System::getEnv('_APP_LOGGING_FORMAT', 'pretty'));
+$exporter = $loggingFormat === 'json'
+    ? new Stdout(sampler: $sampler)
+    : new Pretty(sampler: $sampler);
+
+Span::setExporters($exporter);
