@@ -1844,6 +1844,61 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('Can\'t delete ongoing execution.', (string) $execution['body']['message']);
     }
 
+    public function testDeleteExecutionRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => 'false',
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($executionId);
+
+        // A second function the execution does not belong to.
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — deleting through a function that does not own the
+         * execution must not succeed.
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $otherFunctionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('execution_not_found', $response['body']['type']);
+
+        // The execution is still there.
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($executionId, $response['body']['$id']);
+
+        /**
+         * Test for SUCCESS — the owning function can still delete it.
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
 
 
     public function testUpdateSpecs(): void
