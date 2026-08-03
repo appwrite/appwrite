@@ -89,7 +89,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_OPTIONS_ROUTER_CERTIFICATES',
+                'name' => '_APP_ROUTER_AUTO_CERTIFICATES',
                 'description' => 'Allows Appwrite to automatically issue TLS certificates for function and site domains. By default, set to \'enabled\'. Set to \'disabled\' when a wildcard TLS certificate already covers those domains, for example one issued through Traefik\'s DNS challenge.',
                 'introduction' => '',
                 'default' => 'enabled',

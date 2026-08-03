@@ -34,6 +34,7 @@ use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
@@ -124,6 +125,20 @@ $container->set('publisherForCertificates', fn (Publisher $publisher) => new Cer
     $publisher,
     new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
+
+$container->set('canAutoIssueCertificate', fn () => function (string $hostname): bool {
+    if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
+        return false;
+    }
+
+    if (System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled') === 'disabled') {
+        return false;
+    }
+
+    $domain = new Domain($hostname);
+
+    return $domain->isKnown() && !$domain->isTest();
+});
 
 $container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
     $publisher,
