@@ -1,11 +1,12 @@
 /**
- * Client-side OAuth (PKCE + dynamic client registration) for assistant MCP
- * connections. Tokens are stored via the Console assistant MCP SDK — never keep
- * access tokens in React state beyond the handoff.
+ * Client-side OAuth (PKCE) for assistant MCP connections. Tokens are stored via
+ * the Console assistant MCP SDK — never keep access tokens in React state beyond
+ * the handoff.
  *
- * For the hosted Appwrite MCP server the console owns the authorization server,
- * so {@link connectMcpOAuthSilently} can run authorize + approve via the Console
- * SDK without a popup or consent redirect.
+ * The hosted Appwrite MCP path uses a single pre-registered public client
+ * (`appwrite-agent`). Dynamic Client Registration is only a fallback for
+ * third-party MCP servers. Silent connect runs authorize + approve via the
+ * Console SDK without a popup or consent redirect.
  */
 
 import { sdk } from '@/lib/appwrite/sdk'
@@ -312,6 +313,12 @@ export type StartMcpOAuthConnectInput = {
   /** RFC 8707 resource indicator; defaults to the MCP URL. */
   resource?: string
   scopes?: string[]
+  /**
+   * Pre-registered OAuth2 client id. When set, skips Dynamic Client
+   * Registration and reuses this client for every connect (first-party
+   * Appwrite Agent).
+   */
+  clientId?: string
   clientName?: string
 }
 
@@ -322,6 +329,27 @@ const MCP_DEFAULT_SCOPES = [
   'project:all',
   'organization:all',
 ] as const
+
+function buildFixedClientInfo(params: {
+  clientId: string
+  clientName?: string
+  redirectUri: string
+}): McpOAuthClientInfo {
+  return {
+    client_id: params.clientId,
+    client_name: params.clientName || 'Appwrite Agent',
+    token_endpoint_auth_method: 'none',
+    redirect_uris: [params.redirectUri],
+  }
+}
+
+function scopeFromInput(input: StartMcpOAuthConnectInput): string {
+  const scopeList =
+    input.scopes && input.scopes.length > 0
+      ? input.scopes
+      : [...MCP_DEFAULT_SCOPES]
+  return scopeList.join(' ')
+}
 
 export function extractAuthorizationCodeFromRedirectUrl(
   redirectUrl: string,
@@ -362,7 +390,9 @@ export function extractAuthorizationCodeFromRedirectUrl(
 }
 
 /**
- * Discover AS + register a public PKCE client and persist the pending session.
+ * Discover AS + build a pending PKCE session. Uses a pre-registered
+ * {@link StartMcpOAuthConnectInput.clientId} when provided; otherwise falls
+ * back to Dynamic Client Registration.
  */
 export async function prepareMcpOAuthSession(
   input: StartMcpOAuthConnectInput,
@@ -388,11 +418,6 @@ export async function prepareMcpOAuthSession(
   if (!asMeta.authorization_endpoint || !asMeta.token_endpoint) {
     throw new Error('Authorization server metadata is incomplete')
   }
-  if (!asMeta.registration_endpoint) {
-    throw new Error(
-      'Authorization server does not support dynamic client registration',
-    )
-  }
   if (
     asMeta.code_challenge_methods_supported &&
     !asMeta.code_challenge_methods_supported.includes('S256')
@@ -400,17 +425,29 @@ export async function prepareMcpOAuthSession(
     throw new Error('Authorization server does not support PKCE S256')
   }
 
-  const scopeList =
-    input.scopes && input.scopes.length > 0
-      ? input.scopes
-      : [...MCP_DEFAULT_SCOPES]
-  const scope = scopeList.join(' ')
+  const scope = scopeFromInput(input)
+  const fixedClientId = input.clientId?.trim()
+  let client: McpOAuthClientInfo
 
-  const client = await registerPublicClient({
-    registrationEndpoint: asMeta.registration_endpoint,
-    redirectUri,
-    clientName: input.clientName || 'Appwrite Agent',
-  })
+  if (fixedClientId) {
+    // First-party Appwrite Agent: reuse the seeded public client.
+    client = buildFixedClientInfo({
+      clientId: fixedClientId,
+      clientName: input.clientName,
+      redirectUri,
+    })
+  } else {
+    if (!asMeta.registration_endpoint) {
+      throw new Error(
+        'Authorization server does not support dynamic client registration',
+      )
+    }
+    client = await registerPublicClient({
+      registrationEndpoint: asMeta.registration_endpoint,
+      redirectUri,
+      clientName: input.clientName || 'Appwrite Agent',
+    })
+  }
 
   const state = randomUrlSafeString(24)
   const codeVerifier = randomUrlSafeString(64)
@@ -437,9 +474,50 @@ export async function prepareMcpOAuthSession(
   return { session, scope, codeChallenge, authorizationDetails }
 }
 
+async function resolveAuthorizationCode(params: {
+  clientId: string
+  redirectUri: string
+  scope: string
+  state: string
+  codeChallenge: string
+  resource: string
+  authorizationDetails: string
+}): Promise<string> {
+  const authorizeResult = await sdk.forConsole.oauth2.authorize({
+    clientId: params.clientId,
+    redirectUri: params.redirectUri,
+    responseType: 'code',
+    scope: params.scope,
+    state: params.state,
+    codeChallenge: params.codeChallenge,
+    codeChallengeMethod: 'S256',
+    resource: params.resource,
+    authorizationDetails: params.authorizationDetails,
+  })
+
+  let redirectUrl = authorizeResult.redirectUrl?.trim() || ''
+  if (!redirectUrl) {
+    const grantId = authorizeResult.grantId?.trim()
+    if (!grantId) {
+      throw new Error('Authorization did not return a grant or redirect')
+    }
+    // Auto-approve: the agent is a first-party console surface and the user
+    // already authenticated into the console with these privileges.
+    const approveResult = await sdk.forConsole.oauth2.approve({ grantId })
+    redirectUrl = approveResult.redirectUrl?.trim() || ''
+  }
+
+  if (!redirectUrl) {
+    throw new Error('Authorization approve did not return a redirect URL')
+  }
+
+  return extractAuthorizationCodeFromRedirectUrl(redirectUrl, params.state)
+}
+
 /**
  * Run the full Appwrite MCP OAuth connect without a popup or consent UI.
  * Uses Console `oauth2.authorize` + `oauth2.approve` with the signed-in session.
+ * Prefers the pre-registered Agent client id (no DCR).
  */
 export async function connectMcpOAuthSilently(
   input: StartMcpOAuthConnectInput,
@@ -451,42 +529,80 @@ export async function connectMcpOAuthSilently(
   tokens: McpOAuthTokenSet
   clientInfo: McpOAuthClientInfo
 }> {
+  const fixedClientId = input.clientId?.trim()
+
+  // Fast path for the seeded Appwrite Agent client: no DCR and no AS discovery.
+  if (fixedClientId) {
+    if (typeof window === 'undefined') {
+      throw new Error('MCP OAuth can only run in the browser')
+    }
+
+    const redirectUri = getAssistantMcpOAuthRedirectUri()
+    const resource = input.resource || input.url
+    const scope = scopeFromInput(input)
+    const state = randomUrlSafeString(24)
+    const codeVerifier = randomUrlSafeString(64)
+    const codeChallenge = await sha256Base64Url(codeVerifier)
+    const authorizationDetails = JSON.stringify(
+      MCP_DEFAULT_AUTHORIZATION_DETAILS,
+    )
+    const clientInfo = buildFixedClientInfo({
+      clientId: fixedClientId,
+      clientName: input.clientName,
+      redirectUri,
+    })
+
+    try {
+      const code = await resolveAuthorizationCode({
+        clientId: fixedClientId,
+        redirectUri,
+        scope,
+        state,
+        codeChallenge,
+        resource,
+        authorizationDetails,
+      })
+
+      const tokens = await sdk.forConsole.oauth2.createToken({
+        grantType: 'authorization_code',
+        code,
+        redirectUri,
+        clientId: fixedClientId,
+        codeVerifier,
+        resource,
+      })
+
+      if (!tokens.access_token) {
+        throw new Error('Token response did not include an access_token')
+      }
+
+      return {
+        mcpId: input.mcpId,
+        name: input.name,
+        url: input.url,
+        description: input.description,
+        tokens,
+        clientInfo,
+      }
+    } catch (error) {
+      clearPendingMcpOAuthSession()
+      throw error
+    }
+  }
+
   const { session, scope, codeChallenge, authorizationDetails } =
     await prepareMcpOAuthSession(input)
 
   try {
-    const authorizeResult = await sdk.forConsole.oauth2.authorize({
+    const code = await resolveAuthorizationCode({
       clientId: session.client.client_id,
       redirectUri: session.redirectUri,
-      responseType: 'code',
       scope,
       state: session.state,
       codeChallenge,
-      codeChallengeMethod: 'S256',
       resource: session.resource,
       authorizationDetails,
     })
-
-    let redirectUrl = authorizeResult.redirectUrl?.trim() || ''
-    if (!redirectUrl) {
-      const grantId = authorizeResult.grantId?.trim()
-      if (!grantId) {
-        throw new Error('Authorization did not return a grant or redirect')
-      }
-      // Auto-approve: the agent is a first-party console surface and the user
-      // already authenticated into the console with these privileges.
-      const approveResult = await sdk.forConsole.oauth2.approve({ grantId })
-      redirectUrl = approveResult.redirectUrl?.trim() || ''
-    }
-
-    if (!redirectUrl) {
-      throw new Error('Authorization approve did not return a redirect URL')
-    }
-
-    const code = extractAuthorizationCodeFromRedirectUrl(
-      redirectUrl,
-      session.state,
-    )
     return await completeMcpOAuthConnect({ code, session })
   } catch (error) {
     clearPendingMcpOAuthSession()
@@ -495,7 +611,7 @@ export async function connectMcpOAuthSilently(
 }
 
 /**
- * Discover AS + register a public PKCE client, then open the authorize URL
+ * Discover AS (+ DCR only when no fixed client id), then open the authorize URL
  * in a popup. Resolves with authorization code after the callback page posts back.
  */
 export async function startMcpOAuthConnect(

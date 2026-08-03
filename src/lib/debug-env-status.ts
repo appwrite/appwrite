@@ -147,6 +147,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Appwrite MCP endpoint (assistant + OAuth resource)',
   },
   {
+    key: 'VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID',
+    group: 'Other',
+    description: 'Pre-registered OAuth client id for Agent MCP connect',
+  },
+  {
     key: 'VITE_SITE_ORIGIN',
     group: 'Other',
     description: 'Site origin (sitemap / absolute URLs)',
@@ -185,6 +190,9 @@ function readBuildTimePresence(): Record<string, boolean> {
     VITE_COMPANY_NAME: isNonEmpty(import.meta.env.VITE_COMPANY_NAME),
     VITE_LEGAL_EMAIL: isNonEmpty(import.meta.env.VITE_LEGAL_EMAIL),
     VITE_APPWRITE_MCP_URL: isNonEmpty(import.meta.env.VITE_APPWRITE_MCP_URL),
+    VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID: isNonEmpty(
+      import.meta.env.VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID,
+    ),
     VITE_SITE_ORIGIN: isNonEmpty(import.meta.env.VITE_SITE_ORIGIN),
     VITE_CONSTRUCTION: isNonEmpty(import.meta.env.VITE_CONSTRUCTION),
   }

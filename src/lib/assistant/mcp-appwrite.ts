@@ -13,6 +13,20 @@ export const APPWRITE_ASSISTANT_MCP_DESCRIPTION =
   'Let the agent take actions in your Appwrite projects through the hosted MCP server.'
 
 /**
+ * Pre-registered public OAuth2 app used by the console Agent to connect to
+ * Appwrite MCP. One client for every user/session - never Dynamic Client
+ * Registration. Override with `VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID` when the
+ * backend seeds a different app id (e.g. local/dev).
+ */
+export const APPWRITE_AGENT_OAUTH_CLIENT_ID =
+  (
+    (import.meta.env.VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID as string | undefined) ??
+    'appwrite-agent'
+  ).trim() || 'appwrite-agent'
+
+export const APPWRITE_AGENT_OAUTH_CLIENT_NAME = 'Appwrite Agent'
+
+/**
  * Env / hosted default MCP URL (ignores debug override). Prefer
  * {@link getAppwriteAssistantMcpUrl} at call sites.
  *
@@ -34,6 +48,15 @@ export function getAppwriteAssistantMcpResource(): string {
   return getAppwriteAssistantMcpUrl()
 }
 
+export function getAppwriteAgentOAuthClientInfo(redirectUri: string) {
+  return {
+    client_id: APPWRITE_AGENT_OAUTH_CLIENT_ID,
+    client_name: APPWRITE_AGENT_OAUTH_CLIENT_NAME,
+    token_endpoint_auth_method: 'none' as const,
+    redirect_uris: [redirectUri],
+  }
+}
+
 export function getAppwriteAssistantMcpConnectInput() {
   const url = getAppwriteAssistantMcpUrl()
   return {
@@ -42,6 +65,7 @@ export function getAppwriteAssistantMcpConnectInput() {
     url,
     description: APPWRITE_ASSISTANT_MCP_DESCRIPTION,
     resource: url,
-    clientName: 'Appwrite Agent',
+    clientId: APPWRITE_AGENT_OAUTH_CLIENT_ID,
+    clientName: APPWRITE_AGENT_OAUTH_CLIENT_NAME,
   }
 }
