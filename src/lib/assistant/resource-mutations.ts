@@ -291,7 +291,7 @@ export function countResourceMutations(
 }
 
 export function messageNeedsToolHydration(
-  message: Models.AssistantMessage | AssistantMessageLike,
+  message: Models.AgentMessage | AssistantMessageLike,
 ): boolean {
   if (message.role?.toLowerCase() === 'user') return false
 

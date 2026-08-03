@@ -32,7 +32,7 @@ function isAutomationRunConversation(conversation: {
 
 export async function fetchAssistantConversations(search?: string) {
   const trimmedSearch = search?.trim() || undefined
-  const response = await sdk.forConsole.assistant.listConversations({
+  const response = await sdk.forConsole.agent.listConversations({
     queries: [
       // Agents list excludes automation runs (those appear under Automations).
       Query.or([
@@ -55,7 +55,7 @@ export async function fetchAssistantMessages(
   if (!conversationId) {
     return { messages: [], total: 0 }
   }
-  const response = await sdk.forConsole.assistant.listMessages({
+  const response = await sdk.forConsole.agent.listMessages({
     conversationId,
     queries: [Query.orderDesc('$createdAt'), Query.limit(limit)],
   })
@@ -83,11 +83,11 @@ export async function fetchAssistantMessagesWithTools(
     .filter(({ message }) => messageNeedsToolHydration(message))
     .slice(0, ASSISTANT_TOOL_HYDRATION_LIMIT)
 
-  const hydratedByIndex = new Map<number, Models.AssistantMessage>()
+  const hydratedByIndex = new Map<number, Models.AgentMessage>()
   await Promise.all(
     toHydrate.map(async ({ message, index }) => {
       try {
-        const full = await sdk.forConsole.assistant.getMessage({
+        const full = await sdk.forConsole.agent.getMessage({
           conversationId,
           messageId: message.$id,
         })
@@ -150,7 +150,7 @@ export function assistantConversationsQueryOptions(
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'conversations', normalizedSearch ?? ''],
+    queryKey: ['agent', 'conversations', normalizedSearch ?? ''],
     queryFn: () => fetchAssistantConversations(normalizedSearch),
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -160,7 +160,7 @@ export function assistantConversationsQueryOptions(
 }
 
 export async function fetchAssistantConversation(conversationId: string) {
-  return await sdk.forConsole.assistant.getConversation({ conversationId })
+  return await sdk.forConsole.agent.getConversation({ conversationId })
 }
 
 export function assistantConversationQueryOptions(
@@ -173,7 +173,7 @@ export function assistantConversationQueryOptions(
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'conversation', conversationId ?? ''],
+    queryKey: ['agent', 'conversation', conversationId ?? ''],
     queryFn: () => fetchAssistantConversation(conversationId!),
     staleTime: DEFAULT_STALE_TIME,
     enabled,
@@ -197,7 +197,7 @@ export function assistantMessagesQueryOptions(
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'messages', conversationId, limit],
+    queryKey: ['agent', 'messages', conversationId, limit],
     queryFn: () => fetchAssistantMessages(conversationId!, limit),
     enabled,
     placeholderData: keepPreviousData,
@@ -232,7 +232,7 @@ export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'attachments', ...uniqueFileIds],
+    queryKey: ['agent', 'attachments', ...uniqueFileIds],
     queryFn: () => fetchAssistantAttachmentFiles(uniqueFileIds),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
@@ -270,14 +270,14 @@ export function useCreateAssistantConversation() {
     }) => {
       const { projectId: _projectId, modelTemp, ...conversationParams } = params
       // Backend defaults to 0.2, which many current models reject (only temp=1).
-      return await sdk.forConsole.assistant.createConversation({
+      return await sdk.forConsole.agent.createConversation({
         ...conversationParams,
         modelTemp: modelTemp ?? 1,
       })
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ['assistant', 'conversations'],
+        queryKey: ['agent', 'conversations'],
       })
     },
   })
@@ -288,17 +288,17 @@ export function useDeleteAssistantConversation() {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      return await sdk.forConsole.assistant.deleteConversation({
+      return await sdk.forConsole.agent.deleteConversation({
         conversationId,
       })
     },
     onSuccess: async (_, conversationId) => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['assistant', 'conversations'],
+          queryKey: ['agent', 'conversations'],
         }),
         queryClient.removeQueries({
-          queryKey: ['assistant', 'messages', conversationId],
+          queryKey: ['agent', 'messages', conversationId],
         }),
       ])
     },
@@ -316,7 +316,7 @@ export function useCreateAssistantMessage() {
       context?: AssistantMessageContext
       attachments?: string[]
     }) => {
-      return await sdk.forConsole.assistant.createMessage({
+      return await sdk.forConsole.agent.createMessage({
         conversationId: params.conversationId,
         contentText: params.contentText,
         contentType: 'text',
@@ -328,10 +328,10 @@ export function useCreateAssistantMessage() {
     onSuccess: async (message) => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['assistant', 'conversations'],
+          queryKey: ['agent', 'conversations'],
         }),
         queryClient.invalidateQueries({
-          queryKey: ['assistant', 'messages', message.conversationId],
+          queryKey: ['agent', 'messages', message.conversationId],
         }),
       ])
     },
@@ -349,7 +349,7 @@ export function useUpdateAssistantMessage() {
       context?: AssistantMessageContext
       attachments?: string[]
     }) => {
-      return await sdk.forConsole.assistant.updateMessage({
+      return await sdk.forConsole.agent.updateMessage({
         conversationId: params.conversationId,
         messageId: params.messageId,
         contentText: params.contentText,
@@ -360,10 +360,10 @@ export function useUpdateAssistantMessage() {
     onSuccess: async (message) => {
       await Promise.all([
         queryClient.refetchQueries({
-          queryKey: ['assistant', 'conversations'],
+          queryKey: ['agent', 'conversations'],
         }),
         queryClient.refetchQueries({
-          queryKey: ['assistant', 'messages', message.conversationId],
+          queryKey: ['agent', 'messages', message.conversationId],
         }),
       ])
     },
@@ -385,7 +385,7 @@ export function useUpdateAssistantConversation() {
       modelId?: string
       lockReason?: string
     }) => {
-      return await sdk.forConsole.assistant.updateConversation({
+      return await sdk.forConsole.agent.updateConversation({
         conversationId: params.conversationId,
         title: params.title,
         status: params.status,
@@ -400,10 +400,10 @@ export function useUpdateAssistantConversation() {
     onSuccess: async (conversation) => {
       await Promise.all([
         queryClient.refetchQueries({
-          queryKey: ['assistant', 'conversations'],
+          queryKey: ['agent', 'conversations'],
         }),
         queryClient.refetchQueries({
-          queryKey: ['assistant', 'messages', conversation.$id],
+          queryKey: ['agent', 'messages', conversation.$id],
         }),
       ])
     },
@@ -434,7 +434,7 @@ export function useUploadAssistantAttachments() {
 }
 
 export async function fetchAssistantMcpConnections() {
-  const response = await sdk.forConsole.assistant.listMcpConnections({
+  const response = await sdk.forConsole.agent.listMcpConnections({
     queries: [Query.orderDesc('$updatedAt')],
   })
   return response.mcps ?? []
@@ -448,7 +448,7 @@ export function assistantMcpConnectionsQueryOptions(options?: {
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'mcps'],
+    queryKey: ['agent', 'mcps'],
     queryFn: fetchAssistantMcpConnections,
     staleTime: DEFAULT_STALE_TIME,
     enabled,
@@ -487,10 +487,10 @@ export function useUpsertAssistantMcpConnection() {
         status: params.status,
       }
       if (params.exists) {
-        return await sdk.forConsole.assistant.updateMcpConnection(payload)
+        return await sdk.forConsole.agent.updateMcpConnection(payload)
       }
       try {
-        return await sdk.forConsole.assistant.createMcpConnection(payload)
+        return await sdk.forConsole.agent.createMcpConnection(payload)
       } catch (error) {
         // Connection may already exist from a prior attempt; fall back to update.
         const message =
@@ -500,11 +500,11 @@ export function useUpsertAssistantMcpConnection() {
         if (!/already exists|conflict|409/i.test(message)) {
           throw error
         }
-        return await sdk.forConsole.assistant.updateMcpConnection(payload)
+        return await sdk.forConsole.agent.updateMcpConnection(payload)
       }
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'mcps'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'mcps'] })
     },
   })
 }
@@ -523,10 +523,10 @@ export function useUpdateAssistantMcpConnection() {
       clientInfo?: string
       status?: string
     }) => {
-      return await sdk.forConsole.assistant.updateMcpConnection(params)
+      return await sdk.forConsole.agent.updateMcpConnection(params)
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'mcps'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'mcps'] })
     },
   })
 }
@@ -536,16 +536,16 @@ export function useDeleteAssistantMcpConnection() {
 
   return useMutation({
     mutationFn: async (mcpId: string) => {
-      return await sdk.forConsole.assistant.deleteMcpConnection({ mcpId })
+      return await sdk.forConsole.agent.deleteMcpConnection({ mcpId })
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'mcps'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'mcps'] })
     },
   })
 }
 
 export async function fetchAssistantModels() {
-  const response = await sdk.forConsole.assistant.listModels({
+  const response = await sdk.forConsole.agent.listModels({
     queries: [Query.orderDesc('$updatedAt')],
   })
   return response.models ?? []
@@ -557,7 +557,7 @@ export function assistantModelsQueryOptions(options?: { enabled?: boolean }) {
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'models'],
+    queryKey: ['agent', 'models'],
     queryFn: fetchAssistantModels,
     staleTime: DEFAULT_STALE_TIME,
     enabled,
@@ -583,7 +583,7 @@ export function useCreateAssistantModel() {
       enabled?: boolean
       status?: string
     }) => {
-      return await sdk.forConsole.assistant.createModel({
+      return await sdk.forConsole.agent.createModel({
         // Server-side unique(); client ID.unique() can start with a digit and fail validation.
         modelId: params.modelId?.trim() || 'unique()',
         name: params.name,
@@ -596,7 +596,7 @@ export function useCreateAssistantModel() {
       })
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'models'] })
     },
   })
 }
@@ -615,7 +615,7 @@ export function useUpdateAssistantModel() {
       enabled?: boolean
       status?: string
     }) => {
-      return await sdk.forConsole.assistant.updateModel({
+      return await sdk.forConsole.agent.updateModel({
         modelId: params.modelId,
         name: params.name,
         provider: params.provider,
@@ -627,7 +627,7 @@ export function useUpdateAssistantModel() {
       })
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'models'] })
     },
   })
 }
@@ -637,17 +637,17 @@ export function useDeleteAssistantModel() {
 
   return useMutation({
     mutationFn: async (modelId: string) => {
-      return await sdk.forConsole.assistant.deleteModel({ modelId })
+      return await sdk.forConsole.agent.deleteModel({ modelId })
     },
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['assistant', 'models'] })
+      await queryClient.refetchQueries({ queryKey: ['agent', 'models'] })
     },
   })
 }
 
 export async function fetchAssistantAutomations(search?: string) {
   const trimmedSearch = search?.trim() || undefined
-  const response = await sdk.forConsole.assistant.listAutomations({
+  const response = await sdk.forConsole.agent.listAutomations({
     queries: [
       Query.orderDesc('$updatedAt'),
       ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
@@ -663,7 +663,7 @@ export async function fetchAssistantAutomationRuns(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   if (!automationId) return { runs: [], total: 0 }
-  const response = await sdk.forConsole.assistant.listConversations({
+  const response = await sdk.forConsole.agent.listConversations({
     queries: [
       Query.equal('automationId', automationId),
       Query.orderDesc('$createdAt'),
@@ -691,7 +691,7 @@ export function assistantAutomationRunsQueryOptions(
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
     queryKey: [
-      'assistant',
+      'agent',
       'automations',
       automationId ?? '',
       'runs',
@@ -727,7 +727,7 @@ export function assistantAutomationsQueryOptions(
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['assistant', 'automations', normalizedSearch ?? ''],
+    queryKey: ['agent', 'automations', normalizedSearch ?? ''],
     queryFn: () => fetchAssistantAutomations(normalizedSearch),
     staleTime: DEFAULT_STALE_TIME,
     enabled,
@@ -764,7 +764,7 @@ export function useCreateAssistantAutomation() {
       attachments?: string[]
       enabled?: boolean
     }) => {
-      return await sdk.forConsole.assistant.createAutomation({
+      return await sdk.forConsole.agent.createAutomation({
         // Server-side unique(); client ID.unique() can start with a digit and fail validation.
         automationId: params.automationId?.trim() || 'unique()',
         name: params.name,
@@ -786,7 +786,7 @@ export function useCreateAssistantAutomation() {
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['assistant', 'automations'],
+        queryKey: ['agent', 'automations'],
       })
     },
   })
@@ -813,11 +813,11 @@ export function useUpdateAssistantAutomation() {
       schedule?: string
       enabled?: boolean
     }) => {
-      return await sdk.forConsole.assistant.updateAutomation(params)
+      return await sdk.forConsole.agent.updateAutomation(params)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['assistant', 'automations'],
+        queryKey: ['agent', 'automations'],
       })
     },
   })
@@ -828,18 +828,23 @@ export function useDeleteAssistantAutomation() {
 
   return useMutation({
     mutationFn: async (automationId: string) => {
-      return await sdk.forConsole.assistant.deleteAutomation({ automationId })
+      return await sdk.forConsole.agent.deleteAutomation({ automationId })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['assistant', 'automations'],
+        queryKey: ['agent', 'automations'],
       })
     },
   })
 }
 
-export type AssistantConversation = Models.AssistantConversation
-export type AssistantMessage = Models.AssistantMessage
-export type AssistantMcpConnection = Models.AssistantMcpConnection
-export type AssistantModel = Models.AssistantModel
-export type AssistantAutomation = Models.AssistantAutomation
+export type AssistantConversation = Models.AgentConversation
+export type AssistantMessage = Models.AgentMessage
+export type AssistantMcpConnection = Models.AgentMcpConnection
+export type AssistantModel = Models.AgentModel
+export type AssistantAutomation = Models.AgentAutomation
+export type AgentConversation = Models.AgentConversation
+export type AgentMessage = Models.AgentMessage
+export type AgentMcpConnection = Models.AgentMcpConnection
+export type AgentModel = Models.AgentModel
+export type AgentAutomation = Models.AgentAutomation

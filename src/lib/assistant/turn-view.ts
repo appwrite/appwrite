@@ -53,7 +53,7 @@ export type TurnView = {
 }
 
 export type AssistantMessageLike = Pick<
-  Models.AssistantMessage,
+  Models.AgentMessage,
   | '$id'
   | 'status'
   | 'contentText'
@@ -301,7 +301,7 @@ function findRunningToolKey(
 function applyToolDocument(
   tools: Record<string, TurnToolView>,
   toolOrder: string[],
-  tool: Models.AssistantTool | TurnToolView | Record<string, unknown>,
+  tool: Models.AgentTool | TurnToolView | Record<string, unknown>,
 ): void {
   const record = tool as Record<string, unknown>
   const name =
@@ -362,7 +362,7 @@ function applyToolDocument(
  */
 export function replayTimeline(
   timeline: TimelineEvent[],
-  seedTools: Array<Models.AssistantTool | TurnToolView | Record<string, unknown>> = [],
+  seedTools: Array<Models.AgentTool | TurnToolView | Record<string, unknown>> = [],
   seedRoute?: TurnRoute,
 ): Pick<
   TurnView,
@@ -614,7 +614,7 @@ function finalizeTurnDerivedState(
 export function buildTurnView(
   message: AssistantMessageLike,
   extraTools: Array<
-    Models.AssistantTool | TurnToolView | Record<string, unknown>
+    Models.AgentTool | TurnToolView | Record<string, unknown>
   > = [],
 ): TurnView {
   const timeline = normalizeTimeline(

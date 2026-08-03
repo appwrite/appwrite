@@ -112,6 +112,8 @@ import {
   useUploadAssistantAttachments,
   ASSISTANT_ATTACHMENTS_BUCKET_ID,
   useProject,
+  useConsoleTeam,
+  activeProjectsQueryOptions,
   consoleAccountQueryOptions,
   useAIChatActiveConversationId,
   useAIChatPanelOpen,
@@ -122,7 +124,8 @@ import {
   type AssistantMessage,
   type AssistantModel,
 } from '@/lib/react-query/hooks'
-import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
+import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
+import { GRID_DEFAULT_PAGE_SIZE, isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
 import { AgentAutomationDetail } from '@/components/global/providers/agent/AgentAutomationDetail'
@@ -193,6 +196,43 @@ function assistantConversationProjectId(
     projectId?: string | null
   }
   return nonEmptyId(extended.projectId)
+}
+
+/**
+ * First accessible non-archived project across the user's organizations.
+ * Matches the ProjectSelector fallback used when creating an agent.
+ */
+async function fetchFirstAccessibleProjectId(): Promise<string | null> {
+  try {
+    const { fetchOrganizations } = await import(
+      '@/lib/react-query/hooks/organizations'
+    )
+    const orgs = await fetchOrganizations()
+    for (const org of orgs.teams ?? []) {
+      try {
+        const projects = await listConsoleProjects({
+          organizationId: org.$id,
+          queries: [
+            Query.equal('teamId', org.$id),
+            Query.or([
+              Query.isNull('status'),
+              Query.notEqual('status', 'archived'),
+            ]),
+            Query.orderDesc('$createdAt'),
+            Query.limit(1),
+          ],
+          total: false,
+        })
+        const projectId = nonEmptyId(projects.projects?.[0]?.$id)
+        if (projectId) return projectId
+      } catch {
+        // Try the next organization.
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 function assistantConversationAutomationId(
@@ -2315,8 +2355,36 @@ export function AgentPanelContent({
 
     const handleRealtimeEvent = (response: RealtimeResponseEvent<unknown>) => {
       const hasAssistantEvent =
-        response.events.some((eventName) => eventName.includes('assistant')) ||
-        response.channels.some((channel) => channel.includes('assistant'))
+        response.events.some((eventName) => {
+          const lower = eventName.toLowerCase()
+          return (
+            lower.includes('agentconversation') ||
+            lower.includes('agentmessage') ||
+            lower.includes('agenttool') ||
+            lower.includes('agentmcp') ||
+            lower.includes('agentmodel') ||
+            lower.includes('agentautomation') ||
+            lower.includes('agent.conversation') ||
+            lower.includes('agent.message') ||
+            lower.includes('agent.tool') ||
+            lower.includes('agent.mcp') ||
+            lower.includes('agent.model') ||
+            lower.includes('agent.automation') ||
+            lower.includes('assistant')
+          )
+        }) ||
+        response.channels.some((channel) => {
+          const lower = channel.toLowerCase()
+          return (
+            lower.includes('agentconversation') ||
+            lower.includes('agentmessage') ||
+            lower.includes('agenttool') ||
+            lower.includes('agentmcp') ||
+            lower.includes('agentmodel') ||
+            lower.includes('agentautomation') ||
+            lower.includes('assistant')
+          )
+        })
 
       if (!hasAssistantEvent) return
 
@@ -2335,6 +2403,8 @@ export function AgentPanelContent({
       )
       const isConversationEvent = eventNames.some(
         (eventName) =>
+          eventName.includes('agentconversations') ||
+          eventName.includes('agent.conversations') ||
           eventName.includes('assistantconversations') ||
           eventName.includes('assistant.conversations'),
       )
@@ -2346,16 +2416,16 @@ export function AgentPanelContent({
             : null
 
       // Prefer cache merges above. Invalidate only as a last resort for unknown
-      // assistant payloads, and never broadcast-invalidate all message queries.
+      // agent payloads, and never broadcast-invalidate all message queries.
       if (isConversationEvent || !conversationId) {
         queryClient.invalidateQueries({
-          queryKey: ['assistant', 'conversations'],
+          queryKey: ['agent', 'conversations'],
         })
       }
 
       if (conversationId) {
         queryClient.invalidateQueries({
-          queryKey: ['assistant', 'messages', conversationId],
+          queryKey: ['agent', 'messages', conversationId],
         })
       }
     }
@@ -2443,6 +2513,38 @@ export function AgentPanelContent({
   })
 
   const routeProjectId = nonEmptyId(params.projectId)
+  const routeOrgId = nonEmptyId(params.orgId) ?? nonEmptyId(params.teamId)
+  const needsComposerProjectDefault =
+    isAuthenticated && !selectedContextProjectId && !routeProjectId
+
+  // On org routes, reuse the same project list the overview already loaded.
+  const { data: routeOrgTeam, isLoading: routeOrgTeamLoading } = useConsoleTeam(
+    needsComposerProjectDefault ? routeOrgId : null,
+  )
+  const routeOrgPinnedIds = useMemo(
+    () => parsePinnedProjectIds(routeOrgTeam?.prefs),
+    [routeOrgTeam?.prefs],
+  )
+  const {
+    data: routeOrgProjectsPage,
+    isFetched: routeOrgProjectsFetched,
+    isFetching: routeOrgProjectsFetching,
+  } = useQuery({
+    // Match the org overview loader query key so we reuse the prefetched cache.
+    ...activeProjectsQueryOptions(
+      routeOrgId,
+      0,
+      GRID_DEFAULT_PAGE_SIZE,
+      '',
+      routeOrgPinnedIds.length > 0 ? routeOrgPinnedIds : undefined,
+    ),
+    enabled: Boolean(
+      needsComposerProjectDefault &&
+        routeOrgId &&
+        !routeOrgTeamLoading &&
+        routeOrgPinnedIds.length === 0,
+    ),
+  })
 
   // Sync picker when switching agents / route project only. Do not reset on
   // activeConversation object updates (e.g. after sending a message).
@@ -2494,6 +2596,54 @@ export function AgentPanelContent({
     messages,
     routeProjectId,
     selectedContextProjectId,
+  ])
+
+  // Outside a project route with no selection: pick a default project.
+  // Prefer the current org's list (already on the org page cache); otherwise scan orgs.
+  useEffect(() => {
+    if (!needsComposerProjectDefault) return
+    if (assistantConversationProjectId(activeConversation)) return
+    // Wait until the active conversation document has loaded before defaulting.
+    if (activeConversationId && !activeConversation) return
+
+    if (routeOrgId) {
+      if (routeOrgTeamLoading) return
+      const fromPinned = nonEmptyId(routeOrgPinnedIds[0])
+      if (fromPinned) {
+        setSelectedContextProjectId(fromPinned)
+        return
+      }
+      const fromOrgList = nonEmptyId(routeOrgProjectsPage?.projects?.[0]?.$id)
+      if (fromOrgList) {
+        setSelectedContextProjectId(fromOrgList)
+        return
+      }
+      // Still fetching this org's projects; don't fall back to other orgs yet.
+      if (!routeOrgProjectsFetched || routeOrgProjectsFetching) return
+      // This org has no projects.
+      return
+    }
+
+    let cancelled = false
+    void (async () => {
+      const firstProjectId = await fetchFirstAccessibleProjectId()
+      if (cancelled || !firstProjectId) return
+      setSelectedContextProjectId((current) => current || firstProjectId)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    activeConversation,
+    activeConversationId,
+    needsComposerProjectDefault,
+    routeOrgId,
+    routeOrgPinnedIds,
+    routeOrgProjectsFetched,
+    routeOrgProjectsFetching,
+    routeOrgProjectsPage?.projects,
+    routeOrgTeamLoading,
   ])
   // Hold list/empty UI until auth + list data is ready so public /assistant does
   // not flash "No agents" / sign-in for signed-in users. MCP only gates empty.
@@ -3024,36 +3174,7 @@ export function AgentPanelContent({
         assistantConversationProjectId(conversations[0]))
     if (directContextProjectId) return directContextProjectId
 
-    try {
-      const { fetchOrganizations } = await import(
-        '@/lib/react-query/hooks/organizations'
-      )
-      const orgs = await fetchOrganizations()
-      for (const org of orgs.teams ?? []) {
-        try {
-          const projects = await listConsoleProjects({
-            organizationId: org.$id,
-            queries: [
-              Query.equal('teamId', org.$id),
-              Query.or([
-                Query.isNull('status'),
-                Query.notEqual('status', 'archived'),
-              ]),
-              Query.orderDesc('$createdAt'),
-              Query.limit(1),
-            ],
-            total: false,
-          })
-          const projectIdFromOrg = projects.projects?.[0]?.$id
-          if (projectIdFromOrg) return projectIdFromOrg
-        } catch {
-          // Try the next organization.
-        }
-      }
-      return null
-    } catch {
-      return null
-    }
+    return fetchFirstAccessibleProjectId()
   }
 
   const handleCreateConversation = async () => {
@@ -3696,7 +3817,7 @@ export function AgentPanelContent({
           let fullMessage = message
           if (message.role !== 'user') {
             try {
-              fullMessage = await sdk.forConsole.assistant.getMessage({
+              fullMessage = await sdk.forConsole.agent.getMessage({
                 conversationId: activeConversationId,
                 messageId: message.$id,
               })
@@ -4570,16 +4691,15 @@ export function AgentPanelContent({
           </button>
           {!isPageVariant ? (
             <>
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-[12px]"
                 onClick={handleOpenInNewTab}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label={t('Open in new tab')}
+                title={t('Open in new tab')}
               >
-                <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-                {t('Open in new tab')}
-              </Button>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={handleCloseChat}
@@ -4606,7 +4726,7 @@ export function AgentPanelContent({
             setRunAutomationContextId(runAutomationId)
             setPaneDetailAutomationId(runAutomationId)
             queryClient.setQueryData(
-              ['assistant', 'conversation', conversation.$id],
+              ['agent', 'conversation', conversation.$id],
               conversation,
             )
           }
@@ -4736,16 +4856,15 @@ export function AgentPanelContent({
               </button>
               {!isPageVariant ? (
                 <>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-[12px]"
                     onClick={handleOpenInNewTab}
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-label={t('Open in new tab')}
+                    title={t('Open in new tab')}
                   >
-                    <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-                    {t('Open in new tab')}
-                  </Button>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={handleCloseChat}
@@ -5457,9 +5576,7 @@ export function AgentPanelContent({
                     }
                   />
                   <ProjectSelector
-                    projectId={
-                      selectedContextProjectId || routeProjectId || undefined
-                    }
+                    projectId={contextProjectId || undefined}
                     onProjectSelect={setSelectedContextProjectId}
                     compact
                     disabled={interactionsDisabled}

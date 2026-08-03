@@ -29,7 +29,7 @@ export function ConversationResourceSummary({
     // Dedicated key so we can hydrate tools via getMessage without fighting the
     // live chat messages query (which may keep a leaner list payload).
     queryKey: [
-      'assistant',
+      'agent',
       'conversation-resource-stats',
       conversationId,
       ASSISTANT_MESSAGES_PAGE_SIZE,

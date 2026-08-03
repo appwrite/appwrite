@@ -539,7 +539,7 @@ Use the status-style badge variants so all badges share the same design (tinted 
 - `projects` - Project management, API keys, platforms, webhooks → `services/projects.ts`
 - `domains` - Domain management, DNS records, presets → `services/domains.ts`
 - `console` - Campaigns, coupons, plans, regions, resources → `services/console.ts`
-- `teams`, `vcs`, `backups`, `assistant`, `avatars` → See service files
+- `teams`, `vcs`, `backups`, `agent`, `assistant` (legacy chat), `avatars` → See service files
 
 **Project SDK** (`sdk.forProject(projectId)`):
 

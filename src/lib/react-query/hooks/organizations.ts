@@ -158,6 +158,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     screenshotsGenerated: Number.MAX_SAFE_INTEGER,
     members: Number.MAX_SAFE_INTEGER,
     webhooks: Number.MAX_SAFE_INTEGER,
+    wafRules: Number.MAX_SAFE_INTEGER,
     projects: Number.MAX_SAFE_INTEGER,
     platforms: Number.MAX_SAFE_INTEGER,
     users: Number.MAX_SAFE_INTEGER,

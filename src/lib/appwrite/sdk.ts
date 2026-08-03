@@ -8,6 +8,7 @@
 import {
   Account,
   Activities,
+  Agent,
   Apps,
   Assistant,
   Avatars,
@@ -231,6 +232,8 @@ function createConsoleSdkRaw(client: Client) {
     users: new Users(client),
     migrations: new Migrations(client),
     console: new Console(client),
+    agent: new Agent(client),
+    /** Legacy `/console/assistant` chat stream. Prefer `agent` for conversations. */
     assistant: new Assistant(client),
     sites: new Sites(client),
     domains: new Domains(client),

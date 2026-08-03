@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, Cpu, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
@@ -66,16 +65,15 @@ export function AgentSettingsContent({
           </p>
         </div>
         {onOpenInNewTab ? (
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 shrink-0 px-2 text-[12px]"
             onClick={onOpenInNewTab}
+            className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={t('Open in new tab')}
+            title={t('Open in new tab')}
           >
-            <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-            {t('Open in new tab')}
-          </Button>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </button>
         ) : null}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">

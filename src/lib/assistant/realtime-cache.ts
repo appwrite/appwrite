@@ -3,7 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { isAssistantMessageInFlight, normalizeTimeline } from './turn-view'
 
 type MessagesCache = {
-  messages: Models.AssistantMessage[]
+  messages: Models.AgentMessage[]
   total: number
 }
 
@@ -13,7 +13,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function asAssistantMessage(
   payload: Record<string, unknown>,
-): Models.AssistantMessage | null {
+): Models.AgentMessage | null {
   if (typeof payload.$id !== 'string') return null
   if (typeof payload.conversationId !== 'string') return null
 
@@ -27,7 +27,7 @@ function asAssistantMessage(
           : undefined
 
   return {
-    ...(payload as unknown as Models.AssistantMessage),
+    ...(payload as unknown as Models.AgentMessage),
     $id: payload.$id,
     conversationId: payload.conversationId,
     ...(timeline !== undefined ? { timeline } : {}),
@@ -36,26 +36,26 @@ function asAssistantMessage(
 
 function asAssistantTool(
   payload: Record<string, unknown>,
-): Models.AssistantTool | null {
+): Models.AgentTool | null {
   if (typeof payload.$id !== 'string') return null
   if (typeof payload.messageId !== 'string') return null
-  return payload as unknown as Models.AssistantTool
+  return payload as unknown as Models.AgentTool
 }
 
 function asAssistantConversation(
   payload: Record<string, unknown>,
-): Models.AssistantConversation | null {
+): Models.AgentConversation | null {
   if (typeof payload.$id !== 'string') return null
-  return payload as unknown as Models.AssistantConversation
+  return payload as unknown as Models.AgentConversation
 }
 
 function mergeMessageFields(
-  previous: Models.AssistantMessage | undefined,
-  next: Models.AssistantMessage,
-): Models.AssistantMessage {
+  previous: Models.AgentMessage | undefined,
+  next: Models.AgentMessage,
+): Models.AgentMessage {
   if (!previous) return next
 
-  const merged: Models.AssistantMessage = { ...previous, ...next }
+  const merged: Models.AgentMessage = { ...previous, ...next }
 
   // Streaming message updates often omit hydrated tools; keep what we already have.
   if (!Array.isArray(next.tools)) {
@@ -68,9 +68,9 @@ function mergeMessageFields(
 }
 
 function upsertMessageInList(
-  messages: Models.AssistantMessage[],
-  next: Models.AssistantMessage,
-): Models.AssistantMessage[] {
+  messages: Models.AgentMessage[],
+  next: Models.AgentMessage,
+): Models.AgentMessage[] {
   const existingIndex = messages.findIndex((message) => message.$id === next.$id)
   let nextMessages =
     existingIndex >= 0
@@ -96,9 +96,9 @@ function upsertMessageInList(
 }
 
 function upsertToolOnMessage(
-  message: Models.AssistantMessage,
-  tool: Models.AssistantTool,
-): Models.AssistantMessage {
+  message: Models.AgentMessage,
+  tool: Models.AgentTool,
+): Models.AgentMessage {
   const tools = Array.isArray(message.tools) ? [...message.tools] : []
   const existingIndex = tools.findIndex(
     (entry) =>
@@ -114,16 +114,16 @@ function upsertToolOnMessage(
 }
 
 function sortConversationsByUpdatedAt(
-  conversations: Models.AssistantConversation[],
-): Models.AssistantConversation[] {
+  conversations: Models.AgentConversation[],
+): Models.AgentConversation[] {
   return [...conversations].sort((a, b) =>
     (b.$updatedAt ?? '').localeCompare(a.$updatedAt ?? ''),
   )
 }
 
 function conversationsEqualForList(
-  previous: Models.AssistantConversation,
-  next: Models.AssistantConversation,
+  previous: Models.AgentConversation,
+  next: Models.AgentConversation,
 ): boolean {
   return (
     previous.status === next.status &&
@@ -145,10 +145,10 @@ function isAutomationRunConversation(conversation: {
 
 export function mergeAssistantConversationIntoCache(
   queryClient: QueryClient,
-  conversation: Models.AssistantConversation,
+  conversation: Models.AgentConversation,
 ): void {
-  queryClient.setQueriesData<Models.AssistantConversation[] | undefined>(
-    { queryKey: ['assistant', 'conversations'], exact: false },
+  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+    { queryKey: ['agent', 'conversations'], exact: false },
     (old) => {
       if (!old) return old
       const index = old.findIndex((entry) => entry.$id === conversation.$id)
@@ -189,7 +189,7 @@ export function mergeAssistantConversationIntoCache(
   ) {
     void queryClient.invalidateQueries({
       queryKey: [
-        'assistant',
+      'agent',
         'conversation-resource-stats',
         conversation.$id,
       ],
@@ -202,10 +202,10 @@ export function mergeAssistantConversationIntoCache(
 export function patchAssistantConversationInCache(
   queryClient: QueryClient,
   conversationId: string,
-  patch: Partial<Models.AssistantConversation>,
+  patch: Partial<Models.AgentConversation>,
 ): void {
-  queryClient.setQueriesData<Models.AssistantConversation[] | undefined>(
-    { queryKey: ['assistant', 'conversations'], exact: false },
+  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+    { queryKey: ['agent', 'conversations'], exact: false },
     (old) => {
       if (!old) return old
       const index = old.findIndex((entry) => entry.$id === conversationId)
@@ -229,7 +229,7 @@ export function patchAssistantConversationInCache(
 
 function syncConversationStatusFromMessage(
   queryClient: QueryClient,
-  message: Models.AssistantMessage,
+  message: Models.AgentMessage,
 ): void {
   if (message.role !== 'assistant') return
 
@@ -265,15 +265,15 @@ export function removeAssistantConversationFromCache(
   queryClient: QueryClient,
   conversationId: string,
 ): void {
-  queryClient.setQueriesData<Models.AssistantConversation[] | undefined>(
-    { queryKey: ['assistant', 'conversations'], exact: false },
+  queryClient.setQueriesData<Models.AgentConversation[] | undefined>(
+    { queryKey: ['agent', 'conversations'], exact: false },
     (old) => old?.filter((entry) => entry.$id !== conversationId),
   )
   queryClient.removeQueries({
-    queryKey: ['assistant', 'messages', conversationId],
+    queryKey: ['agent', 'messages', conversationId],
   })
   queryClient.removeQueries({
-    queryKey: ['assistant', 'conversation-resource-stats', conversationId],
+    queryKey: ['agent', 'conversation-resource-stats', conversationId],
   })
 }
 
@@ -283,13 +283,13 @@ function applyMessagesCacheUpdate(
   updater: (old: MessagesCache | undefined) => MessagesCache | undefined,
 ): void {
   queryClient.setQueriesData<MessagesCache | undefined>(
-    { queryKey: ['assistant', 'messages', conversationId], exact: false },
+    { queryKey: ['agent', 'messages', conversationId], exact: false },
     updater,
   )
   // List-row resource counters use a dedicated hydrated query; keep it in sync.
   queryClient.setQueriesData<MessagesCache | undefined>(
     {
-      queryKey: ['assistant', 'conversation-resource-stats', conversationId],
+      queryKey: ['agent', 'conversation-resource-stats', conversationId],
       exact: false,
     },
     updater,
@@ -298,7 +298,7 @@ function applyMessagesCacheUpdate(
 
 export function mergeAssistantMessageIntoCache(
   queryClient: QueryClient,
-  message: Models.AssistantMessage,
+  message: Models.AgentMessage,
 ): void {
   applyMessagesCacheUpdate(queryClient, message.conversationId, (old) => {
     if (!old) {
@@ -316,7 +316,7 @@ export function mergeAssistantMessageIntoCache(
 
 export function mergeAssistantToolIntoCache(
   queryClient: QueryClient,
-  tool: Models.AssistantTool,
+  tool: Models.AgentTool,
 ): void {
   const conversationId = tool.conversationId
   if (!conversationId) {
@@ -332,11 +332,11 @@ export function mergeAssistantToolIntoCache(
       return changed ? { ...old, messages } : old
     }
     queryClient.setQueriesData<MessagesCache | undefined>(
-      { queryKey: ['assistant', 'messages'], exact: false },
+      { queryKey: ['agent', 'messages'], exact: false },
       updater,
     )
     queryClient.setQueriesData<MessagesCache | undefined>(
-      { queryKey: ['assistant', 'conversation-resource-stats'], exact: false },
+      { queryKey: ['agent', 'conversation-resource-stats'], exact: false },
       updater,
     )
     return
@@ -354,15 +354,19 @@ export function mergeAssistantToolIntoCache(
   })
 }
 
-/** Match both `assistant.messages` and compacted `assistantmessages` event forms. */
+/** Match both `agent.messages` / `agentmessages` and legacy `assistant.*` forms. */
 function eventMatchesAssistantResource(
   eventNames: string[],
   resource: 'conversations' | 'messages' | 'tools' | 'mcps',
 ): boolean {
-  const compacted = `assistant${resource}`
-  const dotted = `assistant.${resource}`
-  return eventNames.some(
-    (event) => event.includes(compacted) || event.includes(dotted),
+  const patterns = [
+    `agent${resource}`,
+    `agent.${resource}`,
+    `assistant${resource}`,
+    `assistant.${resource}`,
+  ]
+  return eventNames.some((event) =>
+    patterns.some((pattern) => event.includes(pattern)),
   )
 }
 
@@ -380,7 +384,7 @@ export function applyAssistantRealtimePayload(
     if (isDelete && typeof payload.$id === 'string') {
       removeAssistantConversationFromCache(queryClient, payload.$id)
       void queryClient.invalidateQueries({
-        queryKey: ['assistant', 'automations'],
+        queryKey: ['agent', 'automations'],
         exact: false,
       })
       return true
@@ -390,7 +394,7 @@ export function applyAssistantRealtimePayload(
       mergeAssistantConversationIntoCache(queryClient, conversation)
       // Keep automation run lists in sync (conversations keyed by automationId).
       void queryClient.invalidateQueries({
-        queryKey: ['assistant', 'automations'],
+        queryKey: ['agent', 'automations'],
         exact: false,
       })
       return true
@@ -417,7 +421,7 @@ export function applyAssistantRealtimePayload(
   }
 
   if (eventMatchesAssistantResource(eventNames, 'mcps')) {
-    queryClient.invalidateQueries({ queryKey: ['assistant', 'mcps'] })
+    queryClient.invalidateQueries({ queryKey: ['agent', 'mcps'] })
     return true
   }
 
