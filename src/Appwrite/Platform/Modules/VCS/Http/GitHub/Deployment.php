@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -50,6 +51,7 @@ trait Deployment
     ) {
         $errors = [];
         $provider = $vcs->getName();
+        $checkRuns = new CheckRuns();
 
         // A webhook fans out to every resource linked to the same provider repository,
         // so resolve its owner and name once per provider repository rather than per resource.
@@ -374,8 +376,28 @@ trait Deployment
                     $commands[] = $resource->getAttribute('commands', '');
                 }
 
+                $region = $project->getAttribute('region', 'default');
+                $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                $resourceName = $resource->getAttribute('name');
+                $projectName = $project->getAttribute('name');
+                $name = "{$resourceName} ({$projectName})";
+                $silent = $resource->getAttribute('providerSilentMode', false) === true;
+
+                // Open the run before the deployment is persisted so its id can ride
+                // along: the build worker submitted below can finish before a report
+                // written afterwards lands, which would reopen a completed run.
+                $checkRunId = 0;
+                if (!$silent) {
+                    $checkRunId = $checkRuns->open($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'Starting...', $providerTargetUrl, $deploymentId);
+
+                    if ($checkRunId === 0 && !empty($providerCommitHash)) {
+                        $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Starting...', $providerTargetUrl, $name);
+                    }
+                }
+
                 $deployment = new Document([
                     '$id' => $deploymentId,
+                    'providerCheckRunId' => $checkRunId,
                     'resourceId' => $resourceId,
                     'resourceInternalId' => $resourceInternalId,
                     'resourceType' => $resourceCollection,
@@ -407,13 +429,20 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
-                $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromUrl(
-                        $resource,
-                        $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                        $resource->getAttribute('providerRootDirectory', ''),
-                    ));
+                try {
+                    $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
+                        ->createFromUrl(
+                            $resource,
+                            $deployment,
+                            $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                            $resource->getAttribute('providerRootDirectory', ''),
+                        ));
+                } catch (\Throwable $e) {
+                    // Nothing will build, so nothing will close the run we just opened.
+                    $checkRuns->close($vcs, $owner, $repositoryName, $checkRunId, CheckRuns::CONCLUSION_FAILURE, 'Deployment failed', 'Could not queue the build.', $providerTargetUrl);
+
+                    throw $e;
+                }
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();
@@ -555,17 +584,6 @@ trait Deployment
                             $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
-                }
-
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $region = $project->getAttribute('region', 'default');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Starting...';
-
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
                 Span::add("{$logBase}.build.triggered", 'true');
