@@ -382,8 +382,8 @@ function OAuth2ConsentPage() {
 
   return (
     <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-md">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-xl">
           {phase === 'loading' && (
             <div className="flex min-h-64 items-center justify-center">
               <Loader2 className="text-muted-foreground size-8 animate-spin" />
@@ -392,16 +392,23 @@ function OAuth2ConsentPage() {
 
           {phase === 'error' && (
             <Card className="overflow-hidden p-6 md:p-8">
-              <div className="space-y-4 text-center">
-                <div className="bg-destructive/10 mx-auto flex size-12 items-center justify-center rounded-full">
-                  <TriangleAlert className="text-destructive size-6" />
+              <div className="space-y-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="bg-destructive/10 flex size-10 items-center justify-center rounded-xl">
+                    <TriangleAlert className="text-destructive size-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                      {t('Authorization failed')}
+                    </h1>
+                    <p className="text-muted-foreground text-[13px] leading-relaxed">
+                      {error}
+                    </p>
+                  </div>
                 </div>
-                <h1 className="text-xl font-semibold tracking-tight">
-                  {t('Authorization failed')}
-                </h1>
-                <p className="text-muted-foreground text-sm">{error}</p>
                 <Button
                   variant="outline"
+                  className="w-full"
                   onClick={() => navigate({ to: '/', replace: true })}
                 >
                   {t('Go to console')}

@@ -7,12 +7,16 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   OAuth2ConsentCard,
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
+import {
+  OAUTH2_DEVICE_CODE_LENGTH,
+  OAuth2DeviceCodeInput,
+  normalizeUserCode,
+} from '@/components/global/auth/OAuth2DeviceCodeInput'
 import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -32,11 +36,6 @@ export const Route = createFileRoute('/_auth/oauth2/device')({
 })
 
 type Phase = 'loading' | 'enter-code' | 'consent' | 'approved' | 'denied'
-
-/** Keep only the characters the device user codes are built from. */
-function normalizeUserCode(value: string): string {
-  return value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-}
 
 const DEVICE_FLOW: OAuth2Flow = 'device'
 
@@ -164,8 +163,8 @@ function OAuth2DevicePage() {
 
   return (
     <div className="bg-background h-full overflow-y-auto">
-      <div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-md">
+      <div className="flex min-h-full flex-col items-center p-6 md:p-10">
+        <div className="my-auto w-full max-w-xl">
           {phase === 'loading' && (
             <div className="flex min-h-64 items-center justify-center">
               <Loader2 className="text-muted-foreground size-8 animate-spin" />
@@ -176,16 +175,16 @@ function OAuth2DevicePage() {
             <Card className="overflow-hidden p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-xl">
-                    <MonitorSmartphone className="size-6" />
+                  <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-xl ring-1 ring-border/50">
+                    <MonitorSmartphone className="size-4" />
                   </div>
                   <div className="space-y-1">
-                    <h1 className="text-xl font-semibold tracking-tight">
+                    <h1 className="text-2xl font-semibold tracking-tight">
                       {hasPrefilledCode
                         ? t('Confirm your code')
                         : t('Connect a device')}
                     </h1>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-[13px] leading-relaxed">
                       {hasPrefilledCode
                         ? t(
                             'Make sure this matches the code shown on your device, then continue.',
@@ -197,23 +196,20 @@ function OAuth2DevicePage() {
 
                 <div className="space-y-3">
                   <Label htmlFor="user-code">{t('Device code')}</Label>
-                  <Input
+                  <OAuth2DeviceCodeInput
                     id="user-code"
                     value={code}
-                    onChange={(e) => {
-                      setCode(normalizeUserCode(e.target.value))
+                    onChange={(next) => {
+                      setCode(next)
                       setError(null)
                     }}
-                    placeholder="XXXXXXXX"
                     autoFocus
-                    autoComplete="off"
-                    autoCapitalize="characters"
-                    spellCheck={false}
-                    maxLength={12}
                     disabled={submitMutation.isPending}
-                    className="text-center font-mono text-2xl uppercase tracking-[0.3em]"
+                    aria-invalid={Boolean(error)}
                   />
-                  {error && <p className="text-destructive text-sm">{error}</p>}
+                  {error && (
+                    <p className="text-destructive text-[13px]">{error}</p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -221,16 +217,19 @@ function OAuth2DevicePage() {
                     type="submit"
                     variant="brandCta"
                     className="w-full"
-                    disabled={code.length === 0 || submitMutation.isPending}
+                    disabled={
+                      code.length < OAUTH2_DEVICE_CODE_LENGTH ||
+                      submitMutation.isPending
+                    }
                   >
                     {t('Continue')}
                   </Button>
                 </div>
 
                 {account && (
-                  <p className="text-muted-foreground text-center text-xs">
+                  <p className="text-muted-foreground text-center text-[12px]">
                     {t('Signed in as')}{' '}
-                    <span className="font-medium">
+                    <span className="text-foreground font-medium">
                       {account.email || account.name}
                     </span>
                     .

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, CircleAlert, Loader2, Pencil, Plus, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -127,16 +128,16 @@ export function OAuth2ResourceSelector({
       <div className="flex items-center justify-between gap-2">
         <div
           className={cn(
-            'flex min-w-0 items-center gap-1.5 text-sm',
-            isEmpty ? 'text-amber-600 dark:text-amber-500' : '',
+            'flex min-w-0 items-center gap-1.5 text-[13px]',
+            isEmpty && 'text-muted-foreground',
           )}
         >
           {isEmpty && <CircleAlert className="size-4 shrink-0" />}
           <span className="truncate font-medium">{summary}</span>
           {isDefault && (
-            <span className="text-muted-foreground bg-muted ms-1 rounded px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide">
+            <Badge variant="info" className="ms-1 text-[10px] shrink-0">
               {t('Default')}
-            </span>
+            </Badge>
           )}
         </div>
         <button
@@ -144,7 +145,7 @@ export function OAuth2ResourceSelector({
           disabled={disabled}
           onClick={() => setExpanded((v) => !v)}
           className={cn(
-            'text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 text-xs font-medium disabled:opacity-50',
+            'text-muted-foreground hover:text-foreground flex shrink-0 cursor-pointer items-center gap-1 text-xs font-medium disabled:opacity-50',
             expanded && 'text-foreground',
           )}
         >
@@ -158,7 +159,7 @@ export function OAuth2ResourceSelector({
       </div>
 
       {expanded && (
-        <div className="space-y-3 pt-1">
+        <div className="space-y-3 pt-3">
           {/* Mode toggle for wildcard grants */}
           {wildcard && (
             <div
@@ -169,7 +170,7 @@ export function OAuth2ResourceSelector({
                 type="button"
                 onClick={() => setAll(true)}
                 className={cn(
-                  'flex-1 rounded px-2 py-1.5 transition',
+                  'flex-1 cursor-pointer rounded px-2 py-1.5 transition',
                   isAll
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground',
@@ -181,7 +182,7 @@ export function OAuth2ResourceSelector({
                 type="button"
                 onClick={() => setAll(false)}
                 className={cn(
-                  'flex-1 rounded px-2 py-1.5 transition',
+                  'flex-1 cursor-pointer rounded px-2 py-1.5 transition',
                   !isAll
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground',
@@ -214,7 +215,7 @@ export function OAuth2ResourceSelector({
                       type="button"
                       aria-label={`${t('Remove')} ${r.name}`}
                       onClick={() => remove(id)}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       <X className="size-3" />
                     </button>
@@ -251,7 +252,7 @@ export function OAuth2ResourceSelector({
                       <button
                         type="button"
                         onClick={() => add(r.id)}
-                        className="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm"
+                        className="hover:bg-muted flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm"
                       >
                         <span className="min-w-0 flex-1 truncate">
                           {r.name}

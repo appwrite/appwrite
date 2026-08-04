@@ -34,6 +34,12 @@ import {
   Variable,
   Mail,
   Code2,
+  KeyRound,
+  ShieldCheck,
+  Folder,
+  MonitorSmartphone,
+  ExternalLink,
+  Link2,
 } from 'lucide-react'
 import {
   Popover,
@@ -1354,7 +1360,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Demos',
-            description: 'Preview alerts, banners, loaders, and pages.',
+            description: 'Preview alerts, banners, loaders, OAuth2, and pages.',
             icon: <Bug className="h-3 w-3" />,
             submenu: [
               {
@@ -1533,6 +1539,217 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <Mail className="h-3 w-3" />,
+              },
+              {
+                label: 'OAuth2',
+                description: 'Preview consent, device, outcome, and relay screens.',
+                icon: <KeyRound className="h-3 w-3" />,
+                submenu: [
+                  {
+                    label: 'All screens',
+                    description: 'Open the OAuth2 preview with a screen picker.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <KeyRound className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent',
+                    description: 'Standard authorization consent.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ShieldCheck className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent (MCP)',
+                    description: 'MCP grant with scope narrowing.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent-mcp' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <McpIcon className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Consent (resources)',
+                    description: 'Project and organization resource pickers.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'consent-resources' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Folder className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device code',
+                    description: 'Enter a device authorization code.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-enter-code' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <MonitorSmartphone className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device confirm',
+                    description: 'Confirm a prefilled device code.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-confirm-code' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <MonitorSmartphone className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device consent',
+                    description: 'Device-flow consent screen.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'device-consent' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ShieldCheck className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Access granted',
+                    description: 'Authorization approved outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Device connected',
+                    description: 'Device-flow approved outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved-device' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Access granted (deep link)',
+                    description: 'Approved with native deep-link retry.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-approved-deeplink' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <ExternalLink className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Request cancelled',
+                    description: 'Denied / cancelled outcome.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'outcome-denied' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <X className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Authorization failed',
+                    description: 'Invalid or expired request error.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Loading',
+                    description: 'Consent / device loading spinner.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'loading' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Loader2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay success',
+                    description: 'Native OAuth callback success.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-success' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Check className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay failure',
+                    description: 'Native OAuth callback failure.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-failure' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay missing URL',
+                    description: 'Missing project redirect URL.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-missing' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <Link2 className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'Relay error',
+                    description: 'OAuth error payload without project.',
+                    onClick: () => {
+                      navigate({
+                        to: '/debug/oauth2-preview',
+                        search: { screen: 'relay-error' },
+                      })
+                      setIsOpen(false)
+                    },
+                    icon: <AlertTriangle className="h-3 w-3" />,
+                  },
+                ],
               },
               {
                 label: 'Functions editor',

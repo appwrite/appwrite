@@ -83,6 +83,7 @@ import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/pr
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
 import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
+import { Route as PublicDebugOauth2PreviewRouteImport } from './routes/_public/debug.oauth2-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicDebugCodeEditorPreviewRouteImport } from './routes/_public/debug.code-editor-preview'
 import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
@@ -748,6 +749,12 @@ const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
     path: '/debug/org-setup-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
+const PublicDebugOauth2PreviewRoute =
+  PublicDebugOauth2PreviewRouteImport.update({
+    id: '/debug/oauth2-preview',
+    path: '/debug/oauth2-preview',
     getParentRoute: () => PublicRoute,
   } as any)
 const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
@@ -2762,6 +2769,7 @@ export interface FileRoutesByFullPath {
   '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
@@ -3122,6 +3130,7 @@ export interface FileRoutesByTo {
   '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3454,6 +3463,7 @@ export interface FileRoutesById {
   '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
   '/_public/debug/code-editor-preview': typeof PublicDebugCodeEditorPreviewRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
+  '/_public/debug/oauth2-preview': typeof PublicDebugOauth2PreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
@@ -3822,6 +3832,7 @@ export interface FileRouteTypes {
     | '/agent/settings'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
+    | '/debug/oauth2-preview'
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/organizations/$orgId'
@@ -4182,6 +4193,7 @@ export interface FileRouteTypes {
     | '/agent/$agentId'
     | '/debug/code-editor-preview'
     | '/debug/error-preview'
+    | '/debug/oauth2-preview'
     | '/debug/org-setup-preview'
     | '/debug/verify-email-preview'
     | '/generator/diagrams/$generationId'
@@ -4513,6 +4525,7 @@ export interface FileRouteTypes {
     | '/_public/agent/settings'
     | '/_public/debug/code-editor-preview'
     | '/_public/debug/error-preview'
+    | '/_public/debug/oauth2-preview'
     | '/_public/debug/org-setup-preview'
     | '/_public/debug/verify-email-preview'
     | '/_public/organizations/$orgId'
@@ -5348,6 +5361,13 @@ declare module '@tanstack/react-router' {
       path: '/debug/org-setup-preview'
       fullPath: '/debug/org-setup-preview'
       preLoaderRoute: typeof PublicDebugOrgSetupPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/oauth2-preview': {
+      id: '/_public/debug/oauth2-preview'
+      path: '/debug/oauth2-preview'
+      fullPath: '/debug/oauth2-preview'
+      preLoaderRoute: typeof PublicDebugOauth2PreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/debug/error-preview': {
@@ -8954,6 +8974,7 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugCodeEditorPreviewRoute: typeof PublicDebugCodeEditorPreviewRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
+  PublicDebugOauth2PreviewRoute: typeof PublicDebugOauth2PreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
   PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
@@ -8973,6 +8994,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugCodeEditorPreviewRoute: PublicDebugCodeEditorPreviewRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
+  PublicDebugOauth2PreviewRoute: PublicDebugOauth2PreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
   PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,

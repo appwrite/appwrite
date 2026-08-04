@@ -11,7 +11,6 @@ import {
   CircleAlert,
   Copy,
   Folder,
-  Link2,
   Lock,
   ShieldCheck,
   SlidersHorizontal,
@@ -19,6 +18,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
+import { OAuth2AppAvatar } from '@/components/global/auth/OAuth2AppAvatar'
 import {
   buildConsentPermissions,
   buildTierEditorRows,
@@ -78,6 +79,8 @@ interface OAuth2ConsentCardProps {
   onDone?: (outcome: OAuth2Outcome, redirectUrl?: string) => void
   /** When provided, the account chip becomes a menu with "Use a different account". */
   onSwitchAccount?: () => void | Promise<void>
+  /** Debug preview: skip approve/reject API calls and invoke onDone instead. */
+  preview?: boolean
 }
 
 function hostnameOf(uri: string): string | null {
@@ -88,24 +91,6 @@ function hostnameOf(uri: string): string | null {
   }
 }
 
-function AppAvatar({ app }: { app: Models.App }) {
-  const initial = (app.name || '?').charAt(0).toUpperCase()
-  if (app.logoUri) {
-    return (
-      <img
-        src={app.logoUri}
-        alt={app.name}
-        className="size-14 rounded-xl border object-cover"
-      />
-    )
-  }
-  return (
-    <div className="bg-muted text-muted-foreground flex size-14 items-center justify-center rounded-xl border text-xl font-semibold">
-      {initial}
-    </div>
-  )
-}
-
 export function OAuth2ConsentCard({
   grant,
   app,
@@ -113,6 +98,7 @@ export function OAuth2ConsentCard({
   flow,
   onDone,
   onSwitchAccount,
+  preview = false,
 }: OAuth2ConsentCardProps) {
   const t = useT()
   const [error, setError] = useState<string | null>(null)
@@ -378,7 +364,15 @@ export function OAuth2ConsentCard({
 
   // --- Approve / reject -------------------------------------------------------
   const approveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      if (preview) {
+        return {
+          redirectUrl:
+            flow === 'device'
+              ? undefined
+              : (grant.redirectUri || 'https://example.com/callback'),
+        }
+      }
       // For MCP grants the editor may downscope the requested catalog; `scope`
       // stays omitted when the user kept the full request so the server grants
       // the full literal requested list (keeping the consent-skip diff empty on
@@ -407,7 +401,7 @@ export function OAuth2ConsentCard({
       })
     },
     onSuccess: (result) => {
-      if (flow === 'device' || !result.redirectUrl) {
+      if (preview || flow === 'device' || !result.redirectUrl) {
         onDone?.('approved', result.redirectUrl)
         return
       }
@@ -427,9 +421,19 @@ export function OAuth2ConsentCard({
   })
 
   const rejectMutation = useMutation({
-    mutationFn: () => sdk.forConsole.oauth2.reject({ grantId: grant.$id }),
+    mutationFn: async () => {
+      if (preview) {
+        return {
+          redirectUrl:
+            flow === 'device'
+              ? undefined
+              : (grant.redirectUri || 'https://example.com/callback'),
+        }
+      }
+      return sdk.forConsole.oauth2.reject({ grantId: grant.$id })
+    },
     onSuccess: (result) => {
-      if (flow === 'device' || !result.redirectUrl) {
+      if (preview || flow === 'device' || !result.redirectUrl) {
         onDone?.('denied', result.redirectUrl)
         return
       }
@@ -474,7 +478,7 @@ export function OAuth2ConsentCard({
               aria-expanded={open}
               aria-controls={`${tierKey}-permissions-list`}
               onClick={() => setOpen(!open)}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium uppercase tracking-wide"
+              className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wider"
             >
               {t(heading)}
               {open ? (
@@ -484,7 +488,7 @@ export function OAuth2ConsentCard({
               )}
             </button>
           </div>
-          <p className="text-muted-foreground/80 mt-1 ps-6 text-xs leading-relaxed">
+          <p className="text-muted-foreground mt-1 ps-6 text-[12px] leading-relaxed">
             {t(note)}
           </p>
         </div>
@@ -513,13 +517,13 @@ export function OAuth2ConsentCard({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium">
+                      <span className="text-[13px] font-medium">
                         {t(row.title)}
                       </span>
                       {row.hasRead && row.hasWrite ? (
                         <span
                           className={cn(
-                            'border-border flex shrink-0 overflow-hidden rounded-md border text-[0.6rem] font-medium',
+                            'border-border flex shrink-0 overflow-hidden rounded-md border text-[10px] font-medium',
                             !state.selected && 'pointer-events-none',
                           )}
                         >
@@ -532,7 +536,7 @@ export function OAuth2ConsentCard({
                               })
                             }
                             className={cn(
-                              'px-1.5 py-0.5 transition',
+                              'cursor-pointer px-1.5 py-0.5 transition',
                               state.level === 'read' || readOnlyAll
                                 ? 'bg-muted text-foreground'
                                 : 'text-muted-foreground hover:text-foreground',
@@ -549,9 +553,9 @@ export function OAuth2ConsentCard({
                               })
                             }
                             className={cn(
-                              'border-border border-s px-1.5 py-0.5 transition',
+                              'border-border cursor-pointer border-s px-1.5 py-0.5 transition',
                               state.level === 'full' && !readOnlyAll
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                ? 'bg-muted text-foreground'
                                 : 'text-muted-foreground hover:text-foreground',
                               readOnlyAll && 'opacity-50',
                             )}
@@ -560,20 +564,16 @@ export function OAuth2ConsentCard({
                           </button>
                         </span>
                       ) : (
-                        <span
-                          className={cn(
-                            'shrink-0 rounded px-1.5 py-0.5 text-[0.58rem] font-medium uppercase tracking-wide',
-                            row.accessStrong
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                              : 'bg-muted text-muted-foreground',
-                          )}
+                        <Badge
+                          variant={row.accessStrong ? 'warning' : 'info'}
+                          className="text-[10px] shrink-0"
                         >
                           {t(row.access)}
-                        </span>
+                        </Badge>
                       )}
                     </div>
                     {row.description && (
-                      <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                      <p className="text-muted-foreground mt-1 text-[12px] leading-relaxed">
                         {t(row.description)}
                       </p>
                     )}
@@ -588,91 +588,73 @@ export function OAuth2ConsentCard({
   }
 
   return (
-    <Card className="gap-0 overflow-hidden p-0">
-      {/* Header */}
-      <div className="from-muted/60 flex flex-col items-center gap-4 bg-gradient-to-b to-transparent px-7 pb-4 pt-7 text-center">
-        <div className="flex items-center justify-center">
-          <AppAvatar app={app} />
-          {accountLabel && (
-            <>
-              <div className="flex items-center px-2">
-                <span className="border-border w-4 border-t border-dashed" />
-                <span className="border-border text-muted-foreground flex size-7 items-center justify-center rounded-full border bg-[var(--card)]">
-                  <Link2 className="size-3.5" />
-                </span>
-                <span className="border-border w-4 border-t border-dashed" />
-              </div>
-              <div className="bg-foreground text-background flex size-12 items-center justify-center rounded-full text-lg font-semibold">
-                {accountInitial}
-              </div>
-            </>
-          )}
-        </div>
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight">
-            {t('Authorize')} {app.name}
-          </h1>
-          <p className="text-muted-foreground text-sm">{summary}</p>
-        </div>
-        {accountLabel &&
-          (onSwitchAccount ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild disabled={isBusy}>
-                <button
-                  type="button"
-                  className="bg-muted/70 text-muted-foreground hover:bg-muted flex max-w-full items-center gap-1.5 rounded-full py-1 pe-2 ps-1 text-xs transition disabled:opacity-60"
-                >
-                  <span className="bg-foreground text-background flex size-5 items-center justify-center rounded-full text-[0.6rem] font-semibold">
-                    {accountInitial}
-                  </span>
-                  <span className="truncate">{accountLabel}</span>
-                  <ChevronDown className="size-3.5 shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-72">
-                <div className="flex items-center gap-2 px-2 py-1.5">
-                  <span className="bg-foreground text-background flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-                    {accountInitial}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-start text-sm">
-                    {accountLabel}
-                  </span>
-                  <Check className="text-muted-foreground size-4 shrink-0" />
-                </div>
-                <DropdownMenuItem
-                  disabled={isBusy}
-                  onSelect={() => void onSwitchAccount()}
-                >
-                  <ArrowLeftRight className="size-4" />
-                  {t('Use a different account')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="bg-muted/70 text-muted-foreground flex max-w-full items-center gap-1.5 rounded-full py-1 pe-3 ps-1 text-xs">
-              <span className="bg-foreground text-background flex size-5 items-center justify-center rounded-full text-[0.6rem] font-semibold">
-                {accountInitial}
-              </span>
-              <span className="truncate">{accountLabel}</span>
-            </div>
-          ))}
-      </div>
+    <Card className="overflow-hidden p-6 md:p-8">
+      <div className="space-y-6">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <OAuth2AppAvatar app={app} />
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t('Authorize')} {app.name}
+            </h1>
+            <p className="text-muted-foreground text-[13px] leading-relaxed">
+              {summary}
+            </p>
+          </div>
 
-      {/* Body */}
-      <div className="space-y-4 px-7 pb-7 pt-2">
-        {/* MCP scope-narrowing editor - only for grants aimed at the Appwrite
-            MCP server; everything else keeps the read-only permission list. */}
+          {accountLabel ? (
+            onSwitchAccount ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild disabled={isBusy}>
+                  <button
+                    type="button"
+                    className="cursor-pointer text-muted-foreground hover:text-foreground border-border hover:bg-muted/50 flex max-w-full items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition disabled:opacity-60"
+                  >
+                    <span className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[10px] font-semibold">
+                      {accountInitial}
+                    </span>
+                    <span className="truncate">{accountLabel}</span>
+                    <ChevronDown className="size-3.5 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-72">
+                  <div className="flex items-center gap-2 px-2 py-1.5">
+                    <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
+                      {accountInitial}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-start text-[13px]">
+                      {accountLabel}
+                    </span>
+                    <Check className="text-muted-foreground size-4 shrink-0" />
+                  </div>
+                  <DropdownMenuItem
+                    disabled={isBusy}
+                    onSelect={() => void onSwitchAccount()}
+                  >
+                    <ArrowLeftRight className="size-4" />
+                    {t('Use a different account')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <p className="text-muted-foreground text-[12px]">
+                {t('Signed in as')}{' '}
+                <span className="text-foreground font-medium">{accountLabel}</span>
+              </p>
+            )
+          ) : null}
+        </div>
+
         {canNarrow ? (
-          <div className="border-border overflow-hidden rounded-lg border">
-            <div className="flex items-start gap-3 p-4">
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="flex items-start gap-3 px-4 py-4">
               <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
                 <ShieldCheck className="size-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-medium">
+                <p className="text-[13px] font-medium">
                   {composed?.untouched ? t('Full access') : t('Custom access')}
                 </p>
-                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                <p className="text-muted-foreground mt-1 text-[12px] leading-relaxed">
                   {composed?.untouched
                     ? `${app.name} ${t('will be able to manage your organizations, projects, and their data on your behalf.')}`
                     : `${app.name} ${t('only gets the permissions you selected below.')}`}
@@ -680,21 +662,23 @@ export function OAuth2ConsentCard({
               </div>
             </div>
 
+            <div className="border-t border-border" />
+
             <button
               type="button"
               aria-expanded={customize}
               onClick={() => setCustomize((v) => !v)}
-              className="hover:bg-muted/50 border-border flex w-full items-center justify-between border-t px-4 py-3"
+              className="cursor-pointer hover:bg-muted/40 flex w-full items-center justify-between px-4 py-3"
             >
               <span className="flex items-center gap-2.5 text-start">
                 <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
                   <SlidersHorizontal className="size-4" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium">
+                  <span className="block text-[13px] font-medium">
                     {t('Customize access')}
                   </span>
-                  <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed">
+                  <span className="text-muted-foreground mt-0.5 block text-[12px] leading-relaxed">
                     {t('You can limit')} {app.name}{' '}
                     {t('to specific projects and actions.')}
                   </span>
@@ -707,95 +691,99 @@ export function OAuth2ConsentCard({
               )}
             </button>
 
-            {customize && (
-              <div className="border-border space-y-5 border-t p-4">
-                <label className="flex items-start gap-2.5">
-                  <Checkbox
-                    className="mt-0.5"
-                    checked={readOnlyAll}
-                    onCheckedChange={(checked) =>
-                      setReadOnlyAll(checked === true)
-                    }
-                    disabled={isBusy}
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">
-                      {t('Read-only')}
+            {customize ? (
+              <>
+                <div className="border-t border-border" />
+                <div className="space-y-5 px-4 py-4">
+                  <label className="flex items-start gap-2.5">
+                    <Checkbox
+                      className="mt-0.5"
+                      checked={readOnlyAll}
+                      onCheckedChange={(checked) =>
+                        setReadOnlyAll(checked === true)
+                      }
+                      disabled={isBusy}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-medium">
+                        {t('Read-only')}
+                      </span>
+                      <span className="text-muted-foreground mt-0.5 block text-[12px] leading-relaxed">
+                        {t(
+                          'Limit every selected permission to viewing data - nothing can be created, changed, or deleted.',
+                        )}
+                      </span>
                     </span>
-                    <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed">
+                  </label>
+
+                  {scopeModel.identity.length > 0 ? (
+                    <p className="text-muted-foreground text-[12px] leading-relaxed">
+                      {t('Basic identity')} (
+                      {scopeModel.identity.map((scope) => scope.id).join(', ')}){' '}
+                      {t('is always shared so')} {app.name}{' '}
+                      {t('can recognize your account.')}
+                    </p>
+                  ) : null}
+
+                  {editorGroup(
+                    'project',
+                    'Projects',
+                    'Applies only to the projects you select below.',
+                    projectRows,
+                    projectSelection,
+                    projectPermissionsOpen,
+                    setProjectPermissionsOpen,
+                  )}
+                  {editorGroup(
+                    'organization',
+                    'Organizations',
+                    'Applies only to the organizations you select below.',
+                    organizationRows,
+                    organizationSelection,
+                    organizationPermissionsOpen,
+                    setOrganizationPermissionsOpen,
+                  )}
+
+                  {nothingSelected ? (
+                    <p className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
+                      <CircleAlert className="size-3.5 shrink-0" />
+                      {t('Select at least one permission.')}
+                    </p>
+                  ) : null}
+                  {composed?.lengthCollapsed ? (
+                    <p className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
+                      <CircleAlert className="size-3.5 shrink-0" />
                       {t(
-                        'Limit every selected permission to viewing data - nothing can be created, changed, or deleted.',
+                        'Your selection was too long to grant scope-by-scope, so a fully selected tier was granted as full tier access instead.',
                       )}
-                    </span>
-                  </span>
-                </label>
-
-                {scopeModel.identity.length > 0 && (
-                  <p className="text-muted-foreground/80 mt-1 text-xs leading-relaxed">
-                    {t('Basic identity')} (
-                    {scopeModel.identity.map((scope) => scope.id).join(', ')}){' '}
-                    {t('is always shared so')} {app.name}{' '}
-                    {t('can recognize your account.')}
-                  </p>
-                )}
-
-                {editorGroup(
-                  'project',
-                  'Projects',
-                  'Applies only to the projects you select below.',
-                  projectRows,
-                  projectSelection,
-                  projectPermissionsOpen,
-                  setProjectPermissionsOpen,
-                )}
-                {editorGroup(
-                  'organization',
-                  'Organizations',
-                  'Applies only to the organizations you select below.',
-                  organizationRows,
-                  organizationSelection,
-                  organizationPermissionsOpen,
-                  setOrganizationPermissionsOpen,
-                )}
-
-                {nothingSelected && (
-                  <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500">
-                    <CircleAlert className="size-3.5 shrink-0" />
-                    {t('Select at least one permission.')}
-                  </p>
-                )}
-                {composed?.lengthCollapsed && (
-                  <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500">
-                    <CircleAlert className="size-3.5 shrink-0" />
-                    {t(
-                      'Your selection was too long to grant scope-by-scope, so a fully selected tier was granted as full tier access instead.',
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
           </div>
-        ) : (
-          permissionGroups.length > 0 && (
-            <div className="border-border overflow-hidden rounded-lg border">
-              <button
-                type="button"
-                aria-expanded={showPermissions}
-                onClick={() => setShowPermissions((v) => !v)}
-                className="hover:bg-muted/50 flex w-full items-center justify-between px-4 py-3"
-              >
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  <Lock className="text-muted-foreground size-4" />
-                  {t('Permissions')}
-                </span>
-                {showPermissions ? (
-                  <ChevronUp className="text-muted-foreground size-4" />
-                ) : (
-                  <ChevronDown className="text-muted-foreground size-4" />
-                )}
-              </button>
-              {showPermissions && (
-                <div className="border-border space-y-5 border-t p-4">
+        ) : permissionGroups.length > 0 ? (
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <button
+              type="button"
+              aria-expanded={showPermissions}
+              onClick={() => setShowPermissions((v) => !v)}
+              className="cursor-pointer hover:bg-muted/40 flex w-full items-center justify-between px-4 py-3"
+            >
+              <span className="flex items-center gap-2 text-[13px] font-medium">
+                <Lock className="text-muted-foreground size-4" />
+                {t('Permissions')}
+              </span>
+              {showPermissions ? (
+                <ChevronUp className="text-muted-foreground size-4" />
+              ) : (
+                <ChevronDown className="text-muted-foreground size-4" />
+              )}
+            </button>
+            {showPermissions ? (
+              <>
+                <div className="border-t border-border" />
+                <div className="space-y-5 px-4 py-4">
                   {permissionGroups.map((group) => {
                     const collapsible = group.collapsible === true
                     const open = permissionGroupOpen[group.heading] !== false
@@ -814,7 +802,7 @@ export function OAuth2ConsentCard({
                                     current[group.heading] === false,
                                 }))
                               }
-                              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium uppercase tracking-wide"
+                              className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wider"
                             >
                               {t(group.heading)}
                               {open ? (
@@ -824,20 +812,20 @@ export function OAuth2ConsentCard({
                               )}
                             </button>
                           ) : (
-                            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                            <p className="text-muted-foreground text-[12px] font-semibold uppercase tracking-wider">
                               {t(group.heading)}
                             </p>
                           )}
-                          {group.note && (
-                            <p className="text-muted-foreground/80 mt-1 text-xs leading-relaxed">
+                          {group.note ? (
+                            <p className="text-muted-foreground mt-1 text-[12px] leading-relaxed">
                               {t(group.note)}
                             </p>
-                          )}
+                          ) : null}
                         </div>
-                        {(!collapsible || open) && (
+                        {!collapsible || open ? (
                           <ul
                             id={`permission-group-${group.heading.toLowerCase()}`}
-                            className="space-y-4"
+                            className="space-y-3"
                           >
                             {group.lines.map((line) => (
                               <PermissionRow
@@ -848,18 +836,17 @@ export function OAuth2ConsentCard({
                               />
                             ))}
                           </ul>
-                        )}
+                        ) : null}
                       </div>
                     )
                   })}
                 </div>
-              )}
-            </div>
-          )
-        )}
+              </>
+            ) : null}
+          </div>
+        ) : null}
 
-        {/* Project access */}
-        {projectRequested && (
+        {projectRequested ? (
           <ScopePanel
             icon={<Folder className="size-4" />}
             title={t('Project access')}
@@ -881,10 +868,9 @@ export function OAuth2ConsentCard({
               disabled={isBusy}
             />
           </ScopePanel>
-        )}
+        ) : null}
 
-        {/* Organization access */}
-        {organizationRequested && (
+        {organizationRequested ? (
           <ScopePanel
             icon={<Building2 className="size-4" />}
             title={t('Organization access')}
@@ -906,16 +892,15 @@ export function OAuth2ConsentCard({
               disabled={isBusy}
             />
           </ScopePanel>
-        )}
+        ) : null}
 
-        {error && (
-          <div className="border-destructive/20 bg-destructive/10 flex items-start gap-2 rounded-md border p-3">
+        {error ? (
+          <div className="border-destructive/20 bg-destructive/10 flex items-start gap-2 rounded-lg border p-3">
             <TriangleAlert className="text-destructive mt-0.5 size-4 shrink-0" />
-            <p className="text-destructive text-sm">{error}</p>
+            <p className="text-destructive text-[13px]">{error}</p>
           </div>
-        )}
+        ) : null}
 
-        {/* Actions */}
         <div className="flex flex-col gap-2">
           <Button
             variant="brandCta"
@@ -926,7 +911,6 @@ export function OAuth2ConsentCard({
               approveMutation.mutate()
             }}
           >
-            <Check className="me-1.5 size-4" />
             {t('Authorize')}
           </Button>
           <Button
@@ -942,8 +926,7 @@ export function OAuth2ConsentCard({
           </Button>
         </div>
 
-        {/* Footnote */}
-        <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-xs">
+        <p className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center text-[12px]">
           <span className="inline-flex items-center gap-1">
             <Lock className="size-3.5" />
             {flow === 'authorization' && redirectHost
@@ -952,7 +935,7 @@ export function OAuth2ConsentCard({
                 ? t('After authorizing, return to your device')
                 : t('You can revoke access anytime')}
           </span>
-          {app.privacyPolicyUrl && (
+          {app.privacyPolicyUrl ? (
             <>
               <span aria-hidden>·</span>
               <a
@@ -964,8 +947,8 @@ export function OAuth2ConsentCard({
                 {t('Privacy')}
               </a>
             </>
-          )}
-          {app.termsUrl && (
+          ) : null}
+          {app.termsUrl ? (
             <>
               <span aria-hidden>·</span>
               <a
@@ -977,7 +960,7 @@ export function OAuth2ConsentCard({
                 {t('Terms')}
               </a>
             </>
-          )}
+          ) : null}
         </p>
       </div>
     </Card>
@@ -995,38 +978,34 @@ function PermissionRow({
 }) {
   const t = useT()
   return (
-    <li className="group relative flex items-start gap-2.5">
-      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+    <li className="group relative flex items-start gap-2.5 pe-6">
+      <span className="bg-muted text-muted-foreground mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md">
         <Check className="size-3" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{t(line.title)}</span>
-          {line.access && (
-            <span
-              className={cn(
-                'rounded px-1.5 py-0.5 text-[0.58rem] font-medium uppercase tracking-wide',
-                line.accessStrong
-                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                  : 'bg-muted text-muted-foreground',
-              )}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[13px] font-medium">{t(line.title)}</span>
+          {line.access ? (
+            <Badge
+              variant={line.accessStrong ? 'warning' : 'info'}
+              className="text-[10px] shrink-0"
             >
               {t(line.access)}
-            </span>
-          )}
+            </Badge>
+          ) : null}
         </div>
-        {line.description && (
-          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+        {line.description ? (
+          <p className="text-muted-foreground mt-1 text-[12px] leading-relaxed">
             {t(line.description)}
           </p>
-        )}
+        ) : null}
       </div>
       <button
         type="button"
         title={t('Copy scope')}
         aria-label={`${t('Copy scope')} ${line.token}`}
         onClick={onCopy}
-        className="text-muted-foreground hover:text-foreground absolute end-0 top-0 opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+        className="cursor-pointer text-muted-foreground hover:text-foreground absolute end-0 top-0 opacity-0 transition group-hover:opacity-100 focus:opacity-100"
       >
         {copied ? (
           <Check className="size-3.5" />
@@ -1056,28 +1035,31 @@ function ScopePanel({
   return (
     <div
       className={cn(
-        'space-y-3 rounded-lg border p-4',
-        needsAttention ? 'border-amber-500/50' : 'border-border',
+        'rounded-xl border bg-card/50 overflow-hidden',
+        needsAttention ? 'border-amber-500/40' : 'border-border',
       )}
     >
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start gap-2.5 px-4 py-4">
         <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium">{title}</p>
-          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+          <p className="text-[13px] font-medium">{title}</p>
+          <p className="text-muted-foreground mt-1 text-[12px] leading-relaxed">
             {subtitle}
           </p>
         </div>
       </div>
-      {children}
-      {warning && (
-        <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-500">
-          <CircleAlert className="size-3.5 shrink-0" />
-          {warning}
-        </p>
-      )}
+      <div className="border-t border-border" />
+      <div className="space-y-3 px-4 py-4">
+        {children}
+        {warning ? (
+          <p className="text-muted-foreground flex items-center gap-1.5 text-[12px]">
+            <CircleAlert className="size-3.5 shrink-0" />
+            {warning}
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }
