@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
-import { Activity, Loader2, Target } from 'lucide-react'
+import { WafRuleAction } from '@appwrite.io/console'
+import { Activity, Loader2, Shield, Target, Timer } from 'lucide-react'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
@@ -30,12 +31,16 @@ import {
   firewallUsageConditionsKey,
 } from '@/lib/firewall/usage'
 import {
+  getFirewallActionChartColor,
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
+import { getFirewallActionMetric } from '@/lib/firewall/action-metrics'
+import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import { UsageLogRetentionAlert } from '../../usage/_components/UsageLogRetentionAlert'
 import { FirewallImpactChart } from './FirewallImpactChart'
+import { FirewallActionActivityChart } from './FirewallActionActivityChart'
 import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
@@ -127,6 +132,7 @@ export function RuleImpactPreview({
     selectedDateRange,
     chartInterval,
     usageLogRetentionHours,
+    action,
   )
 
   // Disabled queries keep previous data; never show stale numbers as a preview.
@@ -139,6 +145,14 @@ export function RuleImpactPreview({
     matched: impact?.matched ?? 0,
     rate: impact?.rate ?? 0,
   }
+  const isChallenge = action === WafRuleAction.Challenge
+  // Only challenge rules show an activity section (solves / avg solve time); the
+  // block actions are already represented by "Matched requests".
+  const activityConfig = isChallenge ? getFirewallActionMetric(action) : undefined
+  const activity = previewUnavailable ? undefined : impact?.activity
+  const showActivityPlaceholder =
+    previewUnavailable || (isLoading && !impact) || !activity
+  const activityColor = getFirewallActionChartColor(action)
 
   const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
     .length
@@ -225,6 +239,40 @@ export function RuleImpactPreview({
             </div>
           </div>
 
+          {activityConfig ? (
+            <div
+              className={cn(
+                'grid grid-cols-2 gap-3 transition-opacity duration-200',
+                showSubtleLoading && 'opacity-60',
+              )}
+            >
+              <div className="rounded-lg border border-border bg-muted/20 p-3">
+                <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
+                  <Shield className="h-3.5 w-3.5" />
+                  <span className="text-[11px]">{t(activityConfig.label)}</span>
+                </div>
+                <p className="text-[18px] font-semibold tabular-nums text-foreground">
+                  {showActivityPlaceholder || !activity
+                    ? '-'
+                    : activity.total.toLocaleString()}
+                </p>
+              </div>
+              {isChallenge ? (
+                <div className="rounded-lg border border-border bg-muted/20 p-3">
+                  <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
+                    <Timer className="h-3.5 w-3.5" />
+                    <span className="text-[11px]">{t('Avg solve time')}</span>
+                  </div>
+                  <p className="text-[18px] font-semibold tabular-nums text-foreground">
+                    {showActivityPlaceholder || !activity
+                      ? '-'
+                      : formatFirewallSolveTime(activity.avgSolveTimeMs ?? 0)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {previewUnavailable ? (
             <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
               {unestimableConditions > 0
@@ -257,6 +305,37 @@ export function RuleImpactPreview({
             }
           />
         </div>
+
+        {activityConfig ? (
+          <div
+            className={cn(
+              'border-t border-border px-2 pb-2 pt-3 transition-opacity duration-200',
+              showSubtleLoading && 'opacity-60',
+            )}
+          >
+            <p className="px-2 text-[12px] font-medium text-foreground">
+              {t(activityConfig.label)} {t('over time')}
+            </p>
+            <p className="mb-1 px-2 text-[11px] text-muted-foreground">
+              {t('Site-wide — a solved challenge clears the whole site, not a single path')}
+            </p>
+            <FirewallActionActivityChart
+              series={activity?.series ?? []}
+              color={activityColor}
+              valueLabel={t(activityConfig.label)}
+              showSolveTime={isChallenge}
+              dateRange={dateRange}
+              chartInterval={chartInterval}
+              emptyLabel={
+                previewUnavailable
+                  ? t('Preview unavailable')
+                  : isLoading
+                    ? t('Loading...')
+                    : t('No activity for this period')
+              }
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-border bg-card/50 px-4 py-3">

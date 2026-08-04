@@ -41,17 +41,6 @@ export type FirewallTrafficPoint = {
   redirected: number
 }
 
-/** Per-interval challenge-solving data for the challenge performance charts. */
-export type FirewallChallengePoint = {
-  date: string
-  day: Date
-  fullDate: string
-  /** Challenges solved in this interval. */
-  solved: number
-  /** Average solve time in ms for this interval (solveTimeMs / solved). */
-  avgSolveTimeMs: number
-}
-
 export interface ProjectFirewallTrafficOverview {
   totalRequests: number
   totalPassed: number
@@ -72,7 +61,6 @@ export interface ProjectFirewallTrafficOverview {
   avgSolveTimeChange: number
   blockRateChange: number
   chartPoints: FirewallTrafficPoint[]
-  challengePoints: FirewallChallengePoint[]
 }
 
 function changeFor(
@@ -133,34 +121,6 @@ function mergeFirewallTrafficPoints(
         (base === rateLimited ? point.total : 0),
       redirected:
         redirectedByTime.get(time) ?? (base === redirected ? point.total : 0),
-    }
-  })
-}
-
-function mergeFirewallChallengePoints(
-  solved: UsageChartPoint[],
-  solveTime: UsageChartPoint[],
-): FirewallChallengePoint[] {
-  const base = solved.length > 0 ? solved : solveTime
-  const solvedByTime = new Map(
-    solved.map((point) => [point.day.getTime(), point.total]),
-  )
-  const solveTimeByTime = new Map(
-    solveTime.map((point) => [point.day.getTime(), point.total]),
-  )
-
-  return base.map((point) => {
-    const time = point.day.getTime()
-    const solvedCount =
-      solvedByTime.get(time) ?? (base === solved ? point.total : 0)
-    const solveTimeTotal =
-      solveTimeByTime.get(time) ?? (base === solveTime ? point.total : 0)
-    return {
-      date: point.date,
-      day: point.day,
-      fullDate: formatLocalizedDate(point.day, 'MMM d, yyyy HH:mm'),
-      solved: solvedCount,
-      avgSolveTimeMs: solvedCount > 0 ? solveTimeTotal / solvedCount : 0,
     }
   })
 }
@@ -317,10 +277,6 @@ export async function fetchProjectFirewallTrafficOverview(
       rateLimitedSeries.chartPoints,
       redirectedSeries.chartPoints,
     ),
-    challengePoints: mergeFirewallChallengePoints(
-      challengeSolvedSeries.chartPoints,
-      solveTimeSeries.chartPoints,
-    ),
   }
 }
 
@@ -344,6 +300,5 @@ function emptyFirewallTrafficOverview(): ProjectFirewallTrafficOverview {
     avgSolveTimeChange: 0,
     blockRateChange: 0,
     chartPoints: [],
-    challengePoints: [],
   }
 }

@@ -48,7 +48,7 @@ import {
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
-import { FirewallChallengeCharts } from './_components/FirewallChallengeCharts'
+import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
@@ -192,8 +192,9 @@ export function TrafficOverview() {
   const challengedChange = overview?.challengedChange ?? 0
   const rateLimitedChange = overview?.rateLimitedChange ?? 0
   const redirectedChange = overview?.redirectedChange ?? 0
+  const challengeSolvedChange = overview?.challengeSolvedChange ?? 0
+  const avgSolveTimeChange = overview?.avgSolveTimeChange ?? 0
   const blockRateChange = overview?.blockRateChange ?? 0
-  const challengePoints = overview?.challengePoints ?? []
 
   const chartPoints = useMemo(
     () => chartData.map((point) => ({ date: point.date, day: point.day })),
@@ -301,6 +302,18 @@ export function TrafficOverview() {
       value: `${blockRate}%`,
       change: blockRateChange,
       trend: changeTrend(blockRateChange),
+    },
+    {
+      label: t('Challenge solves'),
+      value: totalChallengeSolved,
+      change: challengeSolvedChange,
+      trend: changeTrend(challengeSolvedChange),
+    },
+    {
+      label: t('Avg solve time'),
+      value: formatFirewallSolveTime(avgSolveTimeMs),
+      change: avgSolveTimeChange,
+      trend: changeTrend(avgSolveTimeChange),
     },
   ]
 
@@ -523,19 +536,6 @@ export function TrafficOverview() {
             </ResponsiveContainer>
           </div>
         </ChartArea>
-      </div>
-
-      <div className="border-t border-border px-4 pb-4 pt-4 sm:px-6">
-        <p className="mb-3 text-[13px] font-medium text-foreground">
-          {t('Challenge performance')}
-        </p>
-        <FirewallChallengeCharts
-          data={challengePoints}
-          totalSolved={totalChallengeSolved}
-          avgSolveTimeMs={avgSolveTimeMs}
-          dateRange={dateRange}
-          chartInterval={resolvedChartInterval}
-        />
       </div>
 
       <div className="grid grid-cols-2 border-y border-border sm:grid-cols-3 xl:grid-cols-6">
