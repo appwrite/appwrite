@@ -327,13 +327,14 @@ function LinksCard({
   const displayed = useAffiliateLinks(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching) {
+    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
       setDisplayedPage(requestedPage)
     }
   }, [
     requestedPage,
     displayedPage,
     requested.isFetching,
+    requested.isSuccess,
     setDisplayedPage,
   ])
 
@@ -526,13 +527,14 @@ function ReferralsCard({
   const displayed = useAffiliateReferrals(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching) {
+    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
       setDisplayedPage(requestedPage)
     }
   }, [
     requestedPage,
     displayedPage,
     requested.isFetching,
+    requested.isSuccess,
     setDisplayedPage,
   ])
 
@@ -721,13 +723,14 @@ function RewardsCard({
   const displayed = useAffiliateRewards(displayedPage - 1, pageSize)
 
   useEffect(() => {
-    if (requestedPage !== displayedPage && !requested.isFetching) {
+    if (requestedPage !== displayedPage && !requested.isFetching && requested.isSuccess) {
       setDisplayedPage(requestedPage)
     }
   }, [
     requestedPage,
     displayedPage,
     requested.isFetching,
+    requested.isSuccess,
     setDisplayedPage,
   ])
 
