@@ -2,6 +2,7 @@
 
 namespace Appwrite\Deployment;
 
+use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -29,7 +30,13 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($resource->getAttribute('providerSilentMode', false) === true) {
+        $checkRunId = (int) $deployment->getAttribute('providerCheckRunId', 0);
+        $silent = $resource->getAttribute('providerSilentMode', false) === true;
+
+        // A run Appwrite opened is always closed. Silent mode is force-set when a
+        // resource is disconnected from git, which would otherwise leave the check
+        // spinning on the commit for good.
+        if ($silent && $checkRunId <= 0) {
             return;
         }
 
@@ -41,6 +48,7 @@ final class GitAction
                 'ready' => 'Build succeeded.',
                 'failed' => 'Build failed.',
                 'processing' => 'Building...',
+                'canceled' => 'Build canceled.',
                 default => $status
             };
             $state = match ($status) {
@@ -56,7 +64,31 @@ final class GitAction
             $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$segment}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
-            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
+            $conclusion = match ($status) {
+                'ready' => CheckRuns::CONCLUSION_SUCCESS,
+                'failed' => CheckRuns::CONCLUSION_FAILURE,
+                'canceled' => CheckRuns::CONCLUSION_CANCELLED,
+                default => ''
+            };
+
+            if ($checkRunId > 0) {
+                // 'processing' leaves the run as it is — it was opened in progress.
+                if (!empty($conclusion)) {
+                    $title = match ($status) {
+                        'ready' => 'Deployment ready',
+                        'failed' => 'Deployment failed',
+                        default => 'Deployment canceled'
+                    };
+
+                    (new CheckRuns())->close($vcs, $owner, $repositoryName, $checkRunId, $conclusion, $title, $message, $targetUrl);
+                }
+            } elseif (!$silent) {
+                $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
+            }
+        }
+
+        if ($silent) {
+            return;
         }
 
         $commentId = $deployment->getAttribute('providerCommentId', '');
