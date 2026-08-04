@@ -322,6 +322,48 @@ final class FormatTest extends TestCase
     }
 
     /**
+     * A route only matches when every path segment is present, so a path
+     * parameter is always supplied no matter what the PHP param declares.
+     * Marking one optional produced a Go SDK that does not compile
+     * (`undefined: SessionId`) and a Python SDK that requested
+     * `/account/sessions/None`.
+     */
+    public function testOptionalPathParameterIsEmittedAsRequired(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/:sessionId'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getPathTest',
+                description: 'Get test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(code: 200, model: Response::MODEL_NONE),
+                ],
+            ))
+            ->param('sessionId', 'current', new Text(256), 'Session ID.', true)
+            ->param('filter', '', new Text(256), 'Optional query filter.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+
+        $parameters = [];
+        foreach ($openApi['paths']['/tests/{sessionId}']['get']['parameters'] as $parameter) {
+            $parameters[$parameter['name']] = $parameter;
+        }
+
+        $this->assertSame('path', $parameters['sessionId']['in']);
+        $this->assertTrue($parameters['sessionId']['required']);
+
+        // An optional query parameter is untouched — only the path is forced.
+        $this->assertSame('query', $parameters['filter']['in']);
+        $this->assertFalse($parameters['filter']['required']);
+    }
+
+    /**
      * The project usage handler writes the text embedding metrics as four
      * per-period lists plus four scalar totals. A typed SDK generated from a
      * schema that calls all eight a single metric object rejects every valid
