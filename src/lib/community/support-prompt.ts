@@ -1,6 +1,7 @@
 import {
   Blocks,
   FileText,
+  Gift,
   HeartHandshake,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ export type CommunitySupportActionId =
   | 'contribute'
   | 'share'
   | 'content'
+  | 'affiliates'
   | 'integrations'
 
 export type CommunitySupportIcon =
@@ -181,7 +183,7 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     id: 'contribute',
     title: 'Star us on GitHub',
     description: 'A star helps more developers discover Appwrite.',
-    href: 'https://github.com/appwrite/appwrite',
+    href: 'https://github.com/appwrite/appwrite/stargazers',
     external: true,
     icon: GitHubBrandIcon,
   },
@@ -199,15 +201,24 @@ export const COMMUNITY_SUPPORT_ACTIONS: CommunitySupportAction[] = [
     description:
       'Publish blogs, videos, or tutorials that help developers discover Appwrite.',
     href: '/community',
-    external: false,
+    external: true,
     icon: FileText,
+  },
+  {
+    id: 'affiliates',
+    title: 'Join the Affiliates program',
+    description:
+      'Share invite links and earn credits when developers upgrade to Pro.',
+    href: '/affiliates',
+    external: true,
+    icon: Gift,
   },
   {
     id: 'integrations',
     title: 'Build integrations',
     description: 'Connect Appwrite to the tools your stack already uses.',
     href: '/integrations',
-    external: false,
+    external: true,
     icon: Blocks,
   },
 ]

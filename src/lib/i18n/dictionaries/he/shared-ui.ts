@@ -297,6 +297,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Write content': 'כתיבת תוכן',
   'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
     'פרסמו בלוגים, סרטונים או מדריכים שעוזרים למפתחים לגלות את Appwrite.',
+  'Join the Affiliates program': 'הצטרפות לתוכנית האפיליאייטס',
+  'Share invite links and earn credits when developers upgrade to Pro.':
+    'שתפו קישורי הזמנה והרוויחו קרדיטים כשמפתחים משדרגים ל-Pro.',
   'Build integrations': 'בניית אינטגרציות',
   'Connect Appwrite to the tools your stack already uses.':
     'חברו את Appwrite לכלים שכבר נמצאים בסטאק שלכם.',

@@ -4,8 +4,10 @@
  * Handles locale code, countries, and locale information fetching.
  */
 
+import { useMemo } from 'react'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { LONG_STALE_TIME } from './constants'
 
 // ============================================================================
@@ -108,6 +110,28 @@ export function useLocaleCodes() {
  */
 export function useCountries() {
   return useQuery(countriesQueryOptions())
+}
+
+/**
+ * Locale countries list plus code/name lookup maps for display resolution.
+ * Prefer this over building a local Map from `useCountries()` in UI.
+ */
+export function useCountryLookups() {
+  const { data, isLoading, isFetched, isError, error, refetch } = useCountries()
+  const lookups = useMemo(
+    () => buildCountryLookups(data?.countries),
+    [data?.countries],
+  )
+
+  return {
+    lookups,
+    countries: data?.countries ?? [],
+    isLoading,
+    isFetched,
+    isError,
+    error,
+    refetch,
+  }
 }
 
 /**

@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  useCountries,
+  useCountryLookups,
   useProjectRequestsBreakdownDrawer,
   useProjectBandwidthBreakdownDrawer,
   useProjectDatabaseReadsBreakdownDrawer,
@@ -27,7 +27,6 @@ import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_REQUESTS_ERROR,
@@ -84,11 +83,7 @@ export function UsageBreakdownDrawer({
   tableLookup: tableLookupProp,
 }: UsageBreakdownDrawerProps) {
   const t = useT()
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
 
   const requestsQuery = useProjectRequestsBreakdownDrawer(
     projectId,

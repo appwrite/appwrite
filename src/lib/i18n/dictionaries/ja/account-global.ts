@@ -19,6 +19,112 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Applications: 'アプリケーション',
   "Applications you've authorized to access your Appwrite account.":
     'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
+  Affiliates: 'アフィリエイト',
+  'Affiliates program': 'アフィリエイトプログラム',
+  'Affiliate link created': 'アフィリエイトリンクを作成しました',
+  'Affiliate link deleted': 'アフィリエイトリンクを削除しました',
+  'Attributed accounts': 'アトリビューション済みアカウント',
+  'Clicks are tracked automatically. Signups are attributed for 180 days.':
+    'クリックは自動で計測されます。登録のアトリビューションは 180 日間有効です。',
+  'Create an invite link': '招待リンクを作成',
+  'Create invite link': '招待リンクを作成',
+  'Credits added to your organization for each Pro upgrade':
+    'Pro へのアップグレードごとに Organization に付与されるクレジット',
+  'Earn credits by referring developers': '開発者を紹介してクレジットを獲得',
+  'Earn Pro credits': 'Pro クレジットを獲得',
+  'Generate a shareable link with an optional name for each campaign or channel.':
+    'キャンペーンやチャネルごとに、任意の名前付きの共有リンクを作成します。',
+  'How rewards work': '報酬の仕組み',
+  'Only referrals who upgrade to Pro generate a reward':
+    'Pro にアップグレードした紹介のみが報酬対象です',
+  'Share with developers': '開発者と共有',
+  Step: 'ステップ',
+  'The Affiliates program rewards you when people you invite join Appwrite and upgrade to Pro. Create a link to get started.':
+    'アフィリエイトプログラムでは、招待した人が Appwrite に参加して Pro にアップグレードすると報酬を受け取れます。リンクを作成して始めましょう。',
+  'Time after signup during which a Pro upgrade still counts for you':
+    '登録後、Pro へのアップグレードがあなたに紐付く期間',
+  'When a referred user upgrades to Pro, you receive $15 in organization credits.':
+    '紹介したユーザーが Pro にアップグレードすると、$15 の Organization クレジットを受け取れます。',
+  'All links': 'すべてのリンク',
+  'Attribution window': 'アトリビューション期間',
+  Attributed: 'アトリビューション日',
+  Claim: '受取',
+  Claimed: '受取済み',
+  'Claim credits': 'クレジットを受け取る',
+  Clicks: 'クリック',
+  clicks: 'クリック',
+  'Choose an organization you own to receive these affiliate credits.':
+    'これらのアフィリエイトクレジットを受け取る、所有している Organization を選択してください。',
+  'Could not load affiliate analytics': 'アフィリエイト分析を読み込めませんでした',
+  Converted: 'コンバート済み',
+  Conversions: 'コンバージョン',
+  conversions: 'コンバージョン',
+  'Copy invite': '招待をコピー',
+  'Create link': 'リンクを作成',
+  'Create a shareable invite link. The link ID is your referral code.':
+    '共有可能な招待リンクを作成します。リンク ID が紹介コードになります。',
+  'Create or join an organization you own to claim credits.':
+    'クレジットを受け取るには、所有する Organization を作成するか参加してください。',
+  'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    '共有可能なリンクを作成し、紹介ユーザーが Pro にアップグレードすると $15 のクレジットを獲得できます。アトリビューションは 180 日間有効です。',
+  'Create your first invite link to start referring users.':
+    '最初の招待リンクを作成してユーザーの紹介を始めましょう。',
+  'Credits claimed for organization': 'Organization 向けにクレジットを受け取りました',
+  '1 pending reward': '保留中の報酬 1 件',
+  'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
+    'コンバートされた紹介から獲得したクレジットです。保留中の報酬を、所有している Organization で受け取れます。',
+  'Delete link': 'リンクを削除',
+  'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.':
+    '既存の紹介と報酬の履歴は残ります。この招待 URL への新規アクセスは機能しなくなります。',
+  'Expires at': '有効期限',
+  'Failed to claim credits': 'クレジットの受け取りに失敗しました',
+  'Failed to copy invite link': '招待リンクのコピーに失敗しました',
+  'Failed to create affiliate link': 'アフィリエイトリンクの作成に失敗しました',
+  'Failed to delete affiliate link': 'アフィリエイトリンクの削除に失敗しました',
+  'Funnel over time': 'ファネルの推移',
+  'Invite link': '招待リンク',
+  'Invite link copied': '招待リンクをコピーしました',
+  'Invite link visits': '招待リンクへのアクセス',
+  'Leave blank to auto-generate': '空白のままにすると自動生成されます',
+  'Link ID': 'リンク ID',
+  Link: 'リンク',
+  Links: 'リンク',
+  links: '件のリンク',
+  'Loading links...': 'リンクを読み込み中...',
+  'Loading referrals...': '紹介を読み込み中...',
+  'Loading rewards...': '報酬を読み込み中...',
+  'No affiliate activity in this date range':
+    'この期間にアフィリエイトのアクティビティはありません',
+  'No links yet': 'まだリンクはありません',
+  'No referrals yet': 'まだ紹介はありません',
+  'No rewards yet': 'まだ報酬はありません',
+  'Not claimed': '未請求',
+  'Conversion rate': 'コンバージョン率',
+  'Conversion rate is the share of attributed signups that upgraded to Pro in the selected date range.':
+    'コンバージョン率は、選択した期間にアトリビューションされた登録のうち Pro にアップグレードした割合です。',
+  'Optional name': '任意の名前',
+  'Pro upgrades': 'Pro へのアップグレード',
+  'Signup rate': '登録率',
+  'Signup rate is the share of invite link clicks that resulted in a new account in the selected date range.':
+    '登録率は、選択した期間に招待リンクのクリックのうち新規アカウントにつながった割合です。',
+  Referrals: '紹介',
+  referrals: '件の紹介',
+  'pending rewards': '件の保留中の報酬',
+  'ready to claim': '受け取り可能',
+  Reward: '報酬',
+  Rewards: '報酬',
+  rewards: '件の報酬',
+  'Rewards appear here after a referral upgrades to Pro.':
+    '紹介が Pro にアップグレードすると、ここに報酬が表示されます。',
+  'Share an invite link to start attributing signups.':
+    '招待リンクを共有して登録のアトリビューションを始めましょう。',
+  'Share invite links to attribute signups. Clicks are tracked automatically.':
+    '招待リンクを共有して登録を紐付けます。クリックは自動で計測されます。',
+  'Signups attributed to your invite links. Converted referrals earn you credits.':
+    '招待リンクに紐付いた登録です。コンバートされた紹介でクレジットを獲得できます。',
+  Signups: '登録',
+  signups: '登録',
+  Untitled: '無題',
   'Application access has been revoked for all authorizations':
     'すべての承認についてアプリケーションのアクセスを取り消しました',
   'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':

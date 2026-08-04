@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n/translate'
 import {
   hasWebsiteAccessCookie,
+  isWebsiteAccessProtectedPath,
   setWebsiteAccessCookie,
   WEBSITE_ACCESS_COOKIE_NAME,
   WEBSITE_ACCESS_PASSWORD,
@@ -15,10 +16,12 @@ const BOOT_COVER_ID = 'website-access-boot-cover'
 
 /**
  * Runs before first paint. Covers the entire viewport when the access cookie is
- * missing so SSR/prerendered HTML never flashes.
+ * missing so SSR/prerendered HTML never flashes. Skips public paths (e.g. `/i/*`).
  */
 export const WEBSITE_ACCESS_BOOT_SCRIPT = `(function(){
   try {
+    var path = (location.pathname || '/').replace(/\\/+$/, '') || '/';
+    if (path === '/access' || path === '/i' || path.indexOf('/i/') === 0) return;
     var re = new RegExp('(?:^|;\\\\s*)${WEBSITE_ACCESS_COOKIE_NAME}=([^;]*)');
     var m = document.cookie.match(re);
     if (m && m[1] && m[1].trim()) return;
@@ -127,7 +130,10 @@ export function WebsiteAccessGate({ children }: { children: ReactNode }) {
   const [locked, setLocked] = useState(false)
 
   useLayoutEffect(() => {
-    if (hasWebsiteAccessCookie()) {
+    if (
+      !isWebsiteAccessProtectedPath(window.location.pathname) ||
+      hasWebsiteAccessCookie()
+    ) {
       removeBootCover()
       return
     }

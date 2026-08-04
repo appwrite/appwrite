@@ -28,6 +28,10 @@ export const ANALYTICS_ACTIONS = {
   'header-old-console': 'Header Old Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
+  'create-affiliate-link': 'Create Affiliate Link Clicked',
+  'copy-affiliate-link': 'Copy Affiliate Link Clicked',
+  'delete-affiliate-link': 'Delete Affiliate Link Clicked',
+  'claim-affiliate-reward': 'Claim Affiliate Reward Clicked',
 
   // Agent (chat page + console right pane)
   'create-agent': 'Create Agent Clicked',
@@ -76,6 +80,7 @@ export const ANALYTICS_ACTIONS = {
   'startups-apply-now': 'Startups Apply Now Clicked',
   'startups-form-submit': 'Startups Form Submit Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
+  'affiliates-join': 'Affiliates Join Clicked',
   'init-claim-ticket': 'Init Claim Ticket Clicked',
 
   // Pricing page CTAs

@@ -1393,4 +1393,88 @@ export const heMarketingDictionary: Record<string, string> = {
     'הפרויקט שלכם ימשיך לפעול, ויחולו חיובים נוספים. את העלויות של משאבים נוספים תוכלו למצוא בהשוואת תוכניות התמחור למטה. נשלח לכם גם תזכורות באימייל כשתגיעו ל-75% ול-100% ממגבלות המשאבים שלכם. כדי להימנע מתשלומים בלתי צפויים, תוכלו להגדיר',
   'Your project will freeze, and Appwrite Console will continue running in read-only mode. You need to upgrade to Pro, remove resources that exceed their limit, or wait for the next billing cycle, which resets usage limits.': // pragma: allowlist secret
     'הפרויקט שלכם יוקפא, וקונסולת Appwrite תמשיך לפעול במצב קריאה בלבד. תצטרכו לשדרג ל-Pro, להסיר משאבים שחורגים מהמגבלה, או להמתין למחזור החיוב הבא, שמאפס את מגבלות השימוש.', // pragma: allowlist secret
+
+  // Affiliates program page
+  'Affiliates Program': 'תוכנית אפיליאייטס',
+  'Share Appwrite with other builders. When someone you invite upgrades to Pro, you earn organization credits to use on Appwrite Cloud.':
+    'שתפו את Appwrite עם מפתחים נוספים. כשמישהו שהזמנתם משדרג ל-Pro, אתם מקבלים קרדיטים לארגון לשימוש ב-Appwrite Cloud.',
+  'Simple invite links': 'קישורי הזמנה פשוטים',
+  'Create shareable links for each campaign or channel and track clicks automatically.':
+    'צרו קישורים לשיתוף לכל קמפיין או ערוץ ועקבו אחרי קליקים באופן אוטומטי.',
+  'Long attribution window': 'חלון ייחוס ארוך',
+  'Signups stay attributed to you for 180 days after they join.':
+    'הרשמות מיוחסות אליכם למשך 180 ימים אחרי ההצטרפות.',
+  'Credits you can spend': 'קרדיטים שאפשר להשתמש בהם',
+  'Earn $15 in organization credits for each referred Pro upgrade.':
+    'הרוויחו 15$ בקרדיטים לארגון על כל שדרוג ל-Pro של מופנה.',
+  'Built into the console': 'משולב בקונסולה',
+  'Manage links, referrals, and rewards from your Appwrite account. No separate dashboard required.':
+    'נהלו קישורים, הפניות ותגמולים מחשבון Appwrite שלכם. אין צורך בלוח בקרה נפרד.',
+  'How it works': 'איך זה עובד',
+  'Rewards are simple, transparent, and paid as credits you can use on Appwrite Cloud.':
+    'התגמולים פשוטים ושקופים, ומשולמים כקרדיטים שאפשר להשתמש בהם ב-Appwrite Cloud.',
+  'Why join Affiliates': 'למה להצטרף לאפיליאייטס',
+  'Recommend Appwrite, help developers ship, and earn credits along the way.':
+    'המליצו על Appwrite, עזרו למפתחים לשחרר מוצרים, והרוויחו קרדיטים בדרך.',
+  'Help developers discover Appwrite': 'עזרו למפתחים לגלות את Appwrite',
+  'Recommend a backend you already trust and help more builders ship faster.':
+    'המליצו על באקאנד שאתם כבר סומכים עליו ועזרו ליותר מפתחים לשחרר מהר יותר.',
+  'Get rewarded for referrals': 'קבלו תגמול על הפניות',
+  'Turn community advocacy into credits that offset your own Appwrite usage.':
+    'הפכו המלצות בקהילה לקרדיטים שמקזזים את השימוש שלכם ב-Appwrite.',
+  'Track what works': 'עקבו אחרי מה שעובד',
+  'See clicks, signups, and conversions so you know which channels perform best.':
+    'ראו קליקים, הרשמות והמרות כדי לדעת אילו ערוצים מצליחים יותר.',
+  'What is the Appwrite Affiliates program?': 'מהי תוכנית האפיליאייטס של Appwrite?',
+  'The Affiliates program lets you create invite links and earn organization credits when people you refer join Appwrite Cloud and upgrade to Pro.':
+    'תוכנית האפיליאייטס מאפשרת ליצור קישורי הזמנה ולהרוויח קרדיטים לארגון כשאנשים שהפניתם מצטרפים ל-Appwrite Cloud ומשדרגים ל-Pro.',
+  'How do I join?': 'איך מצטרפים?',
+  'Sign in to Appwrite Cloud and open Affiliates in your account. From there you can create invite links and track referrals.':
+    'התחברו ל-Appwrite Cloud ופתחו את אפיליאייטס בחשבון. משם תוכלו ליצור קישורי הזמנה ולעקוב אחרי הפניות.',
+  'Open Affiliates': 'פתיחת אפיליאייטס',
+  'How much do I earn?': 'כמה מרוויחים?',
+  'You receive $15 in organization credits for each referred user who upgrades to Pro.':
+    'אתם מקבלים 15$ בקרדיטים לארגון על כל משתמש מופנה שמשדרג ל-Pro.',
+  'How does attribution work if someone clicks more than one invite link?':
+    'איך עובד הייחוס אם מישהו לוחץ על יותר מקישור הזמנה אחד?',
+  'We use last-click attribution. Credit goes to the last invite link clicked before signup. Earlier clicks still appear in analytics, but only the last affiliate earns the reward if that user upgrades to Pro.':
+    'אנחנו משתמשים בייחוס לפי לחיצה אחרונה (last-click). הקרדיט מגיע לקישור ההזמנה האחרון שנלחץ לפני ההרשמה. קליקים קודמים עדיין מופיעים באנליטיקה, אבל רק השותף האחרון מקבל את התגמול אם המשתמש משדרג ל-Pro.',
+  'How long does attribution last?': 'כמה זמן נמשך הייחוס?',
+  'After someone signs up through an attributed invite link, Pro upgrades count for that affiliate for 180 days.':
+    'אחרי שמישהו נרשם דרך קישור הזמנה מיוחס, שדרוגים ל-Pro נספרים לזכות אותו שותף למשך 180 ימים.',
+  'When do I get rewarded?': 'מתי מקבלים תגמול?',
+  'A reward is created when a referred user upgrades to Pro within the attribution window. Credits are added to your organization after the reward is claimed or applied.':
+    'תגמול נוצר כשמשתמש מופנה משדרג ל-Pro בתוך חלון הייחוס. הקרדיטים מתווספים לארגון אחרי מימוש או החלת התגמול.',
+  'Who can join the Affiliates program?': 'מי יכול להצטרף לתוכנית האפיליאייטס?',
+  'The Affiliates program is available on Appwrite Cloud. Create an account, then open Affiliates from your account settings to get started.':
+    'תוכנית האפיליאייטס זמינה ב-Appwrite Cloud. צרו חשבון, ואז פתחו את אפיליאייטס מהגדרות החשבון כדי להתחיל.',
+  'Can I create more than one invite link?': 'אפשר ליצור יותר מקישור הזמנה אחד?',
+  'Yes. Create separate links for different campaigns, posts, or communities so you can compare performance.':
+    'כן. צרו קישורים נפרדים לקמפיינים, פוסטים או קהילות שונות כדי להשוות ביצועים.',
+  'Where can I use the credits?': 'איפה אפשר להשתמש בקרדיטים?',
+  'Affiliate rewards are added as organization credits on Appwrite Cloud and can be used toward eligible Cloud charges.':
+    'תגמולי אפיליאייטס מתווספים כקרדיטים לארגון ב-Appwrite Cloud וניתן להשתמש בהם לחיובים זכאים ב-Cloud.',
+  'Start earning with the Affiliates program': 'התחילו להרוויח עם תוכנית האפיליאייטס',
+  'Create your first invite link, share Appwrite with developers, and earn credits when they upgrade to Pro.':
+    'צרו את קישור ההזמנה הראשון, שתפו את Appwrite עם מפתחים, והרוויחו קרדיטים כשהם משדרגים ל-Pro.',
+  'Join the program': 'הצטרפות לתוכנית',
+  'Three steps from invite link to organization credits. No applications, no waiting list.':
+    'שלושה צעדים מקישור הזמנה לקרדיטים לארגון. בלי הגשות, בלי רשימת המתנה.',
+  'Per Pro upgrade': 'על כל שדרוג ל-Pro',
+  'Track everything from your dashboard': 'עקבו אחרי הכול מהדשבורד',
+  'See clicks, attributed signups, and Pro conversions for each invite link. Claim credits when rewards are ready, without leaving the Appwrite Console.':
+    'ראו קליקים, הרשמות מיוחסות והמרות ל-Pro לכל קישור הזמנה. מימשו קרדיטים כשהתגמולים מוכנים, בלי לצאת מקונסולת Appwrite.',
+  'Track links, referrals, and rewards': 'עקבו אחרי קישורים, הפניות ותגמולים',
+  'Signup rate: 7.8%': 'שיעור הרשמה: 7.8%',
+  'Conversion rate: 12.9%': 'שיעור המרה: 12.9%',
+  '3 pending rewards': '3 תגמולים ממתינים',
+  'Invite links': 'קישורי הזמנה',
+  'Create an Appwrite account': 'צרו חשבון Appwrite',
+  'Sign up for Appwrite Cloud, or sign in if you already have an account. Affiliates is available from your account.':
+    'הירשמו ל-Appwrite Cloud, או התחברו אם כבר יש לכם חשבון. אפיליאייטס זמין מתוך החשבון שלכם.',
+  'Go to Account, then Affiliates. From there you can create invite links and track referrals.':
+    'עברו אל חשבון, ואז לאפיליאייטס. משם תוכלו ליצור קישורי הזמנה ולעקוב אחרי הפניות.',
+  'Create and share your first link': 'צרו ושתפו את הקישור הראשון',
+  'Generate an invite link for each campaign or channel. Signups stay attributed for 180 days, and you earn $15 when a referral upgrades to Pro.':
+    'צרו קישור הזמנה לכל קמפיין או ערוץ. הרשמות מיוחסות למשך 180 ימים, ואתם מרוויחים 15$ כשמופנה משדרג ל-Pro.',
 }

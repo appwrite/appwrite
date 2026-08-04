@@ -15,13 +15,18 @@ type ActionLinkProps = {
   children: ReactNode
 }
 
+function isAbsoluteHttpUrl(href: string): boolean {
+  return /^https?:\/\//i.test(href.trim())
+}
+
 export function ActionLink({
   action,
   className,
   onAction,
   children,
 }: ActionLinkProps) {
-  if (action.external) {
+  // Always open in a new tab so the wizard is not replaced by the destination.
+  if (isAbsoluteHttpUrl(action.href)) {
     return (
       <a
         href={action.href}
@@ -39,6 +44,8 @@ export function ActionLink({
   return (
     <MarketingSiteLink
       href={action.href}
+      target="_blank"
+      rel="noopener noreferrer"
       className={className}
       data-analytics-track="manual"
       onClick={() => onAction(action.id)}

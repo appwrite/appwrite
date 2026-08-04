@@ -29,6 +29,7 @@ import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
+import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
 import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
@@ -60,6 +61,7 @@ import { Route as MarketingCompanyRouteImport } from './routes/_marketing/compan
 import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
 import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
 import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
+import { Route as MarketingAffiliatesRouteImport } from './routes/_marketing/affiliates'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
@@ -92,6 +94,7 @@ import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/acco
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
 import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
+import { Route as PublicAccountAffiliatesRouteImport } from './routes/_public/account.affiliates'
 import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
 import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
 import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
@@ -471,6 +474,11 @@ const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   path: '/llms-full/txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ILinkIdRoute = ILinkIdRouteImport.update({
+  id: '/i/$linkId',
+  path: '/i/$linkId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
   id: '/$generationId',
   path: '/$generationId',
@@ -625,6 +633,11 @@ const MarketingBaaRoute = MarketingBaaRouteImport.update({
 const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
   id: '/assets',
   path: '/assets',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAffiliatesRoute = MarketingAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
   getParentRoute: () => MarketingRoute,
 } as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
@@ -796,6 +809,11 @@ const PublicAccountApplicationsRoute =
     path: '/applications',
     getParentRoute: () => PublicAccountRoute,
   } as any)
+const PublicAccountAffiliatesRoute = PublicAccountAffiliatesRouteImport.update({
+  id: '/affiliates',
+  path: '/affiliates',
+  getParentRoute: () => PublicAccountRoute,
+} as any)
 const MarketingThreadsThreadIdRoute =
   MarketingThreadsThreadIdRouteImport.update({
     id: '/threads/$threadId',
@@ -2678,6 +2696,7 @@ export interface FileRoutesByFullPath {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/affiliates': typeof MarketingAffiliatesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -2709,6 +2728,7 @@ export interface FileRoutesByFullPath {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -2730,6 +2750,7 @@ export interface FileRoutesByFullPath {
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -3039,6 +3060,7 @@ export interface FileRoutesByTo {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/affiliates': typeof MarketingAffiliatesRoute
   '/assets': typeof MarketingAssetsRoute
   '/baa': typeof MarketingBaaRoute
   '/community': typeof MarketingCommunityRoute
@@ -3068,6 +3090,7 @@ export interface FileRoutesByTo {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/': typeof PublicIndexRoute
@@ -3089,6 +3112,7 @@ export interface FileRoutesByTo {
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -3364,6 +3388,7 @@ export interface FileRoutesById {
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_marketing/affiliates': typeof MarketingAffiliatesRoute
   '/_marketing/assets': typeof MarketingAssetsRoute
   '/_marketing/baa': typeof MarketingBaaRoute
   '/_marketing/community': typeof MarketingCommunityRoute
@@ -3395,6 +3420,7 @@ export interface FileRoutesById {
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
+  '/i/$linkId': typeof ILinkIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_public/': typeof PublicIndexRoute
@@ -3416,6 +3442,7 @@ export interface FileRoutesById {
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
   '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/_public/account/affiliates': typeof PublicAccountAffiliatesRoute
   '/_public/account/applications': typeof PublicAccountApplicationsRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
@@ -3729,6 +3756,7 @@ export interface FileRouteTypes {
     | '/sign-out'
     | '/sign-up'
     | '/verify-email'
+    | '/affiliates'
     | '/assets'
     | '/baa'
     | '/community'
@@ -3760,6 +3788,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -3781,6 +3810,7 @@ export interface FileRouteTypes {
     | '/integrations/$slug'
     | '/products/$productId'
     | '/threads/$threadId'
+    | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
     | '/account/payment-methods'
@@ -4090,6 +4120,7 @@ export interface FileRouteTypes {
     | '/sign-out'
     | '/sign-up'
     | '/verify-email'
+    | '/affiliates'
     | '/assets'
     | '/baa'
     | '/community'
@@ -4119,6 +4150,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/'
@@ -4140,6 +4172,7 @@ export interface FileRouteTypes {
     | '/integrations/$slug'
     | '/products/$productId'
     | '/threads/$threadId'
+    | '/account/affiliates'
     | '/account/applications'
     | '/account/billing-addresses'
     | '/account/payment-methods'
@@ -4414,6 +4447,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-out'
     | '/_auth/sign-up'
     | '/_auth/verify-email'
+    | '/_marketing/affiliates'
     | '/_marketing/assets'
     | '/_marketing/baa'
     | '/_marketing/community'
@@ -4445,6 +4479,7 @@ export interface FileRouteTypes {
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
+    | '/i/$linkId'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_public/'
@@ -4466,6 +4501,7 @@ export interface FileRouteTypes {
     | '/_marketing/integrations/$slug'
     | '/_marketing/products/$productId'
     | '/_marketing/threads/$threadId'
+    | '/_public/account/affiliates'
     | '/_public/account/applications'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
@@ -4778,6 +4814,7 @@ export interface RootRouteChildren {
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
+  ILinkIdRoute: typeof ILinkIdRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
@@ -4933,6 +4970,13 @@ declare module '@tanstack/react-router' {
       path: '/llms-full/txt'
       fullPath: '/llms-full/txt'
       preLoaderRoute: typeof LlmsFullTxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/i/$linkId': {
+      id: '/i/$linkId'
+      path: '/i/$linkId'
+      fullPath: '/i/$linkId'
+      preLoaderRoute: typeof ILinkIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generator/$generationId': {
@@ -5150,6 +5194,13 @@ declare module '@tanstack/react-router' {
       path: '/assets'
       fullPath: '/assets'
       preLoaderRoute: typeof MarketingAssetsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/affiliates': {
+      id: '/_marketing/affiliates'
+      path: '/affiliates'
+      fullPath: '/affiliates'
+      preLoaderRoute: typeof MarketingAffiliatesRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_auth/verify-email': {
@@ -5374,6 +5425,13 @@ declare module '@tanstack/react-router' {
       path: '/applications'
       fullPath: '/account/applications'
       preLoaderRoute: typeof PublicAccountApplicationsRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/affiliates': {
+      id: '/_public/account/affiliates'
+      path: '/affiliates'
+      fullPath: '/account/affiliates'
+      preLoaderRoute: typeof PublicAccountAffiliatesRouteImport
       parentRoute: typeof PublicAccountRoute
     }
     '/_marketing/threads/$threadId': {
@@ -7390,6 +7448,7 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface MarketingRouteChildren {
+  MarketingAffiliatesRoute: typeof MarketingAffiliatesRoute
   MarketingAssetsRoute: typeof MarketingAssetsRoute
   MarketingBaaRoute: typeof MarketingBaaRoute
   MarketingCommunityRoute: typeof MarketingCommunityRoute
@@ -7421,6 +7480,7 @@ interface MarketingRouteChildren {
 }
 
 const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingAffiliatesRoute: MarketingAffiliatesRoute,
   MarketingAssetsRoute: MarketingAssetsRoute,
   MarketingBaaRoute: MarketingBaaRoute,
   MarketingCommunityRoute: MarketingCommunityRoute,
@@ -7468,6 +7528,7 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 )
 
 interface PublicAccountRouteChildren {
+  PublicAccountAffiliatesRoute: typeof PublicAccountAffiliatesRoute
   PublicAccountApplicationsRoute: typeof PublicAccountApplicationsRoute
   PublicAccountBillingAddressesRoute: typeof PublicAccountBillingAddressesRoute
   PublicAccountPaymentMethodsRoute: typeof PublicAccountPaymentMethodsRoute
@@ -7478,6 +7539,7 @@ interface PublicAccountRouteChildren {
 }
 
 const PublicAccountRouteChildren: PublicAccountRouteChildren = {
+  PublicAccountAffiliatesRoute: PublicAccountAffiliatesRoute,
   PublicAccountApplicationsRoute: PublicAccountApplicationsRoute,
   PublicAccountBillingAddressesRoute: PublicAccountBillingAddressesRoute,
   PublicAccountPaymentMethodsRoute: PublicAccountPaymentMethodsRoute,
@@ -8992,6 +9054,7 @@ const rootRouteChildren: RootRouteChildren = {
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,
+  ILinkIdRoute: ILinkIdRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,

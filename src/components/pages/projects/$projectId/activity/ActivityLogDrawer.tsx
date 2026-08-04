@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import { Browser, Flag, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -16,8 +16,7 @@ import {
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { sdk } from '@/lib/appwrite/sdk'
-import { buildCountryLookups } from '@/lib/locale/country-lookups'
-import { useCountries } from '@/lib/react-query/hooks'
+import { useCountryLookups } from '@/lib/react-query/hooks'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -236,11 +235,7 @@ export function ActivityLogDrawer({
   display,
 }: ActivityLogDrawerProps) {
   const t = useT()
-  const { data: countriesData } = useCountries()
-  const countryLookups = useMemo(
-    () => buildCountryLookups(countriesData?.countries),
-    [countriesData?.countries],
-  )
+  const { lookups: countryLookups } = useCountryLookups()
   const handleCopyActivityPermalink = useCallback(() => {
     const id = event?.$id
     if (!id) return

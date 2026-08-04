@@ -170,6 +170,7 @@ export const jaCatalog: EnCatalog = {
           education: '教育',
           partners: 'パートナー',
           enterprise: 'Enterprise',
+          affiliates: 'アフィリエイト',
         },
         about: {
           ...enCatalog.app.footer.expanded.about,
