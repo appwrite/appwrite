@@ -73,7 +73,7 @@ export function CookieConsentBanner({
               ) : (
                 <>
                   {t(
-                    'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our', // pragma: allowlist secret
+                    'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our', // pragma: allowlist secret
                   )}{' '}
                   <a
                     href={cookiesPolicyHref}
@@ -101,7 +101,9 @@ export function CookieConsentBanner({
                   </Badge>
                 </div>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {t('Required for sign-in, security, and remembering your preferences.')}
+                  {t(
+                    'Required for sign-in, site access, security, and remembering your preferences.',
+                  )}
                 </p>
               </div>
             </div>

@@ -472,8 +472,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Report bugs or request features': "דיווח על באגים או בקשת פיצ'רים",
   Repository: 'Repo',
   'Repository name': 'שם ה-repo',
-  'Required for sign-in, security, and remembering your preferences.':
-    'נדרשות להתחברות, לאבטחה ולשמירת ההעדפות שלכם.',
+  'Required for sign-in, site access, security, and remembering your preferences.':
+    'נדרשות להתחברות, לגישה לאתר, לאבטחה ולשמירת ההעדפות שלכם.',
   Reset: 'איפוס',
   Row: 'שורה',
   'Rows per page': 'שורות בעמוד',
@@ -650,8 +650,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'המתינו לסיום הבנייה או בטלו אותה קודם',
   'Waiting for build logs...': 'ממתין ללוגים של הבנייה...',
   // pragma: allowlist secret
-  'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our':
-    'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
+  'We use essential cookies to keep you signed in, manage site access, and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our': // pragma: allowlist secret
+    'אנחנו משתמשים בעוגיות חיוניות כדי לשמור אתכם מחוברים, לנהל גישה לאתר ולזכור את ההעדפות שלכם. באישורכם, אנחנו משתמשים גם באנליטיקה כדי להבין איך Appwrite בשימוש ולשפר אותו. קראו את', // pragma: allowlist secret
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
     'לא ניתן להתחזות לחשבון המפעיל של עצמכם.',

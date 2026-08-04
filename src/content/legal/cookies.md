@@ -23,7 +23,7 @@ You may have the right to decide whether to accept or reject cookies. When you a
 ## How do we use cookies?
 
 We use cookies to:
-- Keep you signed in and remember interface preferences;
+- Keep you signed in, manage protected site access, and remember interface preferences;
 - Track traffic flow and patterns of travel in connection with our Site (with your consent where required);
 - Understand the total number of visitors to our Sites on an ongoing basis and the types of internet browsers (e.g. Chrome, Firefox, Safari, or Internet Explorer) and operating systems (e.g. Windows or Mac) used by our visitors;
 - Monitor the performance of our Site and to continually improve it; and
@@ -40,6 +40,7 @@ These cookies are essential to provide you with services available through this 
 | Cookie name | Source | Expiry (In days) | Purpose |
 | --- | --- | --- | --- |
 | a_session_console | Appwrite Console | 365 | Keeps you signed in to the Console |
+| aw_website_access | Appwrite Site | 365 | Remembers that you passed the website access gate <!-- pragma: allowlist secret --> |
 
 ## Performance / Analytics cookies
 
