@@ -156,6 +156,7 @@ import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRena
 import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
 import { AgentEmptyState } from '@/components/global/providers/agent/AgentEmptyState'
 import { VoiceRecordingMeter } from '@/components/global/providers/agent/VoiceRecordingMeter'
+import { useAgentConversationFavicon } from '@/hooks/use-agent-conversation-favicon'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
@@ -2844,6 +2845,10 @@ export function AgentPanelContent({
     () => isAssistantConversationInFlight(activeConversation),
     [activeConversation],
   )
+
+  // Dedicated /agent page only — mirror build-status favicon colors for the
+  // active conversation (blue running, green success, red failed).
+  useAgentConversationFavicon(isPageVariant, activeConversation)
 
   const latestAssistantMessage = useMemo(
     () =>
