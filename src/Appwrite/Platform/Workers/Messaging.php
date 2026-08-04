@@ -151,6 +151,14 @@ class Messaging extends Action
     private function markFailed(Database $dbForProject, string $messageId, \Throwable $error): void
     {
         try {
+            $message = $dbForProject->getDocument('messages', $messageId);
+
+            // Delivery is followed by attachment cleanup, which throws on its own. A status that already
+            // reached a terminal state is the accurate one and must outlive anything that fails after it.
+            if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
+                return;
+            }
+
             $dbForProject->updateDocument('messages', $messageId, new Document([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => [$error->getMessage()],
