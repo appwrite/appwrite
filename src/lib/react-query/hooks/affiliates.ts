@@ -189,7 +189,10 @@ export async function claimAffiliateReward(
 export async function fetchAffiliateUsage(
   params: AffiliateUsageQueryParams,
 ): Promise<Models.UsageEventList> {
-  return await sdk.forConsole.affiliates.getUsage({
+  // Affiliate funnel metrics live on the shared usage endpoint; the console
+  // project scopes them to the signed-in user's tenant, so only a single-link
+  // view needs an explicit filter.
+  return await sdk.forConsole.usage.listEvents({
     metrics: [
       AFFILIATE_METRICS.clicks,
       AFFILIATE_METRICS.signups,
@@ -198,7 +201,9 @@ export async function fetchAffiliateUsage(
     interval: params.interval,
     startAt: params.startAt,
     endAt: params.endAt,
-    linkId: params.linkId,
+    queries: params.linkId
+      ? [Query.equal('resourceId', [params.linkId])]
+      : undefined,
   })
 }
 
