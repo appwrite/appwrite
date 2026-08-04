@@ -4,8 +4,9 @@ import { useId, useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
@@ -19,6 +20,8 @@ import {
   overviewChartPanelChartAreaClass,
   overviewChartPanelChartFillClass,
 } from '@/components/pages/projects/$projectId/overview/chart-panel'
+import { WafRuleAction } from '@appwrite.io/console'
+import { getFirewallActionChartColor } from '@/lib/firewall/actions'
 import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import type { FirewallActionActivityPoint } from '@/lib/firewall/types'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
@@ -29,15 +32,17 @@ import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-const ACTIVITY_CHART_MARGIN = { top: 12, right: 8, left: 0, bottom: 0 } as const
-const ACTIVITY_CHART_Y_AXIS_WIDTH = 36
+const ACTIVITY_CHART_MARGIN = { top: 12, right: 4, left: 0, bottom: 0 } as const
+const ACTIVITY_CHART_Y_AXIS_WIDTH = 40
+// Series colors from the shared firewall action palette so they match the main
+// firewall chart legend: solves = Challenge (violet), avg time = Rate limited (amber).
+const SOLVES_COLOR = getFirewallActionChartColor(WafRuleAction.Challenge)
+const SOLVE_TIME_COLOR = getFirewallActionChartColor(WafRuleAction.RateLimit)
 
 export type FirewallActionActivityChartProps = {
   series: readonly FirewallActionActivityPoint[]
-  /** Series color (per-action palette) + tooltip label for the count. */
-  color: string
   valueLabel: string
-  /** Show an avg solve time row in the tooltip (challenge action). */
+  /** Add the avg solve time line on a second (ms) axis. */
   showSolveTime?: boolean
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
@@ -48,7 +53,6 @@ export type FirewallActionActivityChartProps = {
 
 export function FirewallActionActivityChart({
   series,
-  color,
   valueLabel,
   showSolveTime = false,
   dateRange,
@@ -59,39 +63,47 @@ export function FirewallActionActivityChart({
 }: FirewallActionActivityChartProps) {
   const t = useT()
   const gradientId = `firewall-action-activity-${useId().replace(/:/g, '')}`
+  const solveTimeLabel = t('Avg solve time')
 
   const chartPoints = useMemo(
     () => series.map((point) => ({ date: point.date, day: point.day })),
     [series],
   )
-  const chartAxisMax = useMemo(
+  const countAxisMax = useMemo(
     () => series.reduce((max, point) => Math.max(max, point.value), 0),
     [series],
   )
-  const yAxisTickFormatter = useMemo(
-    () => createCompactCountAxisTickFormatter(chartAxisMax),
-    [chartAxisMax],
+  const countTickFormatter = useMemo(
+    () => createCompactCountAxisTickFormatter(countAxisMax),
+    [countAxisMax],
   )
 
   const hasData = Boolean(dateRange && series.length > 0)
 
   return (
-    <div
-      className={cn(overviewChartPanelBodyClass, FORCE_LTR_CLASS, className)}
-      style={{ height }}
-    >
-      <div className={overviewChartPanelChartAreaClass}>
+    <div className={cn(FORCE_LTR_CLASS, className)}>
+      {showSolveTime && hasData ? (
+        <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-2">
+          <LegendDot color={SOLVES_COLOR} label={valueLabel} />
+          <LegendDot color={SOLVE_TIME_COLOR} label={solveTimeLabel} />
+        </div>
+      ) : null}
+      <div
+        className={cn(overviewChartPanelBodyClass, FORCE_LTR_CLASS)}
+        style={{ height }}
+      >
+        <div className={overviewChartPanelChartAreaClass}>
         <div className={overviewChartPanelChartFillClass}>
           {hasData ? (
             <ResponsiveContainer
               {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
               minHeight={height}
             >
-              <AreaChart data={[...series]} margin={ACTIVITY_CHART_MARGIN}>
+              <ComposedChart data={[...series]} margin={ACTIVITY_CHART_MARGIN}>
                 <defs>
                   <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={color} stopOpacity={0.2} />
-                    <stop offset="100%" stopColor={color} stopOpacity={0} />
+                    <stop offset="0%" stopColor={SOLVES_COLOR} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={SOLVES_COLOR} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -105,12 +117,27 @@ export function FirewallActionActivityChart({
                   chartInterval={chartInterval}
                   variant="overview"
                 />
+                {/* Left axis: solves (count). */}
                 <UsageChartYAxis
-                  tickFormatter={yAxisTickFormatter}
+                  yAxisId="count"
+                  tickFormatter={countTickFormatter}
                   width={ACTIVITY_CHART_Y_AXIS_WIDTH}
                   allowDecimals={false}
                   domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.05) || 1]}
                 />
+                {/* Right axis: avg solve time (ms). */}
+                {showSolveTime ? (
+                  <UsageChartYAxis
+                    yAxisId="time"
+                    orientation="right"
+                    tickFormatter={formatFirewallSolveTime}
+                    width={ACTIVITY_CHART_Y_AXIS_WIDTH}
+                    domain={[
+                      0,
+                      (dataMax: number) => Math.ceil(dataMax * 1.1) || 1,
+                    ]}
+                  />
+                ) : null}
                 <Tooltip
                   isAnimationActive={false}
                   content={({ active, payload }) => {
@@ -134,7 +161,7 @@ export function FirewallActionActivityChart({
                           {showSolveTime ? (
                             <div className="flex justify-between gap-6 text-[11px]">
                               <span className="text-muted-foreground">
-                                {t('Avg solve time')}
+                                {solveTimeLabel}
                               </span>
                               <span className="font-medium tabular-nums text-foreground">
                                 {formatFirewallSolveTime(
@@ -149,16 +176,29 @@ export function FirewallActionActivityChart({
                   }}
                 />
                 <Area
+                  yAxisId="count"
                   type="monotone"
                   dataKey="value"
                   name={valueLabel}
-                  stroke={color}
+                  stroke={SOLVES_COLOR}
                   strokeWidth={2}
                   fill={`url(#${gradientId})`}
                   dot={false}
                   {...CHART_ANIMATION_DISABLED}
                 />
-              </AreaChart>
+                {showSolveTime ? (
+                  <Line
+                    yAxisId="time"
+                    type="monotone"
+                    dataKey="avgSolveTimeMs"
+                    name={solveTimeLabel}
+                    stroke={SOLVE_TIME_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                    {...CHART_ANIMATION_DISABLED}
+                  />
+                ) : null}
+              </ComposedChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex h-full items-center justify-center text-[12px] text-muted-foreground">
@@ -166,7 +206,20 @@ export function FirewallActionActivityChart({
             </div>
           )}
         </div>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className="h-2 w-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span className="text-[12px] text-muted-foreground">{label}</span>
     </div>
   )
 }

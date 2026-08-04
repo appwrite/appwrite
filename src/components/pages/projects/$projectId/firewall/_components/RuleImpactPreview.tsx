@@ -31,7 +31,6 @@ import {
   firewallUsageConditionsKey,
 } from '@/lib/firewall/usage'
 import {
-  getFirewallActionChartColor,
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
@@ -165,7 +164,6 @@ export function RuleImpactPreview({
   const activity = previewUnavailable ? undefined : impact?.activity
   const showActivityPlaceholder =
     previewUnavailable || (isLoading && !impact) || !activity
-  const activityColor = getFirewallActionChartColor(action)
 
   const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
     .length
@@ -330,11 +328,10 @@ export function RuleImpactPreview({
               {t(activityConfig.label)} {t('over time')}
             </p>
             <p className="mb-1 px-2 text-[11px] text-muted-foreground">
-              {t('Site-wide — a solved challenge clears the whole site, not a single path')}
+              {t('A solved challenge clears the whole site, not a single path')}
             </p>
             <FirewallActionActivityChart
               series={activity?.series ?? []}
-              color={activityColor}
               valueLabel={t(activityConfig.label)}
               showSolveTime={isChallenge}
               dateRange={dateRange}

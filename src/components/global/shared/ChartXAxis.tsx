@@ -119,6 +119,11 @@ type UsageChartYAxisProps = {
   tick?: YAxisProps['tick']
   /** Force integer ticks — avoids duplicate labels on small count axes. */
   allowDecimals?: boolean
+  /** Set to render a second axis (dual-axis charts). */
+  yAxisId?: YAxisProps['yAxisId']
+  orientation?: YAxisProps['orientation']
+  /** Tick color — defaults to inherited currentColor; set for a series-tinted axis. */
+  tickFill?: string
 }
 
 /** Shared Y-axis for usage/overview time-series charts. */
@@ -128,6 +133,9 @@ export function UsageChartYAxis({
   width = USAGE_CHART_Y_AXIS_WIDTH,
   tick,
   allowDecimals,
+  yAxisId,
+  orientation,
+  tickFill = 'currentColor',
 }: UsageChartYAxisProps) {
   const tickProps =
     typeof tick === 'object' && tick != null && !Array.isArray(tick)
@@ -136,6 +144,8 @@ export function UsageChartYAxis({
 
   return (
     <YAxis
+      {...(yAxisId != null ? { yAxisId } : {})}
+      {...(orientation != null ? { orientation } : {})}
       axisLine={false}
       tickLine={false}
       width={width}
@@ -143,9 +153,9 @@ export function UsageChartYAxis({
       allowDecimals={allowDecimals}
       tickFormatter={tickFormatter}
       tick={{
-        fill: 'currentColor',
+        fill: tickFill,
         fontSize: 10,
-        textAnchor: 'end',
+        textAnchor: orientation === 'right' ? 'start' : 'end',
         ...tickProps,
       }}
     />
