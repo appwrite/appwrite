@@ -1184,12 +1184,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <Columns2 className="h-3 w-3" />,
         submenuVariant: 'profileComparison',
       },
-      {
-        label: 'Community support X examples',
-        description: 'Review all Cloud and self-hosted share drafts',
-        icon: <MessageSquareQuote className="h-3 w-3" />,
-        submenuVariant: 'communityShareExamples',
-      },
     ]
 
     const faviconOptions: MenuItem[] = (
@@ -1564,6 +1558,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <HeartHandshake className="h-3 w-3" />,
+              },
+              {
+                label: 'Community support X examples',
+                description: 'Review all Cloud and self-hosted share drafts',
+                icon: <MessageSquareQuote className="h-3 w-3" />,
+                submenuVariant: 'communityShareExamples',
               },
             ],
           },
