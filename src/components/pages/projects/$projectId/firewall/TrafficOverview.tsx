@@ -48,6 +48,7 @@ import {
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
+import { FirewallChallengeCharts } from './_components/FirewallChallengeCharts'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
@@ -183,6 +184,8 @@ export function TrafficOverview() {
   const totalChallenged = overview?.totalChallenged ?? 0
   const totalRateLimited = overview?.totalRateLimited ?? 0
   const totalRedirected = overview?.totalRedirected ?? 0
+  const totalChallengeSolved = overview?.totalChallengeSolved ?? 0
+  const avgSolveTimeMs = overview?.avgSolveTimeMs ?? 0
   const requestsChange = overview?.requestsChange ?? 0
   const passedChange = overview?.passedChange ?? 0
   const deniedChange = overview?.deniedChange ?? 0
@@ -190,6 +193,7 @@ export function TrafficOverview() {
   const rateLimitedChange = overview?.rateLimitedChange ?? 0
   const redirectedChange = overview?.redirectedChange ?? 0
   const blockRateChange = overview?.blockRateChange ?? 0
+  const challengePoints = overview?.challengePoints ?? []
 
   const chartPoints = useMemo(
     () => chartData.map((point) => ({ date: point.date, day: point.day })),
@@ -519,6 +523,19 @@ export function TrafficOverview() {
             </ResponsiveContainer>
           </div>
         </ChartArea>
+      </div>
+
+      <div className="border-t border-border px-4 pb-4 pt-4 sm:px-6">
+        <p className="mb-3 text-[13px] font-medium text-foreground">
+          {t('Challenge performance')}
+        </p>
+        <FirewallChallengeCharts
+          data={challengePoints}
+          totalSolved={totalChallengeSolved}
+          avgSolveTimeMs={avgSolveTimeMs}
+          dateRange={dateRange}
+          chartInterval={resolvedChartInterval}
+        />
       </div>
 
       <div className="grid grid-cols-2 border-y border-border sm:grid-cols-3 xl:grid-cols-6">
