@@ -339,6 +339,8 @@ trait Deployment
                     $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
                         'providerCommentId' => \strval($latestCommentId)
                     ]), [
+                        Query::equal('resourceInternalId', [$resourceInternalId]),
+                        Query::equal('resourceType', [$resourceCollection]),
                         Query::equal('providerCommitHash', [$providerCommitHash]),
                         Query::equal('providerBranch', [$providerBranch]),
                     ]));
