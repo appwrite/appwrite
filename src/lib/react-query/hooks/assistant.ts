@@ -422,6 +422,9 @@ export function useScoreAssistantMessage() {
       }
     },
     onSuccess: (message) => {
+      // Only patch score. updateMessage (and list payloads) often omit or
+      // strip hydrated tools/timeline/output, and spreading the response would
+      // wipe console surfaces rendered from those fields.
       queryClient.setQueriesData<{
         messages: Models.AgentMessage[]
         total: number
@@ -430,7 +433,9 @@ export function useScoreAssistantMessage() {
         return {
           ...current,
           messages: current.messages.map((cached) =>
-            cached.$id === message.$id ? { ...cached, ...message } : cached,
+            cached.$id === message.$id
+              ? { ...cached, score: message.score }
+              : cached,
           ),
         }
       })
