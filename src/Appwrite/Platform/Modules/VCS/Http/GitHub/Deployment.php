@@ -50,6 +50,27 @@ trait Deployment
     ) {
         $errors = [];
         $provider = $vcs->getName();
+
+        // A webhook fans out to every resource linked to the same provider repository,
+        // so resolve its owner and name once per provider repository rather than per resource.
+        $identities = [];
+        $resolveIdentity = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$identities): array {
+            if (isset($identities[$providerRepositoryId])) {
+                return $identities[$providerRepositoryId];
+            }
+
+            try {
+                $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+            } catch (RepositoryNotFound $e) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+
+            return $identities[$providerRepositoryId] = [
+                $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId),
+                $repositoryName,
+            ];
+        };
+
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
 
@@ -94,6 +115,11 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+
+                if ($resource->isEmpty()) {
+                    throw new Exception($resourceType === 'function' ? Exception::FUNCTION_NOT_FOUND : Exception::SITE_NOT_FOUND, 'Repository references non-existent ' . $resourceType);
+                }
+
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
@@ -142,12 +168,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                try {
-                    $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                } catch (RepositoryNotFound $e) {
-                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                }
+                [$owner, $repositoryName] = $resolveIdentity($providerRepositoryId);
 
                 $isAuthorized = !$external;
 
@@ -323,13 +344,6 @@ trait Deployment
                     $name = "{$resourceName} ({$projectName})";
                     $message = 'Authorization required for external contributor.';
 
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
                 }
@@ -549,14 +563,6 @@ trait Deployment
                     $region = $project->getAttribute('region', 'default');
                     $name = "{$resourceName} ({$projectName})";
                     $message = 'Starting...';
-
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
