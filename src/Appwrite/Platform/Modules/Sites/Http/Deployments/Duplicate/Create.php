@@ -119,7 +119,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForSites->transfer($path, $destination, $deviceForSites);
+            $deviceForSites->copy($path, $destination);
         }
 
         $commands = [];

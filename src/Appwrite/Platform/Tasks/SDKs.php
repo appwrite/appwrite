@@ -390,7 +390,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'python':
                         $config = new Python();
-                        $config->setPipPackage('appwrite');
+                        $config->setPipPackage($language['pipPackage'] ?? 'appwrite');
                         $license = 'BSD License'; // license edited due to classifiers in pypi
                         break;
                     case 'ruby':

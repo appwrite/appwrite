@@ -250,6 +250,8 @@ $register->set('pools', function () {
     // job may hold a connection, so pools must cover the coroutine count.
     $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
 
+    $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);
+
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
@@ -384,19 +386,13 @@ $register->set('pools', function () {
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-            });
+            }, $poolTimeout);
 
             $group->add($pool);
         }
 
         Config::setParam('pools-' . $key, $config);
     }
-
-    $reconnectAttempts = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_ATTEMPTS', 5);
-    $reconnectSleep = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_SLEEP', 2);
-
-    $group->setReconnectAttempts($reconnectAttempts);
-    $group->setReconnectSleep($reconnectSleep);
 
     return $group;
 });

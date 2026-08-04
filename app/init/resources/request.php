@@ -118,7 +118,10 @@ return function (Container $context): void {
 
     $context->set('locale', function () {
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        // Always fall back to English — it is the only complete translation set.
+        // Using _APP_LOCALE here left missing keys as {{emails.*}} when the
+        // instance default was a partial locale (e.g. fr). See #12448.
+        $locale->setFallback('en');
 
         return $locale;
     });

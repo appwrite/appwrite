@@ -86,6 +86,7 @@ class OpenAPI3 extends Format
             'Project' => '<YOUR_PROJECT_ID>',
             'ProjectPath' => '<YOUR_PROJECT_ID>',
             'Key' => '<YOUR_API_KEY>',
+            'Organization' => '<YOUR_ORGANIZATION_ID>',
             'JWT' => '<YOUR_JWT>',
             'Locale' => 'en',
             'Mode' => '',

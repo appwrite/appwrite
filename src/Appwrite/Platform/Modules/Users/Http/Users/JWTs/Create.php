@@ -47,7 +47,7 @@ class Create extends Action
                 ]
             ))
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true, ['dbForProject'])
+            ->param('sessionId', 'recent', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true, ['dbForProject'])
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
             ->inject('response')
             ->inject('dbForProject')

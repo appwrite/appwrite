@@ -143,6 +143,7 @@ class XList extends Action
                 'userPhone' => $auths['membershipsUserPhone'] ?? false,
                 'userName' => $auths['membershipsUserName'] ?? false,
                 'userMFA' => $auths['membershipsMfa'] ?? false,
+                'userAccessedAt' => $auths['membershipsUserAccessedAt'] ?? false,
             ]),
         ];
     }

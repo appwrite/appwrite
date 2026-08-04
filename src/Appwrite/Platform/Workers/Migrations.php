@@ -978,7 +978,7 @@ class Migrations extends Action
         }
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback('en');
 
         $emailType = $success
             ? 'success'
