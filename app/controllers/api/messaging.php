@@ -4466,8 +4466,7 @@ Http::delete('/v1/messaging/messages/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        // A processing message stays deletable on purpose: a worker that dies mid-send leaves the message
-        // in that state permanently, and blocking the delete would make it impossible to clear.
+        // Processing stays deletable: a worker that dies mid-send leaves the message there for good.
         switch ($message->getAttribute('status')) {
             case MessageStatus::SCHEDULED:
                 $scheduleId = $message->getAttribute('scheduleId');

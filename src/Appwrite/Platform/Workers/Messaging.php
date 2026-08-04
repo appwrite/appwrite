@@ -126,8 +126,6 @@ class Messaging extends Action
                 $message = $dbForProject->getDocument('messages', $messageId);
 
                 try {
-                    // An unreadable message used to fall through with every attribute unset, which made the
-                    // provider lookup below reject a null type and abort the job with a misleading query error.
                     if ($message->isEmpty()) {
                         throw new \Exception('Message not found: ' . $messageId);
                     }
@@ -145,16 +143,15 @@ class Messaging extends Action
     }
 
     /**
-     * Move a message out of the processing state after the job died before writing a terminal status.
-     * The queue does not redeliver, so a message left processing stays that way for good.
+     * Record a failure for a job that died before writing a terminal status. A failed job is dead-lettered
+     * rather than redelivered, so a message left processing stays that way for good.
      */
     private function markFailed(Database $dbForProject, string $messageId, \Throwable $error): void
     {
         try {
             $message = $dbForProject->getDocument('messages', $messageId);
 
-            // Delivery is followed by attachment cleanup, which throws on its own. A status that already
-            // reached a terminal state is the accurate one and must outlive anything that fails after it.
+            // Attachment cleanup runs after delivery and throws on its own; a terminal status must survive it.
             if ($message->isEmpty() || \in_array($message->getAttribute('status'), [MessageStatus::SENT, MessageStatus::FAILED], true)) {
                 return;
             }
@@ -164,7 +161,7 @@ class Messaging extends Action
                 'deliveryErrors' => [$error->getMessage()],
             ]));
         } catch (\Throwable) {
-            // The message is unreadable or already gone; the original error is rethrown by the caller.
+            // Never mask the original failure, which the caller rethrows.
         }
     }
 

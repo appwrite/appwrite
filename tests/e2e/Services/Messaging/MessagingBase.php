@@ -2689,8 +2689,7 @@ trait MessagingBase
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // A message handed straight to the worker is still deletable, so that one left behind by a
-        // failed send can be cleared.
+        // A message already handed to the worker stays deletable.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
