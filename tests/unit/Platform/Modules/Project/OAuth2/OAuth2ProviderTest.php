@@ -7,6 +7,7 @@ namespace Tests\Unit\Platform\Modules\Project\OAuth2;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Apple\Update as AppleUpdate;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Appwrite\Update as AppwriteUpdate;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Auth0\Update as Auth0Update;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Authentik\Update as AuthentikUpdate;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Base;
@@ -36,13 +37,14 @@ final class OAuth2ProviderTest extends TestCase
         \sort($ids);
 
         $expected = [
-            'amazon', 'apple', 'auth0', 'authentik', 'autodesk', 'bitbucket',
-            'bitly', 'box', 'dailymotion', 'discord', 'disqus', 'dropbox',
-            'etsy', 'facebook', 'figma', 'fusionauth', 'github', 'gitlab',
-            'google', 'keycloak', 'kick', 'linkedin', 'microsoft', 'notion',
-            'oidc', 'okta', 'paypal', 'paypalSandbox', 'podio', 'salesforce',
-            'slack', 'spotify', 'stripe', 'tradeshift', 'tradeshiftBox',
-            'twitch', 'wordpress', 'x', 'yahoo', 'yandex', 'zoho', 'zoom',
+            'amazon', 'apple', 'appwrite', 'auth0', 'authentik', 'autodesk',
+            'bitbucket', 'bitly', 'box', 'dailymotion', 'discord', 'disqus',
+            'dropbox', 'etsy', 'facebook', 'figma', 'fusionauth', 'github',
+            'gitlab', 'google', 'keycloak', 'kick', 'linkedin', 'microsoft',
+            'notion', 'oidc', 'okta', 'paypal', 'paypalSandbox', 'podio',
+            'salesforce', 'slack', 'spotify', 'stripe', 'tradeshift',
+            'tradeshiftBox', 'twitch', 'wordpress', 'x', 'yahoo', 'yandex',
+            'zoho', 'zoom',
         ];
         \sort($expected);
 
@@ -84,6 +86,7 @@ final class OAuth2ProviderTest extends TestCase
         yield 'default provider' => [Base::getProviderActions()['amazon'], ['clientId', 'clientSecret']];
         yield 'custom id and secret names' => [DropboxUpdate::class, ['appKey', 'appSecret']];
         yield 'apple' => [AppleUpdate::class, ['serviceId', 'keyId', 'teamId', 'p8File']];
+        yield 'appwrite' => [AppwriteUpdate::class, ['clientId', 'clientSecret']];
         yield 'auth0' => [Auth0Update::class, ['clientId', 'clientSecret', 'endpoint']];
         yield 'authentik' => [AuthentikUpdate::class, ['clientId', 'clientSecret', 'endpoint']];
         yield 'fusionauth' => [FusionAuthUpdate::class, ['clientId', 'clientSecret', 'endpoint']];
@@ -91,7 +94,7 @@ final class OAuth2ProviderTest extends TestCase
         yield 'google' => [GoogleUpdate::class, ['clientId', 'clientSecret', 'prompt']];
         yield 'keycloak' => [KeycloakUpdate::class, ['clientId', 'clientSecret', 'endpoint', 'realmName']];
         yield 'microsoft' => [MicrosoftUpdate::class, ['applicationId', 'applicationSecret', 'tenant']];
-        yield 'oidc' => [OidcUpdate::class, ['clientId', 'clientSecret', 'wellKnownURL', 'authorizationURL', 'tokenURL', 'userInfoURL']];
+        yield 'oidc' => [OidcUpdate::class, ['clientId', 'clientSecret', 'wellKnownURL', 'authorizationURL', 'tokenURL', 'userInfoURL', 'prompt', 'maxAge']];
         yield 'okta' => [OktaUpdate::class, ['clientId', 'clientSecret', 'domain', 'authorizationServerId']];
     }
 
@@ -347,6 +350,8 @@ final class OAuth2ProviderTest extends TestCase
             null,
             null,
             null,
+            null,
+            null,
             true,
         ]);
 
@@ -365,6 +370,8 @@ final class OAuth2ProviderTest extends TestCase
             'https://idp.example/oauth2/authorize',
             'https://idp.example/oauth2/token',
             'https://idp.example/oauth2/userinfo',
+            null,
+            null,
             true,
         ]);
 
@@ -389,6 +396,8 @@ final class OAuth2ProviderTest extends TestCase
                 'https://idp.example/oauth2/authorize',
                 null,
                 'https://idp.example/oauth2/userinfo',
+                null,
+                null,
                 true,
             ],
             assertQueueParam: false,
@@ -417,6 +426,8 @@ final class OAuth2ProviderTest extends TestCase
                 'https://idp.example/oauth2/authorize',
                 'https://idp.example/oauth2/token',
                 'https://idp.example/oauth2/userinfo',
+                null,
+                null,
                 true,
             ],
         );

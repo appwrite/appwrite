@@ -4,11 +4,13 @@ namespace Tests\Unit\SDK\Specification;
 
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\VcsRepositories;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
@@ -20,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
 use Appwrite\Utopia\Response\Model\PlatformApple;
@@ -30,10 +33,14 @@ use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Spatial;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
@@ -135,6 +142,79 @@ final class FormatTest extends TestCase
         );
     }
 
+    public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTestWithOverrides',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+                parameters: [
+                    new Parameter('engine', hide: true),
+                    new Parameter('name', description: 'Overridden description.'),
+                ],
+            ))
+            ->param('name', '', new Text(128), 'Original description.')
+            ->param('engine', 'mysql', new Text(16), 'Engine.', true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertArrayNotHasKey('engine', $properties);
+        $this->assertSame('Overridden description.', $properties['name']['description']);
+        $this->assertSame(['name'], $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['required']);
+    }
+
+    public function testMethodParameterNullDefaultOverridesRouteDefault(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'createTestWithNullDefault',
+            description: 'Create test.',
+            auth: [],
+            responses: [],
+            parameters: [
+                new Parameter('engine', default: null),
+                new Parameter('name', description: 'Overridden description.', optional: false),
+            ],
+        );
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->param('name', 'default-name', new Text(128), 'Original description.', true)
+            ->param('engine', 'mysql', new Text(16), 'Engine.', true);
+
+        $format = new class (new Container(), [], [], [], [], 0, 'console') extends OpenAPI3 {
+            /**
+             * @return array<string, array<string, mixed>>
+             */
+            public function methodParameters(Route $route, Method $method): array
+            {
+                return $this->getMethodParameters($route, $method);
+            }
+        };
+
+        $parameters = $format->methodParameters($route, $method);
+
+        $this->assertNull($parameters['engine']['default']);
+        $this->assertTrue($parameters['engine']['optional']);
+        $this->assertSame('default-name', $parameters['name']['default']);
+        $this->assertSame('Overridden description.', $parameters['name']['description']);
+        $this->assertFalse($parameters['name']['optional']);
+    }
+
     public function testDeleteRouteOptionalParamsAreQueryParams(): void
     {
         Method::$processed = [];
@@ -161,6 +241,46 @@ final class FormatTest extends TestCase
         $this->assertSame('transactionId', $openApi['paths']['/tests/{testId}']['delete']['parameters'][1]['name']);
         $this->assertSame('query', $openApi['paths']['/tests/{testId}']['delete']['parameters'][1]['in']);
 
+    }
+
+    public function testMultiMethodRouteEmitsEveryOperation(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new class (['GET', 'POST'], '/v1/tests/:testId') extends Route {
+            public function getMethods(): array
+            {
+                return [2 => 'GET', 4 => 'POST'];
+            }
+        })
+            ->desc('Get or update test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getOrUpdateTest',
+                description: 'Get or update test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('testId', '', new Text(256), 'Test ID.')
+            ->param('name', null, new Nullable(new Text(256)), 'Test name.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $get = $openApi['paths']['/tests/{testId}']['get'];
+        $post = $openApi['paths']['/tests/{testId}']['post'];
+
+        $this->assertSame('testGetOrUpdateTestGet', $get['operationId']);
+        $this->assertSame('testGetOrUpdateTestPost', $post['operationId']);
+        $this->assertSame('getOrUpdateTest', $get['x-appwrite']['method']);
+        $this->assertSame('getOrUpdateTestPost', $post['x-appwrite']['method']);
+        $this->assertSame('path', $get['parameters'][0]['in']);
+        $this->assertSame('query', $get['parameters'][1]['in']);
+        $this->assertArrayNotHasKey('requestBody', $get);
+        $this->assertSame('path', $post['parameters'][0]['in']);
+        $this->assertCount(1, $post['parameters']);
+        $this->assertArrayHasKey('name', $post['requestBody']['content']['application/json']['schema']['properties']);
     }
 
     public function testModelReferencesDoNotEmitItemsOnObjectProperties(): void
@@ -199,6 +319,56 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiPrefs['type']);
         $this->assertSame([['$ref' => '#/components/schemas/preferences']], $openApiPrefs['allOf']);
 
+    }
+
+    /**
+     * The project usage handler writes the text embedding metrics as four
+     * per-period lists plus four scalar totals. A typed SDK generated from a
+     * schema that calls all eight a single metric object rejects every valid
+     * response, so pin the emitted schema rather than the rule table.
+     */
+    public function testUsageProjectEmbeddingsTextSchema(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/usage'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getUsageTest',
+                description: 'Get test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_USAGE_PROJECT,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new UsageProject(),
+            new Metric(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+
+        $properties = $openApi['components']['schemas']['usageProject']['properties'];
+
+        foreach (['embeddingsText', 'embeddingsTextTokens', 'embeddingsTextDuration', 'embeddingsTextErrors'] as $key) {
+            $this->assertSame('array', $properties[$key]['type'], $key);
+            $this->assertSame(['$ref' => '#/components/schemas/metric'], $properties[$key]['items'], $key);
+            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
+        }
+
+        foreach (['embeddingsTextTotal', 'embeddingsTextTokensTotal', 'embeddingsTextDurationTotal', 'embeddingsTextErrorsTotal'] as $key) {
+            $this->assertSame('integer', $properties[$key]['type'], $key);
+            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
+            $this->assertArrayNotHasKey('items', $properties[$key], $key);
+        }
     }
 
     public function testArrayItemsSchemaInfersTypesFromJsonStringExamples(): void
@@ -487,5 +657,41 @@ final class FormatTest extends TestCase
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+    }
+
+    public function testQueriesSubclassesEmitArrayOfStrings(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        // VcsRepositories extends Queries directly rather than Queries\Base, and a
+        // deeper subclass proves arbitrary inheritance depth is normalised too.
+        $deepSubclass = new class () extends VcsRepositories {};
+
+        $route = (new Route('GET', '/v1/tests/queries'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true)
+            ->param('repositoryQueries', [], new VcsRepositories(), 'Repository queries.', true)
+            ->param('deepQueries', [], $deepSubclass, 'Deeply nested queries.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $parameters = $openApi['paths']['/tests/queries']['get']['parameters'];
+        $schemas = \array_column($parameters, 'schema', 'name');
+
+        $this->assertCount(3, $schemas);
+
+        foreach (['queries', 'repositoryQueries', 'deepQueries'] as $name) {
+            $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
+            $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
+        }
     }
 }

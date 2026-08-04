@@ -899,7 +899,7 @@ final class FunctionsConsoleClientTest extends Scope
 
         $response = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('application/gzip', $response['headers']['content-type']);
+        $this->assertEquals('application/octet-stream', $response['headers']['content-type']);
         $this->assertGreaterThan(0, $response['headers']['content-length']);
         $this->assertGreaterThan(0, \strlen($response['body']));
 

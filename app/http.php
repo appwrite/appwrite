@@ -126,7 +126,7 @@ function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null)
             // executions request coming from custom domain
             $risky = true;
         } else {
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) as $riskyDomain) {
                 if (empty($riskyDomain)) {
                     continue;
                 }
@@ -557,7 +557,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($th->getMessage());
 
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
+            $log->addTag('method', \implode(',', $route?->getMethods() ?? [$request->getMethod()]));
             $log->addTag('url', $route?->getPath() ?? $request->getURI());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());

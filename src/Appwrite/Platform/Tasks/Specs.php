@@ -171,12 +171,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'Mode' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Mode',
-                    'description' => '',
-                    'in' => 'header',
-                ],
                 'DevKey' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Dev-Key',
@@ -240,6 +234,12 @@ class Specs extends Action
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
+                    'in' => 'header',
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
@@ -262,12 +262,6 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Session',
                     'description' => 'The user session to authenticate with',
-                    'in' => 'header',
-                ],
-                'Mode' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Mode',
-                    'description' => '',
                     'in' => 'header',
                 ],
                 'ForwardedUserAgent' => [
@@ -337,6 +331,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Key',
                     'description' => 'Your secret API key',
+                    'in' => 'header',
+                ],
+                'Organization' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Organization',
+                    'description' => 'Your organization ID',
                     'in' => 'header',
                 ],
                 'JWT' => [
@@ -627,6 +627,7 @@ class Specs extends Action
             $routes = [];
             $models = [];
             $services = [];
+            $routeNamespaces = [];
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
@@ -672,11 +673,27 @@ class Specs extends Action
                         }
 
                         $routes[] = $route;
+                        $routeNamespaces[$sdk->getNamespace()] = true;
                     }
                 }
             }
 
+            /**
+             * Tag names must match Method namespaces (path tags), e.g. tablesDB.
+             * Service config keys stay lowercase (tablesdb); descriptions resolve
+             * case-insensitively from services.php.
+             */
+            $serviceDescriptions = [];
+            $configuredServices = [];
+
             foreach (Config::getParam('services', []) as $service) {
+                $serviceKey = $service['key'] ?? '';
+                if ($serviceKey === '') {
+                    continue;
+                }
+
+                $serviceDescriptions[\strtolower($serviceKey)] = $service['subtitle'] ?? '';
+
                 if (
                     !isset($service['docs']) // Skip service if not part of the public API
                     || !isset($service['sdk'])
@@ -691,9 +708,27 @@ class Specs extends Action
                     continue;
                 }
 
+                $configuredServices[$serviceKey] = $service['subtitle'] ?? '';
+            }
+
+            $seenServices = [];
+
+            foreach (\array_keys($routeNamespaces) as $namespace) {
                 $services[] = [
-                    'name' => $service['key'] ?? '',
-                    'description' => $service['subtitle'] ?? '',
+                    'name' => $namespace,
+                    'description' => $serviceDescriptions[\strtolower($namespace)] ?? '',
+                ];
+                $seenServices[\strtolower($namespace)] = true;
+            }
+
+            foreach ($configuredServices as $serviceKey => $description) {
+                if (isset($seenServices[\strtolower($serviceKey)])) {
+                    continue;
+                }
+
+                $services[] = [
+                    'name' => $serviceKey,
+                    'description' => $description,
                 ];
             }
 

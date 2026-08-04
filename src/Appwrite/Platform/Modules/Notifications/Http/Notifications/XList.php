@@ -39,7 +39,7 @@ class XList extends Action
                 group: null,
                 name: 'list',
                 description: '/docs/references/notifications/list-notifications.md',
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
