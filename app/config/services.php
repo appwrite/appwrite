@@ -174,7 +174,7 @@ return [
         'name' => 'Users',
         'subtitle' => 'The Users service allows you to manage your project users.',
         'description' => '/docs/services/users.md',
-        'controller' => '',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/users',
