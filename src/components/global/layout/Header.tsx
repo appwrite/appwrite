@@ -1259,7 +1259,14 @@ export function ConsoleHeader({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={toggleChat}
+                      type="button"
+                      aria-label={headerCopy.actions.assistant}
+                      onClick={(event) => {
+                        // Safari can leave the trigger focused after a tooltip
+                        // open, which makes the next click feel like a no-op.
+                        event.currentTarget.blur()
+                        toggleChat()
+                      }}
                       {...analyticsAttrs('ai-agent-open')}
                       className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                     >

@@ -377,7 +377,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     isFetched && isOperatorAccount(account as OperatorAccount)
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
-  const { showFullscreenLoader } = useDebugOverrides()
+  const { showFullscreenLoader, showAIAssistant } = useDebugOverrides()
   useGlobalAnalyticsTracker()
 
   useEffect(() => {
@@ -457,7 +457,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                         <RootShellCatchBoundary>
                           <DebugModeProvider>
                             <ConsoleRightPaneProvider>
-                              {features.aiAssistant ? (
+                              {/* Mount when the profile feature or the experimental UI
+                                  override is on so the header agent button never no-ops. */}
+                              {features.aiAssistant || showAIAssistant ? (
                                 <AgentChatProvider>
                                   <DocsPreviewProvider>
                                     <PromoBannerProvider>

@@ -351,6 +351,7 @@ function groupConversationsByTime(
 
 export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const { activeContent, showAgent, hideRightPane } = useConsoleRightPane()
   const isAgentBlocked = useMemo(
     () => isAgentBlockedPath(location.pathname),
@@ -371,16 +372,33 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const hasRestoredOpenPrefRef = useRef(false)
 
   const openChat = useCallback(() => {
-    if (isAgentBlocked || isMarketingPage || !isConsolePath) return
+    if (isAgentBlocked || isMarketingPage) return
+    if (!isConsolePath) {
+      // Header is visible on some console routes where the docked pane is not
+      // (e.g. `/`). Open the full agent surface instead of silently no-oping.
+      void navigate({ to: '/agent' })
+      return
+    }
     showAgent()
     setIsOpen(true)
-  }, [isAgentBlocked, isConsolePath, isMarketingPage, setIsOpen, showAgent])
+  }, [
+    isAgentBlocked,
+    isConsolePath,
+    isMarketingPage,
+    navigate,
+    setIsOpen,
+    showAgent,
+  ])
   const closeChat = useCallback(() => {
     setIsOpen(false)
     hideRightPane()
   }, [hideRightPane, setIsOpen])
   const toggleChat = useCallback(() => {
-    if (isAgentBlocked || isMarketingPage || !isConsolePath) return
+    if (isAgentBlocked || isMarketingPage) return
+    if (!isConsolePath) {
+      openChat()
+      return
+    }
     if (activeContent === 'agent') {
       closeChat()
       return

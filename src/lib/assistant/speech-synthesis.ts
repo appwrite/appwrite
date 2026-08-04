@@ -68,11 +68,17 @@ function normalizeProse(text: string): string {
 function splitIntoSentences(text: string): string[] {
   const normalized = normalizeProse(text)
   if (!normalized) return []
-  return normalized
-    .split(/(?<=[.!?…])\s+/u)
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map(ensureSentence)
+  // Avoid lookbehind (`(?<=...)`) for broader Safari compatibility; split on
+  // sentence-ending punctuation and keep the delimiter on the preceding chunk.
+  const parts = normalized.split(/([.!?…]+)\s+/u)
+  const sentences: string[] = []
+  for (let i = 0; i < parts.length; i += 2) {
+    const body = parts[i]?.trim() ?? ''
+    const end = parts[i + 1] ?? ''
+    const combined = `${body}${end}`.trim()
+    if (combined) sentences.push(ensureSentence(combined))
+  }
+  return sentences
 }
 
 /**
