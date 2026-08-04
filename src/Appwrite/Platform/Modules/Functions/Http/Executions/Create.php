@@ -332,12 +332,12 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-
-                $bus->dispatch(new ExecutionScheduled(
-                    execution: $execution->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                ));
             }
+
+            $bus->dispatch(new ExecutionScheduled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
                 $publisherForDeletes->enqueue(new DeleteMessage(
