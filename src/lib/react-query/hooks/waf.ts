@@ -449,6 +449,7 @@ export function firewallRuleImpactQueryOptions(
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
   logRetentionHours?: number,
+  action?: FirewallCreatableAction,
 ) {
   const normalizedResourceId = resourceId?.trim() || undefined
   const conditionSnapshots = buildFirewallUsageConditionSnapshots(conditions)
@@ -467,6 +468,7 @@ export function firewallRuleImpactQueryOptions(
       to ?? '',
       chartInterval ?? '',
       logRetentionHours ?? null,
+      action ?? '',
     ] as const,
     queryFn: ({ queryKey }) => {
       const [
@@ -480,6 +482,7 @@ export function firewallRuleImpactQueryOptions(
         impactTo,
         impactChartInterval,
         impactLogRetentionHours,
+        impactAction,
       ] = queryKey
 
       return fetchFirewallRuleImpact(String(impactProjectId), {
@@ -501,6 +504,9 @@ export function firewallRuleImpactQueryOptions(
           typeof impactLogRetentionHours === 'number'
             ? impactLogRetentionHours
             : undefined,
+        action: impactAction
+          ? (impactAction as FirewallCreatableAction)
+          : undefined,
       })
     },
     enabled: !!projectId,
@@ -521,6 +527,7 @@ export function useFirewallRuleImpact(
   dateRange?: DateRange,
   chartInterval?: UsageChartInterval,
   logRetentionHours?: number,
+  action?: FirewallCreatableAction,
 ) {
   const { data, isLoading, isFetching, error } = useQuery(
     firewallRuleImpactQueryOptions(
@@ -531,6 +538,7 @@ export function useFirewallRuleImpact(
       dateRange,
       chartInterval,
       logRetentionHours,
+      action,
     ),
   )
 

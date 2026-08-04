@@ -1,7 +1,11 @@
-import { Query } from '@appwrite.io/console'
+import { Query, WafRuleAction } from '@appwrite.io/console'
 import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
+import type { FirewallCreatableAction } from '@/lib/firewall/actions'
+import { getFirewallActionMetric } from '@/lib/firewall/action-metrics'
+import { FIREWALL_CHALLENGE_SOLVE_TIME_METRIC } from '@/lib/usage/firewall-events'
+import { fetchUsageMetricsChartSeriesByMetric } from '@/lib/usage/usage-events-common'
 import {
   FIREWALL_CONDITION_OPERATORS,
   isConditionDraftComplete,
@@ -21,7 +25,10 @@ import {
   DEFAULT_USAGE_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import type { FirewallImpactPoint } from '@/lib/firewall/types'
+import type {
+  FirewallActionActivityPoint,
+  FirewallImpactPoint,
+} from '@/lib/firewall/types'
 import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
 
 /** Firewall resourceType → usage.listEvents resourceType. `api` has no usage resourceType. */
@@ -325,12 +332,61 @@ export function draftsFromUsageConditionSnapshots(
   }))
 }
 
+/**
+ * Project-wide WAF activity for a rule's action (denied / rate limited /
+ * redirected / challenge solves). These metrics are project-level counters with
+ * no per-rule dimension, so the values are not scoped to the individual rule.
+ */
+export type FirewallRuleActionActivity = {
+  action: FirewallCreatableAction
+  /** Total count of the action metric over the period. */
+  total: number
+  /** Count per interval, for the activity graph. */
+  series: FirewallActionActivityPoint[]
+  /** Overall average solve time in ms — challenge action only. */
+  avgSolveTimeMs?: number
+}
+
+/** Build activity points from a count metric, optionally with solve time. */
+function buildActionActivitySeries(
+  countPoints: RequestsChartPoint[],
+  solveTimePoints?: RequestsChartPoint[],
+): FirewallActionActivityPoint[] {
+  const solveTimeByTime = new Map(
+    (solveTimePoints ?? []).map((point) => [point.day.getTime(), point.total]),
+  )
+
+  return countPoints.map((point) => {
+    const value = point.total
+    const base: FirewallActionActivityPoint = {
+      date: point.date,
+      day: point.day,
+      fullDate: formatLocalizedDate(point.day, 'MMM d, yyyy HH:mm'),
+      value,
+    }
+    if (solveTimePoints) {
+      const solveTimeTotal = solveTimeByTime.get(point.day.getTime()) ?? 0
+      base.avgSolveTimeMs = value > 0 ? solveTimeTotal / value : 0
+    }
+    return base
+  })
+}
+
 export type FirewallRuleImpactData = {
   series: FirewallImpactPoint[]
   matched: number
   total: number
   rate: number
   dateRange: { from: Date; to: Date }
+  /** Project-wide activity for the rule's action (denied / rate limited / …). */
+  activity?: FirewallRuleActionActivity
+}
+
+/** Compact ms/s label for challenge solve time. */
+export function formatFirewallSolveTime(ms: number): string {
+  if (ms <= 0) return '0ms'
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`
+  return `${Math.round(ms)}ms`
 }
 
 function mergeImpactSeries(
@@ -367,6 +423,7 @@ export async function fetchFirewallRuleImpact(
     dateRange?: DateRange
     chartInterval?: UsageChartInterval
     logRetentionHours?: number
+    action?: FirewallCreatableAction
   },
 ): Promise<FirewallRuleImpactData> {
   const to = options.dateRange?.to ?? new Date()
@@ -394,7 +451,23 @@ export async function fetchFirewallRuleImpact(
     includeConditions: true,
   })
 
-  const [totalOverview, matchedOverview] = await Promise.all([
+  // Only Site challenge rules get an activity section: solves / avg solve time
+  // come from the browser HTML-navigation challenge, so they only apply to sites
+  // (not functions/api). The block actions (denied / rateLimited / redirected)
+  // are already represented by matched traffic, so we don't fetch or show them.
+  // Challenge scopes by resource ONLY — clearance is site-wide, so solves aren't
+  // tied to a path/condition.
+  const isSiteChallenge =
+    options.action === WafRuleAction.Challenge &&
+    options.resourceType === 'sites'
+  const activityConfig = isSiteChallenge
+    ? getFirewallActionMetric(options.action)
+    : undefined
+  const activityMetrics = activityConfig
+    ? [activityConfig.metric, FIREWALL_CHALLENGE_SOLVE_TIME_METRIC]
+    : []
+
+  const [totalOverview, matchedOverview, activitySeries] = await Promise.all([
     fetchProjectRequestsChartOverview(
       projectId,
       dateRange,
@@ -411,7 +484,34 @@ export async function fetchFirewallRuleImpact(
           logRetentionHours,
         )
       : Promise.resolve(null),
+    activityConfig
+      ? fetchUsageMetricsChartSeriesByMetric(
+          projectId,
+          activityMetrics,
+          dateRange,
+          chartInterval,
+          // Resource scope only (challenge clearance is site-wide).
+          totalQueries.length > 0 ? totalQueries : undefined,
+          logRetentionHours,
+        )
+      : Promise.resolve(null),
   ])
+
+  let activity: FirewallRuleActionActivity | undefined
+  if (activitySeries && activityConfig && options.action) {
+    const countPoints =
+      activitySeries.get(activityConfig.metric)?.chartPoints ?? []
+    const total = sumUsageChartPoints(countPoints)
+    const solveTimePoints =
+      activitySeries.get(FIREWALL_CHALLENGE_SOLVE_TIME_METRIC)?.chartPoints ?? []
+    const solveTimeTotal = sumUsageChartPoints(solveTimePoints)
+    activity = {
+      action: options.action,
+      total,
+      avgSolveTimeMs: total > 0 ? solveTimeTotal / total : 0,
+      series: buildActionActivitySeries(countPoints, solveTimePoints),
+    }
+  }
 
   const matchedChart = matchedOverview ?? totalOverview
   const series = mergeImpactSeries(
@@ -437,5 +537,6 @@ export async function fetchFirewallRuleImpact(
     matched,
     rate: total > 0 ? matched / total : 0,
     dateRange: { from, to },
+    activity,
   }
 }

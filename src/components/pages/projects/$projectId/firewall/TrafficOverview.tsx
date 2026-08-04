@@ -48,6 +48,7 @@ import {
   sortFirewallTrafficSeriesByValueAsc,
   type FirewallTrafficSeriesKey,
 } from '@/lib/firewall/traffic-series'
+import { formatFirewallSolveTime } from '@/lib/firewall/usage'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
@@ -183,12 +184,16 @@ export function TrafficOverview() {
   const totalChallenged = overview?.totalChallenged ?? 0
   const totalRateLimited = overview?.totalRateLimited ?? 0
   const totalRedirected = overview?.totalRedirected ?? 0
+  const totalChallengeSolved = overview?.totalChallengeSolved ?? 0
+  const avgSolveTimeMs = overview?.avgSolveTimeMs ?? 0
   const requestsChange = overview?.requestsChange ?? 0
   const passedChange = overview?.passedChange ?? 0
   const deniedChange = overview?.deniedChange ?? 0
   const challengedChange = overview?.challengedChange ?? 0
   const rateLimitedChange = overview?.rateLimitedChange ?? 0
   const redirectedChange = overview?.redirectedChange ?? 0
+  const challengeSolvedChange = overview?.challengeSolvedChange ?? 0
+  const avgSolveTimeChange = overview?.avgSolveTimeChange ?? 0
   const blockRateChange = overview?.blockRateChange ?? 0
 
   const chartPoints = useMemo(
@@ -297,6 +302,18 @@ export function TrafficOverview() {
       value: `${blockRate}%`,
       change: blockRateChange,
       trend: changeTrend(blockRateChange),
+    },
+    {
+      label: t('Challenge solves'),
+      value: totalChallengeSolved,
+      change: challengeSolvedChange,
+      trend: changeTrend(challengeSolvedChange),
+    },
+    {
+      label: t('Avg solve time'),
+      value: formatFirewallSolveTime(avgSolveTimeMs),
+      change: avgSolveTimeChange,
+      trend: changeTrend(avgSolveTimeChange),
     },
   ]
 

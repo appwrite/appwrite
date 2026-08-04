@@ -18,12 +18,16 @@ export const FIREWALL_TRAFFIC_EVENT_METRICS = [
   'waf.requests.challenged',
   'waf.requests.rateLimited',
   'waf.requests.redirected',
+  'waf.requests.challengeSolved',
+  'waf.challenge.solveTimeMs'
 ] as const
 
 export const FIREWALL_DENIED_METRIC = 'waf.requests.denied'
 export const FIREWALL_CHALLENGED_METRIC = 'waf.requests.challenged'
 export const FIREWALL_RATE_LIMITED_METRIC = 'waf.requests.rateLimited'
 export const FIREWALL_REDIRECTED_METRIC = 'waf.requests.redirected'
+export const FIREWALL_CHALLENGE_SOLVED_METRIC = 'waf.requests.challengeSolved'
+export const FIREWALL_CHALLENGE_SOLVE_TIME_METRIC = 'waf.challenge.solveTimeMs'
 export const FIREWALL_REQUESTS_METRIC = REQUESTS_EVENT_METRICS[0]
 
 export type FirewallTrafficPoint = {
@@ -44,12 +48,17 @@ export interface ProjectFirewallTrafficOverview {
   totalChallenged: number
   totalRateLimited: number
   totalRedirected: number
+  totalChallengeSolved: number
+  /** Average challenge solve time in ms (solveTimeMs total / challengeSolved total). */
+  avgSolveTimeMs: number
   requestsChange: number
   passedChange: number
   deniedChange: number
   challengedChange: number
   rateLimitedChange: number
   redirectedChange: number
+  challengeSolvedChange: number
+  avgSolveTimeChange: number
   blockRateChange: number
   chartPoints: FirewallTrafficPoint[]
 }
@@ -161,6 +170,18 @@ export async function fetchProjectFirewallTrafficOverview(
     chartPoints: [],
     previousChartPoints: [],
   }
+  const challengeSolvedSeries = seriesByMetric.get(
+    FIREWALL_CHALLENGE_SOLVED_METRIC,
+  ) ?? {
+    chartPoints: [],
+    previousChartPoints: [],
+  }
+  const solveTimeSeries = seriesByMetric.get(
+    FIREWALL_CHALLENGE_SOLVE_TIME_METRIC,
+  ) ?? {
+    chartPoints: [],
+    previousChartPoints: [],
+  }
 
   const passed = changeFor(
     requestsSeries.chartPoints,
@@ -182,6 +203,25 @@ export async function fetchProjectFirewallTrafficOverview(
     redirectedSeries.chartPoints,
     redirectedSeries.previousChartPoints,
   )
+  const challengeSolved = changeFor(
+    challengeSolvedSeries.chartPoints,
+    challengeSolvedSeries.previousChartPoints,
+  )
+
+  // Solve time is reported as summed ms; average it over challenges solved.
+  const solveTimeTotal = sumUsageChartPoints(solveTimeSeries.chartPoints)
+  const previousSolveTimeTotal = sumUsageChartPoints(
+    solveTimeSeries.previousChartPoints,
+  )
+  const previousChallengeSolved = sumUsageChartPoints(
+    challengeSolvedSeries.previousChartPoints,
+  )
+  const avgSolveTimeMs =
+    challengeSolved.total > 0 ? solveTimeTotal / challengeSolved.total : 0
+  const previousAvgSolveTimeMs =
+    previousChallengeSolved > 0
+      ? previousSolveTimeTotal / previousChallengeSolved
+      : 0
 
   // Top total = sum of every series on the chart (no extra fetch).
   const totalRequests =
@@ -216,12 +256,19 @@ export async function fetchProjectFirewallTrafficOverview(
     totalChallenged: challenged.total,
     totalRateLimited: rateLimited.total,
     totalRedirected: redirected.total,
+    totalChallengeSolved: challengeSolved.total,
+    avgSolveTimeMs,
     requestsChange: computeChangePercent(totalRequests, previousTotalRequests),
     passedChange: passed.change,
     deniedChange: denied.change,
     challengedChange: challenged.change,
     rateLimitedChange: rateLimited.change,
     redirectedChange: redirected.change,
+    challengeSolvedChange: challengeSolved.change,
+    avgSolveTimeChange: computeChangePercent(
+      avgSolveTimeMs,
+      previousAvgSolveTimeMs,
+    ),
     blockRateChange: computeChangePercent(currentBlockRate, previousBlockRate),
     chartPoints: mergeFirewallTrafficPoints(
       requestsSeries.chartPoints,
@@ -241,12 +288,16 @@ function emptyFirewallTrafficOverview(): ProjectFirewallTrafficOverview {
     totalChallenged: 0,
     totalRateLimited: 0,
     totalRedirected: 0,
+    totalChallengeSolved: 0,
+    avgSolveTimeMs: 0,
     requestsChange: 0,
     passedChange: 0,
     deniedChange: 0,
     challengedChange: 0,
     rateLimitedChange: 0,
     redirectedChange: 0,
+    challengeSolvedChange: 0,
+    avgSolveTimeChange: 0,
     blockRateChange: 0,
     chartPoints: [],
   }
