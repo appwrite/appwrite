@@ -13,7 +13,9 @@
  */
 
 import type { ReactNode } from 'react'
-import { AlertTriangle, PlugZap, RefreshCw } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { AlertTriangle, CloudOff, PlugZap, RefreshCw } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
@@ -44,6 +46,13 @@ type VcsInstallationErrorCopy = {
   description: string
   /** Reconnect is primary only when the token is what broke. */
   reconnectIsPrimary: boolean
+  icon: LucideIcon
+  /**
+   * Only a dead token is worth alarming red. The other two clear on their own
+   * or on a retry, and dressing them as failures trains users to ignore the
+   * one state that actually needs them.
+   */
+  isCritical: boolean
 }
 
 function useVcsInstallationErrorCopy(
@@ -58,6 +67,8 @@ function useVcsInstallationErrorCopy(
         'Appwrite can no longer access this Git provider on your behalf. Reconnect the installation to restore access to your repositories.',
       ),
       reconnectIsPrimary: true,
+      icon: AlertTriangle,
+      isCritical: true,
     }
   }
 
@@ -68,6 +79,8 @@ function useVcsInstallationErrorCopy(
         'Another request is already refreshing this installation. Try again in a moment.',
       ),
       reconnectIsPrimary: false,
+      icon: RefreshCw,
+      isCritical: false,
     }
   }
 
@@ -75,6 +88,8 @@ function useVcsInstallationErrorCopy(
     title: t('Could not reach the Git provider'),
     description: t('This is usually temporary. Try again in a moment.'),
     reconnectIsPrimary: false,
+    icon: CloudOff,
+    isCritical: false,
   }
 }
 
@@ -177,11 +192,11 @@ export function VcsInstallationErrorState({
   isRetrying,
   className,
 }: VcsInstallationErrorProps) {
-  const { title, description } = useVcsInstallationErrorCopy(kind)
+  const { title, description, icon } = useVcsInstallationErrorCopy(kind)
 
   return (
     <EmptyState
-      icon={AlertTriangle}
+      icon={icon}
       title={title}
       description={description}
       className={className}
@@ -222,25 +237,48 @@ export function VcsInstallationErrorAlert({
   /** Replaces the default description, e.g. to name the affected control. */
   children?: ReactNode
 }) {
-  const { title, description } = useVcsInstallationErrorCopy(kind)
+  const {
+    title,
+    description,
+    icon: Icon,
+    isCritical,
+  } = useVcsInstallationErrorCopy(kind)
+
+  const body = (
+    <div className="flex flex-col gap-3">
+      <span>{children ?? description}</span>
+      <VcsInstallationIdentity
+        provider={provider}
+        organization={organization}
+      />
+      <div className="flex flex-wrap gap-2">
+        <VcsInstallationErrorActions
+          kind={kind}
+          reconnectUrl={reconnectUrl}
+          onRetry={onRetry}
+          isRetrying={isRetrying}
+        />
+      </div>
+    </div>
+  )
+
+  if (isCritical) {
+    return (
+      <WarningAlert title={title} icon={Icon} className={className}>
+        {body}
+      </WarningAlert>
+    )
+  }
 
   return (
-    <WarningAlert title={title} className={className}>
-      <div className="flex flex-col gap-3">
-        <span>{children ?? description}</span>
-        <VcsInstallationIdentity
-          provider={provider}
-          organization={organization}
-        />
-        <div className="flex flex-wrap gap-2">
-          <VcsInstallationErrorActions
-            kind={kind}
-            reconnectUrl={reconnectUrl}
-            onRetry={onRetry}
-            isRetrying={isRetrying}
-          />
-        </div>
-      </div>
-    </WarningAlert>
+    <Alert className={className}>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <AlertTitle className="text-[13px] font-medium text-foreground">
+        {title}
+      </AlertTitle>
+      <AlertDescription className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+        {body}
+      </AlertDescription>
+    </Alert>
   )
 }
