@@ -95,7 +95,7 @@ export type GlobeConfig = {
   maxRings?: number
   autoRotate?: boolean
   autoRotateSpeed?: number
-  /** Even ambient lighting — no dark side on the sphere. */
+  /** Even ambient lighting - no dark side on the sphere. */
   evenLighting?: boolean
   ambientLightIntensity?: number
   directionalLightIntensity?: number

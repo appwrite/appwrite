@@ -10,6 +10,7 @@ import {
   type ConsentScopeModel,
   type TierScopes,
 } from '@/lib/oauth2/scopes'
+import { getEffectiveMcpEndpointUrl } from '@/lib/debug-mcp-endpoint'
 
 /**
  * MCP-grant detection and consent-time scope narrowing for the hosted Appwrite
@@ -17,8 +18,8 @@ import {
  *
  * The MCP server advertises the authorization server's full scope catalog, so
  * MCP clients mechanically request *everything*. The consent screen detects
- * those grants — the grant's RFC 8707 `resources` contains the MCP server's
- * canonical resource URI — and only then offers a narrowing editor. Because
+ * those grants - the grant's RFC 8707 `resources` contains the MCP server's
+ * canonical resource URI - and only then offers a narrowing editor. Because
  * every granular scope was literally requested, whatever the user narrows to is
  * a plain subset that the approve endpoint's literal check already accepts.
  *
@@ -27,36 +28,46 @@ import {
  * client gains nothing by claiming the MCP resource URI.
  */
 
-/** Resource URIs advertised by the hosted Appwrite MCP server. */
-export const DEFAULT_MCP_RESOURCE_URLS = [
-  'https://mcp.appwrite.io',
-  'https://mcp.appwrite.io/mcp',
-]
-
 /** Mirror of the authorization server's `scope` parameter length cap. */
 export const MAX_SCOPE_PARAM_LENGTH = 8192
 
-/** Normalize an RFC 8707 resource URI for comparison: trailing slashes only —
+/** Normalize an RFC 8707 resource URI for comparison: trailing slashes only -
  *  resource indicators are canonical URIs, so anything else compares exactly. */
 export function normalizeResourceUrl(url: string): string {
   return url.trim().replace(/\/+$/, '')
 }
 
 /**
- * The MCP resource URIs this console recognizes. Defaults to the hosted MCP;
- * extendable via the comma-separated `VITE_MCP_RESOURCE_URLS` env var (e.g.
- * `http://localhost:8000/mcp` for local development).
+ * Expand a single MCP endpoint into the resource URI shapes the server may
+ * advertise (origin, `/mcp`, trailing-slash variants). Driven by
+ * `VITE_APPWRITE_MCP_URL` / debug MCP override via {@link getEffectiveMcpEndpointUrl}.
  */
-export function mcpResourceUrls(raw?: string | null): string[] {
-  const configured = (
-    raw ??
-    (import.meta.env.VITE_MCP_RESOURCE_URLS as string | undefined) ??
-    ''
-  )
-    .split(',')
-    .map(normalizeResourceUrl)
-    .filter((url) => url !== '')
-  return configured.length > 0 ? configured : DEFAULT_MCP_RESOURCE_URLS
+export function mcpResourceUrlsForEndpoint(mcpUrl: string): string[] {
+  const normalized = normalizeResourceUrl(mcpUrl)
+  if (!normalized) return []
+
+  const aliases = new Set<string>([normalized])
+  try {
+    const url = new URL(normalized)
+    aliases.add(url.origin)
+    const path = url.pathname.replace(/\/+$/, '') || '/'
+    if (path === '/') {
+      aliases.add(`${url.origin}/mcp`)
+    } else if (path === '/mcp') {
+      aliases.add(url.origin)
+    }
+  } catch {
+    // keep the normalized string only
+  }
+  return [...aliases]
+}
+
+/**
+ * MCP resource URIs this console recognizes for OAuth consent narrowing.
+ * Derived from the effective Appwrite MCP endpoint (one env var / debug override).
+ */
+export function mcpResourceUrls(): string[] {
+  return mcpResourceUrlsForEndpoint(getEffectiveMcpEndpointUrl())
 }
 
 /** Whether any of the grant's requested resources is a known MCP resource URI. */
@@ -80,7 +91,7 @@ export function isMcpGrant(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Grant composition — turn the editor's selection into the approve payload   */
+/*  Grant composition - turn the editor's selection into the approve payload   */
 /* -------------------------------------------------------------------------- */
 
 /** Per-resource editor selection within one tier. Rows absent from the record
@@ -97,7 +108,7 @@ export interface ComposeInput {
   model: ConsentScopeModel
   project: TierSelection
   organization: TierSelection
-  /** Master read-only toggle — treats every selected resource as `read`. */
+  /** Master read-only toggle - treats every selected resource as `read`. */
   readOnly: boolean
   /** True when the user narrowed the org/project resource pickers. */
   resourcesNarrowed: boolean
@@ -106,11 +117,11 @@ export interface ComposeInput {
 export interface ComposedGrant {
   /**
    * The `scope` value for the approve endpoint, or `undefined` to omit it.
-   * Omission means "grant the full literal requested list" — required so the
+   * Omission means "grant the full literal requested list" - required so the
    * consent-skip diff stays empty on the next re-authorization.
    */
   scope: string | undefined
-  /** The user's selection is the full request — nothing was narrowed. */
+  /** The user's selection is the full request - nothing was narrowed. */
   untouched: boolean
   /** No non-identity scope remains; Authorize must be disabled. */
   blocked: boolean
@@ -119,7 +130,7 @@ export interface ComposedGrant {
 }
 
 /** The bare scope tokens (`tables.read`, …) one tier's selection emits. Every
- *  emitted token is one of the tier's requested tokens — never synthesized —
+ *  emitted token is one of the tier's requested tokens - never synthesized -
  *  so the result is a literal subset of the request by construction. */
 function tierEmission(
   tier: TierScopes,
@@ -148,7 +159,7 @@ function tierEmission(
  * - Any narrowing → identity scopes plus the selected granular tokens; a tier
  *   whose requested tokens all survive collapses to its requested umbrella
  *   (`project:all` / `organization:all`). The console-wide `all` is never part
- *   of a narrowed grant — it bypasses RFC 9396 resource restrictions.
+ *   of a narrowed grant - it bypasses RFC 9396 resource restrictions.
  * - `.write` never implies `.read`: a "Read + Write" row emits both tokens.
  */
 export function composeGrantedScopes(input: ComposeInput): ComposedGrant {
@@ -172,7 +183,7 @@ export function composeGrantedScopes(input: ComposeInput): ComposedGrant {
   }
 
   // A fully-kept tier collapses to its umbrella (when the umbrella was
-  // requested) — keeps the granted string short and re-consent diffs sane.
+  // requested) - keeps the granted string short and re-consent diffs sane.
   // Covers the degenerate umbrella-only request (`project:all` with no
   // granular tokens) too: a full selection keeps the umbrella.
   const tierScopes = (
@@ -209,7 +220,7 @@ export function composeGrantedScopes(input: ComposeInput): ComposedGrant {
   // Client-side mirror of the server's scope length cap. Unreachable in
   // practice (the full catalog is ~2.6 KB), but if a selection ever exceeds
   // it, collapse the larger tier to its requested umbrella and surface that.
-  // Umbrella collapse grants write, so it is off the table under read-only —
+  // Umbrella collapse grants write, so it is off the table under read-only -
   // the toggle already halves the token list, keeping it well under the cap.
   let lengthCollapsed = false
   if (!readOnly && join().length > MAX_SCOPE_PARAM_LENGTH) {
@@ -228,7 +239,7 @@ export function composeGrantedScopes(input: ComposeInput): ComposedGrant {
     }
   }
 
-  // Last resort — reachable when no umbrella was requested (or under
+  // Last resort - reachable when no umbrella was requested (or under
   // read-only, where umbrella collapse is off the table): drop trailing
   // tokens from the longer tier until the value fits. The result stays a
   // literal subset of the request, and the consent screen surfaces the
@@ -257,5 +268,5 @@ export function composeGrantedScopes(input: ComposeInput): ComposedGrant {
   return { scope: join(), untouched: false, blocked, lengthCollapsed }
 }
 
-/** Never granted by a narrowed MCP consent — documented here for tests. */
+/** Never granted by a narrowed MCP consent - documented here for tests. */
 export const NARROWED_GRANT_NEVER_INCLUDES = [ALL_SCOPE]

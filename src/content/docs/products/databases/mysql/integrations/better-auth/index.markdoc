@@ -1,0 +1,139 @@
+---
+layout: article
+title: Better Auth
+description: Use an Appwrite native MySQL database as the database for Better Auth. Configure mysql2, run schema generation and migrations over a direct connection, and store users and sessions in MySQL.
+---
+
+[Better Auth](https://www.better-auth.com/) is a framework-agnostic authentication library for TypeScript that stores users, sessions, accounts, and verification records in your database. An Appwrite [native MySQL database](/docs/products/databases/mysql) gives Better Auth a standard MySQL engine, so you can use `mysql2`, run the Better Auth CLI, and keep auth data in your Appwrite project.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection strings {% #connection-strings %}
+
+Better Auth uses one database URL at runtime and another for schema work. Use the pooler URL for application traffic when your specification includes the pooler, and use the direct engine URL for schema generation and migrations.
+
+```env
+# Runtime: pooled, transaction mode
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
+
+# Schema generation and migrations: direct connection to the engine
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+
+MYSQL_SSL="true"
+BETTER_AUTH_URL="https://example.com"
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+```
+
+The MySQL pooler runs on port `6033`, and the engine runs on port `3306`. The smallest shared-capacity specifications do not include the pooler, so use the direct URL for runtime traffic on those specifications. Connections on Appwrite Cloud are encrypted with TLS. The `MYSQL_SSL` variable below lets local development use an unencrypted port-forward while Cloud uses TLS verification. See [Connections](/docs/products/databases/mysql/connections) for connection fields and [Connection pooling](/docs/products/databases/mysql/connection-pooling#modes) for pool modes.
+
+# Install Better Auth and mysql2 {% #install %}
+
+Install Better Auth with the MySQL driver:
+
+```bash
+npm install better-auth mysql2
+```
+
+# Configure Better Auth {% #configure %}
+
+Pass a `mysql2/promise` pool to Better Auth. Better Auth drives that pool through its built-in Kysely adapter, so the Better Auth CLI can generate and apply the schema for you.
+
+The example below gives Better Auth tables a `better_auth_` prefix. Keep those model names if you want the auth tables grouped together, or choose names that match your schema conventions.
+
+```ts
+import { betterAuth } from 'better-auth';
+import { createPool } from 'mysql2/promise';
+
+if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is required');
+}
+
+const ssl =
+    process.env.MYSQL_SSL === 'true'
+        ? { rejectUnauthorized: true }
+        : undefined;
+
+export const auth = betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL,
+    secret: process.env.BETTER_AUTH_SECRET,
+    database: createPool({
+        uri: process.env.DATABASE_URL,
+        timezone: 'Z',
+        ssl
+    }),
+    emailAndPassword: { enabled: true },
+    user: { modelName: 'better_auth_user' },
+    session: { modelName: 'better_auth_session' },
+    account: { modelName: 'better_auth_account' },
+    verification: { modelName: 'better_auth_verification' }
+});
+```
+
+`timezone: 'Z'` keeps timestamp values consistent between your application and MySQL. Leave mysql2's default `FOUND_ROWS` behavior enabled, because Better Auth relies on matched-row counts for some updates.
+
+# Generate and migrate the schema {% #migrate %}
+
+The [Better Auth CLI](https://www.better-auth.com/docs/concepts/cli) reads your `auth` config and creates the tables it needs. Run schema commands with the direct URL so DDL runs over a session connection:
+
+```bash
+DATABASE_URL="$DIRECT_URL" npx auth@latest generate --config ./auth.ts --yes
+```
+
+Then apply the schema:
+
+```bash
+DATABASE_URL="$DIRECT_URL" npx auth@latest migrate --config ./auth.ts --yes
+```
+
+`migrate` is available for Better Auth's built-in Kysely adapter. If you use the Better Auth Prisma or Drizzle adapter, run `generate` to produce that ORM's schema, then apply it with the ORM migration tool over `DIRECT_URL`. See the [Prisma](/docs/products/databases/mysql/integrations/prisma) and [Drizzle](/docs/products/databases/mysql/integrations/drizzle) guides for their MySQL configuration.
+
+# Create a user {% #example %}
+
+After the schema exists, mount Better Auth's handler in your framework and call the API methods from your server code:
+
+```ts
+import { auth } from './auth';
+
+const result = await auth.api.signUpEmail({
+    body: {
+        email: 'ada@example.com',
+        password: 'a-strong-password',
+        name: 'Ada Lovelace'
+    }
+});
+
+console.log(result.user.id);
+```
+
+On a long-running server, create the `auth` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the mysql2 pool.
+
+# Pooling and session state {% #pooling %}
+
+Auth workloads, including sign-up, login, and session lookups, are short database transactions. Pointing runtime traffic at port `6033` lets many application instances share a smaller backend connection pool when the pooler is available.
+
+The pooler's transaction mode does not keep a backend connection across statements. Better Auth's built-in MySQL path works through Kysely and mysql2 text queries, which fit transaction pooling. If your surrounding application code uses session-bound features such as server-side prepared statements, user variables, or temporary tables, use the direct port or switch the pooler to session mode. See [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) for the trade-offs.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooling" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/integrations/prisma" title="Prisma" %}
+Configure Prisma with pooled and direct MySQL URLs.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/integrations/drizzle" title="Drizzle" %}
+Configure Drizzle ORM with mysql2 and Drizzle Kit migrations.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/integrations/auth-js" title="Auth.js" %}
+Use a native MySQL database as the Auth.js database.
+{% /cards_item %}
+{% /cards %}

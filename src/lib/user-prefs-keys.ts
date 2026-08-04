@@ -15,6 +15,8 @@ import {
   type GeneratorPanelVisibility,
 } from '@/lib/generator/panel-visibility'
 import {
+  AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX,
+  clampAIChatConversationsSidebarWidthPx,
   clampCliShellSessionsSidebarWidthPx,
   clampPostgresSqlEditorHeightPx,
   clampTableViewSidebarWidthPx,
@@ -1459,13 +1461,13 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Databases: Tables DB — which row attributes to fetch & column order (account)
+// Databases: Tables DB - which row attributes to fetch & column order (account)
 // ---------------------------------------------------------------------------
 
 /**
  * Per-table preference key: `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`
  *
- * Value: JSON string `string[]` — ordered column keys: optional system fields
+ * Value: JSON string `string[]` - ordered column keys: optional system fields
  * (`$sequence`, `$id`, `$createdAt`, `$updatedAt`) plus attribute keys.
  * Prefix `!` on a key means it is hidden but keeps its position in the list.
  * Absent or invalid: fetch and show all columns (default).
@@ -1721,11 +1723,80 @@ export function mergeSidebarCollapsedIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Connect project dialog tab (account prefs)
+// ---------------------------------------------------------------------------
+
+/** Full key: `console.connect.tab` - last selected Connect modal tab. */
+export const USER_PREFS_KEY_CONNECT_PROJECT_TAB = 'console.connect.tab'
+
+const CONNECT_PROJECT_TAB_PREF_VALUES = [
+  'mcp',
+  'app',
+  'cli',
+  'skills',
+  'terraform',
+  's3',
+] as const
+
+export type ConnectProjectTabPref =
+  (typeof CONNECT_PROJECT_TAB_PREF_VALUES)[number]
+
+const CONNECT_PROJECT_TAB_PREF_SET = new Set<string>(
+  CONNECT_PROJECT_TAB_PREF_VALUES,
+)
+
+export const DEFAULT_CONNECT_PROJECT_TAB_PREF: ConnectProjectTabPref = 'mcp'
+
+export function parseConnectProjectTab(
+  prefs: UserPrefs | null | undefined,
+): ConnectProjectTabPref {
+  const raw = prefs?.[USER_PREFS_KEY_CONNECT_PROJECT_TAB]
+  if (typeof raw === 'string' && CONNECT_PROJECT_TAB_PREF_SET.has(raw)) {
+    return raw as ConnectProjectTabPref
+  }
+  return DEFAULT_CONNECT_PROJECT_TAB_PREF
+}
+
+export function mergeConnectProjectTabIntoPrefs(
+  prefs: UserPrefs,
+  tab: ConnectProjectTabPref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_CONNECT_PROJECT_TAB]: tab,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // AI assistant panel (account prefs)
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.aiChat.panelOpen` - panel open when true / `"true"`. */
 export const USER_PREFS_KEY_AI_CHAT_PANEL_OPEN = 'console.aiChat.panelOpen'
+
+/** Full key: `console.aiChat.expanded` - fullscreen chat when true / `"true"`. */
+export const USER_PREFS_KEY_AI_CHAT_EXPANDED = 'console.aiChat.expanded'
+
+/**
+ * Full key: `console.aiChat.activeConversationId` - last viewed assistant
+ * conversation id (empty string clears).
+ */
+export const USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID =
+  'console.aiChat.activeConversationId'
+
+/**
+ * Full key: `console.aiChat.pinnedConversationIds` - pinned assistant
+ * conversation ids as a JSON string array. Array order is the pin sort order.
+ */
+export const USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS =
+  'console.aiChat.pinnedConversationIds'
+
+/**
+ * Full key: `console.aiChat.conversationsWidthPx` - conversations sidebar width
+ * in fullscreen chat (string number, px).
+ */
+export const USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX =
+  'console.aiChat.conversationsWidthPx'
 
 /** Full key: `console.aiChat.panelWidthPx` - panel width in pixels (string number). */
 export const USER_PREFS_KEY_AI_CHAT_PANEL_WIDTH_PX =
@@ -1797,6 +1868,116 @@ export function mergeAIChatPanelOpenIntoPrefs(
   }
 }
 
+export function parseAIChatExpanded(
+  prefs: UserPrefs | null | undefined,
+): boolean {
+  return (
+    parseBooleanAccountPref(prefs?.[USER_PREFS_KEY_AI_CHAT_EXPANDED]) ?? false
+  )
+}
+
+export function mergeAIChatExpandedIntoPrefs(
+  prefs: UserPrefs,
+  expanded: boolean,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_EXPANDED]: expanded,
+  }
+}
+
+export function parseAIChatActiveConversationId(
+  prefs: UserPrefs | null | undefined,
+): string | null {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export function mergeAIChatActiveConversationIdIntoPrefs(
+  prefs: UserPrefs,
+  conversationId: string | null,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_ACTIVE_CONVERSATION_ID]: conversationId?.trim() || '',
+  }
+}
+
+const EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS: string[] = []
+
+export function parseAIChatPinnedConversationIds(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS]
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
+    const seen = new Set<string>()
+    const ids: string[] = []
+    for (const entry of parsed) {
+      if (typeof entry !== 'string') continue
+      const id = entry.trim()
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+    }
+    return ids.length > 0 ? ids : EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
+  } catch {
+    return EMPTY_AI_CHAT_PINNED_CONVERSATION_IDS
+  }
+}
+
+export function mergeAIChatPinnedConversationIdsIntoPrefs(
+  prefs: UserPrefs,
+  conversationIds: string[],
+): UserPrefs {
+  const seen = new Set<string>()
+  const ids: string[] = []
+  for (const entry of conversationIds) {
+    const id = entry.trim()
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    ids.push(id)
+  }
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_PINNED_CONVERSATION_IDS]: JSON.stringify(ids),
+  }
+}
+
+export function parseAIChatConversationsWidthPx(
+  prefs: UserPrefs | null | undefined,
+): number {
+  const raw = prefs?.[USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX]
+  const n =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string'
+        ? parseInt(raw, 10)
+        : NaN
+  if (Number.isFinite(n)) {
+    return clampAIChatConversationsSidebarWidthPx(n)
+  }
+  return AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX
+}
+
+export function mergeAIChatConversationsWidthPxIntoPrefs(
+  prefs: UserPrefs,
+  widthPx: number,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_AI_CHAT_CONVERSATIONS_WIDTH_PX]: String(
+      clampAIChatConversationsSidebarWidthPx(widthPx),
+    ),
+  }
+}
+
 export function mergeAIChatPanelWidthPxIntoPrefs(
   prefs: UserPrefs,
   widthPx: number,
@@ -1812,7 +1993,7 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
-// Console right pane width (account prefs) — shared by docs, assistant, etc.
+// Console right pane width (account prefs) - shared by docs, assistant, etc.
 // ---------------------------------------------------------------------------
 
 /** Full key: `console.rightPane.widthPx` - shared right pane width in pixels. */

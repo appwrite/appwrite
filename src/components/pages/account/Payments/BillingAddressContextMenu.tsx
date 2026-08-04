@@ -14,6 +14,7 @@ import { fetchBillingAddress } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface BillingAddressContextMenuProps {
   address: Models.BillingAddress
@@ -42,7 +43,11 @@ export function BillingAddressContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onSelect={() => onUpdate(address)}>
+        <ContextMenuItem
+          onSelect={() =>
+            openDialogAfterOverlayCloses(() => onUpdate(address))
+          }
+        >
           <ContextMenuIcon icon={Pencil} />
           {t('Update')}
         </ContextMenuItem>
@@ -80,7 +85,11 @@ export function BillingAddressContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => onDelete(address)}>
+        <ContextMenuItem
+          onSelect={() =>
+            openDialogAfterOverlayCloses(() => onDelete(address))
+          }
+        >
           <ContextMenuIcon icon={Trash2} />
           {t('Delete')}
         </ContextMenuItem>

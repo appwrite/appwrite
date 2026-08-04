@@ -1,6 +1,6 @@
 /**
  * Container on the explorer root (measures main content width only).
- * Pair utilities with the `/api-explorer` container name — not a parent
+ * Pair utilities with the `/api-explorer` container name - not a parent
  * layout container that includes sidebar width.
  */
 export const API_EXPLORER_CONTAINER = '@container/api-explorer'

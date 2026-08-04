@@ -16,7 +16,7 @@ Base path prefix: `/v1/documentsdb`
 | --- | --- | --- | --- |
 | [`create`](#documentsdb-create) | POST | `/v1/documentsdb` | `Promise<Models.Database>` |
 | [`createCollection`](#documentsdb-createcollection) | POST | `/v1/documentsdb/{databaseId}/collections` | `Promise<Models.Collection>` |
-| [`createFailover`](#documentsdb-createfailover) | — | — | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#documentsdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
 | [`createIndex`](#documentsdb-createindex) | POST | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.Index>` |
 | [`createTransaction`](#documentsdb-createtransaction) | POST | `/v1/documentsdb/transactions` | `Promise<Models.Transaction>` |
 | [`delete`](#documentsdb-delete) | DELETE | `/v1/documentsdb/{databaseId}` | `Promise<{}>` |
@@ -27,13 +27,13 @@ Base path prefix: `/v1/documentsdb`
 | [`get`](#documentsdb-get) | GET | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#documentsdb-getcollection) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |
 | [`getIndex`](#documentsdb-getindex) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
-| [`getReplicas`](#documentsdb-getreplicas) | — | — | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#documentsdb-getstatus) | — | — | `Promise<Models.DatabaseStatus>` |
+| [`getReplicas`](#documentsdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#documentsdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
 | [`getTransaction`](#documentsdb-gettransaction) | GET | `/v1/documentsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#documentsdb-list) | GET | `/v1/documentsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#documentsdb-listcollections) | GET | `/v1/documentsdb/{databaseId}/collections` | `Promise<Models.CollectionList>` |
 | [`listIndexes`](#documentsdb-listindexes) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
-| [`listSpecifications`](#documentsdb-listspecifications) | — | — | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listSpecifications`](#documentsdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTransactions`](#documentsdb-listtransactions) | GET | `/v1/documentsdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#documentsdb-update) | PUT | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#documentsdb-updatecollection) | PUT | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |

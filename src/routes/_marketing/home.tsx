@@ -13,6 +13,7 @@ import {
   LockKeyhole,
   MessageSquare,
   Pentagon,
+  Megaphone,
   Radio,
   Scale,
   Shield,
@@ -227,6 +228,11 @@ function getSecurityItems(homeCopy: HomeCopy) {
   ] as const
 }
 
+/** Bump when replacing homepage hero dashboard screenshots so caches refetch. */
+const HOME_HERO_IMAGE_CACHE_BUST = '20260729'
+const HOME_HERO_LIGHT_SRC = `/images/heroes/console-app-light.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
+const HOME_HERO_DARK_SRC = `/images/heroes/console-app-dark.avif?v=${HOME_HERO_IMAGE_CACHE_BUST}`
+
 export const Route = createFileRoute('/_marketing/home')({
   staticData: {
     ...MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -243,13 +249,13 @@ export const Route = createFileRoute('/_marketing/home')({
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-light.avif',
+        href: HOME_HERO_LIGHT_SRC,
         media: '(prefers-color-scheme: light)',
       },
       {
         rel: 'preload',
         as: 'image',
-        href: '/images/heroes/console-app-dark.avif',
+        href: HOME_HERO_DARK_SRC,
         media: '(prefers-color-scheme: dark)',
       },
     ],
@@ -287,8 +293,8 @@ function HomePage() {
               className="h-7 rounded-full px-3 text-[12px]"
               asChild
             >
-              <MarketingSiteLink href="/docs/products/realtime/presence">
-                <Radio className="size-3.5" />
+              <MarketingSiteLink href="/init">
+                <Megaphone className="size-3.5" />
                 <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
                 {homeCopy.announcementText}
                 <ArrowRight className="size-3.5" />
@@ -350,19 +356,19 @@ function HomePage() {
                 </div>
                 <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
                   <img
-                    src="/images/heroes/console-app-light.avif"
+                    src={HOME_HERO_LIGHT_SRC}
                     alt={homeCopy.heroImageAlt}
-                    width={1280}
-                    height={960}
+                    width={1920}
+                    height={1234}
                     fetchPriority="high"
                     decoding="async"
                     className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
                   />
                   <img
-                    src="/images/heroes/console-app-dark.avif"
+                    src={HOME_HERO_DARK_SRC}
                     alt={homeCopy.heroImageAlt}
-                    width={1280}
-                    height={960}
+                    width={1920}
+                    height={1234}
                     fetchPriority="high"
                     decoding="async"
                     className="hidden h-full w-full rounded-t-md object-cover object-top opacity-95 dark:block sm:rounded-t-lg"
@@ -430,7 +436,7 @@ function HomePage() {
           </nav>
         </section>
 
-        {/* Top customer logos — hidden for now. Restore from git history when needed. */}
+        {/* Top customer logos - hidden for now. Restore from git history when needed. */}
 
         <section className="bg-background py-16 sm:py-20">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">

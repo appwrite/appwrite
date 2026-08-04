@@ -88,6 +88,7 @@ const client = new Client();
 const functions = new Functions(client);
 
 client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
@@ -210,6 +211,7 @@ const client = new sdk.Client();
 const functions = new sdk.Functions(client);
 
 client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
@@ -217,8 +219,8 @@ const promise = functions.createExecution({
     functionId: '<FUNCTION_ID>',
     body: '<BODY>',  // optional
     async: false,  // optional
-    path: '<PATH>',  // optional
-    method: 'GET',  // optional
+    xpath: '<PATH>',  // optional
+    method: sdk.ExecutionMethod.GET,  // optional
     headers: {} // optional
 });
 
@@ -237,6 +239,7 @@ let client = new sdk.Client();
 let functions = new sdk.Functions(client);
 
 client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
@@ -245,7 +248,7 @@ const promise = functions.createExecution({
     body: '<BODY>',  // optional
     async: false,  // optional
     xpath: '<PATH>',  // optional
-    method: 'GET',  // optional
+    method: sdk.ExecutionMethod.GET,  // optional
     headers: {} // optional
 });
 
@@ -752,18 +755,19 @@ const client = new sdk.Client();
 const functions = new sdk.Functions(client);
 
 client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
-const promise = functions.createExecution(
-        '<FUNCTION_ID>', // functionId
-        '<BODY>', // body (optional)
-        true, // Scheduled executions need to be async
-        '<PATH>', // path (optional)
-        ExecutionMethod.GET, // method (optional)
-        {}, // headers (optional)
-        '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
-    );
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',
+    async: true,
+    xpath: '<PATH>',
+    method: sdk.ExecutionMethod.GET,
+    headers: {},
+    scheduledAt: '<SCHEDULED_AT>'
+});
 
 promise.then(function (response) {
     console.log(response); // Success
@@ -780,18 +784,19 @@ let client = new sdk.Client();
 let functions = new sdk.Functions(client);
 
 client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('<PROJECT_ID>') // Your project ID
 ;
 
-const promise = functions.createExecution(
-        '<FUNCTION_ID>', // functionId
-        '<BODY>', // body (optional)
-        true, // Scheduled executions need to be async
-        '<PATH>', // path (optional)
-        ExecutionMethod.GET, // method (optional)
-        {}, // headers (optional)
-        '2020-10-15T06:38:00.000+00:00' // Schedule execution (optional)
-    );
+const promise = functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: '<BODY>',
+    async: true,
+    xpath: '<PATH>',
+    method: sdk.ExecutionMethod.GET,
+    headers: {},
+    scheduledAt: '<SCHEDULED_AT>'
+});
 
 promise.then(function (response) {
     console.log(response); // Success

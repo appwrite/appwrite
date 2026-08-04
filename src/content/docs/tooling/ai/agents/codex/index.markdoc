@@ -114,8 +114,8 @@ Try out the following example prompts based on the MCP server you have configure
 
 - `Create a new user in my Appwrite project`
 - `List all databases in my project`
-- `Show me the collections in my database`
-- `Create a new document in my collection`
+- `Show me the tables in my database`
+- `Create a new row in my table`
 - `Delete a specific user by ID`
 
 {% /tabsitem %}

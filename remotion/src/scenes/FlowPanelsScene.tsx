@@ -7,7 +7,7 @@ import {
   FLOW_PANEL_WIDTH,
 } from '../lib/flow-panels-layout'
 
-/** Docs, API, and dashboard placeholders — side cards from top, center from bottom. */
+/** Docs, API, and dashboard placeholders - side cards from top, center from bottom. */
 export function FlowPanelsScene() {
   const panelCount = FLOW_PANEL_LAYOUTS.length
 

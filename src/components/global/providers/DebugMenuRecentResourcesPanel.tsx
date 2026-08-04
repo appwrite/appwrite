@@ -143,7 +143,7 @@ export function DebugMenuRecentResourcesPanel() {
                       </span>
                     </div>
                     <p className="truncate text-[10px] text-[var(--network-globe-edge)]/80">
-                      {breadcrumbs.join(' / ') || '—'}
+                      {breadcrumbs.join(' / ') || '-'}
                     </p>
                     <p className="truncate font-mono text-[10px] text-[var(--network-globe-edge)]/70">
                       {metaLine(entry)}

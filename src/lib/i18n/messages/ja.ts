@@ -25,7 +25,7 @@ export const jaCatalog: EnCatalog = {
         openWebsiteNavigation: 'サイトナビゲーションを開く',
         create: '作成',
         connect: '接続',
-        assistant: 'アシスタント',
+        assistant: 'Agent',
         upgrade: 'アップグレード',
         signIn: 'サインイン',
         signUp: 'サインアップ',
@@ -72,6 +72,8 @@ export const jaCatalog: EnCatalog = {
         enabled: '有効',
         disabled: '無効',
         console: 'コンソール',
+        // Temporary: remove once the old console is retired
+        oldConsole: '旧コンソール',
         home: 'ホーム',
         docs: 'ドキュメント',
         changelog: '変更履歴',
@@ -272,8 +274,8 @@ export const jaCatalog: EnCatalog = {
       ...enCatalog.website.home,
       seoDescription:
         'Appwrite は、認証、データベース、ストレージ、Functions、メッセージング、サイトを備えたオープンソースの開発者向けプラットフォームです。数百人規模のチームのように構築できます。', // pragma: allowlist secret
-      announcementNew: '新着',
-      announcementText: 'Presences API を発表',
+      announcementNew: 'Breaking',
+      announcementText: 'Appwrite 2.0 の発表を嬉しく思います',
       heroTitleLineOne: 'より速く構築し、',
       heroTitleLineTwo: 'これまで以上にスケール',
       heroDescription:
@@ -384,7 +386,6 @@ export const jaCatalog: EnCatalog = {
         triggerLabel: 'プロダクト',
         desktopTitle: 'プラットフォームプロダクト',
         desktopSubtitle: '一つの Backend プラットフォームで構築、デプロイ、スケール',
-        viewOverview: 'プラットフォーム概要を見る',
         newLabel: '新着',
         categories: {
           ...enCatalog.website.products.navigation.categories,
@@ -403,7 +404,7 @@ export const jaCatalog: EnCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'ライブイベント、チャンネル、プレゼンス。',
           domainsName: 'Domains',
-          domainsTagline: 'ドメイン購入、DNS、TLS、アプリ接続。',
+          domainsTagline: 'ドメインの検索、購入、移管、管理。',
           firewallName: 'Firewall',
           firewallTagline: 'プロジェクトルールで拒否、レート制限、リダイレクト。',
           advisorName: 'Advisor',

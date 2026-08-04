@@ -1,0 +1,138 @@
+---
+layout: article
+title: Security and access control
+description: Control access to PostgreSQL with roles, GRANT and REVOKE, and row-level security policies for multi-tenant data.
+---
+
+PostgreSQL controls access in three layers:
+
+- A **role** is an identity that can connect.
+- **Privileges** decide what a role may do to each table.
+- **Row-level security** narrows that further, to which rows.
+
+Your database's primary `admin` role can create additional roles, so you can give every service and teammate exactly the access it needs instead of sharing one all-powerful login.
+
+# Setup {% #setup %}
+
+The examples below protect a documents table whose rows belong to different owners. Create and seed it as `admin`, the role your database comes with:
+
+```sql
+CREATE TABLE documents (
+    id    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    owner text NOT NULL DEFAULT current_user,
+    title text NOT NULL
+);
+
+INSERT INTO documents (owner, title)
+VALUES ('app_ada', 'Ada plan'), ('app_grace', 'Grace notes');
+```
+
+# Create roles {% #roles %}
+
+A role with `LOGIN` and a password is what other databases call a user:
+
+```sql
+CREATE ROLE reporting LOGIN PASSWORD 'a-strong-password';
+CREATE ROLE app_ada   LOGIN PASSWORD 'pw-ada';
+CREATE ROLE app_grace LOGIN PASSWORD 'pw-grace';
+```
+
+New roles can connect but hold no privileges on your tables until granted some. You can also create and manage roles from the **Roles** tab of your database in the Appwrite Console; see [Database roles](/docs/products/databases/postgresql/connections#roles).
+
+# Grant privileges {% #grants %}
+
+Privileges are per table (or view, sequence, schema) and per action:
+
+```sql
+GRANT SELECT ON documents TO reporting;
+GRANT SELECT, INSERT, UPDATE, DELETE ON documents TO app_ada, app_grace;
+```
+
+| Privilege | Allows |
+| --- | --- |
+| `SELECT` | Read rows |
+| `INSERT` / `UPDATE` / `DELETE` | Write rows |
+| `USAGE` (on schema) | Access objects inside a schema |
+| `CREATE` (on schema) | Create tables in a schema |
+| `ALL` | Everything applicable to the object |
+
+`REVOKE` reverses any grant: `REVOKE INSERT ON documents FROM app_ada;`. To cover tables that don't exist yet, set default privileges once: `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO reporting;`.
+
+Connecting as `reporting` now allows reads but rejects writes:
+
+```sql
+INSERT INTO documents (title) VALUES ('nope');
+```
+
+```text
+ERROR:  permission denied for table documents
+```
+
+This is the pattern for a dashboard, BI tool, or analyst account: a dedicated role that physically cannot modify data.
+
+# Row-level security {% #rls %}
+
+Privileges gate whole tables. Row-level security (RLS) filters individual rows through policies, enforced by the database no matter how the query is written. Enable it and define who sees what:
+
+```sql
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON documents
+    USING (owner = current_user)          -- which rows are visible
+    WITH CHECK (owner = current_user);    -- which rows may be written
+```
+
+`USING` filters reads, updates, and deletes; `WITH CHECK` validates new or modified rows. With the policy in place, connect as `app_ada` and the table simply appears to contain only Ada's rows:
+
+```sql
+SELECT owner, title FROM documents;
+```
+
+```text
+  owner  |  title
+---------+----------
+ app_ada | Ada plan
+```
+
+The `DEFAULT current_user` on the `owner` column stamps new rows automatically, and the policy blocks writing rows for anyone else:
+
+```sql
+INSERT INTO documents (title) VALUES ('Ada draft');           -- works, owner = app_ada
+INSERT INTO documents (owner, title) VALUES ('app_grace', 'forged');
+```
+
+```text
+ERROR:  new row violates row-level security policy for table "documents"
+```
+
+A cross-tenant `UPDATE ... WHERE owner = 'app_grace'` doesn't error; it matches zero visible rows and does nothing. The application can't leak what it can't see.
+
+{% info title="Table owners bypass RLS" %}
+RLS does not apply to the table's owner, so queries as `admin` still see every row. That's usually what you want for migrations and support tooling. To subject the owner to policies too, run `ALTER TABLE documents FORCE ROW LEVEL SECURITY;`.
+{% /info %}
+
+RLS also composes with privileges rather than replacing them: `reporting` can still `SELECT`, but sees zero rows because no row matches `owner = 'reporting'`. Add a second, permissive policy for roles that legitimately need everything:
+
+```sql
+CREATE POLICY reporting_reads_all ON documents
+    FOR SELECT TO reporting
+    USING (true);
+```
+
+# Multi-tenant patterns {% #multi-tenant %}
+
+One role per end user only scales so far. The common production pattern uses one application role plus a session variable the app sets per request. Permissive policies on a table combine with `OR`, so replace the per-role policy instead of stacking the two:
+
+```sql
+DROP POLICY tenant_isolation ON documents;
+
+CREATE POLICY tenant_by_setting ON documents
+    USING (owner = current_setting('app.current_tenant', true))
+    WITH CHECK (owner = current_setting('app.current_tenant', true));
+```
+
+The application runs `SET app.current_tenant = '...'` after taking a connection from the pool, and every query in that session is automatically scoped. Whichever variant you choose, the isolation lives in the database: a forgotten `WHERE` clause in application code returns no one else's data instead of everyone's.
+
+# What the primary role can do {% #admin-role %}
+
+The `admin` role you receive with the database owns your schema and can create roles (`CREATEROLE`), but it is not a superuser: instance-level settings, replication, and other managed responsibilities stay with the platform. Network-level restrictions such as IP allowlists are configured separately; see [Network security](/docs/products/databases/postgresql/network-security).

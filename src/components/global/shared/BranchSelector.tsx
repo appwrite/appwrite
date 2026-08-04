@@ -33,6 +33,7 @@ import { ChevronDown, GitBranch, Info, Loader2 } from 'lucide-react'
 import {
   repositoryBranchesQueryOptions,
   sortRepositoryBranches,
+  useRepository,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -83,6 +84,12 @@ export function BranchSelector({
     if (!open) setSearch('')
   }, [open])
 
+  const { data: repository, isPending: repositoryPending } = useRepository(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
+
   const { data: initialBranchesData, isLoading: initialLoading } = useQuery({
     ...repositoryBranchesQueryOptions(
       projectId,
@@ -120,14 +127,16 @@ export function BranchSelector({
   const isSearching = !!debouncedSearch && searchFetching
   const isLoadingList = debouncedSearch ? isSearching : initialLoading
 
+  // Same resolution as the old console's productionBranchFieldset, which waits
+  // on the repository lookup before falling back to 'main'.
+  const defaultBranch = repository?.defaultBranch
+
   useEffect(() => {
-    if (sortedInitialBranches.length > 0 && !value) {
-      const defaultBranch = sortedInitialBranches.find(
-        (b) => b.name === 'main' || b.name === 'master',
-      )
-      onChange(defaultBranch?.name || sortedInitialBranches[0].name)
-    }
-  }, [sortedInitialBranches, value, onChange])
+    if (value) return
+    if (hasRepository && repositoryPending) return
+
+    onChange(defaultBranch ?? 'main')
+  }, [defaultBranch, hasRepository, repositoryPending, value, onChange])
 
   const labelContent = (
     <>

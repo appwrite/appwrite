@@ -26,6 +26,12 @@ export const CLI_SHELL_TERMINAL_MAIN_MIN_WIDTH_PX = 240
 /** Below this width, sessions render as a horizontal strip above output instead of a right sidebar. */
 export const CLI_SHELL_SESSIONS_STRIP_MAX_WIDTH_PX = 640
 
+/** AI assistant fullscreen: conversations list | chat. */
+export const AI_CHAT_CONVERSATIONS_SIDEBAR_MIN_WIDTH_PX = 220
+export const AI_CHAT_CONVERSATIONS_SIDEBAR_MAX_WIDTH_PX = 420
+export const AI_CHAT_CONVERSATIONS_SIDEBAR_DEFAULT_WIDTH_PX = 288
+export const AI_CHAT_MAIN_MIN_WIDTH_PX = 360
+
 const LEGACY_SIDEBAR_PERCENT_MAX = 60
 
 /** Use when the group has not been measured yet so % ↔ px math stays consistent. */
@@ -73,7 +79,7 @@ export function clampSplitFirstPaneWidthPx(
 /**
  * When a split's container shrinks (e.g. outer sidebar resize), only shrink the
  * first pane if it no longer fits. Do not snap toward min when the container
- * grows — that keeps nested splits independent from sibling resizes.
+ * grows - that keeps nested splits independent from sibling resizes.
  */
 export function fitSplitFirstPaneWidthOnContainerResize(
   currentWidthPx: number,
@@ -194,6 +200,13 @@ export function clampCliShellSessionsSidebarWidthPx(px: number): number {
   return Math.min(
     CLI_SHELL_SESSIONS_SIDEBAR_MAX_WIDTH_PX,
     Math.max(CLI_SHELL_SESSIONS_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
+  )
+}
+
+export function clampAIChatConversationsSidebarWidthPx(px: number): number {
+  return Math.min(
+    AI_CHAT_CONVERSATIONS_SIDEBAR_MAX_WIDTH_PX,
+    Math.max(AI_CHAT_CONVERSATIONS_SIDEBAR_MIN_WIDTH_PX, Math.round(px)),
   )
 }
 

@@ -23,7 +23,7 @@ export function View() {
   if (isLoading) return <DatabaseSettingsLoading />
   if (!database) return null
 
-  const cardProps = { projectId, databaseId, database, canWrite }
+  const cardProps = { projectId, databaseId, dbKind, database, canWrite }
 
   const cards: SettingsCardItem[] = [
     {

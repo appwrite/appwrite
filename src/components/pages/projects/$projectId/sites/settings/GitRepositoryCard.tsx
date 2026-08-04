@@ -20,6 +20,7 @@ import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildSiteUpdateParams,
+  resolveConnectBranch,
   useRepository,
   useVcsInstallations,
   useProject,
@@ -172,12 +173,19 @@ export function GitRepositoryCard({
       ) {
         throw new Error('Installation and Repository are required')
       }
+      const providerBranch = await resolveConnectBranch(
+        projectId,
+        selectedInstallationId,
+        selectedRepositoryId,
+        site.providerBranch ?? '',
+      )
+
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(
         buildSiteUpdateParams(site, {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
-          providerBranch: 'main',
+          providerBranch,
         }),
       )
     },

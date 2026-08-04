@@ -24,7 +24,11 @@ import type {
   FirewallConditionDraft,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
-import { firewallUsageConditionsKey } from '@/lib/firewall/usage'
+import {
+  countUnestimableFirewallConditions,
+  exceedsFirewallUsageConditionLimit,
+  firewallUsageConditionsKey,
+} from '@/lib/firewall/usage'
 import {
   getFirewallActionLabel,
   type FirewallCreatableAction,
@@ -102,8 +106,21 @@ export function RuleImpactPreview({
     // Re-run when the serialized condition values change, not only array identity.
   }, [conditions, conditionsKey])
 
+  const unestimableConditions = useMemo(
+    () => countUnestimableFirewallConditions(debouncedConditions),
+    [debouncedConditions],
+  )
+  const tooManyConditions = useMemo(
+    () => exceedsFirewallUsageConditionLimit(debouncedConditions),
+    [debouncedConditions],
+  )
+  // Usage data cannot represent these rules (unsupported conditions, or more
+  // conditions than the usage API accepts), so any estimate would overstate
+  // matched traffic. Skip the fetch and show "Preview unavailable".
+  const previewUnavailable = unestimableConditions > 0 || tooManyConditions
+
   const { impact, isLoading, isFetching } = useFirewallRuleImpact(
-    projectId,
+    previewUnavailable ? null : projectId,
     debouncedConditions,
     resourceType,
     resourceId,
@@ -112,8 +129,12 @@ export function RuleImpactPreview({
     usageLogRetentionHours,
   )
 
-  const series = useMemo(() => impact?.series ?? [], [impact?.series])
-  const dateRange = impact?.dateRange
+  // Disabled queries keep previous data; never show stale numbers as a preview.
+  const series = useMemo(
+    () => (previewUnavailable ? [] : (impact?.series ?? [])),
+    [previewUnavailable, impact?.series],
+  )
+  const dateRange = previewUnavailable ? undefined : impact?.dateRange
   const summary = {
     matched: impact?.matched ?? 0,
     rate: impact?.rate ?? 0,
@@ -121,7 +142,7 @@ export function RuleImpactPreview({
 
   const filledConditions = conditions.filter((c) => c.value.trim().length > 0)
     .length
-  const showSubtleLoading = isFetching && !isLoading
+  const showSubtleLoading = !previewUnavailable && isFetching && !isLoading
 
   return (
     <div className="space-y-4">
@@ -186,8 +207,8 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Matched requests')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {isLoading && !impact
-                  ? '—'
+                {previewUnavailable || (isLoading && !impact)
+                  ? '-'
                   : summary.matched.toLocaleString()}
               </p>
             </div>
@@ -197,12 +218,24 @@ export function RuleImpactPreview({
                 <span className="text-[11px]">{t('Share of traffic')}</span>
               </div>
               <p className="text-[18px] font-semibold tabular-nums text-foreground">
-                {isLoading && !impact
-                  ? '—'
+                {previewUnavailable || (isLoading && !impact)
+                  ? '-'
                   : `${(summary.rate * 100).toFixed(1)}%`}
               </p>
             </div>
           </div>
+
+          {previewUnavailable ? (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-400">
+              {unestimableConditions > 0
+                ? t(
+                    'Preview unavailable: header, query parameter, continent, state, and "does not contain" conditions have no usage data to estimate from. The rule will still enforce them.',
+                  )
+                : t(
+                    'Preview unavailable: rules with this many conditions cannot be estimated from usage data. The rule will still enforce all conditions.',
+                  )}
+            </p>
+          ) : null}
         </div>
 
         <div
@@ -216,7 +249,11 @@ export function RuleImpactPreview({
             dateRange={dateRange}
             chartInterval={chartInterval}
             emptyLabel={
-              isLoading ? t('Loading...') : t('No traffic data for this period')
+              previewUnavailable
+                ? t('Preview unavailable')
+                : isLoading
+                  ? t('Loading...')
+                  : t('No traffic data for this period')
             }
           />
         </div>

@@ -1,0 +1,204 @@
+---
+layout: article
+title: Next.js
+description: Connect a Next.js App Router application to an Appwrite native MySQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.
+---
+
+An Appwrite native MySQL database works with standard MySQL drivers and ORMs, so a [Next.js](https://nextjs.org/) App Router application can query it from server-side code. Point your driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and keep all database access on the server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [MySQL](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and Appwrite generates the database name for each database.
+{% /info %}
+
+# Where to connect {% #where %}
+
+In the App Router, every server-side execution context runs on the **Node.js runtime by default**, and the Node.js runtime can open raw TCP sockets. That means you can use a standard database driver from any of these:
+
+- **Route Handlers** (`app/api/.../route.ts`) for public routes, webhooks, and REST-style APIs.
+- **Server Actions** (`'use server'` functions) for form submissions and app-internal mutations.
+- **Server Components** (`async` components) for read queries that render straight into the page.
+
+Never import a database driver into a Client Component (`'use client'`) or ship the connection string to the browser. Keep all database access on the server.
+
+The one exception is the **Edge runtime** (`export const runtime = 'edge'`), which runs in a constrained environment and cannot use Node.js TCP drivers. If a route opts into Edge, use the [SQL API](/docs/products/databases/mysql/quick-start#first-queries) over HTTPS, see [the Edge runtime section](#edge) below.
+
+# Install the driver {% #install %}
+
+Install the MySQL driver for Node.js:
+
+```bash
+npm install mysql2
+```
+
+# Environment variables {% #env %}
+
+Put the connection strings in your environment and never commit them. For local development, use `.env.local`, which Next.js loads automatically and the default `create-next-app` template excludes from Git:
+
+```env
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+MYSQL_SSL="true"
+```
+
+`DATABASE_URL` points at the [connection pooler](/docs/products/databases/mysql/connection-pooling) port (`6033`) for runtime traffic, and `DIRECT_URL` points at the MySQL engine port (`3306`) for migrations and schema changes. The connection string returned by Appwrite uses the engine port, so change only the port when you connect through the pooler. If your specification does not include the pooler, use the direct connection string for `DATABASE_URL` too.
+
+Appwrite Cloud serves MySQL over TLS. The examples below use `MYSQL_SSL="true"` to make `mysql2` request TLS and verify the server certificate with the runtime's trusted CAs. For full certificate verification controls or mTLS, see the [Network security](/docs/products/databases/mysql/network-security) page.
+
+# Create a table for the examples {% #table %}
+
+Run this SQL once through your migration workflow or the `mysql` client:
+
+```sql
+CREATE TABLE IF NOT EXISTS nextjs_users (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO nextjs_users (email)
+VALUES ('ada@example.com')
+ON DUPLICATE KEY UPDATE email = nextjs_users.email;
+```
+
+# Pool serverless connections {% #pooling %}
+
+When you deploy to Vercel, Netlify, or another serverless platform, each invocation can spin up a fresh instance with its own connection pool. Hundreds of concurrent invocations fan out into far more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) on the pooler port so it can multiplex those instances over a small number of backend connections.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so session-level features such as server-side prepared statements and temporary tables are unavailable. Use `pool.query()` with `?` placeholders for pooled runtime queries. Reserve the engine port for migrations, schema changes, and workloads that need a full session.
+
+# Use a singleton client {% #singleton %}
+
+Instantiate one pool per module scope and reuse it across invocations, so warm serverless instances do not reconnect on every request. In development, Next.js hot reload re-evaluates modules, which can leak connections, so cache the pool on `globalThis`.
+
+With [mysql2](https://sidorares.github.io/node-mysql2/):
+
+```ts
+// lib/db.ts
+import mysql, { type Pool } from 'mysql2/promise';
+
+const globalForDb = globalThis as unknown as { mysqlPool?: Pool };
+
+function createPool() {
+    const url = new URL(process.env.DATABASE_URL!);
+
+    return mysql.createPool({
+        host: url.hostname,
+        port: Number(url.port || 3306),
+        user: decodeURIComponent(url.username),
+        password: decodeURIComponent(url.password),
+        database: decodeURIComponent(url.pathname.slice(1)),
+        waitForConnections: true,
+        connectionLimit: 5,
+        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: true } : undefined
+    });
+}
+
+export const pool = globalForDb.mysqlPool ?? createPool();
+
+if (process.env.NODE_ENV !== 'production') globalForDb.mysqlPool = pool;
+```
+
+Query it from a Server Component or Route Handler:
+
+```ts
+// app/users/route.ts
+import type { RowDataPacket } from 'mysql2';
+
+import { pool } from '@/lib/db';
+
+type UserRow = RowDataPacket & {
+    id: number;
+    email: string;
+    created_at: Date;
+};
+
+export async function GET() {
+    const [users] = await pool.query<UserRow[]>(
+        'SELECT id, email, created_at FROM nextjs_users ORDER BY created_at DESC LIMIT ?',
+        [10]
+    );
+
+    return Response.json(users);
+}
+```
+
+# Use Prisma or Drizzle {% #orm %}
+
+For a typed schema, migrations, and a query builder, reach for an ORM. Both integrate with the pooled `DATABASE_URL` plus direct `DIRECT_URL` pattern above.
+
+- **Prisma**: point the runtime at the pooled connection string and keep the Prisma CLI on the engine port for migrations, then run `prisma migrate deploy`. See the [Prisma](/docs/products/databases/mysql/integrations/prisma) guide for the full config and migration flow.
+- **Drizzle**: use Drizzle's MySQL driver for runtime queries and the direct URL for `drizzle-kit` migrations. See the [Drizzle](/docs/products/databases/mysql/integrations/drizzle) guide.
+
+{% arrow_link href="/docs/products/databases/mysql/integrations/prisma" %}
+Set up Prisma against native MySQL
+{% /arrow_link %}
+
+# Edge runtime: use the SQL API {% #edge %}
+
+If a Route Handler or route segment opts into the Edge runtime, it cannot use a Node.js MySQL driver:
+
+```ts
+export const runtime = 'edge';
+```
+
+From the Edge runtime, you can execute one parameterized SQL statement over HTTPS and get JSON back. `SELECT`, `INSERT`, `UPDATE`, and `DELETE` statements are allowed by default. Use the global `fetch` available in the Edge runtime:
+
+```ts
+// app/edge-users/route.ts
+export const runtime = 'edge';
+
+export async function GET() {
+    const response = await fetch(
+        'https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/executions',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID!,
+                'X-Appwrite-Key': process.env.APPWRITE_API_KEY!
+            },
+            body: JSON.stringify({
+                sql: 'SELECT id, email FROM nextjs_users WHERE created_at > ? ORDER BY created_at DESC LIMIT ?',
+                bindings: ['2026-05-01 00:00:00', 10]
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+
+    const { rows } = await response.json();
+    return Response.json(rows);
+}
+```
+
+The response is `{ rows, rowCount, columns, durationMs, truncated, bytes }`. Bindings are sent separately and never interpolated into the SQL string. Add `APPWRITE_PROJECT_ID` and `APPWRITE_API_KEY` to your environment alongside the database URLs. Use an API key with the `dedicatedDatabases.execute` scope.
+
+{% arrow_link href="/docs/products/databases/mysql/quick-start#first-queries" %}
+Read the SQL API reference
+{% /arrow_link %}
+
+# Local development {% #local %}
+
+`next dev` runs on the Node.js runtime, so a local server can connect to the native MySQL database with the same server-only driver code. Keep `DATABASE_URL`, `DIRECT_URL`, and `MYSQL_SSL` in `.env.local`.
+
+For throwaway data in tests or experiments, create a [branch](/docs/products/databases/mysql/branches), an instant, isolated copy with its own connection string, and point `.env.local` at it. Delete the branch when you're done.
+
+# Deploy {% #deploy %}
+
+When you deploy, set the same `DATABASE_URL`, `DIRECT_URL`, `MYSQL_SSL`, `APPWRITE_PROJECT_ID`, and `APPWRITE_API_KEY` as environment variables on your hosting platform. Run migrations from the direct connection in your build or release step, and use the SQL API from any Edge Functions.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/integrations/prisma" title="Prisma" %}
+Datasource config, pooled and direct URLs, and the migration workflow.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/quick-start#first-queries" title="SQL API" %}
+Query over HTTPS from the Edge runtime without a TCP connection.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% /cards %}

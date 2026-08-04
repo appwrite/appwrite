@@ -50,21 +50,49 @@ s3.list_buckets()`
   const awsCli = `export AWS_ACCESS_KEY_ID="${pid}"
 export AWS_SECRET_ACCESS_KEY="your-api-key"
 export AWS_DEFAULT_REGION="${regionValue}"
+export AWS_ENDPOINT_URL="${endpoint}"
 
-aws --endpoint-url "${endpoint}" s3 ls`
+aws s3 ls # List buckets
+aws s3 mb "s3://my-new-bucket" # Create new bucket
+aws s3 cp ./file.txt s3://my-new-bucket/file.txt # Upload file to a bucket
+aws s3 ls s3://my-new-bucket --human-readable # List files inside a bucket
+aws s3 cp s3://my-new-bucket/file.txt ./export.txt # Download file from bucket
+aws s3 rm s3://my-new-bucket/file.txt # Delete a file from bucket
+aws s3 rb "s3://my-new-bucket" --force # Remove bucket and its contents`
 
-  const rclone = `[appwrite]
+  const rclone = `# Save config to ~/.config/rclone/rclone.conf
+mkdir -p ~/.config/rclone
+cat > ~/.config/rclone/rclone.conf <<'EOF'
+[appwrite]
 type = s3
 provider = Other
 access_key_id = ${pid}
 secret_access_key = your-api-key
 endpoint = ${endpoint}
-region = ${regionValue}`
+region = ${regionValue}
+EOF
+
+# List buckets
+rclone lsd appwrite:
+
+# Create a bucket
+rclone mkdir appwrite:my-new-bucket
+
+# List files in a bucket
+rclone ls appwrite:my-new-bucket
+
+# Sync local -> remote (preview with --dry-run first)
+rclone sync ./local-folder appwrite:my-new-bucket --dry-run
+rclone sync ./local-folder appwrite:my-new-bucket
+
+# Sync remote -> local (preview with --dry-run first)
+rclone sync appwrite:my-new-bucket ./local-folder --dry-run
+rclone sync appwrite:my-new-bucket ./local-folder`
 
   return [
-    { label: 'boto3', code: boto3, language: 'python' },
     { label: 'AWS CLI', code: awsCli, language: 'bash' },
-    { label: 'rclone', code: rclone, language: 'toml' },
+    { label: 'boto3', code: boto3, language: 'python' },
+    { label: 'rclone', code: rclone, language: 'bash' },
   ]
 }
 

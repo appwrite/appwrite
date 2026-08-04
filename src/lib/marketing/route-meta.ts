@@ -1,9 +1,10 @@
-import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
+import { buildOgImageUrl } from '@/lib/seo/og-image'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 
-export const MARKETING_HOMEPAGE_OG_IMAGE_PATH = '/images/open-graph/website.avif'
-export const BLOG_INDEX_OG_IMAGE_PATH = '/images/open-graph/blog.avif'
+export const MARKETING_HOMEPAGE_OG_DESCRIPTION =
+  'The open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.'
 
 type MetaTag = Record<string, string>
 
@@ -25,7 +26,13 @@ function asRouteMetaTags(tags: readonly MetaTag[]): MetaTag[] {
 }
 
 export function getMarketingHomeOgImage(siteOrigin?: string): string {
-  return resolveSiteAssetUrl(MARKETING_HOMEPAGE_OG_IMAGE_PATH, siteOrigin)
+  return buildOgImageUrl(
+    {
+      title: 'Appwrite',
+      subtitle: MARKETING_HOMEPAGE_OG_DESCRIPTION,
+    },
+    siteOrigin,
+  )
 }
 
 export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag[] {

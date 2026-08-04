@@ -22,6 +22,7 @@ import { fetchPaymentMethod } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface OrgPaymentMethodContextMenuProps {
   method: Models.PaymentMethod
@@ -83,7 +84,11 @@ export function OrgPaymentMethodContextMenu({
                 ))}
                 {availableMethods.length > 0 ? <ContextMenuSeparator /> : null}
                 <ContextMenuItem
-                  onSelect={() => onAddPaymentMethod?.(!isPrimary)}
+                  onSelect={() =>
+                    openDialogAfterOverlayCloses(() =>
+                      onAddPaymentMethod?.(!isPrimary),
+                    )
+                  }
                 >
                   <ContextMenuIcon icon={Plus} />
                   {t('Add')}
@@ -124,7 +129,9 @@ export function OrgPaymentMethodContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={onRemove}>
+        <ContextMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onRemove)}
+        >
           <ContextMenuIcon icon={Trash2} />
           {t('Remove')}
         </ContextMenuItem>

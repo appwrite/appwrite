@@ -309,16 +309,16 @@ Create a Topics table with the following columns:
 
 | Name          | Type   | Description                      |
 |---------------|--------|----------------------------------|
-| `title`       | string | The name of the topic            |
-| `description` | string | Long form description of the topic|
+| `title`       | Varchar | The name of the topic            |
+| `description` | Text | Long form description of the topic|
 
 Create a Votes table with the following columns:
 
 | Name          | Type   | Description                              |
 |---------------|--------|------------------------------------------|
-| `userId`      | string | The ID of the user who cast the vote     |
-| `topicId`     | string | The ID of the topic that was voted on    |
-| `vote`        | string | The vote cast by the user. Must be either "yes" or "no" |
+| `userId`      | Varchar | The ID of the user who cast the vote     |
+| `topicId`     | Varchar | The ID of the topic that was voted on    |
+| `vote`        | Varchar | The vote cast by the user. Must be either "yes" or "no" |
 
 
 ## Code
@@ -349,8 +349,8 @@ export default async function ({ req, res }) {
     databaseId: '<DATABASE_ID>',
     tableId: '<VOTES_TABLE_ID>',
     queries: [
-      Query.equals('userId', vote.userId),
-      Query.equals('topicId', vote.topicId)
+      Query.equal('userId', vote.userId),
+      Query.equal('topicId', vote.topicId)
     ]
   });
 
@@ -376,6 +376,7 @@ export default async function ({ req, res }) {
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.query import Query
+from appwrite.id import ID
 import os
 
 def main(context):
@@ -397,9 +398,9 @@ def main(context):
 
     tablesDB = TablesDB(client)
 
-    existing_votes = tablesDB.list_rows('<VOTES_TABLE_ID>', [
-        Query.equals('userId', vote['userId']),
-        Query.equals('topicId', vote['topicId'])
+    existing_votes = tablesDB.list_rows(database_id='<DATABASE_ID>', table_id='<VOTES_TABLE_ID>', queries=[
+        Query.equal('userId', vote['userId']),
+        Query.equal('topicId', vote['topicId'])
     ])
 
     if existing_votes['total'] > 0:
@@ -408,11 +409,16 @@ def main(context):
           'message': 'You have already voted on this topic.'
         }, 400)
 
-    vote_row = database.create_row('<VOTES_TABLE_ID>', {
-        'userId': vote['userId'],
-        'topicId': vote['topicId'],
-        'vote': vote['vote'],
-    })
+    vote_row = tablesDB.create_row(
+        database_id='<DATABASE_ID>',
+        table_id='<VOTES_TABLE_ID>',
+        row_id=ID.unique(),
+        data={
+            'userId': vote['userId'],
+            'topicId': vote['topicId'],
+            'vote': vote['vote'],
+        }
+    )
 
     return context.res.json({'ok': True, 'message': 'Vote cast.', 'vote': vote_row})
 ```
@@ -423,7 +429,8 @@ require(__DIR__ . '/../vendor/autoload.php');
 
 use Appwrite\Client;
 use Appwrite\Exception;
-use Appwrite\Services\Database;
+use Appwrite\Services\TablesDB;
+use Appwrite\ID;
 use Appwrite\Query;
 
 return function ($context) {
@@ -445,10 +452,14 @@ return function ($context) {
 
     $tablesDB = new TablesDB($client);
 
-    $existingVotes = $database->listRows('<VOTES_TABLE_ID>', [
-        Query->equal('userId', $vote['userId']),
-        Query->equal('topicId', $vote['topicId'])
-    ]);
+    $existingVotes = $tablesDB->listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        queries: [
+            Query::equal('userId', $vote['userId']),
+            Query::equal('topicId', $vote['topicId'])
+        ]
+    );
 
     if ($existingVotes['total'] > 0) {
         return $context->res->json([
@@ -457,16 +468,21 @@ return function ($context) {
         ], 400);
     }
 
-    $voteDocument = $database->createRow('<VOTES_TABLE_ID>', [
-        'userId' => $vote['userId'],
-        'topicId' => $vote['topicId'],
-        'vote' => $vote['vote'],
-    ]);
+    $voteRow = $tablesDB->createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        rowId: ID::unique(),
+        data: [
+            'userId' => $vote['userId'],
+            'topicId' => $vote['topicId'],
+            'vote' => $vote['vote'],
+        ]
+    );
 
     return $context->res->json([
       'ok' => true,
       'message' => 'Vote cast.',
-      'vote' => $voteDocument
+      'vote' => $voteRow
     ]);
 };
 ```
@@ -493,10 +509,14 @@ Future main(final context) async {
 
     final tablesDB = TablesDB(client);
 
-    final existingVotes = await tablesDB.listRows('<VOTES_TABLE_ID>', [
-        Query.equals('userId', vote['userId']),
-        Query.equals('topicId', vote['topicId'])
-    ]);
+    final existingVotes = await tablesDB.listRows(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        queries: [
+            Query.equal('userId', vote['userId']),
+            Query.equal('topicId', vote['topicId'])
+        ]
+    );
 
     if (existingVotes['total'] > 0) {
         return context.res.json({
@@ -505,16 +525,21 @@ Future main(final context) async {
         }, 400);
     }
 
-    final voteDocument = await database.createRow('<VOTES_TABLE_ID>', {
-        'userId': vote['userId'],
-        'topicId': vote['topicId'],
-        'vote': vote['vote'],
-    });
+    final voteRow = await tablesDB.createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<VOTES_TABLE_ID>',
+        rowId: ID.unique(),
+        data: {
+            'userId': vote['userId'],
+            'topicId': vote['topicId'],
+            'vote': vote['vote'],
+        }
+    );
 
     return context.res.json({
       'ok': true,
       'message': 'Vote cast.',
-      'vote': voteDocument
+      'vote': voteRow
     });
 }
 ```
@@ -540,10 +565,14 @@ def main(context)
 
     tablesDB = Appwrite::TablesDB.new(client)
 
-    existing_votes = tablesDB.list_rows('<DATABASE_ID>', '<VOTES_TABLE_ID>', [
-        Appwrite::Query.equal('userId', vote['userId']),
-        Appwrite::Query.equal('topicId', vote['topicId'])
-    ])
+    existing_votes = tablesDB.list_rows(
+        database_id: '<DATABASE_ID>',
+        table_id: '<VOTES_TABLE_ID>',
+        queries: [
+            Appwrite::Query.equal('userId', vote['userId']),
+            Appwrite::Query.equal('topicId', vote['topicId'])
+        ]
+    )
 
     if existing_votes['total'] > 0
         return context.res.json({
@@ -552,11 +581,16 @@ def main(context)
         }, 400)
     end
 
-    vote_row = database.create_row('<VOTES_TABLE_ID>', {
-        'userId': vote['userId'],
-        'topicId': vote['topicId'],
-        'vote': vote['vote'],
-    })
+    vote_row = tablesDB.create_row(
+        database_id: '<DATABASE_ID>',
+        table_id: '<VOTES_TABLE_ID>',
+        row_id: Appwrite::ID.unique(),
+        data: {
+            'userId' => vote['userId'],
+            'topicId' => vote['topicId'],
+            'vote' => vote['vote'],
+        }
+    )
 
     return context.res.json({
       'ok': true,
@@ -681,9 +715,9 @@ Create a Messages table with the following columns:
 
 | Name       | Type   | Description                      |
 |------------|--------|----------------------------------|
-| `name`     | string | The name of the message author   |
-| `email`    | string | The email of the message author  |
-| `content`  | string | The content of the message       |
+| `name`     | Varchar | The name of the message author   |
+| `email`    | Email | The email of the message author  |
+| `content`  | Text | The content of the message       |
 
 ## Code
 
@@ -788,7 +822,7 @@ def main(context):
         )
 
         tablesDB = TablesDB(client)
-        row = tablesDB.create_row('<DATABASE_ID>', '<MESSAGES_TABLE_ID>', ID.unique(), message)
+        row = tablesDB.create_row(database_id='<DATABASE_ID>', table_id='<MESSAGES_TABLE_ID>', row_id=ID.unique(), data=message)
 
         return context.res.text("Message sent")
 
@@ -803,6 +837,7 @@ require(__DIR__ . '/../vendor/autoload.php');
 use Appwrite\Client;
 use Appwrite\Exception;
 use Appwrite\Services\TablesDB;
+use Appwrite\ID;
 
 $html = '<!doctype html>
 <html lang="en">
@@ -842,7 +877,12 @@ return function ($context) {
          ->setKey($context->req->headers['x-appwrite-key']);
 
     $tablesDB = new TablesDB($client);
-    $row = $tablesDB->createRow('<DATABASE_ID>', '<MESSAGES_TABLE_ID>', ID::unique(), $message);
+    $row = $tablesDB->createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<MESSAGES_TABLE_ID>',
+        rowId: ID::unique(),
+        data: $message
+    );
 
     return $context->res->text("Message sent");
   }
@@ -891,7 +931,7 @@ def main(context)
             .set_key(context.req.headers['x-appwrite-key'])
 
         tablesDB = Appwrite::TablesDB.new(client)
-        row = tablesDB.create_row('<DATABASE_ID>', '<MESSAGES_TABLE_ID>', ID.unique(), message)
+        row = tablesDB.create_row(database_id: '<DATABASE_ID>', table_id: '<MESSAGES_TABLE_ID>', row_id: Appwrite::ID.unique(), data: message)
 
         return context.res.text("Message sent")
     end
@@ -903,6 +943,7 @@ end
 ```dart
 import 'dart:async';
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'dart:io';
 
 Future main(final context) async {
     final html = '''<!doctype html>
@@ -941,7 +982,12 @@ Future main(final context) async {
           .setKey(context.req.headers['x-appwrite-key']);
 
         final tablesDB = TablesDB(client);
-        final row = await tablesDB.createRow('<DATABASE_ID>', '<MESSAGES_TABLE_ID>', ID.unique(), message);
+        final row = await tablesDB.createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<MESSAGES_TABLE_ID>',
+            rowId: ID.unique(),
+            data: message
+        );
 
         return context.res.text("Message sent");
     }

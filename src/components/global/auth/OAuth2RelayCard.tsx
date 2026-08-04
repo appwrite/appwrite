@@ -23,7 +23,7 @@ type OAuthError = {
  */
 export function OAuth2RelayCard({ title }: { title: string }) {
   const t = useT()
-  // Client-only route (ssr: false) — read the live query string on mount.
+  // Client-only route (ssr: false) - read the live query string on mount.
   const [search, setSearch] = useState('')
   const [project, setProject] = useState<string | null>(null)
   const [oauthError, setOauthError] = useState<OAuthError | null>(null)

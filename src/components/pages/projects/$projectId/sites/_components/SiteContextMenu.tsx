@@ -23,14 +23,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { toast } from 'sonner'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { fetchProjectSite, useDeleteSite } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -42,6 +34,11 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 
 export type SiteContextMenuSite = {
@@ -81,14 +78,14 @@ export function SiteContextMenu({
   const siteHref = buildConsoleUrl(`/projects/${projectId}/sites/${site.$id}/`)
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const handleConfirmDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
     deleteMutation.mutate(site.$id, {
       onSuccess: () => {
         toast.success(t('Site deleted'))
-        setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete site'))
@@ -177,34 +174,22 @@ export function SiteContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete site')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Are you sure you want to delete this site? This action cannot be undone.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Delete')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmNameDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete site"
+        description={
+          <>
+            {t(
+              'Are you sure you want to delete this site? This action cannot be undone.',
+            )}
+          </>
+        }
+        confirmValue={site.name?.trim() || site.$id}
+        confirmPlaceholder="Enter site name"
+        onConfirm={handleConfirmDelete}
+        isConfirming={deleteMutation.isPending}
+      />
     </>
   )
 }

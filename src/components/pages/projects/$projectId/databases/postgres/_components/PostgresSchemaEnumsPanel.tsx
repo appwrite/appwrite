@@ -20,6 +20,10 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
@@ -93,19 +97,29 @@ export function PostgresSchemaEnumsPanel({
   }
 
   const handleEdit = (enumRow: PostgresSchemaEnumRow) => {
-    setSelectedEnum(enumRow)
-    setInternalDialogOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedEnum(enumRow)
+      setInternalDialogOpen(true)
+    })
+  }
+
+  const openDeleteDialog = (enumName: string) => {
+    openDialogAfterOverlayCloses(() => {
+      setEnumToDelete(enumName)
+      setDeleteDialogOpen(true)
+    })
   }
 
   const handleDelete = async () => {
     if (!enumToDelete) return
-    try {
-      await executeSql.mutateAsync(
-        buildPostgresDropEnumSql(schema, enumToDelete),
-      )
-      toast.success(t('Enum deleted'))
+    const name = enumToDelete
+    closeDialogBeforeOverlayUnmount(() => {
       setDeleteDialogOpen(false)
       setEnumToDelete(null)
+    })
+    try {
+      await executeSql.mutateAsync(buildPostgresDropEnumSql(schema, name))
+      toast.success(t('Enum deleted'))
       await refetch()
     } catch (error) {
       toast.error(getErrorMessage(error) ?? t('Failed to delete enum'))
@@ -254,10 +268,7 @@ export function PostgresSchemaEnumsPanel({
                     enumRow={enumRow}
                     canWrite={canWrite}
                     onUpdate={handleEdit}
-                    onDelete={(enumName) => {
-                      setEnumToDelete(enumName)
-                      setDeleteDialogOpen(true)
-                    }}
+                    onDelete={openDeleteDialog}
                   >
                     <tr className="group transition-colors hover:bg-muted/50">
                       <td
@@ -328,10 +339,7 @@ export function PostgresSchemaEnumsPanel({
                                 </MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onSelect={() => {
-                                  setEnumToDelete(enumRow.enum_name)
-                                  setDeleteDialogOpen(true)
-                                }}
+                                onSelect={() => openDeleteDialog(enumRow.enum_name)}
                               >
                                 <MenuItemContent icon={Trash2}>
                                   {t('Delete')}
@@ -372,7 +380,6 @@ export function PostgresSchemaEnumsPanel({
               {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">
             <Button
               variant="outline"

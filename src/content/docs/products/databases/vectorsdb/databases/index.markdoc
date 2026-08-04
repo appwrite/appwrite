@@ -1,0 +1,975 @@
+---
+layout: article
+title: Databases
+description: Dive deeper into Appwrite VectorsDB and database configuration. Learn how to create and manage multiple vector databases for your application.
+---
+Databases are the largest organizational unit in Appwrite.
+Each database contains a group of [collections](/docs/products/databases/vectorsdb/collections).
+
+# Shared and dedicated databases {% #shared-and-dedicated %}
+VectorsDB databases run on either shared or dedicated infrastructure.
+
+Shared databases run on infrastructure that Appwrite manages and scales for you. They are the fastest way to get started and you can create them from the Console or programmatically with a [Server SDK](/docs/sdks#server).
+
+Dedicated databases run on infrastructure provisioned for your project alone. They can only be created from the Appwrite Console. Once created, you manage their collections and documents with the same SDK methods as a shared database.
+
+# Create in Console {% #create-in-console %}
+The easiest way to create a database is using the Appwrite Console.
+Navigate to the **Databases** page and click **Create database**, choose **VectorsDB** as the database type, and select your preferred tier.
+
+# Create using Server SDKs {% #create-using-server-sdks %}
+You can programmatically create a shared database using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->create(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create(
+    database_id = '<DATABASE_ID>',
+    name = '<NAME>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.create(
+    database_id: '<DATABASE_ID>',
+    name: '<NAME>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Database result = await vectorsDB.Create(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Database result = await vectorsDB.create(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.create(
+    databaseId = "<DATABASE_ID>",
+    name = "<NAME>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.create(
+    "<DATABASE_ID>",
+    "<NAME>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let database = try await vectorsDB.create(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create(
+        "<DATABASE_ID>",
+        "<NAME>",
+        None, // enabled (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create \
+    --database-id <DATABASE_ID> \
+    --name <NAME>
+```
+{% /multicode %}
+
+# List databases {% #list-databases %}
+Use the `list` method to retrieve all databases in your project.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.list({});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.list({});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->list();
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.list()
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.list()
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+DatabaseList result = await vectorsDB.List();
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+DatabaseList result = await vectorsDB.list();
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.list()
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.list(
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let databaseList = try await vectorsDB.list()
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.list(
+        None, // queries (optional)
+        None, // search (optional)
+        None, // total (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db list
+```
+{% /multicode %}
+
+# Get a database {% #get-database %}
+Use the `get` method to retrieve a single database by its ID.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.get({
+    databaseId: '<DATABASE_ID>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.get({
+    databaseId: '<DATABASE_ID>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->get(
+    databaseId: '<DATABASE_ID>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.get(
+    database_id = '<DATABASE_ID>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.get(
+    database_id: '<DATABASE_ID>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Database result = await vectorsDB.Get(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Database result = await vectorsDB.get(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.get(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.get(
+    "<DATABASE_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let database = try await vectorsDB.get(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.get(
+        "<DATABASE_ID>",
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db get \
+    --database-id <DATABASE_ID>
+```
+{% /multicode %}
+
+# Update a database {% #update-database %}
+Use the `update` method to change a database's name or enabled state.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.update({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.update({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->update(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.update(
+    database_id = '<DATABASE_ID>',
+    name = '<NAME>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.update(
+    database_id: '<DATABASE_ID>',
+    name: '<NAME>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+Database result = await vectorsDB.Update(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+Database result = await vectorsDB.update(
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.update(
+    databaseId = "<DATABASE_ID>",
+    name = "<NAME>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.update(
+    "<DATABASE_ID>",
+    "<NAME>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let database = try await vectorsDB.update(
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.update(
+        "<DATABASE_ID>",
+        "<NAME>",
+        None, // enabled (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db update \
+    --database-id <DATABASE_ID> \
+    --name <NAME>
+```
+{% /multicode %}
+
+# Delete a database {% #delete-database %}
+Use the `delete` method to permanently remove a database and all of its collections and documents.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.delete({
+    databaseId: '<DATABASE_ID>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.delete({
+    databaseId: '<DATABASE_ID>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->delete(
+    databaseId: '<DATABASE_ID>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.delete(
+    database_id = '<DATABASE_ID>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.delete(
+    database_id: '<DATABASE_ID>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+await vectorsDB.Delete(
+    databaseId: "<DATABASE_ID>"
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+await vectorsDB.delete(
+    databaseId: '<DATABASE_ID>',
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+vectorsDB.delete(
+    databaseId = "<DATABASE_ID>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.delete(
+    "<DATABASE_ID>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+try await vectorsDB.delete(
+    databaseId: "<DATABASE_ID>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    vectors_db.delete(
+        "<DATABASE_ID>",
+    ).await?;
+
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db delete \
+    --database-id <DATABASE_ID>
+```
+{% /multicode %}

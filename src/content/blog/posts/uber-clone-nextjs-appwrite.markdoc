@@ -3,6 +3,7 @@ layout: post
 title: Build an Uber clone with Geo Queries and Realtime
 description: Learn how to build a real-time ride-hailing app using Appwrite's Geo Queries and Realtime features with Next.js and Leaflet maps.
 date: 2026-04-03
+lastUpdated: 2026-06-29
 cover: /images/blog/uber-clone-nextjs-appwrite/cover.avif
 timeToRead: 15
 author: atharva
@@ -10,11 +11,11 @@ category: tutorial, product
 featured: false
 faqs:
   - question: "What are geo queries in Appwrite?"
-    answer: "Geo queries let you filter and sort documents based on geographic coordinates stored in a point column. Operators like distanceLessThan return documents within a radius of a reference point. They require a spatial index on the point column to perform well. See the [Appwrite Databases docs](/docs/products/databases) for the supported geo query operators."
+    answer: "Geo queries let you filter and sort rows based on geographic coordinates stored in a point column. Operators like distanceLessThan return rows within a radius of a reference point. They require a spatial index on the point column to perform well. See the [Appwrite Databases docs](/docs/products/databases) for the supported geo query operators."
   - question: "Do I need a spatial index for location based queries?"
     answer: "Yes, if you want them to be fast. Without a spatial index, Appwrite has to scan every row and compute distance, which does not scale past a few hundred rows. Adding a spatial index to your point column is the single most impactful change for geo query performance."
   - question: "How do realtime subscriptions work in this app?"
-    answer: "[Appwrite Realtime](/docs/products/databases) pushes events over websockets when documents are created, updated, or deleted. The rider subscribes to their own ride row and reacts when status changes or the driver's location updates, while the driver subscribes to pending rides in their area."
+    answer: "[Appwrite Realtime](/docs/products/databases) pushes events over websockets when rows are created, updated, or deleted. The rider subscribes to their own ride row and reacts when status changes or the driver's location updates, while the driver subscribes to pending rides in their area."
   - question: "Why use a one time password (OTP) for ride verification?"
     answer: "An OTP confirms that the driver who arrives is the one matched in the app, and that the rider getting in is the one who booked. It is a simple anti fraud measure used by most production ride hailing apps."
   - question: "Can I run this app on self hosted Appwrite?"

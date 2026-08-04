@@ -31,6 +31,7 @@ import {
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface ProxyRuleContextMenuProps {
   projectId: string
@@ -76,13 +77,19 @@ export function ProxyRuleContextMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         {rule.status !== 'verified' && (
-          <ContextMenuItem onSelect={() => onViewLogs(rule)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => onViewLogs(rule))
+            }
+          >
             <ContextMenuIcon icon={FileText} />
             {t('View logs')}
           </ContextMenuItem>
         )}
         {canRetry && (
-          <ContextMenuItem onSelect={() => onRetry(rule)}>
+          <ContextMenuItem
+            onSelect={() => openDialogAfterOverlayCloses(() => onRetry(rule))}
+          >
             <ContextMenuIcon icon={RefreshCw} />
             {t('Retry')}
           </ContextMenuItem>
@@ -139,7 +146,9 @@ export function ProxyRuleContextMenu({
           {t('Open in new window')}
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => onDelete(rule)}>
+        <ContextMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(() => onDelete(rule))}
+        >
           <ContextMenuIcon icon={Trash2} />
           {t('Delete')}
         </ContextMenuItem>

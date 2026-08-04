@@ -3,6 +3,7 @@ layout: post
 title: Top 7 prompts every developer should use to get better results
 description: Using AI but not getting great results? These 7 prompts help developers get clearer, more accurate outputs and actually make AI useful day to day.
 date: 2026-04-27
+lastUpdated: 2026-06-29
 cover: /images/blog/top-7-prompts-every-developer-should-use-to-get-better-results/cover.avif
 timeToRead: 5
 author: aishwari
@@ -177,7 +178,7 @@ For a look at what to avoid, [7 prompting mistakes you need to stop making right
 
 # Taking this further with Appwrite
 
-If you're building with AI assistants and using Appwrite as your backend, the [Appwrite MCP server](/docs/tooling/mcp) lets AI tools interact directly with your project. You can query collections, manage functions, and run operations through natural language inside tools like Claude Code, Cursor, or Windsurf.
+If you're building with AI assistants and using Appwrite as your backend, the [Appwrite MCP server](/docs/tooling/mcp) lets AI tools interact directly with your project. You can query tables, manage functions, and run operations through natural language inside tools like Claude Code, Cursor, or Windsurf.
 
 This means the prompts you've refined for code generation can also drive your backend. Instead of switching context between your AI tool and the Appwrite console, the model can do it directly.
 

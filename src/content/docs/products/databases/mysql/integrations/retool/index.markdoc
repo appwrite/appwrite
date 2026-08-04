@@ -1,0 +1,89 @@
+---
+layout: article
+title: Retool
+description: Connect Retool to an Appwrite native MySQL database to build internal and admin tools. Fetch connection details with the API, configure the MySQL resource with TLS, and allow Retool Cloud network access when needed.
+---
+
+An Appwrite [native MySQL database](/docs/products/databases/mysql) exposes a standard MySQL connection, so [Retool](https://retool.com/) connects to it through the built-in **MySQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state, an Appwrite API key with `databases.read`, and permission to create resources in Retool. Fetch connection details by calling `mysql.get()`, which returns `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. See [Connections](/docs/products/databases/mysql/connections) for the full flow.
+{% /info %}
+
+# Choose credentials {% #credentials %}
+
+The primary user is `admin`, and the database name is generated for each database. The connection string has this form: `mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>`.
+
+Use the returned `admin` credentials for the Retool resource and keep access limited through Retool resource permissions, Appwrite network controls, TLS, and narrowly scoped queries. Retool stores resource credentials server-side, so app users query through the Retool resource instead of connecting to MySQL from the browser.
+
+# Create the MySQL resource {% #resource %}
+
+In Retool, go to **Resources**, click **Create new** > **Resource**, search for `MySQL`, and select the MySQL tile. Give the resource a clear **Name** and optional **Description** that identifies the Appwrite database and environment.
+
+In **Resource credentials**, either paste the Appwrite connection string or fill in the fields manually:
+
+| Retool setting | Value |
+|----------------|-------|
+| Host | `db-<hash>.<region>.appwrite.center` |
+| Port | `3306` |
+| Database name | `<database>` |
+| Connection options | Optional MySQL query parameters, such as `timezone=UTC` or `connectTimeout=10000` |
+| Authentication | **Username and password** |
+| Username | `admin` |
+| Password | The value from `connectionPassword` |
+
+In **Advanced options**, choose an outbound region if your Retool organization uses regional egress and you want the resource traffic to originate near your Appwrite database.
+
+Enable **SSL/TLS**. Appwrite Cloud terminates TLS at the edge, and the certificate is signed by a public CA. If Retool shows **Reject unauthorized**, keep it enabled. If Retool shows **Verification mode**, choose **Full verification**. Leave **CA certificate** empty.
+
+Click **Test connection**. If the test succeeds, click **Create resource**.
+
+# Pick the connection path {% #connection-path %}
+
+For most Retool apps, connect directly to MySQL on port `3306`. Appwrite's MySQL pooler listens on port `6033` only on specifications that include connection pooling. If your database has the [connection pooler](/docs/products/databases/mysql/connection-pooling) enabled and your Retool queries rely on session-level state such as server-side prepared statements, user variables, or temporary tables, configure the pooler in **session** mode for that Retool resource.
+
+{% arrow_link href="/docs/products/databases/mysql/connection-pooling#modes" %}
+Compare pooler modes
+{% /arrow_link %}
+
+# Allow Retool Cloud through the network {% #network %}
+
+If you enabled an [IP allowlist](/docs/products/databases/mysql/network-security#ip-allowlist) for the database, add the Retool Cloud egress addresses for the resource's outbound region. Retool's default outbound region is `us-west-2`, and Retool also documents `eu-central-1` and `ap-southeast-1` egress addresses. Retrieve the current list from [Retool's IP address documentation](https://docs.retool.com/data-sources/reference/ip-allowlist-cloud-orgs) instead of copying static addresses into your runbook.
+
+If you leave the database allowlist open, rely on TLS, database credentials, and Retool resource permissions to protect access.
+
+{% arrow_link href="/docs/products/databases/mysql/network-security#ip-allowlist" %}
+Configure the IP allowlist
+{% /arrow_link %}
+
+# Build an admin tool {% #build %}
+
+After the resource is connected, create MySQL queries in Retool and wire them to components:
+
+- Use **SQL mode** for read queries that feed a **Table**, chart, or other display component.
+- Use **GUI mode** actions such as **Insert a record**, **Update an existing record**, **Update a record, or create a new record if it doesn't exist**, **Delete a record**, **Bulk insert records**, **Bulk update via a primary key**, and **Bulk upsert via a primary key** for forms, imports, and editable tables.
+- Bind table edits to the **Save changes** event and refresh the read query after writes complete.
+- Show a confirmation modal before delete actions.
+
+Reference component values with Retool's `{{ }}` embedded expressions. Retool converts MySQL queries to prepared statements by default, which separates values from SQL text and helps prevent SQL injection. Keep that protection enabled unless you have a specific, reviewed reason to disable it.
+
+# Use a branch for staging {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are API-created, isolated copies of a MySQL database with their own connection details. Create a branch for staging or preview work, fetch its `connectionString`, and configure a second Retool MySQL resource against that branch. Delete the branch when the staging tool is no longer needed.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql" title="MySQL" %}
+Create and manage a native MySQL database.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS, IP allowlists, and other network controls.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Create isolated database copies for staging and preview environments.
+{% /cards_item %}
+{% /cards %}

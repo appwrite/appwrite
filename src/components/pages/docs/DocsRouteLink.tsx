@@ -9,8 +9,23 @@ import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'
 import type { DocsPreviewView } from '@/lib/docs/docs-preview-menu'
 import { useDocsPreviewNavigation } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPageUrl, splitHrefHash } from '@/lib/marketing/urls'
-import { openInNewWindow } from '@/lib/utils/context-menu'
+import { buildConsoleUrl, openInNewWindow } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
+
+/** Modal / drawer overlays where the right-pane docs preview would open behind the overlay. */
+const OVERLAY_CONTENT_SELECTOR = [
+  '[data-slot="dialog-content"]',
+  '[data-slot="alert-dialog-content"]',
+  '[data-slot="sheet-content"]',
+  '[data-slot="drawer-content"]',
+].join(', ')
+
+function isInsideOverlay(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest(OVERLAY_CONTENT_SELECTOR))
+  )
+}
 
 type DocsRouteLinkProps = Omit<ComponentProps<'a'>, 'href' | 'children'> & {
   href: string
@@ -35,6 +50,13 @@ export function docsHrefToRoute(href: string) {
   }
 
   return null
+}
+
+function openDocsInNewWindow(href: string, marketingEnabled: boolean) {
+  const docsUrl = getDocsPageUrl(href, marketingEnabled)
+  openInNewWindow(
+    marketingEnabled ? buildConsoleUrl(docsUrl) : docsUrl,
+  )
 }
 
 export function DocsRouteLink({
@@ -81,6 +103,11 @@ export function DocsRouteLink({
       event.preventDefault()
       event.stopPropagation()
       onClick?.(event)
+      // Modals/drawers sit above the right pane; open docs in a new window instead.
+      if (isInsideOverlay(event.currentTarget)) {
+        openDocsInNewWindow(href, marketingEnabled)
+        return
+      }
       if (previewNav) {
         previewNav.navigateToSlug(previewSlug, previewView)
         return

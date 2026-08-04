@@ -40,6 +40,13 @@ export function projectRouteRequiresProjectSelectorGate(pathname: string): boole
   return segments.length >= 2 && Boolean(segments[1])
 }
 
+/** Extract `/projects/:projectId` from a console pathname. */
+export function getProjectIdFromPathname(pathname: string): string | null {
+  if (!pathname.startsWith('/projects/')) return null
+  const segments = pathname.split('/').filter(Boolean)
+  return segments.length >= 2 ? segments[1]! : null
+}
+
 export function areInitialLoaderShellGatesReady(pathname: string): boolean {
   if (!projectRouteRequiresProjectSelectorGate(pathname)) return true
   return gateReady.get(INITIAL_LOADER_SHELL_GATE.projectSelector) === true

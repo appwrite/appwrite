@@ -3,6 +3,7 @@ layout: post
 title: Common Appwrite mistakes (and how to avoid them)
 description: Common mistakes developers make when building with Appwrite and how to fix them before they cause security, performance, or scaling issues.
 date: 2026-03-16
+lastUpdated: 2026-06-29
 cover: /images/blog/common-appwrite-mistakes-and-how-to-avoid-them/cover.avif
 timeToRead: 5
 author: aishwari
@@ -12,7 +13,7 @@ faqs:
   - question: "What is the most common mistake developers make with Appwrite permissions?"
     answer: "Treating permissions as something to clean up after the app is built. Appwrite's permission model is explicit by design, so nothing is exposed unless you say so. Design the permission model before connecting the frontend, use role-based permissions, and always test with at least two separate accounts before launch."
   - question: "Why should I never put Appwrite API keys in the frontend?"
-    answer: "Server API keys grant elevated privileges and bypass document permissions. If they appear in client-side code, anyone who opens DevTools has full access to your backend. If something only works with a server key, move that logic into an [Appwrite Function](/docs/products/functions) and call the function from the client instead."
+    answer: "Server API keys grant elevated privileges and bypass resource permissions. If they appear in client-side code, anyone who opens DevTools has full access to your backend. If something only works with a server key, move that logic into an [Appwrite Function](/docs/products/functions) and call the function from the client instead."
   - question: "When should I add indexes in Appwrite Databases?"
     answer: "Before launch, not after queries slow down. Add an index for every field you filter or sort by, and use compound indexes when a query combines multiple conditions, for example filtering by status and ordering by `$createdAt`. Treat indexes as part of your schema in [Appwrite Databases](/docs/products/databases), not as an optimization to defer."
   - question: "Should business logic live in the frontend or in Appwrite Functions?"

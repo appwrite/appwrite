@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite vs Convex for AI apps and agent workflows"
 description: "Compare Appwrite vs Convex for AI apps and agent workflows, from agent primitives to Auth, TablesDB, Realtime, Storage, Functions, and MCP."
 date: 2026-04-28
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-vs-convex-ai-agents/cover.avif
 timeToRead: 9
 author: atharva

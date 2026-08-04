@@ -1,0 +1,174 @@
+---
+layout: article
+title: Drizzle
+description: Use Drizzle ORM with an Appwrite native MySQL database. Configure mysql2, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native MySQL database is a standard MySQL engine, so [Drizzle ORM](https://orm.drizzle.team/) works against it with no Appwrite-specific configuration. Point Drizzle's mysql2 driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials), then put the returned connection string in your environment. Never commit it:
+
+```env
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+```
+
+Connections on Appwrite Cloud are encrypted with TLS. If your runtime or mysql2 configuration does not infer TLS from the connection string, configure mysql2 to require TLS. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+
+# Install and configure the driver {% #driver %}
+
+Drizzle talks to MySQL through `mysql2`:
+
+```bash
+npm install drizzle-orm mysql2
+npm install -D drizzle-kit
+```
+
+Import `drizzle` from `drizzle-orm/mysql2` and hand it the connection string:
+
+```ts
+import { drizzle } from 'drizzle-orm/mysql2';
+
+export const db = drizzle(process.env.DATABASE_URL!);
+```
+
+Define your tables in a schema file Drizzle Kit can read. Use the MySQL column builders from `drizzle-orm/mysql-core`:
+
+```ts
+import { int, mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core';
+
+export const users = mysqlTable('users', {
+  id: int('id').primaryKey().autoincrement(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow()
+});
+```
+
+# Configure Drizzle Kit {% #config %}
+
+Drizzle Kit reads `drizzle.config.ts` for migrations and introspection. Set the `dialect`, point `schema` at your table definitions, and pass the connection string through `dbCredentials`:
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'mysql',
+  schema: './src/schema.ts',
+  out: './drizzle',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!
+  }
+});
+```
+
+# Run migrations {% #migrate %}
+
+Generate SQL migration files from your schema, then apply them:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+`generate` diffs your schema against the last snapshot and writes a timestamped `.sql` file into the `out` directory. `migrate` applies any pending files to the database. Point Drizzle Kit at the direct engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection. The primary `admin` user owns the generated database and can run schema changes.
+
+For prototypes or preview databases where you do not need committed SQL migration files, Drizzle Kit can push the current schema directly:
+
+```bash
+npx drizzle-kit push
+```
+
+To apply migrations from your application at startup instead of the CLI, use the mysql2 migrator:
+
+```ts
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import { db } from './db';
+
+await migrate(db, { migrationsFolder: './drizzle' });
+```
+
+# Query with Drizzle {% #query %}
+
+Once the schema is migrated, use the query builder. The mysql2 dialect returns an insert result instead of the inserted row, so read the row back with the inserted ID:
+
+```ts
+import { desc, eq } from 'drizzle-orm';
+import { db } from './db';
+import { users } from './schema';
+
+const result = await db.insert(users).values({ email: 'ada@example.com' });
+
+const [user] = await db.select().from(users).where(eq(users.id, Number(result[0].insertId)));
+
+const recent = await db
+  .select()
+  .from(users)
+  .orderBy(desc(users.createdAt))
+  .limit(10);
+```
+
+On long-running servers, create the `db` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse it, and use the pooler when your database specification includes it.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. If your database specification includes the [connection pooler](/docs/products/databases/mysql/connection-pooling), route runtime traffic through it by connecting on port `6033` on the same hostname.
+
+Keep `drizzle.config.ts` and the startup migrator pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+
+```env
+# Runtime: pooler port
+DATABASE_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:6033/<database>"
+
+# Migrations & introspection: direct connection to the engine
+DIRECT_URL="mysql://admin:<password>@db-<hash>.<region>.appwrite.center:3306/<database>"
+```
+
+The Drizzle Kit config then reads the direct URL:
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'mysql',
+  schema: './src/schema.ts',
+  out: './drizzle',
+  dbCredentials: {
+    url: process.env.DIRECT_URL!
+  }
+});
+```
+
+The pooler defaults to transaction mode, which does not keep a backend connection across statements. Drizzle's regular mysql2 query builder sends text queries and works with transaction pooling, but session-level features such as explicit prepared queries, user variables, and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` and `DATABASE_URL` for the preview or CI job.
+3. Run `drizzle-kit migrate` or `drizzle-kit push`, then run your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS and network controls for native MySQL databases.
+{% /cards_item %}
+{% /cards %}

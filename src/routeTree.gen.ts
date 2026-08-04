@@ -9,9 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
+import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
+import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
+import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
+import { Route as AccessRouteImport } from './routes/access'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as MarketingRouteImport } from './routes/_marketing'
@@ -27,12 +35,16 @@ import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
+import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
+import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
+import { Route as PublicAssistantRouteImport } from './routes/_public/assistant'
+import { Route as PublicAgentRouteImport } from './routes/_public/agent'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
@@ -60,6 +72,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
+import { Route as PublicAgentIndexRouteImport } from './routes/_public/agent.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
 import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
 import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
@@ -68,8 +81,12 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicDebugVerifyEmailPreviewRouteImport } from './routes/_public/debug.verify-email-preview'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
+import { Route as PublicAgentSettingsRouteImport } from './routes/_public/agent.settings'
+import { Route as PublicAgentAutomationsRouteImport } from './routes/_public/agent.automations'
+import { Route as PublicAgentAgentIdRouteImport } from './routes/_public/agent.$agentId'
 import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
 import { Route as PublicAccountSecurityRouteImport } from './routes/_public/account.security'
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
@@ -91,8 +108,12 @@ import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
+import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changelog/rss[.]xml'
+import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
+import { Route as PublicAgentSettingsIndexRouteImport } from './routes/_public/agent.settings.index'
+import { Route as PublicAgentAutomationsIndexRouteImport } from './routes/_public/agent.automations.index'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
 import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -118,6 +139,10 @@ import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './route
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
+import { Route as PublicAgentSettingsModelsRouteImport } from './routes/_public/agent.settings.models'
+import { Route as PublicAgentSettingsMcpRouteImport } from './routes/_public/agent.settings.mcp'
+import { Route as PublicAgentAutomationsCreateRouteImport } from './routes/_public/agent.automations.create'
+import { Route as PublicAgentAutomationsAutomationIdRouteImport } from './routes/_public/agent.automations.$automationId'
 import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
 import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
 import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
@@ -125,6 +150,8 @@ import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_mar
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
+import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
+import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiInitTicketIdOgDotpngRouteImport } from './routes/_api/init/$ticketId/og[.]png'
@@ -350,9 +377,34 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
 
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
+  id: '/integrations.md',
+  path: '/integrations.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsDotmdRoute = DocsDotmdRouteImport.update({
+  id: '/docs.md',
+  path: '/docs.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -363,6 +415,21 @@ const DocsRoute = DocsRouteImport.update({
 const DiscordRoute = DiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogDotmdRoute = ChangelogDotmdRouteImport.update({
+  id: '/changelog.md',
+  path: '/changelog.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogDotmdRoute = BlogDotmdRouteImport.update({
+  id: '/blog.md',
+  path: '/blog.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessRoute = AccessRouteImport.update({
+  id: '/access',
+  path: '/access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRoute = PublicRouteImport.update({
@@ -436,6 +503,16 @@ const DocsSplatRoute = DocsSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => DocsRoute,
 } as any)
+const CliInstallDotshRoute = CliInstallDotshRouteImport.update({
+  id: '/cli/install.sh',
+  path: '/cli/install.sh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
+  id: '/cli/install.ps1',
+  path: '/cli/install.ps1',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
   path: '/upgrade',
@@ -464,6 +541,16 @@ const PublicCacheRoute = PublicCacheRouteImport.update({
 const PublicBlocksRoute = PublicBlocksRouteImport.update({
   id: '/blocks',
   path: '/blocks',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAssistantRoute = PublicAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAgentRoute = PublicAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicAccountRoute = PublicAccountRouteImport.update({
@@ -602,6 +689,11 @@ const DocsPartnersIndexRoute = DocsPartnersIndexRouteImport.update({
   path: '/partners/',
   getParentRoute: () => DocsRoute,
 } as any)
+const PublicAgentIndexRoute = PublicAgentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
 const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -645,6 +737,12 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugVerifyEmailPreviewRoute =
+  PublicDebugVerifyEmailPreviewRouteImport.update({
+    id: '/debug/verify-email-preview',
+    path: '/debug/verify-email-preview',
+    getParentRoute: () => PublicRoute,
+  } as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
@@ -655,6 +753,21 @@ const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
   id: '/debug/error-preview',
   path: '/debug/error-preview',
   getParentRoute: () => PublicRoute,
+} as any)
+const PublicAgentSettingsRoute = PublicAgentSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAgentAutomationsRoute = PublicAgentAutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
+  getParentRoute: () => PublicAgentRoute,
+} as any)
+const PublicAgentAgentIdRoute = PublicAgentAgentIdRouteImport.update({
+  id: '/$agentId',
+  path: '/$agentId',
+  getParentRoute: () => PublicAgentRoute,
 } as any)
 const PublicAccountSessionsRoute = PublicAccountSessionsRouteImport.update({
   id: '/sessions',
@@ -767,6 +880,16 @@ const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
   path: '/generator/cover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChangelogRssDotxmlRoute = ApiChangelogRssDotxmlRouteImport.update({
+  id: '/_api/changelog/rss.xml',
+  path: '/changelog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlogRssDotxmlRoute = ApiBlogRssDotxmlRouteImport.update({
+  id: '/_api/blog/rss.xml',
+  path: '/blog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicProjectsProjectIdIndexRoute =
   PublicProjectsProjectIdIndexRouteImport.update({
     id: '/',
@@ -778,6 +901,18 @@ const PublicOrganizationsOrgIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicAgentSettingsIndexRoute =
+  PublicAgentSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicAgentAutomationsIndexRoute =
+  PublicAgentAutomationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicAgentAutomationsRoute,
   } as any)
 const PublicProjectsProjectIdUsageRoute =
   PublicProjectsProjectIdUsageRouteImport.update({
@@ -929,6 +1064,29 @@ const PublicOrganizationsOrgIdAppsRoute =
     path: '/apps',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
+const PublicAgentSettingsModelsRoute =
+  PublicAgentSettingsModelsRouteImport.update({
+    id: '/models',
+    path: '/models',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicAgentSettingsMcpRoute = PublicAgentSettingsMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => PublicAgentSettingsRoute,
+} as any)
+const PublicAgentAutomationsCreateRoute =
+  PublicAgentAutomationsCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicAgentAutomationsRoute,
+  } as any)
+const PublicAgentAutomationsAutomationIdRoute =
+  PublicAgentAutomationsAutomationIdRouteImport.update({
+    id: '/$automationId',
+    path: '/$automationId',
+    getParentRoute: () => PublicAgentAutomationsRoute,
+  } as any)
 const MarketingThreadsAuthorsAuthorIdRoute =
   MarketingThreadsAuthorsAuthorIdRouteImport.update({
     id: '/threads/authors/$authorId',
@@ -966,6 +1124,17 @@ const AuthAuthOauth2SuccessRoute = AuthAuthOauth2SuccessRouteImport.update({
 const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
   id: '/auth/oauth2/failure',
   path: '/auth/oauth2/failure',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAssistantMcpCallbackRoute =
+  AuthAssistantMcpCallbackRouteImport.update({
+    id: '/assistant/mcp/callback',
+    path: '/assistant/mcp/callback',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthAgentMcpCallbackRoute = AuthAgentMcpCallbackRouteImport.update({
+  id: '/agent/mcp/callback',
+  path: '/agent/mcp/callback',
   getParentRoute: () => AuthRoute,
 } as any)
 const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
@@ -2501,9 +2670,17 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
+  '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
+  '/docs.md': typeof DocsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2529,12 +2706,16 @@ export interface FileRoutesByFullPath {
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
+  '/agent': typeof PublicAgentRouteWithChildren
+  '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/cli/install.ps1': typeof CliInstallDotps1Route
+  '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -2546,6 +2727,8 @@ export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -2567,8 +2750,12 @@ export interface FileRoutesByFullPath {
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
+  '/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
+  '/agent/settings': typeof PublicAgentSettingsRouteWithChildren
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -2577,12 +2764,15 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof MarketingIntegrationsIndexRoute
   '/threads': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
+  '/agent/': typeof PublicAgentIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
+  '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -2590,6 +2780,10 @@ export interface FileRoutesByFullPath {
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
+  '/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
+  '/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
+  '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -2615,6 +2809,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
+  '/agent/automations/': typeof PublicAgentAutomationsIndexRoute
+  '/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
@@ -2839,7 +3035,15 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
+  '/docs.md': typeof DocsDotmdRoute
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2864,12 +3068,15 @@ export interface FileRoutesByTo {
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
+  '/assistant': typeof PublicAssistantRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/cli/install.ps1': typeof CliInstallDotps1Route
+  '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -2881,6 +3088,8 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
+  '/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
@@ -2902,20 +3111,25 @@ export interface FileRoutesByTo {
   '/account/payments': typeof PublicAccountPaymentsRoute
   '/account/security': typeof PublicAccountSecurityRoute
   '/account/sessions': typeof PublicAccountSessionsRoute
+  '/agent/$agentId': typeof PublicAgentAgentIdRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
   '/integrations': typeof MarketingIntegrationsIndexRoute
   '/threads': typeof MarketingThreadsIndexRoute
   '/account': typeof PublicAccountIndexRoute
+  '/agent': typeof PublicAgentIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
+  '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -2923,6 +3137,10 @@ export interface FileRoutesByTo {
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
+  '/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
+  '/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
+  '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
@@ -2935,6 +3153,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
+  '/agent/automations': typeof PublicAgentAutomationsIndexRoute
+  '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
@@ -3140,9 +3360,17 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/access': typeof AccessRoute
+  '/blog.md': typeof BlogDotmdRoute
+  '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
+  '/docs.md': typeof DocsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/integrations.md': typeof IntegrationsDotmdRoute
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -3168,12 +3396,16 @@ export interface FileRoutesById {
   '/_marketing/terms': typeof MarketingTermsRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
+  '/_public/agent': typeof PublicAgentRouteWithChildren
+  '/_public/assistant': typeof PublicAssistantRoute
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
+  '/cli/install.ps1': typeof CliInstallDotps1Route
+  '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
@@ -3185,6 +3417,8 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
+  '/_api/blog/rss.xml': typeof ApiBlogRssDotxmlRoute
+  '/_api/changelog/rss.xml': typeof ApiChangelogRssDotxmlRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
@@ -3206,8 +3440,12 @@ export interface FileRoutesById {
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
   '/_public/account/security': typeof PublicAccountSecurityRoute
   '/_public/account/sessions': typeof PublicAccountSessionsRoute
+  '/_public/agent/$agentId': typeof PublicAgentAgentIdRoute
+  '/_public/agent/automations': typeof PublicAgentAutomationsRouteWithChildren
+  '/_public/agent/settings': typeof PublicAgentSettingsRouteWithChildren
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/debug/verify-email-preview': typeof PublicDebugVerifyEmailPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3216,12 +3454,15 @@ export interface FileRoutesById {
   '/_marketing/integrations/': typeof MarketingIntegrationsIndexRoute
   '/_marketing/threads/': typeof MarketingThreadsIndexRoute
   '/_public/account/': typeof PublicAccountIndexRoute
+  '/_public/agent/': typeof PublicAgentIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/$ticketId/og.png': typeof ApiInitTicketIdOgDotpngRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
+  '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -3229,6 +3470,10 @@ export interface FileRoutesById {
   '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
   '/_marketing/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
   '/_marketing/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
+  '/_public/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
+  '/_public/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
+  '/_public/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/_public/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -3254,6 +3499,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
   '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
+  '/_public/agent/automations/': typeof PublicAgentAutomationsIndexRoute
+  '/_public/agent/settings/': typeof PublicAgentSettingsIndexRoute
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/_public/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
@@ -3480,9 +3727,17 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
     | '/docs'
+    | '/docs.md'
     | '/generator'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3508,12 +3763,16 @@ export interface FileRouteTypes {
     | '/terms'
     | '/example-protected-route'
     | '/account'
+    | '/agent'
+    | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/cli/install.ps1'
+    | '/cli/install.sh'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -3525,6 +3784,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs/'
     | '/generator/'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -3546,8 +3807,12 @@ export interface FileRouteTypes {
     | '/account/payments'
     | '/account/security'
     | '/account/sessions'
+    | '/agent/$agentId'
+    | '/agent/automations'
+    | '/agent/settings'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -3556,12 +3821,15 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/threads'
     | '/account/'
+    | '/agent/'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/agent/mcp/callback'
+    | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -3569,6 +3837,10 @@ export interface FileRouteTypes {
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
+    | '/agent/automations/$automationId'
+    | '/agent/automations/create'
+    | '/agent/settings/mcp'
+    | '/agent/settings/models'
     | '/organizations/$orgId/apps'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/domains'
@@ -3594,6 +3866,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
+    | '/agent/automations/'
+    | '/agent/settings/'
     | '/organizations/$orgId/'
     | '/projects/$projectId/'
     | '/organizations/$orgId/apps/$appId'
@@ -3818,7 +4092,15 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
+    | '/docs.md'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3843,12 +4125,15 @@ export interface FileRouteTypes {
     | '/startups'
     | '/terms'
     | '/example-protected-route'
+    | '/assistant'
     | '/blocks'
     | '/cache'
     | '/comps'
     | '/init'
     | '/reset'
     | '/upgrade'
+    | '/cli/install.ps1'
+    | '/cli/install.sh'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -3860,6 +4145,8 @@ export interface FileRouteTypes {
     | '/'
     | '/docs'
     | '/generator'
+    | '/blog/rss.xml'
+    | '/changelog/rss.xml'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
@@ -3881,20 +4168,25 @@ export interface FileRouteTypes {
     | '/account/payments'
     | '/account/security'
     | '/account/sessions'
+    | '/agent/$agentId'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/debug/verify-email-preview'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
     | '/integrations'
     | '/threads'
     | '/account'
+    | '/agent'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/$ticketId/og.png'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/agent/mcp/callback'
+    | '/assistant/mcp/callback'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -3902,6 +4194,10 @@ export interface FileRouteTypes {
     | '/blog/post/$slug'
     | '/changelog/entry/$entry'
     | '/threads/authors/$authorId'
+    | '/agent/automations/$automationId'
+    | '/agent/automations/create'
+    | '/agent/settings/mcp'
+    | '/agent/settings/models'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
@@ -3914,6 +4210,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
+    | '/agent/automations'
+    | '/agent/settings'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/organizations/$orgId/domains/buy'
@@ -4118,9 +4416,17 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_protected'
     | '/_public'
+    | '/access'
+    | '/blog.md'
+    | '/changelog.md'
     | '/discord'
     | '/docs'
+    | '/docs.md'
     | '/generator'
+    | '/integrations.md'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/robots.txt'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -4146,12 +4452,16 @@ export interface FileRouteTypes {
     | '/_marketing/terms'
     | '/_protected/example-protected-route'
     | '/_public/account'
+    | '/_public/agent'
+    | '/_public/assistant'
     | '/_public/blocks'
     | '/_public/cache'
     | '/_public/comps'
     | '/_public/init'
     | '/_public/reset'
     | '/_public/upgrade'
+    | '/cli/install.ps1'
+    | '/cli/install.sh'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
@@ -4163,6 +4473,8 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/docs/'
     | '/generator/'
+    | '/_api/blog/rss.xml'
+    | '/_api/changelog/rss.xml'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
@@ -4184,8 +4496,12 @@ export interface FileRouteTypes {
     | '/_public/account/payments'
     | '/_public/account/security'
     | '/_public/account/sessions'
+    | '/_public/agent/$agentId'
+    | '/_public/agent/automations'
+    | '/_public/agent/settings'
     | '/_public/debug/error-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/debug/verify-email-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4194,12 +4510,15 @@ export interface FileRouteTypes {
     | '/_marketing/integrations/'
     | '/_marketing/threads/'
     | '/_public/account/'
+    | '/_public/agent/'
     | '/docs/partners/'
     | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
     | '/_api/init/$ticketId/og.png'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_auth/agent/mcp/callback'
+    | '/_auth/assistant/mcp/callback'
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
@@ -4207,6 +4526,10 @@ export interface FileRouteTypes {
     | '/_marketing/blog/post/$slug'
     | '/_marketing/changelog/entry/$entry'
     | '/_marketing/threads/authors/$authorId'
+    | '/_public/agent/automations/$automationId'
+    | '/_public/agent/automations/create'
+    | '/_public/agent/settings/mcp'
+    | '/_public/agent/settings/models'
     | '/_public/organizations/$orgId/apps'
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/domains'
@@ -4232,6 +4555,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage'
     | '/_public/projects/$projectId/stores'
     | '/_public/projects/$projectId/usage'
+    | '/_public/agent/automations/'
+    | '/_public/agent/settings/'
     | '/_public/organizations/$orgId/'
     | '/_public/projects/$projectId/'
     | '/_public/organizations/$orgId/apps/$appId'
@@ -4461,14 +4786,26 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  AccessRoute: typeof AccessRoute
+  BlogDotmdRoute: typeof BlogDotmdRoute
+  ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
+  DocsDotmdRoute: typeof DocsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
+  IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   ApiHelloRoute: typeof ApiHelloRoute
+  CliInstallDotps1Route: typeof CliInstallDotps1Route
+  CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
   ILinkIdRoute: typeof ILinkIdRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
+  ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
+  ApiChangelogRssDotxmlRoute: typeof ApiChangelogRssDotxmlRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
@@ -4482,11 +4819,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations.md': {
+      id: '/integrations.md'
+      path: '/integrations.md'
+      fullPath: '/integrations.md'
+      preLoaderRoute: typeof IntegrationsDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generator': {
       id: '/generator'
       path: '/generator'
       fullPath: '/generator'
       preLoaderRoute: typeof GeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs.md': {
+      id: '/docs.md'
+      path: '/docs.md'
+      fullPath: '/docs.md'
+      preLoaderRoute: typeof DocsDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -4501,6 +4873,27 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof DiscordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog.md': {
+      id: '/changelog.md'
+      path: '/changelog.md'
+      fullPath: '/changelog.md'
+      preLoaderRoute: typeof ChangelogDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog.md': {
+      id: '/blog.md'
+      path: '/blog.md'
+      fullPath: '/blog.md'
+      preLoaderRoute: typeof BlogDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -4608,6 +5001,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsSplatRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/cli/install.sh': {
+      id: '/cli/install.sh'
+      path: '/cli/install.sh'
+      fullPath: '/cli/install.sh'
+      preLoaderRoute: typeof CliInstallDotshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cli/install.ps1': {
+      id: '/cli/install.ps1'
+      path: '/cli/install.ps1'
+      fullPath: '/cli/install.ps1'
+      preLoaderRoute: typeof CliInstallDotps1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public/upgrade': {
       id: '/_public/upgrade'
       path: '/upgrade'
@@ -4648,6 +5055,20 @@ declare module '@tanstack/react-router' {
       path: '/blocks'
       fullPath: '/blocks'
       preLoaderRoute: typeof PublicBlocksRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/assistant': {
+      id: '/_public/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof PublicAssistantRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/agent': {
+      id: '/_public/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof PublicAgentRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/account': {
@@ -4839,6 +5260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsPartnersIndexRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/_public/agent/': {
+      id: '/_public/agent/'
+      path: '/'
+      fullPath: '/agent/'
+      preLoaderRoute: typeof PublicAgentIndexRouteImport
+      parentRoute: typeof PublicAgentRoute
+    }
     '/_public/account/': {
       id: '/_public/account/'
       path: '/'
@@ -4895,6 +5323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/_public/debug/verify-email-preview': {
+      id: '/_public/debug/verify-email-preview'
+      path: '/debug/verify-email-preview'
+      fullPath: '/debug/verify-email-preview'
+      preLoaderRoute: typeof PublicDebugVerifyEmailPreviewRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
       path: '/debug/org-setup-preview'
@@ -4908,6 +5343,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/debug/error-preview'
       preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_public/agent/settings': {
+      id: '/_public/agent/settings'
+      path: '/settings'
+      fullPath: '/agent/settings'
+      preLoaderRoute: typeof PublicAgentSettingsRouteImport
+      parentRoute: typeof PublicAgentRoute
+    }
+    '/_public/agent/automations': {
+      id: '/_public/agent/automations'
+      path: '/automations'
+      fullPath: '/agent/automations'
+      preLoaderRoute: typeof PublicAgentAutomationsRouteImport
+      parentRoute: typeof PublicAgentRoute
+    }
+    '/_public/agent/$agentId': {
+      id: '/_public/agent/$agentId'
+      path: '/$agentId'
+      fullPath: '/agent/$agentId'
+      preLoaderRoute: typeof PublicAgentAgentIdRouteImport
+      parentRoute: typeof PublicAgentRoute
     }
     '/_public/account/sessions': {
       id: '/_public/account/sessions'
@@ -5056,6 +5512,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGeneratorCoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_api/changelog/rss.xml': {
+      id: '/_api/changelog/rss.xml'
+      path: '/changelog/rss.xml'
+      fullPath: '/changelog/rss.xml'
+      preLoaderRoute: typeof ApiChangelogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/blog/rss.xml': {
+      id: '/_api/blog/rss.xml'
+      path: '/blog/rss.xml'
+      fullPath: '/blog/rss.xml'
+      preLoaderRoute: typeof ApiBlogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public/projects/$projectId/': {
       id: '/_public/projects/$projectId/'
       path: '/'
@@ -5069,6 +5539,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/agent/settings/': {
+      id: '/_public/agent/settings/'
+      path: '/'
+      fullPath: '/agent/settings/'
+      preLoaderRoute: typeof PublicAgentSettingsIndexRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/automations/': {
+      id: '/_public/agent/automations/'
+      path: '/'
+      fullPath: '/agent/automations/'
+      preLoaderRoute: typeof PublicAgentAutomationsIndexRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
     }
     '/_public/projects/$projectId/usage': {
       id: '/_public/projects/$projectId/usage'
@@ -5245,6 +5729,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
+    '/_public/agent/settings/models': {
+      id: '/_public/agent/settings/models'
+      path: '/models'
+      fullPath: '/agent/settings/models'
+      preLoaderRoute: typeof PublicAgentSettingsModelsRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/settings/mcp': {
+      id: '/_public/agent/settings/mcp'
+      path: '/mcp'
+      fullPath: '/agent/settings/mcp'
+      preLoaderRoute: typeof PublicAgentSettingsMcpRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/automations/create': {
+      id: '/_public/agent/automations/create'
+      path: '/create'
+      fullPath: '/agent/automations/create'
+      preLoaderRoute: typeof PublicAgentAutomationsCreateRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
+    }
+    '/_public/agent/automations/$automationId': {
+      id: '/_public/agent/automations/$automationId'
+      path: '/$automationId'
+      fullPath: '/agent/automations/$automationId'
+      preLoaderRoute: typeof PublicAgentAutomationsAutomationIdRouteImport
+      parentRoute: typeof PublicAgentAutomationsRoute
+    }
     '/_marketing/threads/authors/$authorId': {
       id: '/_marketing/threads/authors/$authorId'
       path: '/threads/authors/$authorId'
@@ -5292,6 +5804,20 @@ declare module '@tanstack/react-router' {
       path: '/auth/oauth2/failure'
       fullPath: '/auth/oauth2/failure'
       preLoaderRoute: typeof AuthAuthOauth2FailureRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/assistant/mcp/callback': {
+      id: '/_auth/assistant/mcp/callback'
+      path: '/assistant/mcp/callback'
+      fullPath: '/assistant/mcp/callback'
+      preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/agent/mcp/callback': {
+      id: '/_auth/agent/mcp/callback'
+      path: '/agent/mcp/callback'
+      fullPath: '/agent/mcp/callback'
+      preLoaderRoute: typeof AuthAgentMcpCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_api/init/ticket/$eventSlug': {
@@ -6876,6 +7402,8 @@ interface AuthRouteChildren {
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
+  AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
+  AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
   AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
 }
@@ -6891,6 +7419,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
+  AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
+  AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
   AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
 }
@@ -7001,6 +7531,58 @@ const PublicAccountRouteChildren: PublicAccountRouteChildren = {
 
 const PublicAccountRouteWithChildren = PublicAccountRoute._addFileChildren(
   PublicAccountRouteChildren,
+)
+
+interface PublicAgentAutomationsRouteChildren {
+  PublicAgentAutomationsAutomationIdRoute: typeof PublicAgentAutomationsAutomationIdRoute
+  PublicAgentAutomationsCreateRoute: typeof PublicAgentAutomationsCreateRoute
+  PublicAgentAutomationsIndexRoute: typeof PublicAgentAutomationsIndexRoute
+}
+
+const PublicAgentAutomationsRouteChildren: PublicAgentAutomationsRouteChildren =
+  {
+    PublicAgentAutomationsAutomationIdRoute:
+      PublicAgentAutomationsAutomationIdRoute,
+    PublicAgentAutomationsCreateRoute: PublicAgentAutomationsCreateRoute,
+    PublicAgentAutomationsIndexRoute: PublicAgentAutomationsIndexRoute,
+  }
+
+const PublicAgentAutomationsRouteWithChildren =
+  PublicAgentAutomationsRoute._addFileChildren(
+    PublicAgentAutomationsRouteChildren,
+  )
+
+interface PublicAgentSettingsRouteChildren {
+  PublicAgentSettingsMcpRoute: typeof PublicAgentSettingsMcpRoute
+  PublicAgentSettingsModelsRoute: typeof PublicAgentSettingsModelsRoute
+  PublicAgentSettingsIndexRoute: typeof PublicAgentSettingsIndexRoute
+}
+
+const PublicAgentSettingsRouteChildren: PublicAgentSettingsRouteChildren = {
+  PublicAgentSettingsMcpRoute: PublicAgentSettingsMcpRoute,
+  PublicAgentSettingsModelsRoute: PublicAgentSettingsModelsRoute,
+  PublicAgentSettingsIndexRoute: PublicAgentSettingsIndexRoute,
+}
+
+const PublicAgentSettingsRouteWithChildren =
+  PublicAgentSettingsRoute._addFileChildren(PublicAgentSettingsRouteChildren)
+
+interface PublicAgentRouteChildren {
+  PublicAgentAgentIdRoute: typeof PublicAgentAgentIdRoute
+  PublicAgentAutomationsRoute: typeof PublicAgentAutomationsRouteWithChildren
+  PublicAgentSettingsRoute: typeof PublicAgentSettingsRouteWithChildren
+  PublicAgentIndexRoute: typeof PublicAgentIndexRoute
+}
+
+const PublicAgentRouteChildren: PublicAgentRouteChildren = {
+  PublicAgentAgentIdRoute: PublicAgentAgentIdRoute,
+  PublicAgentAutomationsRoute: PublicAgentAutomationsRouteWithChildren,
+  PublicAgentSettingsRoute: PublicAgentSettingsRouteWithChildren,
+  PublicAgentIndexRoute: PublicAgentIndexRoute,
+}
+
+const PublicAgentRouteWithChildren = PublicAgentRoute._addFileChildren(
+  PublicAgentRouteChildren,
 )
 
 interface PublicOrganizationsOrgIdAppsAppIdRouteChildren {
@@ -8341,6 +8923,8 @@ const PublicProjectsProjectIdRouteWithChildren =
 
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
+  PublicAgentRoute: typeof PublicAgentRouteWithChildren
+  PublicAssistantRoute: typeof PublicAssistantRoute
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
@@ -8350,12 +8934,15 @@ interface PublicRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicDebugOrgSetupPreviewRoute: typeof PublicDebugOrgSetupPreviewRoute
+  PublicDebugVerifyEmailPreviewRoute: typeof PublicDebugVerifyEmailPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
 
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
+  PublicAgentRoute: PublicAgentRouteWithChildren,
+  PublicAssistantRoute: PublicAssistantRoute,
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,
@@ -8365,6 +8952,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicDebugOrgSetupPreviewRoute: PublicDebugOrgSetupPreviewRoute,
+  PublicDebugVerifyEmailPreviewRoute: PublicDebugVerifyEmailPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }
@@ -8429,14 +9017,26 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  AccessRoute: AccessRoute,
+  BlogDotmdRoute: BlogDotmdRoute,
+  ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
+  DocsDotmdRoute: DocsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
+  IntegrationsDotmdRoute: IntegrationsDotmdRoute,
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   ApiHelloRoute: ApiHelloRoute,
+  CliInstallDotps1Route: CliInstallDotps1Route,
+  CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,
   ILinkIdRoute: ILinkIdRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
+  ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,
+  ApiChangelogRssDotxmlRoute: ApiChangelogRssDotxmlRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,

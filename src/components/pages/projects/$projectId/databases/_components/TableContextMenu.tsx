@@ -35,6 +35,10 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { deleteProjectTable, fetchProjectTable } from '@/lib/react-query/hooks'
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import {
@@ -107,9 +111,9 @@ export function TableContextMenu({
   }, [dbKind, showSecuritySettings])
 
   const deleteTableMutation = useMutation({
-    mutationFn: () => deleteProjectTable(projectId, databaseId, table.$id),
+    mutationFn: () =>
+      deleteProjectTable(projectId, databaseId, dbKind, table.$id),
     onSuccess: async () => {
-      setDeleteDialogOpen(false)
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
@@ -157,7 +161,7 @@ export function TableContextMenu({
   }
 
   const handleDuplicateStructure = () => {
-    setCreateSimilarOpen(true)
+    openDialogAfterOverlayCloses(() => setCreateSimilarOpen(true))
   }
 
   const handleOpenInNewTab = () => {
@@ -174,7 +178,7 @@ export function TableContextMenu({
 
   const handleCopyAsJson = async () => {
     await copyResourceAsJson(
-      () => fetchProjectTable(projectId, databaseId, table.$id),
+      () => fetchProjectTable(projectId, databaseId, dbKind, table.$id),
       { fallback: table },
     )
   }
@@ -206,7 +210,12 @@ export function TableContextMenu({
   }
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteTableMutation.mutate()
   }
 
   return (
@@ -301,7 +310,7 @@ export function TableContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteTableMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteTableMutation.isPending}
             >
               {t('Delete')}

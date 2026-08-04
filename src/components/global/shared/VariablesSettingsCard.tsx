@@ -1,5 +1,5 @@
 /**
- * Variables card — settings (API) and wizard (local state).
+ * Variables card - settings (API) and wizard (local state).
  *
  * - `variant="settings"` (default): project / function / site variables via mutations.
  * - `variant="wizard"`: create flows; updates `onChange` only (never calls API).
@@ -26,6 +26,10 @@ import {
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -578,11 +582,13 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const handleDelete = async () => {
     if (isWizard || !deleteMutation || !selectedVar) return
     setDeleteError('')
+    closeDialogBeforeOverlayUnmount(() => {
+      setShowDeleteModal(false)
+      setSelectedVar(null)
+    })
     try {
       await deleteMutation.mutateAsync(selectedVar.$id)
       toast.success(t(`${scopeLabel} variable has been deleted.`))
-      setShowDeleteModal(false)
-      setSelectedVar(null)
     } catch (error: unknown) {
       setDeleteError(getErrorMessage(error, t('Failed to delete variable')))
     }
@@ -1070,20 +1076,26 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                               variant="settings"
                               variable={record}
                               onUpdate={() => {
-                                setSelectedVar(record)
-                                setShowUpdateModal(true)
+                                openDialogAfterOverlayCloses(() => {
+                                  setSelectedVar(record)
+                                  setShowUpdateModal(true)
+                                })
                               }}
                               onMarkSecret={
                                 !record.secret
                                   ? () => {
-                                      setSelectedVar(record)
-                                      setShowSecretModal(true)
+                                      openDialogAfterOverlayCloses(() => {
+                                        setSelectedVar(record)
+                                        setShowSecretModal(true)
+                                      })
                                     }
                                   : undefined
                               }
                               onDelete={() => {
-                                setSelectedVar(record)
-                                setShowDeleteModal(true)
+                                openDialogAfterOverlayCloses(() => {
+                                  setSelectedVar(record)
+                                  setShowDeleteModal(true)
+                                })
                               }}
                             >
                             <TableRow>
@@ -1150,9 +1162,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedVar(record)
-                                          setShowUpdateModal(true)
+                                        onSelect={() => {
+                                          openDialogAfterOverlayCloses(() => {
+                                            setSelectedVar(record)
+                                            setShowUpdateModal(true)
+                                          })
                                         }}
                                       >
                                         <MenuItemContent icon={Pencil}>
@@ -1161,9 +1175,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                       </DropdownMenuItem>
                                       {!record.secret && (
                                         <DropdownMenuItem
-                                          onClick={() => {
-                                            setSelectedVar(record)
-                                            setShowSecretModal(true)
+                                          onSelect={() => {
+                                            openDialogAfterOverlayCloses(() => {
+                                              setSelectedVar(record)
+                                              setShowSecretModal(true)
+                                            })
                                           }}
                                         >
                                           <MenuItemContent icon={Lock}>
@@ -1172,9 +1188,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         </DropdownMenuItem>
                                       )}
                                       <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedVar(record)
-                                          setShowDeleteModal(true)
+                                        onSelect={() => {
+                                          openDialogAfterOverlayCloses(() => {
+                                            setSelectedVar(record)
+                                            setShowDeleteModal(true)
+                                          })
                                         }}
                                       >
                                         <MenuItemContent icon={Trash2}>

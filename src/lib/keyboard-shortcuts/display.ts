@@ -2,6 +2,7 @@ import {
   GLOBAL_SHORTCUT_IDS,
   GLOBAL_SHORTCUT_REFS,
 } from '@/lib/keyboard-shortcuts/global-shortcuts'
+import { detectUserOs, isMacOs } from '@/lib/user-os'
 
 export type KeyId = string
 
@@ -34,6 +35,7 @@ const SHORTCUT_GROUP_ORDER = [
   'Navigation',
   'Create',
   'Actions',
+  'Agent',
   'SQL editor',
   'Terminal',
   'Help',
@@ -44,11 +46,9 @@ function normalizeShortcutRaw(raw: string) {
   return raw.trim().toLowerCase()
 }
 
+/** Raw device detection (ignores debug OS override). Prefer `usePlatform()`. */
 export function isMacPlatform() {
-  return (
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-  )
+  return isMacOs(detectUserOs())
 }
 
 function formatSingleDisplayKey(key: string, isMac: boolean): string {

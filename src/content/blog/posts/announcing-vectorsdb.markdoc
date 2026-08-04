@@ -1,0 +1,418 @@
+---
+layout: post
+title: "Announcing VectorsDB: Similarity search as a first-class Appwrite database"
+description: Store embeddings, generate them from text with built-in models, and rank documents by similarity without adding a separate vector service to your stack.
+date: 2026-07-09
+cover: /images/blog/announcing-vectorsdb/cover.png
+timeToRead: 6
+author: atharva
+category: announcement
+featured: false
+callToAction: true
+draft: true
+faqs:
+  - question: "What is Appwrite VectorsDB?"
+    answer: "VectorsDB is an Appwrite database for vector embeddings and similarity search. Every collection is created with a fixed dimension, documents hold an embeddings vector plus optional JSON metadata, and an HNSW index keeps similarity search fast as the collection grows."
+  - question: "Do I need a separate embedding service to use VectorsDB?"
+    answer: "No. VectorsDB can generate text embeddings with built-in models, so you can turn strings into vectors and store them in one flow. If you already produce embeddings elsewhere, you can store those instead, as long as their length matches the collection's dimension."
+  - question: "Which similarity metrics does VectorsDB support?"
+    answer: "VectorsDB supports cosine, dot product, and Euclidean distance. You choose the metric when you create the HNSW index, and query with the matching vector query method to get documents ranked from most to least similar."
+  - question: "What is an HNSW index and why does it matter?"
+    answer: "HNSW (Hierarchical Navigable Small World) is an approximate nearest neighbor index. It keeps similarity search fast even as collections grow large, which is what makes vector search practical in production instead of a linear scan over every document."
+  - question: "Can I combine vector search with regular queries?"
+    answer: "Yes. A vector query can be combined with other queries, such as limits, so you can cap how many results come back. Results return as documents with their metadata, ready to render or feed into your application logic."
+  - question: "What can I build with VectorsDB?"
+    answer: "Semantic search over content, recommendations based on similarity, deduplication, and retrieval for AI applications such as RAG. Anywhere ranking by meaning beats matching by exact value, VectorsDB applies."
+---
+
+Semantic search, recommendations, and retrieval for AI features all reduce to the same primitive: store vectors, then find the ones closest to a query. Until now, that primitive usually meant adding a dedicated vector service to your stack, with its own hosting, its own client, and its own auth model to reconcile with the rest of your backend.
+
+Today we are announcing **VectorsDB**, which makes that primitive a first-class Appwrite database.
+
+# Create your first database
+
+In your project, go to **Databases**, click **Create database**, and choose **VectorsDB** as the type. Pick a compute specification, then create your first collection with the `dimension` your embedding model produces. From there, every document you write is a vector ready to be searched.
+
+# A schema designed for vectors
+
+Where other Appwrite databases let you define your own fields, a VectorsDB collection has a deliberate, fixed shape. You create it with a `dimension`, and every document carries two things:
+
+- `embeddings`: a vector of exactly that length
+- `metadata`: optional JSON for whatever belongs alongside the vector, such as the source text, a URL, or labels
+
+That constraint is the feature. The collection always knows what a valid vector looks like, and the HNSW index built on `embeddings` keeps search fast as your data grows.
+
+# Built-in embedding generation
+
+VectorsDB can generate text embeddings with built-in models. You pass a string, and Appwrite turns it into a vector you can store directly, so a working semantic search does not require standing up an embedding service or wiring a third-party API into your ingest path. If you already have embeddings from your own models, store those instead.
+
+# Run a similarity search
+
+Searching is a two-step flow. First, turn the search text into a vector, either with your own model or with the built-in embedding generation:
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createTextEmbeddings({
+    texts: ['The quick brown fox jumps over the lazy dog'],
+    model: sdk.EmbeddingModel.Nomicembedtext // optional, defaults to nomic-embed-text
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createTextEmbeddings({
+    texts: ['The quick brown fox jumps over the lazy dog'],
+    model: sdk.EmbeddingModel.Nomicembedtext // optional, defaults to nomic-embed-text
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\VectorsDB;
+use Appwrite\Enums\EmbeddingModel;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$vectorsDB = new VectorsDB($client);
+
+$result = $vectorsDB->createTextEmbeddings(
+    texts: ['The quick brown fox jumps over the lazy dog'],
+    model: EmbeddingModel::NOMICEMBEDTEXT() // optional, defaults to nomic-embed-text
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.enums import EmbeddingModel
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create_text_embeddings(
+    texts = ['The quick brown fox jumps over the lazy dog'],
+    model = EmbeddingModel.NOMIC_EMBED_TEXT # optional, defaults to nomic-embed-text
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+vectors_db = VectorsDB.new(client)
+
+result = vectors_db.create_text_embeddings(
+    texts: ['The quick brown fox jumps over the lazy dog'],
+    model: EmbeddingModel::NOMIC_EMBED_TEXT # optional, defaults to nomic-embed-text
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+EmbeddingList result = await vectorsDB.CreateTextEmbeddings(
+    texts: new List<string> { "The quick brown fox jumps over the lazy dog" },
+    model: EmbeddingModel.NomicEmbedText // optional, defaults to nomic-embed-text
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+VectorsDB vectorsDB = VectorsDB(client);
+
+EmbeddingList result = await vectorsDB.createTextEmbeddings(
+    texts: ['The quick brown fox jumps over the lazy dog'],
+    model: EmbeddingModel.nomicEmbedText, // optional, defaults to nomic-embed-text
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.enums.EmbeddingModel
+import io.appwrite.services.VectorsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val vectorsDB = VectorsDB(client)
+
+val response = vectorsDB.createTextEmbeddings(
+    texts = listOf("The quick brown fox jumps over the lazy dog"),
+    model = EmbeddingModel.NOMIC_EMBED_TEXT, // optional, defaults to nomic-embed-text
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.enums.EmbeddingModel;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.VectorsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+VectorsDB vectorsDB = new VectorsDB(client);
+
+vectorsDB.createTextEmbeddings(
+    List.of("The quick brown fox jumps over the lazy dog"),
+    EmbeddingModel.NOMIC_EMBED_TEXT, // optional, defaults to nomic-embed-text
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let vectorsDB = VectorsDB(client)
+
+let embeddingList = try await vectorsDB.createTextEmbeddings(
+    texts: ["The quick brown fox jumps over the lazy dog"],
+    model: .nomicEmbedText // optional, defaults to nomic-embed-text
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::enums::EmbeddingModel;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_text_embeddings(
+        vec!["The quick brown fox jumps over the lazy dog"],
+        Some(EmbeddingModel::NomicEmbedText), // optional, defaults to nomic-embed-text
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+```bash
+appwrite vectors-db create-text-embeddings \
+    --texts 'The quick brown fox jumps over the lazy dog' \
+    --model 'nomic-embed-text'
+```
+{% /multicode %}
+
+Then pass that vector as a query to the same `listDocuments` method used across Appwrite Databases. Choose the metric when you create the index, cosine, dot product, or Euclidean distance, and query with the matching method. The vectors below are shortened for readability; in practice you pass the embedding returned by the step above:
+
+{% multicode %}
+```server-nodejs
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```deno
+const result = await vectorsDB.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        sdk.Query.limit(3)
+    ]
+});
+```
+```php
+$result = $vectorsDB->listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query::vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query::limit(3)
+    ]
+);
+```
+```python
+result = vectors_db.list_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    queries = [
+        Query.vector_cosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```ruby
+result = vectors_db.list_documents(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    queries: [
+        Query.vector_cosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```csharp
+DocumentList result = await vectorsDB.ListDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: new List<string> {
+        Query.VectorCosine("embeddings", new List<object> { 0.11, 0.21, 0.30, 0.40 }),
+        Query.Limit(3)
+    }
+);
+```
+```dart
+DocumentList result = await vectorsDB.listDocuments(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        Query.vectorCosine('embeddings', [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ],
+);
+```
+```kotlin
+val result = vectorsDB.listDocuments(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    queries = listOf(
+        Query.vectorCosine("embeddings", listOf(0.11, 0.21, 0.30, 0.40)),
+        Query.limit(3)
+    ),
+)
+```
+```java
+vectorsDB.listDocuments(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    List.of(
+        Query.vectorCosine("embeddings", List.of(0.11, 0.21, 0.30, 0.40)),
+        Query.limit(3)
+    ),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+let result = try await vectorsDB.listDocuments(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    queries: [
+        Query.vectorCosine("embeddings", [0.11, 0.21, 0.30, 0.40]),
+        Query.limit(3)
+    ]
+)
+```
+```server-rust
+let result = vectors_db.list_documents(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    Some(vec![
+        Query::vector_cosine("embeddings", json!([0.11, 0.21, 0.30, 0.40])).to_string(),
+        Query::limit(3).to_string(),
+    ]),
+    None, // transaction_id
+    None, // total
+    None, // ttl
+).await?;
+```
+```bash
+appwrite vectors-db list-documents \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --queries '{"method":"vectorCosine","attribute":"embeddings","values":[[0.11,0.21,0.30,0.40]]}' '{"method":"limit","values":[3]}'
+```
+{% /multicode %}
+
+Results come back as documents ranked from most to least similar, with their metadata attached, ready to render.
+
+# Shared Appwrite Databases capabilities
+
+VectorsDB shares the platform capabilities available across Appwrite Databases:
+
+- **[Permissions](/docs/products/databases/vectorsdb/permissions)** control access at the document level, so clients can search safely.
+- **[Queries](/docs/products/databases/vectorsdb/queries)**, **[pagination](/docs/products/databases/vectorsdb/pagination)**, and ordering work alongside vector queries.
+- **[Transactions](/docs/products/databases/vectorsdb/transactions)** group writes so related changes succeed or fail together.
+- **[Bulk operations](/docs/products/databases/vectorsdb/bulk-operations)** ingest large embedding sets in one request.
+- **[CSV imports](/docs/products/databases/vectorsdb/csv-imports) and [exports](/docs/products/databases/vectorsdb/csv-exports)** move vectors and metadata in and out.
+- **[Backups](/docs/products/databases/vectorsdb/backups)** protect your collections with scheduled and manual snapshots.
+
+Your vectors live next to the rest of your application data, behind the same SDKs and the same access control, instead of in a service on the side.
+
+Every VectorsDB database is provisioned for your project with a compute specification you choose at creation, so search performance scales with the tier you pick.
+
+# Get started
+
+VectorsDB is available on Appwrite Cloud today. Create a database, choose VectorsDB as the type, pick a dimension, and you can run your first similarity search in minutes.
+
+- [VectorsDB documentation](/docs/products/databases/vectorsdb)
+- [Quick start](/docs/products/databases/vectorsdb/quick-start)
+- [Vector search](/docs/products/databases/vectorsdb/vector-search)
+

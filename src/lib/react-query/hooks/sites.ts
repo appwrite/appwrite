@@ -672,6 +672,9 @@ export function siteUsageQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 
@@ -692,6 +695,9 @@ export function sitesUsageQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
   })
 }
 

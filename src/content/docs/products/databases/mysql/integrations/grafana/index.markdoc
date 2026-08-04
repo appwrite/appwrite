@@ -1,0 +1,99 @@
+---
+layout: article
+title: Grafana
+description: Connect Grafana to an Appwrite native MySQL database as a data source and build dashboards. Configure the MySQL data source and provision it from YAML.
+---
+
+An Appwrite [native MySQL database](/docs/products/databases/mysql) exposes a standard managed MySQL 8.4 or 8.0 engine, so [Grafana](https://grafana.com/) connects to it through the built-in **MySQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with your database credentials, and query your tables to build dashboards and alerts.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. Call `mysql.get()` from the Appwrite API to read `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and Appwrite generates the database name for each database. See [Connections](/docs/products/databases/mysql/connections) to retrieve the values.
+{% /info %}
+
+# Protect dashboard credentials {% #credentials %}
+
+Grafana can execute any SQL allowed by the data source user. Keep panel queries read-only, avoid saving write statements in dashboards, and restrict network access to trusted Grafana hosts with an [IP allowlist](/docs/products/databases/mysql/network-security#ip-allowlist). If your deployment has a secondary MySQL user with only `SELECT` privileges, use that user for Grafana.
+
+# Choose a connection target {% #target %}
+
+Grafana holds its data source connections open for the lifetime of the process. Long-lived connections should use either the direct MySQL port `3306` or a [connection pooler](/docs/products/databases/mysql/connection-pooling) on port `6033` running in **session mode**.
+
+Do not point Grafana at the **transaction-mode** pooler. Transaction mode hands a backend connection back to the pool after every statement, which breaks the session assumptions Grafana relies on for connection reuse and prepared statements. For a typical dashboard workload the direct MySQL port is the simplest choice. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs.
+
+# Add the MySQL data source {% #data-source %}
+
+In Grafana, open **Connections** > **Data sources** > **Add data source** and select **MySQL**. Fill in the connection details using the values from your native MySQL database:
+
+| Field | Value |
+| --- | --- |
+| **Host URL** | `db-<hash>.<region>.appwrite.center:3306` |
+| **Database** | `<database>` |
+| **Username** | `admin` |
+| **Password** | `<password>` |
+
+Regions are `fra`, `nyc`, `sfo`, `sgp`, `syd`, and `tor`. Appwrite Cloud encrypts connections to the public hostname with TLS. Grafana's MySQL data source uses MySQL-specific TLS fields such as `tlsAuthWithCACert`, `tlsSkipVerify`, and TLS certificate values in `secureJsonData`.
+
+If you use Grafana Cloud and restrict database access with an IP allowlist, add the Grafana Cloud outbound IP ranges for your stack to the database allowlist. Grafana Cloud can reach the public Appwrite database hostname directly. Private connectivity features are only needed when the database is on a private network.
+
+Under **Connection limits**, keep the connection counts modest so Grafana doesn't exhaust the engine's connection budget. **Max open** caps total connections from this Grafana instance, **Max idle** caps pooled idle connections, and **Max lifetime** recycles connections after the given number of seconds. Select **Save & test** to verify connectivity.
+
+# Provision from YAML {% #provisioning %}
+
+Instead of configuring the data source by hand, you can [provision](https://grafana.com/docs/grafana/latest/administration/provisioning/) it declaratively. Drop a file into Grafana's `provisioning/datasources/` directory and read the password from an environment variable so it never lands in source control:
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Appwrite native MySQL
+    type: mysql
+    url: db-<hash>.<region>.appwrite.center:3306
+    user: admin
+    jsonData:
+      database: <database>
+      maxOpenConns: 5
+      maxIdleConns: 2
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD
+    editable: false
+```
+
+The MySQL data source uses `type: mysql`, keeps the database name under `jsonData.database`, and reads the password from `secureJsonData.password`. Grafana expands `$GRAFANA_DB_PASSWORD` from the process environment when it loads the provisioning file. Add Grafana's MySQL TLS fields if your deployment requires explicit TLS configuration. See the [MySQL data source](https://grafana.com/docs/grafana/latest/datasources/mysql/configure/) docs for every available field.
+
+# Build a panel {% #panel %}
+
+With the data source connected, create a dashboard and add a panel backed by it. Switch the query editor to code mode and write a read-only query against your tables. For example, to plot daily sign-ups from a `grafana_users` table over time:
+
+```text
+SELECT
+  CAST(DATE(created_at) AS DATETIME) AS time,
+  COUNT(*) AS signups
+FROM grafana_users
+GROUP BY CAST(DATE(created_at) AS DATETIME)
+ORDER BY time;
+```
+
+Grafana maps the `time` column to the panel's time axis and `signups` to the value. MySQL 8.4 enables `ONLY_FULL_GROUP_BY`, so the selected time expression must match the grouped expression.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql" title="MySQL databases" %}
+Overview of native MySQL database engines, versions, and regions.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connect" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes and ports. Use the direct MySQL port or session mode for Grafana.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network" %}
+TLS modes, certificate verification, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/products/databases/mysql/connections" %}
+Connect to a native MySQL database
+{% /arrow_link %}

@@ -1,8 +1,9 @@
 ---
 layout: post
 title: "Announcing CSV Import: Bring in large datasets to Appwrite with ease"
-description: Learn how to import documents into your Appwrite collections using a simple CSV file, a new feature built on top of Appwrite's migration APIs.
+description: Learn how to import rows into your Appwrite tables using a simple CSV file, a new feature built on top of Appwrite's migration APIs.
 date: 2025-07-01
+lastUpdated: 2026-06-29
 # update this cover later, once available!
 cover: /images/blog/announcing-csv-imports/cover.avif
 timeToRead: 5
@@ -10,42 +11,42 @@ author: darshan-pandya
 category: announcement
 featured: false
 faqs:
-  - question: "How do I import a CSV file into an Appwrite collection?"
-    answer: "Create a collection with the attributes you want, then upload a CSV file whose first row contains matching attribute names. You can upload a new file during import or pick an existing one from your storage bucket. [Appwrite](/docs/products/databases) validates each row before importing and runs the job in the background."
-  - question: "Can I assign custom document IDs when importing from CSV?"
-    answer: "Yes, include an optional `$id` column in the CSV and Appwrite will use those values as document IDs. If you omit the column, Appwrite generates unique IDs automatically. Custom IDs are useful when migrating from another system that already has stable identifiers."
+  - question: "How do I import a CSV file into an Appwrite table?"
+    answer: "Create a table with the columns you want, then upload a CSV file whose first row contains matching column names. You can upload a new file during import or pick an existing one from your storage bucket. [Appwrite](/docs/products/databases) validates each row before importing and runs the job in the background."
+  - question: "Can I assign custom row IDs when importing from CSV?"
+    answer: "Yes, include an optional `$id` column in the CSV and Appwrite will use those values as row IDs. If you omit the column, Appwrite generates unique IDs automatically. Custom IDs are useful when migrating from another system that already has stable identifiers."
   - question: "What format does the CSV file need to follow?"
-    answer: "The first row must be a header containing attribute names that exactly match your collection's attributes. Each subsequent row represents a document, with values separated by commas. All required attributes must be present, or the row will fail validation."
+    answer: "The first row must be a header containing column names that exactly match your table's columns. Each subsequent row represents a row, with values separated by commas. All required columns must be present, or the row will fail validation."
   - question: "How does Appwrite handle very large CSV imports?"
     answer: "The CSV import system runs as a background task and performs per-row validation, so it can handle production-scale files without blocking the Console. Built on top of [Appwrite's migration APIs](/docs/products/databases), it's designed for reliability across both small datasets and large imports."
   - question: "What happens if a row in my CSV fails validation?"
-    answer: "Appwrite validates each row before importing it, so invalid rows are flagged and skipped rather than corrupting your collection. Common causes are missing required attributes, type mismatches, or values that violate length or enum constraints. Fix the source CSV and re-run the import for those rows."
+    answer: "Appwrite validates each row before importing it, so invalid rows are flagged and skipped rather than corrupting your table. Common causes are missing required columns, type mismatches, or values that violate length or enum constraints. Fix the source CSV and re-run the import for those rows."
   - question: "What are common use cases for CSV imports?"
     answer: "CSV imports are useful for migrating user data from external systems, importing inventory records, seeding test environments, and onboarding structured content like FAQs or product catalogs. They're also handy when prototyping with realistic data from spreadsheets or third-party tools."
 ---
 
-We're introducing a new way to populate your Appwrite databases: **document imports from CSV files**.
+We're introducing a new way to populate your Appwrite databases: **row imports from CSV files**.
 
-Built on top of Appwrite's migration APIs, this feature makes it easy to bring in large datasets, seed collections, or migrate structured data using only a CSV file.
+Built on top of Appwrite's migration APIs, this feature makes it easy to bring in large datasets, seed tables, or migrate structured data using only a CSV file.
 
-The CSV document import is useful for migrating user data from external systems, importing inventory records, seeding test environments, or onboarding structured content such as FAQs.
+The CSV row import is useful for migrating user data from external systems, importing inventory records, seeding test environments, or onboarding structured content such as FAQs.
 
 # How it works
 
-To get started, create a collection and define its attributes in the Appwrite Console. Your CSV file should follow a standard format:
+To get started, create a table and define its columns in the Appwrite Console. Your CSV file should follow a standard format:
 
-- The first row must be a header containing attribute names that match your collection
-- Each subsequent row represents a document, with values separated by commas
+- The first row must be a header containing column names that match your table
+- Each subsequent row represents a row, with values separated by commas
 
 {% info title="Good to know" %}
-You can optionally include the `$id` column to assign custom document IDs.
+You can optionally include the `$id` column to assign custom row IDs.
 {% /info %}
 
-![Collections screen](/images/blog/announcing-csv-imports/csv-import.avif)
+![Tables screen](/images/blog/announcing-csv-imports/csv-import.avif)
 
-All required attributes must be present in the CSV, and Appwrite will validate each row before importing it.
+All required columns must be present in the CSV, and Appwrite will validate each row before importing it.
 
-For example, if your collection contains attributes like `title`, `author`, `year`, and `available`, a valid CSV file would look like this:
+For example, if your table contains columns like `title`, `author`, `year`, and `available`, a valid CSV file would look like this:
 
 ```text
 $id,title,author,year,available
@@ -60,7 +61,7 @@ v42cj0quxp,Pride and Prejudice,Jane Austen,1813,true
 ## Uploading your CSV file
 
 You can upload a new file during import or select an existing one from your project's storage bucket.
-The Console provides a guided interface to help you select the CSV and link it to your target collection. Once uploaded, the import process begins immediately.
+The Console provides a guided interface to help you select the CSV and link it to your target table. Once uploaded, the import process begins immediately.
 
 ## Designed for scale
 

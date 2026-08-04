@@ -4,6 +4,7 @@ title: "Appwrite 1.8.0: The most powerful self-hosted release yet"
 description: Appwrite 1.8.0 brings powerful database features, new runtimes, and key performance updates to make your self-hosted setup faster, safer, and more scalable.
 cover: /images/blog/appwrite-1-8-0-self-hosted-release/cover.avif
 date: 2025-10-31
+lastUpdated: 2026-06-29
 timeToRead: 5
 author: steven
 category: announcement
@@ -11,7 +12,7 @@ faqs:
   - question: "What is new in Appwrite 1.8.0 for self-hosted users?"
     answer: "Appwrite 1.8.0 introduces TablesDB, a Transactions API, spatial columns, CSV import, a Bulk API, Database Upsert, auto-increment support, opt-in relationship loading, and new time-based and inversion queries for [Databases](/docs/products/databases). It also adds new runtimes and performance improvements across the self-hosted stack."
   - question: "What is TablesDB in Appwrite?"
-    answer: "TablesDB is a relational-style API on top of Appwrite [Databases](/docs/products/databases). It introduces tables, columns, and rows alongside the existing collections and documents model, with endpoints like createTable, createColumn, and createRow for developers who prefer a structured schema."
+    answer: "TablesDB is a relational-style API on top of Appwrite [Databases](/docs/products/databases). It introduces tables, columns, and rows alongside the existing collections and documents model, with endpoints like createTable, createTextColumn, and createRow for developers who prefer a structured schema."
   - question: "How do Appwrite database transactions work?"
     answer: "You stage multiple operations across one or more tables and only commit them when you are ready. If every step succeeds, Appwrite commits atomically. If anything fails (permissions, conflicts, validation), Appwrite rolls back the entire transaction so your data stays consistent."
   - question: "Can I use Appwrite to store and query geographic data?"
@@ -35,7 +36,7 @@ Over the past two months, we've been rolling out a series of major database upgr
 
 ## Introducing TablesDB
 
-Meet **TablesDB.** A major step forward in how Appwrite handles structured data. It introduces familiar **relational concepts** like tables, columns, and rows, along with a new **TablesDB API** that aligns with standard CRUD patterns such as `createTable`, `createRow`, and `createColumn`.
+Meet **TablesDB.** A major step forward in how Appwrite handles structured data. It introduces familiar **relational concepts** like tables, columns, and rows, along with a new **TablesDB API** that aligns with standard CRUD patterns such as `createTable`, `createRow`, and `createTextColumn`.
 
 Built for developers who prefer a more structured model, TablesDB offers the clarity of relational databases while remaining fully compatible with Appwrite's existing collections and documents. It's ideal for analytics, structured datasets, and complex relationships, giving you more control and flexibility when modelling data at scale.
 
@@ -60,7 +61,7 @@ With this new API, you can store points, lines, and polygons directly in Appwrit
 
 ## CSV import
 
-CSV import is a new way to populate your Appwrite databases from CSV files. Built on top of Appwrite's migration APIs, this feature makes it easy to bring in large datasets, seed collections, or migrate structured data using only a CSV file.
+CSV import is a new way to populate your Appwrite databases from CSV files. Built on top of Appwrite's migration APIs, this feature makes it easy to bring in large datasets, seed tables, or migrate structured data using only a CSV file.
 
 [Learn more about CSV import](/blog/post/announcing-csv-imports)
 

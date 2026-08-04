@@ -3,6 +3,7 @@ layout: post
 title: How Appwrite Databases can replace your PlanetScale database
 description: Compare PlanetScale Databases to Appwrite Databases so you can understand whether Appwrite is a viable alternative to PlanetScale's free-tier.
 date: 2024-03-10
+lastUpdated: 2026-06-29
 cover: /images/blog/planetscale-databases-alternative/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -13,7 +14,7 @@ faqs:
   - question: "Can I run raw SQL queries on Appwrite Databases?"
     answer: "No. Appwrite exposes a query API and SDKs instead of direct SQL access. You can model tables, indexes, and relationships, and run filtered, paginated queries, but the underlying SQL layer is not exposed to users."
   - question: "How do permissions work in Appwrite Databases?"
-    answer: "You set permissions at the database, collection, and document level using roles like `any`, `users`, `team`, or specific user IDs. This means access control lives next to the data rather than in a separate rules engine."
+    answer: "You set permissions at the database, table, and row level using roles like `any`, `users`, `team`, or specific user IDs. This means access control lives next to the data rather than in a separate rules engine."
   - question: "Does Appwrite handle backups automatically?"
     answer: "Yes. Appwrite Cloud takes automated backups, and there is a manual database backup feature for on demand snapshots. You can restore from backups without downtime, including on the free plan."
   - question: "Can I self-host Appwrite Databases?"

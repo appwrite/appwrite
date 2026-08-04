@@ -3,6 +3,7 @@ layout: post
 title: Building a full-stack app with Svelte and Appwrite
 description: Learn how to build full-stack apps with Svelte and Appwrite by building an expense tracker.
 date: 2025-01-31
+lastUpdated: 2026-06-29
 cover: /images/blog/build-fullstack-svelte-appwrite/cover.avif
 timeToRead: 15
 author: ebenezer-don
@@ -15,9 +16,9 @@ faqs:
   - question: "Can I use Appwrite with TypeScript in Svelte?"
     answer: "Yes. The Appwrite Web SDK ships with full TypeScript types. The tutorial uses JavaScript for simplicity, but you can swap in TypeScript by picking that option in sv create and importing types directly from the appwrite package."
   - question: "How do I enforce that users only see their own data?"
-    answer: "Enable Document Security on your collection and set per-document permissions when creating rows. Use the user's ID as the read/write permission so other users can't access their data. [Appwrite Databases](/docs/products/databases) handles the permission checks automatically."
-  - question: "What's the difference between collection-level and document-level permissions?"
-    answer: "Collection-level permissions apply to all documents in the collection. Document-level (Document Security) lets each row carry its own permissions, which is what you want for multi-tenant data like a personal expense tracker. Enable Document Security to use it."
+    answer: "Enable row security on your table and set per-row permissions when creating rows. Use the user's ID as the read/write permission so other users can't access their data. [Appwrite Databases](/docs/products/databases) handles the permission checks automatically."
+  - question: "What's the difference between table-level and row-level permissions?"
+    answer: "Table-level permissions apply to all rows in the table. Row-level (Row security) lets each row carry its own permissions, which is what you want for multi-tenant data like a personal expense tracker. Enable Row security to use it."
   - question: "Do I need to host Svelte and Appwrite separately?"
     answer: "Not necessarily. You can deploy the SvelteKit frontend on [Appwrite Sites](/docs/products/sites) and use the same project for backend services, keeping everything under one console. Or you can deploy SvelteKit elsewhere (Netlify, Vercel) and point at Appwrite for the backend."
 ---
@@ -74,7 +75,7 @@ Our application needs to communicate with [Appwrite](https://cloud.appwrite.io/?
 PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 PUBLIC_APPWRITE_PROJECT_ID=your-project-id
 PUBLIC_APPWRITE_DATABASE_ID=expense-db
-PUBLIC_APPWRITE_COLLECTION_ID=expenses
+PUBLIC_APPWRITE_TABLE_ID=expenses
 ```
 
 The `PUBLIC_` prefix makes these variables available to our client-side code in Svelte. You'll need to replace `your-project-id` with your actual Appwrite project ID, which we'll create in the next step.
@@ -85,28 +86,28 @@ Before we continue with the frontend implementation, we need to configure our Ap
 
 1. Create a new project
 2. Open the **Databases** tab from the sidebar and create a database with the ID "expense-db"
-3. In your new database, create a collection with the ID "expenses"
+3. In your new database, create a table with the ID "expenses"
 
-The expenses collection needs several attributes to store the expense data effectively. Open the **Attributes** tab of your new collection and add the following attributes:
+The expenses table needs several columns to store the expense data effectively. Open the **Columns** tab of your new table and add the following columns:
 
 ```md
-- `userId` (String, required)
+- `userId` (Text, required)
 - `amount` (Float, required)
 - `category` (Enum, required)
   - Elements: "food", "rent", "transportation", "entertainment", "shopping", "healthcare", "utilities", "education", "other"
-- `description` (String, required)
+- `description` (Text, required)
 - `date` (DateTime, required)
 - `createdAt` (DateTime, required)
 - `updatedAt` (DateTime, required)
 ```
 
-Notice that the `category` attribute is an enumerated type with a set of predefined values. This structured approach helps us organize and filter expenses effectively. We have both a `date` attribute and a `createdAt` attribute because when an expense is created is not necessarily the same as when it occurred.
+Notice that the `category` column is an enumerated type with a set of predefined values. This structured approach helps us organize and filter expenses effectively. We have both a `date` column and a `createdAt` column because when an expense is created is not necessarily the same as when it occurred.
 
-To ensure that users can only access their own expenses, Open the collection's **Settings** tab and scroll to **Permissions**. Click **Add role**, select **Users** and check **Create** permission.
+To ensure that users can only access their own expenses, Open the table's **Settings** tab and scroll to **Permissions**. Click **Add role**, select **Users** and check **Create** permission.
 
-Next, enable **Document Security** to allow users to access their documents. We'll ensure this by giving users the **Read** permission when creating documents in our code.
+Next, enable **Row security** to allow users to access their rows. We'll ensure this by giving users the **Read** permission when creating rows in our code.
 
-![permissions-document-security](/images/blog/build-fullstack-svelte-appwrite/permissions-document-security.avif)
+![permissions-row-security](/images/blog/build-fullstack-svelte-appwrite/permissions-document-security.avif)
 
 ## Project structure
 
@@ -173,12 +174,12 @@ This template provides the basic structure for our application. The `data-svelte
 Let's set up our connection to Appwrite. If you haven't already, create a new file in the `src/lib` directory named `appwrite.js`. We'll use this file to configure the Appwrite client and provide access to our database and account services.
 
 ```js
-import { Client, Account, Databases } from 'appwrite'
+import { Client, Account, TablesDB } from 'appwrite'
 import {
 	PUBLIC_APPWRITE_ENDPOINT,
 	PUBLIC_APPWRITE_PROJECT_ID,
 	PUBLIC_APPWRITE_DATABASE_ID,
-	PUBLIC_APPWRITE_COLLECTION_ID
+	PUBLIC_APPWRITE_TABLE_ID
 } from '$env/static/public'
 
 const client = new Client()
@@ -186,17 +187,17 @@ const client = new Client()
 client.setEndpoint(PUBLIC_APPWRITE_ENDPOINT).setProject(PUBLIC_APPWRITE_PROJECT_ID)
 
 export const account = new Account(client)
-export const databases = new Databases(client)
+export const tablesDB = new TablesDB(client)
 
-// Collection IDs from environment variables
-export const EXPENSES_COLLECTION_ID = PUBLIC_APPWRITE_COLLECTION_ID
+// Table IDs from environment variables
+export const EXPENSES_TABLE_ID = PUBLIC_APPWRITE_TABLE_ID
 export const DATABASE_ID = PUBLIC_APPWRITE_DATABASE_ID
 
 ```
 
-This configuration file initializes our connection to Appwrite. The `Client` class creates a new Appwrite client instance, which we configure with our endpoint and project ID from our environment variables. We then create instances of the `Databases` and `Account` services, which we'll use throughout our application for database operations and user authentication.
+This configuration file initializes our connection to Appwrite. The `Client` class creates a new Appwrite client instance, which we configure with our endpoint and project ID from our environment variables. We then create instances of the `TablesDB` and `Account` services, which we'll use throughout our application for database operations and user authentication.
 
-Finally, we export the collection IDs from our environment variables so that we can use them in other parts of our application.
+Finally, we export the table IDs from our environment variables so that we can use them in other parts of our application.
 
 ## Managing authentication state
 
@@ -270,7 +271,9 @@ Finally, we'll add a `logout` function to the `auth.js` file to handle user logo
 ```js
 export async function logout() {
 	try {
-		await account.deleteSession('current')
+		await account.deleteSession({
+		    sessionId: 'current'
+		})
 		user.set(null)
 	} catch (error) {
 		console.error('Logout error:', error)
@@ -545,9 +548,9 @@ We'll start with our imports and state management:
 ```svelte
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import { databases, account } from '$lib/appwrite'
-	import { DATABASE_ID, EXPENSES_COLLECTION_ID } from '$lib/appwrite'
-	import { Query, Permission, Role } from 'appwrite'
+	import { tablesDB, account } from '$lib/appwrite'
+	import { DATABASE_ID, EXPENSES_TABLE_ID } from '$lib/appwrite'
+	import { Query, Permission, Role, ID } from 'appwrite'
 	import { formatDistanceToNow } from 'date-fns'
 
 	let expenses = []
@@ -609,14 +612,14 @@ onMount(async () => {
 async function fetchExpenses() {
   try {
     loading = true
-    const response = await databases.listDocuments({
+    const response = await tablesDB.listRows({
       databaseId: DATABASE_ID,
-      collectionId: EXPENSES_COLLECTION_ID,
+      tableId: EXPENSES_TABLE_ID,
       queries: [
         Query.orderDesc('$createdAt')
       ]
     })
-    expenses = response.documents
+    expenses = response.rows
     calculateStats()
   } catch (e) {
     error = 'Failed to load expenses'
@@ -661,20 +664,20 @@ async function handleSubmit() {
     }
 
     if (editingExpense) {
-      await databases.updateDocument({
+      await tablesDB.updateRow({
         databaseId: DATABASE_ID,
-        collectionId: EXPENSES_COLLECTION_ID,
-        documentId: editingExpense.$id,
+        tableId: EXPENSES_TABLE_ID,
+        rowId: editingExpense.$id,
         data: {
           ...expenseData,
           updatedAt: now
         }
       })
     } else {
-      await databases.createDocument({
+      await tablesDB.createRow({
         databaseId: DATABASE_ID,
-        collectionId: EXPENSES_COLLECTION_ID,
-        documentId: ID.unique(),
+        tableId: EXPENSES_TABLE_ID,
+        rowId: ID.unique(),
         data: expenseData,
         permissions: [
           Permission.read(Role.user(user.$id)),
@@ -697,17 +700,17 @@ async function handleSubmit() {
 }
 ```
 
-The `handleSubmit` function handles both creating new expenses and updating existing ones. When creating a new expense, we set document-level permissions to ensure users can access their expenses. Here, we're giving users the **Read**, **Update**, and **Delete** permissions.
+The `handleSubmit` function handles both creating new expenses and updating existing ones. When creating a new expense, we set row-level permissions to ensure users can access their expenses. Here, we're giving users the **Read**, **Update**, and **Delete** permissions.
 
 Finally, let's add utility functions for managing expenses:
 
 ```js
 async function deleteExpense(id) {
   try {
-    await databases.deleteDocument({
+    await tablesDB.deleteRow({
       databaseId: DATABASE_ID,
-      collectionId: EXPENSES_COLLECTION_ID,
-      documentId: id
+      tableId: EXPENSES_TABLE_ID,
+      rowId: id
     })
     await fetchExpenses()
   } catch (e) {

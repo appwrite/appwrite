@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useState,
   useEffect,
@@ -32,10 +33,12 @@ function writeDebugModeOpen(open: boolean): void {
 
 interface DebugModeContextValue {
   isDebugModeOpen: boolean
+  closeDebugMode: () => void
 }
 
 const DebugModeContext = createContext<DebugModeContextValue>({
   isDebugModeOpen: false,
+  closeDebugMode: () => {},
 })
 
 export function useDebugMode() {
@@ -51,6 +54,11 @@ export function DebugModeProvider({ children }: DebugModeProviderProps) {
     readDebugModeOpen(),
   )
   const typedSequenceRef = useRef('')
+
+  const closeDebugMode = useCallback(() => {
+    setIsDebugModeOpen(false)
+    writeDebugModeOpen(false)
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,7 +99,7 @@ export function DebugModeProvider({ children }: DebugModeProviderProps) {
   }, [])
 
   return (
-    <DebugModeContext.Provider value={{ isDebugModeOpen }}>
+    <DebugModeContext.Provider value={{ isDebugModeOpen, closeDebugMode }}>
       {children}
     </DebugModeContext.Provider>
   )

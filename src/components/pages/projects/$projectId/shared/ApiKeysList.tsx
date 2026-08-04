@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { ApiKeyContextMenu } from '../api-keys/_components/ApiKeyContextMenu'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 export interface ApiKey {
   id: string
@@ -247,14 +248,26 @@ export function ApiKeysList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {onUpdate && (
-                          <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              openDialogAfterOverlayCloses(() =>
+                                onUpdate(apiKey.id),
+                              )
+                            }
+                          >
                             <MenuItemContent icon={Pencil}>
                               {t('Update')}
                             </MenuItemContent>
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
-                          <DropdownMenuItem onClick={() => onDelete(apiKey.id)}>
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              openDialogAfterOverlayCloses(() =>
+                                onDelete(apiKey.id),
+                              )
+                            }
+                          >
                             <MenuItemContent icon={Trash2}>
                               {t('Delete')}
                             </MenuItemContent>

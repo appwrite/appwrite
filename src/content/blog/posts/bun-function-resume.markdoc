@@ -3,6 +3,7 @@ layout: post
 title: Share your resume using Appwrite Functions
 description: How you can create a resume using HTML and use a Bun Appwrite Function to share it with the world. 
 date: 2024-03-07
+lastUpdated: 2026-06-29
 cover: /images/blog/bun-function-resume/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -216,6 +217,6 @@ And with that, you have successfully deployed your resume using Appwrite Functio
 
 Additionally, if you would like to learn more about Appwrite Functions, here are some resources:
 
-- [Appwrite Functions docs](https://appwrite.io/docs/functions): These documents provide more information on how to use Appwrite Functions.
+- [Appwrite Functions docs](https://appwrite.io/docs/functions): Learn more about how to use Appwrite Functions.
 - [Bun functions announcements](https://appwrite.io/blog/post/why-you-need-to-try-the-new-bun-runtime): Read the full announcement about our Bun functions runtime.
 - [Appwrite Discord](https://discord.com/invite/appwrite): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

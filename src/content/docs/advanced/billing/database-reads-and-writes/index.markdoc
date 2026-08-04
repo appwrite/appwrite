@@ -4,7 +4,7 @@ title: Database Reads and Writes
 description: Learn how Appwrite handles database reads and writes and their associated costs.
 ---
 
-Appwrite provides powerful database capabilities through its [Database API](/docs/products/databases), allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability.
+Appwrite provides powerful database capabilities through [TablesDB](/docs/products/databases), allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability.
 
 ## Database Operations
 

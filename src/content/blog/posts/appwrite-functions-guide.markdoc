@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite Functions: everything you need to know"
 description: A complete guide to Appwrite Functions covering triggers, execution modes, deployment options, permissions, and practical use cases for server-side logic.
 date: 2026-03-24
+lastUpdated: 2026-06-29
 cover: /images/blog/appwrite-functions-guide/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -137,7 +138,10 @@ const execution = await functions.createExecution({
     async: true
 });
 // execution.status will be "waiting" or "processing"
-// poll later with functions.getExecution(functionId, execution.$id)
+// poll later with functions.getExecution({
+//     functionId,
+//     executionId: execution.$id
+// })
 ```
 
 HTTP-triggered functions always behave synchronously from the HTTP client's perspective: the connection stays open until the function returns a response or times out.

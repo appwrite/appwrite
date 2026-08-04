@@ -4,6 +4,10 @@ import {
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
 import { Key, Trash2, Check, X, Pencil, Lightbulb } from 'lucide-react'
 import { type Collection } from '@/lib/utils/mock-data'
 import { useState, useEffect, useRef, useMemo } from 'react'
@@ -188,6 +192,7 @@ export function IndexesSpreadsheet({
   } = useProjectTableIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     tableId,
     indexesFilterQueries,
     indexesPageIndexed,
@@ -210,7 +215,7 @@ export function IndexesSpreadsheet({
 
   // Fetch columns for index creation (first page, default limit)
   const { columns: availableColumns, isLoading: columnsLoading } =
-    useProjectTableColumns(projectId, databaseId, tableId)
+    useProjectTableColumns(projectId, databaseId, DB_KIND, tableId)
 
   // TablesDB only: notify parent when the table has no non-relationship columns.
   useEffect(() => {
@@ -251,6 +256,7 @@ export function IndexesSpreadsheet({
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         tableId,
         apiData,
       )
@@ -276,6 +282,7 @@ export function IndexesSpreadsheet({
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         tableId,
         indexKey,
       )
@@ -287,7 +294,6 @@ export function IndexesSpreadsheet({
       queryClient.invalidateQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      setDeleteDialogOpen(false)
       setIndexToDelete(null)
     },
     onError: (error: Error) => {
@@ -302,12 +308,14 @@ export function IndexesSpreadsheet({
 
   const handleDeleteIndex = (indexKey: string) => {
     setIndexToDelete(indexKey)
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const handleConfirmDelete = () => {
     if (indexToDelete) {
-      deleteIndexMutation.mutate(indexToDelete)
+      const key = indexToDelete
+      closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+      deleteIndexMutation.mutate(key)
     }
   }
 

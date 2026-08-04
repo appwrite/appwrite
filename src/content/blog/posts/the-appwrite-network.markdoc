@@ -20,8 +20,8 @@ faqs:
     answer: "Yes. All Appwrite Cloud projects are served through a built-in global CDN with strategically placed PoPs, plus integrated DDoS protection that combines traffic analysis, rate limiting, and filtering. This applies to all plans without extra configuration."
   - question: "Can I control where my project's data is stored?"
     answer: "Yes. When you create a project, you can choose the region where your data lives. The data stays in that region for compliance, while edges and the CDN make it accessible to users worldwide with low latency."
-  - question: "Does Appwrite offer a Firewall?"
-    answer: "Yes. [Appwrite Firewall](/docs/products/firewall) lets you create project rules to deny, rate limit, redirect, or bypass matching API, Functions, and Sites traffic from the Console."
+  - question: "Does Appwrite offer a Web Application Firewall?"
+    answer: "Yes. The [WAF](/docs/products/network/waf) is available to enterprise customers and inspects HTTP and HTTPS traffic at OSI Layer 7. It blocks common attacks like SQL injection, XSS, and CSRF, and includes customizable rulesets managed through a dedicated success manager."
 ---
 
 We are happy to announce the launch of the Appwrite Network, a network of cloud regions and edge locations (edges) to improve Appwrite Cloud availability, performance, and compliance with local regulations. This will provide Appwrite developers and teams with the best tools and infrastructure to build, deploy, and scale your applications. This brings us closer to the Appwrite mission of making software development more accessible and enjoyable for all developers.
@@ -98,9 +98,11 @@ All Appwrite’s Cloud projects are served by Appwrite’s built-in CDN. Our new
 
 Moreover, the CDN includes integrated DDoS protection that combines standard traffic analysis, rate limiting, and filtering techniques to help mitigate potential threats in real time. This balanced approach helps maintain solid performance while providing a reliable level of security for your applications.
 
-# Firewall
+# Web application firewall (WAF)
 
-[Appwrite Firewall](/docs/products/firewall) lets you protect project APIs, Functions, and Sites with rules you manage in the Console. Deny abusive traffic, rate limit noisy paths, redirect deprecated endpoints, or bypass trusted clients, then monitor outcomes from the Firewall overview.
+Our [Web Application Firewall](/docs/products/network/waf) (WAF) is now available exclusively to enterprise customers, providing a crucial protective layer for your applications. Operating at OSI Layer 7, the WAF inspects and filters all HTTP/HTTPS traffic in real time, effectively blocking common web vulnerabilities such as SQL injection, XSS, and CSRF, while also mitigating application-level DDoS attacks.
+
+Customizable rulesets allow you to tailor the WAF to your application's specific needs, with detailed analysis of request headers, payloads, and query strings to identify and neutralize threats before they reach your infrastructure. Setup and configuration are managed through your dedicated Appwrite success manager, ensuring that the WAF adapts to evolving security challenges and compliance requirements. To learn more about our enterprise plan, you can [contact us](/contact-us/enterprise).
 
 # The road ahead
 

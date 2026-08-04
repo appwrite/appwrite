@@ -51,6 +51,7 @@ import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
 import { PaymentMethodContextMenu } from './PaymentMethodContextMenu'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void
@@ -120,13 +121,17 @@ export function AccountPaymentMethods({
   }, [completedPaymentMethods])
 
   const handleEdit = (method: Models.PaymentMethod) => {
-    setSelectedPaymentMethod(method)
-    setEditModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedPaymentMethod(method)
+      setEditModalOpen(true)
+    })
   }
 
   const handleDelete = (method: Models.PaymentMethod) => {
-    setSelectedPaymentMethod(method)
-    setDeleteModalOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedPaymentMethod(method)
+      setDeleteModalOpen(true)
+    })
   }
 
   const handleEditSuccess = () => {

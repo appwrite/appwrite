@@ -14,7 +14,7 @@ faqs:
   - question: "Which SDKs do Appwrite Skills cover?"
     answer: "Skills are available for the Appwrite CLI and the TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, and Swift SDKs. Each skill is maintained alongside its SDK, so it stays in sync with the latest API patterns."
   - question: "How do I install Appwrite Skills?"
-    answer: "Run `npx skills add appwrite/agent-skills` in your project directory. The installer asks which SDK skills you want, which AI tools to enable them for, whether to install at the project or global scope, and how to link them. The full repo lives at [github.com/appwrite/agent-skills](https://github.com/appwrite/agent-skills/)."
+    answer: "Run `npx skills add appwrite/skills` in your project directory. The installer asks which SDK skills you want, which AI tools to enable them for, whether to install at the project or global scope, and how to link them. The full repo lives at [github.com/appwrite/skills](https://github.com/appwrite/skills/)."
   - question: "Which AI agents work with Appwrite Skills?"
     answer: "Any agent that supports the [Agent Skills](https://skills.agents.md/) format works, including Claude Code, Cursor, and Windsurf. Install once and the same skill files can be linked from each tool, so you do not have to maintain separate sets of prompts."
   - question: "What is the difference between Skills and the Appwrite MCP server?"
@@ -31,7 +31,7 @@ Introducing **Appwrite Skills**.
 
 Skills are open source markdown files that give AI agents deep knowledge of Appwrite SDKs and services. When installed, skills provide your AI tools with accurate, language-specific context about Appwrite APIs, so they generate correct code without needing to look up documentation. No more copy-pasting docs into your prompt. No more fixing hallucinated method calls. Just accurate, idiomatic Appwrite code from your agent, every time.
 
-You can find all Appwrite Skills on [GitHub](https://github.com/appwrite/agent-skills/).
+You can find all Appwrite Skills on [GitHub](https://github.com/appwrite/skills/).
 
 # Why Skills?
 
@@ -68,7 +68,7 @@ Whether you're building a Flutter app, a Node.js backend, or a Python script, th
 Getting started takes one command:
 
 ```bash
-npx skills add appwrite/agent-skills
+npx skills add appwrite/skills
 ```
 
 Run it in your project directory, and you'll be prompted to:
@@ -89,6 +89,6 @@ We've been running experiments to find out which AI models work best with Appwri
 Visit our documentation to learn more, check out the skills repo on GitHub, or join us on Discord to let us know what you think.
 
 - [Skills documentation](/docs/tooling/skills)
-- [Appwrite Skills on GitHub](https://github.com/appwrite/agent-skills/)
+- [Appwrite Skills on GitHub](https://github.com/appwrite/skills/)
 - [MCP Server docs](/docs/tooling/mcp)
 - [Discord server](https://appwrite.io/discord)

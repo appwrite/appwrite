@@ -115,15 +115,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateApnsProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<AUTH_KEY>',                            // authKey (optional)
-        '<AUTH_KEY_ID>',                         // authKeyId (optional)
-        '<TEAM_ID>',                             // teamId (optional)
-        '<BUNDLE_ID>'                            // bundleId (optional)
-    );
+const provider = await messaging.updateApnsProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    authKey: '<AUTH_KEY>',
+    authKeyId: '<AUTH_KEY_ID>',
+    teamId: '<TEAM_ID>',
+    bundleId: '<BUNDLE_ID>'
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -139,15 +139,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateApnsProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<AUTH_KEY>',                            // authKey (optional)
-        '<AUTH_KEY_ID>',                         // authKeyId (optional)
-        '<TEAM_ID>',                             // teamId (optional)
-        '<BUNDLE_ID>'                            // bundleId (optional)
-    );
+const provider = await messaging.updateApnsProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    authKey: '<AUTH_KEY>',
+    authKeyId: '<AUTH_KEY_ID>',
+    teamId: '<TEAM_ID>',
+    bundleId: '<BUNDLE_ID>'
+});
 ```
 ```php
 <?php

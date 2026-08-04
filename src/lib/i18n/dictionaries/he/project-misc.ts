@@ -296,6 +296,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create a firewall rule scoped to a site to control how it handles requests.':
     'צרו כלל חומת אש לאתר כדי לשלוט באופן הטיפול בבקשות אליו.',
   'Firewall rule scope': 'היקף כלל חומת האש',
+  'Firewall resource': 'משאב חומת אש',
+  'Search resources...': 'חיפוש משאבים...',
+  'Showing first results. Refine your search to find more.':
+    'מוצגות התוצאות הראשונות. צמצמו את החיפוש כדי למצוא עוד.',
   API: 'API',
   'Firewall protection': 'הגנת חומת אש',
   'Firewall is evaluating rules against incoming traffic for this project.':
@@ -379,11 +383,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Value: 'ערך',
   'Remove condition': 'הסרת תנאי',
   'IP address': 'כתובת IP',
-  'HTTP method': 'מתודת HTTP',
   'Select method': 'בחרו מתודה',
   'e.g. curl/8.0': 'למשל curl/8.0',
+  'Key, e.g. token': 'מפתח, למשל token',
+  'Key, e.g. x-custom-header': 'מפתח, למשל x-custom-header',
+  'e.g. 203.0.113.10': 'למשל 203.0.113.10',
+  'e.g. 203.0.113.10 or CIDR range 203.0.113.0/24':
+    'למשל 203.0.113.10 או טווח CIDR 203.0.113.0/24',
   'User agent': 'User agent',
-  'Request path': 'נתיב בקשה',
   If: 'אם',
   Then: 'אז',
   And: 'וגם',
@@ -1113,20 +1120,68 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Read the docs': 'קריאת הדוקומנטציה',
   'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.':
     'השתמשו ב-CLI של Appwrite כדי לנהל את הפרויקט מהטרמינל. התקינו את ה-CLI, התחברו, ואז כוונו אותו לפרויקט הזה.', // pragma: allowlist secret
+  'Manage this project from the terminal. Use an interactive browser login on your machine, or an API key in CI/CD.':
+    'נהלו את הפרויקט הזה מהטרמינל. השתמשו בהתחברות אינטראקטיבית בדפדפן במחשב שלכם, או במפתח API ב-CI/CD.',
+  Interactive: 'אינטראקטיבי',
+  'CI/CD': 'CI/CD',
   'Install the CLI': 'התקנת ה-CLI',
   'Install script': 'סקריפט התקנה',
   'Full installation guide': 'מדריך התקנה מלא',
   'Log in': 'התחברות',
+  '2. Log in': '2. התחברות',
   Terminal: 'טרמינל',
   'Your email (blurred)': 'האימייל שלכם (מטושטש)',
   'Connect to this project': 'התחברות לפרויקט הזה',
+  '3. Connect to this project': '3. התחברות לפרויקט הזה',
   'For non-interactive use (CI/CD), add':
     'לשימוש לא אינטראקטיבי (CI/CD), הוסיפו',
   'Create API keys in your project settings.':
     'צרו מפתחות API בהגדרות הפרויקט שלכם.',
+  'Opens your browser to authorize the CLI with OAuth (device flow). No password in the terminal.':
+    'פותח את הדפדפן כדי לאשר את ה-CLI עם OAuth (device flow). בלי סיסמה בטרמינל.',
+  'Opens your browser for OAuth. No password in the terminal.':
+    'פותח את הדפדפן ל-OAuth. בלי סיסמה בטרמינל.',
+  'About device authorization': 'על אישור מכשיר',
+  'Device auth': 'אישור מכשיר',
+  'Interactive setup. Pick or create a project and write appwrite.config.json.':
+    'הגדרה אינטראקטיבית. בחרו או צרו פרויקט וכתבו את appwrite.config.json.',
+  'Interactive init. Writes appwrite.config.json.':
+    'אתחול אינטראקטיבי. כותב את appwrite.config.json.',
+  'Authenticate with an API key': 'אימות עם מפתח API',
+  '2. Authenticate with an API key': '2. אימות עם מפתח API',
+  'Non-interactive mode for CI/CD. Sets endpoint, project, and key for headless commands.':
+    'מצב לא אינטראקטיבי ל-CI/CD. מגדיר endpoint, פרויקט ומפתח לפקודות ללא ממשק.',
+  'Headless CI/CD auth: endpoint, project, and key.':
+    'אימות CI/CD ללא ממשק: endpoint, פרויקט ומפתח.',
+  'Non-interactive docs': 'דוקומנטציה לא אינטראקטיבית',
+  'CI docs': 'דוקס CI',
+  'Install guide': 'מדריך התקנה',
+  'Try it': 'נסו',
+  'Common interactive commands after login and init:':
+    'פקודות אינטראקטיביות נפוצות אחרי התחברות ו-init:',
+  'Common headless commands after configuring the client:':
+    'פקודות headless נפוצות אחרי הגדרת ה-client:',
+  'After login and init:': 'אחרי התחברות ו-init:',
+  'After configuring the client:': 'אחרי הגדרת ה-client:',
+  'Try in Appwrite Terminal': 'נסו ב-Appwrite Terminal',
+  'Open Appwrite Terminal': 'פתיחת Appwrite Terminal',
+  'Run CLI commands in your browser against this project. Your Console session is already connected.':
+    'הריצו פקודות CLI בדפדפן מול הפרויקט הזה. סשן ה-Console שלכם כבר מחובר.',
+  "You don't have permission to open the project terminal.":
+    'אין לכם הרשאה לפתוח את טרמינל הפרויקט.',
+  'For local workflows like pull, push, init, and run, use your machine terminal after install.':
+    'לזרימות מקומיות כמו pull, push, init ו-run, השתמשו בטרמינל במחשב אחרי ההתקנה.',
+  'Example commands': 'פקודות לדוגמה',
+  'Pull resources': 'משיכת משאבים',
+  'Push resources': 'דחיפת משאבים',
+  'Init a function': 'אתחול פונקציה',
+  'Run a function locally': 'הרצת פונקציה מקומית',
+  'List users': 'הצגת משתמשים',
+  'Create a team': 'יצירת צוות',
+  'Create a function deployment': 'יצירת פריסת פונקציה',
   'CLI commands': 'פקודות CLI',
-  'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.':
-    'תנו לסוכן ה-AI שלכם הקשר מדויק של Appwrite SDK: חתימות מתודות, תבניות ושיטות עבודה מומלצות לשפה שלכם. התקינו פעם אחת לכל פרויקט או גלובלית; עובד ב-Cursor, ב-Claude Code ובכלים תואמים נוספים.', // pragma: allowlist secret
+  'Give your AI agent accurate Appwrite SDK context: method signatures, patterns, and best practices for your language. Run the setup once; you choose project or global scope in the prompts. Works with Cursor, Claude Code, and other compatible tools.':
+    'תנו לסוכן ה-AI שלכם הקשר מדויק ל-Appwrite SDK: חתימות מתודות, תבניות ושיטות עבודה מומלצות לשפה שלכם. הריצו את ההתקנה פעם אחת; תבחרו היקף פרויקט או גלובלי בפרומפטים. עובד עם Cursor, Claude Code וכלים תואמים נוספים.', // pragma: allowlist secret
   'Skills are available for': 'מיומנויות (Skills) זמינות עבור',
   'pick what you use during setup.': 'בחרו במה אתם משתמשים במהלך ההתקנה.',
   Docs: 'דוקומנטציה',
@@ -1143,6 +1198,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'project (this repo) or global.': 'פרויקט (ה-repo הזה) או גלובלי.',
   'prefer symlink so skills stay up to date.':
     'עדיף קישור סימבולי כדי שהמיומנויות יישארו מעודכנות.',
+  'Skills help your agent write Appwrite code. Ask one of these after installing. For live project actions like listing users, use MCP.':
+    'Skills עוזרות לסוכן שלכם לכתוב קוד Appwrite. בקשו אחת מהבקשות האלה אחרי ההתקנה. לפעולות חיות בפרויקט כמו הצגת משתמשים, השתמשו ב-MCP.',
+  'SDK context for your AI agent: accurate methods, patterns, and best practices. For live project actions like listing users, use MCP.':
+    'הקשר SDK לסוכן ה-AI שלכם: מתודות מדויקות, תבניות ושיטות עבודה מומלצות. לפעולות חיות בפרויקט כמו הצגת משתמשים, השתמשו ב-MCP.',
+  'Available for TypeScript, Dart, Go, and more.':
+    'זמין עבור TypeScript, Dart, Go ועוד.',
+  'Run in project root. Pick SDKs, tools, scope, and method.':
+    'הריצו בתיקיית השורש של הפרויקט. בחרו SDK, כלים, היקף ושיטת התקנה.',
+  'Run in project root.': 'הריצו בתיקיית השורש של הפרויקט.',
+  'Ask your agent to write Appwrite code:':
+    'בקשו מהסוכן שלכם לכתוב קוד Appwrite:',
+  'Implement email/password sign-in with the Appwrite SDK':
+    'ממשו התחברות עם אימייל וסיסמה באמצעות Appwrite SDK',
+  'Review my Appwrite auth implementation against best practices':
+    'בדקו את מימוש האימות שלי ב-Appwrite מול שיטות עבודה מומלצות',
+  'Add Realtime updates to my dashboard with the Appwrite SDK':
+    'הוסיפו עדכוני Realtime ללוח הבקרה שלי עם Appwrite SDK',
   'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.':
     'השתמשו בנקודת קצה HTTPS ברמת הפרויקט עם חתימה תואמת SigV4 כדי לחבר את האחסון ל-rclone, ל-IaC או לצינורות מותאמים אישית. נקודת קצה, מפתח גישה וסוד הניתנים להעתקה יופיעו כאן כשהאינטגרציה תהיה מוכנה.',
   'Work in progress - nothing to copy yet.':
@@ -1234,6 +1306,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Install: 'התקנה',
   'MCP servers': 'שרתי MCP',
   '1. Install': '1. התקנה',
+  'More tools in the docs': 'כלים נוספים בדוקס',
   '2. Try it': '2. נסו',
   'Continue to Try it': 'המשך ל-נסו',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
@@ -1299,10 +1372,47 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'השתמשו בו כשאתם רוצים סביבות שניתן לשחזר, שינויים מתועדים ב-Git, או לחבר את Appwrite לסטאק Terraform רחב יותר (VPC, DNS, פונקציות ועוד) בזרימת עבודה אחת. הרישום מתעד משאבים כגון', // pragma: allowlist secret
   'and others, with full schemas and imports.':
     'ואחרים, עם סכימות מלאות וייבוא.',
+  'Declare Appwrite resources in .tf files and apply them with Terraform. Use the examples for provider setup, TablesDB, and Functions.':
+    'הגדירו משאבי Appwrite בקובצי .tf והחילו אותם עם Terraform. השתמשו בדוגמאות להגדרת הספק, TablesDB ופונקציות.',
+  'Manage Appwrite resources as code. Copy an example on the right, then run terraform init and apply.':
+    'נהלו משאבי Appwrite כקוד. העתיקו דוגמה מימין, ואז הריצו terraform init ו-apply.',
+  'Required for apply. Never commit secrets to Git.':
+    'נדרש עבור apply. לעולם אל תבצעו commit לסודות ב-Git.',
+  'Name after TF_VAR_ must match the variable (usually lowercase). .env files are not loaded.':
+    'השם אחרי TF_VAR_ חייב להתאים למשתנה (בדרך כלל באותיות קטנות). קובצי .env אינם נטענים.',
+  'Terraform loads terraform.tfvars next to your .tf files automatically. Gitignore *.tfvars.':
+    'Terraform טוען את terraform.tfvars ליד קובצי ה-.tf אוטומטית. הוסיפו *.tfvars ל-.gitignore.',
+  'Pass your API key with TF_VAR_appwrite_api_key or the terraform.tfvars example. Never commit secrets to Git.':
+    'העבירו את מפתח ה-API עם TF_VAR_appwrite_api_key או עם דוגמת terraform.tfvars. לעולם אל תבצעו commit לסודות ב-Git.',
   'Terraform needs an API key with scopes for the resources you manage. Pass it with':
     'Terraform זקוק למפתח API עם הרשאות למשאבים שאתם מנהלים. העבירו אותו באמצעות',
+  'Terraform needs an API key with scopes for the resources you manage. Never commit secrets to Git.':
+    'Terraform זקוק למפתח API עם הרשאות למשאבים שאתם מנהלים. לעולם אל תבצעו commit לסודות ב-Git.',
   or: 'או',
   'never commit secrets to Git.': 'לעולם אל תבצעו commit לסודות ב-Git.',
+  'Environment variable': 'משתנה סביבה',
+  'Terraform maps TF_VAR_<name> to variable "<name>". The name after TF_VAR_ must match exactly (usually lowercase), so for var.appwrite_api_key run:':
+    'Terraform ממפה את TF_VAR_<name> ל-variable "<name>". השם אחרי TF_VAR_ חייב להתאים בדיוק (בדרך כלל באותיות קטנות), לכן עבור var.appwrite_api_key הריצו:',
+  'A .env file is not read by Terraform. Export the variable in your shell (or use direnv) before terraform apply.':
+    'קובץ .env אינו נקרא על ידי Terraform. ייצאו את המשתנה בטרמינל (או השתמשו ב-direnv) לפני terraform apply.',
+  'Add a terraform.tfvars file next to your .tf files. Terraform loads it automatically. See the terraform.tfvars example tab, and gitignore *.tfvars.':
+    'הוסיפו קובץ terraform.tfvars ליד קובצי ה-.tf. Terraform טוען אותו אוטומטית. ראו את לשונית הדוגמה terraform.tfvars, והוסיפו *.tfvars ל-.gitignore.',
+  'Place next to your .tf files. Terraform loads terraform.tfvars automatically. Add *.tfvars to .gitignore so the API key is never committed.':
+    'שימו ליד קובצי ה-.tf. Terraform טוען את terraform.tfvars אוטומטית. הוסיפו *.tfvars ל-.gitignore כדי שמפתח ה-API לא יישמר ב-repo.',
+  'TablesDB example: database, table, columns, and index. Add alongside your provider configuration.':
+    'דוגמת TablesDB: מסד נתונים, טבלה, עמודות ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
+  'TablesDB example: database, table, column, and index. Add alongside your provider configuration.':
+    'דוגמת TablesDB: מסד נתונים, טבלה, עמודה ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
+  'Storage example: buckets with size limits, extensions, and image transformations.':
+    'דוגמת אחסון: באקטים עם מגבלות גודל, סיומות והמרות תמונה.',
+  'Storage example: buckets and a file upload from a local path on the machine running Terraform.':
+    'דוגמת אחסון: באקטים והעלאת קובץ מנתיב מקומי במחשב שמריץ Terraform.',
+  'Functions example: a basic function, an event-driven function, and an environment variable.':
+    'דוגמת פונקציות: פונקציה בסיסית, פונקציה מונעת אירועים ומשתנה סביבה.',
+  'Auth example: a team and a user. Pass passwords through variables (see terraform.tfvars), not hard-coded strings.':
+    'דוגמת אימות: צוות ומשתמש. העבירו סיסמאות דרך משתנים (ראו terraform.tfvars), לא כמחרוזות מקודדות.',
+  'Example database, table, columns, and index. Add alongside your provider configuration.':
+    'דוגמה למסד נתונים, טבלה, עמודות ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
   'Provider docs on Terraform Registry':
     'דוקומנטציית הספק ב-Terraform Registry',
   "Provider uses this project's endpoint and project ID. Run":

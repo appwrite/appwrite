@@ -3,6 +3,7 @@ layout: post
 title: "Announcing time helper queries: Cleaner, more expressive time-based queries"
 description: Handle time-based filtering directly in your queries using new helpers for created and updated timestamps.
 date: 2025-09-02
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-time-helper-queries/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -11,7 +12,7 @@ featured: false
 faqs:
   - question: "What are time helper queries in Appwrite Databases?"
     answer: "Time helper queries are dedicated operators (`createdBefore`, `createdAfter`, `updatedBefore`, `updatedAfter`) that filter rows by their `$createdAt` and `$updatedAt` timestamps. They replace verbose range comparisons against system attributes with a more direct, intent-revealing syntax."
-  - question: "How do I filter Appwrite documents by date?"
+  - question: "How do I filter Appwrite rows by date?"
     answer: "Use the time helper queries with an ISO-8601 date string, for example `Query.createdAfter(new Date('2024-01-01').toISOString())`. You can combine multiple helpers in the same query to express a range, such as everything created in a specific month or updated after a given backup."
   - question: "What is ISO-8601 date format?"
     answer: "ISO-8601 is the international standard for representing dates and times, for example `2024-10-05T14:48:00Z`. The `Z` suffix denotes UTC. Appwrite expects timestamps in ISO-8601 because it is unambiguous and sorts correctly as a string, which makes it ideal for queries and APIs."
@@ -26,11 +27,11 @@ If you’ve ever built a feed, a dashboard, or an audit report, you know how oft
 
 These time-based queries show up in so many of the apps you build, and when you’re working with dates, you naturally think in terms of *before* and *after*.
 
-To make this workflow smoother, we’re excited to announce **time helper queries:** A new way to filter your documents by creating and updating times using simple, expressive syntax.
+To make this workflow smoother, we’re excited to announce **time helper queries:** A new way to filter rows by creation and update times using simple, expressive syntax.
 
 # A better way to query by dates
 
-Many workflows depend on knowing when a document was created or last updated. Whether you’re loading new items into a feed, exporting data that has changed since the previous run, or applying retention rules, you often need to filter by time.
+Many workflows depend on knowing when a row was created or last updated. Whether you’re loading new items into a feed, exporting data that has changed since the previous run, or applying retention rules, you often need to filter by time.
 
 Previously, this meant comparing against `$createdAt` or `$updatedAt` using range operators. That approach works, but it adds extra noise to your queries. To make this more direct, you can now use dedicated helpers that map exactly to these common cases:
 
@@ -66,7 +67,7 @@ Time-based filtering shows up in countless scenarios:
 - **Analytics dashboards:** Chart data for “last 7 days” or “last quarter.”
 - **Exports & reports:** Generate monthly summaries or audits.
 - **Archival & compliance:** Isolate data for retention or deletion policies.
-- **Incremental jobs:** Process only documents updated after your last run.
+- **Incremental jobs:** Process only rows updated after your last run.
 
 # Immediate benefits
 

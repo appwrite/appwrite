@@ -80,15 +80,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.createSms(
-        '<MESSAGE_ID>',                          // messageId
-        '<CONTENT>',                             // content
-        [],                                      // topics (optional)
-        [],                                      // users (optional)
-        [],                                      // targets (optional)
-        true,                                    // draft (optional)
-        ''                                       // scheduledAt (optional)
-    );
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: true,
+    scheduledAt: ''
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -104,15 +104,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.createSms(
-        '<MESSAGE_ID>',                          // messageId
-        '<CONTENT>',                             // content
-        [],                                      // topics (optional)
-        [],                                      // users (optional)
-        [],                                      // targets (optional)
-        true,                                    // draft (optional)
-        ''                                       // scheduledAt (optional)
-    );
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: true,
+    scheduledAt: ''
+});
 ```
 ```php
 <?php
@@ -383,14 +383,14 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.updateMsg91Provider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<SENDER_ID>',                           // senderId (optional)
-        '<AUTH_KEY>',                            // authKey (optional)
-        '<FROM>'                                 // from (optional)
-    );
+const message = await messaging.updateMsg91Provider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    templateId: '<TEMPLATE_ID>',
+    senderId: '<SENDER_ID>',
+    authKey: '<AUTH_KEY>'
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -406,14 +406,14 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.updateMsg91Provider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<SENDER_ID>',                           // senderId (optional)
-        '<AUTH_KEY>',                            // authKey (optional)
-        '<FROM>'                                 // from (optional)
-    );
+const message = await messaging.updateMsg91Provider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    templateId: '<TEMPLATE_ID>',
+    senderId: '<SENDER_ID>',
+    authKey: '<AUTH_KEY>'
+});
 ```
 ```php
 <?php

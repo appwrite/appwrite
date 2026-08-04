@@ -43,42 +43,14 @@ import {
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
+import {
+  FIREWALL_TRAFFIC_SERIES,
+  sortFirewallTrafficSeriesByValueAsc,
+  type FirewallTrafficSeriesKey,
+} from '@/lib/firewall/traffic-series'
 import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAlert'
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
-
-const SERIES = [
-  {
-    key: 'requests' as const,
-    label: 'Passed',
-    color: '#10b981',
-    gradientId: 'firewall-requests-fill',
-  },
-  {
-    key: 'denied' as const,
-    label: 'Denied',
-    color: 'var(--destructive)',
-    gradientId: 'firewall-denied-fill',
-  },
-  {
-    key: 'challenged' as const,
-    label: 'Challenged',
-    color: 'var(--chart-4)',
-    gradientId: 'firewall-challenged-fill',
-  },
-  {
-    key: 'rateLimited' as const,
-    label: 'Rate limited',
-    color: '#f59e0b',
-    gradientId: 'firewall-rate-limited-fill',
-  },
-  {
-    key: 'redirected' as const,
-    label: 'Redirected',
-    color: 'var(--chart-3)',
-    gradientId: 'firewall-redirected-fill',
-  },
-]
 
 interface StatCardProps {
   label: string
@@ -272,7 +244,7 @@ export function TrafficOverview() {
         challenged: totalChallenged,
         rateLimited: totalRateLimited,
         redirected: totalRedirected,
-      }) satisfies Record<(typeof SERIES)[number]['key'], number>,
+      }) satisfies Record<FirewallTrafficSeriesKey, number>,
     [
       totalPassed,
       totalDenied,
@@ -282,18 +254,12 @@ export function TrafficOverview() {
     ],
   )
 
-  // Highest total first (legend / tooltip preference). Recharts stacks
-  // bottom-up, so areas render in reverse of this list.
-  const seriesByValueDesc = useMemo(() => {
-    return [...SERIES].sort((a, b) => {
-      const diff = seriesTotals[b.key] - seriesTotals[a.key]
-      if (diff !== 0) return diff
-      return (
-        SERIES.findIndex((series) => series.key === a.key) -
-        SERIES.findIndex((series) => series.key === b.key)
-      )
-    })
-  }, [seriesTotals])
+  // Lowest total first (legend / tooltip preference). Recharts stacks
+  // bottom-up, so render in this order for lowest at the bottom.
+  const seriesByValueAsc = useMemo(
+    () => sortFirewallTrafficSeriesByValueAsc(seriesTotals),
+    [seriesTotals],
+  )
 
   const metrics = [
     {
@@ -391,7 +357,7 @@ export function TrafficOverview() {
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {seriesByValueDesc.map((series) => (
+          {seriesByValueAsc.map((series) => (
             <div key={series.key} className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-full"
@@ -423,7 +389,7 @@ export function TrafficOverview() {
                 {...chartProps}
               >
                 <defs>
-                  {SERIES.map((series) => (
+                  {FIREWALL_TRAFFIC_SERIES.map((series) => (
                     <linearGradient
                       key={series.gradientId}
                       id={series.gradientId}
@@ -498,7 +464,7 @@ export function TrafficOverview() {
                     }
 
                     const sortedPayload = [...payload].sort(
-                      (a, b) => seriesValue(b) - seriesValue(a),
+                      (a, b) => seriesValue(a) - seriesValue(b),
                     )
 
                     return (
@@ -527,7 +493,7 @@ export function TrafficOverview() {
                 />
                 {/* Recharts stacks bottom-up: render lowest totals first so the
                     highest-value series sits on top (and owns the outer stroke). */}
-                {[...seriesByValueDesc].reverse().map((series) => (
+                {seriesByValueAsc.map((series) => (
                   <Area
                     key={series.key}
                     type="monotone"

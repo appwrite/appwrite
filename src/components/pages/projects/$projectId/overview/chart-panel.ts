@@ -12,7 +12,7 @@ export {
   USAGE_CHART_Y_AXIS_WIDTH,
 } from '@/lib/usage/chart-layout'
 
-/** Header block above chart/breakdown body — fixed height so chart columns stay aligned. */
+/** Header block above chart/breakdown body - fixed height so chart columns stay aligned. */
 export const OVERVIEW_CHART_PANEL_HEADER_HEIGHT = 60
 
 /** Body height below the header (matches {@link OVERVIEW_CHART_HEIGHT} on desktop rows). */
@@ -69,7 +69,7 @@ export function overviewBreakdownListClassForRowCount(
     : overviewTopBreakdownListClass
 }
 
-/** One breakdown row — keep skeleton and data rows the same height. */
+/** One breakdown row - keep skeleton and data rows the same height. */
 export const overviewTopBreakdownRowClass =
   'flex h-9 min-h-9 w-full min-w-0 shrink-0 items-center gap-2 overflow-hidden rounded-md px-2'
 
@@ -77,14 +77,14 @@ export const overviewTopBreakdownRowClass =
 export const overviewChartTabPanelsContainerClass =
   'grid w-full [&>*]:col-start-1 [&>*]:row-start-1 [&>*]:w-full'
 
-/** Tab panel visibility — keep in layout for stable sizing, hide visually when inactive. */
+/** Tab panel visibility - keep in layout for stable sizing, hide visually when inactive. */
 export function overviewChartTabPanelVisibilityClass(
   isActive: boolean,
 ): string {
   return isActive ? '' : 'invisible pointer-events-none'
 }
 
-/** Chart + breakdown row — fixed height on wide layouts. */
+/** Chart + breakdown row - fixed height on wide layouts. */
 export function overviewChartContentRowClassName(
   withBreakdown = true,
 ): string {
@@ -97,7 +97,7 @@ export function overviewChartContentRowClassName(
 export const overviewChartContentRowClass =
   overviewChartContentRowClassName(true)
 
-/** Main chart column — grows to fill space not used by the breakdown panel. */
+/** Main chart column - grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
   'flex h-full w-full min-w-0 flex-col overflow-hidden border-b border-border px-5 pb-8 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
 
@@ -108,14 +108,14 @@ export const overviewBreakdownColumnClass =
 export const overviewChartPanelHeaderClass =
   'mb-4 flex h-[60px] shrink-0 flex-nowrap items-center justify-between gap-x-3'
 
-/** Legend rows, links, and other header actions — single row beside the title. */
+/** Legend rows, links, and other header actions - single row beside the title. */
 export const overviewChartPanelHeaderActionsClass =
   'flex shrink-0 flex-nowrap items-center justify-end gap-x-4 gap-y-1.5'
 
 export const overviewChartPanelBodyClass =
   'flex h-[240px] w-full min-w-0 shrink-0 flex-col text-muted-foreground'
 
-/** Chart canvas — fills the fixed panel body. */
+/** Chart canvas - fills the fixed panel body. */
 export const overviewChartPanelChartAreaClass =
   'relative flex h-full min-h-0 w-full min-w-0 flex-col'
 

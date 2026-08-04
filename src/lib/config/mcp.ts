@@ -22,7 +22,39 @@ export const MCP_EDITOR_CONFIG_SNIPPET = {
   },
 } as const
 
-export const MCP_CLAUDE_CODE_INSTALL_COMMAND = `claude mcp add ${MCP_SERVER_NAME} --transport http ${MCP_SERVER_URL}`
+/**
+ * Claude Desktop (and similar stdio-only clients) need `mcp-remote` to reach
+ * the hosted HTTP MCP endpoint.
+ * @see https://appwrite.io/docs/tooling/ai/vibe-coding/claude-desktop
+ */
+export const MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET = {
+  mcpServers: {
+    [MCP_SERVER_NAME]: {
+      command: 'npx',
+      args: ['mcp-remote', MCP_SERVER_URL],
+    },
+  },
+} as const
+
+/** OpenCode remote MCP entry. */
+export const MCP_OPENCODE_CONFIG_SNIPPET = {
+  $schema: 'https://opencode.ai/config.json',
+  mcp: {
+    [MCP_SERVER_NAME]: {
+      type: 'remote',
+      enabled: true,
+      url: MCP_SERVER_URL,
+    },
+  },
+} as const
+
+/** `authenticateComment` is the localized trailing comment on the `/mcp` line. */
+export function getMcpClaudeCodeInstallCommand(
+  authenticateComment: string,
+): string {
+  return `claude mcp add ${MCP_SERVER_NAME} --transport http ${MCP_SERVER_URL}
+claude "/mcp" # ${authenticateComment}`
+}
 
 export const MCP_CODEX_INSTALL_COMMAND = `codex mcp add ${MCP_SERVER_NAME} --url ${MCP_SERVER_URL}`
 
@@ -34,17 +66,41 @@ export function getSelfHostedMcpEnv(projectId: string, endpoint: string) {
   }
 }
 
-/** Cursor / VS Code mcp.json for self-hosted (stdio via uvx). */
+/** Shared uvx stdio server entry for self-hosted editor configs. */
+function getSelfHostedUvxServer(projectId: string, endpoint: string) {
+  return {
+    command: 'uvx',
+    args: ['mcp-server-appwrite'],
+    env: getSelfHostedMcpEnv(projectId, endpoint),
+  }
+}
+
+/** Cursor / VS Code / Claude Desktop mcp.json for self-hosted (stdio via uvx). */
 export function getSelfHostedMcpEditorConfig(
   projectId: string,
   endpoint: string,
 ) {
   return {
     mcpServers: {
+      [MCP_SERVER_NAME]: getSelfHostedUvxServer(projectId, endpoint),
+    },
+  }
+}
+
+/** OpenCode local MCP entry (`type: local` + `environment`). */
+export function getSelfHostedOpencodeConfig(
+  projectId: string,
+  endpoint: string,
+) {
+  const env = getSelfHostedMcpEnv(projectId, endpoint)
+  return {
+    $schema: 'https://opencode.ai/config.json',
+    mcp: {
       [MCP_SERVER_NAME]: {
-        command: 'uvx',
-        args: ['mcp-server-appwrite'],
-        env: getSelfHostedMcpEnv(projectId, endpoint),
+        type: 'local',
+        command: ['uvx', 'mcp-server-appwrite'],
+        enabled: true,
+        environment: env,
       },
     },
   }

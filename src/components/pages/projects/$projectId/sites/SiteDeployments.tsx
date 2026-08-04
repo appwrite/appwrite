@@ -8,6 +8,10 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
+import {
   Clock,
   Trash2,
   GitBranch,
@@ -89,6 +93,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
+import { formatDecimalBytes } from '@/lib/utils/byte-display-unit'
 import { proxyRuleServesActiveDeployment } from '@/lib/utils/proxy-domains'
 import {
   useProjectSite,
@@ -116,12 +121,8 @@ import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1000
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+function formatSize(bytes: number | bigint): string {
+  return formatDecimalBytes(bytes)
 }
 
 function formatDuration(seconds: number): string {
@@ -562,7 +563,6 @@ export function SiteDeploymentsView() {
           : `${t('Successfully deleted')} ${selectedDeployments.size} ${t('deployments')}`,
       )
       setSelectedDeployments(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete deployments'))
@@ -576,7 +576,11 @@ export function SiteDeploymentsView() {
 
   const confirmBulkDelete = () => {
     if (selectedDeployments.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedDeployments))
+    const ids = Array.from(selectedDeployments)
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+    })
+    bulkDeleteMutation.mutate(ids)
   }
 
   const toggleDeployment = (deploymentId: string) => {
@@ -1838,12 +1842,12 @@ export function SiteDeploymentsView() {
                                     deploymentData.status,
                                   ) && (
                                     <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setCancelTargetDeploymentId(
-                                          deploymentData.$id,
-                                        )
-                                        setCancelBuildDialogOpen(true)
+                                      onSelect={() => {
+                                        const id = deploymentData.$id
+                                        openDialogAfterOverlayCloses(() => {
+                                          setCancelTargetDeploymentId(id)
+                                          setCancelBuildDialogOpen(true)
+                                        })
                                       }}
                                     >
                                       <MenuItemContent icon={XCircle}>

@@ -1,0 +1,29 @@
+---
+layout: article
+title: VectorsDB
+description: Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.
+---
+
+Appwrite VectorsDB lets you store vector embeddings and run similarity search over them.
+A collection is created with a fixed `dimension`, every document holds an `embeddings` vector of that length plus optional `metadata`, and an HNSW index keeps similarity search fast as your data grows.
+
+{% info title="Looking for file storage?" %}
+Databases store data, if you need to store files like images, PDFs or videos, use [Appwrite Storage](/docs/products/storage).
+{% /info %}
+
+You organize data into databases, collections, and documents, the same way you do across Appwrite Databases. What sets VectorsDB apart is the fixed schema built for vectors and the ability to generate text embeddings and search by similarity.
+
+# Key concepts {% #key-concepts %}
+[Collections](/docs/products/databases/vectorsdb/collections) are created with a required `dimension`, the length of the vectors they hold. Instead of a typed-attribute schema, every collection is provisioned with a fixed shape: a required `embeddings` vector and an optional `metadata` object.
+
+[Documents](/docs/products/databases/vectorsdb/documents) store a single embedding under `embeddings` and any associated JSON under `metadata`. The embedding length must match the collection's `dimension`.
+
+[Embeddings](/docs/products/databases/vectorsdb/embeddings) can be generated from text with built-in models, so you can turn strings into vectors and store them without running a separate embedding service.
+
+[Vector search](/docs/products/databases/vectorsdb/vector-search) ranks documents by how close their `embeddings` are to a query vector. You create an HNSW index on the `embeddings` field, then pass a vector query to list documents by cosine, dot product, or Euclidean distance.
+
+VectorsDB also shares the [permissions](/docs/products/databases/vectorsdb/permissions), [queries](/docs/products/databases/vectorsdb/queries), [pagination](/docs/products/databases/vectorsdb/pagination), [transactions](/docs/products/databases/vectorsdb/transactions), and [bulk operations](/docs/products/databases/vectorsdb/bulk-operations) used across Appwrite Databases.
+
+{% arrow_link href="/docs/products/databases/vectorsdb/quick-start" %}
+Quick start
+{% /arrow_link %}

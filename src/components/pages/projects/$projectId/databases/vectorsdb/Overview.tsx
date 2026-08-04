@@ -181,12 +181,12 @@ export function Overview({
   } = useProjectTables(
     projectId,
     databaseId,
+    DB_KIND,
     requestedPage - 1,
     pageSize,
     searchValue,
     'asc',
     '$createdAt',
-    DB_KIND,
   )
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
@@ -197,12 +197,12 @@ export function Overview({
   } = useProjectTables(
     projectId,
     databaseId,
+    DB_KIND,
     displayedPage - 1,
     pageSize,
     searchValue,
     'asc',
     '$createdAt',
-    DB_KIND,
   )
 
   // Update displayed page only when requested page data is ready (no flash)
@@ -218,7 +218,7 @@ export function Overview({
   // Fetch database schema for export
   const { data: databaseSchema, isLoading: schemaLoading } = useQuery({
     queryKey: ['database-schema', 'project', projectId, databaseId],
-    queryFn: () => fetchDatabaseSchema(projectId, databaseId),
+    queryFn: () => fetchDatabaseSchema(projectId, databaseId, DB_KIND),
     enabled:
       !!projectId &&
       !!databaseId &&
@@ -501,7 +501,7 @@ export function Overview({
   // Create table mutation
   const createTableMutation = useMutation({
     mutationFn: (data: { tableId?: string; name: string }) =>
-      createProjectTable(projectId!, databaseId!, data),
+      createProjectTable(projectId!, databaseId!, DB_KIND, data),
     onSuccess: async (table) => {
       toast.success(`${table.name} ${t('has been created')}`)
       // Refetch tables and wait for it to complete before navigating
@@ -533,7 +533,7 @@ export function Overview({
       // Delete all tables in parallel
       await Promise.all(
         tableIds.map((tableId) =>
-          deleteProjectTable(projectId, databaseId, tableId),
+          deleteProjectTable(projectId, databaseId, DB_KIND, tableId),
         ),
       )
     },
@@ -790,6 +790,7 @@ export function Overview({
                   <DatabaseMonitorMobileNav
                     projectId={projectId}
                     databaseId={databaseId}
+                  dbKind={DB_KIND}
                   />
                 </div>
               ) : null}
@@ -1156,6 +1157,7 @@ export function Overview({
           <div className="flex min-h-0 flex-1 flex-col">
             <DatabaseMonitorView
               databaseId={databaseId}
+              dbKind={DB_KIND}
               dateRange={monitorDateRange}
               chartTick={monitorChartTick}
             />

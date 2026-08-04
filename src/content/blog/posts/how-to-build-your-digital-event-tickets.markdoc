@@ -3,6 +3,7 @@ layout: post
 title: How to build your digital event tickets
 description: Did you enjoy the Init tickets? In this blog we share how you can create your own.
 date: 2024-03-04
+lastUpdated: 2026-06-29
 cover: /images/blog/tickets-cover.avif
 timeToRead: 12
 author: laura-du-ry
@@ -117,20 +118,20 @@ for (let c = 0; c < maxCols; c++) {
 }
 ```
 
-However, this operation is expensive! It's best if we don't have to always fetch it on each and every access to it. So we save it to Appwrite Cloud. By using a number array attribute and converting the matrix to a flat array, this is what our final code will look like.
+However, this operation is expensive! It's best if we don't have to always fetch it on each and every access to it. So we save it to Appwrite Cloud. By using a number array column and converting the matrix to a flat array, this is what our final code will look like.
 
 ```ts
-import { APPWRITE_DB_INIT_ID, APPWRITE_COL_INIT_ID } from '$env/static/private';
+import { APPWRITE_DB_INIT_ID, APPWRITE_TABLE_INIT_ID } from '$env/static/private';
 import { appwriteInit } from '$lib/appwrite/init';
 import parse from 'node-html-parser';
 import type { TicketData, ContributionsMatrix } from '../../constants';
 
 export async function getContributions(id: string): Promise<ContributionsMatrix | null> {
-    const { gh_user, contributions } = (await appwriteInit.database.getDocument(
-        APPWRITE_DB_INIT_ID,
-        APPWRITE_COL_INIT_ID,
-        id
-    )) as unknown as TicketData;
+    const { gh_user, contributions } = (await appwriteInit.tablesDB.getRow({
+        databaseId: APPWRITE_DB_INIT_ID,
+        tableId: APPWRITE_TABLE_INIT_ID,
+        rowId: id
+    })) as unknown as TicketData;
 
     if (!gh_user) return null;
 
@@ -145,9 +146,14 @@ export async function getContributions(id: string): Promise<ContributionsMatrix 
 
     // Code for fetching the matrix here
 
-    // Update the document with the new contributions
-    await appwriteInit.database.updateDocument(APPWRITE_DB_INIT_ID, APPWRITE_COL_INIT_ID, id, {
-        contributions: matrix.flat()
+    // Update the row with the new contributions
+    await appwriteInit.tablesDB.updateRow({
+        databaseId: APPWRITE_DB_INIT_ID,
+        tableId: APPWRITE_TABLE_INIT_ID,
+        rowId: id,
+        data: {
+            contributions: matrix.flat()
+        }
     });
 
     return matrix;

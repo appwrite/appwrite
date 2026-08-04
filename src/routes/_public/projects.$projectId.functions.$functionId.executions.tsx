@@ -35,7 +35,7 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Function metadata only — executions load in the view with a skeleton (do not block navigation)
+    // Function metadata only - executions load in the view with a skeleton (do not block navigation)
     await queryClient.ensureQueryData(
       projectFunctionQueryOptions(projectId, functionId),
     )

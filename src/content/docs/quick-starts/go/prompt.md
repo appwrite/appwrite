@@ -168,8 +168,8 @@ type Todo struct {
 }
 
 type TodoList struct {
-    *models.DocumentList
-    Documents []Todo `json:"rows"`
+    *models.RowList
+    Rows []Todo `json:"rows"`
 }
 ```
 
@@ -186,7 +186,7 @@ func getTodos() {
     todoResponse.Decode(&todos)
 
     fmt.Println("Todos:")
-    for _, todo := range todos.Documents {
+    for _, todo := range todos.Rows {
         fmt.Printf("Title: %s\nDescription: %s\nIs Todo Complete: %t\n\n", todo.Title, todo.Description, todo.IsComplete)
     }
 }
@@ -210,7 +210,7 @@ func getCompletedTodos() {
     todoResponse.Decode(&todos)
 
     fmt.Println("Completed todos (limited to 5):")
-    for _, todo := range todos.Documents {
+    for _, todo := range todos.Rows {
         fmt.Printf("Title: %s\nDescription: %s\nIs Todo Complete: %t\n\n", todo.Title, todo.Description, todo.IsComplete)
     }
 }
@@ -233,7 +233,7 @@ func getIncompleteTodos() {
     todoResponse.Decode(&todos)
 
     fmt.Println("Incomplete todos (ordered by title):")
-    for _, todo := range todos.Documents {
+    for _, todo := range todos.Rows {
         fmt.Printf("Title: %s\nDescription: %s\nIs Todo Complete: %t\n\n", todo.Title, todo.Description, todo.IsComplete)
     }
 }

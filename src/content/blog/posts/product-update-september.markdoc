@@ -3,7 +3,7 @@ layout: post
 title: "September product update: New Roles | Hackathon | CCPA | 1.6 for self-hosted"
 description: "A recap of everything new at Appwrite in September."
 date: 2024-09-30
-lastUpdated: 2026-05-22
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-september/cover.avif
 timeToRead: 5
 author: dennis-ivy
@@ -15,8 +15,8 @@ faqs:
     answer: "CCPA is a California privacy law that gives consumers rights over how their personal data is collected and used. Appwrite being CCPA compliant means the platform meets those requirements, which makes it easier for you to satisfy your own obligations to California users."
   - question: "What landed in Appwrite 1.6 for self-hosted?"
     answer: "Self-hosted 1.6 includes local development tooling, the new Appwrite CLI, binary executions, dynamic keys, delayed executions, the Go SDK and runtime, and session alerts. These are the same features that shipped on Cloud during Init."
-  - question: "Can I update existing collection attribute names and sizes in Appwrite?"
-    answer: "Yes. You can rename an attribute or change its size directly from the Console without recreating the attribute or running a manual migration. This makes schema iteration much less painful."
+  - question: "Can I update existing table column names and sizes in Appwrite?"
+    answer: "Yes. You can rename a column or change its size directly from the Console without recreating the column or running a manual migration. This makes schema iteration much less painful."
   - question: "What was the 1.5.11 security patch about?"
     answer: "An issue in open-runtimes/executor caused error stack traces to leak into build and execution logs. Cloud was patched and affected keys were rotated by the team, and self-hosted users should upgrade to 1.5.11 to apply the fix."
 ---
@@ -94,11 +94,11 @@ If you are using a self-hosted Appwrite instance, we strongly recommend upgradin
 [Check out the changelog for more details.](https://appwrite.io/changelog/entry/2024-09-17)
 
 
-## Updating collection attribute names and sizes
+## Updating table column names and sizes
 
-You can now update attribute names and sizes directly from your Cloud Console.
+You can now update column names and sizes directly from your Cloud Console.
 
-This update provides better flexibility in managing your data models, allowing you to adjust attributes without needing to recreate them or handle complicated migrations.
+This update provides better flexibility in managing your data models, allowing you to adjust columns without needing to recreate them or handle complicated migrations.
 
 This is just one in a series of updates we plan to release for Appwrite databases over the next few weeks.
 

@@ -7,37 +7,34 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   IMAGE_TRANSFORMATIONS_DESCRIPTION,
   IMAGE_TRANSFORMATIONS_DOCS_HREF,
-  STORAGE_BUILDS_DESCRIPTION,
-  STORAGE_DEPLOYMENTS_DESCRIPTION,
+  OVERVIEW_STORAGE_BREAKDOWN_OPTIONS,
   STORAGE_DOCS_HREF,
-  STORAGE_FILE_DESCRIPTION,
   formatImageTransformationsTotal,
   formatImageTransformationsValue,
   formatStorageBytesTotal,
   formatStorageBytesValue,
   getStorageGaugeDisplayTotal,
+  type OverviewStorageBreakdownType,
 } from '@/lib/usage/storage-usage'
 import { topConsumersToBreakdownItems } from '@/lib/usage/compute-usage'
 import {
   refetchProjectStorageUsageQueries,
   useProjectImageTransformationsUsage,
-  useProjectStorageBuildsChart,
-  useProjectStorageDeploymentsChart,
-  useProjectStorageFilesUsage,
+  useProjectStorageResourceTypeUsage,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
-import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 
-const STORAGE_USAGE_ERROR = {
-  title: "Couldn't load storage usage",
-  message:
-    "We couldn't fetch usage data from the server. Check your connection and try again.",
-} as const
+const STORAGE_CHART_GRADIENT_IDS: Record<OverviewStorageBreakdownType, string> =
+  {
+    buckets: 'usage-storage-buckets-gradient',
+    databases: 'usage-storage-databases-gradient',
+    functions: 'usage-storage-functions-gradient',
+    sites: 'usage-storage-sites-gradient',
+  }
 
 type StorageSectionProps = {
   projectId: string
@@ -55,19 +52,31 @@ export function StorageSection({
   const { disableUsageBreakdownQueries } = useDebugOverrides()
   const showBreakdown = !disableUsageBreakdownQueries
 
-  const filesQuery = useProjectStorageFilesUsage(
+  // One query per resource family of the unified `storage` gauge. Listed
+  // explicitly rather than mapped so hook order stays fixed.
+  const bucketsQuery = useProjectStorageResourceTypeUsage(
+    'buckets',
     projectId,
     dateRange,
     true,
     chartInterval,
   )
-  const deploymentsQuery = useProjectStorageDeploymentsChart(
+  const databasesQuery = useProjectStorageResourceTypeUsage(
+    'databases',
     projectId,
     dateRange,
     true,
     chartInterval,
   )
-  const buildsQuery = useProjectStorageBuildsChart(
+  const functionsQuery = useProjectStorageResourceTypeUsage(
+    'functions',
+    projectId,
+    dateRange,
+    true,
+    chartInterval,
+  )
+  const sitesQuery = useProjectStorageResourceTypeUsage(
+    'sites',
     projectId,
     dateRange,
     true,
@@ -80,37 +89,62 @@ export function StorageSection({
     chartInterval,
   )
 
+  const storageQueries = useMemo(
+    () => ({
+      buckets: bucketsQuery,
+      databases: databasesQuery,
+      functions: functionsQuery,
+      sites: sitesQuery,
+    }),
+    [bucketsQuery, databasesQuery, functionsQuery, sitesQuery],
+  )
+
+  const storageCards = useMemo(
+    () =>
+      OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option) => {
+        const query = storageQueries[option.value]
+        const chartPoints = query.isError ? [] : (query.data?.chartPoints ?? [])
+
+        return {
+          option,
+          query,
+          chartPoints,
+          breakdownItems: query.isError
+            ? []
+            : topConsumersToBreakdownItems(query.data?.topConsumers ?? []),
+        }
+      }),
+    [storageQueries],
+  )
+
+  const imageTransformationsPoints = imageTransformationsQuery.isError
+    ? []
+    : (imageTransformationsQuery.data?.chartPoints ?? [])
+  const imageTransformationsBreakdownItems = useMemo(
+    () =>
+      imageTransformationsQuery.isError
+        ? []
+        : topConsumersToBreakdownItems(
+            imageTransformationsQuery.data?.topConsumers ?? [],
+          ),
+    [imageTransformationsQuery.isError, imageTransformationsQuery.data?.topConsumers],
+  )
+
   const breakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
     return [
-      ...(filesQuery.isError
-        ? []
-        : topConsumersToBreakdownItems(filesQuery.data?.topConsumers ?? [])),
-      ...(imageTransformationsQuery.isError
-        ? []
-        : topConsumersToBreakdownItems(
-            imageTransformationsQuery.data?.topConsumers ?? [],
-          )),
+      ...storageCards.flatMap((card) => card.breakdownItems),
+      ...imageTransformationsBreakdownItems,
     ]
-  }, [
-    filesQuery.data?.topConsumers,
-    filesQuery.isError,
-    imageTransformationsQuery.data?.topConsumers,
-    imageTransformationsQuery.isError,
-    showBreakdown,
-  ])
+  }, [showBreakdown, storageCards, imageTransformationsBreakdownItems])
 
-  const breakdownBucketIds = useMemo(
-    () => getUsageBreakdownResourceIds(breakdownItems),
-    [breakdownItems],
-  )
-
-  const { storageLookup } = useUsageResourceBreakdownLookups(
-    projectId,
-    breakdownBucketIds,
-    showBreakdown && breakdownBucketIds.length > 0,
-  )
+  const { storageLookup, computeLookup, databaseLookup } =
+    useUsageResourceBreakdownLookups(
+      projectId,
+      breakdownItems,
+      showBreakdown && breakdownItems.length > 0,
+    )
 
   useEffect(() => {
     registerRefreshHandler(
@@ -129,101 +163,38 @@ export function StorageSection({
     void refetchProjectStorageUsageQueries(queryClient, projectId)
   }
 
-  const filesPoints = filesQuery.isError ? [] : (filesQuery.data?.chartPoints ?? [])
-  const deploymentsPoints = deploymentsQuery.isError
-    ? []
-    : (deploymentsQuery.data?.chartPoints ?? [])
-  const buildsPoints = buildsQuery.isError
-    ? []
-    : (buildsQuery.data?.chartPoints ?? [])
-  const imageTransformationsPoints = imageTransformationsQuery.isError
-    ? []
-    : (imageTransformationsQuery.data?.chartPoints ?? [])
-
-  const filesBreakdownItems = filesQuery.isError
-    ? []
-    : topConsumersToBreakdownItems(filesQuery.data?.topConsumers ?? [])
-  const imageTransformationsBreakdownItems = imageTransformationsQuery.isError
-    ? []
-    : topConsumersToBreakdownItems(
-        imageTransformationsQuery.data?.topConsumers ?? [],
-      )
-
   return (
     <div className="space-y-6">
-      <StorageMetricBentoCard
-        projectId={projectId}
-        title="Files"
-        description={STORAGE_FILE_DESCRIPTION}
-        unitLabel="bytes"
-        chartGradientId="usage-storage-files-gradient"
-        chartPoints={filesPoints}
-        total={getStorageGaugeDisplayTotal(filesPoints)}
-        changePercent={filesQuery.data?.changePercent ?? 0}
-        isLoading={shouldShowUsageChartSkeleton(
-          filesQuery.isError,
-          filesQuery.isLoading,
-          filesQuery.isPlaceholderData,
-        )}
-        isError={filesQuery.isError}
-        queryError={filesQuery.error}
-        formatTotal={formatStorageBytesTotal}
-        formatValue={formatStorageBytesValue}
-        axisFormat="bytes"
-        showBreakdown={showBreakdown}
-        breakdownItems={filesBreakdownItems}
-        breakdownLookup={storageLookup}
-        onRetry={handleRetryAll}
-        docsHref={STORAGE_DOCS_HREF}
-      />
-
-      <UsageTimeSeriesChartCard
-        title="Deployment storage"
-        description={STORAGE_DEPLOYMENTS_DESCRIPTION}
-        unitLabel="bytes"
-        chartGradientId="usage-storage-deployments-gradient"
-        total={getStorageGaugeDisplayTotal(deploymentsPoints)}
-        changePercent={deploymentsQuery.data?.changePercent ?? 0}
-        chartPoints={deploymentsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          deploymentsQuery.isError,
-          deploymentsQuery.isLoading,
-          deploymentsQuery.isPlaceholderData,
-        )}
-        isError={deploymentsQuery.isError}
-        queryError={deploymentsQuery.error}
-        errorTitle={STORAGE_USAGE_ERROR.title}
-        errorMessage={STORAGE_USAGE_ERROR.message}
-        formatTotal={formatStorageBytesTotal}
-        formatValue={formatStorageBytesValue}
-        axisFormat="bytes"
-        onRetry={handleRetryAll}
-        docsHref={STORAGE_DOCS_HREF}
-      />
-
-      <UsageTimeSeriesChartCard
-        title="Build storage"
-        description={STORAGE_BUILDS_DESCRIPTION}
-        unitLabel="bytes"
-        chartGradientId="usage-storage-builds-gradient"
-        total={getStorageGaugeDisplayTotal(buildsPoints)}
-        changePercent={buildsQuery.data?.changePercent ?? 0}
-        chartPoints={buildsPoints}
-        isLoading={shouldShowUsageChartSkeleton(
-          buildsQuery.isError,
-          buildsQuery.isLoading,
-          buildsQuery.isPlaceholderData,
-        )}
-        isError={buildsQuery.isError}
-        queryError={buildsQuery.error}
-        errorTitle={STORAGE_USAGE_ERROR.title}
-        errorMessage={STORAGE_USAGE_ERROR.message}
-        formatTotal={formatStorageBytesTotal}
-        formatValue={formatStorageBytesValue}
-        axisFormat="bytes"
-        onRetry={handleRetryAll}
-        docsHref={STORAGE_DOCS_HREF}
-      />
+      {storageCards.map(({ option, query, chartPoints, breakdownItems }) => (
+        <StorageMetricBentoCard
+          key={option.value}
+          projectId={projectId}
+          title={option.title}
+          description={option.description}
+          unitLabel="bytes"
+          chartGradientId={STORAGE_CHART_GRADIENT_IDS[option.value]}
+          chartPoints={chartPoints}
+          total={getStorageGaugeDisplayTotal(chartPoints)}
+          changePercent={query.data?.changePercent ?? 0}
+          isLoading={shouldShowUsageChartSkeleton(
+            query.isError,
+            query.isLoading,
+            query.isPlaceholderData,
+          )}
+          isError={query.isError}
+          queryError={query.error}
+          formatTotal={formatStorageBytesTotal}
+          formatValue={formatStorageBytesValue}
+          axisFormat="bytes"
+          showBreakdown={showBreakdown}
+          breakdownItems={breakdownItems}
+          breakdownLookup={storageLookup}
+          computeLookup={computeLookup}
+          databaseLookup={databaseLookup}
+          onRetry={handleRetryAll}
+          docsHref={STORAGE_DOCS_HREF}
+        />
+      ))}
 
       <StorageMetricBentoCard
         projectId={projectId}

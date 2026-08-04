@@ -43,7 +43,7 @@ There are three types of targets you can use to reach your targets.
 Before you can send messages, make sure you have the appropriate targets added for your user.
 ## Add email target {% #add-email-target%}
 Verified emails for users that signed up with [email password](/docs/products/auth/email-password), 
-[magic URL](/docs/products/auth/magic-url), and [email OTP](/docs/products/auth/email-otp) login will already have an email target.
+[magic URL](/docs/products/auth/magic-url), [email OTP](/docs/products/auth/email-otp), and [OAuth2](https://appwrite.io/docs/products/auth/oauth2) login will already have an email target.
 
 ## Add SMS target {% #add-sms-target%}
 Verified phone numbers for users that signed up with [Phone OTP](/docs/products/auth/phone-sms) login will already have a phone target.

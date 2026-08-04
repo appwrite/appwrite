@@ -3,6 +3,7 @@ layout: post
 title: Solving CORS errors with Appwrite
 description: Understanding why you are getting CORS error when sending a request to an Appwrite backend and how to debug.
 date: 2024-01-16
+lastUpdated: 2026-06-29
 cover: /images/blog/cors-error/cors_cover.avif
 timeToRead: 3
 author: dennis-ivy
@@ -75,7 +76,7 @@ So if you find this is why you were getting a CORS error, you have a few ways of
 
 ## 3 - Incorrect ID on request
 
-This one happens because of an improperly configured request, such as a typo when specifying a project ID. For example, when using the `listDocuments` method,
+This one happens because of an improperly configured request, such as a typo when specifying a project ID. For example, when using the `listRows` method,
 if the project ID is set incorrectly when the client is initialized, you will receive a CORS error.
 
 Without diving into the details about how CORS works, the problem occurs when the browser tries to check if the origin is allowed.

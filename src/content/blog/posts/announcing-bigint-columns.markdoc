@@ -3,6 +3,7 @@ layout: post
 title: "Announcing BigInt columns: Store 64-bit integers for counters, IDs, and timestamps"
 description: A new column type for values that overflow the 32-bit integer range, with the same constraints, defaults, and atomic operations you already use.
 date: 2026-05-12
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-bigint-columns/cover.avif
 timeToRead: 5
 author: arnab-chatterjee
@@ -182,7 +183,7 @@ In the Appwrite Console, open your table, head to the **Columns** tab, and click
 
 ## From a Server SDK
 
-Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with `tables.write` (or `collections.write` for the legacy API).
+Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys) with `tables.write` and `columns.write`.
 
 {% multicode %}
 

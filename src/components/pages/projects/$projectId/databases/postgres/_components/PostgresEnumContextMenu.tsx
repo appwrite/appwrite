@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/context-menu'
 import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import type { PostgresSchemaEnumRow } from '@/lib/postgres-sql'
 import { useT } from '@/lib/i18n/translate'
@@ -35,7 +36,11 @@ export function PostgresEnumContextMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         {canWrite ? (
-          <ContextMenuItem onSelect={() => onUpdate(enumRow)}>
+          <ContextMenuItem
+            onSelect={() =>
+              openDialogAfterOverlayCloses(() => onUpdate(enumRow))
+            }
+          >
             <ContextMenuIcon icon={Pencil} />
             {t('Update')}
           </ContextMenuItem>
@@ -65,7 +70,11 @@ export function PostgresEnumContextMenu({
         {canWrite ? (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem onSelect={() => onDelete(enumRow.enum_name)}>
+            <ContextMenuItem
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() => onDelete(enumRow.enum_name))
+              }
+            >
               <ContextMenuIcon icon={Trash2} />
               {t('Delete')}
             </ContextMenuItem>

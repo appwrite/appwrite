@@ -38,6 +38,10 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 
@@ -69,7 +73,6 @@ export function TeamContextMenu({
         queryKey: ['teams', 'project', projectId],
       })
       toast.success(t('Team deleted'))
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete team'))
@@ -90,7 +93,12 @@ export function TeamContextMenu({
   }
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
   }
 
   const hasName = !!team.name
@@ -180,7 +188,7 @@ export function TeamContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

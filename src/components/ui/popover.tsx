@@ -22,12 +22,16 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
+  container,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
+  /** Portal target. Use a dialog/sheet node so wheel scroll works under RemoveScroll. */
+  container?: HTMLElement | null
+}) {
   const pageDirection = usePageDirection()
 
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         dir={pageDirection}

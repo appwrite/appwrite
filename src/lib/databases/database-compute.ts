@@ -59,24 +59,19 @@ export function readDatabaseSpecification(
 }
 
 /**
- * Engine services to probe for product-owned dedicated compute under the same ID.
- * Native unified `type` values (`postgresql` / `mysql` / `mongodb`) map to that
- * engine only. Product APIs use their dedicated backend: TablesDB → MySQL,
- * DocumentsDB → MongoDB, VectorsDB → PostgreSQL.
+ * Engine for native dedicated compute lookups only.
+ * Product DBs must use `{ type: 'product', dbKind }` - never engine probing.
  */
 export function productDedicatedEngineHints(
   databaseType: string | null | undefined,
 ): string[] {
-  // Native DBs report the engine as `type`; do not fall through to TablesDB's
-  // MySQL-first hints (coerceDatabaseType maps native engines to TablesDB).
   const nativeEngine = engineFromDatabaseTypeValue(databaseType)
   if (nativeEngine) return [nativeEngine]
 
   const type = coerceDatabaseType(databaseType)
   if (type === DatabaseType.Documentsdb) return ['mongodb']
   if (type === DatabaseType.Vectorsdb) return ['postgresql']
-  // TablesDB: MySQL first, then Postgres for older / alternate backends.
-  return ['mysql', 'postgresql']
+  return ['mysql']
 }
 
 /**
@@ -190,7 +185,7 @@ export function findSpecOptionByResources(
           label: match.name,
           cpu: formatDedicatedSpecCpu(match.cpu),
           memory: formatDedicatedSpecMemory(match.memory),
-          storage: '—',
+          storage: '-',
           connections: String(match.maxConnections),
           price: '',
           priceUsd: match.price,

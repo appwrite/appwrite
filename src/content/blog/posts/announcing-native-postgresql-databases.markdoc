@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Announcing native PostgreSQL databases: The full engine, provisioned in minutes"
+description: Run a managed PostgreSQL instance inside your Appwrite project and connect to it with psql, your ORM, and the entire PostgreSQL ecosystem.
+date: 2026-07-09
+cover: /images/blog/announcing-native-postgresql-databases/cover.png
+timeToRead: 6
+author: atharva
+category: announcement
+featured: false
+callToAction: true
+draft: true
+faqs:
+  - question: "What is a native PostgreSQL database in Appwrite?"
+    answer: "It is a managed PostgreSQL instance provisioned on dedicated compute for your Appwrite project. You get the raw engine with its own hostname, credentials, and TLS, and you connect with psql or any PostgreSQL driver. There is no Appwrite abstraction layer between your code and the database."
+  - question: "How is a native database different from Appwrite Databases like TablesDB?"
+    answer: "Appwrite databases such as TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite SDKs and platform APIs, with document permissions and platform features built in. A native PostgreSQL database is the engine itself: you bring your own ORM, migrations, and drivers, and Appwrite manages the infrastructure underneath."
+  - question: "Can I use the Appwrite SDK to read and write data in a native PostgreSQL database?"
+    answer: "No. Data in a native database is accessed with standard PostgreSQL clients, drivers, and ORMs rather than the Appwrite SDKs. That is the point of the product: your existing PostgreSQL code and tooling work unchanged."
+  - question: "Which PostgreSQL versions are supported?"
+    answer: "PostgreSQL 18 is the default, with 17 also supported. Version upgrades run online: a second instance is provisioned on the new version, data streams over with logical replication, and traffic cuts over without a read or write outage."
+  - question: "What infrastructure features are included?"
+    answer: "Scheduled backups and point-in-time recovery, database branches, high availability with up to five replicas, online compute resizing, storage autoscaling, IP allowlists, a connection pooler, and maintenance windows. Extensions like PostGIS and pgvector can be installed per database."
+  - question: "How much does a native PostgreSQL database cost?"
+    answer: "Compute specifications start at $10 per month for 1 vCPU and 1 GB of memory and scale up to 8 vCPU and 64 GB. Storage and bandwidth allowances are included per tier, with overages and optional add-ons like high availability replicas and point-in-time recovery billed on top."
+---
+
+Some projects outgrow abstractions. You want `psql`, your own migrations, an ORM you chose yourself, and the thirty years of tooling that surround PostgreSQL, without also taking on provisioning, backups, failover, and patching.
+
+Today we are announcing **native PostgreSQL databases** in Appwrite. You pick a compute specification, Appwrite provisions the engine in your project's region, and you connect to it like any PostgreSQL server, because it is one.
+
+# Create your first database
+
+Provisioning happens in the Console:
+
+1. In your project, go to **Databases** and click **Create database**.
+2. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+
+![Choosing PostgreSQL in the create database flow](/images/docs/products/databases/postgresql/dark/create-database-type.avif)
+
+3. Under **Specifications**, pick the tier that fits your workload, and optionally configure read replicas and point-in-time recovery.
+
+![Selecting a specification](/images/docs/products/databases/postgresql/dark/create-database-specs.avif)
+
+4. Review the summary and click **Create database**.
+
+The database provisions in minutes and reports `ready` when you can connect.
+
+# Direct access to the PostgreSQL engine
+
+A native database gets its own hostname, credentials, and TLS out of the box:
+
+```bash
+psql "postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+```
+
+From there, everything you know applies. Prisma, Drizzle, Django, Rails, Spring Boot, EF Core, and GORM work against it with no Appwrite-specific configuration, and we ship [integration guides](/docs/products/databases/postgresql/integrations/prisma) for each. Extensions like PostGIS, pgvector, and pg_trgm install per database.
+
+This is a different product from [Appwrite Databases](/docs/products/databases). TablesDB, DocumentsDB, and VectorsDB are accessed through Appwrite SDKs with platform permissions built in. A native PostgreSQL database has no Appwrite layer between your code and the engine, and the Appwrite SDKs do not manage its data. Your drivers do.
+
+# Managed infrastructure features
+
+Appwrite manages the operational work that self-hosting PostgreSQL would put on your team:
+
+- **[Backups and point-in-time recovery.](/docs/products/databases/postgresql/backups)** Scheduled and manual backups, plus continuous archiving that can restore to any moment inside the retention window.
+- **[Branches.](/docs/products/databases/postgresql/branches)** Ephemeral copies of your database created from a storage snapshot, ideal for previews and testing against production-shaped data.
+- **[High availability.](/docs/products/databases/postgresql/high-availability)** Up to five replicas with asynchronous, synchronous, or quorum replication and automatic failover behind a stable hostname.
+- **[Scaling.](/docs/products/databases/postgresql/scaling)** Resize compute online between eight specifications, and let storage autoscaling grow the disk before it fills.
+- **[Connection pooling.](/docs/products/databases/postgresql/connection-pooling)** A per-database pooler multiplexes serverless traffic, with read/write splitting when replicas are enabled.
+- **[Network security.](/docs/products/databases/postgresql/network-security)** TLS by default, IP allowlists, and a dedicated hostname per database.
+
+# SQL tooling in the Console
+
+The Console treats the database as a first-class SQL environment. The SQL editor runs queries with formatting and explain plans, the Monitor tab tracks compute, connections, storage, and workload, and the active connections view surfaces what `pg_stat_activity` knows with actions to cancel or terminate sessions.
+
+![The SQL editor in the Appwrite Console](/images/docs/products/databases/postgresql/dark/sql-editor.avif)
+
+# Specifications and pricing
+
+Specifications run from **$10 per month** (1 vCPU, 1 GB memory, 10 GB storage) to **$699 per month** (8 vCPU, 64 GB memory, 3 TB storage), each with included storage and bandwidth. High availability replicas and point-in-time recovery are add-ons, priced as a percentage of the tier. The full table lives in the [documentation](/docs/products/databases/postgresql#specifications).
+
+# Get started
+
+Native PostgreSQL databases are available on Appwrite Cloud today on dedicated infrastructure.
+
+- [PostgreSQL documentation](/docs/products/databases/postgresql)
+- [Quick start](/docs/products/databases/postgresql/quick-start)
+

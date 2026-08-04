@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import { cn } from '@/lib/utils'
 import {
@@ -58,7 +59,6 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import {
   collectUsageResourceBreakdownItems,
-  getUsageBreakdownResourceIds,
 } from '@/lib/usage/usage-resources-breakdown'
 import { useUsageResourceBreakdownLookups } from '@/lib/react-query/hooks'
 
@@ -133,12 +133,14 @@ function MonitorChartAnchor({
 
 export type DatabaseMonitorViewProps = {
   databaseId: string
+  dbKind: DatabaseRouteKind
   dateRange: DateRange
   chartTick: number
 }
 
 export function DatabaseMonitorView({
   databaseId,
+  dbKind,
   dateRange,
   chartTick,
 }: DatabaseMonitorViewProps) {
@@ -161,7 +163,7 @@ export function DatabaseMonitorView({
     [chartInterval, dateRange],
   )
 
-  const { database } = useProjectDatabase(projectId, databaseId)
+  const { database } = useProjectDatabase(projectId, databaseId, dbKind)
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
     projectId,
   )
@@ -173,13 +175,21 @@ export function DatabaseMonitorView({
     () => dedicatedDatabases.find((item) => item.$id === databaseId),
     [dedicatedDatabases, databaseId],
   )
-  const apiSpecId = dedicated?.specification?.trim() || null
+  // Product DBs with dedicated compute may be missing from the engine list;
+  // fall back to the specification on the product database model itself.
+  const productSpecId =
+    (database as { specification?: string | null } | null)?.specification ??
+    null
+  const apiSpecId =
+    dedicated?.specification?.trim() || productSpecId?.trim() || null
   const specId = getEffectiveDatabaseSpecIdForMonitoring(
     databaseType,
     apiSpecId,
   )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
-  const replicaCount = dedicated?.replicas ?? 0
+  const productReplicas =
+    (database as { replicas?: number | null } | null)?.replicas ?? null
+  const replicaCount = dedicated?.replicas ?? productReplicas ?? 0
   const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
 
   useEffect(() => {
@@ -234,15 +244,11 @@ export function DatabaseMonitorView({
         : [],
     [readsBreakdowns, writesBreakdowns, showBreakdown, serverless],
   )
-  const resourceLookupIds = useMemo(
-    () => getUsageBreakdownResourceIds(resourceBreakdownItems),
-    [resourceBreakdownItems],
-  )
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceLookupIds,
-      showBreakdown && serverless && resourceLookupIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && serverless && resourceBreakdownItems.length > 0,
     )
 
   const refetchMonitor = useCallback(async () => {

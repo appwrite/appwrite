@@ -25,7 +25,7 @@ export const heCatalog: EnCatalog = {
         openWebsiteNavigation: 'פתח ניווט אתר',
         create: 'יצירה',
         connect: 'חיבור',
-        assistant: 'עוזר',
+        assistant: 'Agent',
         upgrade: 'שדרוג',
         signIn: 'התחברו',
         signUp: 'הירשמו',
@@ -72,6 +72,8 @@ export const heCatalog: EnCatalog = {
         enabled: 'מופעל',
         disabled: 'כבוי',
         console: 'קונסול',
+        // Temporary: remove once the old console is retired
+        oldConsole: 'קונסול ישן',
         home: 'בית',
         docs: 'דוקומנטציה',
         changelog: 'יומן שינויים',
@@ -272,8 +274,8 @@ export const heCatalog: EnCatalog = {
       ...enCatalog.website.home,
       seoDescription:
         'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
-      announcementNew: 'חדש',
-      announcementText: 'מכריזים על Presences API',
+      announcementNew: 'Breaking',
+      announcementText: 'אנחנו נרגשים להכריז על Appwrite 2.0',
       heroTitleLineOne: 'לבנות מהר יותר,',
       heroTitleLineTwo: 'לצמוח רחוק מאי פעם',
       heroDescription:
@@ -384,7 +386,6 @@ export const heCatalog: EnCatalog = {
         triggerLabel: 'מוצרים',
         desktopTitle: 'מוצרי הפלטפורמה',
         desktopSubtitle: 'לבנות, לפרוס ולהתרחב על פלטפורמת Backend אחת',
-        viewOverview: 'צפו בסקירת הפלטפורמה',
         newLabel: 'חדש',
         categories: {
           ...enCatalog.website.products.navigation.categories,
@@ -403,7 +404,7 @@ export const heCatalog: EnCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',
           domainsName: 'Domains',
-          domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
+          domainsTagline: 'חיפוש, רכישה, העברה וניהול דומיינים.',
           firewallName: 'חומת אש',
           firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',

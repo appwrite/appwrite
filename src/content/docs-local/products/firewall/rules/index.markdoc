@@ -15,12 +15,12 @@ A **Firewall rule** is a named policy that matches inbound requests and applies 
 | Resource type | [API, Functions, or Sites](/docs/products/firewall/scopes) |
 | Resource ID | Required for Functions and Sites scopes |
 | Conditions | One or more [request filters](/docs/products/firewall/conditions) (required) |
-| Action | Deny, bypass, rate limit, or redirect (set at create time) |
+| Action | Deny, bypass, challenge, rate limit, or redirect (set at create time) |
 | Priority | Evaluation order ([lower first](/docs/products/firewall/priority)), `-100000` to `100000` |
 | Enabled | Whether the rule participates in evaluation |
 | Rule ID | Optional custom ID at create time |
 
-Action-specific fields (rate limit quota, redirect location and status code) are stored with the rule when those actions are selected.
+Action-specific fields (rate limit quota, redirect location and status code, challenge type) are stored with the rule when those actions are selected.
 
 When at least one **enabled** rule exists, Appwrite marks the project as Firewall-enabled so evaluation runs for eligible traffic. Disabling or deleting the last enabled rule turns evaluation off for the project.
 

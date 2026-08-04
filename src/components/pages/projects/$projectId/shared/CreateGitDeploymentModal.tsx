@@ -34,6 +34,7 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { useT } from '@/lib/i18n/translate'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 
 export type CreateGitDeploymentResourceType = 'function' | 'site'
 
@@ -131,7 +132,7 @@ export function CreateGitDeploymentModal({
       const providerRepositoryId = hasLinkedRepo
         ? resource.providerRepositoryId!
         : selectedRepositoryId
-      const ref = branch?.trim() || 'main'
+      const ref = branch.trim()
 
       if (!hasLinkedRepo && resourceType === 'function') {
         const func = resource as Models.Function
@@ -170,6 +171,9 @@ export function CreateGitDeploymentModal({
       })
     },
     onSuccess: () => {
+      closeDialogBeforeOverlayUnmount(() => {
+        onOpenChange(false)
+      })
       const deployKey =
         resourceType === 'function'
           ? ['deployments', 'function', projectId, resourceId]
@@ -198,7 +202,6 @@ export function CreateGitDeploymentModal({
           ),
         )
       }
-      onOpenChange(false)
       onSuccess?.()
     },
     onError: (err: Error) => {
@@ -211,7 +214,7 @@ export function CreateGitDeploymentModal({
       toast.error(t('Please select an installation and repository'))
       return
     }
-    const ref = branch?.trim() || 'main'
+    const ref = branch.trim()
     if (!ref) {
       toast.error(t('Please select a branch'))
       return

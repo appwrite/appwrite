@@ -19,6 +19,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import type { ApiKey } from '../shared/ApiKeysList'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import {
   Dialog,
   DialogContent,
@@ -170,11 +171,15 @@ export function View({ initialData }: ViewProps = {}) {
   const confirmDelete = () => {
     if (!selectedKeyId) return
 
-    deleteMutation.mutate(selectedKeyId, {
+    const keyId = selectedKeyId
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+      setSelectedKeyId(null)
+    })
+
+    deleteMutation.mutate(keyId, {
       onSuccess: () => {
         toast.success(t('API key deleted successfully'))
-        setDeleteDialogOpen(false)
-        setSelectedKeyId(null)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete API key'))

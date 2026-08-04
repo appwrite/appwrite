@@ -36,7 +36,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { GbHoursUnitInfo } from '../../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './ComputeMetricBentoCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -132,15 +131,10 @@ export function ComputeUsageSection({
     showBreakdown,
   ])
 
-  const breakdownResourceIds = useMemo(
-    () => getUsageBreakdownResourceIds(breakdownItems),
-    [breakdownItems],
-  )
-
   const { computeLookup } = useUsageResourceBreakdownLookups(
     projectId,
-    breakdownResourceIds,
-    showBreakdown && breakdownResourceIds.length > 0,
+    breakdownItems,
+    showBreakdown && breakdownItems.length > 0,
   )
 
   useEffect(() => {

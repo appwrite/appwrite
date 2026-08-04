@@ -31,7 +31,7 @@ export function getRouter() {
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),
-    // Fires when any route CatchBoundary catches — before the error UI mounts.
+    // Fires when any route CatchBoundary catches - before the error UI mounts.
     // Critical for max-update-depth and other crashes that can break the error page.
     defaultOnCatch: (error, errorInfo) => {
       reportRouterCaughtError(error, errorInfo, {
@@ -56,14 +56,16 @@ export function getRouter() {
     scheduleClearStaleChunkReloadGuard()
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
-      if (tryReloadForStaleChunk(event.reason)) {
+      if (tryReloadForStaleChunk(event.reason, { event })) {
         event.preventDefault()
         return
       }
       reportUnhandledError(event.reason, 'unhandledrejection')
     }
     const onWindowError = (event: ErrorEvent) => {
-      if (tryReloadForStaleChunk(event.error ?? event.message)) {
+      if (
+        tryReloadForStaleChunk(event.error ?? event.message, { event })
+      ) {
         event.preventDefault()
         return
       }
@@ -71,8 +73,23 @@ export function getRouter() {
       if (!event.error && !event.message) return
       reportUnhandledError(event.error ?? event.message, 'window.error')
     }
+    // Vite dispatches this when a dynamically imported chunk fails to load
+    // (common right after a deploy deletes the previous hashed assets).
+    // This is the canonical signal - no message matching required.
+    const onVitePreloadError = (event: Event) => {
+      const payload = (event as Event & { payload?: unknown }).payload
+      if (
+        tryReloadForStaleChunk(payload ?? 'vite:preloadError', {
+          event,
+          fromVitePreload: true,
+        })
+      ) {
+        event.preventDefault()
+      }
+    }
     window.addEventListener('unhandledrejection', onUnhandledRejection)
-    window.addEventListener('error', onWindowError)
+    window.addEventListener('error', onWindowError, true)
+    window.addEventListener('vite:preloadError', onVitePreloadError)
   }
 
   return router

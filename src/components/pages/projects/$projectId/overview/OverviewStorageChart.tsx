@@ -39,24 +39,31 @@ import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/Cha
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import type { DateRange } from 'react-day-picker'
 
+/** One stacked series per `resourceType` family of the unified storage gauge. */
 const STORAGE_SERIES = [
   {
-    key: 'files' as const,
-    label: 'Files',
+    key: 'buckets' as const,
+    label: 'Buckets',
     color: 'var(--chart-brand)',
-    gradientId: 'overview-storage-files-gradient',
+    gradientId: 'overview-storage-buckets-gradient',
   },
   {
-    key: 'deployments' as const,
-    label: 'Deployments',
+    key: 'databases' as const,
+    label: 'Databases',
     color: 'var(--chart-2)',
-    gradientId: 'overview-storage-deployments-gradient',
+    gradientId: 'overview-storage-databases-gradient',
   },
   {
-    key: 'builds' as const,
-    label: 'Builds',
+    key: 'functions' as const,
+    label: 'Functions',
     color: 'var(--chart-3)',
-    gradientId: 'overview-storage-builds-gradient',
+    gradientId: 'overview-storage-functions-gradient',
+  },
+  {
+    key: 'sites' as const,
+    label: 'Sites',
+    color: 'var(--chart-4)',
+    gradientId: 'overview-storage-sites-gradient',
   },
 ]
 
@@ -93,17 +100,19 @@ function buildSkeletonChartData(
 
   return shell.map((point, index) => {
     const wave = SKELETON_WAVE[index % SKELETON_WAVE.length]
-    const files = Math.round(peak * 0.72 * wave)
-    const deployments = Math.round(peak * 0.18 * wave)
-    const builds = Math.round(peak * 0.1 * wave)
+    const buckets = Math.round(peak * 0.56 * wave)
+    const databases = Math.round(peak * 0.22 * wave)
+    const functions = Math.round(peak * 0.14 * wave)
+    const sites = Math.round(peak * 0.08 * wave)
 
     return {
       date: point.date,
       day: point.day,
-      files,
-      deployments,
-      builds,
-      total: files + deployments + builds,
+      buckets,
+      databases,
+      functions,
+      sites,
+      total: buckets + databases + functions + sites,
     }
   })
 }

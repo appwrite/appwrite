@@ -28,6 +28,7 @@ export const Route = createFileRoute(
       tablesQueryOptions(
         projectId,
         databaseId,
+        dbKind as DatabaseRouteKind,
         0,
         ROWS_DEFAULT_PAGE_SIZE,
         undefined,

@@ -1,6 +1,6 @@
 /**
  * Presence-only env status for the debug menu.
- * Never returns or exposes env values — only whether each key is set.
+ * Never returns or exposes env values - only whether each key is set.
  */
 
 import { getRuntimeConfig } from '@/lib/runtime-config'
@@ -77,6 +77,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override post-signup email verification',
   },
   {
+    key: 'VITE_CONSTRUCTION',
+    group: 'Other',
+    description: 'Vite DEV header construction bar (false/0/off to hide; unset = on)',
+  },
+  {
     key: 'VITE_THREADS_APPWRITE_ENDPOINT',
     group: 'Threads',
     description: 'Threads Appwrite endpoint',
@@ -137,9 +142,14 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Legal contact email override',
   },
   {
-    key: 'VITE_MCP_RESOURCE_URLS',
+    key: 'VITE_APPWRITE_MCP_URL',
     group: 'Other',
-    description: 'Extra MCP resource URLs',
+    description: 'Appwrite MCP endpoint (assistant + OAuth resource)',
+  },
+  {
+    key: 'VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID',
+    group: 'Other',
+    description: 'Pre-registered OAuth client id for Agent MCP connect',
   },
   {
     key: 'VITE_SITE_ORIGIN',
@@ -179,8 +189,12 @@ function readBuildTimePresence(): Record<string, boolean> {
     VITE_CONTACT_SALES_URL: isNonEmpty(import.meta.env.VITE_CONTACT_SALES_URL),
     VITE_COMPANY_NAME: isNonEmpty(import.meta.env.VITE_COMPANY_NAME),
     VITE_LEGAL_EMAIL: isNonEmpty(import.meta.env.VITE_LEGAL_EMAIL),
-    VITE_MCP_RESOURCE_URLS: isNonEmpty(import.meta.env.VITE_MCP_RESOURCE_URLS),
+    VITE_APPWRITE_MCP_URL: isNonEmpty(import.meta.env.VITE_APPWRITE_MCP_URL),
+    VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID: isNonEmpty(
+      import.meta.env.VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID,
+    ),
     VITE_SITE_ORIGIN: isNonEmpty(import.meta.env.VITE_SITE_ORIGIN),
+    VITE_CONSTRUCTION: isNonEmpty(import.meta.env.VITE_CONSTRUCTION),
   }
 }
 

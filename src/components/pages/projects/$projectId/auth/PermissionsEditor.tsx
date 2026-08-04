@@ -42,6 +42,7 @@ import { Badge } from '@/components/ui/badge'
 import { useProjectUsers, useProjectTeams } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useT } from '@/lib/i18n/translate'
 
@@ -1626,20 +1627,28 @@ function AddRoleDropdown({
           <span>{t('All users')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onOpenUserModal}>
+        <DropdownMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onOpenUserModal)}
+        >
           <User className="size-4 me-2" />
           <span>{t('Select users')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onOpenTeamModal}>
+        <DropdownMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onOpenTeamModal)}
+        >
           <Building2 className="size-4 me-2" />
           <span>{t('Select teams')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onOpenLabelModal}>
+        <DropdownMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onOpenLabelModal)}
+        >
           <Tag className="size-4 me-2" />
           <span>{t('Label')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onOpenCustomModal}>
+        <DropdownMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(onOpenCustomModal)}
+        >
           <Code className="size-4 me-2" />
           <span>{t('Custom')}</span>
         </DropdownMenuItem>

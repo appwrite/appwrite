@@ -1,3 +1,7 @@
+import {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+} from '@/lib/analytics-route'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import {
@@ -9,6 +13,12 @@ import {
   getPlanNameFromTier,
   type CanonicalPlanId,
 } from '@/lib/utils/plan-filter'
+
+export {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+  type AnalyticsSurface,
+} from '@/lib/analytics-route'
 
 /** Upstream Plausible script URL (server proxy target). Not loaded in the browser. */
 export const PLAUSIBLE_UPSTREAM_SCRIPT_SRC =
@@ -56,17 +66,6 @@ export type AnalyticsProps = Record<string, AnalyticsPropValue>
 
 /** Login state for Plausible custom properties. */
 export type AnalyticsAuth = 'user' | 'guest'
-
-/**
- * Coarse product surface for Plausible custom properties.
- * Derived from the sanitized route template, not the raw pathname.
- */
-export type AnalyticsSurface =
-  | 'marketing'
-  | 'console'
-  | 'docs'
-  | 'account'
-  | 'auth'
 
 /**
  * Billing plan bucket for Plausible custom properties.
@@ -139,58 +138,29 @@ function normalizeAnalyticsProps(props: AnalyticsProps = {}) {
   ) as Record<string, string | number | boolean>
 }
 
+/**
+ * Route path used for analytics. Public pages (marketing, docs, blog, ...)
+ * report the full concrete pathname so per-page traffic is visible.
+ * Console, account, and auth routes report the sanitized route template
+ * (e.g. /projects/$projectId/databases/$databaseId) so raw IDs never leave.
+ */
 export function getAnalyticsRoutePath(
   routeId: string | undefined,
   pathname: string,
 ) {
-  const routePath = routeId
+  const template = routeId
     ?.split('/')
     .filter(Boolean)
     .filter((part) => !part.startsWith('_'))
     .join('/')
 
-  return routePath ? `/${routePath}` : pathname || '/'
-}
-
-export function getAnalyticsArea(routePath: string) {
-  const parts = routePath.split('/').filter(Boolean)
-  if (parts[0] === 'projects') return parts[2] ?? 'overview'
-  if (parts[0] === 'organizations') return parts[2] ?? 'overview'
-  return parts[0] ?? 'root'
-}
-
-/**
- * Map a sanitized route template to a coarse Plausible `surface` property.
- */
-export function getAnalyticsSurface(routePath: string): AnalyticsSurface {
-  const root = routePath.split('/').filter(Boolean)[0] ?? ''
-
-  if (root === 'docs') return 'docs'
-  if (root === 'account') return 'account'
-
-  if (
-    root === 'sign-in' ||
-    root === 'sign-up' ||
-    root === 'join' ||
-    root === 'verify-email' ||
-    root === 'auth' ||
-    root === 'oauth2' ||
-    root === 'reset' ||
-    root === 'card'
-  ) {
-    return 'auth'
+  const routePath = template ? `/${template}` : pathname || '/'
+  const surface = getAnalyticsSurface(routePath)
+  if (surface === 'marketing' || surface === 'docs') {
+    return pathname || routePath
   }
 
-  if (
-    root === 'projects' ||
-    root === 'organizations' ||
-    root === 'upgrade' ||
-    root === 'generator'
-  ) {
-    return 'console'
-  }
-
-  return 'marketing'
+  return routePath
 }
 
 export function getAnalyticsRouteUrl(routePath: string) {

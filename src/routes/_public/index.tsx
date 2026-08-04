@@ -64,7 +64,10 @@ export const Route = createFileRoute('/_public/')({
     }
 
     try {
-      const orgId = await resolvePostAuthOrganizationId(account)
+      const orgId = await resolvePostAuthOrganizationId(
+        account,
+        context.queryClient,
+      )
       await prefetchOrganizationOverviewData(context.queryClient, orgId)
       throw redirect({
         to: '/organizations/$orgId',

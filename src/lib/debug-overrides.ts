@@ -6,6 +6,10 @@ import {
   type InitTicketTypeId,
   isInitTicketTypeId,
 } from '@/lib/init/ticket-types'
+import {
+  USER_OS_VALUES,
+  type UserOsOverride,
+} from '@/lib/user-os'
 
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
@@ -17,11 +21,14 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
-  showDevConstructionStripe: 'debug:showDevConstructionStripe',
+  showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
+  /** Overrides detected client OS for UI toggles and keyboard shortcuts. */
+  userOs: 'debug:userOs',
+  /** @deprecated Migrated to `userOs`; kept for one-time localStorage migration. */
   keyboardLayout: 'debug:keyboardLayout',
   disableUsageBreakdownQueries: 'debug:disableUsageBreakdownQueries',
   disableOverviewBandwidthChart: 'debug:disableOverviewBandwidthChart',
@@ -57,7 +64,8 @@ export type MockCloudStatusAlert =
 
 export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 
-export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
+/** @deprecated Use `UserOsOverride` from `@/lib/user-os`. */
+export type KeyboardLayoutOverride = UserOsOverride
 
 export type PageDirectionOverride = 'ltr' | 'rtl'
 export type DebugLanguageOverride = 'en' | 'he' | 'ja'
@@ -80,10 +88,10 @@ export type DebugOverrides = {
    */
   showFunctionsLocalEditor: boolean
   /**
-   * When true, show the yellow/black construction tape strip above the header
-   * in Vite DEV. Default true (DEV only).
+   * When true, show the DEV construction bar at the top of the header stack.
+   * Default true, or VITE_CONSTRUCTION when set.
    */
-  showDevConstructionStripe: boolean
+  showConstruction: boolean
   /**
    * Mock which Init launch day is "today" (0 = before, 1–5 = during, 6 = after,
    * 7 = 7+ days after event, org promo banner hidden).
@@ -96,8 +104,11 @@ export type DebugOverrides = {
   previewInitReactionConfetti: boolean
   /** Controls Init animation optimizations for constrained devices. */
   initLowPowerAnimations: InitLowPowerAnimationsOverride
-  /** Command center keyboard visualizer and shortcut labels. */
-  keyboardLayout: KeyboardLayoutOverride
+  /**
+   * Overrides detected client OS for OS toggles, docs tabs, and keyboard
+   * shortcut labels / visualizer. `'auto'` uses device detection.
+   */
+  userOs: UserOsOverride
   /** When true, skip usage listEvents/listGauges calls that pass dimensions (overview breakdown panels). */
   disableUsageBreakdownQueries: boolean
   /** When true, hide the matching usage chart tab on the project overview. */
@@ -131,6 +142,21 @@ function readBooleanFromStorage(key: string, defaultValue = false) {
   return raw === 'true'
 }
 
+/**
+ * Default for the Vite DEV construction bar when localStorage has no override.
+ * Set `VITE_CONSTRUCTION=false` (or 0/off/no) to hide it for agent browsers.
+ * Unset defaults to on.
+ */
+export function getShowConstructionDefault(): boolean {
+  const raw = String(import.meta.env.VITE_CONSTRUCTION ?? '')
+    .trim()
+    .toLowerCase()
+  if (!raw) return true
+  if (['0', 'false', 'off', 'no'].includes(raw)) return false
+  if (['1', 'true', 'on', 'yes'].includes(raw)) return true
+  return true
+}
+
 function readStringFromStorage<T extends string>(
   key: string,
   allowedValues: readonly T[],
@@ -161,6 +187,37 @@ function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | 
   return isInitTicketTypeId(raw) ? raw : null
 }
 
+const USER_OS_OVERRIDE_VALUES = ['auto', ...USER_OS_VALUES] as const
+
+/**
+ * Read the user OS debug override. Migrates legacy `keyboardLayout` values
+ * (`auto` | `macos` | `windows`) into `userOs` once, then drops the old key.
+ */
+function readUserOsOverrideFromStorage(): UserOsOverride {
+  const storage = getStorage()
+  if (!storage) return 'auto'
+
+  const fromUserOs = storage.getItem(DEBUG_OVERRIDE_KEYS.userOs)
+  if (
+    fromUserOs !== null &&
+    USER_OS_OVERRIDE_VALUES.includes(fromUserOs as UserOsOverride)
+  ) {
+    return fromUserOs as UserOsOverride
+  }
+
+  const legacy = storage.getItem(DEBUG_OVERRIDE_KEYS.keyboardLayout)
+  if (
+    legacy !== null &&
+    (legacy === 'auto' || legacy === 'macos' || legacy === 'windows')
+  ) {
+    storage.setItem(DEBUG_OVERRIDE_KEYS.userOs, legacy)
+    storage.removeItem(DEBUG_OVERRIDE_KEYS.keyboardLayout)
+    return legacy
+  }
+
+  return 'auto'
+}
+
 export function loadDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: readBooleanFromStorage(
@@ -188,9 +245,9 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
-    showDevConstructionStripe: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showDevConstructionStripe,
-      true,
+    showConstruction: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showConstruction,
+      getShowConstructionDefault(),
     ),
     mockInitCurrentDay: readNullableInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
@@ -207,11 +264,7 @@ export function loadDebugOverrides(): DebugOverrides {
       ['auto', 'on', 'off'] as const,
       'auto',
     ),
-    keyboardLayout: readStringFromStorage(
-      DEBUG_OVERRIDE_KEYS.keyboardLayout,
-      ['auto', 'macos', 'windows'] as const,
-      'auto',
-    ),
+    userOs: readUserOsOverrideFromStorage(),
     disableUsageBreakdownQueries: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.disableUsageBreakdownQueries,
       false,
@@ -310,7 +363,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showNativeAppBar',
   'showSuccessTeamCard',
   'showFunctionsLocalEditor',
-  'showDevConstructionStripe',
+  'showConstruction',
   'disableUsageBreakdownQueries',
   'disableOverviewBandwidthChart',
   'disableOverviewRequestsChart',
@@ -335,7 +388,7 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showNativeAppBar: false,
   showSuccessTeamCard: false,
   showFunctionsLocalEditor: false,
-  showDevConstructionStripe: true,
+  showConstruction: getShowConstructionDefault(),
   disableUsageBreakdownQueries: false,
   disableOverviewBandwidthChart: false,
   disableOverviewRequestsChart: false,
@@ -381,9 +434,45 @@ export function subscribeToDebugOverrides(
   }
 }
 
+/**
+ * Defaults used for SSR and the first client render (no localStorage).
+ * Keeps hydration markup identical; persisted overrides apply after mount.
+ */
+export function getDefaultDebugOverrides(): DebugOverrides {
+  return {
+    showNativeAppBar: false,
+    showAIAssistant: false,
+    showActivityChart: false,
+    showSuccessTeamCard: false,
+    mockCloudStatusAlert: 'live',
+    showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
+    showFunctionsLocalEditor: false,
+    showConstruction: getShowConstructionDefault(),
+    mockInitCurrentDay: null,
+    mockInitTicketType: null,
+    previewInitReactionConfetti: false,
+    initLowPowerAnimations: 'auto',
+    userOs: 'auto',
+    disableUsageBreakdownQueries: false,
+    disableOverviewBandwidthChart: false,
+    disableOverviewRequestsChart: false,
+    disableOverviewStorageChart: false,
+    disableOverviewExecutionsChart: false,
+    disableOverviewComputeChart: false,
+    unlockOnboardingLocks: false,
+    previewOnboardingComplete: false,
+    previewCommunitySupportWizard: false,
+    pageDirection: 'ltr',
+    language: 'en',
+  }
+}
+
 export function useDebugOverrides(): DebugOverrides {
-  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  // Do not read localStorage during useState init — that diverges from SSR and
+  // remounts the app shell (visible as a white flash).
+  const [overrides, setOverrides] = useState(getDefaultDebugOverrides)
   useEffect(() => {
+    setOverrides(loadDebugOverrides())
     return subscribeToDebugOverrides(setOverrides)
   }, [])
   return overrides

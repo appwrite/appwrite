@@ -3,6 +3,7 @@ layout: post
 title: "Introducing Go, high-performance Functions runtime and SDK"
 description: We’re excited to announce that Go runtime is now supported in Appwrite Functions and we have added a Go SDK.
 date: 2024-08-22
+lastUpdated: 2026-06-29
 cover: /images/blog/go-cover.avif
 timeToRead: 7
 author: matej-baco
@@ -229,7 +230,7 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 }
 ```
 
-Some of our API endpoints such as the ones that return preferences from the Accounts and Teams APIs as well as the ones the return documents from the Appwrite Database are loosely typed because they can be customised by user. For these, the structs offer a `Decode()` method, as seen in the following example.
+Some of our API endpoints such as the ones that return preferences from the Accounts and Teams APIs as well as the ones that return rows from Appwrite Databases are loosely typed because they can be customised by user. For these, the structs offer a `Decode()` method, as seen in the following example.
 
 ```go
 package handler
@@ -238,19 +239,20 @@ import (
 	"log"
 	"os"
 
-	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/models"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
 type Profile struct {
-	*models.Document
+	*models.Row
 	Name      string `json:"name"`
 	Verified  bool   `json:"verified"`
 }
 
 type ProfileList struct {
-	*models.DocumentList
-	Documents []Profile `json:"documents"`
+	*models.RowList
+	Rows []Profile `json:"rows"`
 }
 
 func Main(Context openruntimes.Context) openruntimes.Response {
@@ -260,9 +262,9 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
 	)
 
-	databases := appwrite.NewDatabases(client)
+	tablesDB := appwrite.NewTablesDB(client)
 
-	response, err := databases.ListDocuments("main", "profiles")
+	response, err := tablesDB.ListRows("main", "profiles")
 	if err != nil {
 		Context.Error(err)
 		return Context.Res.Text("Internal error" Context.Res.WithStatusCode(500))
@@ -275,11 +277,11 @@ func Main(Context openruntimes.Context) openruntimes.Response {
 		return Context.Res.Text("Internal error", Context.Res.WithStatusCode(500))
 	}
 
-	for _, profile := range profiles.Documents {
+	for _, profile := range profiles.Rows {
 		Context.Log(profile.Id, profile.Name, profile.Verified)
 	}
 	
-	return Context.Res.Json(profiles.Documents)
+	return Context.Res.Json(profiles.Rows)
 }
 ```
 

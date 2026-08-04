@@ -18,6 +18,10 @@ import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
+import {
   Plus,
   Key,
   Table2,
@@ -575,10 +579,11 @@ function RelationshipField({
 
   const { rows: relatedRows, isLoading: relatedRowsLoading } =
     useProjectTableRows(
-      projectId,
-      databaseId,
-      relatedTableId,
-      0,
+    projectId,
+    databaseId,
+    relatedTableId,
+    DB_KIND,
+    0,
       100,
       undefined,
       'desc',
@@ -587,6 +592,7 @@ function RelationshipField({
   const { columns: relatedColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     relatedTableId,
     undefined,
     0,
@@ -2637,6 +2643,7 @@ export function DocumentsRowCreateBridge({
   const { columns: apiColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     table.$id,
   )
 
@@ -2656,6 +2663,7 @@ export function DocumentsRowCreateBridge({
         return await updateProjectTableRow(
           projectId,
           databaseId,
+          DB_KIND,
           table.$id,
           rowId,
           data,
@@ -2665,6 +2673,7 @@ export function DocumentsRowCreateBridge({
       return await createProjectTableRow(
         projectId,
         databaseId,
+        DB_KIND,
         table.$id,
         data,
         customId,
@@ -3083,6 +3092,7 @@ export function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
+    DB_KIND,
     effectiveRequestedPage - 1,
     effectivePageSize,
     effectiveSearch,
@@ -3099,6 +3109,7 @@ export function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
+    DB_KIND,
     effectiveDisplayedPage - 1,
     effectivePageSize,
     effectiveDisplayedSearch,
@@ -3201,7 +3212,7 @@ export function RowsSpreadsheet({
 
   // Fetch collection attributes (Documents API), not tables listColumns
   const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectCollectionAttributes(projectId, databaseId, tableId)
+    useProjectCollectionAttributes(projectId, databaseId, DB_KIND, tableId)
 
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
@@ -3482,7 +3493,7 @@ export function RowsSpreadsheet({
         return
       }
 
-      fetchProjectTableRow(projectId, databaseId, tableId, rowId).then(
+      fetchProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId).then(
         (apiRow: unknown) => {
           if (!apiRow || typeof apiRow !== 'object') return
           const rowObj = apiRow as Record<string, unknown>
@@ -3563,6 +3574,7 @@ export function RowsSpreadsheet({
         return await updateProjectTableRow(
           projectId,
           databaseId,
+          DB_KIND,
           tableId,
           rowId,
           data,
@@ -3573,6 +3585,7 @@ export function RowsSpreadsheet({
         return await createProjectTableRow(
           projectId,
           databaseId,
+          DB_KIND,
           tableId,
           data,
           customId,
@@ -3659,7 +3672,7 @@ export function RowsSpreadsheet({
       // Delete all rows in parallel
       await Promise.all(
         rowIds.map((rowId) =>
-          deleteProjectTableRow(projectId, databaseId, tableId, rowId),
+          deleteProjectTableRow(projectId, databaseId, DB_KIND, tableId, rowId),
         ),
       )
     },
@@ -3684,7 +3697,6 @@ export function RowsSpreadsheet({
         }
       }
       setSelectedRows(new Set())
-      setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(
@@ -3700,14 +3712,16 @@ export function RowsSpreadsheet({
 
   const confirmBulkDelete = () => {
     if (selectedRows.size === 0) return
-    bulkDeleteMutation.mutate(Array.from(selectedRows))
+    const rowIds = Array.from(selectedRows)
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    bulkDeleteMutation.mutate(rowIds)
   }
 
   const duplicateRowMutation = useMutation({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
-      return createProjectTableRow(projectId, databaseId, tableId, data)
+      return createProjectTableRow(projectId, databaseId, DB_KIND, tableId, data)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -3763,6 +3777,7 @@ export function RowsSpreadsheet({
       const result = await createProjectTableRows(
         projectId,
         databaseId,
+        DB_KIND,
         tableId,
         sampleRows,
         hasRelationshipColumns,
@@ -4521,6 +4536,7 @@ export function RowsSpreadsheet({
                 key={row.$id}
                 projectId={projectId}
                 databaseId={databaseId}
+                dbKind={DB_KIND}
                 tableId={tableId}
                 row={row}
                 contextColumnKey={contextCellColumnKey}
@@ -4751,7 +4767,9 @@ export function RowsSpreadsheet({
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedRows(new Set([row.$id]))
-                              setDeleteDialogOpen(true)
+                              openDialogAfterOverlayCloses(() =>
+                                setDeleteDialogOpen(true),
+                              )
                             }}
                           >
                             <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
@@ -5038,6 +5056,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   const { table: tableData, isLoading: tableLoading } = useProjectTable(
     projectId,
     databaseId,
+    DB_KIND,
     tableId,
   )
 
@@ -5079,7 +5098,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   const updatePermissionsMutation = useMutation({
     mutationFn: async (newPermissions: string[]) => {
       if (!tableData) throw new Error('Table data not available')
-      return await updateProjectTable(projectId, databaseId, tableId, {
+      return await updateProjectTable(projectId, databaseId, DB_KIND, tableId, {
         name: tableData.name,
         permissions: newPermissions,
         rowSecurity: tableData.rowSecurity,
@@ -5101,7 +5120,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
   const updateSecurityMutation = useMutation({
     mutationFn: async (newRowSecurity: boolean) => {
       if (!tableData) throw new Error('Table data not available')
-      return await updateProjectTable(projectId, databaseId, tableId, {
+      return await updateProjectTable(projectId, databaseId, DB_KIND, tableId, {
         name: tableData.name,
         permissions: tableData.$permissions || [],
         rowSecurity: newRowSecurity,
@@ -5264,11 +5283,13 @@ export function TableSettings({
   const { table: tableData, isLoading: tableLoading } = useProjectTable(
     projectId,
     databaseId,
+    DB_KIND,
     tableId,
   )
   const { columns: tableColumns } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     tableId,
   )
 
@@ -5328,7 +5349,7 @@ export function TableSettings({
   const toggleTableMutation = useMutation({
     mutationFn: async (newEnabled: boolean) => {
       if (!tableData) throw new Error('Table data not available')
-      return await updateProjectTable(projectId, databaseId, tableId, {
+      return await updateProjectTable(projectId, databaseId, DB_KIND, tableId, {
         name: tableData.name,
         permissions: tableData.$permissions || [],
         rowSecurity: tableData.rowSecurity,
@@ -5353,7 +5374,7 @@ export function TableSettings({
   const updateNameMutation = useMutation({
     mutationFn: async (newName: string) => {
       if (!tableData) throw new Error('Table data not available')
-      return await updateProjectTable(projectId, databaseId, tableId, {
+      return await updateProjectTable(projectId, databaseId, DB_KIND, tableId, {
         name: newName,
         permissions: tableData.$permissions || [],
         rowSecurity: tableData.rowSecurity,
@@ -5399,7 +5420,7 @@ export function TableSettings({
   // Delete mutation
   const deleteTableMutation = useMutation({
     mutationFn: async () => {
-      return await deleteProjectTable(projectId, databaseId, tableId)
+      return await deleteProjectTable(projectId, databaseId, DB_KIND, tableId)
     },
     onSuccess: async () => {
       // Delete table preferences

@@ -66,7 +66,7 @@ Create a new application.
 | `dataDeletionUrl` | `string` | No | Application data deletion URL shown to users during OAuth2 consent. |
 | `postLogoutRedirectUris` | `string[]` | No | Post-logout redirect URIs for OpenID Connect RP-Initiated Logout. Each must be an https URL, an http loopback URL, or a private-use scheme URI, and must not contain a fragment. After ending the user session, the logout endpoint only redirects to URIs in this list. |
 | `enabled` | `boolean` | No | Is application enabled? |
-| `type` | `string` | No | OAuth2 client type. Use `public` for SPAs, mobile, and native apps that cannot keep a `client_secret` — PKCE is then required at the token endpoint. Use `confidential` for server-side clients that present a `client_secret`. Defaults to `confidential`. |
+| `type` | `string` | No | OAuth2 client type. Use `public` for SPAs, mobile, and native apps that cannot keep a `client_secret` - PKCE is then required at the token endpoint. Use `confidential` for server-side clients that present a `client_secret`. Defaults to `confidential`. |
 | `deviceFlow` | `boolean` | No | Allow this client to use the OAuth2 Device Authorization Grant (RFC 8628) for input-constrained devices such as TVs and CLIs. Defaults to false. |
 | `teamId` | `string` | No | Team unique ID. |
 
@@ -269,7 +269,7 @@ Update an application by its unique ID.
 | `enabled` | `boolean` | No | Is application enabled? |
 | `redirectUris` | `string[]` | No | Redirect URIs. Each must be an https URL, an http loopback URL (localhost, 127.0.0.1, [::1]), or a private-use scheme URI (e.g. com.example.app:/oauth), and must not contain a fragment. |
 | `postLogoutRedirectUris` | `string[]` | No | Post-logout redirect URIs for OpenID Connect RP-Initiated Logout. Each must be an https URL, an http loopback URL, or a private-use scheme URI, and must not contain a fragment. After ending the user session, the logout endpoint only redirects to URIs in this list. |
-| `type` | `string` | No | OAuth2 client type. Use `public` for SPAs, mobile, and native apps that cannot keep a `client_secret` — PKCE is then required at the token endpoint. Use `confidential` for server-side clients that present a `client_secret`. Defaults to `confidential`. |
+| `type` | `string` | No | OAuth2 client type. Use `public` for SPAs, mobile, and native apps that cannot keep a `client_secret` - PKCE is then required at the token endpoint. Use `confidential` for server-side clients that present a `client_secret`. Defaults to `confidential`. |
 | `deviceFlow` | `boolean` | No | Allow this client to use the OAuth2 Device Authorization Grant (RFC 8628) for input-constrained devices such as TVs and CLIs. Defaults to false. |
 
 **SDK signature**

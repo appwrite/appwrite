@@ -25,7 +25,9 @@ export async function respondWithClientStaticFile(
   }
 
   if (typeof Bun !== 'undefined') {
-    return new Response(Bun.file(filepath), { headers })
+    // A BunFile body makes Bun override Content-Type with the file's MIME
+    // type (text/plain for .txt); a stream body keeps the explicit headers.
+    return new Response(Bun.file(filepath).stream(), { headers })
   }
 
   const body = await readFile(filepath)

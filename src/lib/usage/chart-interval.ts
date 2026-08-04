@@ -53,7 +53,7 @@ export function resolveUsageChartIntervalForPlan(
   return options[0]?.value ?? DEFAULT_USAGE_CHART_INTERVAL
 }
 
-/** Finest to coarsest — used when coarsening interval for wider date ranges. */
+/** Finest to coarsest - used when coarsening interval for wider date ranges. */
 export const USAGE_CHART_INTERVAL_COARSEN_ORDER: UsageChartInterval[] = [
   '15m',
   '1h',

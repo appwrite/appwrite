@@ -6,7 +6,7 @@ export const DEDICATED_DATABASE_USAGE_RESOURCE_TYPE =
 
 /**
  * Build Utopia `queries[]` for usage.listEvents / usage.listGauges.
- * The SDK does not accept top-level `resourceId` / `resourceType` — filters must
+ * The SDK does not accept top-level `resourceId` / `resourceType` - filters must
  * go through `queries` (`equal("resourceId", …)`, `equal("resourceType", …)`).
  * For dedicated databases, `ordinal` scopes gauges to a cluster node
  * (0 = primary, 1+ = replicas).

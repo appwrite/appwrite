@@ -1,0 +1,184 @@
+---
+layout: article
+title: Spring Boot
+description: Connect a Spring Boot application to an Appwrite native MySQL database with Spring Data JPA and Hibernate. Configure the JDBC datasource and HikariCP pool, map entities, and run Flyway or Liquibase migrations against MySQL.
+---
+
+An Appwrite native MySQL database is a standard MySQL engine, so a Spring Boot application connects to it through MySQL Connector/J with no Appwrite-specific runtime configuration. Point `spring.datasource` at the JDBC URL from your database credentials, size the built-in HikariCP pool, and use Spring Data JPA, Hibernate, Flyway, or Liquibase as you would with any managed MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. You can fetch credentials with the API by calling `mysql.get()`, which returns `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. See [Connections](/docs/products/databases/mysql/connections) for the full flow.
+{% /info %}
+
+# Add the dependencies {% #dependencies %}
+
+A Spring Data JPA application needs the JPA starter and MySQL Connector/J. HikariCP ships with `spring-boot-starter-data-jpa`, and Spring Boot picks the driver class from the JDBC URL.
+
+```text
+org.springframework.boot:spring-boot-starter-data-jpa
+com.mysql:mysql-connector-j
+```
+
+If you use Flyway, add `org.springframework.boot:spring-boot-starter-flyway` and `org.flywaydb:flyway-mysql`. If you use Liquibase, add `org.springframework.boot:spring-boot-starter-liquibase`.
+
+# Configure the datasource {% #datasource %}
+
+Build the JDBC URL from the host and database name in the credentials returned by `mysql.get()`. Appwrite uses port `3306`, the primary user is `admin`, and the database name is generated per database. Read the password from the environment:
+
+```yaml
+spring:
+    datasource:
+        url: jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
+        username: admin
+        password: ${DB_PASSWORD}
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 2
+            connection-timeout: 30000
+            max-lifetime: 1200000
+    jpa:
+        hibernate:
+            ddl-auto: validate
+```
+
+The equivalent `application.properties`:
+
+```ini
+spring.datasource.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
+spring.datasource.username=admin
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.max-lifetime=1200000
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+`sslMode=REQUIRED` enables TLS for the MySQL connection. If your security policy requires host certificate validation, configure MySQL Connector/J with `sslMode=VERIFY_IDENTITY` and a JVM trust configuration that trusts the certificate chain. The [Network security](/docs/products/databases/mysql/network-security) page covers TLS, mTLS, and IP allowlists.
+
+# Size the HikariCP pool {% #pool %}
+
+A Spring Boot server is long-running, so it holds its HikariCP pool open for the lifetime of the process. Keep `maximum-pool-size` modest. HikariCP guidance is that throughput usually peaks at a small pool, roughly `(CPU cores x 2) + effective spindle count` for the database, not hundreds of connections. A pool that exceeds what MySQL can serve only queues work inside the database and adds latency.
+
+Each replica of your application opens its own pool, so multiply `maximum-pool-size` by the number of instances and keep the total under the connection budget of your native MySQL database [specification](/docs/products/databases/mysql#specifications). Set `max-lifetime` a little below your infrastructure's idle timeout so HikariCP recycles connections before they are closed.
+
+# Map an entity {% #entity %}
+
+Define a JPA entity and a Spring Data repository as usual. This example uses a prefixed table name so it is easy to identify in a shared database:
+
+```java
+package com.example.demo;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "spring_boot_users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+```
+
+Add a repository interface for it:
+
+```java
+package com.example.demo;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
+```
+
+Inject the repository wherever you need it and call `save`, `findById`, `findByEmail`, and the rest of the generated query methods. HikariCP hands each transaction a pooled connection and returns it on commit.
+
+# Run migrations {% #migrate %}
+
+Let a migration tool own the schema and set `ddl-auto: validate` so Hibernate checks the mapping against the live tables at startup but never alters them. Add Flyway or Liquibase to your build and Spring Boot runs pending migrations automatically on boot.
+
+For example, a Flyway migration at `src/main/resources/db/migration/V1__init.sql` can create the table used by the entity above:
+
+```sql
+CREATE TABLE spring_boot_users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+```
+
+Flyway reads versioned scripts from `src/main/resources/db/migration`. Point Flyway at the direct MySQL port `3306` so migrations run on a session connection with DDL privileges. Setting `spring.flyway.url` gives Flyway its own datasource, independent of the runtime pool:
+
+```ini
+spring.flyway.url=jdbc:mysql://db-<hash>.<region>.appwrite.center:3306/<database>?sslMode=REQUIRED
+spring.flyway.user=admin
+spring.flyway.password=${DB_PASSWORD}
+```
+
+Liquibase is equivalent: it reads a changelog from `src/main/resources/db/changelog` and accepts its own `spring.liquibase.url`, `spring.liquibase.user`, and `spring.liquibase.password` pointing at the same MySQL port.
+
+The primary `admin` user owns the database and can run schema changes, so run migrations as `admin`.
+
+# Pooling and the connection pooler {% #pooling %}
+
+HikariCP is already a connection pool, so a long-running Spring Boot server should connect to the direct MySQL port `3306` and let HikariCP manage connections. Routing a server's traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling) in `transaction` mode stacks HikariCP on top of a transaction pooler and can break session-level features such as server-side prepared statements, user variables, and temporary tables.
+
+If you put the pooler in front of your server, use `session` mode so MySQL keeps a backend connection for the whole client session. Connect HikariCP on the pooler port `6033` and keep `maximum-pool-size` small. See the [connection pooler](/docs/products/databases/mysql/connection-pooling#modes) page for the mode trade-offs. Always run Flyway or Liquibase against port `3306` regardless of how runtime traffic connects.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are instant, isolated copies of a database with their own hostname and connection string. They are useful for running migrations against throwaway data in a pull-request preview or integration-test job.
+
+1. Create a branch with the API and read its `connectionString`.
+2. Convert the connection string to a JDBC URL and inject it into `spring.datasource.url`, or split it into `spring.datasource.url`, `spring.datasource.username`, and `spring.datasource.password`.
+3. Boot the application so Flyway or Liquibase applies migrations, then run your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations and `@DataJpaTest` integration tests run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for the connection pooler.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/products/databases/mysql" %}
+Back to native MySQL overview
+{% /arrow_link %}

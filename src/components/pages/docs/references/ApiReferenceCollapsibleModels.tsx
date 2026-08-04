@@ -35,7 +35,7 @@ export function ApiReferenceCollapsibleModels({
         {model.properties.length > 0 ? (
           <ApiReferenceInlineModelPropertiesTable properties={model.properties} />
         ) : (
-          <span className="text-[13px] text-muted-foreground/60">—</span>
+          <span className="text-[13px] text-muted-foreground/60">-</span>
         )}
       </div>
     )
@@ -60,7 +60,7 @@ export function ApiReferenceCollapsibleModels({
             {model.properties.length > 0 ? (
               <ApiReferenceInlineModelPropertiesTable properties={model.properties} />
             ) : (
-              <span className="text-[13px] text-muted-foreground/60">—</span>
+              <span className="text-[13px] text-muted-foreground/60">-</span>
             )}
           </AccordionContent>
         </AccordionItem>

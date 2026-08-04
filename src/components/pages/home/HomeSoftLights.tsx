@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Soft ambient gradients without CSS blur filters — large blurs repaint the full
+ * Soft ambient gradients without CSS blur filters - large blurs repaint the full
  * viewport on scroll and cause severe jank on the marketing home page.
  *
  * Blue/purple page wash uses #7C67FE (rgb 124, 103, 254) in light and dark mode.
@@ -91,7 +91,7 @@ const variants = {
   },
 } as const
 
-/** Single ambient wash for marketing sections — one secondary brand tone. */
+/** Single ambient wash for marketing sections - one secondary brand tone. */
 const singleSecondaryLightGradients = {
   purple: cn(
     'bg-[radial-gradient(ellipse_at_center,rgba(124,103,254,0.16)_0%,rgba(124,103,254,0.055)_36%,transparent_70%)]',
@@ -224,7 +224,7 @@ export function SectionSoftLight({
   )
 }
 
-/** Tile-scoped lights for MCP / Skills / plugins bento — softer than hero, stronger than bare wash. */
+/** Tile-scoped lights for MCP / Skills / plugins bento - softer than hero, stronger than bare wash. */
 const tileLights = {
   mcp: cn(
     'absolute -start-[36%] top-[-32%] h-[300px] w-[440px]',
@@ -258,7 +258,7 @@ export function AiTileSoftLight({ tone }: { tone: AiTileSoftLightTone }) {
   )
 }
 
-/** Neutral ambient wash for product bento visual frames — single top-left light. */
+/** Neutral ambient wash for product bento visual frames - single top-left light. */
 export function ProductBentoSoftLights({
   blend = false,
   expanded = false,

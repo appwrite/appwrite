@@ -1,0 +1,225 @@
+---
+layout: article
+title: Node.js drivers
+description: Connect to an Appwrite native MySQL database from Node.js with mysql2 or MariaDB Connector/Node.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.
+---
+
+A native MySQL database works with standard Node.js drivers that speak the MySQL wire protocol. The [Connections](/docs/products/databases/mysql/connections#drivers) page shows the smallest query. This guide covers driver pools, TLS verification, serverless connection management, and common connection errors.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and the connection values returned by the database object: host, port, username, password, and database name. Store the password in an environment variable and keep it out of source control.
+{% /info %}
+
+# Raw driver, ORM, or SQL API? {% #choosing %}
+
+There are three common ways to query a native MySQL database from Node.js. Pick by workload:
+
+| Approach                     | Use it when                                                                                  |
+|------------------------------|----------------------------------------------------------------------------------------------|
+| **Raw driver** (this page)   | You want a connection pool you control, hot-path queries, or a thin data layer with little overhead. |
+| **ORM** ([Prisma](/docs/products/databases/mysql/integrations/prisma), [Drizzle](/docs/products/databases/mysql/integrations/drizzle)) | You want migrations, a typed schema, and query building. The ORM still uses a MySQL driver underneath. |
+| **[SQL API](/docs/products/databases/mysql/quick-start#first-queries)** | You're on a runtime that cannot open TCP sockets, or you're scripting a query over HTTPS. |
+
+The rest of this page is for long-running or serverless Node.js servers that can open TCP connections.
+
+# mysql2 promise API {% #mysql2-promise %}
+
+Install mysql2 with `npm install mysql2`. For a long-running server, create one promise pool at module scope and reuse it for every request. The pool opens connections lazily up to `connectionLimit`.
+
+```js
+import mysql from 'mysql2/promise';
+import process from 'node:process';
+
+const pool = mysql.createPool({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 3306,
+  user: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: { rejectUnauthorized: true },
+  waitForConnections: true,
+  connectionLimit: 10,
+  idleTimeout: 30000,
+  enableKeepAlive: true,
+});
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS drivers_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+const [result] = await pool.execute(
+  'INSERT INTO drivers_events (email) VALUES (?)',
+  ['ada@example.com']
+);
+
+const [rows] = await pool.execute(
+  'SELECT id, email FROM drivers_events WHERE id = ?',
+  [result.insertId]
+);
+
+console.log(rows[0]);
+
+await pool.end();
+```
+
+Use `execute` for parameterized statements on the direct MySQL port. mysql2 prepares these statements on the server and caches them per connection, which is a good fit for a stable application pool.
+
+# mysql2 callback API {% #mysql2-callback %}
+
+Use the callback API when your application already follows callback patterns. Keep the pool shared, and close it only during process shutdown.
+
+```js
+import mysql from 'mysql2';
+import process from 'node:process';
+
+const pool = mysql.createPool({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 3306,
+  user: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: { rejectUnauthorized: true },
+  waitForConnections: true,
+  connectionLimit: 10,
+  idleTimeout: 30000,
+  enableKeepAlive: true,
+});
+
+pool.query(`
+  CREATE TABLE IF NOT EXISTS drivers_events_callback (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`, (createErr) => {
+  if (createErr) throw createErr;
+
+  pool.execute(
+    'INSERT INTO drivers_events_callback (email) VALUES (?)',
+    ['grace@example.com'],
+    (insertErr, result) => {
+      if (insertErr) throw insertErr;
+
+      pool.execute(
+        'SELECT id, email FROM drivers_events_callback WHERE id = ?',
+        [result.insertId],
+        (selectErr, rows) => {
+          if (selectErr) throw selectErr;
+          console.log(rows[0]);
+          pool.end();
+        }
+      );
+    }
+  );
+});
+```
+
+# MariaDB Connector/Node.js {% #mariadb %}
+
+MariaDB Connector/Node.js is a maintained JavaScript driver for MariaDB and MySQL databases. Install it with `npm install mariadb`. Its default API is promise-based and it exposes a pool with `connectionLimit`.
+
+```js
+import mariadb from 'mariadb';
+import process from 'node:process';
+
+const pool = mariadb.createPool({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 3306,
+  user: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: true,
+  connectionLimit: 10,
+  connectTimeout: 5000,
+});
+
+let connection;
+
+try {
+  connection = await pool.getConnection();
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS drivers_events_mariadb (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  const result = await connection.query(
+    'INSERT INTO drivers_events_mariadb (email) VALUES (?)',
+    ['lin@example.com']
+  );
+
+  const rows = await connection.query(
+    'SELECT id, email FROM drivers_events_mariadb WHERE id = ?',
+    [result.insertId]
+  );
+
+  console.log(rows[0]);
+} finally {
+  if (connection) connection.release();
+  await pool.end();
+}
+```
+
+The connector uses Node.js trusted root CAs when `ssl: true` is enabled. If your runtime image does not ship with a current trust store, pass a CA bundle with `ssl: { ca: fs.readFileSync('./ca-bundle.crt') }`.
+
+# TLS and CA verification {% #tls %}
+
+Connections on Appwrite Cloud are encrypted with TLS, terminated at the edge and forwarded to your database over the internal network. Use certificate verification in production:
+
+| Driver                   | TLS option                                      |
+|--------------------------|-------------------------------------------------|
+| `mysql2`                 | `ssl: { rejectUnauthorized: true }`             |
+| `mariadb`                | `ssl: true`                                     |
+| Custom CA bundle         | Add `ca` inside the driver's `ssl` object       |
+
+The database hostname uses a certificate signed by a public CA, so Node.js can verify it with the built-in trust store in standard runtimes. Use a custom CA bundle only for images that do not include one, or when your organization requires a pinned bundle.
+
+For mTLS, where the client also presents a certificate, see the [Network security](/docs/products/databases/mysql/network-security) page. Add the client `key` and `cert` alongside `ca` in the same `ssl` object.
+
+# Pool sizing {% #pool-sizing %}
+
+Pool sizing is a connection budget. Each connection in `connectionLimit`, across every running instance, counts against your specification's connection cap. A single app server with `connectionLimit: 10` is usually modest. Ten replicas with `connectionLimit: 50` each can open 500 connections and exhaust smaller specifications.
+
+Size each driver pool to the connection cap divided by replica count, then leave headroom for migrations, background workers, and admin tools. If you need more client concurrency than the engine can accept directly, route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling).
+
+# Serverless connection management {% #serverless %}
+
+On Lambda, Cloud Run, Vercel, and similar platforms, every cold start is a fresh instance with its own pool. Keep the pool at module scope so warm invocations reuse it, and keep each pool small, usually `connectionLimit: 1` or `2`.
+
+Appwrite's MySQL pooler is ProxySQL on port `6033`. It is designed for high fan-out runtime traffic and defaults to transaction mode. In transaction mode, use text queries with placeholders through `query`, and keep server-side prepared statements, temporary tables, user variables, and named locks on the direct port (`3306`) or a session-mode pooler.
+
+Run migrations, schema changes, and dump or restore tools on the direct port. These workflows rely on a stable session and DDL privileges.
+
+# Troubleshooting {% #troubleshooting %}
+
+| Symptom                                                        | Cause and fix                                                                                                   |
+|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `self-signed certificate` / `unable to verify the first certificate` | TLS is reaching the wrong host, or the runtime has a stale or incomplete CA bundle. Verify the database hostname and supply a current public CA bundle only when the runtime lacks one. |
+| `ER_CON_COUNT_ERROR` / connection attempts rejected at the proxy | Aggregate pool size across all instances exceeds the database specification's connection cap. Lower each pool's `connectionLimit`, or use the [connection pooler](/docs/products/databases/mysql/connection-pooling) on port `6033` with small per-instance pools. |
+| `Unknown prepared statement handler` or prepared statement errors on port `6033` | A prepared statement cache is being used through the transaction-mode pooler. Use `query` with placeholders for pooled runtime traffic, or use the direct port or [session mode](/docs/products/databases/mysql/connection-pooling#modes). |
+| `ETIMEDOUT` / `connect ETIMEDOUT`                              | The database may be cold-starting on smaller specifications or blocked by an [IP allowlist](/docs/products/databases/mysql/network-security#ip-allowlist). Confirm your egress IP is allowed and raise `connectTimeout` to absorb cold starts. |
+| Connections drop after a period of inactivity                  | The proxy closes idle connections after its network idle timeout. Keep mysql2 `idleTimeout` below that window, and enable keep-alive where the driver supports it. |
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and connect with common clients.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/quick-start#first-queries" title="SQL API" %}
+Run SQL over HTTPS with no TCP connection for edge runtimes and scripts.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

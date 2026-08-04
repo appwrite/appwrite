@@ -3,6 +3,7 @@ layout: post
 title: "Appwrite 1.5: celebrating the contributors"
 description: Appreciating the contributors from our community who help shape Appwrite as it is today.
 date: 2024-03-06
+lastUpdated: 2026-06-29
 cover: /images/blog/celebrating-1.5-contributors.avif
 timeToRead: 5
 author: aditya-oberai
@@ -76,7 +77,7 @@ The latest version of Appwrite was built with the help of over 20 developers, tr
 - [@AmitGurbani](https://github.com/AmitGurbani), who [fixed clearing of the DateTime attribute](https://github.com/appwrite/console/pull/594)
 - [@sahalsaad](https://github.com/sahalsaad), who [added nullable option to the DateTime field](https://github.com/appwrite/console/pull/608)
 - [@FreSauce](https://github.com/FreSauce), who [fixed missing separator for keycodes comparison](https://github.com/appwrite/console/pull/585)
-- [@kunalvirk](https://github.com/kunalvirk), who [fixed duplicate message on document deletion](https://github.com/appwrite/console/pull/588)
+- [@kunalvirk](https://github.com/kunalvirk), who [fixed duplicate message on row deletion](https://github.com/appwrite/console/pull/588)
 - [@KanniShashankh](https://github.com/KanniShashankh), who [updated client-side Cron regex](https://github.com/appwrite/console/pull/553)
 - [@nick2432](https://github.com/nick2432), who [fixed wrong validation of projectId](https://github.com/appwrite/console/pull/589)
 - [@FreSauce](https://github.com/FreSauce), who [helped add the option to update hostname for flutter web apps](https://github.com/appwrite/console/pull/541)

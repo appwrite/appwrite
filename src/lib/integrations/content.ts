@@ -1,5 +1,6 @@
 import { extractDocsToc } from '@/lib/docs/toc'
 import { preprocessBlogMarkdocContent } from '@/lib/blog/preprocess'
+import { markdocToMarkdown } from '@/lib/seo/markdoc-to-markdown'
 import {
   INTEGRATION_CATEGORIES,
   INTEGRATION_CATEGORY_ORDER,
@@ -127,6 +128,18 @@ export function getAllIntegrationMeta(): IntegrationMeta[] {
 
 export function getIntegration(slug: string): Integration | undefined {
   return allIntegrations.find((integration) => integration.slug === slug)
+}
+
+/** Plain-markdown source (including frontmatter) for the .md export endpoint. */
+export function getIntegrationMarkdownExport(slug: string): string | null {
+  if (!getIntegration(slug)) return null
+
+  const modulePath = Object.keys(integrationLoaders).find(
+    (path) => slugFromModulePath(path) === slug,
+  )
+  if (!modulePath) return null
+  const raw = integrationLoaders[modulePath]
+  return raw ? markdocToMarkdown(raw) : null
 }
 
 export function getIntegrationsCatalog(): IntegrationsCatalog {

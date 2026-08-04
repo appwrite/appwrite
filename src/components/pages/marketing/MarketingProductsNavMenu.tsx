@@ -76,7 +76,6 @@ type ProductNavigationCopy = {
   triggerLabel: string
   desktopTitle: string
   desktopSubtitle: string
-  viewOverview: string
   newLabel: string
   categories: ProductNavigationCategoriesCopy
   items: ProductNavigationItemsCopy
@@ -365,17 +364,6 @@ function DesktopProductsNavPanel({
           />
         ))}
       </div>
-
-      <div className="border-t border-border bg-muted/20 px-4 py-2">
-        <Link
-          to="/home"
-          onClick={onNavigate}
-          className="inline-flex cursor-pointer items-center gap-1.5 text-start text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {navigationCopy.viewOverview}
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
-      </div>
     </div>
   )
 }
@@ -408,20 +396,6 @@ function MobileProductsNavPanel({
           closeSheet={closeSheet}
         />
       ))}
-
-      {closeSheet ? (
-        <div className="px-2 pt-1">
-          <SheetClose asChild>
-            <Link
-              to="/home"
-              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {navigationCopy.viewOverview}
-              <ArrowRight className="size-3.5" aria-hidden />
-            </Link>
-          </SheetClose>
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -4,7 +4,7 @@ import {
   INIT_TICKET_MATCHERS,
 } from '@/lib/init/ticket-types'
 
-/** Init July 2026 — gold for @appwrite.io contributors, silver for 3+ year members, then standard. */
+/** Init July 2026 - gold for @appwrite.io contributors, silver for 3+ year members, then standard. */
 export const INIT_JULY_2026_TICKET_CONFIG: InitEventTicketConfig = {
   rules: [
     { typeId: 'gold', when: INIT_TICKET_MATCHERS.appwriteVerified },
@@ -13,7 +13,7 @@ export const INIT_JULY_2026_TICKET_CONFIG: InitEventTicketConfig = {
   ],
 }
 
-/** Init Sep 2026 — same ticket types as July until event-specific rules are added. */
+/** Init Sep 2026 - same ticket types as July until event-specific rules are added. */
 export const INIT_SEP_2026_TICKET_CONFIG: InitEventTicketConfig = {
   rules: [
     { typeId: 'gold', when: INIT_TICKET_MATCHERS.appwriteVerified },

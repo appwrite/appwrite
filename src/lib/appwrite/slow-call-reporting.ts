@@ -4,8 +4,9 @@
  */
 
 import * as Sentry from '@sentry/tanstackstart-react'
-import { getRuntimeConfig } from '@/lib/runtime-config'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
+import { getRuntimeConfig } from '@/lib/runtime-config'
+import { initSentryClient } from '@/lib/sentry/init-client'
 
 export const SLOW_CALL_THRESHOLD_MS = 5000
 
@@ -19,6 +20,7 @@ function reportSlowSdkCall(
   durationMs: number,
 ): void {
   if (!isSentryEnabled()) return
+  if (!initSentryClient()) return
   try {
     Sentry.captureMessage(`Slow Appwrite SDK call: ${scope}.${method}`, {
       level: 'warning',

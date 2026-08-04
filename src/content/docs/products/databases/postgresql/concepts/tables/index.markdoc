@@ -1,0 +1,220 @@
+---
+layout: article
+title: Tables and data types
+description: Create PostgreSQL tables with the right column types and constraints. Covers numeric, text, date and time, JSON, and array types.
+---
+
+A table is the unit of storage in a relational database, a named grid where:
+
+- each **row** is one record: one customer, one order
+- each **column** is one attribute every record shares: name, price, creation time
+- each column has a **type** that determines what values it accepts and how they compare, sort, and calculate
+
+Unlike a spreadsheet, the set of columns is declared up front and enforced; every row has exactly those columns. This fixed shape is what lets the database enforce correctness: precise types and constraints reject bad data before it ever reaches your application.
+
+The examples on this page build up pieces of a small store schema: customers, products, and orders.
+
+# Create a table {% #create %}
+
+`CREATE TABLE` names the table and declares each column with its type and the rules it must obey:
+
+```sql
+CREATE TABLE customers (
+    id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name       text NOT NULL,
+    email      text NOT NULL UNIQUE,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+```
+
+This declaration packs in the most common column features:
+
+- `GENERATED ALWAYS AS IDENTITY` makes the database assign an auto-incrementing value. Prefer it over the older `serial` shorthand, which creates a separate sequence with looser ownership semantics.
+- `PRIMARY KEY` uniquely identifies each row and creates an index automatically.
+- `NOT NULL` rejects missing values, and `UNIQUE` rejects duplicates.
+- `DEFAULT now()` fills the column when an insert doesn't provide a value.
+
+# Numeric types {% #numeric %}
+
+| Type | Range | Use for |
+| --- | --- | --- |
+| `smallint` | −32,768 to 32,767 | Small counters, enum-like codes |
+| `integer` | about ±2.1 billion | General whole numbers |
+| `bigint` | about ±9.2 quintillion | IDs, anything that may grow |
+| `numeric(p, s)` | Exact decimal, up to `p` digits | Money, quantities that must not round |
+| `real` / `double precision` | Approximate floating point | Measurements, scientific data |
+
+The critical distinction is exact versus approximate:
+
+- **numeric** stores decimal values exactly: 0.1 + 0.2 is 0.3.
+- **double precision** stores binary approximations: the same sum comes back as 0.30000000000000004.
+
+Always use `numeric` for money. A price column like `numeric(10, 2)` holds up to 8 digits before the decimal point and exactly 2 after; plain `numeric` with no qualifiers accepts values of any precision.
+
+# Text types {% #text %}
+
+PostgreSQL has exactly three character types, and they all share the same storage underneath:
+
+| Type | Holds | Use for |
+| --- | --- | --- |
+| `text` | Strings of any length, up to about 1 GB | All strings (the default choice) |
+| `varchar(n)` | Up to n characters | Same as `text`, plus an enforced length limit |
+| `char(n)` | Exactly n characters, space-padded | Fixed-length codes only |
+
+There is no tiered family like other databases' TINYTEXT or LONGTEXT; one `text` type covers everything. Use `text` for all strings. PostgreSQL does not treat `varchar` differently from `text` in storage or performance, so a length limit is purely a business rule:
+
+```sql
+CREATE TABLE products (
+    id    bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name  text NOT NULL,
+    sku   varchar(20) NOT NULL UNIQUE,  -- length limit as a business rule
+    price numeric(10, 2) NOT NULL CHECK (price >= 0)
+);
+```
+
+# Date and time types {% #datetime %}
+
+| Type | Stores | Use for |
+| --- | --- | --- |
+| `timestamptz` | Point in time, UTC internally | Created/updated timestamps, events |
+| `timestamp` | Wall-clock time, no zone | Rarely the right choice |
+| `date` | Calendar date | Birthdays, due dates |
+| `time` | Time of day | Opening hours |
+| `interval` | Duration | Timeouts, subscription lengths |
+
+Default to `timestamptz`. It converts input to UTC on write and renders it in the session's time zone on read, so two clients in different time zones always agree on the moment an event happened:
+
+```sql
+CREATE TABLE deployments (
+    id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    version     text NOT NULL,
+    deployed_at timestamptz NOT NULL DEFAULT now()
+);
+
+INSERT INTO deployments (version, deployed_at) VALUES
+    ('1.4.0', '2026-07-15 09:00:00+02'),   -- written from Berlin
+    ('1.4.1', '2026-07-15 07:30:00+00');   -- written from London
+
+SELECT version, deployed_at FROM deployments ORDER BY deployed_at;
+```
+
+Both rows are stored in UTC, so the ordering is correct regardless of the time zone each writer used: 07:00 UTC (1.4.0) sorts before 07:30 UTC (1.4.1).
+
+# Boolean, UUID, and binary {% #other %}
+
+Three more types cover flags, identifiers, and raw bytes:
+
+- **boolean** accepts `true`/`false` and the literals `'yes'`, `'no'`, `'1'`, `'0'`.
+- **uuid** stores 128-bit identifiers natively in 16 bytes, and `gen_random_uuid()` generates them without any extension.
+- **bytea** holds raw bytes, such as hashes or encrypted blobs.
+
+```sql
+CREATE TABLE api_tokens (
+    token_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    active   boolean NOT NULL DEFAULT true,
+    secret   bytea NOT NULL
+);
+```
+
+# JSON columns {% #json %}
+
+Use `jsonb` for schemaless data attached to structured rows. It stores a parsed binary representation that supports indexing and containment queries; plain `json` keeps the original text and is only useful when you must preserve key order or duplicates:
+
+```sql
+CREATE TABLE events (
+    id      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    kind    text NOT NULL,
+    payload jsonb NOT NULL DEFAULT '{}'
+);
+
+INSERT INTO events (kind, payload)
+VALUES ('signup', '{"plan": "pro", "referrer": "newsletter"}');
+
+SELECT payload->>'plan' AS plan
+FROM events
+WHERE payload @> '{"referrer": "newsletter"}';
+```
+
+`->>` extracts a field as text, and `@>` tests containment. Reach for `jsonb` when attributes vary per row; keep anything you filter or join on regularly as a real column.
+
+# Array types {% #arrays %}
+
+Any type can be stored as an array by appending `[]`:
+
+```sql
+CREATE TABLE articles (
+    id   bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tags text[] NOT NULL DEFAULT '{}'
+);
+
+INSERT INTO articles (tags) VALUES (ARRAY['sql', 'tutorial']);
+
+SELECT * FROM articles WHERE 'sql' = ANY (tags);
+```
+
+Arrays suit small, ordered value lists owned by one row. When the values need their own attributes or are shared across rows, model them as a separate table instead. See [Data modeling](/docs/products/databases/postgresql/concepts/data-modeling).
+
+# Constraints {% #constraints %}
+
+Constraints are rules the database enforces on every write, no matter which application or migration performs it:
+
+| Constraint | Enforces |
+| --- | --- |
+| `PRIMARY KEY` | Unique, non-null row identifier |
+| `UNIQUE` | No duplicate values in a column or column group (multiple `NULL`s are allowed unless declared `NULLS NOT DISTINCT`) |
+| `NOT NULL` | Value must be present |
+| `CHECK` | Arbitrary boolean expression per row |
+| `REFERENCES` (foreign key) | Value must exist in the referenced table |
+
+```sql
+CREATE TABLE orders (
+    id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customer_id bigint NOT NULL REFERENCES customers (id),
+    status      text NOT NULL DEFAULT 'pending'
+                CHECK (status IN ('pending', 'paid', 'shipped', 'cancelled')),
+    total       numeric(10, 2) NOT NULL CHECK (total >= 0)
+);
+```
+
+A foreign key also controls what happens when the referenced row disappears. `ON DELETE CASCADE` removes dependent rows, `ON DELETE SET NULL` orphans them explicitly, and the default `NO ACTION` blocks the delete. Foreign keys are covered in depth in [Joins and relationships](/docs/products/databases/postgresql/concepts/joins).
+
+# Generated columns {% #generated %}
+
+A generated column is one the database computes for you from the row's other columns, instead of accepting a value from the application. You declare the formula once in the schema; every write runs it automatically. This removes a whole class of bugs where a derived value, like a line total, is computed in application code and drifts out of sync with the columns it came from.
+
+```sql
+CREATE TABLE line_items (
+    quantity   integer NOT NULL,
+    unit_price numeric(10, 2) NOT NULL,
+    line_total numeric(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+);
+
+INSERT INTO line_items (quantity, unit_price) VALUES (3, 19.99);
+
+SELECT line_total FROM line_items;
+```
+
+```text
+ line_total
+------------
+      59.97
+```
+
+The insert supplies only `quantity` and `unit_price`; the database fills in `line_total` as 3 × 19.99. Writing to the column directly is an error, and if a later `UPDATE` changes the quantity, the total is recomputed in the same statement, so it can never disagree with its inputs. `STORED` means the result is computed on write and saved on disk like a normal column, making reads free.
+
+# Change a table {% #alter %}
+
+`ALTER TABLE` evolves a schema in place:
+
+```sql
+ALTER TABLE customers ADD COLUMN phone text;
+ALTER TABLE customers ALTER COLUMN phone SET NOT NULL;
+ALTER TABLE customers RENAME COLUMN phone TO phone_number;
+ALTER TABLE customers DROP COLUMN phone_number;
+```
+
+Adding a nullable column or one with a constant default doesn't rewrite the table, so it's fast at any size, though it still takes a brief exclusive lock and waits for in-flight queries. Adding `NOT NULL` to an existing column scans the table to validate existing rows, so on large tables do it during a quiet period.
+
+{% info title="Full type catalog" %}
+PostgreSQL ships many more specialized types: network addresses (`inet`, `cidr`, `macaddr`), geometric types (`point`, `polygon`, `circle`), bit strings, ranges, and full-text search types (`tsvector`, `tsquery`). Run `\dTS` in `psql` or query `pg_type` to list what your database supports, and see the [extensions page](/docs/products/databases/postgresql/extensions) for types added by extensions such as `vector`.
+{% /info %}

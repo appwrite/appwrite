@@ -988,7 +988,7 @@ export function fillChartPointsGaps(
 
 /**
  * Fill gauge chart buckets by carrying snapshots across missing intervals.
- * Gauges report levels (MAU, storage, CPU %), not per-interval deltas — missing
+ * Gauges report levels (MAU, storage, CPU %), not per-interval deltas - missing
  * buckets must not be treated as zero. Leading gaps before the first sample are
  * backfilled with the first known value so charts do not plot a fake 0%.
  */

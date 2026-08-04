@@ -1,5 +1,9 @@
 import { cn } from '@/lib/utils'
 import {
+  closeDialogBeforeOverlayUnmount,
+  openDialogAfterOverlayCloses,
+} from '@/lib/utils/overlay-lock'
+import {
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
@@ -173,6 +177,7 @@ export function IndexesSpreadsheet({
   } = useProjectCollectionIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     collectionId,
     indexesFilterQueries,
     indexesPageIndexed,
@@ -196,6 +201,7 @@ export function IndexesSpreadsheet({
   const { columns: schemaAttributes } = useProjectCollectionAttributes(
     projectId,
     databaseId,
+    DB_KIND,
     collectionId,
   )
 
@@ -203,6 +209,7 @@ export function IndexesSpreadsheet({
     projectId,
     databaseId,
     collectionId,
+    DB_KIND,
     0,
     50,
   )
@@ -239,6 +246,7 @@ export function IndexesSpreadsheet({
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         collectionId,
         apiData,
       )
@@ -262,6 +270,7 @@ export function IndexesSpreadsheet({
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         collectionId,
         indexKey,
       )
@@ -273,7 +282,6 @@ export function IndexesSpreadsheet({
       queryClient.invalidateQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      setDeleteDialogOpen(false)
       setIndexToDelete(null)
     },
     onError: (error: Error) => {
@@ -287,12 +295,14 @@ export function IndexesSpreadsheet({
 
   const handleDeleteIndex = (indexKey: string) => {
     setIndexToDelete(indexKey)
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
   }
 
   const handleConfirmDelete = () => {
     if (indexToDelete) {
-      deleteIndexMutation.mutate(indexToDelete)
+      const key = indexToDelete
+      closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+      deleteIndexMutation.mutate(key)
     }
   }
 

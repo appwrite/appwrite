@@ -1,0 +1,1371 @@
+---
+layout: article
+title: Backups
+description: Scheduled backups, manual backups, restores, and point-in-time recovery for your MySQL database.
+---
+
+Native databases are backed up automatically. Backups are stored off the database instance and restorable from the API. For finer recovery granularity than scheduled backups, enable point-in-time recovery.
+
+# Automatic backups {% #automatic %}
+
+Every database gets a default backup policy when it is provisioned, so you have scheduled backups from day one. You can adjust the default policy, or add more policies with different schedules and retention windows.
+
+# Backup policies {% #policies %}
+
+A policy defines a schedule (cron expression) and a retention period in days. Create one with:
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createBackupPolicy({
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createBackupPolicy({
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->createBackupPolicy(
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.create_backup_policy(
+    database_id='<DATABASE_ID>',
+    policy_id='hourly',
+    name='Hourly',
+    schedule='0 * * * *',
+    retention=30,
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.create_backup_policy(
+    database_id: '<DATABASE_ID>',
+    policy_id: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.CreateBackupPolicy(
+    databaseId: "<DATABASE_ID>",
+    policyId: "hourly",
+    name: "Hourly",
+    schedule: "0 * * * *",
+    retention: 30
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.createBackupPolicy(
+    databaseId: '<DATABASE_ID>',
+    policyId: 'hourly',
+    name: 'Hourly',
+    schedule: '0 * * * *',
+    retention: 30,
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.createBackupPolicy(
+    databaseId = "<DATABASE_ID>",
+    policyId = "hourly",
+    name = "Hourly",
+    schedule = "0 * * * *",
+    retention = 30,
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.createBackupPolicy(
+    databaseId: "<DATABASE_ID>",
+    policyId: "hourly",
+    name: "Hourly",
+    schedule: "0 * * * *",
+    retention: 30
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.CreateBackupPolicy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30)
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.create_backup_policy("<DATABASE_ID>", "hourly", "Hourly", "0 * * * *", 30, None, None).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "policyId": "hourly",
+      "name": "Hourly",
+      "schedule": "0 * * * *",
+      "retention": 30
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/backups/policies
+```
+
+{% /multicode %}
+
+| Parameter   | Value                   | Description                                |
+| ----------- | ----------------------- | ------------------------------------------ |
+| `policyId`  | custom ID or `unique()` | Policy identifier                          |
+| `name`      | text                    | Display name                               |
+| `schedule`  | cron expression         | When backups run, for example `0 3 * * *`  |
+| `retention` | 1 - 365 days            | How long backups from this policy are kept |
+
+List, update, and delete policies with `listBackupPolicies`, `updateBackupPolicy`, and `deleteBackupPolicy`. The number of policies you can create depends on your plan.
+
+# Manual backups {% #manual %}
+
+Take an on-demand backup before a risky change:
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const backup = await mysql.createBackup({
+    databaseId: '<DATABASE_ID>',
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const backup = await mysql.createBackup({
+    databaseId: '<DATABASE_ID>',
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$backup = $mysql->createBackup(
+    databaseId: '<DATABASE_ID>',
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+backup = mysql.create_backup(
+    database_id='<DATABASE_ID>',
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+backup = mysql.create_backup(
+    database_id: '<DATABASE_ID>',
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var backup = await mysql.CreateBackup(
+    databaseId: "<DATABASE_ID>"
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final backup = await mysql.createBackup(
+    databaseId: '<DATABASE_ID>',
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val backup = mysql.createBackup(
+    databaseId = "<DATABASE_ID>",
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let backup = try await mysql.createBackup(
+    databaseId: "<DATABASE_ID>"
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    result, err := service.CreateBackup("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let backup = mysql.create_backup("<DATABASE_ID>", None).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/backups
+```
+
+{% /multicode %}
+
+The backup runs asynchronously with status `pending` until it completes. List backups and check their status with `listBackups`, or fetch one with `getBackup`.
+
+# Restore from a backup {% #restore %}
+
+Restoring replaces the database's current data with the backup's contents. The database status moves to `restoring` and returns to `ready` when the restore completes; connections are unavailable during the restore.
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.create_restoration(
+    database_id='<DATABASE_ID>',
+    type='backup',
+    backup_id='<BACKUP_ID>',
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.create_restoration(
+    database_id: '<DATABASE_ID>',
+    type: 'backup',
+    backup_id: '<BACKUP_ID>',
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.CreateRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "backup",
+    backupId: "<BACKUP_ID>"
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'backup',
+    backupId: '<BACKUP_ID>',
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.createRestoration(
+    databaseId = "<DATABASE_ID>",
+    type = "backup",
+    backupId = "<BACKUP_ID>",
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.createRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "backup",
+    backupId: "<BACKUP_ID>"
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.CreateRestoration(
+        "<DATABASE_ID>",
+        mysql.WithCreateRestorationType("backup"),
+        mysql.WithCreateRestorationBackupId("<BACKUP_ID>"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.create_restoration("<DATABASE_ID>", Some("backup"), Some("<BACKUP_ID>"), None).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "type": "backup",
+      "backupId": "<BACKUP_ID>"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/restorations
+```
+
+{% /multicode %}
+
+Track progress with `getRestoration` or the database status.
+
+{% info title="Restores overwrite current data" %}
+Everything written after the backup was taken is lost when you restore it. If you need the current state too, take a manual backup first, or use a [branch](/docs/products/databases/mysql/branches) to inspect data without touching the live database.
+{% /info %}
+
+# Point-in-time recovery {% #pitr %}
+
+Scheduled backups recover to fixed snapshots. Point-in-time recovery (PITR) continuously archives the binary log, so you can restore to any moment inside the retention window, for example the second before a bad migration ran.
+
+Enable PITR when creating the database, or through the API:
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->update(
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update(
+    database_id='<DATABASE_ID>',
+    pitr=True,
+    pitr_retention_days=7,
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update(
+    database_id: '<DATABASE_ID>',
+    pitr: true,
+    pitr_retention_days: 7,
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.Update(
+    databaseId: "<DATABASE_ID>",
+    pitr: true,
+    pitrRetentionDays: 7
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.update(
+    databaseId: '<DATABASE_ID>',
+    pitr: true,
+    pitrRetentionDays: 7,
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.update(
+    databaseId = "<DATABASE_ID>",
+    pitr = true,
+    pitrRetentionDays = 7,
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.update(
+    databaseId: "<DATABASE_ID>",
+    pitr: true,
+    pitrRetentionDays: 7
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        mysql.WithUpdatePitr(true),
+        mysql.WithUpdatePitrRetentionDays(7),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update("<DATABASE_ID>", None, None, None, None, None, None, None, None, Some(true), Some(7), None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "pitr": true,
+      "pitrRetentionDays": 7
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+
+{% /multicode %}
+
+`pitrRetentionDays` accepts 1 to 35 days. PITR is billed as an add-on on top of your specification; see [pricing](/pricing).
+
+## Check the recovery window {% #pitr-windows %}
+
+You can retrieve the time ranges you can restore to. Right after enabling PITR, no recovery window is available yet; the window opens once continuous archiving has captured its first segment.
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const windows = await mysql.getPitr({
+    databaseId: '<DATABASE_ID>',
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+const windows = await mysql.getPitr({
+    databaseId: '<DATABASE_ID>',
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$windows = $mysql->getPitr(
+    databaseId: '<DATABASE_ID>',
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+windows = mysql.get_pitr(
+    database_id='<DATABASE_ID>',
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+windows = mysql.get_pitr(
+    database_id: '<DATABASE_ID>',
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+var windows = await mysql.GetPitr(
+    databaseId: "<DATABASE_ID>"
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+final windows = await mysql.getPitr(
+    databaseId: '<DATABASE_ID>',
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+val windows = mysql.getPitr(
+    databaseId = "<DATABASE_ID>",
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+let windows = try await mysql.getPitr(
+    databaseId: "<DATABASE_ID>"
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    result, err := service.GetPitr("<DATABASE_ID>")
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    let windows = mysql.get_pitr("<DATABASE_ID>").await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/pitr
+```
+
+{% /multicode %}
+
+## Restore to a point in time {% #pitr-restore %}
+
+Pass a Unix timestamp inside the recovery window:
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: 1767225600,
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.createRestoration({
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: 1767225600,
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: 1767225600,
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.create_restoration(
+    database_id='<DATABASE_ID>',
+    type='pitr',
+    target_time=1767225600,
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.create_restoration(
+    database_id: '<DATABASE_ID>',
+    type: 'pitr',
+    target_time: 1767225600,
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.CreateRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "pitr",
+    targetTime: 1767225600
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.createRestoration(
+    databaseId: '<DATABASE_ID>',
+    type: 'pitr',
+    targetTime: 1767225600,
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.createRestoration(
+    databaseId = "<DATABASE_ID>",
+    type = "pitr",
+    targetTime = 1767225600,
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.createRestoration(
+    databaseId: "<DATABASE_ID>",
+    type: "pitr",
+    targetTime: 1767225600
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.CreateRestoration(
+        "<DATABASE_ID>",
+        mysql.WithCreateRestorationType("pitr"),
+        mysql.WithCreateRestorationTargetTime(1767225600),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::mysql::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.create_restoration("<DATABASE_ID>", Some("pitr"), None, Some(1767225600)).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "type": "pitr",
+      "targetTime": 1767225600
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>/restorations
+```
+
+{% /multicode %}
+
+Like a backup restore, a PITR restore is in-place: the database is unavailable while restoring and everything after the target time is discarded.
+
+# Limits {% #limits %}
+
+| Limit            | Value          |
+| ---------------- | -------------- |
+| Backup retention | 1 - 365 days   |
+| PITR retention   | 1 - 35 days    |
+| Backup policies  | Plan-dependent |

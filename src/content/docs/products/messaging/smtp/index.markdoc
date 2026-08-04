@@ -158,7 +158,11 @@ client = Client()
 
 messaging = Messaging(client)
 
-result = messaging.create_email('<MESSAGE_ID>', '<SUBJECT>', '<CONTENT>')
+result = messaging.create_email(
+    message_id='<MESSAGE_ID>',
+    subject='<SUBJECT>',
+    content='<CONTENT>'
+)
 ```
 ```ruby
 require 'appwrite'
@@ -351,25 +355,31 @@ client
 ;
 
 // update provider
-messaging.updateSendgridProvider(
-    '<PROVIDER_ID>',
-    '<PROVIDER_NAME>',
-    '<API_KEY>',
-    '<DOMAIN>',
-    '<IS_EU_REGION?>',
-    '<SENDER_NAME>',
-    '<SENDER_EMAIL>',
-    '<REPLY_TO_NAME>',
-    '<REPLY_TO_EMAIL>',
-    '<ENABLED?>',
-).then(function (response) {
+messaging.updateSmtpProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<PROVIDER_NAME>',
+    host: '<HOST>',
+    port: 587,
+    username: '<USERNAME>',
+    password: '<PASSWORD>',
+    encryption: sdk.SmtpEncryption.Tls,
+    autoTLS: true,
+    mailer: '<MAILER>',
+    fromName: '<SENDER_NAME>',
+    fromEmail: '<SENDER_EMAIL>',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>',
+    enabled: true
+}).then(function (response) {
     console.log(response);
 }, function (error) {
     console.log(error);
 });
 
 // delete provider
-messaging.deleteProvider('<PROVIDER_ID>')
+messaging.deleteProvider({
+    providerId: '<PROVIDER_ID>'
+})
 .then(function (response) {
     console.log(response);
 }, function (error) {
@@ -385,25 +395,31 @@ let client = new sdk.Client();
 let messaging = new sdk.Messaging(client);
 
 // update provider
-messaging.updateSendgridProvider(
-    '<PROVIDER_ID>',
-    '<PROVIDER_NAME>',
-    '<API_KEY>',
-    '<DOMAIN>',
-    '<IS_EU_REGION?>',
-    '<SENDER_NAME>',
-    '<SENDER_EMAIL>',
-    '<REPLY_TO_NAME>',
-    '<REPLY_TO_EMAIL>',
-    '<ENABLED?>',
-).then(function (response) {
+messaging.updateSmtpProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<PROVIDER_NAME>',
+    host: '<HOST>',
+    port: 587,
+    username: '<USERNAME>',
+    password: '<PASSWORD>',
+    encryption: sdk.SmtpEncryption.Tls,
+    autoTLS: true,
+    mailer: '<MAILER>',
+    fromName: '<SENDER_NAME>',
+    fromEmail: '<SENDER_EMAIL>',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>',
+    enabled: true
+}).then(function (response) {
     console.log(response);
 }, function (error) {
     console.log(error);
 });
 
 // delete provider
-messaging.deleteProvider('<PROVIDER_ID>')
+messaging.deleteProvider({
+    providerId: '<PROVIDER_ID>'
+})
 .then(function (response) {
     console.log(response);
 }, function (error) {
@@ -452,17 +468,21 @@ client = Client()
 
 messaging = Messaging(client)
 
-result = messaging.update_sendgrid_provider(
-    '<PROVIDER_ID>',
-    '<PROVIDER_NAME>',
-    '<API_KEY>',
-    '<DOMAIN>',
-    '<IS_EU_REGION?>',
-    '<SENDER_NAME>',
-    '<SENDER_EMAIL>',
-    '<REPLY_TO_NAME>',
-    '<REPLY_TO_EMAIL>',
-    '<ENABLED?>',
+result = messaging.update_smtp_provider(
+    provider_id='<PROVIDER_ID>',
+    name='<PROVIDER_NAME>',
+    host='<HOST>',
+    port=587,
+    username='<USERNAME>',
+    password='<PASSWORD>',
+    encryption='tls',
+    auto_tls=True,
+    mailer='<MAILER>',
+    from_name='<SENDER_NAME>',
+    from_email='<SENDER_EMAIL>',
+    reply_to_name='<REPLY_TO_NAME>',
+    reply_to_email='<REPLY_TO_EMAIL>',
+    enabled=True,
 )
 ```
 ```ruby

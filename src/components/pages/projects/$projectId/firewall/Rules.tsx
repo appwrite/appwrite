@@ -1,7 +1,5 @@
-import { Fragment, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import {
-  ArrowUpRight,
   Copy,
   ExternalLink,
   FileJson,
@@ -49,13 +47,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchFirewallRule,
-  useFirewallResourceNames,
   useFirewallRules,
   useUpdateFirewallRule,
 } from '@/lib/react-query/hooks'
@@ -65,7 +61,6 @@ import {
   getRuleRedirect,
 } from '@/lib/firewall/actions'
 import {
-  FIREWALL_RESOURCE_TYPES,
   formatConditionSummary,
   parseFirewallConditions,
   type FirewallResourceType,
@@ -78,6 +73,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
@@ -88,35 +84,12 @@ import {
 } from '../shared/service-header-container'
 import { RuleActionBadge } from './_components/RuleActionBadge'
 import { RuleContextMenu } from './_components/RuleContextMenu'
+import {
+  FirewallResourceSelector,
+  type FirewallResourceSelection,
+} from './_components/FirewallResourceSelector'
 import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
-
-const SCOPE_TOGGLE_ITEM_CLASS =
-  'h-9 flex-none px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
-
-type RuleResourceGroup = {
-  resourceId: string
-  rules: Models.WafRule[]
-}
-
-function groupRulesByResourceId(rules: Models.WafRule[]): RuleResourceGroup[] {
-  const groups = new Map<string, Models.WafRule[]>()
-
-  for (const rule of rules) {
-    const resourceId = rule.resourceId?.trim() || ''
-    const existing = groups.get(resourceId)
-    if (existing) {
-      existing.push(rule)
-    } else {
-      groups.set(resourceId, [rule])
-    }
-  }
-
-  return Array.from(groups.entries()).map(([resourceId, groupRules]) => ({
-    resourceId,
-    rules: groupRules,
-  }))
-}
 
 function emptyCopyForScope(scope: FirewallResourceType): {
   title: string
@@ -148,8 +121,8 @@ function emptyCopyForScope(scope: FirewallResourceType): {
 interface RulesListProps {
   projectId: string
   canWrite: boolean
-  resourceScope: FirewallResourceType
-  onResourceScopeChange: (resourceScope: FirewallResourceType) => void
+  resourceSelection: FirewallResourceSelection
+  onResourceSelectionChange: (selection: FirewallResourceSelection) => void
   onCreate: () => void
   /** When true, create is disabled (plan limit or missing permission). */
   createDisabled?: boolean
@@ -160,36 +133,33 @@ interface RulesListProps {
 export function RulesList({
   projectId,
   canWrite,
-  resourceScope,
-  onResourceScopeChange,
+  resourceSelection,
+  onResourceSelectionChange,
   onCreate,
   createDisabled = false,
   createDisabledTooltip,
 }: RulesListProps) {
   const t = useT()
   const [searchValue, setSearchValue] = useState('')
+  const resourceScope = resourceSelection.resourceType
+  const resourceId =
+    resourceScope === 'api'
+      ? undefined
+      : resourceSelection.resourceId?.trim() || undefined
   const { rules, isLoading, isFetching } = useFirewallRules(
     projectId,
     0,
     DEFAULT_PAGE_SIZE,
     searchValue,
     resourceScope,
+    resourceId,
   )
   // Drop keepPreviousData leftovers from another scope while the filtered query loads.
-  const scopedRules = rules.filter(
-    (rule) => (rule.resourceType || 'api') === resourceScope,
-  )
-  const resourceIds =
-    resourceScope === 'api'
-      ? []
-      : scopedRules
-          .map((rule) => rule.resourceId?.trim() || '')
-          .filter(Boolean)
-  const { names: resourceNames } = useFirewallResourceNames(
-    projectId,
-    resourceScope === 'api' ? null : resourceScope,
-    resourceIds,
-  )
+  const scopedRules = rules.filter((rule) => {
+    if ((rule.resourceType || 'api') !== resourceScope) return false
+    if (resourceScope === 'api') return true
+    return (rule.resourceId?.trim() || '') === (resourceId || '')
+  })
   const updateMutation = useUpdateFirewallRule(projectId)
   const [editingRule, setEditingRule] = useState<Models.WafRule | null>(null)
   const [deletingRule, setDeletingRule] = useState<Models.WafRule | null>(null)
@@ -204,8 +174,6 @@ export function RulesList({
       ? t("You don't have permission to create firewall rules.")
       : t("You've reached the limit for this resource on your plan"))
   const emptyCopy = emptyCopyForScope(resourceScope)
-  const groupedRules =
-    resourceScope === 'api' ? null : groupRulesByResourceId(scopedRules)
 
   const handleToggleEnabled = async (rule: Models.WafRule) => {
     const nextEnabled = !rule.enabled
@@ -289,35 +257,6 @@ export function RulesList({
     </Button>
   )
 
-  const scopeSwitcher = (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      size="default"
-      value={resourceScope}
-      onValueChange={(next) => {
-        if (!next) return
-        if (
-          FIREWALL_RESOURCE_TYPES.some((option) => option.value === next)
-        ) {
-          onResourceScopeChange(next as FirewallResourceType)
-        }
-      }}
-      className="h-9 w-fit shrink-0"
-      aria-label={t('Firewall rule scope')}
-    >
-      {FIREWALL_RESOURCE_TYPES.map((option) => (
-        <ToggleGroupItem
-          key={option.value}
-          value={option.value}
-          className={SCOPE_TOGGLE_ITEM_CLASS}
-        >
-          {t(option.label)}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
-  )
-
   const toolbarRow = (
     <div
       className={cn(
@@ -326,7 +265,11 @@ export function RulesList({
       )}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        {scopeSwitcher}
+        <FirewallResourceSelector
+          projectId={projectId}
+          value={resourceSelection}
+          onValueChange={onResourceSelectionChange}
+        />
         <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -473,7 +416,9 @@ export function RulesList({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     disabled={!canWrite}
-                    onClick={() => setEditingRule(rule)}
+                    onSelect={() =>
+                      openDialogAfterOverlayCloses(() => setEditingRule(rule))
+                    }
                   >
                     <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                   </DropdownMenuItem>
@@ -551,7 +496,9 @@ export function RulesList({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     disabled={!canWrite}
-                    onClick={() => setDeletingRule(rule)}
+                    onSelect={() =>
+                      openDialogAfterOverlayCloses(() => setDeletingRule(rule))
+                    }
                   >
                     <MenuItemContent icon={Trash2}>
                       {t('Delete')}
@@ -633,61 +580,7 @@ export function RulesList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {groupedRules
-                ? groupedRules.map((group) => {
-                    const resourceName = !group.resourceId
-                      ? t('Project-wide')
-                      : resourceNames[group.resourceId] || group.resourceId
-                    const resourceLink =
-                      group.resourceId && resourceScope === 'functions' ? (
-                        <Link
-                          to="/projects/$projectId/functions/$functionId"
-                          params={{
-                            projectId,
-                            functionId: group.resourceId,
-                          }}
-                          className="group/resource inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] font-semibold text-foreground hover:underline"
-                        >
-                          <span className="truncate">{resourceName}</span>
-                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60 transition-opacity group-hover/resource:opacity-100" />
-                        </Link>
-                      ) : group.resourceId && resourceScope === 'sites' ? (
-                        <Link
-                          to="/projects/$projectId/sites/$siteId"
-                          params={{
-                            projectId,
-                            siteId: group.resourceId,
-                          }}
-                          className="group/resource inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] font-semibold text-foreground hover:underline"
-                        >
-                          <span className="truncate">{resourceName}</span>
-                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60 transition-opacity group-hover/resource:opacity-100" />
-                        </Link>
-                      ) : (
-                        <span className="truncate text-[13px] font-semibold text-foreground">
-                          {resourceName}
-                        </span>
-                      )
-
-                    return (
-                      <Fragment key={`group-${group.resourceId || 'none'}`}>
-                        <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-                          <TableCell colSpan={7} className="px-4 py-2.5">
-                            <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-                              {resourceLink}
-                              {group.resourceId ? (
-                                <span className="truncate font-mono text-[11px] text-muted-foreground">
-                                  {group.resourceId}
-                                </span>
-                              ) : null}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                        {group.rules.map((rule) => renderRuleRow(rule))}
-                      </Fragment>
-                    )
-                  })
-                : scopedRules.map((rule) => renderRuleRow(rule))}
+              {scopedRules.map((rule) => renderRuleRow(rule))}
             </TableBody>
           </Table>
         </div>

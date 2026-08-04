@@ -6,19 +6,12 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import { useDeleteSite } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { useT } from '@/lib/i18n/translate'
 
 interface DangerZoneCardProps {
@@ -83,49 +76,36 @@ export function DangerZoneCard({
         )}
       </div>
       <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={deleteSiteMutation.isPending}
-            >
-              <Trash2 className="me-1.5 h-4 w-4" />
-              {t('Delete site')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>{t('Delete site')}</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                {t('Are you sure you want to delete')}{' '}
-                {site && (
-                  <span className="font-medium text-foreground">
-                    {site.name || t('this site')}
-                  </span>
-                )}{' '}
-                {t('and all its data? This action cannot be undone.')}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-                disabled={deleteSiteMutation.isPending}
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={deleteSiteMutation.isPending}
-              >
-                {t('Delete')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={deleteSiteMutation.isPending}
+          onClick={() => setDeleteDialogOpen(true)}
+        >
+          <Trash2 className="me-1.5 h-4 w-4" />
+          {t('Delete site')}
+        </Button>
+        <ConfirmNameDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete site"
+          description={
+            <>
+              {t('Are you sure you want to delete')}{' '}
+              {site && (
+                <span className="font-medium text-foreground">
+                  {site.name || t('this site')}
+                </span>
+              )}{' '}
+              {t('and all its data? This action cannot be undone.')}
+            </>
+          }
+          confirmValue={site?.name?.trim() || site?.$id || ''}
+          confirmPlaceholder="Enter site name"
+          onConfirm={handleDelete}
+          isConfirming={deleteSiteMutation.isPending}
+        />
       </div>
     </div>
   )

@@ -13,6 +13,7 @@ import {
   FileJson,
   Route,
   Layers,
+  Cpu,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -85,7 +86,12 @@ export function getColumnIcon(type: string): LucideIcon {
       return Columns3
     case 'json':
     case 'jsonb':
+    case 'object':
       return FileJson
+    case 'vector':
+    case 'embedding':
+    case 'embeddings':
+      return Cpu
     case 'point':
       return MapPin
     case 'linestring':

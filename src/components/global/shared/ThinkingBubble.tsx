@@ -112,10 +112,11 @@ const COLOR_PALETTES: Record<SphereColorMode, ColorPalette> = {
 }
 
 function particleCountForSize(size: number): number {
-  if (size <= 40) return 700
-  if (size <= 72) return 1100
-  if (size <= 120) return 1600
-  return 2000
+  // Scale roughly with area so composer/turn bubbles stay light; hero stays dense.
+  const clamped = Math.max(16, Math.min(280, size))
+  const normalized = (clamped - 16) / (220 - 16)
+  const curved = Math.pow(Math.min(1, Math.max(0, normalized)), 1.45)
+  return Math.round(72 + curved * 1928)
 }
 
 export const SPHERE_PARTICLE_COUNT_MIN = 50

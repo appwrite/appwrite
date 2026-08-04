@@ -139,6 +139,7 @@ export async function navigateToDatabaseFromSwitcher(options: {
       tablesQueryOptions(
         projectId,
         selection.id,
+        dbKind,
         0,
         ROWS_DEFAULT_PAGE_SIZE,
         undefined,

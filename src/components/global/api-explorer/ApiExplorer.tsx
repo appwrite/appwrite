@@ -1243,7 +1243,7 @@ function MethodListPanel({
 
   const collapsibleGroupIdsKey = collapsibleGroupIds.join('\0')
 
-  // Expand all groups only when the service or search filter changes — not when
+  // Expand all groups only when the service or search filter changes - not when
   // selecting a method (parent re-renders must not reset manual collapse state).
   useEffect(() => {
     setExpandedGroupIds(collapsibleGroupIds)

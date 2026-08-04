@@ -384,6 +384,67 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
+      prefix: "apis",
+      parent: {
+        href: "/docs",
+        label: "APIs",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/apis",
+            },
+          ],
+        },
+        {
+          label: "Protocols",
+          items: [
+            {
+              label: "REST",
+              href: "/docs/apis/rest",
+            },
+            {
+              label: "GraphQL",
+              href: "/docs/apis/graphql",
+            },
+            {
+              label: "Realtime",
+              href: "/docs/apis/realtime",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Events",
+              href: "/docs/apis/events",
+            },
+            {
+              label: "Webhooks",
+              href: "/docs/apis/webhooks",
+            },
+            {
+              label: "Response codes",
+              href: "/docs/apis/response-codes",
+            },
+          ],
+        },
+        {
+          label: "Policies",
+          items: [
+            {
+              label: "Release policy",
+              href: "/docs/apis/release-policy",
+            },
+          ],
+        },
+      ],
+    },
+    {
       prefix: "apis/realtime",
       parent: {
         href: "/docs/apis",
@@ -434,6 +495,53 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Custom endpoint",
               href: "/docs/apis/realtime/custom-endpoint",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "partners/apps",
+      parent: {
+        href: "/docs",
+        label: "Apps",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/partners/apps",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/partners/apps/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Registration",
+              href: "/docs/partners/apps/registration",
+            },
+            {
+              label: "Scopes",
+              href: "/docs/partners/apps/scopes",
+            },
+            {
+              label: "Consent",
+              href: "/docs/partners/apps/consent",
+            },
+            {
+              label: "Tokens",
+              href: "/docs/partners/apps/tokens",
+            },
+            {
+              label: "Device flow",
+              href: "/docs/partners/apps/device-flow",
             },
           ],
         },
@@ -721,6 +829,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               label: "Presences",
               href: "/docs/products/auth/presences",
             },
+            {
+              label: "OAuth2 server",
+              href: "/docs/products/auth/oauth-server",
+            },
           ],
         },
         {
@@ -808,6 +920,66 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
+      prefix: "products/auth/oauth-server",
+      parent: {
+        href: "/docs/products/auth",
+        label: "OAuth2 server",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/auth/oauth-server",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/auth/oauth-server/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Clients",
+              href: "/docs/products/auth/oauth-server/clients",
+            },
+            {
+              label: "Authorization",
+              href: "/docs/products/auth/oauth-server/authorization",
+            },
+            {
+              label: "Tokens",
+              href: "/docs/products/auth/oauth-server/tokens",
+            },
+            {
+              label: "Scopes",
+              href: "/docs/products/auth/oauth-server/scopes",
+            },
+            {
+              label: "Device flow",
+              href: "/docs/products/auth/oauth-server/device-flow",
+            },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
+            {
+              label: "Sign in with your product",
+              href: "/docs/products/auth/oauth-server/sign-in-with-your-product/step-1",
+            },
+            {
+              label: "Custom scopes",
+              href: "/docs/products/auth/oauth-server/custom-scopes/step-1",
+            },
+          ],
+        },
+      ],
+    },
+    {
       prefix: "products/avatars",
       parent: {
         href: "/docs",
@@ -889,9 +1061,57 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               label: "Overview",
               href: "/docs/products/databases",
             },
+          ],
+        },
+        {
+          label: "Appwrite databases",
+          items: [
+            {
+              label: "TablesDB",
+              href: "/docs/products/databases/tablesdb",
+            },
+            {
+              label: "DocumentsDB",
+              href: "/docs/products/databases/documentsdb",
+            },
+            {
+              label: "VectorsDB",
+              href: "/docs/products/databases/vectorsdb",
+            },
+          ],
+        },
+        {
+          label: "Native databases",
+          items: [
+            {
+              label: "PostgreSQL",
+              href: "/docs/products/databases/postgresql",
+            },
+            {
+              label: "MySQL",
+              href: "/docs/products/databases/mysql",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "products/databases/documentsdb",
+      parent: {
+        href: "/docs/products/databases",
+        label: "DocumentsDB",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/databases/documentsdb",
+            },
             {
               label: "Quick start",
-              href: "/docs/products/databases/quick-start",
+              href: "/docs/products/databases/documentsdb/quick-start",
             },
           ],
         },
@@ -900,43 +1120,31 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Databases",
-              href: "/docs/products/databases/databases",
+              href: "/docs/products/databases/documentsdb/databases",
             },
             {
-              label: "Tables",
-              href: "/docs/products/databases/tables",
+              label: "Collections",
+              href: "/docs/products/databases/documentsdb/collections",
             },
             {
-              label: "Rows",
-              href: "/docs/products/databases/rows",
+              label: "Documents",
+              href: "/docs/products/databases/documentsdb/documents",
             },
             {
               label: "Permissions",
-              href: "/docs/products/databases/permissions",
-            },
-            {
-              label: "Relationships",
-              href: "/docs/products/databases/relationships",
+              href: "/docs/products/databases/documentsdb/permissions",
             },
             {
               label: "Queries",
-              href: "/docs/products/databases/queries",
+              href: "/docs/products/databases/documentsdb/queries",
             },
             {
               label: "Order",
-              href: "/docs/products/databases/order",
-            },
-            {
-              label: "Operators",
-              href: "/docs/products/databases/operators",
-            },
-            {
-              label: "Geo queries",
-              href: "/docs/products/databases/geo-queries",
+              href: "/docs/products/databases/documentsdb/order",
             },
             {
               label: "Backups",
-              href: "/docs/products/databases/backups",
+              href: "/docs/products/databases/documentsdb/backups",
             },
           ],
         },
@@ -945,43 +1153,495 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Pagination",
-              href: "/docs/products/databases/pagination",
+              href: "/docs/products/databases/documentsdb/pagination",
             },
             {
               label: "Transactions",
-              href: "/docs/products/databases/transactions",
-            },
-            {
-              label: "Type generation",
-              href: "/docs/products/databases/type-generation",
-            },
-            {
-              label: "Offline sync",
-              href: "/docs/products/databases/offline",
+              href: "/docs/products/databases/documentsdb/transactions",
             },
             {
               label: "Bulk operations",
-              href: "/docs/products/databases/bulk-operations",
+              href: "/docs/products/databases/documentsdb/bulk-operations",
             },
             {
               label: "Atomic numeric operations",
-              href: "/docs/products/databases/atomic-numeric-operations",
-            },
-            {
-              label: "CSV imports",
-              href: "/docs/products/databases/csv-imports",
-            },
-            {
-              label: "CSV exports",
-              href: "/docs/products/databases/csv-exports",
-            },
-            {
-              label: "AI suggestions",
-              href: "/docs/products/databases/ai-suggestions",
+              href: "/docs/products/databases/documentsdb/atomic-numeric-operations",
             },
             {
               label: "Timestamp overrides",
-              href: "/docs/products/databases/timestamp-overrides",
+              href: "/docs/products/databases/documentsdb/timestamp-overrides",
+            },
+            {
+              label: "JSON imports",
+              href: "/docs/products/databases/documentsdb/json-imports",
+            },
+            {
+              label: "JSON exports",
+              href: "/docs/products/databases/documentsdb/json-exports",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "products/databases/mysql",
+      parent: {
+        href: "/docs/products/databases",
+        label: "MySQL",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/databases/mysql",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/databases/mysql/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Tables and data types",
+              href: "/docs/products/databases/mysql/concepts/tables",
+            },
+            {
+              label: "Querying rows",
+              href: "/docs/products/databases/mysql/concepts/queries",
+            },
+            {
+              label: "Joins and relationships",
+              href: "/docs/products/databases/mysql/concepts/joins",
+            },
+            {
+              label: "Indexes",
+              href: "/docs/products/databases/mysql/concepts/indexes",
+            },
+            {
+              label: "Transactions",
+              href: "/docs/products/databases/mysql/concepts/transactions",
+            },
+            {
+              label: "Data modeling",
+              href: "/docs/products/databases/mysql/concepts/data-modeling",
+            },
+            {
+              label: "Security and access control",
+              href: "/docs/products/databases/mysql/concepts/access-control",
+            },
+          ],
+        },
+        {
+          label: "Connecting",
+          items: [
+            {
+              label: "Connections",
+              href: "/docs/products/databases/mysql/connections",
+            },
+            {
+              label: "Connection pooling",
+              href: "/docs/products/databases/mysql/connection-pooling",
+            },
+          ],
+        },
+        {
+          label: "Manage",
+          items: [
+            {
+              label: "Backups",
+              href: "/docs/products/databases/mysql/backups",
+            },
+            {
+              label: "Branches",
+              href: "/docs/products/databases/mysql/branches",
+            },
+            {
+              label: "High availability",
+              href: "/docs/products/databases/mysql/high-availability",
+            },
+            {
+              label: "Scaling",
+              href: "/docs/products/databases/mysql/scaling",
+            },
+            {
+              label: "Network security",
+              href: "/docs/products/databases/mysql/network-security",
+            },
+            {
+              label: "Monitoring",
+              href: "/docs/products/databases/mysql/monitoring",
+            },
+            {
+              label: "Maintenance",
+              href: "/docs/products/databases/mysql/maintenance",
+            },
+          ],
+        },
+        {
+          label: "Integrations",
+          items: [
+            {
+              label: "Node.js drivers",
+              href: "/docs/products/databases/mysql/integrations/drivers",
+            },
+            {
+              label: "Prisma",
+              href: "/docs/products/databases/mysql/integrations/prisma",
+            },
+            {
+              label: "Drizzle",
+              href: "/docs/products/databases/mysql/integrations/drizzle",
+            },
+            {
+              label: "Auth.js",
+              href: "/docs/products/databases/mysql/integrations/auth-js",
+            },
+            {
+              label: "Better Auth",
+              href: "/docs/products/databases/mysql/integrations/better-auth",
+            },
+            {
+              label: "Laravel",
+              href: "/docs/products/databases/mysql/integrations/laravel",
+            },
+            {
+              label: "Rails",
+              href: "/docs/products/databases/mysql/integrations/rails",
+            },
+            {
+              label: "Django",
+              href: "/docs/products/databases/mysql/integrations/django",
+            },
+            {
+              label: "FastAPI",
+              href: "/docs/products/databases/mysql/integrations/fastapi",
+            },
+            {
+              label: "Spring Boot",
+              href: "/docs/products/databases/mysql/integrations/spring-boot",
+            },
+            {
+              label: "EF Core",
+              href: "/docs/products/databases/mysql/integrations/ef-core",
+            },
+            {
+              label: "GORM",
+              href: "/docs/products/databases/mysql/integrations/gorm",
+            },
+            {
+              label: "Next.js",
+              href: "/docs/products/databases/mysql/integrations/nextjs",
+            },
+            {
+              label: "dbt",
+              href: "/docs/products/databases/mysql/integrations/dbt",
+            },
+            {
+              label: "Metabase",
+              href: "/docs/products/databases/mysql/integrations/metabase",
+            },
+            {
+              label: "Grafana",
+              href: "/docs/products/databases/mysql/integrations/grafana",
+            },
+            {
+              label: "Retool",
+              href: "/docs/products/databases/mysql/integrations/retool",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "products/databases/postgresql",
+      parent: {
+        href: "/docs/products/databases",
+        label: "PostgreSQL",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/databases/postgresql",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/databases/postgresql/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Tables and data types",
+              href: "/docs/products/databases/postgresql/concepts/tables",
+            },
+            {
+              label: "Querying rows",
+              href: "/docs/products/databases/postgresql/concepts/queries",
+            },
+            {
+              label: "Joins and relationships",
+              href: "/docs/products/databases/postgresql/concepts/joins",
+            },
+            {
+              label: "Indexes",
+              href: "/docs/products/databases/postgresql/concepts/indexes",
+            },
+            {
+              label: "Transactions",
+              href: "/docs/products/databases/postgresql/concepts/transactions",
+            },
+            {
+              label: "Data modeling",
+              href: "/docs/products/databases/postgresql/concepts/data-modeling",
+            },
+            {
+              label: "Security and access control",
+              href: "/docs/products/databases/postgresql/concepts/access-control",
+            },
+          ],
+        },
+        {
+          label: "Connecting",
+          items: [
+            {
+              label: "Connections",
+              href: "/docs/products/databases/postgresql/connections",
+            },
+            {
+              label: "Connection pooling",
+              href: "/docs/products/databases/postgresql/connection-pooling",
+            },
+          ],
+        },
+        {
+          label: "Manage",
+          items: [
+            {
+              label: "Extensions",
+              href: "/docs/products/databases/postgresql/extensions",
+            },
+            {
+              label: "Backups",
+              href: "/docs/products/databases/postgresql/backups",
+            },
+            {
+              label: "Branches",
+              href: "/docs/products/databases/postgresql/branches",
+            },
+            {
+              label: "High availability",
+              href: "/docs/products/databases/postgresql/high-availability",
+            },
+            {
+              label: "Scaling",
+              href: "/docs/products/databases/postgresql/scaling",
+            },
+            {
+              label: "Network security",
+              href: "/docs/products/databases/postgresql/network-security",
+            },
+            {
+              label: "Monitoring",
+              href: "/docs/products/databases/postgresql/monitoring",
+            },
+            {
+              label: "Maintenance",
+              href: "/docs/products/databases/postgresql/maintenance",
+            },
+          ],
+        },
+        {
+          label: "Integrations",
+          items: [
+            {
+              label: "Node.js drivers",
+              href: "/docs/products/databases/postgresql/integrations/drivers",
+            },
+            {
+              label: "Prisma",
+              href: "/docs/products/databases/postgresql/integrations/prisma",
+            },
+            {
+              label: "Drizzle",
+              href: "/docs/products/databases/postgresql/integrations/drizzle",
+            },
+            {
+              label: "Auth.js",
+              href: "/docs/products/databases/postgresql/integrations/auth-js",
+            },
+            {
+              label: "Better Auth",
+              href: "/docs/products/databases/postgresql/integrations/better-auth",
+            },
+            {
+              label: "Laravel",
+              href: "/docs/products/databases/postgresql/integrations/laravel",
+            },
+            {
+              label: "Rails",
+              href: "/docs/products/databases/postgresql/integrations/rails",
+            },
+            {
+              label: "Django",
+              href: "/docs/products/databases/postgresql/integrations/django",
+            },
+            {
+              label: "FastAPI",
+              href: "/docs/products/databases/postgresql/integrations/fastapi",
+            },
+            {
+              label: "Spring Boot",
+              href: "/docs/products/databases/postgresql/integrations/spring-boot",
+            },
+            {
+              label: "EF Core",
+              href: "/docs/products/databases/postgresql/integrations/ef-core",
+            },
+            {
+              label: "GORM",
+              href: "/docs/products/databases/postgresql/integrations/gorm",
+            },
+            {
+              label: "Next.js",
+              href: "/docs/products/databases/postgresql/integrations/nextjs",
+            },
+            {
+              label: "dbt",
+              href: "/docs/products/databases/postgresql/integrations/dbt",
+            },
+            {
+              label: "Metabase",
+              href: "/docs/products/databases/postgresql/integrations/metabase",
+            },
+            {
+              label: "Grafana",
+              href: "/docs/products/databases/postgresql/integrations/grafana",
+            },
+            {
+              label: "Retool",
+              href: "/docs/products/databases/postgresql/integrations/retool",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "products/databases/tablesdb",
+      parent: {
+        href: "/docs/products/databases",
+        label: "Databases",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/databases/tablesdb",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/databases/tablesdb/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Databases",
+              href: "/docs/products/databases/tablesdb/databases",
+            },
+            {
+              label: "Tables",
+              href: "/docs/products/databases/tablesdb/tables",
+            },
+            {
+              label: "Rows",
+              href: "/docs/products/databases/tablesdb/rows",
+            },
+            {
+              label: "Permissions",
+              href: "/docs/products/databases/tablesdb/permissions",
+            },
+            {
+              label: "Relationships",
+              href: "/docs/products/databases/tablesdb/relationships",
+            },
+            {
+              label: "Queries",
+              href: "/docs/products/databases/tablesdb/queries",
+            },
+            {
+              label: "Order",
+              href: "/docs/products/databases/tablesdb/order",
+            },
+            {
+              label: "Operators",
+              href: "/docs/products/databases/tablesdb/operators",
+            },
+            {
+              label: "Geo queries",
+              href: "/docs/products/databases/tablesdb/geo-queries",
+            },
+            {
+              label: "Backups",
+              href: "/docs/products/databases/tablesdb/backups",
+            },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
+            {
+              label: "Pagination",
+              href: "/docs/products/databases/tablesdb/pagination",
+            },
+            {
+              label: "Transactions",
+              href: "/docs/products/databases/tablesdb/transactions",
+            },
+            {
+              label: "Type generation",
+              href: "/docs/products/databases/tablesdb/type-generation",
+            },
+            {
+              label: "Offline sync",
+              href: "/docs/products/databases/tablesdb/offline",
+            },
+            {
+              label: "Bulk operations",
+              href: "/docs/products/databases/tablesdb/bulk-operations",
+            },
+            {
+              label: "Atomic numeric operations",
+              href: "/docs/products/databases/tablesdb/atomic-numeric-operations",
+            },
+            {
+              label: "CSV imports",
+              href: "/docs/products/databases/tablesdb/csv-imports",
+            },
+            {
+              label: "CSV exports",
+              href: "/docs/products/databases/tablesdb/csv-exports",
+            },
+            {
+              label: "AI suggestions",
+              href: "/docs/products/databases/tablesdb/ai-suggestions",
+            },
+            {
+              label: "Timestamp overrides",
+              href: "/docs/products/databases/tablesdb/timestamp-overrides",
             },
           ],
         },
@@ -995,6 +1655,98 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Legacy API",
               href: "/docs/references/cloud/client-web/databases",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      prefix: "products/databases/vectorsdb",
+      parent: {
+        href: "/docs/products/databases",
+        label: "VectorsDB",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/products/databases/vectorsdb",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/products/databases/vectorsdb/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Databases",
+              href: "/docs/products/databases/vectorsdb/databases",
+            },
+            {
+              label: "Collections",
+              href: "/docs/products/databases/vectorsdb/collections",
+            },
+            {
+              label: "Documents",
+              href: "/docs/products/databases/vectorsdb/documents",
+            },
+            {
+              label: "Embeddings",
+              href: "/docs/products/databases/vectorsdb/embeddings",
+            },
+            {
+              label: "Permissions",
+              href: "/docs/products/databases/vectorsdb/permissions",
+            },
+            {
+              label: "Queries",
+              href: "/docs/products/databases/vectorsdb/queries",
+            },
+            {
+              label: "Order",
+              href: "/docs/products/databases/vectorsdb/order",
+            },
+            {
+              label: "Backups",
+              href: "/docs/products/databases/vectorsdb/backups",
+            },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
+            {
+              label: "Pagination",
+              href: "/docs/products/databases/vectorsdb/pagination",
+            },
+            {
+              label: "Vector search",
+              href: "/docs/products/databases/vectorsdb/vector-search",
+            },
+            {
+              label: "Transactions",
+              href: "/docs/products/databases/vectorsdb/transactions",
+            },
+            {
+              label: "Bulk operations",
+              href: "/docs/products/databases/vectorsdb/bulk-operations",
+            },
+            {
+              label: "Timestamp overrides",
+              href: "/docs/products/databases/vectorsdb/timestamp-overrides",
+            },
+            {
+              label: "CSV imports",
+              href: "/docs/products/databases/vectorsdb/csv-imports",
+            },
+            {
+              label: "CSV exports",
+              href: "/docs/products/databases/vectorsdb/csv-exports",
             },
           ],
         },
@@ -1140,6 +1892,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Email with Mailgun",
               href: "/docs/products/messaging/mailgun",
+            },
+            {
+              label: "Email with Resend",
+              href: "/docs/products/messaging/resend",
             },
             {
               label: "Email with SendGrid",
@@ -1396,6 +2152,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               href: "/docs/products/storage/buckets",
             },
             {
+              label: "Folders",
+              href: "/docs/products/storage/folders",
+            },
+            {
               label: "Permissions",
               href: "/docs/products/storage/permissions",
             },
@@ -1415,6 +2175,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "Image transformations",
               href: "/docs/products/storage/images",
+            },
+            {
+              label: "S3 API",
+              href: "/docs/products/storage/s3",
             },
           ],
         },

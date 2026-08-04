@@ -9,6 +9,7 @@ import {
   Account,
   Activities,
   Affiliates,
+  Agent,
   Apps,
   Assistant,
   Avatars,
@@ -47,6 +48,7 @@ import {
   Webhooks,
   Notifications,
   Waf,
+  type Models,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
@@ -232,11 +234,36 @@ function createConsoleSdkRaw(client: Client) {
     users: new Users(client),
     migrations: new Migrations(client),
     console: new Console(client),
+    agent: new Agent(client),
+    /** Legacy `/console/assistant` chat stream. Prefer `agent` for conversations. */
     assistant: new Assistant(client),
     sites: new Sites(client),
     domains: new Domains(client),
     storage: new Storage(client),
-    organization: new Organization(client),
+    /**
+     * Organization-scoped console API (`X-Appwrite-Organization`).
+     * Required for `/organization/projects` and related org project routes.
+     * Matches the reference console: `sdk.forConsole.organization(orgId)`.
+     */
+    organization(organizationId: string) {
+      const id = String(organizationId ?? '').trim()
+      if (!id) {
+        throw new Error('Organization ID is required')
+      }
+      const organizationClient = new Client()
+      installSetProjectWithHeader(organizationClient)
+      organizationClient.setEndpoint(client.config.endpoint)
+      if (client.config.project) {
+        organizationClient.setProject(client.config.project)
+      }
+      if (client.config.locale) {
+        organizationClient.setLocale(client.config.locale)
+      }
+      Object.assign(organizationClient.headers, client.getHeaders(), {
+        'X-Appwrite-Organization': id,
+      })
+      return new Organization(organizationClient)
+    },
     organizations: new Organizations(client),
     presences: new Presences(client),
     usage: new Usage(client),
@@ -251,10 +278,29 @@ const endpoint = getApiEndpoint()
 const clientConsole = new Client()
 const clientProject = new Client()
 
+/**
+ * Upstream `Client.setProject` only stores `config.project`. Service methods
+ * (`tablesDB.update`, etc.) pass `X-Appwrite-Project` from config on each call,
+ * but raw `client.call` does not. Keep the shared console/project clients in
+ * sync so `sdk.forProject(id)` / `setProject('console')` alone is enough for
+ * every request on that instance.
+ */
+function installSetProjectWithHeader(client: Client) {
+  const originalSetProject = client.setProject.bind(client)
+  client.setProject = ((value: string) => {
+    const projectId = String(value ?? '')
+    client.headers['X-Appwrite-Project'] = projectId
+    return originalSetProject(projectId)
+  }) as Client['setProject']
+}
+
+installSetProjectWithHeader(clientConsole)
+installSetProjectWithHeader(clientProject)
+
 // Configure Console client
 clientConsole.setEndpoint(endpoint).setProject('console')
 
-// Configure Project client (will be set per-project)
+// Configure Project client (will be set per-project via sdk.forProject)
 clientProject.setEndpoint(endpoint).setMode('admin')
 
 // Match server-side content (e.g. localized responses) to the active UI language.
@@ -470,6 +516,93 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
 }
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
+const tablesDBForProject = new TablesDB(clientProject)
+const documentsDBForProject = new DocumentsDB(clientProject)
+const vectorsDBForProject = new VectorsDB(clientProject)
+
+/**
+ * Upstream product `update()` only serializes name / enabled / replicas.
+ * Dedicated compute tier changes need `specification` on the same product
+ * update path. Extend our project SDK instances so call sites always use
+ * `tablesDB.update` / `documentsDB.update` / `vectorsDB.update` (never a
+ * raw REST `client.call` from feature code).
+ */
+function installProductDatabaseUpdateSpecificationSupport(
+  service: TablesDB | DocumentsDB | VectorsDB,
+  pathPrefix: 'tablesdb' | 'documentsdb' | 'vectorsdb',
+) {
+  const originalUpdate = service.update.bind(service)
+  service.update = ((
+    paramsOrFirst: unknown,
+    ...rest: unknown[]
+  ): Promise<Models.Database> => {
+    const params =
+      paramsOrFirst &&
+      typeof paramsOrFirst === 'object' &&
+      !Array.isArray(paramsOrFirst)
+        ? (paramsOrFirst as Record<string, unknown>)
+        : {
+            databaseId: paramsOrFirst,
+            name: rest[0],
+            enabled: rest[1],
+            replicas: rest[2],
+          }
+
+    const specification =
+      typeof params.specification === 'string'
+        ? params.specification.trim()
+        : undefined
+    if (!specification) {
+      return originalUpdate(
+        paramsOrFirst as never,
+        ...(rest as never[]),
+      ) as Promise<Models.Database>
+    }
+
+    const databaseId = params.databaseId
+    if (typeof databaseId === 'undefined') {
+      return originalUpdate(
+        paramsOrFirst as never,
+        ...(rest as never[]),
+      ) as Promise<Models.Database>
+    }
+
+    const payload: Record<string, unknown> = { specification }
+    if (typeof params.name !== 'undefined') payload.name = params.name
+    if (typeof params.enabled !== 'undefined') payload.enabled = params.enabled
+    if (typeof params.replicas !== 'undefined') {
+      payload.replicas = params.replicas
+    }
+
+    const uri = new URL(
+      `${service.client.config.endpoint}/${pathPrefix}/${encodeURIComponent(String(databaseId))}`,
+    )
+    return service.client.call(
+      'put',
+      uri,
+      {
+        'X-Appwrite-Project': service.client.config.project,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      payload,
+    ) as Promise<Models.Database>
+  }) as typeof service.update
+}
+
+installProductDatabaseUpdateSpecificationSupport(
+  tablesDBForProject,
+  'tablesdb',
+)
+installProductDatabaseUpdateSpecificationSupport(
+  documentsDBForProject,
+  'documentsdb',
+)
+installProductDatabaseUpdateSpecificationSupport(
+  vectorsDBForProject,
+  'vectorsdb',
+)
+
 const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
@@ -493,9 +626,9 @@ const sdkForProjectRaw = {
   proxy: new Proxy(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
-  tablesDB: new TablesDB(clientProject),
-  documentsDB: new DocumentsDB(clientProject),
-  vectorsDB: new VectorsDB(clientProject),
+  tablesDB: tablesDBForProject,
+  documentsDB: documentsDBForProject,
+  vectorsDB: vectorsDBForProject,
   waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),

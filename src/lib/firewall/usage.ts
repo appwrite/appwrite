@@ -4,6 +4,7 @@ import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   FIREWALL_CONDITION_OPERATORS,
+  isConditionDraftComplete,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
   type FirewallConditionAttribute,
@@ -33,6 +34,8 @@ const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string | null> = {
 /**
  * Map a draft condition attribute to a usage.listEvents filter attribute.
  * `userAgent` is approximated with `clientName` (usage has no userAgent field).
+ * Attributes usage cannot filter on (continent / state / headers / query)
+ * return null and are skipped in affected-traffic estimation.
  */
 function toUsageAttribute(attribute: string): string | null {
   switch (attribute) {
@@ -40,7 +43,13 @@ function toUsageAttribute(attribute: string): string | null {
     case 'path':
     case 'method':
     case 'country':
+    case 'city':
       return attribute
+    case 'host':
+      return 'hostname'
+    case 'os':
+      return 'osName'
+    case 'browser':
     case 'userAgent':
       return 'clientName'
     default:
@@ -50,8 +59,8 @@ function toUsageAttribute(attribute: string): string | null {
 
 /**
  * Usage filter attributes that exist 1:1 as firewall condition attributes.
- * `userAgent` is a firewall-only attribute (usage uses `clientName` instead),
- * so it is intentionally excluded from this reverse mapping.
+ * `userAgent` is a firewall-only attribute (usage uses `clientName` instead,
+ * which reverse-maps to `browser` here), so it is intentionally excluded.
  */
 function toFirewallConditionAttribute(
   attribute: string,
@@ -61,7 +70,14 @@ function toFirewallConditionAttribute(
     case 'path':
     case 'method':
     case 'country':
+    case 'city':
       return attribute
+    case 'hostname':
+      return 'host'
+    case 'osName':
+      return 'os'
+    case 'clientName':
+      return 'browser'
     default:
       return null
   }
@@ -127,6 +143,56 @@ export function draftsFromUsageFilterMap(
   })
 }
 
+/** Operators with no usage.listEvents equivalent (skipped in estimation). */
+const UNESTIMABLE_OPERATORS = new Set<FirewallConditionOperator>([
+  'notContains',
+])
+
+/**
+ * True when a condition cannot be represented as a usage filter (attribute or
+ * operator has no usage equivalent) and is skipped by
+ * `buildFirewallConditionUsageQueries` - making the estimate an upper bound.
+ */
+export function isUnestimableFirewallCondition(
+  draft: FirewallConditionDraft,
+): boolean {
+  return (
+    toUsageAttribute(draft.attribute) == null ||
+    UNESTIMABLE_OPERATORS.has(draft.operator)
+  )
+}
+
+/**
+ * Number of complete conditions the affected-traffic estimate cannot include.
+ * Callers should tell the user the estimate overcounts when this is > 0.
+ */
+export function countUnestimableFirewallConditions(
+  conditions: FirewallConditionDraft[],
+): number {
+  return conditions.filter(
+    (draft) =>
+      isConditionDraftComplete(draft) && isUnestimableFirewallCondition(draft),
+  ).length
+}
+
+/** usage.listEvents allows up to 10 queries; leave room for resource filters. */
+export const FIREWALL_USAGE_CONDITION_QUERY_LIMIT = 8
+
+/**
+ * True when the rule has more estimable conditions than the usage query limit,
+ * in which case `buildFirewallConditionUsageQueries` would drop the excess and
+ * the estimate would describe a less restrictive rule.
+ */
+export function exceedsFirewallUsageConditionLimit(
+  conditions: FirewallConditionDraft[],
+): boolean {
+  const estimable = conditions.filter(
+    (draft) =>
+      isConditionDraftComplete(draft) && !isUnestimableFirewallCondition(draft),
+  ).length
+  return estimable > FIREWALL_USAGE_CONDITION_QUERY_LIMIT
+}
+
 /**
  * Build usage.listEvents queries from firewall conditions.
  * Only attributes supported by the usage API are included (max 10 total with resource filters).
@@ -140,6 +206,7 @@ export function buildFirewallConditionUsageQueries(
   for (const draft of conditions) {
     const attribute = toUsageAttribute(draft.attribute)
     if (!attribute) continue
+    if (UNESTIMABLE_OPERATORS.has(draft.operator)) continue
 
     if (isNoValueOperator(draft.operator)) {
       queries.push(
@@ -171,8 +238,8 @@ export function buildFirewallConditionUsageQueries(
       }
     }
 
-    // usage.listEvents allows up to 10 queries; leave room for resource filters
-    if (queries.length >= 8) break
+    // Callers gate on exceedsFirewallUsageConditionLimit; this break is a backstop.
+    if (queries.length >= FIREWALL_USAGE_CONDITION_QUERY_LIMIT) break
   }
 
   return queries

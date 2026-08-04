@@ -38,23 +38,34 @@ Build **at least one** complete condition (attribute, operator, and value). Ever
 
 Examples:
 
-- IP address **Equals** `203.0.113.10` (exact IP only; no CIDR)
-- Request path **Starts with** `/v1/account`
-- HTTP method **Equals** `POST`
+- IP address **Equals** `203.0.113.10` (or a CIDR block like `198.51.100.0/24`)
+- Path **Starts with** `/v1/account`
+- Method **Equals** `POST`
+- Header `x-api-client` **Is empty**
 - Country **Equals** `DE`
 
-See [Conditions](/docs/products/firewall/conditions) for attributes, operators, and matching details.
+Attributes are grouped into **Request** (hostname, path, method, header, query parameter), **Client** (IP address, operating system, browser, user agent), and **Location** (country, continent, city, state). City and state require the premium Geo DB addon. See [Conditions](/docs/products/firewall/conditions) for attributes, operators, and matching details.
 
 # Choose an action {% #choose-an-action %}
 
-Select **Deny**, **Bypass**, **Rate limit**, or **Redirect**. The action type is fixed after create; to switch actions, create a new rule and delete the old one.
+Select **Deny**, **Bypass**, **Challenge**, **Rate limit**, or **Redirect**. The action type is fixed after create; to switch actions, create a new rule and delete the old one.
+
+**Deny** and **Bypass** need no extra settings.
+
+For **Challenge**, set:
+
+- **Difficulty** (`1` easiest to `5` hardest; Console default `3`)
+- **TTL (seconds)** (`900` to `86400`; Console default `1800`) — how long a visitor stays cleared after passing before being challenged again
+
+Challenge rules use the platform default challenge type. See [Challenge](/docs/products/firewall/actions#challenge).
 
 For **Rate limit**, set:
 
 - **Request limit** (Console default `100`)
 - **Interval (seconds)** (Console default `60`; maximum `86400`)
+- **Limit by** (`ip` or `userId`; Console default `ip`) — whether the quota is counted per client IP or per authenticated user
 
-Quotas are counted per client IP per rule. See [Rate limit](/docs/products/firewall/actions#rate-limit).
+Quotas are counted per bucket key per rule. See [Rate limit](/docs/products/firewall/actions#rate-limit).
 
 For **Redirect**, set:
 
@@ -85,5 +96,5 @@ Free plans allow **2** rules per project. Pro allows **50**. See [Plan limits](/
 
 - Confirm the rule under the correct scope tab.
 - Test with a client SDK or API key (Firewall does not block Console access).
-- Watch [traffic overview](/docs/products/firewall/monitor) for denied, rate-limited, or redirected counts.
+- Watch [traffic overview](/docs/products/firewall/monitor) for denied, challenged, rate-limited, or redirected counts.
 - [Update](/docs/products/firewall/update) priority, conditions, or scope if legitimate traffic is affected.

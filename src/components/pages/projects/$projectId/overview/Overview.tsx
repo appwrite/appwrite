@@ -46,6 +46,7 @@ import {
   useProjectGbHoursOverview,
   useProjectOverviewStorageOverview,
   useComputeBreakdownResources,
+  useDatabaseBreakdownResources,
   useStorageBreakdownResources,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
@@ -96,6 +97,7 @@ import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { PlatformContextMenu } from '../apps/_components/PlatformContextMenu'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import {
   Dialog,
   DialogContent,
@@ -202,7 +204,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const projectConnect = useProjectConnectDialog()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
-    useState<OverviewStorageBreakdownType>('files')
+    useState<OverviewStorageBreakdownType>('buckets')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -470,26 +472,35 @@ export function View({ projectId, initialData }: ViewProps) {
 
   const storageBreakdownIds = useMemo(() => {
     const ids = new Set<string>()
-    for (const item of storageUsage?.storageBreakdown?.files ?? []) {
+    for (const item of storageUsage?.storageBreakdown?.buckets ?? []) {
       const id = item.id?.trim() || item.path?.trim()
       if (id) ids.add(id)
     }
     return Array.from(ids)
-  }, [storageUsage?.storageBreakdown?.files])
+  }, [storageUsage?.storageBreakdown?.buckets])
+
+  const storageDatabaseBreakdownIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of storageUsage?.storageBreakdown?.databases ?? []) {
+      const id = item.id?.trim() || item.path?.trim()
+      if (id) ids.add(id)
+    }
+    return Array.from(ids)
+  }, [storageUsage?.storageBreakdown?.databases])
 
   const storageComputeBreakdownIds = useMemo(() => {
     const ids = new Set<string>()
     for (const item of [
-      ...(storageUsage?.storageBreakdown?.deployments ?? []),
-      ...(storageUsage?.storageBreakdown?.builds ?? []),
+      ...(storageUsage?.storageBreakdown?.functions ?? []),
+      ...(storageUsage?.storageBreakdown?.sites ?? []),
     ]) {
       const id = item.id?.trim() || item.path?.trim()
       if (id) ids.add(id)
     }
     return Array.from(ids)
   }, [
-    storageUsage?.storageBreakdown?.deployments,
-    storageUsage?.storageBreakdown?.builds,
+    storageUsage?.storageBreakdown?.functions,
+    storageUsage?.storageBreakdown?.sites,
   ])
 
   const activeStorageBreakdownTitle = 'Top consumers'
@@ -529,6 +540,16 @@ export function View({ projectId, initialData }: ViewProps) {
         showUsageBreakdownPanels &&
         activeTab === 'storage' &&
         storageComputeBreakdownIds.length > 0,
+    )
+
+  const { data: storageDatabaseBreakdownResources } =
+    useDatabaseBreakdownResources(
+      projectId,
+      storageDatabaseBreakdownIds,
+      isOverviewChartTabVisible('storage') &&
+        showUsageBreakdownPanels &&
+        activeTab === 'storage' &&
+        storageDatabaseBreakdownIds.length > 0,
     )
 
   const { data: gbHoursBreakdownResources } = useComputeBreakdownResources(
@@ -843,11 +864,15 @@ export function View({ projectId, initialData }: ViewProps) {
   const confirmDelete = () => {
     if (!selectedKeyId) return
 
-    deleteMutation.mutate(selectedKeyId, {
+    const keyId = selectedKeyId
+    closeDialogBeforeOverlayUnmount(() => {
+      setDeleteDialogOpen(false)
+      setSelectedKeyId(null)
+    })
+
+    deleteMutation.mutate(keyId, {
       onSuccess: () => {
         toast.success(t('API key deleted successfully'))
-        setDeleteDialogOpen(false)
-        setSelectedKeyId(null)
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete API key'))
@@ -964,7 +989,7 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Charts card - usage stats (cloud only) */}
         {visibleOverviewChartTabs.length > 0 && (
           <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-            {/* Filters first, then metric tabs — stacked below @[700px], side-by-side above */}
+            {/* Filters first, then metric tabs - stacked below @[700px], side-by-side above */}
             <div className="border-b border-border">
               <div className="flex min-w-0 flex-col @[700px]:flex-row @[700px]:items-center @[700px]:gap-3 @[700px]:px-5">
                 <div className="order-1 flex w-full min-w-0 flex-col gap-2 px-4 py-2.5 @[520px]:flex-row @[520px]:flex-wrap @[520px]:items-center @[700px]:order-2 @[700px]:w-auto @[700px]:shrink-0 @[700px]:px-0 @[700px]:py-3">
@@ -1044,7 +1069,7 @@ export function View({ projectId, initialData }: ViewProps) {
               </div>
             </div>
 
-            {/* Chart content — stacked in one grid cell for stable height across tabs */}
+            {/* Chart content - stacked in one grid cell for stable height across tabs */}
             <div className={overviewChartTabPanelsContainerClass}>
             {isOverviewChartTabVisible('bandwidth') ? (
             <div
@@ -1202,6 +1227,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       projectId={projectId}
                       storageLookup={storageBreakdownResources?.resources}
                       resourceLookup={storageComputeBreakdownResources?.resources}
+                      databaseLookup={storageDatabaseBreakdownResources?.resources}
                       headerAddon={
                         <OverviewStorageBreakdownToggle
                           value={storageBreakdownType}

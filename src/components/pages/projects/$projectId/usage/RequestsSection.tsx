@@ -46,7 +46,7 @@ import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import { useT } from '@/lib/i18n/translate'
-import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import {
@@ -373,15 +373,16 @@ export function RequestsSection({
     [breakdowns],
   )
 
-  const resourceBreakdownIds = useMemo(() => {
-    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
-  }, [resourceEntry?.items])
+  const resourceBreakdownItems = useMemo(
+    () => resourceEntry?.items ?? [],
+    [resourceEntry?.items],
+  )
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceBreakdownIds,
-      showBreakdown && resourceBreakdownIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && resourceBreakdownItems.length > 0,
     )
 
   useEffect(() => {

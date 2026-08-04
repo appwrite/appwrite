@@ -627,7 +627,7 @@ export function DatabaseDetailLayout({
 
   const createTableMutation = useMutation({
     mutationFn: (data: { tableId?: string; name: string }) =>
-      createProjectTable(projectId!, databaseId, data),
+      createProjectTable(projectId!, databaseId, dbKind, data),
     onSuccess: async (table) => {
       toast.success(`${table.name} ${t('has been created')}`)
       await queryClient.refetchQueries({
@@ -902,7 +902,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   const database = databases.find((db) => db.$id === databaseId)
   const createTableMutation = useMutation({
     mutationFn: (data: { tableId?: string; name: string }) =>
-      createProjectTable(projectId!, databaseId!, data),
+      createProjectTable(projectId!, databaseId!, dbKind, data),
     onSuccess: async (table) => {
       toast.success(`${table.name} ${t('has been created')}`)
       await queryClient.refetchQueries({

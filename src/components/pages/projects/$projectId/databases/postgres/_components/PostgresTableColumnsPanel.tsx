@@ -21,6 +21,7 @@ import {
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
+import { openDialogAfterOverlayCloses, closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
@@ -103,19 +104,29 @@ export function PostgresTableColumnsPanel({
   }
 
   const handleEdit = (column: PostgresTableColumnRow) => {
-    setSelectedColumn(column)
-    setInternalDialogOpen(true)
+    openDialogAfterOverlayCloses(() => {
+      setSelectedColumn(column)
+      setInternalDialogOpen(true)
+    })
+  }
+
+  const openDeleteDialog = (columnName: string) => {
+    openDialogAfterOverlayCloses(() => {
+      setColumnToDelete(columnName)
+      setDeleteDialogOpen(true)
+    })
   }
 
   const handleDelete = async () => {
     if (!columnToDelete) return
-    try {
-      await executeSql.mutateAsync(
-        buildPostgresDropColumnSql(tableId, columnToDelete),
-      )
-      toast.success(t('Column deleted'))
+    const name = columnToDelete
+    closeDialogBeforeOverlayUnmount(() => {
       setDeleteDialogOpen(false)
       setColumnToDelete(null)
+    })
+    try {
+      await executeSql.mutateAsync(buildPostgresDropColumnSql(tableId, name))
+      toast.success(t('Column deleted'))
       await refetch()
     } catch (error) {
       toast.error(getErrorMessage(error) ?? t('Failed to delete column'))
@@ -305,10 +316,7 @@ export function PostgresTableColumnsPanel({
                     onUpdate={handleEdit}
                     onDelete={
                       !primary
-                        ? (columnName) => {
-                            setColumnToDelete(columnName)
-                            setDeleteDialogOpen(true)
-                          }
+                        ? openDeleteDialog
                         : undefined
                     }
                   >
@@ -446,10 +454,7 @@ export function PostgresTableColumnsPanel({
                               <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onSelect={() => {
-                                setColumnToDelete(column.column_name)
-                                setDeleteDialogOpen(true)
-                              }}
+                              onSelect={() => openDeleteDialog(column.column_name)}
                             >
                               <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                             </DropdownMenuItem>

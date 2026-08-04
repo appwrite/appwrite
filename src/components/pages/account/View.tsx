@@ -18,6 +18,7 @@ import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/Ser
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { ACCOUNT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/account-settings-cards'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
+import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -188,6 +189,13 @@ export function View() {
   const openAccountShortcutsHelp = useCallback(() => {
     setCommandCenterInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
+  }, [])
+
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setCommandCenterInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   useGlobalCommandShortcuts({

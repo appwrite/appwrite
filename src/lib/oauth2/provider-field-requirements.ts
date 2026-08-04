@@ -13,7 +13,7 @@ export type OAuth2CatalogParameter = {
 
 export const OIDC_WELL_KNOWN_PARAM_ID = 'wellKnownURL'
 
-/** Manual OIDC discovery endpoints — only used when well-known URL is not set. */
+/** Manual OIDC discovery endpoints - only used when well-known URL is not set. */
 export const OIDC_MANUAL_DISCOVERY_PARAM_IDS = [
   'authorizationURL',
   'tokenURL',

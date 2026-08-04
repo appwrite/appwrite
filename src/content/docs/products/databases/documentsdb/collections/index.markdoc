@@ -1,0 +1,526 @@
+---
+layout: article
+title: Collections
+description: Organize documents with Appwrite DocumentsDB collections. Learn how to create collections, configure permissions, and add indexes for fast queries.
+---
+Appwrite uses collections as containers of documents.
+Collections are schemaless, so documents in the same collection can hold different fields. You shape data in your application instead of defining columns up front.
+
+# Create collection {% #create-collection %}
+You can create collections using the Appwrite Console, a [Server SDK](/docs/sdks#server), or using the [CLI](/docs/tooling/command-line/installation).
+{% tabs %}
+
+{% tabsitem #console title="Console" %}
+Head to the **Databases** page, open a [database](/docs/products/databases/documentsdb/databases), and click **Create collection**.
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: [sdk.Permission.read(sdk.Role.any())], // optional
+    documentSecurity: false // optional
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: [sdk.Permission.read(sdk.Role.any())], // optional
+    documentSecurity: false // optional
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\DocumentsDB;
+use Appwrite\Permission;
+use Appwrite\Role;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$documentsDB = new DocumentsDB($client);
+
+$result = $documentsDB->createCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: [Permission::read(Role::any())], // optional
+    documentSecurity: false // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+from appwrite.permission import Permission
+from appwrite.role import Role
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.create_collection(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    name = '<NAME>',
+    permissions = [Permission.read(Role.any())], # optional
+    document_security = False # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB.new(client)
+
+result = documents_db.create_collection(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: [Permission.read(Role.any())], # optional
+    document_security: false # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+Collection result = await documentsDB.CreateCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "<NAME>",
+    permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
+    documentSecurity: false // optional
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+DocumentsDB documentsDB = DocumentsDB(client);
+
+Collection result = await documentsDB.createCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: [Permission.read(Role.any())], // (optional)
+    documentSecurity: false, // (optional)
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.DocumentsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val documentsDB = DocumentsDB(client)
+
+val response = documentsDB.createCollection(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    name = "<NAME>",
+    permissions = listOf(Permission.read(Role.any())), // optional
+    documentSecurity = false, // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.DocumentsDB;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+documentsDB.createCollection(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<NAME>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let documentsDB = DocumentsDB(client)
+
+let collection = try await documentsDB.createCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "<NAME>",
+    permissions: [Permission.read(Role.any())], // optional
+    documentSecurity: false // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::DocumentsDB;
+use appwrite::permission::Permission;
+use appwrite::role::Role;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let result = documents_db.create_collection(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "<NAME>",
+        Some(vec![Permission::read(Role::any()).to_string()]), // permissions (optional)
+        Some(false), // documentSecurity (optional)
+        None, // enabled (optional)
+        None, // attributes (optional)
+        None, // indexes (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+
+# Permissions {% #permissions %}
+Appwrite uses permissions to control data access.
+For security, only users that are granted permissions can access a resource.
+
+By default, Appwrite doesn't grant permissions to any users when a new collection is created.
+This means users can't create documents or read, update, and delete existing documents until you grant access.
+
+Set `documentSecurity` to `true` on a collection to configure permissions on individual documents. A user then needs either collection level or document level permissions to access a document.
+
+[Learn about configuring permissions](/docs/products/databases/documentsdb/permissions).
+
+# Indexes {% #indexes %}
+Databases use indexes to quickly locate data without scanning every document.
+To ensure the best performance, Appwrite recommends an index for every field you query.
+If you plan to query multiple fields in a single query, creating an index with **all** queried fields will yield optimal performance.
+
+The following indexes are currently supported:
+
+| Type       | Description                                                                                                  |
+|------------|--------------------------------------------------------------------------------------------------------------|
+| `key`      | Plain index to allow queries.                                                                                 |
+| `unique`   | Unique index to disallow duplicates.                                                                          |
+| `fulltext` | For searching within text fields. Required for the [search query method](/docs/products/databases/documentsdb/queries). |
+
+You can create an index by navigating to your collection's **Indexes** tab or by using your favorite [Server SDK](/docs/sdks#server).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'title_index',
+    type: sdk.DocumentsDBIndexType.Key,
+    attributes: ['title']
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const documentsDB = new sdk.DocumentsDB(client);
+
+const result = await documentsDB.createIndex({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'title_index',
+    type: sdk.DocumentsDBIndexType.Key,
+    attributes: ['title']
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\DocumentsDB;
+use Appwrite\Enums\DocumentsDBIndexType;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$documentsDB = new DocumentsDB($client);
+
+$result = $documentsDB->createIndex(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'title_index',
+    type: DocumentsDBIndexType::KEY(),
+    attributes: ['title']
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.documents_db import DocumentsDB
+from appwrite.enums import DocumentsDBIndexType
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB(client)
+
+result = documents_db.create_index(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    key = 'title_index',
+    type = DocumentsDBIndexType.KEY,
+    attributes = ['title']
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+documents_db = DocumentsDB.new(client)
+
+result = documents_db.create_index(
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    key: 'title_index',
+    type: DocumentsDBIndexType::KEY,
+    attributes: ['title']
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+Index result = await documentsDB.CreateIndex(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    key: "title_index",
+    type: DocumentsDBIndexType.Key,
+    attributes: new List<string> { "title" }
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+DocumentsDB documentsDB = DocumentsDB(client);
+
+Index result = await documentsDB.createIndex(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: 'title_index',
+    type: enums.DocumentsDBIndexType.key,
+    attributes: ['title'],
+);
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.enums.DocumentsDBIndexType
+import io.appwrite.services.DocumentsDB
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val documentsDB = DocumentsDB(client)
+
+val response = documentsDB.createIndex(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    key = "title_index",
+    type = DocumentsDBIndexType.KEY,
+    attributes = listOf("title"),
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.enums.DocumentsDBIndexType;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.DocumentsDB;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+DocumentsDB documentsDB = new DocumentsDB(client);
+
+documentsDB.createIndex(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "title_index",
+    DocumentsDBIndexType.KEY,
+    List.of("title"),
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let documentsDB = DocumentsDB(client)
+
+let index = try await documentsDB.createIndex(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    key: "title_index",
+    type: .key,
+    attributes: ["title"]
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::DocumentsDB;
+use appwrite::enums::DocumentsDBIndexType;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let documents_db = DocumentsDB::new(&client);
+
+    let result = documents_db.create_index(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "title_index",
+        DocumentsDBIndexType::Key,
+        vec!["title"],
+        None, // orders (optional)
+        None, // lengths (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+{% /multicode %}

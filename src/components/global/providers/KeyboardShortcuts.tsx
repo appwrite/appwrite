@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useMemo,
   type ReactNode,
   type ComponentProps,
@@ -32,9 +33,17 @@ import {
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import {
+  registerCommandCenterOpener,
+  type CommandCenterPage,
+} from '@/lib/command-center/opener-bridge'
+
+export type { CommandCenterPage }
 
 interface KeyboardShortcutsContextValue {
   openCommandCenter: () => void
+  /** Open Command Center directly on a named sub-page (protocol / agent). */
+  openCommandCenterPage: (page: CommandCenterPage) => void
   closeCommandCenter: () => void
   isCommandCenterOpen: boolean
 }
@@ -42,16 +51,17 @@ interface KeyboardShortcutsContextValue {
 const KeyboardShortcutsContext =
   createContext<KeyboardShortcutsContextValue | null>(null)
 
-// Default no-op context for when used outside provider (e.g., on org overview page)
+/** Fallback when outside a provider (agent pane / pages without a CC host). */
 const defaultContextValue: KeyboardShortcutsContextValue = {
   openCommandCenter: () => {},
+  openCommandCenterPage: () => {},
   closeCommandCenter: () => {},
   isCommandCenterOpen: false,
 }
 
 export function useKeyboardShortcutsContext() {
   const context = useContext(KeyboardShortcutsContext)
-  // Return default context if not within provider (e.g., on org overview page)
+  // Return default context if not within provider (e.g., agent pane / org overview)
   return context ?? defaultContextValue
 }
 
@@ -244,9 +254,21 @@ export function KeyboardShortcutsProvider({
     setCommandCenterOpen(true)
   }, [])
 
-  const openShortcutsHelp = useCallback(() => {
-    setInitialSubPage('shortcuts')
+  const openCommandCenterPage = useCallback((page: CommandCenterPage) => {
+    setInitialSubPage(page)
     setCommandCenterOpen(true)
+  }, [])
+
+  const openShortcutsHelp = useCallback(() => {
+    openCommandCenterPage('shortcuts')
+  }, [openCommandCenterPage])
+
+  // Agent pane is a sibling of this provider; register so protocol effects can open CC.
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   const handleCommandCenterOpenChange = useCallback((open: boolean) => {
@@ -339,6 +361,7 @@ export function KeyboardShortcutsProvider({
 
   const contextValue: KeyboardShortcutsContextValue = {
     openCommandCenter,
+    openCommandCenterPage,
     closeCommandCenter,
     isCommandCenterOpen: commandCenterOpen,
   }
@@ -383,9 +406,20 @@ export function StandaloneCommandCenterScope({
     setCommandCenterOpen(true)
   }, [])
 
-  const openShortcutsHelp = useCallback(() => {
-    setInitialSubPage('shortcuts')
+  const openCommandCenterPage = useCallback((page: CommandCenterPage) => {
+    setInitialSubPage(page)
     setCommandCenterOpen(true)
+  }, [])
+
+  const openShortcutsHelp = useCallback(() => {
+    openCommandCenterPage('shortcuts')
+  }, [openCommandCenterPage])
+
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   const closeCommandCenter = useCallback(() => {
@@ -402,10 +436,16 @@ export function StandaloneCommandCenterScope({
   const contextValue = useMemo<KeyboardShortcutsContextValue>(
     () => ({
       openCommandCenter,
+      openCommandCenterPage,
       closeCommandCenter,
       isCommandCenterOpen: commandCenterOpen,
     }),
-    [openCommandCenter, closeCommandCenter, commandCenterOpen],
+    [
+      openCommandCenter,
+      openCommandCenterPage,
+      closeCommandCenter,
+      commandCenterOpen,
+    ],
   )
 
   return (

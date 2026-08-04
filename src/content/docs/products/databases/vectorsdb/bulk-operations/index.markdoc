@@ -1,0 +1,475 @@
+---
+layout: article
+title: Bulk operations
+description: Perform bulk operations on documents within your collections for efficient data handling in Appwrite VectorsDB.
+---
+
+Appwrite VectorsDB supports bulk operations for documents, allowing you to create, update, or delete multiple documents in a single request. This can significantly improve performance for apps as it allows you to reduce the number of API calls needed while working with large data sets.
+
+Bulk operations can only be performed via the server-side SDKs. The client-side SDKs do not support bulk operations by design to prevent abuse and protect against unexpected costs. This ensures that only trusted server environments can perform large-scale data operations.
+
+For client applications that need bulk-like functionality, consider using [Appwrite Functions](/docs/products/functions) with proper rate limiting and validation.
+
+Each document's data follows the fixed schema provisioned by its collection: an `embeddings` vector whose length must equal the collection's `dimension`, and an optional free-form `metadata` object. The examples on this page use a collection with `dimension: 4` to keep the arrays readable.
+
+{% info title="Important notes" %}
+Bulk operations trigger Functions, Webhooks, or Realtime events for each document manipulated. Rather than a single event for the entire bulk operation, each document generates a separate event on the existing realtime channels for its operation type.
+{% /info %}
+
+# Atomic behavior {% #atomic-behavior %}
+
+Bulk operations in Appwrite are **atomic**, meaning they follow an all-or-nothing approach. Either all documents in your bulk request succeed, or all documents fail.
+
+This atomicity ensures:
+- **Data consistency**: Your database remains in a consistent state even if some operations would fail.
+- **Race condition prevention**: Multiple clients can safely perform bulk operations simultaneously.
+- **Simplified error handling**: You only need to handle complete success or complete failure scenarios.
+
+For example, if you attempt to create 100 documents and one fails due to a validation error, none of the 100 documents will be created.
+
+# Plan limits {% #plan-limits %}
+
+Bulk operations have different limits based on your Appwrite plan:
+
+| Plan | Documents per request |
+|------|----------------------|
+| Free | 100 |
+| Pro  | 1,000 |
+
+These limits apply to all bulk operations including create, update, upsert, and delete operations. If you need higher limits than what the Pro plan offers, you can [inquire](/contact-us/enterprise) about a custom plan.
+
+# Create documents {% #create-documents %}
+
+You can create multiple documents in a single request using the `createDocuments` method.
+
+{% info title="Custom timestamps" %}
+When creating, updating or upserting in bulk, you can set `$createdAt` and `$updatedAt` for each document in the payload. Values must be ISO 8601 date-time strings. If omitted, Appwrite sets them automatically.
+{% /info %}
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.createDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        {
+            $id: sdk.ID.unique(),
+            embeddings: [0.12, 0.84, 0.33, 0.57],
+            metadata: { title: 'Hamlet', genre: 'tragedy' }
+        },
+        {
+            $id: sdk.ID.unique(),
+            embeddings: [0.91, 0.22, 0.14, 0.65],
+            metadata: { title: 'Macbeth', genre: 'tragedy' }
+        }
+    ]
+});
+```
+
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.id import ID
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.create_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    documents = [
+        {
+            '$id': ID.unique(),
+            'embeddings': [0.12, 0.84, 0.33, 0.57],
+            'metadata': { 'title': 'Hamlet', 'genre': 'tragedy' }
+        },
+        {
+            '$id': ID.unique(),
+            'embeddings': [0.91, 0.22, 0.14, 0.65],
+            'metadata': { 'title': 'Macbeth', 'genre': 'tragedy' }
+        }
+    ]
+)
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.create_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        vec![
+            json!({
+                "$id": ID::unique(),
+                "embeddings": [0.12, 0.84, 0.33, 0.57],
+                "metadata": { "title": "Hamlet", "genre": "tragedy" }
+            }),
+            json!({
+                "$id": ID::unique(),
+                "embeddings": [0.91, 0.22, 0.14, 0.65],
+                "metadata": { "title": "Macbeth", "genre": "tragedy" }
+            }),
+        ],
+    ).await?;
+
+    Ok(())
+}
+```
+
+{% /multicode %}
+
+# Update documents {% #update-documents %}
+
+{% info title="Permissions required" %}
+You must grant **update** permissions to users at the **collection level** before users can update documents.
+[Learn more about permissions](/docs/products/databases/vectorsdb/permissions)
+{% /info %}
+
+You can update multiple documents in a single request using the `updateDocuments` method. Pass the fields to change in `data`, and use `queries` to select which documents are affected.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.updateDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    data: {
+        metadata: { genre: 'drama' }
+    },
+    queries: [
+        sdk.Query.equal('metadata.genre', 'tragedy')
+    ]
+});
+```
+
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.update_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    data = {
+        'metadata': { 'genre': 'drama' }
+    },
+    queries = [
+        Query.equal('metadata.genre', 'tragedy')
+    ]
+)
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::query::Query;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.update_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(json!({
+            "metadata": { "genre": "drama" }
+        })),
+        Some(vec![
+            Query::equal("metadata.genre", "tragedy").to_string(),
+        ]),
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+
+{% /multicode %}
+
+# Upsert documents {% #upsert-documents %}
+
+{% info title="Permissions required" %}
+You must grant **create** and **update** permissions to users at the **collection level** before users can create documents.
+[Learn more about permissions](/docs/products/databases/vectorsdb/permissions)
+{% /info %}
+
+You can upsert multiple documents in a single request using the `upsertDocuments` method. Documents with a new `$id` are created, while documents with an existing `$id` are updated.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.upsertDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documents: [
+        {
+            $id: sdk.ID.unique(),
+            embeddings: [0.40, 0.40, 0.40, 0.40],
+            metadata: { title: 'Othello', genre: 'tragedy' }
+        },
+        {
+            $id: 'document-id-2', // Existing document ID
+            embeddings: [0.10, 0.10, 0.10, 0.10],
+            metadata: { title: 'Hamlet', genre: 'tragedy' }
+        }
+    ]
+});
+```
+
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.id import ID
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.upsert_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    documents = [
+        {
+            '$id': ID.unique(),
+            'embeddings': [0.40, 0.40, 0.40, 0.40],
+            'metadata': { 'title': 'Othello', 'genre': 'tragedy' }
+        },
+        {
+            '$id': 'document-id-2',  # Existing document ID
+            'embeddings': [0.10, 0.10, 0.10, 0.10],
+            'metadata': { 'title': 'Hamlet', 'genre': 'tragedy' }
+        }
+    ]
+)
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::id::ID;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.upsert_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        vec![
+            json!({
+                "$id": ID::unique(),
+                "embeddings": [0.40, 0.40, 0.40, 0.40],
+                "metadata": { "title": "Othello", "genre": "tragedy" }
+            }),
+            json!({
+                "$id": "document-id-2", // Existing document ID
+                "embeddings": [0.10, 0.10, 0.10, 0.10],
+                "metadata": { "title": "Hamlet", "genre": "tragedy" }
+            }),
+        ],
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+
+{% /multicode %}
+
+# Delete documents {% #delete-documents %}
+
+{% info title="Permissions required" %}
+You must grant **delete** permissions to users at the **collection level** before users can delete documents.
+[Learn more about permissions](/docs/products/databases/vectorsdb/permissions)
+{% /info %}
+
+You can delete multiple documents in a single request using the `deleteDocuments` method.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const vectorsDB = new sdk.VectorsDB(client);
+
+const result = await vectorsDB.deleteDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
+        sdk.Query.equal('metadata.genre', 'drama')
+    ]
+});
+```
+
+```python
+from appwrite.client import Client
+from appwrite.services.vectors_db import VectorsDB
+from appwrite.query import Query
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+vectors_db = VectorsDB(client)
+
+result = vectors_db.delete_documents(
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    queries = [
+        Query.equal('metadata.genre', 'drama')
+    ]
+)
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::vectors_db::VectorsDB;
+use appwrite::query::Query;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let vectors_db = VectorsDB::new(&client);
+
+    let result = vectors_db.delete_documents(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        Some(vec![
+            Query::equal("metadata.genre", "drama").to_string(),
+        ]),
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+
+{% /multicode %}
+
+{% info title="Queries for deletion" %}
+
+When deleting documents, you must specify queries to filter which documents to delete.
+If no queries are provided, all documents in the collection will be deleted.
+[Learn more about queries](/docs/products/databases/vectorsdb/queries).
+
+{% /info %}
+
+# Use transactions {% #use-transactions %}
+
+`updateDocuments`, `upsertDocuments`, and `deleteDocuments` accept a `transactionId`. When provided, Appwrite stages the bulk request and applies it on commit. See [Transactions](/docs/products/databases/vectorsdb/transactions).
+
+{% multicode %}
+```server-nodejs
+await vectorsDB.upsertDocuments({
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  documents: [
+    { $id: sdk.ID.unique(), embeddings: [0.12, 0.84, 0.33, 0.57], metadata: { title: 'One' } },
+    { $id: sdk.ID.unique(), embeddings: [0.91, 0.22, 0.14, 0.65], metadata: { title: 'Two' } }
+  ],
+  transactionId: '<TRANSACTION_ID>'
+});
+```
+```python
+vectors_db.upsert_documents(
+  database_id = '<DATABASE_ID>',
+  collection_id = '<COLLECTION_ID>',
+  documents = [
+    { '$id': ID.unique(), 'embeddings': [0.12, 0.84, 0.33, 0.57], 'metadata': { 'title': 'One' } },
+    { '$id': ID.unique(), 'embeddings': [0.91, 0.22, 0.14, 0.65], 'metadata': { 'title': 'Two' } }
+  ],
+  transaction_id = '<TRANSACTION_ID>'
+)
+```
+```server-rust
+let result = vectors_db.upsert_documents(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    vec![
+        json!({
+            "$id": ID::unique(),
+            "embeddings": [0.12, 0.84, 0.33, 0.57],
+            "metadata": { "title": "One" }
+        }),
+        json!({
+            "$id": ID::unique(),
+            "embeddings": [0.91, 0.22, 0.14, 0.65],
+            "metadata": { "title": "Two" }
+        }),
+    ],
+    Some("<TRANSACTION_ID>"),
+).await?;
+```
+{% /multicode %}

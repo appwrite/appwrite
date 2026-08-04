@@ -74,7 +74,7 @@ export function localizePostgresBackendTypeLabel(
   t: Translator,
 ): string {
   const label = formatPostgresBackendTypeLabel(backendType)
-  if (label === '—') return label
+  if (label === '-') return label
   if (label === 'Unknown') return t('Unknown')
   return t(label)
 }
@@ -85,7 +85,7 @@ export function localizePostgresConnectionStateLabel(
   t: Translator,
 ): string {
   const label = formatPostgresConnectionStateLabel(state, backendType)
-  if (label === '—') return label
+  if (label === '-') return label
   if (label === 'System') return t('System')
 
   if (state?.trim()) {

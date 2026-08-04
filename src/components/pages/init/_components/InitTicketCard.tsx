@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -36,6 +37,7 @@ import { getInitTicketStackOption } from '@/lib/init/ticket-stack'
 import { getFrameworkIconFile } from '@/lib/frameworks'
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { scrambleSensitiveText } from '@/lib/scramble-sensitive-text'
 
 const TILT_MAX_X = 22
 const TILT_MAX_Y = 32
@@ -566,6 +568,20 @@ export const InitTicketCard = forwardRef<
   } = ticketAppearance
   const holderTitle = getInitTicketHolderTitle(prefs, defaultHolderTitle)
 
+  // Scramble PII before CSS blur so real values are not recoverable from the DOM.
+  const displayHolderName = useMemo(
+    () => (blurred ? scrambleSensitiveText(holderName) : holderName),
+    [blurred, holderName],
+  )
+  const displayGithubUsername = useMemo(() => {
+    if (!githubUsername) return undefined
+    return blurred ? scrambleSensitiveText(githubUsername) : githubUsername
+  }, [blurred, githubUsername])
+  const displayTicketNumber = useMemo(
+    () => (blurred ? scrambleSensitiveText(ticketNumber) : ticketNumber),
+    [blurred, ticketNumber],
+  )
+
   const sceneRef = useRef<HTMLDivElement>(null)
   const flipperRef = useRef<HTMLDivElement>(null)
   const shadowRef = useRef<HTMLDivElement>(null)
@@ -594,9 +610,9 @@ export const InitTicketCard = forwardRef<
 
   const faceProps: TicketFaceSharedProps = {
     dateRangeLabel,
-    holderName,
-    githubUsername,
-    ticketNumber,
+    holderName: displayHolderName,
+    githubUsername: displayGithubUsername,
+    ticketNumber: displayTicketNumber,
     prefs,
     passLabel,
     holderTitle,

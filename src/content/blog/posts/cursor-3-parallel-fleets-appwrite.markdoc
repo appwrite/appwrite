@@ -3,6 +3,7 @@ layout: post
 title: "Cursor 3: parallel agents, cloud agents, skills, and MCP"
 description: An overview of Cursor 3 - agent-first layout, cloud agents, the skills marketplace and MCP, and the integrated browser - with notes on using it alongside Appwrite.
 date: 2026-04-03
+lastUpdated: 2026-06-29
 cover: /images/blog/cursor-3-parallel-fleets-appwrite/cover.avif
 timeToRead: 7
 author: eldad-fux
@@ -40,7 +41,7 @@ One of the most significant additions is the ability to hand off tasks to **Clou
 - **Autonomy:** These agents plan, execute, and test over longer horizons without human intervention.
 - **Artifacts:** When the agent finishes, it does not just give you a diff; it provides logs, video recordings of its work, and even live previews.
 
-**Why this matters for you:** Setting up complex Appwrite Database schemas or writing intricate migration scripts can be time-consuming. You can now hand off a prompt like `& Migrate our current SQL users to Appwrite Auth and set up the corresponding Collections` and walk away. The agent will handle the heavy lifting in the cloud and notify you when it is ready for review.
+**Why this matters for you:** Setting up complex Appwrite Database schemas or writing intricate migration scripts can be time-consuming. You can now hand off a prompt like `& Migrate our current SQL users to Appwrite Auth and set up the corresponding tables` and walk away. The agent will handle the heavy lifting in the cloud and notify you when it is ready for review.
 
 ## 3. Native Appwrite skills & MCP
 

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useConfirmedOffline } from '@/lib/network-connectivity'
 import {
+  forceReloadForStaleChunk,
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
@@ -233,7 +234,8 @@ export function ErrorComponent({
   }
 
   const handleReload = () => {
-    window.location.reload()
+    // Cache-bust so we don't re-serve HTML that still references deleted chunks.
+    forceReloadForStaleChunk()
   }
 
   const showTechnicalDetails =

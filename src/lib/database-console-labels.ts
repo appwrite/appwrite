@@ -97,7 +97,6 @@ export type DatabaseConsoleLabels = {
   containerNotFoundTitle: string
   failedToCreateContainer: string
   failedToDeleteContainers: string
-  createdManyContainersSuccess: string
   recordsRefreshedSuccess: string
   failedToRefreshRecords: string
   deleteDatabaseContainersDescription: string
@@ -114,8 +113,6 @@ export type DatabaseConsoleLabels = {
 
   /** `Pagination` itemLabel (lowercase, plural). */
   paginationItemLabel: string
-
-  debugCreateManyContainers: string
 }
 
 const TABLES: DatabaseConsoleLabels = {
@@ -187,7 +184,6 @@ const TABLES: DatabaseConsoleLabels = {
   containerNotFoundTitle: 'Table not found',
   failedToCreateContainer: 'Failed to create table',
   failedToDeleteContainers: 'Failed to delete tables',
-  createdManyContainersSuccess: 'Created 50 tables',
   recordsRefreshedSuccess: 'Rows refreshed successfully',
   failedToRefreshRecords: 'Failed to refresh rows',
   deleteDatabaseContainersDescription:
@@ -203,7 +199,6 @@ const TABLES: DatabaseConsoleLabels = {
   disabledContainerTitle: 'Table is disabled',
   disabledContainerBodyPrefix: 'This table is currently disabled.',
   paginationItemLabel: 'tables',
-  debugCreateManyContainers: 'Debug: Create 50 tables',
 }
 
 const DOCUMENTS: DatabaseConsoleLabels = {
@@ -276,7 +271,6 @@ const DOCUMENTS: DatabaseConsoleLabels = {
   containerNotFoundTitle: 'Collection not found',
   failedToCreateContainer: 'Failed to create collection',
   failedToDeleteContainers: 'Failed to delete collections',
-  createdManyContainersSuccess: 'Created 50 collections',
   recordsRefreshedSuccess: 'Documents refreshed successfully',
   failedToRefreshRecords: 'Failed to refresh documents',
   deleteDatabaseContainersDescription:
@@ -291,7 +285,6 @@ const DOCUMENTS: DatabaseConsoleLabels = {
   disabledContainerTitle: 'Collection is disabled',
   disabledContainerBodyPrefix: 'This collection is currently disabled.',
   paginationItemLabel: 'collections',
-  debugCreateManyContainers: 'Debug: Create 50 collections',
 }
 
 const VECTORS: DatabaseConsoleLabels = {
@@ -364,7 +357,6 @@ const VECTORS: DatabaseConsoleLabels = {
   containerNotFoundTitle: 'Collection not found',
   failedToCreateContainer: 'Failed to create collection',
   failedToDeleteContainers: 'Failed to delete collections',
-  createdManyContainersSuccess: 'Created 50 collections',
   recordsRefreshedSuccess: 'Documents refreshed successfully',
   failedToRefreshRecords: 'Failed to refresh documents',
   deleteDatabaseContainersDescription:
@@ -379,7 +371,6 @@ const VECTORS: DatabaseConsoleLabels = {
   disabledContainerTitle: 'Collection is disabled',
   disabledContainerBodyPrefix: 'This collection is currently disabled.',
   paginationItemLabel: 'collections',
-  debugCreateManyContainers: 'Debug: Create 50 collections',
 }
 
 export function getDatabaseConsoleLabels(
@@ -450,7 +441,6 @@ const TRANSLATABLE_DATABASE_LABEL_KEYS = [
   'containerNotFoundTitle',
   'failedToCreateContainer',
   'failedToDeleteContainers',
-  'createdManyContainersSuccess',
   'recordsRefreshedSuccess',
   'failedToRefreshRecords',
   'deleteDatabaseContainersDescription',
@@ -462,7 +452,6 @@ const TRANSLATABLE_DATABASE_LABEL_KEYS = [
   'disabledContainerTitle',
   'disabledContainerBodyPrefix',
   'paginationItemLabel',
-  'debugCreateManyContainers',
 ] as const satisfies readonly (keyof DatabaseConsoleLabels)[]
 
 /** Returns user-facing database labels translated for the active language. */

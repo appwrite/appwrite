@@ -12,7 +12,7 @@ Skills are available for the Appwrite CLI and all major SDKs, including TypeScri
 Get started with one command:
 
 ```bash
-npx skills add appwrite/agent-skills
+npx skills add appwrite/skills
 ```
 
 {% arrow_link href="/blog/post/announcing-appwrite-skills" %}

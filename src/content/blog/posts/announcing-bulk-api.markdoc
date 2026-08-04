@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Bulk API: Handle heavy data workloads with ease"
 description: Perform multiple database operations in a single API call. Enjoy faster writes and better performance for heavy server-side workloads.
 date: 2025-07-03
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-bulk-api/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -10,14 +11,14 @@ category: announcement
 featured: false
 faqs:
   - question: "What is the Appwrite Bulk API?"
-    answer: "The Bulk API lets you create, update, upsert, or delete many documents in a single request using `createDocuments`, `updateDocuments`, `upsertDocuments`, and `deleteDocuments`. It is much faster than sending one request per document and reduces network overhead for batch workloads."
+    answer: "The Bulk API lets you create, update, upsert, or delete many rows in a single request using `createRows`, `updateRows`, `upsertRows`, and `deleteRows`. It is much faster than sending one request per row and reduces network overhead for batch workloads."
   - question: "Why is the Bulk API restricted to server-side SDKs?"
     answer: "Bulk operations typically involve high-volume data changes that should be authorized by trusted code, not by end users. Restricting the API to server SDKs (which use API keys) prevents clients from issuing mass writes or deletes against your project."
-  - question: "When should I use the Bulk API instead of single-document calls?"
-    answer: "Reach for the Bulk API any time you are processing data in batches: importing CSV files, syncing from another database, applying changes from a scheduled job, or cleaning up stale records. For interactive UI writes (one document at a time), the regular methods are usually clearer."
+  - question: "When should I use the Bulk API instead of single-row calls?"
+    answer: "Reach for the Bulk API any time you are processing data in batches: importing CSV files, syncing from another database, applying changes from a scheduled job, or cleaning up stale records. For interactive UI writes (one row at a time), the regular methods are usually clearer."
   - question: "How does Appwrite handle partial failures in a bulk request?"
-    answer: "Bulk operations are transactional at the document level, so individual document validations (such as permissions or schema mismatches) are reported alongside successes. Check the response to see which documents were processed and which failed, then retry only the failures."
-  - question: "Are there limits on how many documents I can send in one bulk call?"
+    answer: "Bulk operations are transactional at the row level, so individual row validations (such as permissions or schema mismatches) are reported alongside successes. Check the response to see which rows were processed and which failed, then retry only the failures."
+  - question: "Are there limits on how many rows I can send in one bulk call?"
     answer: "Yes. There is a maximum batch size per request that depends on payload size and the underlying database engine. The [bulk operations documentation](/docs/products/databases/bulk-operations) lists the current limits and recommended batch sizes for large imports."
   - question: "Does Bulk API work with self-hosted Appwrite?"
     answer: "Yes. Bulk API is available on both Appwrite Cloud and self-hosted installations that run the supporting version. You call the same methods from your server SDK regardless of where Appwrite is hosted."
@@ -27,9 +28,9 @@ We're excited to introduce another Appwrite Databases feature, **Bulk API**. Exp
 
 # Faster development with bulk actions
 
-Previously, writing or modifying large amounts of data in Appwrite Databases required sending one request per document. This method was inefficient, slow, and resource-intensive, especially when dealing with thousands of records.
+Previously, writing or modifying large amounts of data in Appwrite Databases required sending one request per row. This method was inefficient, slow, and resource-intensive, especially when dealing with thousands of records.
 
-With the new Bulk API, you can create, update, or delete multiple documents in one go, vastly speeding up your workflows and reducing network overhead.
+With the new Bulk API, you can create, update, or delete multiple rows in one go, vastly speeding up your workflows and reducing network overhead.
 
 # Optimized for server-side workloads
 
@@ -49,12 +50,12 @@ Bulk operations can only be performed via the server-side SDKs. The client-side 
 
 Utilizing the Bulk API is straightforward. You can use it to:
 
-- Create multiple documents in a single request using the `createDocuments` method
-- Update multiple documents in a single request using the `updateDocuments` method
-- Delete multiple documents in a single request using the `deleteDocuments` method
-- Upsert multiple documents in a single request using the `upsertDocuments` method
+- Create multiple rows in a single request using the `createRows` method
+- Update multiple rows in a single request using the `updateRows` method
+- Delete multiple rows in a single request using the `deleteRows` method
+- Upsert multiple rows in a single request using the `upsertRows` method
 
-Here is a code example for creating multiple documents in a single request:
+Here is a code example for creating multiple rows in a single request:
 
 
 ```server-nodejs
@@ -65,22 +66,22 @@ const client = new sdk.Client()
     .setProject('<PROJECT_ID>')
     .setKey('<API_KEY>');
 
-const databases = new sdk.Databases(client);
+const tablesDB = new sdk.TablesDB(client);
 
-const result = await databases.createDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    [
+const result = await tablesDB.createRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rows: [
         {
             $id: sdk.ID.unique(),
-            name: 'Document 1',
+            name: 'Row 1',
         },
         {
             $id: sdk.ID.unique(),
-            name: 'Document 2',
+            name: 'Row 2',
         }
     ]
-);
+});
 ```
 
 

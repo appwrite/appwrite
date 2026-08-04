@@ -29,12 +29,17 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import {
   deleteProjectTableRow,
   createProjectTableRow,
   fetchProjectTableRow,
 } from '@/lib/react-query/hooks'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { useT } from '@/lib/i18n/translate'
 
 /** Minimal row shape for context menu (matches RowData from View) */
@@ -48,6 +53,7 @@ export interface RowContextMenuRow {
 interface RowContextMenuProps {
   projectId: string
   databaseId: string
+  dbKind: DatabaseRouteKind
   tableId: string
   row: RowContextMenuRow
   /** When set, right-click was on a cell; show "Copy value" in Copy submenu for this column */
@@ -86,6 +92,7 @@ function getCellValue(row: RowContextMenuRow, columnKey: string): unknown {
 export function RowContextMenu({
   projectId,
   databaseId,
+  dbKind,
   tableId,
   row,
   contextColumnKey,
@@ -99,9 +106,8 @@ export function RowContextMenu({
 
   const deleteMutation = useMutation({
     mutationFn: () =>
-      deleteProjectTableRow(projectId, databaseId, tableId, row.$id),
+      deleteProjectTableRow(projectId, databaseId, dbKind, tableId, row.$id),
     onSuccess: async () => {
-      setDeleteDialogOpen(false)
       await queryClient.refetchQueries({ queryKey: [...queryKey] })
       toast.success(t('Row deleted'))
       onRowDeleted?.(row.$id)
@@ -120,6 +126,7 @@ export function RowContextMenu({
       return createProjectTableRow(
         projectId,
         databaseId,
+        dbKind,
         tableId,
         data as Record<string, unknown>,
       )
@@ -144,7 +151,8 @@ export function RowContextMenu({
 
   const handleCopyAsJson = async () => {
     await copyResourceAsJson(
-      () => fetchProjectTableRow(projectId, databaseId, tableId, row.$id),
+      () =>
+        fetchProjectTableRow(projectId, databaseId, dbKind, tableId, row.$id),
       { fallback: row },
     )
   }
@@ -184,7 +192,12 @@ export function RowContextMenu({
   }
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
+    openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
+  }
+
+  const handleDelete = () => {
+    closeDialogBeforeOverlayUnmount(() => setDeleteDialogOpen(false))
+    deleteMutation.mutate()
   }
 
   return (
@@ -278,7 +291,7 @@ export function RowContextMenu({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
               {t('Delete')}

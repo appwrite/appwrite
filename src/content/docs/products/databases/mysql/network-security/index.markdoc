@@ -1,0 +1,500 @@
+---
+layout: article
+title: Network security
+description: TLS by default, IP allowlists, and idle timeouts for your MySQL database.
+---
+
+Every native database is reachable through a unique public hostname, secured with TLS, and protected by network controls that you configure per database.
+
+# Hostname {% #hostname %}
+
+Each database gets a stable hostname in the form:
+
+```
+db-<hash>.<region>.appwrite.center
+```
+
+The hostname does not change for the lifetime of the database, across restarts, resizes, failovers, and version upgrades. You can copy it from the database response.
+
+# TLS {% #tls %}
+
+Connections on Appwrite Cloud are encrypted with TLS, terminated at Appwrite's edge and forwarded to your database over the internal network. Use TLS when connecting to the public hostname. If your driver does not infer TLS from the connection string, configure it to require TLS.
+
+# IP allowlist {% #ip-allowlist %}
+
+By default, any host that has your credentials can reach the database over the public internet. To restrict access to known networks, configure an IP allowlist. Connections from addresses outside the allowlist are dropped at the network layer, before authentication.
+
+From the API, pass CIDR blocks or single addresses:
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    networkIPAllowlist: ['203.0.113.0/24', '198.51.100.7'],
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    networkIPAllowlist: ['203.0.113.0/24', '198.51.100.7'],
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->update(
+    databaseId: '<DATABASE_ID>',
+    networkIPAllowlist: ['203.0.113.0/24', '198.51.100.7'],
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update(
+    database_id='<DATABASE_ID>',
+    network_i_p_allowlist=['203.0.113.0/24', '198.51.100.7'],
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update(
+    database_id: '<DATABASE_ID>',
+    network_i_p_allowlist: ['203.0.113.0/24', '198.51.100.7'],
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.Update(
+    databaseId: "<DATABASE_ID>",
+    networkIPAllowlist: new List<string> { "203.0.113.0/24", "198.51.100.7" }
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.update(
+    databaseId: '<DATABASE_ID>',
+    networkIPAllowlist: ['203.0.113.0/24', '198.51.100.7'],
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.update(
+    databaseId = "<DATABASE_ID>",
+    networkIPAllowlist = listOf("203.0.113.0/24", "198.51.100.7"),
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.update(
+    databaseId: "<DATABASE_ID>",
+    networkIPAllowlist: ["203.0.113.0/24", "198.51.100.7"]
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        mysql.WithUpdateNetworkIPAllowlist([]string{"203.0.113.0/24", "198.51.100.7"}),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update(
+        "<DATABASE_ID>",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(vec!["203.0.113.0/24".to_string(), "198.51.100.7".to_string()]),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "networkIPAllowlist": [
+          "203.0.113.0/24",
+          "198.51.100.7"
+      ]
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+
+{% /multicode %}
+
+Rules:
+
+- Entries are IPv4 or IPv6 addresses or CIDR blocks, up to 100 entries per database.
+- An empty allowlist means the database accepts connections from any address.
+- The allowlist applies to the database and pooler ports. Appwrite's internal infrastructure, backups, monitoring, and replication are unaffected.
+
+{% info title="Don't lock yourself out" %}
+If you connect from networks with changing addresses (home ISPs, mobile networks, serverless platforms without static egress), an allowlist can block you. Add your serverless provider's egress ranges, or leave the allowlist empty and rely on strong credentials and rotation.
+{% /info %}
+
+# Idle timeout {% #idle-timeout %}
+
+Connections that stay idle are closed by the edge proxy after `networkIdleTimeoutSeconds`, 900 seconds by default. Long-lived driver pools usually send periodic keepalives and are not affected. Raise the timeout if you hold connections open across long pauses; lower it to reclaim connection slots faster.
+
+{% multicode %}
+
+```server-nodejs
+import { Client, Mysql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    networkIdleTimeoutSeconds: 900,
+});
+```
+
+```server-deno
+import { Client, Mysql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const mysql = new Mysql(client);
+
+await mysql.update({
+    databaseId: '<DATABASE_ID>',
+    networkIdleTimeoutSeconds: 900,
+});
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Mysql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$mysql = new Mysql($client);
+
+$mysql->update(
+    databaseId: '<DATABASE_ID>',
+    networkIdleTimeoutSeconds: 900,
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.mysql import Mysql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+mysql = Mysql(client)
+
+mysql.update(
+    database_id='<DATABASE_ID>',
+    network_idle_timeout_seconds=900,
+)
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+mysql = Mysql.new(client)
+
+mysql.update(
+    database_id: '<DATABASE_ID>',
+    network_idle_timeout_seconds: 900,
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Mysql mysql = new Mysql(client);
+
+await mysql.Update(
+    databaseId: "<DATABASE_ID>",
+    networkIdleTimeoutSeconds: 900
+);
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Mysql mysql = Mysql(client);
+
+await mysql.update(
+    databaseId: '<DATABASE_ID>',
+    networkIdleTimeoutSeconds: 900,
+);
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Mysql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val mysql = Mysql(client)
+
+mysql.update(
+    databaseId = "<DATABASE_ID>",
+    networkIdleTimeoutSeconds = 900,
+)
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let mysql = Mysql(client)
+
+_ = try await mysql.update(
+    databaseId: "<DATABASE_ID>",
+    networkIdleTimeoutSeconds: 900
+)
+```
+
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/mysql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewMysql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        mysql.WithUpdateNetworkIdleTimeoutSeconds(900),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Mysql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let mysql = Mysql::new(&client);
+
+    mysql.update("<DATABASE_ID>", None, None, None, None, None, Some(900), None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "networkIdleTimeoutSeconds": 900
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/mysql/<DATABASE_ID>
+```
+
+{% /multicode %}
+
+# Locking down access {% #checklist %}
+
+For a production database:
+
+1. Set an IP allowlist covering only your application's egress addresses.
+2. Rotate the [primary password](/docs/products/databases/mysql/connections#rotate) on a schedule, and after anyone with access leaves your team.
+3. Watch [connection activity](/docs/products/databases/mysql/monitoring#activity) for unexpected clients.

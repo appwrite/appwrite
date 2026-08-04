@@ -8,6 +8,16 @@ export const NOINDEX_ROBOTS_META = {
   content: 'noindex, nofollow',
 } as const
 
+/**
+ * Default robots directive for indexable hosts. `max-image-preview:large`
+ * makes pages eligible for large image previews in Google Search and is a
+ * requirement for good Google Discover presentation.
+ */
+export const INDEXABLE_ROBOTS_META = {
+  name: 'robots',
+  content: 'max-image-preview:large',
+} as const
+
 export const NOINDEX_ROBOTS_HEADER = 'noindex, nofollow'
 
 const SEO_INDEXABLE_HOST_SET = new Set<string>(SEO_INDEXABLE_HOSTS)
@@ -47,7 +57,9 @@ export function getRequestHostFromHeaders(
 }
 
 export function getSeoRobotsMetaTags(siteOrigin: string) {
-  return isSeoIndexableOrigin(siteOrigin) ? [] : [NOINDEX_ROBOTS_META]
+  return isSeoIndexableOrigin(siteOrigin)
+    ? [INDEXABLE_ROBOTS_META]
+    : [NOINDEX_ROBOTS_META]
 }
 
 export function getNonProductionRobotsTxt(): string {

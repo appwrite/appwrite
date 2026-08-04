@@ -12,7 +12,7 @@ import {
 } from '@/lib/init/ticket-video-wall-clock-loop'
 
 const CAPTURE_WALL_CLOCK_MS = INIT_TICKET_VIDEO_CAPTURE_WALL_CLOCK_SEC * 1000
-/** ~6 Mbps per megapixel per second at 60fps — keeps edges clean on cropped stage. */
+/** ~6 Mbps per megapixel per second at 60fps - keeps edges clean on cropped stage. */
 const VIDEO_BITRATE = 35_000_000
 
 function getCropTargetConstructor():

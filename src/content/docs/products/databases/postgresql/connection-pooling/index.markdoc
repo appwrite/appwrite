@@ -1,0 +1,276 @@
+---
+layout: article
+title: Connection pooling
+description: Configure the per-database connection pooler to serve many short-lived clients, with automatic read/write splitting when high availability is enabled.
+---
+
+PostgreSQL creates one backend process per connection, which makes each connection relatively expensive. Serverless functions, edge runtimes, and horizontally scaled application servers can easily exhaust the connection limit of your specification. The connection pooler sits in front of your database and multiplexes many client connections onto a small pool of server connections.
+
+The pooler runs next to your database and is reachable on port `6432` on the same hostname. Your application connects to the pooler exactly like it would connect to PostgreSQL directly, same credentials, same TLS. The pooler is available on specifications that run on dedicated compute; the smallest specifications run on shared capacity and do not include it.
+
+# Pool modes {% #modes %}
+
+| Mode          | Behavior                                                                    | Use for                                        |
+|---------------|-----------------------------------------------------------------------------|------------------------------------------------|
+| `transaction` | A server connection is assigned for the duration of a transaction, then returned to the pool | Serverless and most applications (default)     |
+| `session`     | A server connection is held for the entire client session                    | Session-level features: prepared statements, advisory locks, `LISTEN/NOTIFY`, temporary tables |
+
+Transaction mode gives the highest connection multiplexing but does not support session-level state. If your framework prepares statements at the session level, either switch the driver to unnamed prepared statements or use session mode.
+
+# Configure the pooler {% #configure %}
+
+Read the current pooler configuration with `getPooler`, and tune the pool mode and sizes with `updatePooler`. All parameters are optional; omitted values keep their current setting.
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const pooler = await postgresql.updatePooler({
+    databaseId: '<DATABASE_ID>',
+    mode: 'transaction',
+    maxConnections: 500,
+    defaultPoolSize: 25,
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const pooler = await postgresql.updatePooler({
+    databaseId: '<DATABASE_ID>',
+    mode: 'transaction',
+    maxConnections: 500,
+    defaultPoolSize: 25,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$pooler = $postgresql->updatePooler(
+    databaseId: '<DATABASE_ID>',
+    mode: 'transaction',
+    maxConnections: 500,
+    defaultPoolSize: 25,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+pooler = postgresql.update_pooler(
+    database_id='<DATABASE_ID>',
+    mode='transaction',
+    max_connections=500,
+    default_pool_size=25,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+pooler = postgresql.update_pooler(
+    database_id: '<DATABASE_ID>',
+    mode: 'transaction',
+    max_connections: 500,
+    default_pool_size: 25,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var pooler = await postgresql.UpdatePooler(
+    databaseId: "<DATABASE_ID>",
+    mode: "transaction",
+    maxConnections: 500,
+    defaultPoolSize: 25
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final pooler = await postgresql.updatePooler(
+    databaseId: '<DATABASE_ID>',
+    mode: 'transaction',
+    maxConnections: 500,
+    defaultPoolSize: 25,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val pooler = postgresql.updatePooler(
+    databaseId = "<DATABASE_ID>",
+    mode = "transaction",
+    maxConnections = 500,
+    defaultPoolSize = 25,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let pooler = try await postgresql.updatePooler(
+    databaseId: "<DATABASE_ID>",
+    mode: "transaction",
+    maxConnections: 500,
+    defaultPoolSize: 25
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.UpdatePooler(
+        "<DATABASE_ID>",
+        postgresql.WithUpdatePoolerMode("transaction"),
+        postgresql.WithUpdatePoolerMaxConnections(500),
+        postgresql.WithUpdatePoolerDefaultPoolSize(25),
+    )
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let pooler = postgresql.update_pooler("<DATABASE_ID>", Some("transaction"), Some(500), Some(25), None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "mode": "transaction",
+      "maxConnections": 500,
+      "defaultPoolSize": 25
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/pooler
+```
+{% /multicode %}
+
+| Parameter            | Range          | Description                                                                    |
+|----------------------|----------------|--------------------------------------------------------------------------------|
+| `mode`               | `transaction`, `session` | How long a server connection stays assigned to a client                |
+| `maxConnections`     | 10 - 10,000    | Maximum pooled client connections. Cannot exceed the connection cap of your specification |
+| `defaultPoolSize`    | 1 - 1,000      | Server connections per user in the pool                                        |
+| `readWriteSplitting` | boolean        | Route `SELECT`s to replicas, writes and locked reads to the primary. Defaults to on when high availability is enabled |
+
+The same settings are available in the Console under **Settings** > **Connection pooler**.
+
+# Connect through the pooler {% #connect %}
+
+Take your normal connection string and change the port to `6432`:
+
+```bash
+postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>
+```
+
+Point your application's runtime traffic at the pooler port. Keep migrations and long-lived administrative sessions on the direct port `5432`, schema changes and tools like `pg_dump` expect session semantics and can misbehave in transaction mode.
+
+# Read/write splitting {% #read-write-splitting %}
+
+When [high availability](/docs/products/databases/postgresql/high-availability) is enabled, the pooler can route read-only statements to replicas and everything else to the primary. `SELECT ... FOR UPDATE` and statements inside explicit transactions go to the primary. Replicas replicate asynchronously by default, so a read that immediately follows a write can be stale; use `sync` or `quorum` replication mode if you need read-your-writes consistency through the pooler.
+
+# Sizing guidance {% #sizing %}
+
+A useful starting point for `defaultPoolSize` is `4 x CPU cores` of your specification, and it rarely helps to go above your specification's connection cap divided by the number of databases sharing the workload. Watch the connection metrics in the [Monitor tab](/docs/products/databases/postgresql/monitoring) and increase the pool only when clients queue for a connection.
+
+# When not to use the pooler {% #when-not %}
+
+Skip the pooler when you have a small, fixed number of long-lived application servers that each maintain their own driver-level pool, and their combined connection count fits comfortably in your specification's limit. Adding a pooler in that setup only adds a hop.

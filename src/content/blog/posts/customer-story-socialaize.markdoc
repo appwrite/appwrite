@@ -3,6 +3,7 @@ layout: post
 title: Simplifying social media management with automation and AI with StoreAlert and Appwrite
 description: Discover how Appwrite Cloud seamlessly powers Socialaize's growth, handling 200K to 600K daily function executions and delivering enterprise-grade infrastructure while creating annual savings of up to 300% on backend costs.
 date: 2025-08-22
+lastUpdated: 2026-06-29
 cover: /images/blog/customer-story-socialaize/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -21,7 +22,7 @@ faqs:
   - question: "Can Appwrite Functions schedule recurring tasks?"
     answer: "Yes. [Appwrite Functions](/docs/products/functions) supports cron schedules. Socialaize uses a sync-manager cron function that polls each social platform on a schedule and writes new content into [Appwrite Databases](/docs/products/databases) for processing."
   - question: "Can multiple users share access to the same data in Appwrite?"
-    answer: "Yes. [Appwrite Teams](/docs/products/auth) let you group users and assign permissions to a team rather than individual users. Socialaize uses Teams so multiple users can share OAuth connections to the same social accounts, with the permission system enforced by Appwrite at the document and storage level."
+    answer: "Yes. [Appwrite Teams](/docs/products/auth) let you group users and assign permissions to a team rather than individual users. Socialaize uses Teams so multiple users can share OAuth connections to the same social accounts, with the permission system enforced by Appwrite at the row and storage level."
 ---
 
 
@@ -58,7 +59,7 @@ Socialaize is an all-in-one social media command center designed to automate con
 Zach built the entire Socialaize platform on a modern stack of Astro, Vue, and Appwrite, leveraging nearly every feature Appwrite offers to overcome his challenges and bring his vision to life.
 
 - **Modular architecture with Appwrite Functions:** To manage the API chaos, Zach chose to go serverless, building dedicated functions for each social media API. This allowed him to isolate the logic for each social network, making the system cleaner, more reliable, and easier to maintain. **Appwrite Functions** are the engine of the entire platform, powering everything from the sync-manager cron job (scheduled task) that polls for new content to handlers for AI content generation, permissions, payments, and analytics.
-- **A single source of truth with Appwrite Databases:** **Appwrite Databases** act as the central nervous system for the entire application. Dozens of collections store everything from user data and connected accounts to workflow configurations, media metadata, and the massive amount of data required for the Social Hub.
+- **A single source of truth with Appwrite Databases:** **Appwrite Databases** act as the central nervous system for the entire application. Dozens of tables store everything from user data and connected accounts to workflow configurations, media metadata, and the massive amount of data required for the Social Hub.
 - **A complete backend toolkit for rapid development:** Zach utilized Appwrite's full suite of tools to accelerate development. **Appwrite Authentication** handles user sign-up, the complex OAuth flows for each social platform, and teams to share permissions for accessing connected social media accounts across groups of users. **Appwrite Storage** provides a robust, permission-aware solution for the central Media Library and user-uploaded content, with separate buckets automatically created for each team.
 
 # **Socialaize today**
@@ -69,7 +70,7 @@ After initially self-hosting Appwrite and pushing it to its limits, Zach migrate
 
 > It's especially nice that you guys have to deal with the scaling now and not me.
 
-Appwrite Cloud seamlessly manages the hundreds of thousands of daily function executions, millions of database documents, and real-time connections, allowing Socialaize to perform reliably at enterprise scale.
+Appwrite Cloud seamlessly manages the hundreds of thousands of daily function executions, millions of database rows, and real-time connections, allowing Socialaize to perform reliably at enterprise scale.
 
 > We have somewhere between 200,000 to 600,000 function executions per day.
 

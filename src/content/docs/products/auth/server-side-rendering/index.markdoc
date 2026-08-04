@@ -247,7 +247,7 @@ def login():
         account = Account(admin_client)
 
         # Create the session using the Appwrite client
-        session = account.create_email_password_session(email, password)
+        session = account.create_email_password_session(email=email, password=password)
         resp = make_response(jsonify({'success': True}))
 
         # Set the session cookie
@@ -592,9 +592,9 @@ def oauth():
     account = Account(admin_client)
 
     redirect_url = account.create_o_auth2_token(
-        OAuthProvider.Github,                # Provider
-        'https://example.com/oauth/success', # Success URL
-        'https://example.com/oauth/failure', # Failure URL
+        provider=OAuthProvider.Github,
+        success='https://example.com/oauth/success',
+        failure='https://example.com/oauth/failure',
     )
 
     return redirect(redirect_url)
@@ -644,7 +644,7 @@ app.get('/oauth/success', async (req, res) => {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',
-            maxAge: sesion.expire
+            maxAge: session.expire,
             path: '/',
         });
 
@@ -699,7 +699,7 @@ def oauth_success():
 
     try:
         # Create the session using the Appwrite client
-        session = account.create_session(user_id, secret)
+        session = account.create_session(user_id=user_id, secret=secret)
 
         # Set the session cookie
         res = make_response(jsonify({'success': True}))

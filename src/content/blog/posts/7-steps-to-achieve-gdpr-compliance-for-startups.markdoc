@@ -3,6 +3,7 @@ layout: post
 title: "7 practical steps to achieve GDPR compliance for your startup"
 description: All you need to know about GDPR compliance for startups, the do's, don'ts and best practices.
 date: 2024-09-25
+lastUpdated: 2026-06-29
 cover: /images/blog/7-steps-gdpr-startups/cover.avif
 timeToRead: 4
 author: aditya-oberai
@@ -16,7 +17,7 @@ faqs:
   - question: "How does Appwrite help with GDPR compliance?"
     answer: "Appwrite hashes passwords with Argon2, encrypts data in transit over TLS, supports MFA on [Appwrite Auth](/docs/products/auth), and lets you delete user accounts (and their data) on request. Appwrite Cloud also offers EU regions so personal data of EU users can stay within the EU, simplifying data transfer compliance."
   - question: "What is the right to be forgotten and how do I implement it?"
-    answer: "Users have the right to request deletion of their personal data. In Appwrite, you can delete a user via the Users API, which removes their identity record. You still need to delete documents, files, and other user-tied records in your collections and buckets, which you can do in an [Appwrite Function](/docs/products/functions) triggered by the user deletion event."
+    answer: "Users have the right to request deletion of their personal data. In Appwrite, you can delete a user via the Users API, which removes their identity record. You still need to delete rows, files, and other user-tied records in your tables and buckets, which you can do in an [Appwrite Function](/docs/products/functions) triggered by the user deletion event."
   - question: "Do I need a Data Processing Agreement (DPA) with my backend provider?"
     answer: "Yes. If your backend provider processes personal data on your behalf, GDPR requires a DPA. Appwrite Cloud customers can request a DPA covering Appwrite's role as a data processor. Self-hosted Appwrite means you are processor and controller for your own data."
   - question: "How quickly must I report a data breach under GDPR?"

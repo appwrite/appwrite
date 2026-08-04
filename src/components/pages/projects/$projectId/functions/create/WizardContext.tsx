@@ -38,7 +38,7 @@ const defaultFormData: FunctionWizardFormData = {
   repositoryOwner: undefined,
   repositoryName: undefined,
   repositoryUrl: undefined,
-  providerBranch: 'main',
+  providerBranch: '',
   providerRootDirectory: './',
   functionName: '',
   runtime: undefined,

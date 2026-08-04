@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-/** Red warning card — use whenever copy is shown in destructive/warning red. */
+/** Red warning card - use whenever copy is shown in destructive/warning red. */
 export const warningAlertContainerClassName =
   'border-red-500/30 bg-red-500/5'
 

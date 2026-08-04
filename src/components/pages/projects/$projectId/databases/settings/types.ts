@@ -5,4 +5,6 @@ export type ProjectDatabaseDetail = {
   enabled?: boolean
   createdAt: string
   updatedAt: string
+  /** Dedicated compute slug, or null/shared when TablesDB is serverless. */
+  specification?: string | null
 }

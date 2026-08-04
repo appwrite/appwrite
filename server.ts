@@ -64,11 +64,22 @@
  */
 
 import path from 'node:path'
+// Keep this import first among local modules so Sentry is ready when this file
+// is started without `--preload` (preload is still required to catch failures
+// in sibling static imports below).
+import {
+  captureServerException,
+  flushSentryServer,
+} from './src/lib/sentry/init-server.ts'
 import {
   getAllMarketingPrerenderPaths,
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from './src/lib/legacy-console-path.ts'
 import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
@@ -77,15 +88,22 @@ import {
 } from './src/lib/runtime-config-shared.ts'
 import {
   applyNoIndexResponseHeaders,
-  getNonProductionRobotsTxt,
   getRequestHostFromHeaders,
   isSeoIndexableHost,
-  NOINDEX_ROBOTS_HEADER,
 } from './src/lib/seo/indexing.ts'
 import {
-  isLegacyConsolePath,
-  rewriteLegacyConsolePath,
-} from './src/lib/legacy-console-path.ts'
+  AI_CATALOG_CONTENT_TYPE,
+  APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
+  APPWRITE_MCP_SERVER_CARD_PATH,
+  DISCOVERY_CORS_HEADERS,
+  MCP_SERVER_CARD_CONTENT_TYPE,
+  buildAgentSkillsDiscoveryDocument,
+  buildAiCatalogDocument,
+  buildMcpServerCard,
+  serializeDiscoveryJson,
+} from './src/lib/seo/agent-discovery.ts'
+import { trackServerPageview } from './src/lib/server-analytics.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -93,7 +111,7 @@ const CLIENT_DIRECTORY = './dist/client'
 const SERVER_ENTRY_POINT = './dist/server/server.js'
 
 // Public runtime config, read once from the process env (constant per process)
-// and stamped into every HTML response in place of the build-time placeholder —
+// and stamped into every HTML response in place of the build-time placeholder -
 // see src/lib/runtime-config-shared.ts and src/routes/__root.tsx.
 const RUNTIME_CONFIG = readRuntimeConfigFromEnv(process.env)
 const RUNTIME_CONFIG_JSON = serializeRuntimeConfig(RUNTIME_CONFIG)
@@ -116,6 +134,37 @@ function withSeoIndexingHeaders(req: Request, response: Response): Response {
     statusText: response.statusText,
     headers,
   })
+}
+
+function discoveryExportResponse(
+  req: Request,
+  body: string,
+  contentType: string,
+): Response {
+  trackServerPageview(req, { format: 'json' })
+  return new Response(body, {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=3600',
+      ...DISCOVERY_CORS_HEADERS,
+    },
+  })
+}
+
+async function readClientExportOrFallback(
+  relativePath: string,
+  fallback: () => string,
+): Promise<string> {
+  const filepath = path.join(CLIENT_DIRECTORY, relativePath)
+  try {
+    const file = Bun.file(filepath)
+    if (await file.exists()) {
+      return await file.text()
+    }
+  } catch {
+    // Fall through to runtime generation.
+  }
+  return fallback()
 }
 
 function htmlResponse(
@@ -174,13 +223,40 @@ const INCLUDE_PATTERNS = (process.env.ASSET_PRELOAD_INCLUDE_PATTERNS ?? '')
 // Parse comma-separated exclude patterns (no defaults)
 const EXCLUDE_PATTERNS = [
   convertGlobToRegExp('*.html'),
-  convertGlobToRegExp('llms-full.txt'),
   ...(process.env.ASSET_PRELOAD_EXCLUDE_PATTERNS ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
     .map((pattern: string) => convertGlobToRegExp(pattern)),
 ]
+
+/**
+ * llms exports must never be registered as static routes (neither preloaded
+ * nor on-demand); requests fall through to the TanStack route, which serves
+ * the same prebuilt file with the right Content-Type and records a
+ * server-side pageview.
+ */
+/**
+ * Text / markdown / robots / discovery exports owned by TanStack or explicit
+ * Bun handlers so they get the correct Content-Type, CORS, and server-side
+ * Plausible pageviews. Never register these as plain Bun static routes.
+ */
+function isServerTrackedExportFile(relativePath: string): boolean {
+  const normalized = relativePath.split(/[/\\]/).join('/')
+  return (
+    normalized === 'llms.txt' ||
+    normalized === 'llms-full.txt' ||
+    normalized === 'docs/llms.txt' ||
+    normalized === 'docs.md' ||
+    normalized === 'blog.md' ||
+    normalized === 'changelog.md' ||
+    normalized === 'integrations.md' ||
+    normalized === 'robots.txt' ||
+    normalized === '.well-known/mcp/server-card.json' ||
+    normalized === '.well-known/ai-catalog.json' ||
+    normalized === '.well-known/agent-skills/index.json'
+  )
+}
 
 // Verbose logging flag
 const VERBOSE = process.env.ASSET_PRELOAD_VERBOSE_LOGGING === 'true'
@@ -256,11 +332,7 @@ function isFileEligibleForPreloading(relativePath: string): boolean {
   const normalized = relativePath.split(/[/\\]/).join('/')
   const fileName = normalized.split('/').pop() ?? normalized
 
-  if (
-    normalized === 'llms-full.txt' ||
-    normalized.startsWith('llms-full/') ||
-    fileName.endsWith('.html')
-  ) {
+  if (fileName.endsWith('.html')) {
     return false
   }
 
@@ -408,6 +480,9 @@ async function initializeStaticRoutes(
       if (isAccidentalThreadStaticHtml(relativePath)) {
         continue
       }
+      if (isServerTrackedExportFile(relativePath)) {
+        continue
+      }
 
       const filepath = path.join(clientDirectory, relativePath)
       const route = `/${relativePath.split(path.sep).join(path.posix.sep)}`
@@ -468,9 +543,11 @@ async function initializeStaticRoutes(
           // build-time config frozen into window.__APP_CONFIG__).
           routes[route] = async (req: Request) => {
             if (metadata.type.includes('text/html')) {
+              // Never cache HTML: it embeds hashed asset URLs. Caching across
+              // deploys leaves tabs on a shell that 404s deleted /assets/*.js.
               return htmlResponse(req, await Bun.file(filepath).text(), {
                 'Content-Type': metadata.type,
-                'Cache-Control': 'public, max-age=3600',
+                'Cache-Control': 'no-store',
               })
             }
             const fileOnDemand = Bun.file(filepath)
@@ -506,7 +583,8 @@ async function initializeStaticRoutes(
       routes[urlPath] = async (req: Request) =>
         htmlResponse(req, await Bun.file(filepath).text(), {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600',
+          // Same as SSR HTML: hashed script URLs must not outlive a deploy.
+          'Cache-Control': 'no-store',
         })
 
       skipped.push({
@@ -636,6 +714,10 @@ async function initializeStaticRoutes(
     log.error(
       `Failed to load static files from ${clientDirectory}: ${String(error)}`,
     )
+    captureServerException(error, {
+      source: 'static-routes-init',
+      clientDirectory,
+    })
   }
 
   return { routes, loaded, skipped }
@@ -690,12 +772,13 @@ async function initializeServer() {
     log.success('TanStack Start application handler initialized')
   } catch (error) {
     log.error(`Failed to load server handler: ${String(error)}`)
+    captureServerException(error, { source: 'server-handler-load' })
+    await flushSentryServer()
     process.exit(1)
   }
 
   // Build static routes with intelligent preloading
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY)
-  const productionRobotsHandler = staticRoutes['/robots.txt']
 
   // Create Bun server
   const server = Bun.serve({
@@ -717,27 +800,40 @@ async function initializeServer() {
       '/console': redirectLegacyConsolePath,
       '/console/*': redirectLegacyConsolePath,
 
-      // Serve static assets (preloaded or on-demand)
+      // MCP / agent discovery (SEP-1649 Server Card + AI Catalog). Excluded from
+      // static registration so we can attach CORS + server-side pageviews.
+      [APPWRITE_MCP_SERVER_CARD_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/mcp/server-card.json',
+            () => serializeDiscoveryJson(buildMcpServerCard()),
+          ),
+          MCP_SERVER_CARD_CONTENT_TYPE,
+        ),
+      [APPWRITE_AI_CATALOG_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/ai-catalog.json',
+            () => serializeDiscoveryJson(buildAiCatalogDocument()),
+          ),
+          AI_CATALOG_CONTENT_TYPE,
+        ),
+      [APPWRITE_AGENT_SKILLS_DISCOVERY_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/agent-skills/index.json',
+            () => serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+          ),
+          'application/json; charset=utf-8',
+        ),
+
+      // Serve static assets (preloaded or on-demand). robots.txt, llms exports,
+      // and discovery documents are excluded so they use tracked handlers above
+      // or fall through to TanStack.
       ...staticRoutes,
-
-      '/robots.txt': async (req: Request) => {
-        if (!isIndexableRequest(req)) {
-          return new Response(getNonProductionRobotsTxt(), {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/plain; charset=utf-8',
-              'Cache-Control': 'no-store',
-              'X-Robots-Tag': NOINDEX_ROBOTS_HEADER,
-            },
-          })
-        }
-
-        if (productionRobotsHandler) {
-          return productionRobotsHandler(req)
-        }
-
-        return new Response('Not Found', { status: 404 })
-      },
 
       // Fallback to TanStack Start handler for all other routes. HTML responses
       // get the runtime config stamped in (the SSR shell emits a placeholder).
@@ -758,7 +854,7 @@ async function initializeServer() {
           }
 
           // Incomplete strip-only redirects may land on /project-{region}-{id}/...
-          // without the /console prefix — rewrite those before the SPA.
+          // without the /console prefix - rewrite those before the SPA.
           if (isLegacyConsolePath(url.pathname)) {
             return redirectLegacyConsolePath(req)
           }
@@ -775,6 +871,11 @@ async function initializeServer() {
           })
         } catch (error) {
           log.error(`Server handler error: ${String(error)}`)
+          captureServerException(error, {
+            source: 'server-handler-fetch',
+            url: req.url,
+            method: req.method,
+          })
           return internalServerErrorResponse()
         }
       },
@@ -785,6 +886,7 @@ async function initializeServer() {
       log.error(
         `Uncaught server error: ${error instanceof Error ? error.message : String(error)}`,
       )
+      captureServerException(error, { source: 'bun-serve-error' })
       return internalServerErrorResponse()
     },
   })
@@ -793,7 +895,9 @@ async function initializeServer() {
 }
 
 // Initialize the server
-initializeServer().catch((error: unknown) => {
+initializeServer().catch(async (error: unknown) => {
   log.error(`Failed to start server: ${String(error)}`)
+  captureServerException(error, { source: 'server-initialize' })
+  await flushSentryServer()
   process.exit(1)
 })

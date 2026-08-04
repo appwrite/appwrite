@@ -3,6 +3,7 @@ layout: post
 title: "Product update December 2024: Highlights of the year"
 description: Get a full recap of products, features and programs we released in 2024.
 date: 2025-01-09
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-december-2024/cover-image.avif
 timeToRead: 10
 author: dennis-ivy
@@ -59,7 +60,7 @@ Integrate with popular AI tools like Pinecone, OpenAI and Perplexity, among othe
 
 A CLI can be your best friend if done right. The [new version](https://appwrite.io/blog/post/introducing-new-appwrite-cli) was a more than welcome addition and has made developing applications with Appwrite a lot more enjoyable.
 
-No more overwriting or deleting existing collection data during deployments. With the new Appwrite CLI, you can test functions locally and push or pull data between Appwrite and your CLI seamlessly without affecting existing data.
+No more overwriting or deleting existing table data during deployments. With the new Appwrite CLI, you can test functions locally and push or pull data between Appwrite and your CLI seamlessly without affecting existing data.
 
 ## Improved SSR support - Implement SSR authentication with ease
 
@@ -162,4 +163,3 @@ If you'd like to participate in next month's Community Recognitions, [join our D
 As we look to 2025, we are grateful to our community and are focused on improving Appwrite to help developers build solutions that solve real problems. Here’s to another year of making software development accessible and enjoyable for all developers.
 
 Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.
-

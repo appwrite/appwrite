@@ -197,7 +197,10 @@ export function ConsoleLayout({
           id="main-content"
           tabIndex={-1}
           className={cn(
-            'flex min-h-0 min-w-0 flex-1 flex-col bg-background outline-none',
+            // Content-width container for resource grids / toolbars. Nearest
+            // `@container` for main descendants so queries ignore sidebar width
+            // (unlike the layout-row `@container` on the flex parent above).
+            '@container flex min-h-0 min-w-0 flex-1 flex-col bg-background outline-none',
             usesSplitMain ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
           )}
         >

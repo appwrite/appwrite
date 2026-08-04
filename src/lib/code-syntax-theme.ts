@@ -15,7 +15,7 @@ export type CodeSyntaxColors = {
   string: string
 }
 
-/** Dark chrome — matches snapwrite CodeMirror HighlightStyle. */
+/** Dark chrome - matches snapwrite CodeMirror HighlightStyle. */
 export const CODE_SYNTAX_COLORS_DARK: CodeSyntaxColors = {
   moduleKeyword: '#9685FE',
   function: '#67A3FE',
@@ -26,7 +26,7 @@ export const CODE_SYNTAX_COLORS_DARK: CodeSyntaxColors = {
   string: '#4AD4AB',
 }
 
-/** Light chrome — same brand hues, slightly deeper for contrast on white. */
+/** Light chrome - same brand hues, slightly deeper for contrast on white. */
 export const CODE_SYNTAX_COLORS_LIGHT: CodeSyntaxColors = {
   moduleKeyword: '#7B6AEE',
   function: '#4A8FE8',
@@ -118,7 +118,10 @@ export function prismSyntaxHighlightStyles(
     { types: ['tag'], style: { color: colors.string } },
     { types: ['function'], style: { color: colors.function } },
     { types: ['class-name'], style: { color: colors.moduleKeyword } },
-    { types: ['attr-name', 'variable'], style: { color: colors.property } },
+    {
+      types: ['attr-name', 'variable', 'property'],
+      style: { color: colors.property },
+    },
     {
       types: [
         'deleted',
@@ -131,6 +134,10 @@ export function prismSyntaxHighlightStyles(
       style: { color: colors.string },
     },
     { types: ['number', 'inserted', 'constant'], style: { color: colors.string } },
+    {
+      types: ['boolean'],
+      style: { color: colors.keyword },
+    },
     { types: ['selector'], style: { color: colors.keyword } },
     { types: ['punctuation', 'operator'], style: neutral ?? {} },
   ]

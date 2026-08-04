@@ -13,7 +13,7 @@ export type ReferenceTypeBadgeVariant = FormFieldTypeBadgeVariant
 
 /**
  * Container on the explorer root (measures `main` content width only).
- * Pair utilities with the `/reference-explorer` container name — not the layout-row
+ * Pair utilities with the `/reference-explorer` container name - not the layout-row
  * `@container`, which includes sidebar width and wrongly enables desktop columns on iPad.
  */
 export const REFERENCE_EXPLORER_CONTAINER = '@container/reference-explorer'

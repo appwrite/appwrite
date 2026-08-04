@@ -5,6 +5,7 @@ import { getBlogPostsPage } from '@/lib/blog/content'
 import { getBlogIndexRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
+import { BLOG_RSS_PATH } from '@/lib/seo/rss'
 
 const blogSearchSchema = z.object({
   search: z.string().optional(),
@@ -26,6 +27,14 @@ export const Route = createFileRoute('/_marketing/blog/')({
   },
   head: () => ({
     meta: getBlogIndexRouteMetaTags({ siteOrigin: getRequestSiteOrigin() }),
+    links: [
+      {
+        rel: 'alternate',
+        type: 'application/rss+xml',
+        title: 'Appwrite Blog',
+        href: BLOG_RSS_PATH,
+      },
+    ],
   }),
   component: BlogIndexPage,
 })

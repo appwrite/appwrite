@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-/** Global CSS class — defined in styles.css @layer components. */
+/** Global CSS class - defined in styles.css @layer components. */
 export const LINK_NEUTRAL_CLASS = 'link-neutral'
 
 /** Subtle dotted underline for inline text links. */
@@ -16,9 +16,9 @@ export const HEADING_LINK_TEXT_CLASS = cn(
   LINK_DASHED_DECORATION_CLASS,
 )
 
-/** Wrapper class — styles child anchors via styles.css (see .prose-links-neutral). */
+/** Wrapper class - styles child anchors via styles.css (see .prose-links-neutral). */
 export const PROSE_LINKS_NEUTRAL_CLASS = 'prose-links-neutral'
 
-/** In-card link hint (e.g. "View day", "Learn more") — neutral, not brand pink. */
+/** In-card link hint (e.g. "View day", "Learn more") - neutral, not brand pink. */
 export const CARD_LINK_HINT_CLASS =
   'inline-flex items-center gap-1 font-medium text-muted-foreground transition-colors group-hover:text-foreground'

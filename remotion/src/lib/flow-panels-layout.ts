@@ -20,7 +20,7 @@ export type FlowPanelLayout = {
   id: FlowPanelId
   label: string
   enterFrom: FlowPanelEnterFrom
-  /** Static path under public/ — omit for placeholder chrome. */
+  /** Static path under public/ - omit for placeholder chrome. */
   imageSrc?: string
 }
 

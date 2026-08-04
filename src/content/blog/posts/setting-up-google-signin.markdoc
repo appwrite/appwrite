@@ -3,6 +3,7 @@ layout: post
 title: Setting up “Sign in with Google” in your app
 description: Learn how to set up Google OAuth2 authentication in your app.
 date: 2025-09-09
+lastUpdated: 2026-06-29
 cover: /images/blog/setting-up-google-signin/cover.avif
 timeToRead: 5
 author: atharva
@@ -124,9 +125,11 @@ const account = new Account(client);
 
 // Go to OAuth provider login page
 account.createOAuth2Session(
-    OAuthProvider.Google, // provider
-    'https://example.com/success', // redirect here on success
-    'https://example.com/failed', // redirect here on failure
+    {
+    provider: OAuthProvider.Google,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed'
+},
 );
 ```
 
@@ -137,7 +140,9 @@ If you're facing problems where cookies are not being set after authentication, 
 You can use the following method to get more information about the current logged-in session.
 
 ```jsx
-const session = await account.getSession('current');
+const session = await account.getSession({
+    sessionId: 'current'
+});
 ```
 
 The `getSession()` method will provide you with all the information about the session of the current logged-in user.

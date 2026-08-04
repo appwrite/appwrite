@@ -81,15 +81,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.createSms(
-        '<MESSAGE_ID>',                          // messageId
-        '<CONTENT>',                             // content
-        [],                                      // topics (optional)
-        [],                                      // users (optional)
-        [],                                      // targets (optional)
-        true,                                    // draft (optional)
-        ''                                       // scheduledAt (optional)
-    );
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: true,
+    scheduledAt: ''
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -105,15 +105,15 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const message = await messaging.createSms(
-        '<MESSAGE_ID>',                          // messageId
-        '<CONTENT>',                             // content
-        [],                                      // topics (optional)
-        [],                                      // users (optional)
-        [],                                      // targets (optional)
-        true,                                    // draft (optional)
-        ''                                       // scheduledAt (optional)
-    );
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: true,
+    scheduledAt: ''
+});
 ```
 ```php
 <?php
@@ -381,14 +381,14 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateTwilioProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<ACCOUNT_SID>',                         // accountSid (optional)
-        '<AUTH_TOKEN>',                          // authToken (optional)
-        '<FROM>'                                 // from (optional)
-    );
+const provider = await messaging.updateTwilioProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    accountSid: '<ACCOUNT_SID>',
+    authToken: '<AUTH_TOKEN>',
+    from: '<FROM>'
+});
 ```
 ```deno
 import * as sdk from "npm:node-appwrite";
@@ -404,14 +404,14 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const provider = await messaging.updateTwilioProvider(
-        '<PROVIDER_ID>',                         // providerId
-        '<NAME>',                                // name (optional)
-        false,                                   // enabled (optional)
-        '<ACCOUNT_SID>',                         // accountSid (optional)
-        '<AUTH_TOKEN>',                          // authToken (optional)
-        '<FROM>'                                 // from (optional)
-    );
+const provider = await messaging.updateTwilioProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    accountSid: '<ACCOUNT_SID>',
+    authToken: '<AUTH_TOKEN>',
+    from: '<FROM>'
+});
 ```
 ```php
 <?php

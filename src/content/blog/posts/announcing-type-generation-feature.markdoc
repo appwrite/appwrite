@@ -1,28 +1,29 @@
 ---
 layout: post
 title: "Introducing Type generation: Automate your type definitions with Appwrite"
-description: "Automatically generate types from your collections with support for multiple languages."
+description: "Automatically generate types from your tables with support for multiple languages."
 date: 2025-06-24
+lastUpdated: 2026-06-29
 cover: /images/blog/type-generation-feature/cover.avif
 timeToRead: 4
 author: chirag-aggarwal
 category: announcement
 faqs:
   - question: "What is Appwrite type generation?"
-    answer: "Type generation is a CLI command that produces type definitions in your project's language directly from your Appwrite collections and tables. It keeps client code in sync with your database schema, reducing the chance of typos and stale types when the schema changes."
+    answer: "Type generation is a CLI command that produces type definitions in your project's language directly from your Appwrite tables. It keeps client code in sync with your database schema, reducing the chance of typos and stale types when the schema changes."
   - question: "Which languages does Appwrite type generation support?"
     answer: "The Appwrite CLI generates types for TypeScript, JavaScript, PHP, Swift, Dart, Java, and Kotlin. The CLI detects your project's language automatically, or you can pass options to specify it explicitly. More languages are added over time."
-  - question: "How do I generate types from my Appwrite collections?"
-    answer: "Install the [Appwrite CLI](/docs/tooling/command-line/installation), initialize your project, run `appwrite pull collections`, then run `appwrite types <output-directory>`. The CLI writes the generated type definitions into the specified folder, ready to import in your application code."
+  - question: "How do I generate types from my Appwrite tables?"
+    answer: "Install the [Appwrite CLI](/docs/tooling/command-line/installation), initialize your project, run `appwrite pull tables`, then run `appwrite types <output-directory>`. The CLI writes the generated type definitions into the specified folder, ready to import in your application code."
   - question: "Do I need to regenerate types every time my schema changes?"
-    answer: "Yes. After updating columns, indexes, or relationships in your [Appwrite Databases](/docs/products/databases), run `appwrite pull collections` followed by `appwrite types` to refresh the generated definitions. You can wire this into a CI step or pre-commit hook to keep types current."
+    answer: "Yes. After updating columns, indexes, or relationships in your [Appwrite Databases](/docs/products/databases), run `appwrite pull tables` followed by `appwrite types` to refresh the generated definitions. You can wire this into a CI step or pre-commit hook to keep types current."
   - question: "Why use generated types instead of writing them manually?"
     answer: "Manual types drift from the schema over time as columns are added, renamed, or removed, leading to subtle runtime bugs. Generation guarantees the types always reflect the current schema, which catches mismatches at compile time and removes a tedious manual sync step from your workflow."
   - question: "Does Appwrite type generation work with self-hosted Appwrite?"
     answer: "Yes. Type generation works against any Appwrite project the CLI can authenticate to, whether on Appwrite Cloud or self-hosted. The same commands and output formats apply, so your local workflow stays consistent regardless of deployment target."
 ---
 
-We're excited to announce Appwrite’s newest CLI feature, **Type generation**. Designed specifically to enhance your developer experience. Type generation automates the creation of type definitions directly from your database collections, seamlessly integrating with your preferred programming language.
+We're excited to announce Appwrite’s newest CLI feature, **Type generation**. Designed specifically to enhance your developer experience. Type generation automates the creation of type definitions directly from your database tables, seamlessly integrating with your preferred programming language.
 
 # Say goodbye to manual mapping
 
@@ -36,10 +37,10 @@ Whether you work with PHP, Swift, Dart, TypeScript, JavaScript, Java, or Kotlin,
 
 Using Type generation is straightforward. 
 
-First, ensure you have the [Appwrite CLI](/docs/tooling/command-line/installation#getting-started) installed and your project is [initialised](/docs/tooling/command-line/installation#initialization). Then, run the following command in your terminal to pull collections from your Appwrite project:
+First, ensure you have the [Appwrite CLI](/docs/tooling/command-line/installation#getting-started) installed and your project is [initialised](/docs/tooling/command-line/installation#initialization). Then, run the following command in your terminal to pull tables from your Appwrite project:
 
 ```bash
-appwrite pull collections
+appwrite pull tables
 ```
 
 To generate types, you can use the Appwrite CLI command:

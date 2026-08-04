@@ -9,6 +9,7 @@ import {
   useProjectTableIndexes,
 } from '@/lib/react-query/hooks'
 import { getColumnIcon } from '@/lib/utils/column-icons'
+import { type DatabaseRouteKind } from '@/lib/database-routes'
 import {
   Table2,
   Key,
@@ -94,6 +95,7 @@ const NODE_PADDING = 12
 const MAX_VISIBLE_COLUMNS = 20
 const MIN_SPACING = 240 // Base spacing between nodes
 const MIN_NODE_GAP = 15 // Minimum gap between nodes
+const DB_KIND = 'tablesdb' as const satisfies DatabaseRouteKind
 
 export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const t = useT()
@@ -105,6 +107,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const { tables, isLoading } = useAllProjectTablesForVisualizer(
     projectId,
     databaseId,
+    DB_KIND,
   )
 
   const minimapRef = useRef<HTMLDivElement>(null)
@@ -520,6 +523,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const { columns: activeTableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
+    DB_KIND,
     activeTableId || undefined,
   )
 
@@ -527,6 +531,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const { indexes: activeTableIndexes } = useProjectTableIndexes(
     projectId,
     databaseId,
+    DB_KIND,
     activeTableId || undefined,
   )
 
@@ -576,6 +581,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return await createProjectTableIndex(
         projectId,
         databaseId,
+        DB_KIND,
         activeTableId,
         apiData,
       )
@@ -1028,7 +1034,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   // Fetch database schema for export
   const { data: databaseSchema } = useQuery({
     queryKey: ['database-schema', 'project', projectId, databaseId],
-    queryFn: () => fetchDatabaseSchema(projectId, databaseId),
+    queryFn: () => fetchDatabaseSchema(projectId, databaseId, DB_KIND),
     enabled: !!projectId && !!databaseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })

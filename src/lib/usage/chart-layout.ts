@@ -1,7 +1,7 @@
-/** Y-axis width for usage/overview time-series charts — wide enough to avoid label clipping. */
+/** Y-axis width for usage/overview time-series charts - wide enough to avoid label clipping. */
 export const USAGE_CHART_Y_AXIS_WIDTH = 48
 
-/** Area chart margins — keep plot area flush with the container edges. */
+/** Area chart margins - keep plot area flush with the container edges. */
 export const USAGE_CHART_MARGIN = {
   top: 8,
   right: 0,
@@ -15,7 +15,7 @@ export const USAGE_CHART_X_AXIS_PADDING = {
   right: 8,
 } as const
 
-/** ResponsiveContainer defaults for flex layouts — minWidth prevents under-fill in flex rows. */
+/** ResponsiveContainer defaults for flex layouts - minWidth prevents under-fill in flex rows. */
 export const USAGE_CHART_RESPONSIVE_CONTAINER_PROPS = {
   width: '100%' as const,
   height: '100%' as const,

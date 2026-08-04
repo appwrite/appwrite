@@ -1,0 +1,658 @@
+---
+layout: article
+title: Scaling
+description: Resize the compute specification of your PostgreSQL database with zero downtime and grow storage automatically as your data grows.
+---
+
+Native databases scale in two dimensions: the compute specification (CPU, memory, and connection limit) and storage. Both can change after creation, without dump-and-restore migrations.
+
+# List available specifications {% #specifications %}
+
+Each database runs against a specification that defines its CPU, memory, included storage, and maximum connections. List the specifications available to your plan:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const specifications = await postgresql.listSpecifications({
+
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+const specifications = await postgresql.listSpecifications({
+
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$specifications = $postgresql->listSpecifications(
+
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+specifications = postgresql.list_specifications(
+
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+specifications = postgresql.list_specifications(
+
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+var specifications = await postgresql.ListSpecifications(
+
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+final specifications = await postgresql.listSpecifications(
+
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+val specifications = postgresql.listSpecifications(
+
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+let specifications = try await postgresql.listSpecifications(
+
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    result, err := service.ListSpecifications()
+    if err != nil {
+        panic(err)
+    }
+    _ = result
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    let specifications = postgresql.list_specifications().await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X GET \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/specifications
+```
+{% /multicode %}
+
+# Change the compute specification {% #resize %}
+
+{% only_dark %}
+![Compute tier settings](/images/docs/products/databases/postgresql/dark/settings-compute-tier.avif)
+{% /only_dark %}
+{% only_light %}
+![Compute tier settings](/images/docs/products/databases/postgresql/settings-compute-tier.avif)
+{% /only_light %}
+
+To resize in the Console, open your database, go to **Settings** > **Compute**, and select the new tier.
+
+From the API, pass the new specification ID:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    specification: '<SPECIFICATION>',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    specification: '<SPECIFICATION>',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->update(
+    databaseId: '<DATABASE_ID>',
+    specification: '<SPECIFICATION>',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.update(
+    database_id='<DATABASE_ID>',
+    specification='<SPECIFICATION>',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.update(
+    database_id: '<DATABASE_ID>',
+    specification: '<SPECIFICATION>',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.Update(
+    databaseId: "<DATABASE_ID>",
+    specification: "<SPECIFICATION>"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.update(
+    databaseId: '<DATABASE_ID>',
+    specification: '<SPECIFICATION>',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.update(
+    databaseId = "<DATABASE_ID>",
+    specification = "<SPECIFICATION>",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.update(
+    databaseId: "<DATABASE_ID>",
+    specification: "<SPECIFICATION>"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        postgresql.WithUpdateSpecification("<SPECIFICATION>"),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.update("<DATABASE_ID>", None, None, Some("<SPECIFICATION>"), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "specification": "<SPECIFICATION>"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>
+```
+{% /multicode %}
+
+Resizes apply with zero downtime through a rolling cutover: a new instance is provisioned on the target specification, data is streamed over, and traffic cuts over once it has caught up. The database status shows `scaling` while the resize is in progress.
+
+# Storage {% #storage %}
+
+Each specification includes a storage allowance, and storage beyond the allowance is billed per GB. Storage only grows; you cannot shrink a database's storage after it has expanded. To reclaim a smaller footprint, restore a [backup](/docs/products/databases/postgresql/backups) into a new database.
+
+# Storage autoscaling {% #autoscaling %}
+
+With storage autoscaling enabled, Appwrite grows the storage automatically when usage crosses a threshold, so the database never hits a full disk. Configure it under **Settings** > **Storage** in the Console, or through the API:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500,
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.update({
+    databaseId: '<DATABASE_ID>',
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500,
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->update(
+    databaseId: '<DATABASE_ID>',
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500,
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.update(
+    database_id='<DATABASE_ID>',
+    storage_autoscaling=True,
+    storage_autoscaling_threshold_percent=85,
+    storage_autoscaling_max_gb=500,
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.update(
+    database_id: '<DATABASE_ID>',
+    storage_autoscaling: true,
+    storage_autoscaling_threshold_percent: 85,
+    storage_autoscaling_max_gb: 500,
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.Update(
+    databaseId: "<DATABASE_ID>",
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.update(
+    databaseId: '<DATABASE_ID>',
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500,
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.update(
+    databaseId = "<DATABASE_ID>",
+    storageAutoscaling = true,
+    storageAutoscalingThresholdPercent = 85,
+    storageAutoscalingMaxGb = 500,
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.update(
+    databaseId: "<DATABASE_ID>",
+    storageAutoscaling: true,
+    storageAutoscalingThresholdPercent: 85,
+    storageAutoscalingMaxGb: 500
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/postgresql"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.Update(
+        "<DATABASE_ID>",
+        postgresql.WithUpdateStorageAutoscaling(true),
+        postgresql.WithUpdateStorageAutoscalingThresholdPercent(85),
+        postgresql.WithUpdateStorageAutoscalingMaxGb(500),
+    )
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.update("<DATABASE_ID>", None, None, None, None, None, None, None, None, None, None, Some(true), Some(85), Some(500), None, None, None, None, None, None, None).await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X PATCH \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "storageAutoscaling": true,
+      "storageAutoscalingThresholdPercent": 85,
+      "storageAutoscalingMaxGb": 500
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>
+```
+{% /multicode %}
+
+| Parameter                             | Range              | Description                                              |
+|---------------------------------------|--------------------|-----------------------------------------------------------|
+| `storageAutoscaling`                  | boolean            | Enable automatic storage growth                          |
+| `storageAutoscalingThresholdPercent`  | 50 - 95            | Usage percentage that triggers an expansion (default 85) |
+| `storageAutoscalingMaxGb`             | integer, 0 = no cap | Upper bound for automatic growth                        |
+
+Set a cap if you want a hard ceiling on storage cost; without one, autoscaling grows storage as needed and the overage is billed per GB.
+
+# Picking a specification {% #picking %}
+
+Guidelines for choosing a starting tier:
+
+- **Connections**: count the maximum concurrent connections your application opens, including all replicas of your app server. If it exceeds the specification's connection cap, either move up a tier or put the [connection pooler](/docs/products/databases/postgresql/connection-pooling) in front.
+- **Memory**: PostgreSQL performs best when the working set fits in memory. Watch the cache hit ratio in the [Monitor tab](/docs/products/databases/postgresql/monitoring); a sustained ratio below ~99% for an OLTP workload is a sign to add memory.
+- **CPU**: sustained CPU above 70-80% at normal load leaves no headroom for spikes, migrations, or backups.
+
+Start small and resize up when the metrics say so; resizes are online, so there is no penalty for growing later.

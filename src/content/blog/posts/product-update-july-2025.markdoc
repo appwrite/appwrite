@@ -3,6 +3,7 @@ layout: post
 title: "July product update: New Database features, Sites live, and Console improvements"
 description: Get a full recap of products, features and programs we released in the month of July.
 date: 2025-07-31
+lastUpdated: 2026-06-29
 cover: /images/blog/product-update-july-2025/cover.avif
 timeToRead: 3
 author: dennis-ivy
@@ -11,15 +12,15 @@ featured: false
 callToAction: true
 faqs:
   - question: "What major features did Appwrite ship in July 2025?"
-    answer: "July included the general availability of [Appwrite Sites](/docs/products/sites), CSV import for Databases, the Bulk API, Database Upsert, encrypted string attribute support, and auto-increment columns. The release also included Console and deployment improvements plus richer OTP email previews."
+    answer: "July included the general availability of [Appwrite Sites](/docs/products/sites), CSV import for Databases, the Bulk API, Database Upsert, encrypted text column support, and auto-increment columns. The release also included Console and deployment improvements plus richer OTP email previews."
   - question: "What is the Bulk API in Appwrite Databases?"
-    answer: "The Bulk API lets you create, update, delete, or upsert many documents in a single request instead of looping through individual calls. It is useful for migrations, seeding, and syncing data between systems."
+    answer: "The Bulk API lets you create, update, delete, or upsert many rows in a single request instead of looping through individual calls. It is useful for migrations, seeding, and syncing data between systems."
   - question: "What is a database upsert and when should I use it?"
-    answer: "Upsert is a single operation that creates a document if it does not exist or updates it if it does. It removes the need to do a read followed by a conditional write, which simplifies idempotent sync flows and reduces round trips."
+    answer: "Upsert is a single operation that creates a row if it does not exist or updates it if it does. It removes the need to do a read followed by a conditional write, which simplifies idempotent sync flows and reduces round trips."
   - question: "What does CSV import do in [Appwrite Databases](/docs/products/databases)?"
-    answer: "CSV import lets you bring a CSV file directly into an Appwrite collection through the migration APIs. It is built for seeding collections, onboarding legacy data, and bulk loading without writing a custom script."
-  - question: "How does encrypted string attribute support work?"
-    answer: "Appwrite can encrypt string attributes at rest in [Databases](/docs/products/databases) and [Storage](/docs/products/storage), so you do not have to implement encryption logic in your application code. You enable it on the attribute from the Console."
+    answer: "CSV import lets you bring a CSV file directly into an Appwrite table through the migration APIs. It is built for seeding tables, onboarding legacy data, and bulk loading without writing a custom script."
+  - question: "How does encrypted text column support work?"
+    answer: "Appwrite can encrypt text columns at rest in [Databases](/docs/products/databases) and [Storage](/docs/products/storage), so you do not have to implement encryption logic in your application code. You enable encryption on the column from the Console."
   - question: "What changed with OTP email previews?"
     answer: "Appwrite now surfaces the OTP code in the email preview, so end users can read the code from the notification without opening the message. This reduces friction on phones and improves login completion rates."
 ---
@@ -49,7 +50,7 @@ You can now host your applications directly from the Appwrite console, making Ap
 
 ![CSV imports](/images/blog/announcing-csv-imports/cover.avif)
 
-We started July with CSV import.  Built on top of Appwrite's migration APIs, this Databases feature makes it easy to bring in large datasets, seed collections, or migrate structured data using only a CSV file.
+We started July with CSV import. Built on top of Appwrite's migration APIs, this Databases feature makes it easy to bring in large datasets, seed tables, or migrate structured data using only a CSV file.
 
 [Learn more](/blog/post/announcing-csv-imports)
 
@@ -57,7 +58,7 @@ We started July with CSV import.  Built on top of Appwrite's migration APIs, thi
 
 ![Bulk API](/images/blog/announcing-bulk-api/cover.avif)
 
-You can now handle heavy data workloads with greater ease. With Bulk API, you can create, update, delete, or upsert multiple documents in a single API call.
+You can now handle heavy data workloads with greater ease. With Bulk API, you can create, update, delete, or upsert multiple rows in a single API call.
 
 This is especially useful for managing large datasets or syncing data between systems without multiple API calls.
 
@@ -67,15 +68,15 @@ This is especially useful for managing large datasets or syncing data between sy
 
 ![Database Upsert](/images/blog/announcing-database-upsert/cover.avif)
 
-Database Upsert lets you create or update a document with a single API call. If the document exists, it’s updated; if not, it’s created. This removes the need for manual existence checks, reduces extra requests, and simplifies your logic.
+Database Upsert lets you create or update a row with a single API call. If the row exists, it’s updated; if not, it’s created. This removes the need for manual existence checks, reduces extra requests, and simplifies your logic.
 
 [Learn more](/blog/post/announcing-database-upsert)
 
-# Encrypted string attribute support
+# Encrypted text column support
 
 ![Encrypted ](/images/blog/announcing-encrypted-string-attributes/cover.avif)
 
-We’ve added an extra layer of security to Appwrite Databases and Storage. This feature allows you to encrypt string attributes at rest directly from the Appwrite console, without needing to implement manual encryption.
+We’ve added an extra layer of security to Appwrite Databases and Storage. This feature allows you to encrypt text columns at rest directly from the Appwrite console, without needing to implement manual encryption.
 
 [Learn more](/blog/post/announcing-encrypted-string-attributes)
 
@@ -83,7 +84,7 @@ We’ve added an extra layer of security to Appwrite Databases and Storage. This
 
 ![Auto-increment](/images/blog/announcing-auto-increment-support/cover.avif)
 
-Appwrite Databases now support auto-increment fields. A `$sequence` column is automatically managed in your collection, increasing with each new document. This helps keep your data ordered without requiring manual handling.
+Appwrite Databases now support auto-increment fields. A `$sequence` column is automatically managed in your table, increasing with each new row. This helps keep your data ordered without requiring manual handling.
 
 [Learn more](/blog/post/announcing-auto-increment-support)
 
@@ -134,8 +135,8 @@ If you'd like to participate in next month's Community Recognitions, [join our D
 **Read**
 
 - [Building with Appwrite Sites templates](/blog/post/building-with-sites-templates)
-- [Using $sequence to track document order in Appwrite](/blog/post/track-document-order-with-sequence)
-- [Secure sensitive database fields with encrypted string attributes](/blog/post/encrypted-attributes-for-sensitive-fields)
+- [Using $sequence to track row order in Appwrite](/blog/post/track-document-order-with-sequence)
+- [Secure sensitive database fields with encrypted columns](/blog/post/encrypted-attributes-for-sensitive-fields)
 
 **Watch**
 

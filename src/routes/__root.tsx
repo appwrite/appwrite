@@ -24,7 +24,7 @@ import {
   isLegacyTheme,
   LEGACY_ICON_SRC,
 } from '@/lib/legacy-theme-assets'
-import { AIChatProvider } from '@/components/global/providers/AIChat'
+import { AgentChatProvider } from '@/components/global/providers/AgentChat'
 import { DocsPreviewProvider } from '@/components/global/providers/DocsPreview'
 import {
   ConsoleRightPane,
@@ -47,6 +47,11 @@ import {
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import {
+  WebsiteAccessGate,
+  WEBSITE_ACCESS_BOOT_SCRIPT,
+} from '@/components/global/auth/WebsiteAccessGate'
+import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
@@ -66,6 +71,7 @@ import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
 import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
+import { DevConstructionStripe } from '@/components/global/layout/DevConstructionStripe'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -342,6 +348,21 @@ function isProjectRoute(pathname: string) {
   return parts[0] === 'projects' && parts.length >= 2
 }
 
+/** Full-viewport shell: construction stripe spans main column + right pane. */
+function RootAppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="root-container flex w-full min-w-0 flex-col overflow-hidden">
+      <DevConstructionStripe />
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className="root-scroll-container h-full min-h-0 flex-1 overflow-hidden">
+          <MarketingSiteLayoutGate>{children}</MarketingSiteLayoutGate>
+        </div>
+        <ConsoleRightPane />
+      </div>
+    </div>
+  )
+}
+
 const STATUS_PAGE_URL = 'https://status.appwrite.online'
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -403,83 +424,82 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             Must precede <Scripts /> so module-level config reads see it. */}
         <ScriptOnce>{getRuntimeConfigScript()}</ScriptOnce>
         <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
+        <ScriptOnce>{WEBSITE_ACCESS_BOOT_SCRIPT}</ScriptOnce>
+        {/* Must run before <Scripts /> so entry/main chunk 404s after deploy can
+            auto-recover before the app module graph (and router listeners) load. */}
+        <ScriptOnce>{STALE_CHUNK_BOOT_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
         <ContextualDocumentTitle />
-        <ClientThemeProvider>
-          <I18nProvider>
-            <AnalyticsSessionPropsSync />
-            <PageDirectionProvider>
-              <CookieConsentProvider>
-                <NavigationHistoryProvider>
-                  <RecentResourcesProvider>
-                    {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-                    {!skipStaticLoader ? (
-                      <FullscreenLoader
-                        isVisible={clientMounted ? isLoaderVisible : true}
-                        statusBanner={clientMounted ? statusBanner : undefined}
-                      />
-                    ) : null}
-                    <SentryContextProvider>
-                      <RootShellCatchBoundary>
-                        <DebugModeProvider>
-                          <ConsoleRightPaneProvider>
-                            {features.aiAssistant ? (
-                              <AIChatProvider>
+        {/* I18n outside ClientThemeProvider so FullscreenLoader is not remounted when
+            ThemeProvider attaches after client mount (that remount reset the 1.5s spinner). */}
+        <I18nProvider>
+          {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready.
+              Kept outside ClientThemeProvider remount boundaries. Always mount when the
+              debug override is on (auth/marketing pages set skipStaticLoader). */}
+          <FullscreenLoader
+            isVisible={
+              showFullscreenLoader ||
+              (!skipStaticLoader && (clientMounted ? isLoading : true))
+            }
+            statusBanner={
+              clientMounted && isLoaderVisible ? statusBanner : undefined
+            }
+          />
+          <ClientThemeProvider>
+            <WebsiteAccessGate>
+              <AnalyticsSessionPropsSync />
+              <PageDirectionProvider>
+                <CookieConsentProvider>
+                  <NavigationHistoryProvider>
+                    <RecentResourcesProvider>
+                      <SentryContextProvider>
+                        <RootShellCatchBoundary>
+                          <DebugModeProvider>
+                            <ConsoleRightPaneProvider>
+                              {features.aiAssistant ? (
+                                <AgentChatProvider>
+                                  <DocsPreviewProvider>
+                                    <PromoBannerProvider>
+                                      <RootAppShell>{children}</RootAppShell>
+                                      <ClientOnly>
+                                        <DebugMenu />
+                                      </ClientOnly>
+                                    </PromoBannerProvider>
+                                  </DocsPreviewProvider>
+                                </AgentChatProvider>
+                              ) : (
                                 <DocsPreviewProvider>
                                   <PromoBannerProvider>
-                                    <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                        <MarketingSiteLayoutGate>
-                                          {children}
-                                        </MarketingSiteLayoutGate>
-                                      </div>
-                                      <ConsoleRightPane />
-                                    </div>
+                                    <RootAppShell>{children}</RootAppShell>
                                     <ClientOnly>
                                       <DebugMenu />
                                     </ClientOnly>
                                   </PromoBannerProvider>
                                 </DocsPreviewProvider>
-                              </AIChatProvider>
-                            ) : (
-                              <DocsPreviewProvider>
-                                <PromoBannerProvider>
-                                  <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                      <MarketingSiteLayoutGate>
-                                        {children}
-                                      </MarketingSiteLayoutGate>
-                                    </div>
-                                    <ConsoleRightPane />
-                                  </div>
-                                  <ClientOnly>
-                                    <DebugMenu />
-                                  </ClientOnly>
-                                </PromoBannerProvider>
-                              </DocsPreviewProvider>
-                            )}
-                            <ClientOnly>
-                              <CommunitySupportPromptProvider />
-                            </ClientOnly>
-                          </ConsoleRightPaneProvider>
-                        </DebugModeProvider>
-                      </RootShellCatchBoundary>
-                    </SentryContextProvider>
-                    <ClientOnly>
-                      <Toaster />
-                    </ClientOnly>
-                    <ClientOnly>
-                      {!isProjectRoute(location.pathname) && (
-                        <GlobalUploadProgress />
-                      )}
-                    </ClientOnly>
-                  </RecentResourcesProvider>
-                </NavigationHistoryProvider>
-              </CookieConsentProvider>
-            </PageDirectionProvider>
-          </I18nProvider>
-        </ClientThemeProvider>
+                              )}
+                              <ClientOnly>
+                                <CommunitySupportPromptProvider />
+                              </ClientOnly>
+                            </ConsoleRightPaneProvider>
+                          </DebugModeProvider>
+                        </RootShellCatchBoundary>
+                      </SentryContextProvider>
+                      <ClientOnly>
+                        <Toaster />
+                      </ClientOnly>
+                      <ClientOnly>
+                        {!isProjectRoute(location.pathname) && (
+                          <GlobalUploadProgress />
+                        )}
+                      </ClientOnly>
+                    </RecentResourcesProvider>
+                  </NavigationHistoryProvider>
+                </CookieConsentProvider>
+              </PageDirectionProvider>
+            </WebsiteAccessGate>
+          </ClientThemeProvider>
+        </I18nProvider>
         <Scripts />
       </body>
     </html>

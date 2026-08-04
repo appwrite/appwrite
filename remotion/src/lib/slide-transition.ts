@@ -32,7 +32,7 @@ export function getSlideOffset(direction: SlideDirection, progress: number) {
   }
 }
 
-/** Full-frame slide off-screen — no fade until the scene has cleared the viewport. */
+/** Full-frame slide off-screen - no fade until the scene has cleared the viewport. */
 export function getExitTransition(
   frame: number,
   exitStart: number,
@@ -64,7 +64,7 @@ type SlideTransitionOptions = {
   skipExit?: boolean
 }
 
-/** Exit-only slide — scenes appear instantly, type-in handles enter. */
+/** Exit-only slide - scenes appear instantly, type-in handles enter. */
 export function useSlideTransition({
   durationInFrames,
   exitTo = 'left',

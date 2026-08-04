@@ -3,6 +3,7 @@ layout: post
 title: 7 prompting mistakes you need to stop making right now
 description: Avoid these 7 common prompting mistakes that lead to poor AI outputs. Learn how to write better prompts and get more accurate and reliable results.
 date: 2026-04-27
+lastUpdated: 2026-06-29
 cover: /images/blog/7-prompting-mistakes-you-need-to-stop-making-right-now/cover.avif
 timeToRead: 5
 author: aishwari
@@ -104,7 +105,7 @@ The second prompt gives the model a language, a framework, specific libraries, e
 
 The developers getting the most out of AI tools aren't the ones who use it the most. They're the ones who've learned to communicate precisely. Prompting is a communication skill. The better you get at it, the more leverage you get from every AI tool in your workflow.
 
-If you're building applications with AI features and want a backend that keeps up, [Appwrite](https://appwrite.io) gives you auth, databases, storage, and serverless functions in one platform. Appwrite also works with the [Model Context Protocol](/docs/tooling/mcp), so your AI assistant can interact directly with your backend, creating collections, querying data, and managing functions through natural language. It's a practical way to pair better prompting with better tooling.
+If you're building applications with AI features and want a backend that keeps up, [Appwrite](https://appwrite.io) gives you auth, databases, storage, and serverless functions in one platform. Appwrite also works with the [Model Context Protocol](/docs/tooling/mcp), so your AI assistant can interact directly with your backend, creating tables, querying data, and managing functions through natural language. It's a practical way to pair better prompting with better tooling.
 
 # More resources
 - [Appwrite MCP server](/docs/tooling/mcp)

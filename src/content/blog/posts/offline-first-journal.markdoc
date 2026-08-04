@@ -3,6 +3,7 @@ layout: post
 title: Build an offline-first journal app with RxDB and Appwrite
 description: Learn how you can use RxDB to setup data replication and enable offline synchronization with Appwrite Databases in a JavaScript app.
 date: 2025-04-17
+lastUpdated: 2026-06-29
 cover: /images/blog/offline-first-journal/cover.avif
 timeToRead: 14
 author: aditya-oberai
@@ -12,8 +13,8 @@ faqs:
   - question: "What is RxDB and why use it with Appwrite?"
     answer: "RxDB is a local-first, reactive NoSQL database for JavaScript apps. Pairing it with [Appwrite Databases](/docs/products/databases) gives you local storage with automatic two way sync, so your app keeps working offline and pushes changes to the server when connectivity returns."
   - question: "Does RxDB officially support Appwrite?"
-    answer: "Yes. RxDB ships a replication plugin specifically for Appwrite Databases. It handles the push and pull replication loop, so you only need to configure the database, collection, and a few schema fields."
-  - question: "Why does the entries collection need a `deleted` boolean field?"
+    answer: "Yes. RxDB ships a replication plugin specifically for Appwrite Databases. It handles the push and pull replication loop, so you only need to configure the database, table, and a few schema fields."
+  - question: "Why does the entries table need a `deleted` boolean field?"
     answer: "RxDB does not hard delete records. It uses soft deletes via a `deleted` flag so the deletion can replicate to other clients without losing data in offline scenarios. Without this field, sync will not work correctly."
   - question: "Can I use a framework other than SvelteKit for this pattern?"
     answer: "Yes. RxDB runs in any JavaScript environment, including React, Vue, Angular, React Native, and Electron. The replication plugin for Appwrite is framework agnostic, so the same sync logic carries over."
@@ -55,21 +56,21 @@ Our tech stack for this app will be:
 
 ## Configure your Appwrite project
 
-First, [create an Appwrite Cloud account](https://cloud.appwrite.io/) if you haven’t already. Once your project is ready, go to the **Settings** page and copy your project ID and API endpoint for further usage. Next, go to the **Databases** page from the left sidebar, create a new database with the ID `journals`, and then a collection with the ID `entries` (save both IDs for further usage).
+First, [create an Appwrite Cloud account](https://cloud.appwrite.io/) if you haven’t already. Once your project is ready, go to the **Settings** page and copy your project ID and API endpoint for further usage. Next, go to the **Databases** page from the left sidebar, create a new database with the ID `journals`, and then a table with the ID `entries` (save both IDs for further usage).
 
-Next, head to the **Attributes** tab and add the following:
+Next, head to the **Columns** tab and add the following:
 
 | Key | Type | Size | Required |
 | --- | --- | --- | --- |
-| `title` | String | 100 | Yes |
-| `content` | String | 20000 | Yes |
+| `title` | Varchar | 100 | Yes |
+| `content` | MediumText |  | Yes |
 | `createdAt` | Integer |  | Yes |
 | `updatedAt` | Integer |  | Yes |
 | `deleted` | Boolean |  | Yes |
 
-> **Note:** The `deleted` attribute is necessary to add because RxDB does not hard delete any data, only soft deletes to prevent data loss in offline scenarios.
+> **Note:** The `deleted` column is necessary to add because RxDB does not hard delete any data, only soft deletes to prevent data loss in offline scenarios.
 
-Then, head to the **Settings** tab of your collection, scroll down to the **Permissions** section, and add the following:
+Then, head to the **Settings** tab of your table, scroll down to the **Permissions** section, and add the following:
 
 | Role | Create | Read | Update | Delete |
 | --- | --- | --- | --- | --- |
@@ -116,7 +117,7 @@ In the root directory of your app, create a `.env` file and add the information 
 PUBLIC_APPWRITE_ENDPOINT=your-appwrite-cloud-endpoint
 PUBLIC_APPWRITE_PROJECT_ID=your-project-id
 PUBLIC_APPWRITE_DATABASE_ID=your-database-id
-PUBLIC_APPWRITE_COLLECTION_ID=your-collection-id
+PUBLIC_APPWRITE_TABLE_ID=your-table-id
 ```
 
 Next, in the `src/lib` subdirectory, create a file `appwrite.js` and add the following code:
@@ -127,14 +128,14 @@ import {
 	PUBLIC_APPWRITE_ENDPOINT,
 	PUBLIC_APPWRITE_PROJECT_ID,
 	PUBLIC_APPWRITE_DATABASE_ID,
-	PUBLIC_APPWRITE_COLLECTION_ID
+	PUBLIC_APPWRITE_TABLE_ID
 } from '$env/static/public';
 
 export const appwriteConfig = {
 	endpoint: PUBLIC_APPWRITE_ENDPOINT,
 	projectId: PUBLIC_APPWRITE_PROJECT_ID,
 	databaseId: PUBLIC_APPWRITE_DATABASE_ID,
-	collectionId: PUBLIC_APPWRITE_COLLECTION_ID
+	tableId: PUBLIC_APPWRITE_TABLE_ID
 };
 
 export const client = new Client()
@@ -221,7 +222,7 @@ export const getDB = async () => {
 
 		// Add collections
 		await db.addCollections({
-			entries: { // Name must match the collection ID from Appwrite
+			entries: { // Name must match the table ID from Appwrite
 				schema: journalSchema
 			}
 		});
@@ -251,7 +252,7 @@ const setupReplication = async (db) => {
 			replicationIdentifier: 'journals-replication',
 			client,
 			databaseId: appwriteConfig.databaseId,
-			collectionId: appwriteConfig.collectionId,
+			collectionId: appwriteConfig.tableId,
 			deletedField: 'deleted',
 			collection: db.entries,
 			pull: {

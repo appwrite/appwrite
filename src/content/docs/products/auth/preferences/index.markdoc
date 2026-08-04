@@ -187,14 +187,14 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const promise = teams.updatePrefs(
-    '<TEAM_ID>',
-    {
+const promise = teams.updatePrefs({
+    teamId: '<TEAM_ID>',
+    prefs: {
         theme: 'corporate',
         notificationsEnabled: true,
         defaultView: 'kanban'
     }
-);
+});
 
 promise.then(function (response) {
     console.log(response); // Success
@@ -273,7 +273,9 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const promise = teams.getPrefs('<TEAM_ID>');
+const promise = teams.getPrefs({
+    teamId: '<TEAM_ID>'
+});
 
 promise.then(function (prefs) {
     console.log(prefs); // Team preferences

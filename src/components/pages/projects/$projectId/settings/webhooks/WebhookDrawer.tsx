@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
@@ -205,7 +206,7 @@ export function WebhookDrawer({
   const handleRequestDelete = () => {
     if (!webhook || !onDelete || isPending) return
     handleOpenChange(false)
-    window.setTimeout(() => onDelete(webhook), 0)
+    openDialogAfterOverlayCloses(() => onDelete(webhook))
   }
 
   const validate = (): boolean => {
@@ -270,10 +271,7 @@ export function WebhookDrawer({
               setCustomSecret('')
               setRevealedSecret(secret)
               onOpenChange(false)
-              if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur()
-              }
-              window.setTimeout(() => setSecretDialogOpen(true), 0)
+              openDialogAfterOverlayCloses(() => setSecretDialogOpen(true))
               return
             }
 

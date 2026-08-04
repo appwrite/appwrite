@@ -1,8 +1,10 @@
 import * as Sentry from '@sentry/tanstackstart-react'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getRuntimeConfig } from '@/lib/runtime-config'
-import { isStaleChunkLoadError } from '@/lib/stale-chunk-error'
-import { isIndexedDBMutationError } from '@/lib/upload-queue/indexeddb'
+import { initSentryClient } from '@/lib/sentry/init-client'
+import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
+
+export { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
 /** Avoid duplicate Sentry events when onCatch and ErrorComponent both report. */
 const reportedErrors = new WeakSet<object>()
@@ -107,20 +109,6 @@ export function toReportableError(error: unknown): Error {
   }
 }
 
-function getErrorCode(error: unknown): number | undefined {
-  if (!error || typeof error !== 'object') return undefined
-  const withCode = error as { code?: number; status?: number }
-  return withCode.code ?? withCode.status
-}
-
-/** Errors we intentionally do not send to Sentry (auth redirects, deploy churn, etc.). */
-export function shouldSkipSentryError(error: unknown): boolean {
-  if (getErrorCode(error) === 401) return true
-  if (isStaleChunkLoadError(error)) return true
-  if (isIndexedDBMutationError(error)) return true
-  return false
-}
-
 export type CaptureExceptionContext = {
   projectId?: string
   orgId?: string
@@ -144,6 +132,7 @@ export function captureExceptionWithContext(
 ): string | undefined {
   if (!isSentryReportingEnabled()) return undefined
   if (shouldSkipSentryError(error)) return undefined
+  if (!initSentryClient()) return undefined
 
   const dedupeKey =
     error !== null && typeof error === 'object' ? error : toReportableError(error)
@@ -152,36 +141,38 @@ export function captureExceptionWithContext(
 
   const reportable = toReportableError(error)
 
-  Sentry.captureException(reportable, {
-    extra: {
-      ...additionalContext,
-      timestamp: new Date().toISOString(),
-    },
-    tags: {
-      ...(additionalContext?.source && { error_source: additionalContext.source }),
-      ...(additionalContext?.projectId && {
-        project_id: additionalContext.projectId,
-      }),
-      ...(additionalContext?.orgId && { org_id: additionalContext.orgId }),
-      ...(additionalContext?.functionId && {
-        function_id: additionalContext.functionId,
-      }),
-      ...(additionalContext?.bucketId && {
-        bucket_id: additionalContext.bucketId,
-      }),
-      ...(additionalContext?.databaseId && {
-        database_id: additionalContext.databaseId,
-      }),
-      ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
-    },
-  })
-
-  return Sentry.lastEventId()
+  return (
+    Sentry.captureException(reportable, {
+      extra: {
+        ...additionalContext,
+        timestamp: new Date().toISOString(),
+      },
+      tags: {
+        ...(additionalContext?.source && {
+          error_source: additionalContext.source,
+        }),
+        ...(additionalContext?.projectId && {
+          project_id: additionalContext.projectId,
+        }),
+        ...(additionalContext?.orgId && { org_id: additionalContext.orgId }),
+        ...(additionalContext?.functionId && {
+          function_id: additionalContext.functionId,
+        }),
+        ...(additionalContext?.bucketId && {
+          bucket_id: additionalContext.bucketId,
+        }),
+        ...(additionalContext?.databaseId && {
+          database_id: additionalContext.databaseId,
+        }),
+        ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
+      },
+    }) ?? Sentry.lastEventId()
+  )
 }
 
 /**
  * Report an error caught by a TanStack Router CatchBoundary (`onCatch` / `defaultOnCatch`).
- * Prefer this over waiting for the error UI to mount — the UI can fail to render.
+ * Prefer this over waiting for the error UI to mount - the UI can fail to render.
  */
 export function reportRouterCaughtError(
   error: Error,

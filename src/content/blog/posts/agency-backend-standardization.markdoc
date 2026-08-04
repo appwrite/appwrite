@@ -3,6 +3,7 @@ layout: post
 title: "How agencies standardize backend stacks across clients"
 description: Why development agencies benefit from standardizing their backend stack and how to choose a platform flexible enough to serve diverse client needs.
 date: 2026-03-16
+lastUpdated: 2026-06-29
 cover: /images/blog/agency-backend-standardization/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -59,7 +60,7 @@ Agencies that have standardized their backend stack typically follow a pattern:
 
 4. **Use the platform's organizational features.** Most backend platforms offer organizations, teams, or workspaces for managing multiple projects. Use them consistently so there's a clear structure that any team member can navigate.
 
-5. **Document your patterns, not just the platform.** Your team's specific conventions (how you name collections, how you structure permissions, how you handle file uploads) should be documented alongside the platform documentation.
+5. **Document your patterns, not just the platform.** Your team's specific conventions (how you name tables, how you structure permissions, how you handle file uploads) should be documented alongside the platform documentation.
 
 # Evaluating a backend platform for agency use
 

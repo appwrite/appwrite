@@ -84,6 +84,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'code.svg',
   ],
   ai: [
+    'anthropic.svg',
     'claude.svg',
     'chatgpt.svg',
     'cursor-ai.svg',

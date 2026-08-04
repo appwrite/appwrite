@@ -6,6 +6,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { CommunitySupportWizard } from '@/components/global/shared/CommunitySupportWizard'
 import { useCommunitySupportPrompt } from '@/lib/react-query/hooks/community-support-prompt'
 import type { ConsoleAccountCache } from '@/lib/react-query/hooks/auth'
+import { isConsoleImpersonationActive } from '@/lib/console-impersonation'
 import { setDebugOverride, useDebugOverrides } from '@/lib/debug-overrides'
 import { isOptionalAuthPage } from '@/components/global/auth/RequireAuth'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
@@ -49,9 +50,14 @@ export function CommunitySupportPromptProvider() {
   const accountCache = isAuthenticated
     ? (account as ConsoleAccountCache | undefined)
     : undefined
+  const isImpersonating = isConsoleImpersonationActive(
+    account as { impersonatorUserId?: string } | null | undefined,
+  )
   const { shouldShow, recordShown, skip, takeAction, state } =
     useCommunitySupportPrompt(accountCache, {
-      trackActiveDay: isAuthenticated && !suppressed,
+      // Pref writes are skipped while impersonating; avoid optimistic cache
+      // churn that can cascade into max-update-depth loops on /account.
+      trackActiveDay: isAuthenticated && !suppressed && !isImpersonating,
     })
   const [debugOpen, setDebugOpen] = useState(false)
   /** Keeps the wizard mounted for the current impression after prefs stamp lastShownAt. */
@@ -69,7 +75,13 @@ export function CommunitySupportPromptProvider() {
   }, [previewCommunitySupportWizard])
 
   useEffect(() => {
-    if (debugOpen || !isAuthenticated || suppressed || !shouldShow) {
+    if (
+      debugOpen ||
+      !isAuthenticated ||
+      suppressed ||
+      isImpersonating ||
+      !shouldShow
+    ) {
       if (!shouldShow) {
         recordingShowRef.current = false
       }
@@ -87,6 +99,7 @@ export function CommunitySupportPromptProvider() {
   }, [
     debugOpen,
     isAuthenticated,
+    isImpersonating,
     recordShown,
     shouldShow,
     state.shownCount,
@@ -108,7 +121,9 @@ export function CommunitySupportPromptProvider() {
   }, [debugOpen, suppressed, track])
 
   const open =
-    !suppressed && (debugOpen || (isAuthenticated && impressionOpen))
+    !suppressed &&
+    !isImpersonating &&
+    (debugOpen || (isAuthenticated && impressionOpen))
 
   if (!open) return null
 

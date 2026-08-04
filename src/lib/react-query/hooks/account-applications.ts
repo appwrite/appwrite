@@ -39,7 +39,7 @@ async function fetchAllPages<T extends { $id: string }>(
 
 export type AccountConnectedApp = {
   consent: Models.Oauth2Consent
-  /** Registered app ID or CIMD URL — whichever identifies the client. */
+  /** Registered app ID or CIMD URL - whichever identifies the client. */
   clientId: string
   /** Client ID metadata document URL for URL-form clients, null otherwise. */
   cimdUrl: string | null
@@ -47,7 +47,7 @@ export type AccountConnectedApp = {
    * Resolved client metadata. For registered apps this is the app record;
    * for CIMD clients the server resolves the metadata document behind the
    * same endpoint. Null when resolution fails (app deleted, document
-   * unreachable) — the consent is still real and revocable.
+   * unreachable) - the consent is still real and revocable.
    */
   app: Models.App | null
 }
@@ -98,7 +98,7 @@ function getGroupKey(
   // known-client id instead would merge distinct URL-form clients that happen
   // to resolve to the same canonical name (e.g. two claude.ai documents) into
   // a single "revoke all" row. Known-client matching still drives the icon and
-  // display name for these rows — it just doesn't drive grouping.
+  // display name for these rows - it just doesn't drive grouping.
   if (connectedApp.cimdUrl) return `cimd:${connectedApp.cimdUrl}`
   if (knownClient) return `client:${knownClient.id}`
 

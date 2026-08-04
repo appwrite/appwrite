@@ -52,7 +52,7 @@ import {
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { Skeleton } from '@/components/ui/skeleton'
-import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
@@ -466,15 +466,16 @@ export function BandwidthSection({
     [breakdowns],
   )
 
-  const resourceBreakdownIds = useMemo(() => {
-    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
-  }, [resourceEntry?.items])
+  const resourceBreakdownItems = useMemo(
+    () => resourceEntry?.items ?? [],
+    [resourceEntry?.items],
+  )
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
       projectId,
-      resourceBreakdownIds,
-      showBreakdown && resourceBreakdownIds.length > 0,
+      resourceBreakdownItems,
+      showBreakdown && resourceBreakdownItems.length > 0,
     )
 
   useEffect(() => {

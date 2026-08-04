@@ -41,6 +41,7 @@ function MigrationItem({
   const { table } = useProjectTable(
     projectId,
     parsed?.databaseId ?? null,
+    'tablesdb',
     parsed?.tableId ?? null,
   )
   const tableName = table?.name ?? parsed?.tableId ?? migration.resourceId

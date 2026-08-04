@@ -3,6 +3,7 @@ layout: post
 title: "Announcing CSV exports: Effortless data extraction, right from your Console"
 description: Export your data to a CSV file directly from the Appwrite Console. Filter, customize, and download your data in just a few clicks.
 date: 2026-02-04
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-csv-export/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -14,7 +15,7 @@ faqs:
   - question: "Can I export only filtered rows instead of the entire table?"
     answer: "Yes, CSV exports respect the filters and search parameters you've applied to the table view. This lets you export targeted slices of data without writing custom scripts. You can also choose specific columns to keep the output lean."
   - question: "What customization options are available for CSV exports?"
-    answer: "You can pick columns, apply queries, set a custom delimiter, include or skip the header row, and get notified by email when the export completes. Related documents are exported as IDs by default to keep the data structured. This makes the same export usable for engineering, analytics, or non-technical teammates."
+    answer: "You can pick columns, apply queries, set a custom delimiter, include or skip the header row, and get notified by email when the export completes. Related rows are exported as IDs by default to keep the data structured. This makes the same export usable for engineering, analytics, or non-technical teammates."
   - question: "Are CSV exports available on self-hosted Appwrite?"
     answer: "CSV exports launched first on Appwrite Cloud and will be coming to self-hosted in a later release. If you self-host, watch the Appwrite changelog and upgrade once the feature lands in a stable version."
   - question: "How does Appwrite handle large CSV exports without timing out?"
@@ -58,7 +59,7 @@ You can:
 - Include or skip headers: Add an optional header row for readability.
 - Run in the background: Appwrite processes exports asynchronously, so you can continue working while it completes.
 - Get notified: Receive an email with a short-lived download link when the export is ready.
-- Handle relationships cleanly: Related documents are exported as IDs by default, ensuring your data stays structured and easy to use.
+- Handle relationships cleanly: Related rows are exported as IDs by default, ensuring your data stays structured and easy to use.
 
 This flexibility makes CSV exports powerful enough for developers and simple enough for non-technical team members.
 

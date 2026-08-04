@@ -3,6 +3,7 @@ layout: post
 title: "Announcing Full Schema Creation: Provision complete tables in one atomic call"
 description: Create a table, all its columns, and indexes synchronously, ready to use instantly, with no background jobs.
 date: 2025-12-30
+lastUpdated: 2026-06-29
 cover: /images/blog/full-schema.avif
 timeToRead: 5
 author: aditya-oberai
@@ -28,7 +29,7 @@ When you’re spinning up a new feature, environment, or test pipeline, schema c
 
 That’s exactly why we’re announcing **Full Schema Creation** for Appwrite Databases.
 
-With Full Schema Creation, you can define an entire table, its attributes and indexes, in a **single, synchronous request**. When the call returns, the table is immediately ready for reads and writes. If anything fails along the way, nothing is created. No partial schemas. No waiting. No brittle setup scripts.
+With Full Schema Creation, you can define an entire table, its columns and indexes, in a **single, synchronous request**. When the call returns, the table is immediately ready for reads and writes. If anything fails along the way, nothing is created. No partial schemas. No waiting. No brittle setup scripts.
 
 # One request. One outcome. Fully usable.
 
@@ -58,7 +59,7 @@ const table = await tablesDB.createTable({
         },
         {
             key: 'name',
-            type: 'string',
+            type: 'varchar',
             size: 255,
             required: true
         },

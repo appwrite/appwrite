@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import {
+  commitConsoleAccountToCaches,
   getConsoleAccountFromCache,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
@@ -45,23 +47,46 @@ function toPrefs(state: CommunitySupportPromptState): CommunitySupportPrefs {
   }
 }
 
+function isAccountUser(
+  value: ConsoleAccountCache | undefined,
+): value is Models.User {
+  return !!value && typeof value === 'object' && '$id' in value
+}
+
+/**
+ * Patch RQ + module singleton together. `updateAccountPrefs` diffs against the
+ * singleton; optimistic RQ-only updates made every write look new and stormed
+ * `[account prefs] update` / React #185.
+ */
 function patchAccountPrefsCache(
   queryClient: ReturnType<typeof useQueryClient>,
   next: CommunitySupportPrefs,
 ) {
-  queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
-    { queryKey: ['account', 'console'] },
-    (current) =>
-      current
-        ? {
-            ...current,
-            prefs: mergeCommunitySupportPrefsIntoPrefs(
-              (current.prefs ?? {}) as UserPrefs,
-              next,
-            ),
-          }
-        : current,
-  )
+  const current = getConsoleAccountFromCache(queryClient)
+  if (!isAccountUser(current)) {
+    queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+      { queryKey: ['account', 'console'] },
+      (existing) =>
+        existing
+          ? {
+              ...existing,
+              prefs: mergeCommunitySupportPrefsIntoPrefs(
+                (existing.prefs ?? {}) as UserPrefs,
+                next,
+              ),
+            }
+          : existing,
+    )
+    return
+  }
+
+  commitConsoleAccountToCaches(queryClient, {
+    ...current,
+    prefs: mergeCommunitySupportPrefsIntoPrefs(
+      (current.prefs ?? {}) as UserPrefs,
+      next,
+    ),
+  } as Models.User)
 }
 
 /**
@@ -74,6 +99,12 @@ export function useCommunitySupportPrompt(
 ) {
   const queryClient = useQueryClient()
   const trackActiveDay = options?.trackActiveDay ?? true
+  const accountId = isAccountUser(account) ? account.$id : undefined
+
+  /** One active-day write per account+calendar day (prevents re-entry storms). */
+  const recordedDayGuardRef = useRef<string | null>(null)
+  /** One impression stamp per open cycle. */
+  const recordedShowGuardRef = useRef(false)
 
   const state = useMemo(
     () =>
@@ -125,23 +156,51 @@ export function useCommunitySupportPrompt(
     [account, updateMutation],
   )
 
+  // Reset guards when the signed-in account changes (incl. impersonation).
+  useEffect(() => {
+    recordedDayGuardRef.current = null
+    recordedShowGuardRef.current = false
+  }, [accountId])
+
   /** Record today's visit as a unique active day when needed. */
   useEffect(() => {
     if (!account || !trackActiveDay) return
+
+    const dayKey = getLocalDayKey()
+    const guardKey = `${accountId ?? 'unknown'}:${dayKey}`
+    if (recordedDayGuardRef.current === guardKey) return
+
     const latest = readLatestState()
-    const next = withRecordedActiveDay(latest)
-    if (
-      next.uniqueDayCount === latest.uniqueDayCount &&
-      next.lastActiveDay === latest.lastActiveDay
-    ) {
+    if (latest.lastActiveDay === dayKey) {
+      recordedDayGuardRef.current = guardKey
       return
     }
-    persist(next)
-  }, [account, persist, readLatestState, state, trackActiveDay])
+
+    if (updateMutation.isPending) return
+
+    // Set before mutate so account-identity churn from onMutate cannot re-enter.
+    recordedDayGuardRef.current = guardKey
+    persist(withRecordedActiveDay(latest, dayKey))
+  }, [
+    account,
+    accountId,
+    persist,
+    readLatestState,
+    trackActiveDay,
+    updateMutation.isPending,
+  ])
 
   const shouldShow = shouldShowCommunitySupportPrompt(state)
 
+  useEffect(() => {
+    if (!shouldShow) {
+      recordedShowGuardRef.current = false
+    }
+  }, [shouldShow])
+
   const recordShown = useCallback(() => {
+    if (recordedShowGuardRef.current) return
+    recordedShowGuardRef.current = true
     persist(withRecordedShow(readLatestState()))
   }, [persist, readLatestState])
 

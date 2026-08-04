@@ -1,5 +1,5 @@
 /**
- * Runtime (not build-time) public config — Vite-app side.
+ * Runtime (not build-time) public config - Vite-app side.
  *
  * Values were historically read via `import.meta.env.VITE_*`, which Vite inlines
  * as string literals at build time and forces a separate image per environment.
@@ -44,7 +44,7 @@ const EMPTY_CONFIG: RuntimeConfig = {
  * Read config on the server.
  *
  * `import.meta.env.DEV` is a static build flag, so the dev branch is tree-shaken
- * out of the production server bundle — no `VITE_*` literals get inlined here.
+ * out of the production server bundle - no `VITE_*` literals get inlined here.
  * In dev, Vite populates `import.meta.env` from `.env`; in production we read the
  * live `process.env`.
  */

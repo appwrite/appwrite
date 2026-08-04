@@ -37,6 +37,17 @@ export async function fetchCountries() {
 }
 
 /**
+ * Query function to fetch continents
+ *
+ * Uses the console SDK locale service to get all available continents.
+ * @returns Continents list from the API
+ */
+export async function fetchContinents() {
+  const response = await sdk.forConsole.locale.listContinents()
+  return response
+}
+
+/**
  * Query function to fetch user locale information
  *
  * Uses the console SDK locale service to get user's locale information.
@@ -59,6 +70,18 @@ export function countriesQueryOptions() {
   return queryOptions({
     queryKey: ['countries', 'console'],
     queryFn: fetchCountries,
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+/**
+ * Continents list from the console locale API - shared by `useContinents`
+ * and any route loaders so the cache key stays identical.
+ */
+export function continentsQueryOptions() {
+  return queryOptions({
+    queryKey: ['continents', 'console'],
+    queryFn: fetchContinents,
     staleTime: LONG_STALE_TIME,
   })
 }
@@ -109,6 +132,15 @@ export function useCountryLookups() {
     error,
     refetch,
   }
+}
+
+/**
+ * Hook to fetch continents
+ *
+ * Uses the console SDK to fetch all available continents.
+ */
+export function useContinents() {
+  return useQuery(continentsQueryOptions())
 }
 
 /**

@@ -21,6 +21,10 @@ import {
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
+import {
+  openDialogAfterOverlayCloses,
+  closeDialogBeforeOverlayUnmount,
+} from '@/lib/utils/overlay-lock'
 import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
@@ -96,15 +100,23 @@ export function PostgresTableIndexesPanel({
     onCreateDialogOpenChange?.(open)
   }
 
+  const openDeleteDialog = (indexName: string) => {
+    openDialogAfterOverlayCloses(() => {
+      setIndexToDelete(indexName)
+      setDeleteDialogOpen(true)
+    })
+  }
+
   const handleDelete = async () => {
     if (!indexToDelete) return
-    try {
-      await executeSql.mutateAsync(
-        buildPostgresDropIndexSql(schema, indexToDelete),
-      )
-      toast.success(t('Index deleted'))
+    const name = indexToDelete
+    closeDialogBeforeOverlayUnmount(() => {
       setDeleteDialogOpen(false)
       setIndexToDelete(null)
+    })
+    try {
+      await executeSql.mutateAsync(buildPostgresDropIndexSql(schema, name))
+      toast.success(t('Index deleted'))
       await refetch()
     } catch (error) {
       toast.error(getErrorMessage(error) ?? t('Failed to delete index'))
@@ -294,10 +306,7 @@ export function PostgresTableIndexesPanel({
                     key={index.index_name}
                     index={index}
                     canWrite={canWrite && !isPrimary}
-                    onDelete={(indexName) => {
-                      setIndexToDelete(indexName)
-                      setDeleteDialogOpen(true)
-                    }}
+                    onDelete={openDeleteDialog}
                   >
                   <tr
                     className={cn(
@@ -425,10 +434,7 @@ export function PostgresTableIndexesPanel({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onSelect={() => {
-                                setIndexToDelete(index.index_name)
-                                setDeleteDialogOpen(true)
-                              }}
+                              onSelect={() => openDeleteDialog(index.index_name)}
                             >
                               <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                             </DropdownMenuItem>

@@ -30,6 +30,7 @@ import {
 } from '@/lib/database-specs'
 import { isPostgresClientBackend } from '@/lib/postgres-metrics'
 import {
+  POSTGRES_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   useDedicatedDatabaseCardMetrics,
   useDedicatedDatabaseStorageChart,
@@ -140,9 +141,13 @@ export function PostgresDatabaseReplicasCard({
   const updateMutation = useUpdateDedicatedDatabaseHa(
     projectId,
     databaseId,
-    engine,
+    source,
   )
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  // Specs come from the owning product/engine service (not a shared postgres list).
+  const { data: specificationsData } = useDatabaseSpecifications(
+    projectId,
+    source,
+  )
   const isPostgresEngine =
     engine === 'postgresql' || engine === 'postgres' || !engine
   const { connections, isLoading: connectionsLoading, refetch: refetchConnections } =
@@ -278,7 +283,7 @@ export function PostgresDatabaseReplicasCard({
 
   const handleReplicasUpdate = () => {
     updateMutation.mutate(
-      { replicas: replicaCount },
+      { replicas: replicaCount, name: database.name },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -424,7 +429,7 @@ export function PostgresDatabaseSyncModeCard({
   haEngine,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
-  const engine = useHaEngine({
+  const source = useReplicationSource({
     projectId,
     databaseId,
     database,
@@ -435,7 +440,7 @@ export function PostgresDatabaseSyncModeCard({
   const updateMutation = useUpdateDedicatedDatabaseHa(
     projectId,
     databaseId,
-    engine,
+    source,
   )
   const [syncMode, setSyncMode] = useState(database.syncMode || 'async')
   const { writeDisabled, writeTooltip } = useWriteAccess(
@@ -451,7 +456,7 @@ export function PostgresDatabaseSyncModeCard({
 
   const handleSyncModeUpdate = () => {
     updateMutation.mutate(
-      { syncMode },
+      { syncMode, name: database.name },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -664,7 +669,7 @@ export function PostgresDatabasePitrCard({
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const [pitrEnabled, setPitrEnabled] = useState(database.pitr === true)
   const [pitrRetentionDays, setPitrRetentionDays] = useState(
@@ -819,7 +824,7 @@ export function PostgresDatabaseStorageCard({
   const t = useT()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const { data: specificationsData, isLoading: specificationsLoading } =
-    useDatabaseSpecifications(projectId)
+    useDatabaseSpecifications(projectId, POSTGRES_DATABASE_SPECS_SOURCE)
   const storageDateRange = useMemo(() => getDefaultStorageUsageDateRange(), [])
   const storageUsageQuery = useDedicatedDatabaseStorageChart(
     projectId,

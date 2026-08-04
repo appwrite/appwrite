@@ -4,8 +4,10 @@ import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_auth/sign-out')({
   head: () => ({ meta: [{ title: pageTitle('Sign out') }] }),
-  loader: async ({ context }) => {
+  loader: async ({ context, cause, preload }) => {
     if (typeof window === 'undefined') return
+    // Intent preload of a <Link to="/sign-out"> must not destroy the session.
+    if (cause === 'preload' || preload) return
     await performConsoleSignOut(context.queryClient)
   },
 })

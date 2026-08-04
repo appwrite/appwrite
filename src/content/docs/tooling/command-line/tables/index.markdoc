@@ -227,6 +227,12 @@ appwrite tables-db [COMMAND] [OPTIONS]
 * `update-string-column [options]`
 * Update a string column. Changing the 'default' value will not update already existing rows.
 ---
+* `create-text-column [options]`
+* Create a text column.
+---
+* `update-text-column [options]`
+* Update a text column. Changing the 'default' value will not update already existing rows.
+---
 * `create-url-column [options]`          
 * Create a URL column.
 ---

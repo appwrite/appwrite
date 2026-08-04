@@ -89,6 +89,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { CreateRecordDialog } from './CreateRecord'
@@ -1270,7 +1271,11 @@ export function View({ initialData }: ViewProps = {}) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
                     <DropdownMenuItem
-                      onClick={() => setImportZoneDialogOpen(true)}
+                      onSelect={() =>
+                        openDialogAfterOverlayCloses(() =>
+                          setImportZoneDialogOpen(true),
+                        )
+                      }
                     >
                       {t('Import')}
                     </DropdownMenuItem>
@@ -1574,9 +1579,11 @@ export function View({ initialData }: ViewProps = {}) {
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
                                         <DropdownMenuItem
-                                          onClick={() => {
-                                            setSelectedRecord(record)
-                                            setUpdateRecordDialogOpen(true)
+                                          onSelect={() => {
+                                            openDialogAfterOverlayCloses(() => {
+                                              setSelectedRecord(record)
+                                              setUpdateRecordDialogOpen(true)
+                                            })
                                           }}
                                         >
                                           <MenuItemContent icon={Pencil}>
@@ -1584,9 +1591,11 @@ export function View({ initialData }: ViewProps = {}) {
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                          onClick={() => {
-                                            setSelectedRecord(record)
-                                            setDeleteRecordDialogOpen(true)
+                                          onSelect={() => {
+                                            openDialogAfterOverlayCloses(() => {
+                                              setSelectedRecord(record)
+                                              setDeleteRecordDialogOpen(true)
+                                            })
                                           }}
                                         >
                                           <MenuItemContent icon={Trash2}>

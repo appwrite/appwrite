@@ -41,11 +41,11 @@ const client = new Client()
 const teams = new Teams(client);
 
 // Create team for a new tenant
-const tenantTeam = await teams.create(
-    'example_corp', // Team ID for tenant
-    'Example Corp',   // Tenant name
-    ['owner', 'admin', 'member'] // Tenant roles
-);
+const tenantTeam = await teams.create({
+    teamId: 'example_corp',
+    name: 'Example Corp',
+    roles: ['owner', 'admin', 'member']
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -114,14 +114,12 @@ const client = new Client()
 const teams = new Teams(client);
 
 // Invite a member to the tenant
-const membership = await teams.createMembership(
-    'example_corp',      // Team/tenant ID
-    ['admin'],           // Member's role in the tenant
-    'user@example.com',  // User's email
-    undefined,           // userId (optional)
-    undefined,           // phone (optional)
-    'https://example.com/accept-invite' // Redirect URL after accepting
-);
+const membership = await teams.createMembership({
+    teamId: 'example_corp',
+    roles: ['admin'],
+    email: 'user@example.com',
+    url: 'https://example.com/accept-invite'
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -192,25 +190,25 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 // Create a row that only members of "Example Corp" tenant can access
-const row = await tablesDB.createRow(
-    'invoices_db',
-    'invoices',
-    ID.unique(),
-    {
+const row = await tablesDB.createRow({
+    databaseId: 'invoices_db',
+    tableId: 'invoices',
+    rowId: ID.unique(),
+    data: {
         title: 'Q2 Invoice',
         amount: 2500.00,
         customer: 'Example Customer',
         status: 'pending',
         tenant_id: 'example_corp'
     },
-    [
+    permissions: [
         // All Example Corp team members can read
         Permission.read(Role.team('example_corp')),
 
         // Only admins can update
         Permission.write(Role.team('example_corp', ['admin']))
     ]
-);
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -323,19 +321,19 @@ const client = new Client()
 const tablesDB = new TablesDB(client);
 
 // Current user will only see invoices they have access to
-const rows = await tablesDB.listRows(
-    'invoices_db',
-    'invoices'
-);
+const rows = await tablesDB.listRows({
+    databaseId: 'invoices_db',
+    tableId: 'invoices'
+});
 
 // For specific tenant data, you can add a query filter
-const tenantDocuments = await tablesDB.listRows(
-    'invoices_db',
-    'invoices',
-    [
+const tenantRows = await tablesDB.listRows({
+    databaseId: 'invoices_db',
+    tableId: 'invoices',
+    queries: [
         Query.equal('tenant_id', 'example_corp')
     ]
-);
+});
 ```
 ```client-flutter
 import 'package:appwrite/appwrite.dart';

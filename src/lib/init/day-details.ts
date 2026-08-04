@@ -9,8 +9,8 @@ import type { LaunchEventDay, LaunchEventScheduleItem } from './types'
 export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   {
     day: 1,
-    dateLabel: 'JULY 20',
-    weekdayLabel: 'MONDAY, JULY 20',
+    dateLabel: 'AUGUST 12',
+    weekdayLabel: 'WEDNESDAY, AUGUST 12',
     title: 'Announcing Appwrite 2.0',
     description: 'The next chapter of Appwrite is here.',
     longDescription:
@@ -67,8 +67,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 2,
-    dateLabel: 'JULY 21',
-    weekdayLabel: 'TUESDAY, JULY 21',
+    dateLabel: 'AUGUST 13',
+    weekdayLabel: 'THURSDAY, AUGUST 13',
     title: 'PostgreSQL comes to Appwrite',
     description: 'Native PostgreSQL, managed inside Appwrite.',
     longDescription:
@@ -103,8 +103,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 3,
-    dateLabel: 'JULY 22',
-    weekdayLabel: 'WEDNESDAY, JULY 22',
+    dateLabel: 'AUGUST 14',
+    weekdayLabel: 'FRIDAY, AUGUST 14',
     title: 'VectorsDB, DocumentsDB & MySQL',
     description: 'Three new database types for modern apps.',
     longDescription:
@@ -160,8 +160,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 4,
-    dateLabel: 'JULY 23',
-    weekdayLabel: 'THURSDAY, JULY 23',
+    dateLabel: 'AUGUST 15',
+    weekdayLabel: 'SATURDAY, AUGUST 15',
     title: 'S3 support for Storage',
     description: 'Access Appwrite Storage with S3-compatible APIs.',
     longDescription:
@@ -196,8 +196,8 @@ export const INIT_JULY_2026_DAYS: LaunchEventDay[] = [
   },
   {
     day: 5,
-    dateLabel: 'JULY 24',
-    weekdayLabel: 'FRIDAY, JULY 24',
+    dateLabel: 'AUGUST 16',
+    weekdayLabel: 'SUNDAY, AUGUST 16',
     title: 'Appwrite Firewall & Domains',
     description: 'Protect traffic and own your domains in Appwrite.',
     longDescription:

@@ -1,0 +1,78 @@
+---
+layout: article
+title: Metabase
+description: Connect Metabase to an Appwrite native MySQL database for analytics. Configure MySQL connection details, require TLS on Cloud, and build dashboards on a session-safe connection.
+---
+
+Appwrite's native MySQL database is a standard MySQL engine, so [Metabase](https://www.metabase.com/) can connect to it without an Appwrite-specific adapter. Add the database in Metabase, use the host and credentials from the [Connections](/docs/products/databases/mysql/connections) page, and Metabase will sync the schema so your team can build questions and dashboards.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. Fetch them with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). The response includes `hostname`, `connectionPort`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Choose credentials for Metabase {% #credentials %}
+
+Metabase connects with the MySQL user you provide. Use the least-privilege MySQL account available for analytics. A reporting account typically needs `SELECT` on the tables and views Metabase should query. The primary `admin` user returned by Appwrite can read and write data and schema, so reserve it for trusted Metabase instances.
+
+Metabase features such as model actions and editable table data need write privileges. Enable them only on a connection whose MySQL account has the specific write permissions that workflow needs.
+
+# Add the database in Metabase {% #add-database %}
+
+In Metabase, click the grid icon, then open **Admin > Databases > Add a database**. Choose **MySQL** as the database type and fill in the connection form with the values from the [Connections](/docs/products/databases/mysql/connections) page.
+
+| Field | Value |
+|-------|-------|
+| Host | `db-<hash>.<region>.appwrite.center` |
+| Port | `3306` |
+| Database name | `<database>` |
+| Username | `admin`, or your least-privilege MySQL account |
+| Password | `<password>` |
+
+Turn on **Use a secure connection (SSL)**. Appwrite Cloud requires TLS for native MySQL connections on the public hostname. If your Metabase deployment needs an explicit certificate chain, add it in Metabase's **SSL certificate** field. See [Network security](/docs/products/databases/mysql/network-security) for Appwrite TLS and network controls.
+
+{% info title="Use a session-safe connection" %}
+Metabase keeps database sessions open and can use session-level MySQL behavior while exploring data. Connect it to the direct MySQL port (`3306`). If your specification includes the [connection pooler](/docs/products/databases/mysql/connection-pooling), use `session` mode for Metabase. Transaction-mode pooling can break session-level features because a client session is not bound to one backend connection.
+{% /info %}
+
+Click **Save changes**. Metabase verifies the connection and starts its first schema sync.
+
+# Build a question or dashboard {% #build %}
+
+Once the first sync finishes, your tables appear in the data picker. To build your first chart:
+
+1. Click **+ New > Question** and pick your Appwrite MySQL database as the data source.
+2. Choose a table, add a summary such as count, sum, or average, and group by a column such as a timestamp.
+3. Switch the visualization to a line, bar, or table view, then save the question.
+4. Add saved questions to a dashboard and use filters to slice data across cards.
+
+Use read-only native SQL questions for analytics dashboards. If the connection uses `admin`, use Metabase permissions to limit who can run native SQL or enable write-capable features.
+
+# How Metabase syncs your schema {% #sync %}
+
+After you connect, Metabase scans the database to discover tables, columns, constraints, and field metadata, then keeps that metadata current on a schedule:
+
+- A lightweight schema sync runs hourly by default.
+- A more intensive field-value scan runs daily by default to populate filter dropdowns.
+
+New tables and columns appear after the next sync. To pull them in immediately, open **Admin > Databases > your database** and click **Sync database schema**. You can also restrict which schemas Metabase tracks and adjust the sync and scan cadence from the database settings. Refer to the [Metabase documentation](https://www.metabase.com/docs/latest/databases/sync-scan) for the full set of sync and scan options.
+
+# Use a branch for testing {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a native MySQL database with their own host and credentials. Point a second Metabase database connection at a branch when you want to validate a dashboard against a snapshot of production data without querying the live database. Branches are managed through the API, and you can delete the branch when testing is complete.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql" title="MySQL" %}
+Provision and manage a native MySQL database for your project.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve connection details and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooling" %}
+Pool modes and ports, including why BI tools need session or direct connections.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS, certificate verification, IP allowlists, and idle connection timeouts.
+{% /cards_item %}
+{% /cards %}

@@ -26,6 +26,7 @@ import {
   parseInt64Value,
 } from '@/lib/utils/database-columns'
 import { useT } from '@/lib/i18n/translate'
+import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 export type ColumnType =
   | 'text'
@@ -103,7 +104,7 @@ interface ColumnDrawerProps {
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
   /** Table metadata for row size usage (varchar create only). Optional: bytesUsed, bytesMax. */
-  table?: { bytesUsed?: number; bytesMax?: number }
+  table?: { bytesUsed?: number | bigint; bytesMax?: number | bigint }
 }
 
 const COLUMN_TYPES: { value: ColumnType; label: string }[] = [
@@ -207,7 +208,7 @@ export function ColumnDrawer({
   const [enumElements, setEnumElements] = useState<string[]>([''])
   const [enumElementInput, setEnumElementInput] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  /** Text inputs for bigint min/max — avoids Number precision loss past MAX_SAFE_INTEGER. */
+  /** Text inputs for bigint min/max - avoids Number precision loss past MAX_SAFE_INTEGER. */
   const [bigintMinText, setBigintMinText] = useState('')
   const [bigintMaxText, setBigintMaxText] = useState('')
   // Ref to avoid stale state when user checks Encrypted then immediately submits (state may not have flushed)
@@ -377,10 +378,10 @@ export function ColumnDrawer({
         !isEditMode &&
         table?.bytesUsed !== undefined &&
         table?.bytesMax !== undefined &&
-        table.bytesMax > 0
+        toByteCount(table.bytesMax) > 0
       ) {
         const newColumnBytes = formData.size * 4 + 2
-        if (table.bytesUsed + newColumnBytes > table.bytesMax) {
+        if (toByteCount(table.bytesUsed) + newColumnBytes > toByteCount(table.bytesMax)) {
           newErrors.size = t(
             'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.',
           )
@@ -739,7 +740,7 @@ export function ColumnDrawer({
                 {!isEditMode &&
                   table?.bytesUsed !== undefined &&
                   table?.bytesMax !== undefined &&
-                  table.bytesMax > 0 && (
+                  toByteCount(table.bytesMax) > 0 && (
                     <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
                       <p className="text-[11px] font-medium text-foreground">
                         {t('Row size usage')}
@@ -749,18 +750,20 @@ export function ColumnDrawer({
                       </p>
                       <Progress
                         value={
-                          table.bytesMax > 0
+                          toByteCount(table.bytesMax) > 0
                             ? Math.min(
                               100,
-                              (table.bytesUsed / table.bytesMax) * 100,
+                              (toByteCount(table.bytesUsed) /
+                                toByteCount(table.bytesMax)) *
+                                100,
                             )
                             : 0
                         }
                         className="h-2"
                       />
                       <p className="text-[11px] text-muted-foreground">
-                        Current: {(table.bytesUsed / 1024).toFixed(1)} KB /{' '}
-                        {(table.bytesMax / 1024).toFixed(1)} KB
+                        Current: {(toByteCount(table.bytesUsed) / 1024).toFixed(1)}{' '}
+                        KB / {(toByteCount(table.bytesMax) / 1024).toFixed(1)} KB
                         {formData.size
                           ? ` · New column: ~${((formData.size * 4 + 2) / 1024).toFixed(1)} KB`
                           : ''}
@@ -904,7 +907,7 @@ export function ColumnDrawer({
                   <p className="text-[11px] text-muted-foreground">
                     Signed 64-bit range: {INT64_MIN.toString()} to{' '}
                     {INT64_MAX.toString()}. Enter the full value (do not use the
-                    number input — large values lose precision in JavaScript).
+                    number input - large values lose precision in JavaScript).
                   </p>
                 )}
               </>

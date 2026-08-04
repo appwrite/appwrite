@@ -16,7 +16,7 @@ Base path prefix: `/v1/vectorsdb`
 | --- | --- | --- | --- |
 | [`create`](#vectorsdb-create) | POST | `/v1/vectorsdb` | `Promise<Models.Database>` |
 | [`createCollection`](#vectorsdb-createcollection) | POST | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollection>` |
-| [`createFailover`](#vectorsdb-createfailover) | — | — | `Promise<Models.DedicatedDatabase>` |
+| [`createFailover`](#vectorsdb-createfailover) | - | - | `Promise<Models.DedicatedDatabase>` |
 | [`createIndex`](#vectorsdb-createindex) | POST | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.Index>` |
 | [`createOperations`](#vectorsdb-createoperations) | POST | `/v1/vectorsdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createTextEmbeddings`](#vectorsdb-createtextembeddings) | POST | `/v1/vectorsdb/embeddings/text` | `Promise<Models.EmbeddingList>` |
@@ -29,13 +29,13 @@ Base path prefix: `/v1/vectorsdb`
 | [`get`](#vectorsdb-get) | GET | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#vectorsdb-getcollection) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
 | [`getIndex`](#vectorsdb-getindex) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
-| [`getReplicas`](#vectorsdb-getreplicas) | — | — | `Promise<Models.DedicatedDatabaseReplicas>` |
-| [`getStatus`](#vectorsdb-getstatus) | — | — | `Promise<Models.DatabaseStatus>` |
+| [`getReplicas`](#vectorsdb-getreplicas) | - | - | `Promise<Models.DedicatedDatabaseReplicas>` |
+| [`getStatus`](#vectorsdb-getstatus) | - | - | `Promise<Models.DatabaseStatus>` |
 | [`getTransaction`](#vectorsdb-gettransaction) | GET | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
 | [`list`](#vectorsdb-list) | GET | `/v1/vectorsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#vectorsdb-listcollections) | GET | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollectionList>` |
 | [`listIndexes`](#vectorsdb-listindexes) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
-| [`listSpecifications`](#vectorsdb-listspecifications) | — | — | `Promise<Models.DedicatedDatabaseSpecificationList>` |
+| [`listSpecifications`](#vectorsdb-listspecifications) | - | - | `Promise<Models.DedicatedDatabaseSpecificationList>` |
 | [`listTransactions`](#vectorsdb-listtransactions) | GET | `/v1/vectorsdb/transactions` | `Promise<Models.TransactionList>` |
 | [`update`](#vectorsdb-update) | PUT | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#vectorsdb-updatecollection) | PUT | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |

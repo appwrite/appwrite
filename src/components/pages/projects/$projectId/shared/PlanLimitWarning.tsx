@@ -8,8 +8,8 @@ import { useT } from '@/lib/i18n/translate'
 interface PlanLimitWarningProps {
   /** The current count of resources */
   currentCount: number
-  /** The limit from the plan (0 means unlimited) */
-  limit: number | null | undefined
+  /** The limit from the plan (0 means unlimited). May be bigint from the SDK. */
+  limit: number | bigint | null | undefined
   /** The plan name */
   planName?: string
   /** The resource name (e.g., "databases", "buckets", "functions") */
@@ -29,20 +29,27 @@ export function PlanLimitWarning({
   fullWidth = true,
 }: PlanLimitWarningProps) {
   const t = useT()
-  // If limit is null, undefined, or 0, it means unlimited - no warning needed
-  if (!limit || limit === 0) {
+  const limitNumber =
+    limit == null
+      ? 0
+      : typeof limit === 'bigint'
+        ? Number(limit)
+        : Number(limit)
+
+  // If limit is null, undefined, NaN, or 0, it means unlimited - no warning needed
+  if (!Number.isFinite(limitNumber) || limitNumber === 0) {
     return null
   }
 
-  const isAtLimit = currentCount >= limit
-  const isApproachingLimit = currentCount >= limit * 0.5 // Show alert when at 50% of limit
+  const isAtLimit = currentCount >= limitNumber
+  const isApproachingLimit = currentCount >= limitNumber * 0.5 // Show alert when at 50% of limit
 
   // Only show alert if at limit or approaching limit (50%+)
   if (!isAtLimit && !isApproachingLimit) {
     return null
   }
 
-  const remaining = Math.max(0, limit - currentCount)
+  const remaining = Math.max(0, limitNumber - currentCount)
 
   return (
     <div className="border-b border-border bg-amber-500/5">
@@ -58,7 +65,7 @@ export function PlanLimitWarning({
             <div className="flex-1 min-w-0">
               <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                 {isAtLimit
-                  ? `${t("You've reached the limit of")} ${limit} ${t(resourceName)}`
+                  ? `${t("You've reached the limit of")} ${limitNumber} ${t(resourceName)}`
                   : `${t('Approaching the limit for')} ${t(resourceName)}`}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
@@ -66,7 +73,7 @@ export function PlanLimitWarning({
                   {isAtLimit ? (
                     <>
                       {t('Your plan')} ({planName}) {t('includes up to')}{' '}
-                      {limit} {t(resourceName)}.{' '}
+                      {limitNumber} {t(resourceName)}.{' '}
                       {orgId && (
                         <Link
                           to="/upgrade"
@@ -81,7 +88,8 @@ export function PlanLimitWarning({
                   ) : (
                     <>
                       {t('Your plan')} ({planName}) {t('includes up to')}{' '}
-                      {limit} {t(resourceName)}. {t('Remaining:')} {remaining}
+                      {limitNumber} {t(resourceName)}. {t('Remaining:')}{' '}
+                      {remaining}
                       .{' '}
                       {orgId && (
                         <Link

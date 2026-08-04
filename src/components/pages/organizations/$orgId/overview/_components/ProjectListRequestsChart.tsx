@@ -36,7 +36,7 @@ export const PROJECT_LIST_REQUESTS_SECTION_MIN_HEIGHT =
   10 + PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT
 
 const CHART_COLOR = 'var(--chart-brand)'
-/** Soft greyscale placeholder — border-toned line, whisper-light fill. */
+/** Soft greyscale placeholder - border-toned line, whisper-light fill. */
 const SKELETON_CHART_STROKE = 'hsl(var(--border))'
 const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
 const SKELETON_CHART_FILL_TOP_OPACITY = 0.06

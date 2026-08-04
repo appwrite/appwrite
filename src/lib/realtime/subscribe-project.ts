@@ -313,17 +313,42 @@ function invalidateAssistantQueries(
   queryClient: QueryClient,
   payload: Record<string, unknown> | null,
 ): void {
+  // Keep this module free of assistant UI imports (avoids SSR circular deps via
+  // routeTree → AgentChat → @/lib/realtime → subscribe-project). Live merge for the
+  // chat panel happens in AgentChat via applyAssistantRealtimePayload.
   const conversationId = payload?.conversationId as string | undefined
 
-  queryClient.invalidateQueries({ queryKey: ['assistant', 'conversations'] })
+  queryClient.invalidateQueries({ queryKey: ['agent', 'conversations'] })
 
   if (conversationId) {
     queryClient.invalidateQueries({
-      queryKey: ['assistant', 'messages', conversationId],
+      queryKey: ['agent', 'messages', conversationId],
     })
   } else {
-    queryClient.invalidateQueries({ queryKey: ['assistant', 'messages'] })
+    queryClient.invalidateQueries({ queryKey: ['agent', 'messages'] })
   }
+}
+
+function isAgentRealtimeSignal(values: string[]): boolean {
+  return values.some((value) => {
+    const lower = value.toLowerCase()
+    return (
+      lower.includes('agentconversation') ||
+      lower.includes('agentmessage') ||
+      lower.includes('agenttool') ||
+      lower.includes('agentmcp') ||
+      lower.includes('agentmodel') ||
+      lower.includes('agentautomation') ||
+      lower.includes('agent.conversation') ||
+      lower.includes('agent.message') ||
+      lower.includes('agent.tool') ||
+      lower.includes('agent.mcp') ||
+      lower.includes('agent.model') ||
+      lower.includes('agent.automation') ||
+      // Legacy Assistant product names (pre-rename).
+      lower.includes('assistant')
+    )
+  })
 }
 
 export type OnMigrationEvent = (payload: unknown) => void
@@ -344,9 +369,7 @@ function handleRealtimeEvent(
       ? (response.payload as Record<string, unknown>)
       : null
 
-  const hasAssistantEvent =
-    events.some((eventName) => eventName.includes('assistant')) ||
-    channels.some((channel) => channel.includes('assistant'))
+  const hasAssistantEvent = isAgentRealtimeSignal(events) || isAgentRealtimeSignal(channels)
 
   if (hasAssistantEvent) {
     invalidateAssistantQueries(queryClient, payload)

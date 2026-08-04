@@ -18,7 +18,7 @@ export const enCatalog = {
         openWebsiteNavigation: 'Open website navigation',
         create: 'Create',
         connect: 'Connect',
-        assistant: 'Assistant',
+        assistant: 'Agent',
         upgrade: 'Upgrade',
         signIn: 'Sign in',
         signUp: 'Sign up',
@@ -62,6 +62,8 @@ export const enCatalog = {
         enabled: 'Enabled',
         disabled: 'Disabled',
         console: 'Console',
+        // Temporary: remove once the old console is retired
+        oldConsole: 'Old console',
         home: 'Home',
         docs: 'Docs',
         changelog: 'Changelog',
@@ -255,8 +257,8 @@ export const enCatalog = {
     home: {
       seoDescription:
         'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.', // pragma: allowlist secret
-      announcementNew: 'New',
-      announcementText: 'Announcing the Presences API',
+      announcementNew: 'Breaking',
+      announcementText: "We're thrilled to announce Appwrite 2.0",
       heroTitleLineOne: 'Build faster and scale',
       heroTitleLineTwo: 'bigger than ever',
       heroDescription:
@@ -376,7 +378,6 @@ export const enCatalog = {
         triggerLabel: 'Products',
         desktopTitle: 'Platform products',
         desktopSubtitle: 'Build, deploy, and scale on one backend platform',
-        viewOverview: 'View platform overview',
         newLabel: 'New',
         categories: {
           build: 'Build',
@@ -393,7 +394,7 @@ export const enCatalog = {
           realtimeName: 'Realtime',
           realtimeTagline: 'Live events, channels, and presence.',
           domainsName: 'Domains',
-          domainsTagline: 'Buy domains, DNS, TLS, and app connections.',
+          domainsTagline: 'Search, buy, transfer, and manage domains.',
           firewallName: 'Firewall',
           firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',

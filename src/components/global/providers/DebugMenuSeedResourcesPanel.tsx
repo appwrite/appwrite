@@ -8,6 +8,7 @@ import {
   Globe,
   HardDrive,
   Loader2,
+  Table2,
   Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,8 +17,17 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { createConsoleProject } from '@/lib/appwrite/console-projects'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks'
-import { createProjectDatabase } from '@/lib/react-query/hooks/databases'
+import {
+  createProjectDatabase,
+  createProjectTable,
+} from '@/lib/react-query/hooks/databases'
 import { Dependencies } from '@/lib/react-query/hooks/dependencies'
+import {
+  isDatabaseRouteKind,
+  usesCollectionsPath,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +37,7 @@ type ResourceKind =
   | 'projects'
   | 'memberships'
   | 'databases'
+  | 'tables'
   | 'buckets'
   | 'domains'
 
@@ -55,6 +66,7 @@ const RESOURCE_LABELS: Record<
   projects: { singular: 'project', plural: 'projects' },
   memberships: { singular: 'membership', plural: 'memberships' },
   databases: { singular: 'database', plural: 'databases' },
+  tables: { singular: 'table', plural: 'tables' },
   buckets: { singular: 'bucket', plural: 'buckets' },
   domains: { singular: 'domain', plural: 'domains' },
 }
@@ -81,11 +93,23 @@ export function DebugMenuSeedResourcesPanel() {
   const params = useParams({ strict: false }) as {
     orgId?: string
     projectId?: string
+    databaseId?: string
+    dbKind?: string
   }
 
   const routeOrgId = typeof params.orgId === 'string' ? params.orgId : undefined
   const projectId =
     typeof params.projectId === 'string' ? params.projectId : undefined
+  const databaseId =
+    typeof params.databaseId === 'string' ? params.databaseId : undefined
+  const dbKind: DatabaseRouteKind =
+    typeof params.dbKind === 'string' && isDatabaseRouteKind(params.dbKind)
+      ? params.dbKind
+      : 'tablesdb'
+  const usesCollections = usesCollectionsPath(dbKind)
+  const tableLabels = usesCollections
+    ? { singular: 'collection', plural: 'collections' }
+    : { singular: 'table', plural: 'tables' }
   const { project } = useProject(projectId)
   const organizationId = routeOrgId || project?.teamId || null
   const [amount, setAmount] = useState(String(DEFAULT_AMOUNT))
@@ -99,24 +123,24 @@ export function DebugMenuSeedResourcesPanel() {
     : DEFAULT_AMOUNT
 
   const contextLabel = useMemo(() => {
-    if (projectId && organizationId) {
-      return `Project ${projectId}, organization ${organizationId}`
-    }
-    if (projectId) return `Project ${projectId}`
-    if (organizationId) return `Organization ${organizationId}`
+    const parts: string[] = []
+    if (projectId) parts.push(`Project ${projectId}`)
+    if (organizationId) parts.push(`organization ${organizationId}`)
+    if (databaseId) parts.push(`database ${databaseId}`)
+    if (parts.length > 0) return parts.join(', ')
     return 'Open a project or organization route to seed resources.'
-  }, [organizationId, projectId])
+  }, [databaseId, organizationId, projectId])
 
   const runSeed = async (
     kind: ResourceKind,
     createOne: (index: number, seed: string) => Promise<unknown>,
     invalidate: () => Promise<void>,
+    labels: { singular: string; plural: string } = RESOURCE_LABELS[kind],
   ) => {
     const total = safeAmount
     const seed = `${buildSeedLabel(prefix)}-${Date.now().toString(36)}`
     setBusyKind(kind)
     setProgress({ kind, created: 0, total, failed: 0 })
-    const label = RESOURCE_LABELS[kind]
 
     const results: PromiseSettledResult<unknown>[] = []
 
@@ -142,18 +166,18 @@ export function DebugMenuSeedResourcesPanel() {
       const failed = total - created
       if (created > 0) {
         toast.success(
-          `Created ${created} ${created === 1 ? label.singular : label.plural}`,
+          `Created ${created} ${created === 1 ? labels.singular : labels.plural}`,
         )
       }
       if (failed > 0) {
         toast.error(
           `Failed to create ${failed} ${
-            failed === 1 ? label.singular : label.plural
+            failed === 1 ? labels.singular : labels.plural
           }: ${getFailureMessage(results)}`,
         )
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, `Failed to create ${label.plural}`))
+      toast.error(getErrorMessage(error, `Failed to create ${labels.plural}`))
     } finally {
       setBusyKind(null)
     }
@@ -217,6 +241,31 @@ export function DebugMenuSeedResourcesPanel() {
     )
   }
 
+  const seedTables = () => {
+    if (!projectId || !databaseId) return
+    try {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, `Failed to create ${tableLabels.plural}`),
+      )
+      return
+    }
+    void runSeed(
+      'tables',
+      (index, seed) =>
+        createProjectTable(projectId, databaseId, dbKind, {
+          name: `${seed} ${tableLabels.singular} ${index}`,
+        }),
+      async () => {
+        await queryClient.refetchQueries({
+          queryKey: ['tables', 'project', projectId, databaseId],
+        })
+      },
+      tableLabels,
+    )
+  }
+
   const seedBuckets = () => {
     if (!projectId) return
     void runSeed(
@@ -277,6 +326,16 @@ export function DebugMenuSeedResourcesPanel() {
       disabledReason: 'Open a project route first.',
     },
     {
+      kind: 'tables',
+      title: usesCollections ? 'Collections' : 'Tables',
+      description: usesCollections
+        ? 'Create empty collections in the current database.'
+        : 'Create empty tables in the current database.',
+      icon: <Table2 className="h-3.5 w-3.5" />,
+      disabled: !projectId || !databaseId,
+      disabledReason: 'Open a database route first.',
+    },
+    {
       kind: 'buckets',
       title: 'Empty buckets',
       description: 'Create empty storage buckets in the current project.',
@@ -298,6 +357,7 @@ export function DebugMenuSeedResourcesPanel() {
     projects: seedProjects,
     memberships: seedMemberships,
     databases: seedDatabases,
+    tables: seedTables,
     buckets: seedBuckets,
     domains: seedDomains,
   }

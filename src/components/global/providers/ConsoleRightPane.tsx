@@ -15,7 +15,7 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
-import { AIChatPanelContent } from './AIChat'
+import { AgentPanelContent } from './AgentChat'
 import { DocsPreviewContent } from './DocsPreview'
 import {
   useConsoleRightPane,
@@ -34,7 +34,7 @@ const AUTH_ROUTE_PATHNAMES = new Set([
   '/verify-email',
 ])
 
-function isAssistantBlockedPath(pathname: string): boolean {
+function isAgentBlockedPath(pathname: string): boolean {
   return AUTH_ROUTE_PATHNAMES.has(pathname)
 }
 
@@ -52,17 +52,17 @@ export function ConsoleRightPane() {
     () => isConsoleRightPanePath(location.pathname),
     [location.pathname],
   )
-  const isAssistantBlocked = useMemo(
-    () => isAssistantBlockedPath(location.pathname),
+  const isAgentBlocked = useMemo(
+    () => isAgentBlockedPath(location.pathname),
     [location.pathname],
   )
   const resolvedContent =
     isMarketingPage || !isConsolePath
       ? null
-      : activeContent === 'assistant' &&
+      : activeContent === 'agent' &&
           overrides.showAIAssistant &&
-          !isAssistantBlocked
-        ? 'assistant'
+          !isAgentBlocked
+        ? 'agent'
         : activeContent === 'docs'
           ? 'docs'
           : null
@@ -108,8 +108,10 @@ export function ConsoleRightPane() {
       ref={panelRef}
       style={{ width: `${widthPx}px` }}
       className={cn(
-        'relative flex h-full shrink-0 flex-col border-s border-border bg-background',
-        resolvedContent === 'assistant' &&
+        // Above ConsoleLayout sticky header (z-[110]) so the centered resize
+        // rail hover/drag highlight is not clipped where it overlaps the header.
+        'relative z-[111] flex h-full shrink-0 flex-col border-s border-border bg-background',
+        resolvedContent === 'agent' &&
           '[&_button:not(:disabled)]:cursor-pointer',
       )}
     >
@@ -126,7 +128,7 @@ export function ConsoleRightPane() {
       {resolvedContent === 'docs' ? (
         <DocsPreviewContent />
       ) : (
-        <AIChatPanelContent />
+        <AgentPanelContent />
       )}
     </div>
   )

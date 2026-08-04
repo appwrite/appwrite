@@ -1,0 +1,118 @@
+---
+layout: article
+title: CSV imports
+description: Import embeddings into Appwrite VectorsDB by uploading a CSV file. Learn how to format the embeddings and metadata columns for a bulk import.
+---
+
+Appwrite's CSV Import feature allows you to create multiple documents in a collection by uploading a single CSV file. This is especially useful for loading precomputed embeddings, seeding test environments, or migrating vectors from another system.
+
+# Prepare your CSV {% #prepare-csv %}
+
+A VectorsDB collection has a fixed schema, so every CSV maps to the same two columns:
+
+| Column       | Type     | Description                                                                      |
+|--------------|----------|----------------------------------------------------------------------------------|
+| `embeddings` | `vector` | The embedding vector, written as a JSON array. Required, and its length must equal the collection's `dimension`. |
+| `metadata`   | `object` | Arbitrary JSON stored alongside the vector, written as a JSON object. Optional.  |
+
+Each row represents a new document. The `embeddings` value is parsed as a JSON array of numbers, and the `metadata` value is parsed as a JSON object. Each row is validated before being imported.
+
+{% info title="Good to know" %}
+You can optionally include the `$id` column to define custom document IDs. If not provided, Appwrite will generate unique IDs for each document automatically.
+
+Appwrite imports documents in batches of 100 documents at a time. If a provided ID already exists in the collection, the entire batch containing that document will fail, but documents in other batches will continue to be imported successfully.
+{% /info %}
+
+An example of a valid CSV file for a collection created with `dimension: 4`:
+
+```text
+$id,embeddings,metadata
+vec_1,"[0.12,0.04,0.88,0.31]","{""title"":""First vector"",""year"":2024}"
+vec_2,"[0.55,0.61,0.07,0.42]","{""title"":""Second vector"",""year"":2025}"
+vec_3,"[0.20,0.20,0.20,0.20]","{""title"":""Third vector"",""year"":2025}"
+```
+
+The double quotes around each value let you include the commas inside the JSON array and object. The inner double quotes of the JSON keys and string values are escaped by doubling them (`""`). See [Special characters](#special-characters) for the escaping rules.
+
+{% info title="Vector length" %}
+Every `embeddings` array must contain exactly as many numbers as the collection's `dimension`. A row whose vector length does not match the dimension is rejected.
+{% /info %}
+
+# Metadata values {% #metadata-values %}
+
+The `metadata` column is an object, so each value must be a valid JSON object or the literal `null`:
+
+- **A JSON object**, for example `"{""key"":""value""}"`. An empty object `"{}"` is also valid.
+- **`null`** (the unquoted literal) stores no metadata for that document.
+
+A blank `metadata` value is not accepted. To omit metadata for a row, use `null` rather than leaving the field empty:
+
+```text
+$id,embeddings,metadata
+vec_1,"[0.12,0.04,0.88,0.31]","{""title"":""With metadata""}"
+vec_2,"[0.55,0.61,0.07,0.42]",null
+```
+
+# Create and update timestamps {% #created-at-and-updated-at %}
+
+You can also optionally include `$createdAt` and `$updatedAt` columns to set custom timestamps for imported documents. If omitted, Appwrite sets these automatically during import.
+
+An example of a valid CSV file with `$createdAt` and `$updatedAt` timestamps:
+
+```text
+$id,$createdAt,$updatedAt,embeddings,metadata
+vec_1,2025-08-10T12:34:56.000Z,2025-08-10T12:34:56.000Z,"[0.12,0.04,0.88,0.31]","{""title"":""First vector""}"
+vec_2,2025-08-11T09:15:00.000Z,2025-08-11T10:00:00.000Z,"[0.55,0.61,0.07,0.42]","{""title"":""Second vector""}"
+```
+
+{% info title="Timestamps format" %}
+`$createdAt` and `$updatedAt` must be valid ISO 8601 date-time strings, for example: `2025-08-10T12:34:56.000Z`.
+{% /info %}
+
+# Permissions {% #permissions %}
+
+You can set permissions for documents in your CSV file by adding data for the `$permissions` column. Make sure document level security is enabled for your collection.
+
+An example of a valid permissions string:
+
+```text
+"read(""any""),update(""users""),delete(""user:user_id"")"
+```
+
+The roles used are API strings that can be found in the [permissions documentation](/docs/apis/rest#roles).
+
+A full example of a valid CSV file with document permissions:
+
+```text
+$id,embeddings,metadata,$permissions
+vec_1,"[0.12,0.04,0.88,0.31]","{""title"":""First vector""}","read(""any""),update(""user:user_id""),delete(""user:user_id"")"
+vec_2,"[0.55,0.61,0.07,0.42]","{""title"":""Second vector""}","read(""users""),update(""user:user_id"")"
+```
+
+# Special characters {% #special-characters %}
+
+The `embeddings` and `metadata` values are JSON written inside CSV fields, so you need to escape the characters that CSV treats specially.
+
+## Comma
+
+The JSON array and object both contain commas, so wrap each value in double quotes (`"[0.1,0.2,0.3,0.4]"`). Without the surrounding quotes, the commas would be read as column separators.
+
+## Double quotes
+
+JSON keys and string values use double quotes, and a double quote inside a quoted CSV field must be escaped by doubling it (`""`). For example, the object `{"title":"hello"}` is written in the CSV as `"{""title"":""hello""}"`.
+
+# Run the import {% #run-import %}
+
+CSV imports run as a background migration. First upload your CSV to a [storage bucket](/docs/products/storage/buckets), then start the import against the target collection. The import is triggered through the migrations endpoint at `POST /v1/migrations/csv/imports` with an [API key](/docs/advanced/platform/api-keys) that has the `migrations.write` scope. The request takes the storage `bucketId` and `fileId` that hold your CSV, and the target collection as a composite `resourceId` in the form `databaseId:collectionId`.
+
+The `onDuplicate` option controls what happens when a document with an existing `$id` is encountered: `fail` (the default) aborts on the first conflict, `skip` ignores it, and `overwrite` replaces the existing document.
+
+{% info title="Console import" %}
+The VectorsDB collection view in the Appwrite Console offers JSON import and export. To import a CSV into a VectorsDB collection, use the migrations endpoint described above.
+{% /info %}
+
+# Additional resources {% #additional-resources %}
+
+- [Appwrite CLI](/docs/command-line)
+- [Database permissions](/docs/products/databases/vectorsdb/permissions)
+- [Embeddings](/docs/products/databases/vectorsdb/embeddings)

@@ -3,7 +3,7 @@ layout: post
 title: Announcing Database Reads and Writes pricing
 description: To ensure Appwrite Cloud's sustainability, we are introducing pricing for database read and write operations, effective April 10th, 2025.
 date: 2025-03-13
-lastUpdated: 2026-05-22
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-database-reads-and-writes-pricing/cover.avif
 timeToRead: 6
 author: eldad-fux
@@ -12,13 +12,13 @@ featured: false
 callToAction: true
 faqs:
   - question: "How does Appwrite count database read and write operations?"
-    answer: "Most operations are counted by the number of documents affected, not the number of API calls. Fetching a collection of 50 documents in one call counts as 50 read operations. A query that returns no documents counts as a single operation. Writes are counted per document on create, update, and delete."
+    answer: "Most operations are counted by the number of rows affected, not the number of API calls. Fetching a table of 50 rows in one call counts as 50 read operations. A query that returns no rows counts as a single operation. Writes are counted per row on create, update, and delete."
   - question: "What's included in the free database operation quota?"
     answer: "The Free plan includes 500,000 read operations and 250,000 write operations per month. The Pro plan includes 1,750,000 reads and 750,000 writes monthly, and Enterprise has custom limits. Operations beyond the included quota are billed at $0.060 per 100,000 reads and $0.10 per 100,000 writes. See the [pricing page](/pricing) for details."
   - question: "How can I reduce my database operation usage?"
     answer: "Filter data server-side instead of fetching large datasets and filtering on the client. Use the `limit` and `offset` parameters to paginate so you only retrieve what you need. Cache frequently accessed data in your app or CDN, and monitor usage in the [Appwrite Console](/docs/products/databases) to spot inefficient query patterns."
   - question: "Where can I see my current database operation usage?"
-    answer: "You can review usage in your organization's usage page or in the usage section of a specific database. This shows reads and writes over time, broken down so you can identify which collections or workloads drive the most operations. Use this data to plan ahead before crossing the included quota."
+    answer: "You can review usage in your organization's usage page or in the usage section of a specific database. This shows reads and writes over time, broken down so you can identify which tables or workloads drive the most operations. Use this data to plan ahead before crossing the included quota."
   - question: "Does the pricing apply to self-hosted Appwrite?"
     answer: "No, the read and write operation pricing applies only to [Appwrite Cloud](/pricing). Self-hosted Appwrite has no per-operation billing because you provide the infrastructure. The same database APIs work in both, so you can develop locally on self-hosted and deploy to Cloud without code changes."
   - question: "Why is Appwrite charging for database operations now?"
@@ -54,16 +54,16 @@ Database operations in Appwrite are categorized into two types:
 ## Read operations
 
 Any action that retrieves data from your database, including:
-- Fetching documents with `getDocument` or `listDocuments`.
+- Fetching rows with `getRow` or `listRows`.
 
 ## Write operations
 
 Any action that modifies data in your database, including:
-- Creating documents with `createDocument`.
-- Updating documents with `updateDocument`.
-- Deleting documents with `deleteDocument`.
+- Creating rows with `createRow`.
+- Updating rows with `updateRow`.
+- Deleting rows with `deleteRow`.
 
-Most operations are counted based on the number of documents affected. For example, if you fetch a collection of 50 documents with a single API call, this counts as 50 read operations, not as a single operation. However, if your query returns no documents, it will count as a single operation.
+Most operations are counted based on the number of rows affected. For example, if you fetch a table of 50 rows with a single API call, this counts as 50 read operations, not as a single operation. However, if your query returns no rows, it will count as a single operation.
 
 # Your usage
 

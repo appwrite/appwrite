@@ -1139,6 +1139,11 @@ export function platformsQueryOptions(projectId: string | null | undefined) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      // Overview / org cards prefetch platforms in the background; never hold the
+      // fullscreen initial loader for this non-critical call.
+      skipInitialLoader: true,
+    },
   })
 }
 

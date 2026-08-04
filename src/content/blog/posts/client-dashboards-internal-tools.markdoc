@@ -3,6 +3,7 @@ layout: post
 title: "Building client dashboards and internal tools faster"
 description: How to ship admin panels, dashboards, and internal tools quickly for clients without rebuilding the same backend infrastructure from scratch each time.
 date: 2026-03-20
+lastUpdated: 2026-06-29
 cover: /images/blog/client-dashboards-internal-tools/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -50,7 +51,7 @@ Tools like Retool, Appsmith, or Budibase let teams build internal tools on top o
 
 ## Use a backend platform with a built-in management console
 
-Backend platforms like Appwrite come with their own console, a fully functional web interface for managing all your application's data, users, files, and settings. For many internal tools, configuring the right collections, permissions, and views in the platform console is all the "internal tool" a team actually needs.
+Backend platforms like Appwrite come with their own console, a fully functional web interface for managing all your application's data, users, files, and settings. For many internal tools, configuring the right tables, permissions, and views in the platform console is all the "internal tool" a team actually needs.
 
 For cases where a custom UI is required, the platform provides the API layer, authentication, and data storage, so the developer only has to build the front end.
 

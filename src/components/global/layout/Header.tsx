@@ -35,6 +35,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
+  ExternalLink,
 } from 'lucide-react'
 import {
   useAuth,
@@ -94,7 +95,7 @@ import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
-import { useAIChat } from '@/components/global/providers/AIChat'
+import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -292,7 +293,7 @@ export function ConsoleHeader({
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
-  const { toggleChat } = useAIChat()
+  const { toggleChat } = useAgentChat()
   const queryClient = useQueryClient()
   const {
     account,
@@ -462,16 +463,6 @@ export function ConsoleHeader({
 
   return (
     <div className="@container w-full overflow-visible">
-      {import.meta.env.DEV && overrides.showDevConstructionStripe ? (
-        <div
-          aria-hidden
-          className="h-1 w-full shrink-0 opacity-50"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(-45deg, #fbbf24 0 6px, #171717 6px 12px)',
-          }}
-        />
-      ) : null}
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
@@ -1230,7 +1221,7 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Feedback / Support — console tools; on marketing only at very wide
+              {/* Feedback / Support - console tools; on marketing only at very wide
                   widths so they cannot crowd the centered Changelog / stars. */}
               <div
                 className={cn(
@@ -1269,7 +1260,7 @@ export function ConsoleHeader({
                   <TooltipTrigger asChild>
                     <button
                       onClick={toggleChat}
-                      {...analyticsAttrs('ai-assistant-open')}
+                      {...analyticsAttrs('ai-agent-open')}
                       className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
                     >
                       <Bot className="h-4 w-4" />
@@ -1601,6 +1592,20 @@ export function ConsoleHeader({
                           <span>{headerCopy.accountMenu.changelog}</span>
                         </Link>
                       )}
+                    </DropdownMenuItem>
+
+                    {/* Temporary: remove once the old console is retired */}
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://cloud.appwrite.io"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        {...analyticsAttrs('header-old-console')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{headerCopy.accountMenu.oldConsole}</span>
+                      </a>
                     </DropdownMenuItem>
                   </>
 

@@ -205,8 +205,10 @@ export default defineConfig(async () => {
         '@cli-shell/cjs/resolve.exports',
         // Appwrite console SDK default-imports this CJS package from dist/esm/sdk.js.
         'json-bigint',
-        // CJS entry re-exports `useSyncExternalStoreWithSelector`; pre-bundle so named ESM imports work
-        // (recharts).
+        // CJS shim entries: named ESM imports fail unless pre-bundled with interop.
+        // with-selector: recharts / @tanstack/react-store.
+        // shim: @radix-ui/react-use-is-hydrated (pulled in by excluded Avatar).
+        'use-sync-external-store/shim',
         'use-sync-external-store/shim/with-selector.js',
       ],
       include: [
@@ -214,6 +216,7 @@ export default defineConfig(async () => {
         'decimal.js-light',
         'recharts',
         'use-sync-external-store',
+        'use-sync-external-store/shim',
         'use-sync-external-store/shim/with-selector.js',
         'sprintf-js/src/sprintf.js',
         // Pre-bundle so json-bigint gets a default export shim and the console SDK stays in sync
@@ -228,9 +231,10 @@ export default defineConfig(async () => {
         '@tanstack/store',
         'almostnode',
         'sharp',
-        // Pre-bundling inlines a nested @radix-ui/react-direction copy and can load a
-        // second React instance, breaking hooks (useState of null) in ScrollArea.
+        // Pre-bundling inlines nested @radix-ui copies and can load a second React
+        // instance, breaking hooks (useState of null) in ScrollArea / Avatar.
         '@radix-ui/react-scroll-area',
+        '@radix-ui/react-avatar',
       ],
     },
     ssr: {

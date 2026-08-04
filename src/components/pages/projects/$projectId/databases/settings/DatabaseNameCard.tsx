@@ -9,11 +9,13 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 import type { ProjectDatabaseDetail } from './types'
 
 type DatabaseNameCardProps = {
   projectId: string
   databaseId: string
+  dbKind: DatabaseRouteKind
   database: ProjectDatabaseDetail
   canWrite: boolean
 }
@@ -21,6 +23,7 @@ type DatabaseNameCardProps = {
 export function DatabaseNameCard({
   projectId,
   databaseId,
+  dbKind,
   database,
   canWrite,
 }: DatabaseNameCardProps) {
@@ -41,7 +44,12 @@ export function DatabaseNameCard({
       if (trimmed.length > 128) {
         throw new Error(t('Name must be no longer than 128 characters'))
       }
-      await updateProjectDatabase(projectId, databaseId, { name: trimmed })
+      await updateProjectDatabase(
+        projectId,
+        databaseId,
+        { name: trimmed },
+        dbKind,
+      )
     },
     onSuccess: () => {
       invalidateDatabaseModel(projectId, databaseId)

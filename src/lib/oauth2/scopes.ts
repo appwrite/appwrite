@@ -37,8 +37,8 @@ export const IDENTITY_SCOPES = ['openid', 'profile', 'email', 'phone'] as const
 /**
  * This consent screen always authorizes against the Appwrite **console**
  * project. On the server, any OAuth2 access token issued for the console
- * project is granted the full `users` (member) role — the same access a
- * signed-in console session has — regardless of the OIDC scopes requested
+ * project is granted the full `users` (member) role - the same access a
+ * signed-in console session has - regardless of the OIDC scopes requested
  * (see app/init/resources/request.php and app/config/roles.php in the cloud
  * backend). The `openid`/`profile`/`email` scopes only shape the OIDC identity
  * claims; they do NOT limit what the application can do. So the consent screen
@@ -104,7 +104,7 @@ export function describeScopes(scopes: string[]): ScopeDescriptor[] {
 }
 
 // Identity scopes shown (in this order) as secondary detail beneath the
-// full-access item. `openid` is intentionally omitted — identity verification
+// full-access item. `openid` is intentionally omitted - identity verification
 // is implied by full account access, so listing it separately is redundant.
 const CONSENT_IDENTITY_SCOPES = ['profile', 'email'] as const
 
@@ -121,7 +121,7 @@ export function describeConsentScopes(scopes: string[]): ScopeDescriptor[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Consent scope model — split into identity / full / project / org tiers    */
+/*  Consent scope model - split into identity / full / project / org tiers    */
 /* -------------------------------------------------------------------------- */
 
 export interface TierScopes {
@@ -196,7 +196,7 @@ export function splitConsentScopes(scopes: string[]): ConsentScopeModel {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Per-resource copy — one readable line per resource a scope can touch       */
+/*  Per-resource copy - one readable line per resource a scope can touch       */
 /* -------------------------------------------------------------------------- */
 
 interface ResourceCopy {
@@ -363,7 +363,11 @@ const PROJECT_RESOURCE_COPY: Record<string, ResourceCopy> = {
   },
   assistant: {
     name: 'AI Assistant',
-    desc: 'The AI Assistant that suggests answers and configuration.',
+    desc: 'Legacy AI Assistant scope. Prefer agent scopes for the console Agent.',
+  },
+  agent: {
+    name: 'Agent',
+    desc: 'The console Agent that suggests answers and configuration.',
   },
   migrations: {
     name: 'Migrations',
@@ -455,7 +459,7 @@ const ORGANIZATION_RESOURCE_COPY: Record<string, ResourceCopy> = {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Grouping — collapse resource+action scopes into readable permission lines  */
+/*  Grouping - collapse resource+action scopes into readable permission lines  */
 /* -------------------------------------------------------------------------- */
 
 function actionRank(action: string): number {
@@ -464,13 +468,13 @@ function actionRank(action: string): number {
   return 2
 }
 
-/** The action of a bare scope token — `read` in `tables.read`. */
+/** The action of a bare scope token - `read` in `tables.read`. */
 export function scopeAction(scope: string): string {
   const dot = scope.lastIndexOf('.')
   return dot === -1 ? scope : scope.slice(dot + 1)
 }
 
-/** The resource of a bare scope token — `tables` in `tables.read`. */
+/** The resource of a bare scope token - `tables` in `tables.read`. */
 export function scopeResource(scope: string): string {
   const dot = scope.lastIndexOf('.')
   return dot === -1 ? scope : scope.slice(0, dot)
@@ -646,7 +650,7 @@ export function buildConsentPermissions(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Editor rows — per-resource rows for the MCP consent narrowing editor      */
+/*  Editor rows - per-resource rows for the MCP consent narrowing editor      */
 /* -------------------------------------------------------------------------- */
 
 export interface EditorRow {

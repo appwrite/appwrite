@@ -155,6 +155,7 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
+import { registerCommandCenterOpener } from '@/lib/command-center/opener-bridge'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
@@ -745,6 +746,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const openOrgShortcutsHelp = useCallback(() => {
     setCommandCenterInitialSubPage('shortcuts')
     setCommandCenterOpen(true)
+  }, [])
+
+  // Agent pane is a sibling of this page; register so console protocol can open CC.
+  useEffect(() => {
+    return registerCommandCenterOpener((page) => {
+      setCommandCenterInitialSubPage(page)
+      setCommandCenterOpen(true)
+    })
   }, [])
 
   useGlobalCommandShortcuts({
@@ -1507,6 +1516,40 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       : !supportsAdditionalMembers
         ? t('Member limit reached for your plan.')
         : undefined
+
+  // Agent console protocol: invite=member opens the invite dialog.
+  useEffect(() => {
+    const shouldInvite =
+      typeof search === 'object' &&
+      'invite' in search &&
+      (search as { invite?: string }).invite === 'member'
+    if (
+      !shouldInvite ||
+      organizationsLoading ||
+      inviteDialogOpen ||
+      inviteDisabled
+    ) {
+      return
+    }
+    setInviteDialogOpen(true)
+    navigate({
+      to: location.pathname,
+      search: (prev: Record<string, unknown>) => {
+        if (!prev || typeof prev !== 'object') return {}
+        const newSearch = { ...(prev as Record<string, unknown>) }
+        delete newSearch.invite
+        return Object.keys(newSearch).length === 0 ? {} : newSearch
+      },
+      replace: true,
+    })
+  }, [
+    inviteDialogOpen,
+    inviteDisabled,
+    location.pathname,
+    navigate,
+    organizationsLoading,
+    search,
+  ])
 
   // Calculate member limit
   // Check both addons.seats and plan.members field
@@ -2444,7 +2487,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <>
                         {/* Toolbar: Search + Filters + Create */}
                         <div className="mb-4 flex items-center gap-3">
-                          <div className="relative min-w-0 flex-1 sm:max-w-xs">
+                          <div className="relative min-w-0 flex-1 @[640px]:max-w-xs">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               placeholder={t('Search projects...')}

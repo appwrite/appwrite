@@ -203,6 +203,12 @@ You can also upload files programmatically using our SDKs:
 
 {% /multicode %}
 
+When uploading, you can pass the optional `folder` parameter to organize files into virtual folders, for example `photos/2026`.
+
+{% arrow_link href="/docs/products/storage/folders" %}
+Learn more about folders
+{% /arrow_link %}
+
 # Large files {% #large-files %}
 When you are trying to upload any files above 5MB, you will need to upload them in chunks for better reliability and performance.
 If you're using an Appwrite SDK, this is handled automatically.

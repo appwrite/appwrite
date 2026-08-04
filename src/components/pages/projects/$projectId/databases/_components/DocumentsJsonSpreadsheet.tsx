@@ -181,6 +181,7 @@ export function DocumentsJsonSpreadsheet({
     projectId,
     databaseId,
     tableId,
+    dbKind,
     requestedPage - 1,
     effectivePageSize,
     effectiveSearch,
@@ -197,6 +198,7 @@ export function DocumentsJsonSpreadsheet({
     projectId,
     databaseId,
     tableId,
+    dbKind,
     displayedPage - 1,
     effectivePageSize,
     displayedSearch,
@@ -292,7 +294,7 @@ export function DocumentsJsonSpreadsheet({
     mutationFn: async (rowIds: string[]) => {
       await Promise.all(
         rowIds.map((rowId) =>
-          deleteProjectTableRow(projectId, databaseId, tableId, rowId),
+          deleteProjectTableRow(projectId, databaseId, dbKind, tableId, rowId),
         ),
       )
     },

@@ -3,6 +3,7 @@ layout: post
 title: "Announcing inversion queries: Exclusion rules made simple"
 description: Adding five new NOT operators to let you exclude what you don’t need while keeping queries efficient.
 date: 2025-09-04
+lastUpdated: 2026-06-29
 cover: /images/blog/announcing-inversion-queries/cover.avif
 timeToRead: 5
 author: jake-barnby
@@ -22,7 +23,7 @@ faqs:
   - question: "Are inversion queries available on self-hosted Appwrite?"
     answer: "Yes, inversion queries are available on both Appwrite Cloud and self-hosted deployments. If you're on a recent self-hosted version, the new `NOT` operators are exposed through your client SDKs just like the existing query operators."
 ---
-When you need to exclude certain records, the usual approach is to fetch a broad set of rows, sometimes even the entire collection, and then filter them in your application code. 
+When you need to exclude certain records, the usual approach is to fetch a broad set of rows, sometimes even the entire table, and then filter them in your application code.
 
 It works, but it also means you are moving more data across the network than necessary, increasing payload sizes, and adding extra logic to your client. In smaller projects this might not be noticeable, but as your datasets grow, it quickly becomes inefficient.
 
@@ -38,11 +39,11 @@ With inversion queries, you can express these cases directly in your database ca
 
 They include:
 
-- `notContains`: Find rows where the attribute does not contain the given substring
-- `notSearch`: Find rows where the attribute does not match the search query
-- `notBetween`: Find rows where the attribute is not between two given values
-- `notStartsWith`: Find rows where the attribute does not start with the given value
-- `notEndsWith`: Find rows where the attribute does not end with the given value
+- `notContains`: Find rows where the column does not contain the given substring
+- `notSearch`: Find rows where the column does not match the search query
+- `notBetween`: Find rows where the column is not between two given values
+- `notStartsWith`: Find rows where the column does not start with the given value
+- `notEndsWith`: Find rows where the column does not end with the given value
 
 # Why does this matter?
 
