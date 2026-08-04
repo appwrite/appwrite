@@ -362,12 +362,30 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Authorization required for external contributor.';
+                    // Gated like every other report: silent mode otherwise left a
+                    // permanent pending status on the commit.
+                    if ($resource->getAttribute('providerSilentMode', false) === false) {
+                        $resourceName = $resource->getAttribute('name');
+                        $projectName = $project->getAttribute('name');
+                        $name = "{$resourceName} ({$projectName})";
 
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                        $reported = $checkRuns->conclude(
+                            $vcs,
+                            $owner,
+                            $repositoryName,
+                            $providerCommitHash,
+                            $name,
+                            CheckRuns::CONCLUSION_ACTION_REQUIRED,
+                            'Authorization required',
+                            'A maintainer must authorize this external contributor before Appwrite deploys this pull request.',
+                            $authorizeUrl,
+                        );
+
+                        if ($reported === 0 && !empty($providerCommitHash)) {
+                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Authorization required for external contributor.', $authorizeUrl, $name);
+                        }
+                    }
+
                     continue;
                 }
 
