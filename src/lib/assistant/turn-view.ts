@@ -75,12 +75,22 @@ const KNOWN_AGENT_LABELS: Record<string, string> = {
   researcher: 'Researcher',
   appwrite: 'Appwrite',
   worker: 'Worker',
+  platform: 'Platform',
+  planner: 'Planner',
   FINISH: 'Supervisor',
 }
 
+/**
+ * Display label for an assistant/subagent id.
+ * Always includes an "agent" suffix so short ids like "platform" stay clear in UI.
+ */
 export function getAssistantAgentLabel(agent?: string | null): string {
   if (!agent) return 'Agent'
-  return KNOWN_AGENT_LABELS[agent] ?? agent
+  const base = KNOWN_AGENT_LABELS[agent] ?? agent
+  const trimmed = String(base).trim()
+  if (!trimmed) return 'Agent'
+  if (/agent$/i.test(trimmed)) return trimmed
+  return `${trimmed} agent`
 }
 
 export function isAssistantMessageInFlight(status?: string | null): boolean {

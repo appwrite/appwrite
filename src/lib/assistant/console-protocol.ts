@@ -4,6 +4,36 @@
  * Shareable contract between the assistant engine and the Console.
  * The agent posts UI metadata via the built-in `console` tool; the Console
  * parses the tool result and turns it into components / side-effects.
+ *
+ * ## Chart actions (usage)
+ *
+ * After calling `usage_list_events` / `usage_list_gauges`, emit a `chart` action
+ * so the Console can render the series with the shared usage charts library.
+ * Prefer requesting an `interval` (e.g. `1h`) for time-series charts.
+ *
+ * Example (pass `metrics` through from the usage tool response):
+ *
+ * ```json
+ * {
+ *   "type": "chart",
+ *   "title": "Requests (last 24 hours)",
+ *   "unitLabel": "requests",
+ *   "interval": "1h",
+ *   "startAt": "2026-08-03T06:00:00.000Z",
+ *   "endAt": "2026-08-04T06:00:00.000Z",
+ *   "projectId": "…",
+ *   "metrics": [
+ *     {
+ *       "metric": "network.requests",
+ *       "points": [{ "time": "2026-08-03T07:00:00.000Z", "value": 42 }]
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * Use metric `network.requests` for API request counts (never bare `requests`).
+ * Use `chartType: "bar"` (or point `label`s) for dimension breakdowns.
+ * Use `kind: "gauges"` when the source tool was `usage_list_gauges`.
  */
 
 /** Wire protocol id — bump only on breaking changes. */
@@ -49,6 +79,34 @@ export type ConsoleResourceItem = {
   fields?: Record<string, string | number | boolean | null>
 }
 
+/**
+ * One usage datapoint for a console chart.
+ * Mirrors `usage_list_events` / `usage_list_gauges` point shape (time + value).
+ */
+export type ConsoleChartPoint = {
+  /** ISO 8601 timestamp from the usage API */
+  time: string
+  value: number
+  /**
+   * Optional category label for bar charts / dimension breakdowns
+   * (e.g. country, path, method). When omitted for bars, `time` is used.
+   */
+  label?: string
+}
+
+/** One metric series — mirrors usage API `metrics[]` entries. */
+export type ConsoleChartMetric = {
+  /** Metric id or display name (e.g. `requests`, `executions`) */
+  metric: string
+  points: ConsoleChartPoint[]
+}
+
+export type ConsoleChartAxisFormat = 'count' | 'bytes' | 'gbhours'
+
+export type ConsoleChartKind = 'events' | 'gauges'
+
+export type ConsoleChartType = 'area' | 'bar'
+
 export type ConsoleAction =
   | { type: 'set_theme'; theme: 'light' | 'dark' | 'system' }
   | { type: 'navigate'; path: string; hash?: string; replace?: boolean }
@@ -85,11 +143,50 @@ export type ConsoleAction =
       /** Optional column hints for table layout; `key` should match `fields` keys */
       columns?: Array<{ key: string; label: string }>
     }
+  | {
+      /**
+       * Render a usage chart from agent tool data (usage_list_events / gauges).
+       * Prefer passing `metrics` straight through from the usage API response.
+       */
+      type: 'chart'
+      title: string
+      description?: string
+      /** Visual: area (default, time series) or bar (categorical / breakdown) */
+      chartType?: ConsoleChartType
+      /**
+       * Fill strategy when gap-filling a time series.
+       * `events` zero-fills missing buckets; `gauges` carry-forward.
+       */
+      kind?: ConsoleChartKind
+      /** Unit next to the total, e.g. "requests", "executions" */
+      unitLabel?: string
+      /** Y-axis / value formatter hint */
+      axisFormat?: ConsoleChartAxisFormat
+      /**
+       * Bucket size from the usage API (`1m`, `15m`, `30m`, `1h`, `1d`).
+       * Empty / omitted = flat aggregate (KPI + optional single-point chart).
+       */
+      interval?: string
+      /** ISO 8601 range start — enables gap-filling when paired with endAt + interval */
+      startAt?: string
+      /** ISO 8601 range end */
+      endAt?: string
+      /** Optional % change vs previous period (hides comparison when omitted) */
+      changePercent?: number
+      /** Deep link to the Console usage page */
+      href?: string
+      projectId?: string
+      /**
+       * Series data. Prefer mirroring usage_list_events / usage_list_gauges:
+       * `{ metric, points: [{ time, value }] }`.
+       */
+      metrics: ConsoleChartMetric[]
+    }
   | { type: 'refresh'; scopes: string[] }
 
 export type ConsoleRenderableAction = Extract<
   ConsoleAction,
-  { type: 'resource' } | { type: 'resource_list' }
+  { type: 'resource' } | { type: 'resource_list' } | { type: 'chart' }
 >
 
 export type ConsoleSideEffectAction = Exclude<
@@ -139,7 +236,22 @@ export function parseConsoleEnvelope(output: unknown): ConsoleEnvelope | null {
 export function isRenderableConsoleAction(
   action: ConsoleAction,
 ): action is ConsoleRenderableAction {
-  return action.type === 'resource' || action.type === 'resource_list'
+  return (
+    action.type === 'resource' ||
+    action.type === 'resource_list' ||
+    action.type === 'chart'
+  )
+}
+
+/** Resolve a deep link for a console chart (usage overview by default). */
+export function resolveConsoleChartHref(
+  href: string | undefined,
+  projectId?: string | null,
+): string | undefined {
+  if (href?.trim()) return normalizeConsolePath(href)
+  const pid = projectId?.trim()
+  if (!pid) return undefined
+  return `/projects/${pid}/usage`
 }
 
 export function isSideEffectConsoleAction(

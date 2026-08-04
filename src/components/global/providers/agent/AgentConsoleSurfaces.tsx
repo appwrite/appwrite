@@ -54,6 +54,7 @@ import {
   buildConsoleUrl,
   openInNewTab as openConsoleInNewTab,
 } from '@/lib/utils/context-menu'
+import { ConsoleChartView } from './AgentConsoleChart'
 
 type ConsoleLinkMode = {
   openInNewTab: boolean
@@ -815,15 +816,16 @@ function ConsoleResourceListView({
   const t = useT()
   const { openPath, openInNewTab } = useConsoleResourceLink(linkMode)
   const [filter, setFilter] = useState('')
-  const total = action.total ?? action.items.length
+  const items = Array.isArray(action.items) ? action.items : []
+  const total = action.total ?? items.length
   const projectId = action.projectId || linkMode.projectId
   const filtered = useMemo(
-    () => action.items.filter((item) => itemMatchesFilter(item, filter.trim())),
-    [action.items, filter],
+    () => items.filter((item) => itemMatchesFilter(item, filter.trim())),
+    [items, filter],
   )
   const columns = useMemo(
-    () => deriveListColumns(action.items, action.columns),
-    [action.columns, action.items],
+    () => deriveListColumns(items, action.columns),
+    [action.columns, items],
   )
   const listHref = resolveConsoleListHref(
     action.listHref,
@@ -903,7 +905,7 @@ function ConsoleResourceListView({
 
       {filtered.length === 0 ? (
         <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-          {action.items.length === 0
+          {items.length === 0
             ? action.emptyMessage || t('No results')
             : t('No results match your filter')}
         </p>
@@ -989,9 +991,9 @@ function ConsoleResourceListView({
         </Table>
       )}
 
-      {total > action.items.length ? (
+      {total > items.length ? (
         <div className="border-t border-border px-4 py-3 text-[12px] text-muted-foreground">
-          {t('Showing')} {action.items.length} {t('of')} {total}
+          {t('Showing')} {items.length} {t('of')} {total}
           {listHref ? (
             <>
               {' · '}
@@ -1050,8 +1052,13 @@ export function AgentConsoleSurfaces({
     return {
       resourceActions: collectRenderableConsoleActions(tools).filter(
         (action) => {
-          if (action.type !== 'resource_list') return true
-          return action.items.length > 0
+          if (action.type === 'resource_list') {
+            return Array.isArray(action.items) && action.items.length > 0
+          }
+          if (action.type === 'chart') {
+            return Array.isArray(action.metrics) && action.metrics.length > 0
+          }
+          return true
         },
       ),
       ctaActions: collectConsoleCtaActions(tools),
@@ -1062,21 +1069,37 @@ export function AgentConsoleSurfaces({
 
   return (
     <div className="space-y-3">
-      {resourceActions.map((action) =>
-        action.type === 'resource' ? (
-          <ConsoleResourceCardView
-            key={action.key}
-            action={action}
-            linkMode={linkMode}
-          />
-        ) : (
-          <ConsoleResourceListView
-            key={action.key}
-            action={action}
-            linkMode={linkMode}
-          />
-        ),
-      )}
+      {resourceActions.map((action) => {
+        switch (action.type) {
+          case 'resource':
+            return (
+              <ConsoleResourceCardView
+                key={action.key}
+                action={action}
+                linkMode={linkMode}
+              />
+            )
+          case 'chart':
+            return (
+              <ConsoleChartView
+                key={action.key}
+                action={action}
+                projectId={projectId}
+                openInNewTab={openInNewTab}
+              />
+            )
+          case 'resource_list':
+            return (
+              <ConsoleResourceListView
+                key={action.key}
+                action={action}
+                linkMode={linkMode}
+              />
+            )
+          default:
+            return null
+        }
+      })}
       {ctaActions.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {ctaActions.map((action) => (

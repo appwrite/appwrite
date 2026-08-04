@@ -181,6 +181,7 @@ export function applyConsoleAction(
     }
     case 'resource':
     case 'resource_list':
+    case 'chart':
       // Rendered in chat UI — not side-effects.
       return
     default:
