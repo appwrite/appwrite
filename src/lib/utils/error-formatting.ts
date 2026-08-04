@@ -68,11 +68,6 @@ export function getVcsInstallationErrorKind(
   return message.includes('reconnect') ? 'reconnect' : 'provider'
 }
 
-/** True when a VCS call failed because the installation must be reconnected. */
-export function isVcsInstallationTokenError(error: unknown): boolean {
-  return getVcsInstallationErrorKind(error) === 'reconnect'
-}
-
 /** True when the API responded with HTTP 404 (resource missing or inaccessible). */
 export function isHttpNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false

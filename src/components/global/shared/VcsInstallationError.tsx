@@ -41,23 +41,21 @@ export interface VcsInstallationErrorProps {
   className?: string
 }
 
-type VcsInstallationErrorCopy = {
-  title: string
-  description: string
-  /** Reconnect is primary only when the token is what broke. */
-  reconnectIsPrimary: boolean
-  icon: LucideIcon
-  /**
-   * Only a dead token is worth alarming red. The other two clear on their own
-   * or on a retry, and dressing them as failures trains users to ignore the
-   * one state that actually needs them.
-   */
-  isCritical: boolean
+/**
+ * A dead token is the only kind the user must act on: it leads with the
+ * reconnect and is the only one worth alarming red. The other two clear on
+ * their own or on a retry, and dressing those as failures trains users to
+ * ignore the one state that actually needs them.
+ */
+function isReconnectKind(kind: VcsInstallationErrorKind) {
+  return kind === 'reconnect'
 }
 
-function useVcsInstallationErrorCopy(
-  kind: VcsInstallationErrorKind,
-): VcsInstallationErrorCopy {
+function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
+  title: string
+  description: string
+  icon: LucideIcon
+} {
   const t = useT()
 
   if (kind === 'reconnect') {
@@ -66,9 +64,7 @@ function useVcsInstallationErrorCopy(
       description: t(
         'Appwrite can no longer access this Git provider on your behalf. Reconnect the installation to restore access to your repositories.',
       ),
-      reconnectIsPrimary: true,
       icon: AlertTriangle,
-      isCritical: true,
     }
   }
 
@@ -78,18 +74,14 @@ function useVcsInstallationErrorCopy(
       description: t(
         'Another request is already refreshing this installation. Try again in a moment.',
       ),
-      reconnectIsPrimary: false,
       icon: RefreshCw,
-      isCritical: false,
     }
   }
 
   return {
     title: t('Could not reach the Git provider'),
     description: t('This is usually temporary. Try again in a moment.'),
-    reconnectIsPrimary: false,
     icon: CloudOff,
-    isCritical: false,
   }
 }
 
@@ -127,13 +119,12 @@ function VcsInstallationErrorActions({
   reconnectUrl,
   onRetry,
   isRetrying,
-  size = 'sm',
 }: Pick<
   VcsInstallationErrorProps,
   'kind' | 'reconnectUrl' | 'onRetry' | 'isRetrying'
-> & { size?: 'sm' | 'default' }) {
+>) {
   const t = useT()
-  const { reconnectIsPrimary } = useVcsInstallationErrorCopy(kind)
+  const reconnectIsPrimary = isReconnectKind(kind)
 
   // A locked installation is healthy, it is just mid-refresh. Offering a
   // reconnect there would send the user to re-authorize for no reason.
@@ -142,7 +133,7 @@ function VcsInstallationErrorActions({
       <Button
         key="reconnect"
         asChild
-        size={size}
+        size="sm"
         variant={reconnectIsPrimary ? 'default' : 'outline'}
         className="text-[13px]"
       >
@@ -157,7 +148,7 @@ function VcsInstallationErrorActions({
     <Button
       key="retry"
       type="button"
-      size={size}
+      size="sm"
       variant={reconnectIsPrimary ? 'outline' : 'default'}
       onClick={onRetry}
       disabled={isRetrying}
@@ -237,12 +228,7 @@ export function VcsInstallationErrorAlert({
   /** Replaces the default description, e.g. to name the affected control. */
   children?: ReactNode
 }) {
-  const {
-    title,
-    description,
-    icon: Icon,
-    isCritical,
-  } = useVcsInstallationErrorCopy(kind)
+  const { title, description, icon: Icon } = useVcsInstallationErrorCopy(kind)
 
   const body = (
     <div className="flex flex-col gap-3">
@@ -262,7 +248,7 @@ export function VcsInstallationErrorAlert({
     </div>
   )
 
-  if (isCritical) {
+  if (isReconnectKind(kind)) {
     return (
       <WarningAlert title={title} icon={Icon} className={className}>
         {body}
