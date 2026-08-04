@@ -122,12 +122,41 @@ class Messaging extends Action
                 $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
-                $message = $dbForProject->getDocument('messages', $payload['messageId']);
+                $messageId = $payload['messageId'];
+                $message = $dbForProject->getDocument('messages', $messageId);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                try {
+                    // An unreadable message used to fall through with every attribute unset, which made the
+                    // provider lookup below reject a null type and abort the job with a misleading query error.
+                    if ($message->isEmpty()) {
+                        throw new \Exception('Message not found: ' . $messageId);
+                    }
+
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
+                } catch (\Throwable $e) {
+                    $this->markFailed($dbForProject, $messageId, $e);
+
+                    throw $e;
+                }
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
+        }
+    }
+
+    /**
+     * Move a message out of the processing state after the job died before writing a terminal status.
+     * The queue does not redeliver, so a message left processing stays that way for good.
+     */
+    private function markFailed(Database $dbForProject, string $messageId, \Throwable $error): void
+    {
+        try {
+            $dbForProject->updateDocument('messages', $messageId, new Document([
+                'status' => MessageStatus::FAILED,
+                'deliveryErrors' => [$error->getMessage()],
+            ]));
+        } catch (\Throwable) {
+            // The message is unreadable or already gone; the original error is rethrown by the caller.
         }
     }
 
