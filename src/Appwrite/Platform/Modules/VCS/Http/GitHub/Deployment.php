@@ -73,6 +73,24 @@ trait Deployment
             ];
         };
 
+        // A skipped deployment used to leave the commit with no indicator at all, so
+        // there was no way to tell a deliberate skip from a broken integration.
+        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash): void {
+            if (!$checkRuns->supports($vcs) || $resource->getAttribute('providerSilentMode', false) === true) {
+                return;
+            }
+
+            try {
+                [$owner, $repositoryName] = $resolveIdentity($repository->getAttribute('providerRepositoryId'));
+            } catch (\Throwable) {
+                return;
+            }
+
+            $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
+
+            $checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'Deployment skipped', $reason);
+        };
+
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
 
@@ -128,6 +146,7 @@ trait Deployment
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, 'The commit message contains ' . \implode(' or ', VCS_DEPLOYMENT_SKIP_PATTERNS) . '.');
                     continue;
                 }
 
@@ -136,6 +155,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, "Branch '{$providerBranch}' does not match the branch triggers configured for this resource.");
                     continue;
                 }
 
@@ -153,6 +173,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
+                        $reportSkip($resource, $project, $repository, 'None of the changed files match the path filters configured for this resource.');
                         continue;
                     }
                 }
