@@ -112,7 +112,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+            $deviceForFunctions->copy($path, $destination);
         }
 
         // Cloning the source deployment's attributes onto the new one, with

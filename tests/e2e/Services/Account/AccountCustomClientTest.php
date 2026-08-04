@@ -4596,6 +4596,8 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $session['headers']['status-code']);
         $this->assertNotEmpty($session['body']['expire']);
+        $this->assertTrue((new DatetimeValidator())->isValid($session['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $session['body']['expire']));
         $expiryAfter = $session['body']['expire'];
 
         $this->assertGreaterThan(\strtotime($expiryBefore), \strtotime($expiryAfter));
@@ -4608,6 +4610,23 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertTrue((new DatetimeValidator())->isValid($session['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $session['body']['expire']));
         $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
+
+        \sleep(3); // Small delay to ensure expiry can expand
+
+        $session = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' =>  $cookie,
+        ]));
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertEquals($sessionId, $session['body']['$id']);
+        $this->assertNotEmpty($session['body']['expire']);
+
+        $this->assertGreaterThan(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
     }
 }

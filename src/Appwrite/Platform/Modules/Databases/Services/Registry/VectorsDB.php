@@ -23,7 +23,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as Upd
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Delete as DeleteVectorDatabase;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Embeddings\Text\Create as CreateTextEmbeddings;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Get as GetVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Delete as DeleteTransaction;
@@ -43,7 +42,6 @@ class VectorsDB extends Base
         $this->registerCollectionActions($service);
         $this->registerIndexActions($service);
         $this->registerDocumentActions($service);
-        $this->registerEmbeddingActions($service);
         $this->registerTransactionActions($service);
     }
 
@@ -95,10 +93,5 @@ class VectorsDB extends Base
         $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
         $service->addAction(ListTransactions::getName(), new ListTransactions());
         $service->addAction(CreateOperations::getName(), new CreateOperations());
-    }
-
-    private function registerEmbeddingActions(Service $service): void
-    {
-        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings());
     }
 }

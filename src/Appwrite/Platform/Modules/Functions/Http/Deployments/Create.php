@@ -236,7 +236,7 @@ class Create extends Action
                 }
 
                 if ($deployment->isEmpty()) {
-                    $deviceForFunctions->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+                    $deviceForFunctions->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
                         $deployment = $deployments->upload($function, $deployment->setAttributes([
@@ -266,7 +266,14 @@ class Create extends Action
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->uploadChunk($deviceForLocal->read($fileTmpName), $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->upload(
+            $deviceForLocal->read($fileTmpName),
+            $path,
+            $metadata['content_type'] ?? '',
+            $chunk,
+            $chunks,
+            $metadata
+        );
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -295,7 +302,7 @@ class Create extends Action
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
-                    $deviceForFunctions->finalizeUpload($path, $chunks, $metadata);
+                    $deviceForFunctions->finalize($path, $chunks, $metadata);
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 

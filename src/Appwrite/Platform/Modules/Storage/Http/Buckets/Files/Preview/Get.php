@@ -210,7 +210,7 @@ class Get extends Action
 
         $startTime = \microtime(true);
 
-        $source = $deviceForFiles->read($path);
+        $source = (string) $deviceForFiles->read($path);
 
         $downloadTime = \microtime(true) - $startTime;
 

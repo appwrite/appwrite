@@ -254,6 +254,32 @@ readonly class Deployments
     }
 
     /**
+     * Resolve the command passed to helpers/start.sh.
+     *
+     * Framework and runtime defaults use relative paths such as
+     * `bash helpers/server.sh`, which must be resolved from `/usr/local/server`.
+     * Console creation flows persist that same default onto the deployment. Always
+     * wrapping a non-empty deployment startCommand with `cd .../src/function`
+     * breaks those relative helper paths and causes the runtime to crash-loop
+     * until the request times out (HTTP 408).
+     *
+     * Only truly custom deployment start commands are prefixed with a cd into
+     * the function source directory.
+     */
+    public static function startCommand(Document $deployment, string $default): string
+    {
+        $command = $deployment->getAttribute('startCommand', '');
+
+        if ($command === '' || $command === $default) {
+            return $default;
+        }
+
+        $escaped = \str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $command);
+
+        return 'cd /usr/local/server/src/function/ && ' . $escaped;
+    }
+
+    /**
      * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
      */
     protected static function payload(

@@ -2287,6 +2287,22 @@ trait MigrationsBase
             $this->assertEquals(1, $deployments['body']['total']);
 
             $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
+
+            // The jobs worker marks the deployment ready before activate() points the
+            // function at it, and the execution below reads that pointer -- ready
+            // alone still 404s until the activation write lands.
+            $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]));
+
+            $this->assertEquals(200, $function['headers']['status-code']);
+            $this->assertSame(
+                $deployments['body']['deployments'][0]['$id'],
+                $function['body']['deploymentId'] ?? '',
+                'Function is not yet activated on the ready deployment',
+            );
         }, 100000, 500);
 
         // Attempt execution

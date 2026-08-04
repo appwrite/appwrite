@@ -1750,7 +1750,8 @@ Http::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['prefs' => $prefs]));
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -2456,6 +2457,10 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
+        if ($user->getId() !== $session->getAttribute('userId')) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -2692,7 +2697,7 @@ Http::post('/v1/users/:userId/jwts')
         ]
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true, ['dbForProject'])
+    ->param('sessionId', 'recent', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent\' to use the most recent session. Defaults to the most recent session.', true, ['dbForProject'])
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
