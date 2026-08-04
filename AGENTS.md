@@ -29,7 +29,7 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 
 ## Project layout
 
-- **src/Appwrite/Platform/Modules/** -- feature modules (Account, Avatars, Compute, Console, Databases, Functions, Health, Project, Projects, Proxy, Sites, Storage, Teams, Tokens, VCS, Webhooks)
+- **src/Appwrite/Platform/Modules/** -- feature modules (Account, Avatars, Compute, Console, Databases, Functions, Health, Project, Projects, Proxy, Sites, Storage, Teams, Tokens, Users, VCS, Webhooks)
 - **src/Appwrite/Platform/Workers/** -- background job workers
 - **src/Appwrite/Platform/Tasks/** -- CLI tasks
 - **app/init.php** -- bootstrap (registers services, resources, listeners)

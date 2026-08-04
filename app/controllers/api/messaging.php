@@ -4466,9 +4466,8 @@ Http::delete('/v1/messaging/messages/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        // Processing stays deletable: a worker that dies mid-send leaves the message there for good.
         switch ($message->getAttribute('status')) {
-            case MessageStatus::PROCESSING:
-                throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
             case MessageStatus::SCHEDULED:
                 $scheduleId = $message->getAttribute('scheduleId');
                 $scheduledAt = $message->getAttribute('scheduledAt');

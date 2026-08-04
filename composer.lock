@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d1bdfa80653b02ca0006815cf5f7e163",
+    "content-hash": "47fed84fa9ca6c3d7da20266a4e04587",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4474,16 +4474,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "1.0.0-rc15",
+            "version": "1.0.0-rc16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "e71b97e247d9fcdc07bb350b63aaaf35acad21ff"
+                "reference": "0d270c05fdeef59b6404addd403dbe0eb0b1c0e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/e71b97e247d9fcdc07bb350b63aaaf35acad21ff",
-                "reference": "e71b97e247d9fcdc07bb350b63aaaf35acad21ff",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/0d270c05fdeef59b6404addd403dbe0eb0b1c0e1",
+                "reference": "0d270c05fdeef59b6404addd403dbe0eb0b1c0e1",
                 "shasum": ""
             },
             "require": {
@@ -4492,7 +4492,7 @@
                 "php": ">=8.5",
                 "utopia-php/cli": "^0.24",
                 "utopia-php/http": "^2.0@RC",
-                "utopia-php/queue": "^0.23 || ^0.24",
+                "utopia-php/queue": "0.23.* || 0.24.* || 1.0.*",
                 "utopia-php/servers": "^0.4"
             },
             "type": "library",
@@ -4515,9 +4515,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc15"
+                "source": "https://github.com/utopia-php/platform/tree/1.0.0-rc16"
             },
-            "time": "2026-07-31T09:20:57+00:00"
+            "time": "2026-08-04T06:38:05+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -4722,16 +4722,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.24.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "9ac210fb516307b114db1d8972b057206d47257a"
+                "reference": "d7bd6d4b3b17d6d0a46aaf7449285705467efd37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/9ac210fb516307b114db1d8972b057206d47257a",
-                "reference": "9ac210fb516307b114db1d8972b057206d47257a",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/d7bd6d4b3b17d6d0a46aaf7449285705467efd37",
+                "reference": "d7bd6d4b3b17d6d0a46aaf7449285705467efd37",
                 "shasum": ""
             },
             "require": {
@@ -4749,6 +4749,7 @@
                 "workerman/workerman": "^4.0"
             },
             "suggest": {
+                "ext-pcntl": "Fallback for Adapter\\KubernetesJob graceful shutdown when Swoole is unavailable.",
                 "ext-swoole": "Needed to support Swoole.",
                 "workerman/workerman": "Needed to support Workerman."
             },
@@ -4779,9 +4780,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.24.0"
+                "source": "https://github.com/utopia-php/queue/tree/1.0.1"
             },
-            "time": "2026-07-31T08:38:16+00:00"
+            "time": "2026-08-04T08:52:40+00:00"
         },
         {
             "name": "utopia-php/registry",
