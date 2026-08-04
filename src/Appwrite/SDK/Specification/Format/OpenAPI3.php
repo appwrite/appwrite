@@ -832,6 +832,13 @@ class OpenAPI3 extends Format
 
                     if ($parameterNode['path']) { // Param is in URL path (directly or through alias)
                         $node['in'] = 'path';
+                        // A route only matches when every path segment is present, so a
+                        // path parameter is always supplied whatever the PHP param says.
+                        // OpenAPI requires `required: true` here, and generators emit a
+                        // bare identifier for the path substitution — an optional one
+                        // becomes an undefined reference (Go) or interpolates the
+                        // absent value into the URL (Python).
+                        $node['required'] = true;
                         $methodTemp['parameters'][] = $node;
                     } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
                         $node['in'] = 'query';
