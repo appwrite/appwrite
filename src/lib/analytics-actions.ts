@@ -37,6 +37,7 @@ export const ANALYTICS_ACTIONS = {
   'create-agent': 'Create Agent Clicked',
   'create-agent-automation': 'Create Agent Automation Clicked',
   'create-agent-model': 'Create Agent Model Clicked',
+  'create-agent-memory': 'Create Agent Memory Clicked',
   'agent-send': 'Agent Send Clicked',
   'agent-stop': 'Agent Stop Clicked',
   'agent-suggestion': 'Agent Suggestion Clicked',

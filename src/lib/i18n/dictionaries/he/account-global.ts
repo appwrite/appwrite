@@ -619,6 +619,33 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Base URL (optional)': 'Base URL (אופציונלי)',
   'Allow this model in the agent composer.':
     'אפשרו בחירה במודל הזה בקומפוזר של הסוכן.',
+  'Add memory': 'הוספת זיכרון',
+  'Update memory': 'עדכון זיכרון',
+  'Preferences, instructions, and facts the Appwrite Agent can reuse across conversations.':
+    'העדפות, הוראות ועובדות ש-Appwrite Agent יכול להשתמש בהן שוב בשיחות.',
+  'Sign in to manage memory.': 'התחברו כדי לנהל זיכרון.',
+  'No memories': 'אין זיכרונות',
+  'Add preferences, instructions, or facts for the agent to remember.':
+    'הוסיפו העדפות, הוראות או עובדות שהסוכן יזכור.',
+  Preference: 'העדפה',
+  Instruction: 'הוראה',
+  Fact: 'עובדה',
+  'Memory created': 'הזיכרון נוצר',
+  'Memory updated': 'הזיכרון עודכן',
+  'Memory deleted': 'הזיכרון נמחק',
+  'Failed to create memory': 'יצירת הזיכרון נכשלה',
+  'Failed to update memory': 'עדכון הזיכרון נכשל',
+  'Failed to delete memory': 'מחיקת הזיכרון נכשלה',
+  'Key cannot be changed after creation.': 'לא ניתן לשנות את המפתח לאחר היצירה.',
+  'A stable key for this memory within your account.':
+    'מפתח יציב לזיכרון הזה בחשבון שלכם.',
+  'What should the agent remember?': 'מה על הסוכן לזכור?',
+  'Higher values are kept first when space is limited.':
+    'ערכים גבוהים יותר נשמרים קודם כשיש מגבלת מקום.',
+  'Include this memory when the agent runs.':
+    'כללו את הזיכרון הזה כשהסוכן רץ.',
+  'Delete memory': 'מחיקת זיכרון',
+  'This permanently deletes the memory.': 'פעולה זו מוחקת את הזיכרון לצמיתות.',
   Archive: 'ארכוב',
   'Archive agent': 'ארכוב הסוכן',
   'Agent archived': 'הסוכן הועבר לארכיון',

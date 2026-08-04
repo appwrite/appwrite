@@ -142,6 +142,7 @@ import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_p
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
 import { Route as PublicAgentSettingsModelsRouteImport } from './routes/_public/agent.settings.models'
+import { Route as PublicAgentSettingsMemoryRouteImport } from './routes/_public/agent.settings.memory'
 import { Route as PublicAgentSettingsMcpRouteImport } from './routes/_public/agent.settings.mcp'
 import { Route as PublicAgentAutomationsCreateRouteImport } from './routes/_public/agent.automations.create'
 import { Route as PublicAgentAutomationsAutomationIdRouteImport } from './routes/_public/agent.automations.$automationId'
@@ -1082,6 +1083,12 @@ const PublicAgentSettingsModelsRoute =
   PublicAgentSettingsModelsRouteImport.update({
     id: '/models',
     path: '/models',
+    getParentRoute: () => PublicAgentSettingsRoute,
+  } as any)
+const PublicAgentSettingsMemoryRoute =
+  PublicAgentSettingsMemoryRouteImport.update({
+    id: '/memory',
+    path: '/memory',
     getParentRoute: () => PublicAgentSettingsRoute,
   } as any)
 const PublicAgentSettingsMcpRoute = PublicAgentSettingsMcpRouteImport.update({
@@ -2799,6 +2806,7 @@ export interface FileRoutesByFullPath {
   '/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
   '/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
   '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -3158,6 +3166,7 @@ export interface FileRoutesByTo {
   '/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
   '/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
   '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
@@ -3493,6 +3502,7 @@ export interface FileRoutesById {
   '/_public/agent/automations/$automationId': typeof PublicAgentAutomationsAutomationIdRoute
   '/_public/agent/automations/create': typeof PublicAgentAutomationsCreateRoute
   '/_public/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
+  '/_public/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/_public/agent/settings/models': typeof PublicAgentSettingsModelsRoute
   '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -3862,6 +3872,7 @@ export interface FileRouteTypes {
     | '/agent/automations/$automationId'
     | '/agent/automations/create'
     | '/agent/settings/mcp'
+    | '/agent/settings/memory'
     | '/agent/settings/models'
     | '/organizations/$orgId/apps'
     | '/organizations/$orgId/billing'
@@ -4221,6 +4232,7 @@ export interface FileRouteTypes {
     | '/agent/automations/$automationId'
     | '/agent/automations/create'
     | '/agent/settings/mcp'
+    | '/agent/settings/memory'
     | '/agent/settings/models'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/members'
@@ -4555,6 +4567,7 @@ export interface FileRouteTypes {
     | '/_public/agent/automations/$automationId'
     | '/_public/agent/automations/create'
     | '/_public/agent/settings/mcp'
+    | '/_public/agent/settings/memory'
     | '/_public/agent/settings/models'
     | '/_public/organizations/$orgId/apps'
     | '/_public/organizations/$orgId/billing'
@@ -5774,6 +5787,13 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/agent/settings/models'
       preLoaderRoute: typeof PublicAgentSettingsModelsRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
+    }
+    '/_public/agent/settings/memory': {
+      id: '/_public/agent/settings/memory'
+      path: '/memory'
+      fullPath: '/agent/settings/memory'
+      preLoaderRoute: typeof PublicAgentSettingsMemoryRouteImport
       parentRoute: typeof PublicAgentSettingsRoute
     }
     '/_public/agent/settings/mcp': {
@@ -7594,12 +7614,14 @@ const PublicAgentAutomationsRouteWithChildren =
 
 interface PublicAgentSettingsRouteChildren {
   PublicAgentSettingsMcpRoute: typeof PublicAgentSettingsMcpRoute
+  PublicAgentSettingsMemoryRoute: typeof PublicAgentSettingsMemoryRoute
   PublicAgentSettingsModelsRoute: typeof PublicAgentSettingsModelsRoute
   PublicAgentSettingsIndexRoute: typeof PublicAgentSettingsIndexRoute
 }
 
 const PublicAgentSettingsRouteChildren: PublicAgentSettingsRouteChildren = {
   PublicAgentSettingsMcpRoute: PublicAgentSettingsMcpRoute,
+  PublicAgentSettingsMemoryRoute: PublicAgentSettingsMemoryRoute,
   PublicAgentSettingsModelsRoute: PublicAgentSettingsModelsRoute,
   PublicAgentSettingsIndexRoute: PublicAgentSettingsIndexRoute,
 }

@@ -120,7 +120,7 @@ export function Models() {
                   <li key={model.$id}>
                     <button
                       type="button"
-                      className="flex w-full items-center gap-3 rounded-none px-3 py-3 text-start transition-colors hover:bg-accent/50"
+                      className="flex w-full cursor-pointer items-center gap-3 rounded-none px-3 py-3 text-start transition-colors hover:bg-accent/50"
                       onClick={() => setEditor({ mode: 'edit', model })}
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">

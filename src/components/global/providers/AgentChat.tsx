@@ -148,6 +148,7 @@ import { AgentAutomationDrawer } from '@/components/global/providers/agent/Agent
 import { AgentAutomationsPanel } from '@/components/global/providers/agent/AgentAutomationsPanel'
 import {
   AgentSettingsContent,
+  agentSettingsPath,
   type AgentSettingsSectionId,
 } from '@/components/pages/agent/AgentSettingsContent'
 import { AgentConversationsResizableLayout } from '@/components/global/providers/agent/AgentConversationsResizableLayout'
@@ -2279,10 +2280,7 @@ export function AgentPanelContent({
         return
       }
       void navigate({
-        to:
-          next === 'mcp'
-            ? '/agent/settings/mcp'
-            : '/agent/settings/models',
+        to: agentSettingsPath(next),
         replace: options?.replace,
       })
     },
@@ -4400,9 +4398,7 @@ export function AgentPanelContent({
 
   const getAgentSurfacePath = useCallback(() => {
     if (section === 'settings') {
-      return settingsSection === 'mcp'
-        ? '/agent/settings/mcp'
-        : '/agent/settings/models'
+      return agentSettingsPath(settingsSection)
     }
     if (section === 'automations') {
       if (automationEditor.mode === 'create') return '/agent/automations/create'

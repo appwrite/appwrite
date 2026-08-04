@@ -1,14 +1,27 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, Cpu, ExternalLink } from 'lucide-react'
+import { Brain, ChevronLeft, Cpu, ExternalLink } from 'lucide-react'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
+import { Memory } from '@/components/pages/agent/settings/Memory'
 import { Mcp } from '@/components/pages/agent/settings/Mcp'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { AGENT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/agent-settings-cards'
 import { useT } from '@/lib/i18n/translate'
 
-export type AgentSettingsSectionId = 'models' | 'mcp'
+export type AgentSettingsSectionId = 'models' | 'memory' | 'mcp'
+
+export function agentSettingsPath(section: AgentSettingsSectionId): string {
+  switch (section) {
+    case 'mcp':
+      return '/agent/settings/mcp'
+    case 'memory':
+      return '/agent/settings/memory'
+    case 'models':
+    default:
+      return '/agent/settings/models'
+  }
+}
 
 type AgentSettingsContentProps = {
   section: AgentSettingsSectionId
@@ -16,6 +29,12 @@ type AgentSettingsContentProps = {
   onBack: () => void
   /** Right-pane only: open the matching `/agent/settings/...` route in a new tab. */
   onOpenInNewTab?: () => void
+}
+
+function SettingsSection({ section }: { section: AgentSettingsSectionId }) {
+  if (section === 'mcp') return <Mcp />
+  if (section === 'memory') return <Memory />
+  return <Models />
 }
 
 /** Settings body shared by the /agent page and the right-pane agent surface. */
@@ -36,6 +55,20 @@ export function AgentSettingsContent({
         to: '/agent/settings/models',
         icon: Cpu,
         keywords: ['model', 'llm', 'openai', 'anthropic', 'provider', 'api key'],
+      },
+      {
+        id: 'memory',
+        label: t('Memory'),
+        to: '/agent/settings/memory',
+        icon: Brain,
+        keywords: [
+          'memory',
+          'memories',
+          'preference',
+          'instruction',
+          'fact',
+          'remember',
+        ],
       },
       {
         id: 'mcp',
@@ -89,12 +122,16 @@ export function AgentSettingsContent({
             onSearchQueryChange={setSettingsNavSearch}
             useRouteLinks={false}
             onNavigateToSection={(sectionId) => {
-              if (sectionId === 'models' || sectionId === 'mcp') {
+              if (
+                sectionId === 'models' ||
+                sectionId === 'memory' ||
+                sectionId === 'mcp'
+              ) {
                 onSectionChange(sectionId)
               }
             }}
           >
-            {section === 'mcp' ? <Mcp /> : <Models />}
+            <SettingsSection section={section} />
           </SettingsLayoutShell>
         </div>
       </div>

@@ -965,6 +965,33 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Base URL (optional)': 'Base URL（任意）',
   'Allow this model in the agent composer.':
     'エージェントの入力欄でこのモデルを選択できるようにします。',
+  'Add memory': 'メモリを追加',
+  'Update memory': 'メモリを更新',
+  'Preferences, instructions, and facts the Appwrite Agent can reuse across conversations.':
+    'Appwrite Agent が会話をまたいで再利用できる設定、指示、事実。',
+  'Sign in to manage memory.': 'サインインしてメモリを管理。',
+  'No memories': 'メモリはありません',
+  'Add preferences, instructions, or facts for the agent to remember.':
+    'エージェントが記憶する設定、指示、事実を追加します。',
+  Preference: '好み',
+  Instruction: '指示',
+  Fact: '事実',
+  'Memory created': 'メモリを作成しました',
+  'Memory updated': 'メモリを更新しました',
+  'Memory deleted': 'メモリを削除しました',
+  'Failed to create memory': 'メモリの作成に失敗しました',
+  'Failed to update memory': 'メモリの更新に失敗しました',
+  'Failed to delete memory': 'メモリの削除に失敗しました',
+  'Key cannot be changed after creation.': '作成後にキーは変更できません。',
+  'A stable key for this memory within your account.':
+    'アカウント内でこのメモリを識別する安定したキー。',
+  'What should the agent remember?': 'エージェントに何を覚えてもらいますか?',
+  'Higher values are kept first when space is limited.':
+    '容量が限られている場合、値が高いものが優先して保持されます。',
+  'Include this memory when the agent runs.':
+    'エージェント実行時にこのメモリを含めます。',
+  'Delete memory': 'メモリを削除',
+  'This permanently deletes the memory.': 'このメモリは完全に削除されます。',
   File: 'ファイル',
   Open: '開く',
   Ready: '準備完了',

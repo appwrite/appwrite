@@ -617,6 +617,98 @@ export function useDeleteAssistantMcpConnection() {
   })
 }
 
+export async function fetchAssistantMemories() {
+  const response = await sdk.forConsole.agent.listMemories({
+    queries: [Query.orderDesc('$updatedAt')],
+  })
+  return response.memories ?? []
+}
+
+export function assistantMemoriesQueryOptions(options?: { enabled?: boolean }) {
+  const enabled =
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: ['agent', 'memories'],
+    queryFn: fetchAssistantMemories,
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+  })
+}
+
+export function useAssistantMemories(options?: { enabled?: boolean }) {
+  return useQuery(assistantMemoriesQueryOptions(options))
+}
+
+export function useCreateAssistantMemory() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      memoryId?: string
+      scope: string
+      key: string
+      content: string
+      category?: string
+      priority?: number
+      status?: string
+      source?: string
+      expiresAt?: string
+    }) => {
+      return await sdk.forConsole.agent.createMemory({
+        memoryId: params.memoryId?.trim() || 'unique()',
+        scope: params.scope,
+        key: params.key,
+        content: params.content,
+        category: params.category,
+        priority: params.priority,
+        status: params.status,
+        source: params.source,
+        expiresAt: params.expiresAt,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['agent', 'memories'] })
+    },
+  })
+}
+
+export function useUpdateAssistantMemory() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      memoryId: string
+      content?: string
+      category?: string
+      priority?: number
+      status?: string
+      source?: string
+      expiresAt?: string
+    }) => {
+      return await sdk.forConsole.agent.updateMemory(params)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['agent', 'memories'] })
+    },
+  })
+}
+
+export function useDeleteAssistantMemory() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (memoryId: string) => {
+      return await sdk.forConsole.agent.deleteMemory({ memoryId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['agent', 'memories'] })
+    },
+  })
+}
+
 export async function fetchAssistantModels() {
   const response = await sdk.forConsole.agent.listModels({
     queries: [Query.orderDesc('$updatedAt')],
@@ -914,10 +1006,12 @@ export function useDeleteAssistantAutomation() {
 export type AssistantConversation = Models.AgentConversation
 export type AssistantMessage = Models.AgentMessage
 export type AssistantMcpConnection = Models.AgentMcpConnection
+export type AssistantMemory = Models.AgentMemory
 export type AssistantModel = Models.AgentModel
 export type AssistantAutomation = Models.AgentAutomation
 export type AgentConversation = Models.AgentConversation
 export type AgentMessage = Models.AgentMessage
 export type AgentMcpConnection = Models.AgentMcpConnection
+export type AgentMemory = Models.AgentMemory
 export type AgentModel = Models.AgentModel
 export type AgentAutomation = Models.AgentAutomation
