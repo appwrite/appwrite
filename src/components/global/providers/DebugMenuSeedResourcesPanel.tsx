@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
+  Brain,
+  Cpu,
   Database,
   FolderKanban,
   Globe,
@@ -40,6 +42,8 @@ type ResourceKind =
   | 'tables'
   | 'buckets'
   | 'domains'
+  | 'models'
+  | 'memories'
 
 type SeedProgress = {
   kind: ResourceKind
@@ -59,6 +63,14 @@ type SeedCard = {
 
 const DEFAULT_AMOUNT = 5
 const MAX_AMOUNT = 100
+const MEMORY_CATEGORIES = ['preference', 'instruction', 'fact'] as const
+const MOCK_MODEL_PROVIDERS = [
+  { provider: 'openai', model: 'gpt-4o' },
+  { provider: 'anthropic', model: 'claude-sonnet-4-5' },
+  { provider: 'google', model: 'gemini-2.5-flash' },
+  { provider: 'openrouter', model: 'openai/gpt-4o-mini' },
+  { provider: 'custom', model: 'mock-model' },
+] as const
 const RESOURCE_LABELS: Record<
   ResourceKind,
   { singular: string; plural: string }
@@ -69,6 +81,8 @@ const RESOURCE_LABELS: Record<
   tables: { singular: 'table', plural: 'tables' },
   buckets: { singular: 'bucket', plural: 'buckets' },
   domains: { singular: 'domain', plural: 'domains' },
+  models: { singular: 'model', plural: 'models' },
+  memories: { singular: 'memory', plural: 'memories' },
 }
 
 function buildSeedLabel(prefix: string) {
@@ -128,7 +142,7 @@ export function DebugMenuSeedResourcesPanel() {
     if (organizationId) parts.push(`organization ${organizationId}`)
     if (databaseId) parts.push(`database ${databaseId}`)
     if (parts.length > 0) return parts.join(', ')
-    return 'Open a project or organization route to seed resources.'
+    return 'Agent models and memories work anywhere. Open a project or organization route for the rest.'
   }, [databaseId, organizationId, projectId])
 
   const runSeed = async (
@@ -299,7 +313,67 @@ export function DebugMenuSeedResourcesPanel() {
     )
   }
 
+  const seedModels = () => {
+    void runSeed(
+      'models',
+      (index, seed) => {
+        const provider =
+          MOCK_MODEL_PROVIDERS[(index - 1) % MOCK_MODEL_PROVIDERS.length]!
+        return sdk.forConsole.agent.createModel({
+          modelId: 'unique()',
+          name: `${seed} ${provider.provider} ${index}`,
+          provider: provider.provider,
+          model: provider.model,
+          apiKey: `sk-debug-${seed}-${index}`,
+          enabled: true,
+          status: 'ready',
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({ queryKey: ['agent', 'models'] })
+      },
+    )
+  }
+
+  const seedMemories = () => {
+    void runSeed(
+      'memories',
+      (index, seed) => {
+        const category =
+          MEMORY_CATEGORIES[(index - 1) % MEMORY_CATEGORIES.length]!
+        return sdk.forConsole.agent.createMemory({
+          memoryId: 'unique()',
+          scope: 'user',
+          key: `${seed}.${category}.${index}`,
+          content: `Debug ${category} #${index}: prefer concise answers and reuse this mock memory.`,
+          category,
+          priority: index,
+          status: 'active',
+          source: 'user',
+        })
+      },
+      async () => {
+        await queryClient.refetchQueries({ queryKey: ['agent', 'memories'] })
+      },
+    )
+  }
+
   const cards: SeedCard[] = [
+    {
+      kind: 'models',
+      title: 'Agent models',
+      description: 'Create mock LLM models with fake API keys for the agent.',
+      icon: <Cpu className="h-3.5 w-3.5" />,
+      disabled: false,
+    },
+    {
+      kind: 'memories',
+      title: 'Agent memories',
+      description:
+        'Create mock preferences, instructions, and facts for the agent.',
+      icon: <Brain className="h-3.5 w-3.5" />,
+      disabled: false,
+    },
     {
       kind: 'projects',
       title: 'Projects',
@@ -360,6 +434,8 @@ export function DebugMenuSeedResourcesPanel() {
     tables: seedTables,
     buckets: seedBuckets,
     domains: seedDomains,
+    models: seedModels,
+    memories: seedMemories,
   }
 
   return (

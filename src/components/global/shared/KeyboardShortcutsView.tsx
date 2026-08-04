@@ -20,6 +20,7 @@ import { POSTGRES_SQL_EDITOR_SHORTCUTS } from '@/lib/postgres-sql-editor-shortcu
 import { AGENT_SHORTCUTS } from '@/lib/assistant/agent-shortcuts'
 import { AppwriterPromo } from '@/components/global/shared/AppwriterPromo'
 import { KeyboardLayoutVisualizer } from '@/components/global/shared/KeyboardLayoutVisualizer'
+import { ShortcutGlyph } from '@/components/global/shared/ShortcutGlyphs'
 
 interface ShortcutCommand {
   id: string
@@ -74,7 +75,7 @@ function ShortcutKeyBadges({
                 : 'border-border bg-muted/50 text-foreground/80 dark:bg-muted/40 dark:text-muted-foreground',
             )}
           >
-            {key}
+            <ShortcutGlyph keyLabel={key} />
           </kbd>
         </span>
       ))}

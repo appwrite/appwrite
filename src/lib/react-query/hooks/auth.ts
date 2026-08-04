@@ -2190,15 +2190,21 @@ export function useAIChatActiveConversationId(
   const activeConversationId = parseAIChatActiveConversationId(
     account?.prefs as UserPrefs | undefined,
   )
+  const activeConversationIdRef = useRef(activeConversationId)
+  activeConversationIdRef.current = activeConversationId
+  const accountRef = useRef(account)
+  accountRef.current = account
 
   const updateMutation = useMutation({
     mutationFn: async (value: string | null) => {
-      if (!account) {
+      const currentAccount =
+        getConsoleAccountFromCache(queryClient) ?? accountRef.current
+      if (!currentAccount) {
         throw new Error('Account data not available')
       }
       return await updateAccountPrefs(
         mergeAIChatActiveConversationIdIntoPrefs(
-          (account.prefs ?? {}) as UserPrefs,
+          (currentAccount.prefs ?? {}) as UserPrefs,
           value,
         ),
         'ai-chat-active-conversation',
@@ -2219,26 +2225,35 @@ export function useAIChatActiveConversationId(
             : current,
       )
     },
-    onSuccess: (updatedAccount) => {
+    onSuccess: (updatedAccount, value) => {
+      // A newer selection may have already been applied optimistically while
+      // this request was in flight. Do not clobber it with a stale response.
+      const cachedId = parseAIChatActiveConversationId(
+        getConsoleAccountFromCache(queryClient)?.prefs as UserPrefs | undefined,
+      )
+      if (cachedId !== value) return
       syncConsoleAccountAfterMutation(queryClient, {
         apiResult: updatedAccount,
       })
     },
   })
 
+  const mutateActiveConversationId = updateMutation.mutate
+
   const setActiveConversationId = useCallback(
     (value: string | null | ((prev: string | null) => string | null)) => {
-      const nextValue =
-        typeof value === 'function' ? value(activeConversationId) : value
+      const previous = activeConversationIdRef.current
+      const nextValue = typeof value === 'function' ? value(previous) : value
       const normalized =
         typeof nextValue === 'string' && nextValue.trim()
           ? nextValue.trim()
           : null
-      if (normalized === activeConversationId) return
-      if (!account) return
-      updateMutation.mutate(normalized)
+      if (normalized === previous) return
+      if (!accountRef.current) return
+      activeConversationIdRef.current = normalized
+      mutateActiveConversationId(normalized)
     },
-    [account, activeConversationId, updateMutation],
+    [mutateActiveConversationId],
   )
 
   return { activeConversationId, setActiveConversationId }

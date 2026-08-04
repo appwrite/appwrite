@@ -352,8 +352,11 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Voice input': '音声入力',
   'Stop voice input': '音声入力を停止',
   'Listening...': '聞いています...',
-  'Listening... Click the mic to stop':
-    '聞いています... マイクをクリックして停止',
+  'Listening... Say "send now" to submit':
+    '聞いています... 「今すぐ送信」と言うと送信',
+  'Sending soon. Cancel to keep editing':
+    'まもなく送信します。キャンセルして編集を続ける',
+  'Sending in': '送信まで',
   'Microphone permission denied': 'マイクの許可が拒否されました',
   'Voice input is not supported in this browser':
     'このブラウザでは音声入力はサポートされていません',
@@ -426,6 +429,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Search agents...': 'エージェントを検索...',
   'Previous image': '前の画像',
   'Select values for placeholders': 'プレースホルダーの値を選択',
+  Confirm: '確認',
   'Thinking...': '考え中...',
   'Answering...': '回答中...',
   'Running...': '実行中...',
@@ -936,9 +940,12 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Title prefix (optional)': 'タイトル接頭辞（任意）',
   'Weekly review': '週次レビュー',
   'Manage models': 'モデルを管理',
+  'Search models...': 'モデルを検索...',
   'Run this automation on its schedule.':
     'このオートメーションをスケジュールどおりに実行します。',
   Models: 'モデル',
+  models: 'モデル',
+  memories: 'メモリ',
   'Add model': 'モデルを追加',
   'Update model': 'モデルを更新',
   'Add your own LLM providers and API keys for Agents.':

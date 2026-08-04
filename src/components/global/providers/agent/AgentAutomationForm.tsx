@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,26 +12,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
 import { CronScheduleEditor } from '@/components/pages/projects/$projectId/functions/CronScheduleEditor'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  useAssistantModels,
   useCreateAssistantAutomation,
   useDeleteAssistantAutomation,
   useUpdateAssistantAutomation,
   type AssistantAutomation,
 } from '@/lib/react-query/hooks'
-
-const DEFAULT_MODEL_VALUE = '__default__'
 
 type AutomationFormState = {
   name: string
@@ -86,7 +77,6 @@ export function AgentAutomationForm({
   onSaved,
 }: AgentAutomationFormProps) {
   const t = useT()
-  const { data: models = [] } = useAssistantModels({ enabled: !disabled })
   const createMutation = useCreateAssistantAutomation()
   const updateMutation = useUpdateAssistantAutomation()
   const deleteMutation = useDeleteAssistantAutomation()
@@ -98,11 +88,6 @@ export function AgentAutomationForm({
   useEffect(() => {
     setForm(automation ? formFromAutomation(automation) : emptyForm())
   }, [automation])
-
-  const enabledModels = useMemo(
-    () => models.filter((model) => model.enabled !== false),
-    [models],
-  )
 
   const isSaving = createMutation.isPending || updateMutation.isPending
   const isDeleting = deleteMutation.isPending
@@ -255,30 +240,17 @@ export function AgentAutomationForm({
                 </button>
               ) : null}
             </div>
-            <Select
-              value={form.modelId || DEFAULT_MODEL_VALUE}
-              onValueChange={(value) =>
+            <AgentModelPicker
+              value={form.modelId}
+              onChange={(modelId) =>
                 setForm((current) => ({
                   ...current,
-                  modelId: value === DEFAULT_MODEL_VALUE ? '' : value,
+                  modelId,
                 }))
               }
               disabled={disabled}
-            >
-              <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder={t('Appwrite default')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={DEFAULT_MODEL_VALUE}>
-                  {t('Appwrite default')}
-                </SelectItem>
-                {enabledModels.map((model) => (
-                  <SelectItem key={model.$id} value={model.$id}>
-                    {model.name || model.model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              size="form"
+            />
           </div>
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
             <div>

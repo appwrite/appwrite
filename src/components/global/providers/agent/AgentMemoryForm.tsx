@@ -212,54 +212,52 @@ export function AgentMemoryForm({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="assistant-memory-category">{t('Category')}</Label>
-              <Select
-                value={form.category}
-                onValueChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-                    category: value as MemoryCategory,
-                  }))
-                }
-                disabled={disabled}
-              >
-                <SelectTrigger
-                  id="assistant-memory-category"
-                  className="h-9 text-[13px]"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MEMORY_CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {categoryLabel(category, t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="assistant-memory-priority">{t('Priority')}</Label>
-              <Input
-                id="assistant-memory-priority"
-                type="number"
-                value={form.priority}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    priority: event.target.value,
-                  }))
-                }
+          <div className="space-y-2">
+            <Label htmlFor="assistant-memory-category">{t('Category')}</Label>
+            <Select
+              value={form.category}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  category: value as MemoryCategory,
+                }))
+              }
+              disabled={disabled}
+            >
+              <SelectTrigger
+                id="assistant-memory-category"
                 className="h-9 text-[13px]"
-                disabled={disabled}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                {t('Higher values are kept first when space is limited.')}
-              </p>
-            </div>
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MEMORY_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {categoryLabel(category, t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assistant-memory-priority">{t('Priority')}</Label>
+            <Input
+              id="assistant-memory-priority"
+              type="number"
+              value={form.priority}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  priority: event.target.value,
+                }))
+              }
+              className="h-9 text-[13px]"
+              disabled={disabled}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {t('Higher values are kept first when space is limited.')}
+            </p>
           </div>
 
           <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">

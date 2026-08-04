@@ -51,9 +51,77 @@ const SPEECH_RECOGNITION_LANG: Record<SupportedLanguage, string> = {
   ja: 'ja-JP',
 }
 
+/**
+ * Spoken phrase that starts a cancelable submit countdown when it ends the
+ * transcript (e.g. "… create a bucket send now").
+ */
+export const VOICE_SUBMIT_TRIGGER_BY_LANG: Record<SupportedLanguage, string> = {
+  en: 'send now',
+  he: 'שלח עכשיו',
+  ja: '今すぐ送信',
+}
+
 const EMPTY_LEVELS = Object.freeze(
   Array.from({ length: VOICE_LEVEL_BAR_COUNT }, () => 0),
 ) as number[]
+
+/** Normalize transcript text for trigger matching. */
+export function normalizeVoiceTranscript(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}]+$/gu, '')
+    .replace(/\s+/g, ' ')
+}
+
+function voiceSubmitTriggersForLang(lang?: SupportedLanguage): string[] {
+  const primary =
+    VOICE_SUBMIT_TRIGGER_BY_LANG[lang ?? 'en'] ??
+    VOICE_SUBMIT_TRIGGER_BY_LANG.en
+  // Always accept English "send now" too; people often keep the English command.
+  return Array.from(
+    new Set([
+      normalizeVoiceTranscript(primary),
+      normalizeVoiceTranscript('send now'),
+    ]),
+  ).filter(Boolean)
+}
+
+/** True when the transcript ends with the voice submit trigger phrase. */
+export function voiceTranscriptEndsWithSubmitTrigger(
+  text: string,
+  lang?: SupportedLanguage,
+): boolean {
+  const normalized = normalizeVoiceTranscript(text)
+  if (!normalized) return false
+  return voiceSubmitTriggersForLang(lang).some((trigger) => {
+    if (normalized === trigger) return true
+    return normalized.endsWith(` ${trigger}`)
+  })
+}
+
+/** Remove a trailing voice submit trigger phrase before sending. */
+export function stripVoiceSubmitTrigger(
+  text: string,
+  lang?: SupportedLanguage,
+): string {
+  const triggers = voiceSubmitTriggersForLang(lang).sort(
+    (a, b) => b.length - a.length,
+  )
+  let result = text.trim()
+  for (const trigger of triggers) {
+    const escaped = trigger
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\s+/g, '\\s+')
+    const stripped = result
+      .replace(new RegExp(`(?:^|\\s)${escaped}[\\p{P}\\p{S}]*$`, 'iu'), '')
+      .trim()
+    if (stripped !== result.trim()) {
+      return stripped
+    }
+  }
+  return result
+}
 
 function getSpeechRecognitionConstructor():
   | SpeechRecognitionConstructor
@@ -86,17 +154,79 @@ function stopMediaStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop())
 }
 
-function createAudioLevelMonitor(stream: MediaStream): {
-  getLevels: () => number[]
-  stop: () => void
-} {
-  const AudioContextCtor =
+function getAudioContextConstructor(): typeof AudioContext | undefined {
+  if (typeof window === 'undefined') return undefined
+  return (
     window.AudioContext ||
     (
       window as Window & {
         webkitAudioContext?: typeof AudioContext
       }
     ).webkitAudioContext
+  )
+}
+
+/**
+ * Clear UI cue when voice recording starts or stops. Uses Web Audio so we
+ * don't need asset files; failures are ignored (autoplay / closed context).
+ */
+function playVoicePromptCue(kind: 'start' | 'end') {
+  const AudioContextCtor = getAudioContextConstructor()
+  if (!AudioContextCtor) return
+
+  try {
+    const context = new AudioContextCtor()
+    const now = context.currentTime
+    // Two short tones (up for start, down for end) so the cue is easy to hear.
+    const notes =
+      kind === 'start'
+        ? [
+            { freq: 880, at: 0, dur: 0.085 },
+            { freq: 1175, at: 0.095, dur: 0.11 },
+          ]
+        : [
+            { freq: 1040, at: 0, dur: 0.085 },
+            { freq: 660, at: 0.095, dur: 0.12 },
+          ]
+    const peak = kind === 'start' ? 0.18 : 0.15
+    const totalMs = (notes[notes.length - 1]!.at + notes[notes.length - 1]!.dur + 0.08) * 1000
+
+    for (const note of notes) {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(note.freq, now + note.at)
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+
+      const startAt = now + note.at
+      const endAt = startAt + note.dur
+      gain.gain.setValueAtTime(0.0001, startAt)
+      gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.0001, endAt)
+
+      oscillator.start(startAt)
+      oscillator.stop(endAt + 0.02)
+    }
+
+    const close = () => {
+      void context.close().catch(() => {})
+    }
+    window.setTimeout(close, totalMs)
+
+    if (context.state === 'suspended') {
+      void context.resume().catch(() => {})
+    }
+  } catch {
+    // Best-effort feedback only.
+  }
+}
+
+function createAudioLevelMonitor(stream: MediaStream): {
+  getLevels: () => number[]
+  stop: () => void
+} {
+  const AudioContextCtor = getAudioContextConstructor()
 
   if (!AudioContextCtor) {
     return {
@@ -287,6 +417,7 @@ export async function startVoicePrompt(
       stopped = true
       teardown()
     }
+    playVoicePromptCue('end')
     options.onEnd()
   }
 
@@ -298,5 +429,6 @@ export async function startVoicePrompt(
     throw new Error('Could not start voice input')
   }
 
+  playVoicePromptCue('start')
   return session
 }

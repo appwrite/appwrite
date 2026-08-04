@@ -1816,7 +1816,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Seed',
-            description: 'Create mock projects, DBs, buckets, and domains.',
+            description: 'Create mock agent models, memories, projects, and more.',
             icon: <Boxes className="h-3 w-3" />,
             submenuVariant: 'seedResources',
           },

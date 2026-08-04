@@ -5,10 +5,11 @@ import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import {
   ASSISTANT_MESSAGES_PAGE_SIZE,
+  ASSISTANT_MODELS_PICKER_PAGE_SIZE,
   assistantAutomationsQueryOptions,
   assistantConversationsQueryOptions,
   assistantMessagesQueryOptions,
-  assistantModelsQueryOptions,
+  assistantModelsInfiniteQueryOptions,
   ensureConsoleAccountQueryData,
 } from '@/lib/react-query/hooks'
 import {
@@ -54,7 +55,9 @@ export const Route = createFileRoute('/_public/agent')({
 
     // Non-blocking: models/automations can fill in after the shell paints.
     void context.queryClient
-      .ensureQueryData(assistantModelsQueryOptions())
+      .ensureInfiniteQueryData(
+        assistantModelsInfiniteQueryOptions(ASSISTANT_MODELS_PICKER_PAGE_SIZE),
+      )
       .catch(() => {})
     void context.queryClient
       .ensureQueryData(assistantAutomationsQueryOptions(''))

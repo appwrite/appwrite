@@ -1,6 +1,8 @@
 import {
+  infiniteQueryOptions,
   keepPreviousData,
   queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -20,6 +22,12 @@ import {
 const ASSISTANT_TOOL_HYDRATION_LIMIT = 8
 
 export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
+
+/** Limit for model pickers / chat composer (not the settings list). */
+export const ASSISTANT_MODELS_PICKER_PAGE_SIZE = 25
+
+export const ASSISTANT_SETTINGS_PAGE_SIZE = DEFAULT_PAGE_SIZE
+export const ASSISTANT_SETTINGS_PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 function isAutomationRunConversation(conversation: {
   automationId?: string | null
@@ -617,29 +625,49 @@ export function useDeleteAssistantMcpConnection() {
   })
 }
 
-export async function fetchAssistantMemories() {
+export async function fetchAssistantMemories(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+) {
   const response = await sdk.forConsole.agent.listMemories({
-    queries: [Query.orderDesc('$updatedAt')],
+    queries: [
+      Query.orderDesc('$updatedAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+    ],
   })
-  return response.memories ?? []
+  const memories = response.memories ?? []
+  return {
+    memories,
+    total: response.total ?? memories.length,
+  }
 }
 
-export function assistantMemoriesQueryOptions(options?: { enabled?: boolean }) {
+export function assistantMemoriesQueryOptions(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+  options?: { enabled?: boolean },
+) {
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['agent', 'memories'],
-    queryFn: fetchAssistantMemories,
+    queryKey: ['agent', 'memories', page, limit],
+    queryFn: () => fetchAssistantMemories(page, limit),
     staleTime: DEFAULT_STALE_TIME,
     enabled,
     retry: false,
+    placeholderData: keepPreviousData,
   })
 }
 
-export function useAssistantMemories(options?: { enabled?: boolean }) {
-  return useQuery(assistantMemoriesQueryOptions(options))
+export function useAssistantMemories(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(assistantMemoriesQueryOptions(page, limit, options))
 }
 
 export function useCreateAssistantMemory() {
@@ -709,29 +737,121 @@ export function useDeleteAssistantMemory() {
   })
 }
 
-export async function fetchAssistantModels() {
+export async function fetchAssistantModels(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+  search?: string,
+) {
+  const trimmedSearch = search?.trim() || undefined
   const response = await sdk.forConsole.agent.listModels({
-    queries: [Query.orderDesc('$updatedAt')],
+    queries: [
+      Query.orderDesc('$updatedAt'),
+      Query.limit(limit),
+      Query.offset(page * limit),
+      ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
+    ],
   })
-  return response.models ?? []
+  const models = response.models ?? []
+  return {
+    models,
+    total: response.total ?? models.length,
+  }
 }
 
-export function assistantModelsQueryOptions(options?: { enabled?: boolean }) {
+export async function fetchAssistantModel(modelId: string) {
+  return await sdk.forConsole.agent.getModel({ modelId })
+}
+
+export function assistantModelQueryOptions(
+  modelId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
   const enabled =
     (options?.enabled ?? true) &&
+    !!modelId &&
     isClientQueryEnabled &&
     getActiveProfileFeatures().aiAssistant
   return queryOptions({
-    queryKey: ['agent', 'models'],
-    queryFn: fetchAssistantModels,
+    queryKey: ['agent', 'models', 'detail', modelId],
+    queryFn: () => fetchAssistantModel(modelId!),
     staleTime: DEFAULT_STALE_TIME,
     enabled,
     retry: false,
   })
 }
 
-export function useAssistantModels(options?: { enabled?: boolean }) {
-  return useQuery(assistantModelsQueryOptions(options))
+export function useAssistantModel(
+  modelId: string | null | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery(assistantModelQueryOptions(modelId, options))
+}
+
+export function assistantModelsQueryOptions(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  const trimmedSearch = search?.trim() || undefined
+  const enabled =
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return queryOptions({
+    queryKey: ['agent', 'models', page, limit, trimmedSearch ?? ''],
+    queryFn: () => fetchAssistantModels(page, limit, trimmedSearch),
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAssistantModels(
+  page: number = 0,
+  limit: number = ASSISTANT_SETTINGS_PAGE_SIZE,
+  options?: { enabled?: boolean; search?: string },
+) {
+  return useQuery(
+    assistantModelsQueryOptions(page, limit, options?.search, options),
+  )
+}
+
+export function assistantModelsInfiniteQueryOptions(
+  limit: number = ASSISTANT_MODELS_PICKER_PAGE_SIZE,
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  const trimmedSearch = search?.trim() || undefined
+  const enabled =
+    (options?.enabled ?? true) &&
+    isClientQueryEnabled &&
+    getActiveProfileFeatures().aiAssistant
+  return infiniteQueryOptions({
+    queryKey: ['agent', 'models', 'infinite', limit, trimmedSearch ?? ''],
+    queryFn: ({ pageParam }) =>
+      fetchAssistantModels(pageParam, limit, trimmedSearch),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _pages, lastPageParam) => {
+      const loaded = (lastPageParam + 1) * limit
+      return loaded < (lastPage.total ?? 0) ? lastPageParam + 1 : undefined
+    },
+    staleTime: DEFAULT_STALE_TIME,
+    enabled,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAssistantModelsInfinite(
+  limit: number = ASSISTANT_MODELS_PICKER_PAGE_SIZE,
+  search?: string,
+  options?: { enabled?: boolean },
+) {
+  return useInfiniteQuery(
+    assistantModelsInfiniteQueryOptions(limit, search, options),
+  )
 }
 
 export function useCreateAssistantModel() {

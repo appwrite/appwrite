@@ -109,6 +109,7 @@ import {
   useAssistantMcpConnections,
   useAssistantMessages,
   ASSISTANT_MESSAGES_PAGE_SIZE,
+  ASSISTANT_MODELS_PICKER_PAGE_SIZE,
   fetchAssistantMessages,
   useCreateAssistantConversation,
   useAssistantModels,
@@ -157,6 +158,8 @@ import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModel
 import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { AgentTurnActivity } from '@/components/global/providers/agent/AgentTurnActivity'
+import { AgentClarifySurfaces } from '@/components/global/providers/agent/AgentClarifySurfaces'
+import { AgentChatSurfacesDebugPanel } from '@/components/global/providers/agent/AgentChatSurfacesDebugPanel'
 import { AgentConsoleSurfaces } from '@/components/global/providers/agent/AgentConsoleSurfaces'
 import { AgentConversationContextMenu } from '@/components/global/providers/agent/AgentConversationContextMenu'
 import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
@@ -168,6 +171,10 @@ import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import {
+  formatClarifyAnswersSummary,
+  parseClarifyAnswers,
+} from '@/lib/assistant/clarify-protocol'
 import { applyAssistantRealtimePayload } from '@/lib/assistant/realtime-cache'
 import {
   clearComposerDraft,
@@ -177,7 +184,10 @@ import {
 import { resolveAssistantModelTemp } from '@/lib/assistant/model-providers'
 import {
   isVoicePromptSupported,
+  normalizeVoiceTranscript,
   startVoicePrompt,
+  stripVoiceSubmitTrigger,
+  voiceTranscriptEndsWithSubmitTrigger,
   VOICE_LEVEL_BAR_COUNT,
   type VoicePromptSession,
 } from '@/lib/assistant/voice-prompt'
@@ -194,6 +204,7 @@ import {
   AGENT_NEW_SHORTCUT_RAW,
 } from '@/lib/assistant/agent-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
 import {
   useKeyboardShortcut,
   usePlatform,
@@ -214,6 +225,7 @@ import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { useConsoleProtocolEffects } from '@/hooks/use-console-protocol-effects'
 
 const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
+const EMPTY_ASSISTANT_MODELS: AssistantModel[] = []
 
 /** Prefer VolumeOff; VolumeX remains imported so flaky HMR cannot leave a dangling identifier. */
 const AgentSpeakStopIcon = VolumeOff ?? VolumeX
@@ -548,6 +560,8 @@ function applyPlaceholderValues(
 
 /** Distance from bottom that still counts as "following" the conversation. */
 const AUTO_SCROLL_BOTTOM_THRESHOLD = 96
+/** Cancelable countdown after the spoken submit phrase (e.g. "send now"). */
+const VOICE_SUBMIT_COUNTDOWN_MS = 3000
 
 interface AssistantMessageRowProps {
   message: AssistantMessage
@@ -559,6 +573,11 @@ interface AssistantMessageRowProps {
   openResourceInNewTab?: boolean
   contextProjectId?: string | null
   organizationId?: string | null
+  /** Latest assistant message can collect clarify answers. */
+  clarifyInteractive?: boolean
+  /** Following user message text (hydrate answered clarify forms). */
+  clarifyFollowingUserText?: string | null
+  onSubmitClarifyAnswers?: (answersJson: string) => void
   onCopyMessage: (messageId: string, text: string) => void
   onSpeakMessage?: (messageId: string, text: string) => void
   speaking?: boolean
@@ -1329,6 +1348,9 @@ const AssistantMessageRow = memo(
     openResourceInNewTab = false,
     contextProjectId,
     organizationId,
+    clarifyInteractive = false,
+    clarifyFollowingUserText = null,
+    onSubmitClarifyAnswers,
     onCopyMessage,
     onSpeakMessage,
     speaking = false,
@@ -1342,12 +1364,19 @@ const AssistantMessageRow = memo(
     const messageId = message.$id
     const role = message.role
     const messageText = message.contentText || ''
+    const clarifyAnswers = useMemo(
+      () => (messageText ? parseClarifyAnswers(messageText) : null),
+      [messageText],
+    )
+    const displayMessageText = clarifyAnswers
+      ? formatClarifyAnswersSummary(clarifyAnswers)
+      : messageText
     const messageScore =
       message.score === 1 || message.score === -1 ? message.score : 0
     const isUserMessage = role.toLowerCase() === 'user'
     const isRtlMessage = useMemo(
-      () => isRtlMessageText(messageText),
-      [messageText],
+      () => isRtlMessageText(displayMessageText),
+      [displayMessageText],
     )
     const alignRight = isUserMessage ? !isRtlMessage : isRtlMessage
     const attachmentsAlignment: 'left' | 'right' = alignRight ? 'right' : 'left'
@@ -1403,14 +1432,14 @@ const AssistantMessageRow = memo(
                 alignRight ? 'items-end' : 'items-start',
               )}
             >
-              {messageText ? (
+              {displayMessageText ? (
                 <div
                   dir={isRtlMessage ? 'rtl' : 'ltr'}
                   className={cn(
                     'inline-block max-w-full cursor-default rounded-lg bg-primary px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
                   )}
                 >
-                  {messageText}
+                  {displayMessageText}
                 </div>
               ) : null}
               <MessageAttachments
@@ -1428,7 +1457,7 @@ const AssistantMessageRow = memo(
               <div
                 dir="ltr"
                 className={cn(
-                  'mt-1 flex h-5 w-full items-center gap-2.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
+                  'mt-1 flex h-6 w-full items-center gap-1.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
                   alignRight ? 'justify-end' : 'justify-start',
                 )}
               >
@@ -1439,7 +1468,7 @@ const AssistantMessageRow = memo(
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
                       aria-label={t('Copy message')}
                       {...analyticsAttrs('agent-copy-message')}
@@ -1454,7 +1483,7 @@ const AssistantMessageRow = memo(
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                       onClick={() =>
                         onStartEditResend(
                           messageId,
@@ -1474,7 +1503,7 @@ const AssistantMessageRow = memo(
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                       onClick={() =>
                         onStartEditResend(
                           messageId,
@@ -1491,7 +1520,7 @@ const AssistantMessageRow = memo(
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
                       aria-label={t('Copy message')}
                       {...analyticsAttrs('agent-copy-message')}
@@ -1519,6 +1548,12 @@ const AssistantMessageRow = memo(
                   openInNewTab={openResourceInNewTab}
                   projectId={contextProjectId}
                   organizationId={organizationId}
+                />
+                <AgentClarifySurfaces
+                  message={message}
+                  interactive={clarifyInteractive}
+                  followingUserText={clarifyFollowingUserText}
+                  onSubmitAnswers={onSubmitClarifyAnswers}
                 />
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2.5">
@@ -1580,7 +1615,7 @@ const AssistantMessageRow = memo(
                 <div
                   dir="ltr"
                   className={cn(
-                    'mt-1 flex h-5 w-full items-center justify-start gap-2.5 transition-opacity duration-150',
+                    'mt-1 flex h-6 w-full items-center justify-start gap-1.5 transition-opacity duration-150',
                     messageScore !== 0 || speaking
                       ? 'opacity-100 pointer-events-auto'
                       : 'opacity-0 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
@@ -1593,7 +1628,7 @@ const AssistantMessageRow = memo(
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                        className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                         onClick={() => onCopyMessage(messageId, messageText)}
                         aria-label={t('Copy message')}
                         {...analyticsAttrs('agent-copy-message')}
@@ -1610,7 +1645,7 @@ const AssistantMessageRow = memo(
                           size="sm"
                           variant="ghost"
                           className={cn(
-                            'h-4 w-4 p-0 hover:text-foreground',
+                            'size-6 rounded-sm p-0 hover:text-foreground',
                             speaking
                               ? 'text-foreground'
                               : 'text-muted-foreground',
@@ -1646,7 +1681,7 @@ const AssistantMessageRow = memo(
                         variant="ghost"
                         disabled={scoring}
                         className={cn(
-                          'h-4 w-4 p-0 hover:text-foreground',
+                          'size-6 rounded-sm p-0 hover:text-foreground',
                           messageScore === 1
                             ? 'text-foreground'
                             : 'text-muted-foreground',
@@ -1674,7 +1709,7 @@ const AssistantMessageRow = memo(
                         variant="ghost"
                         disabled={scoring}
                         className={cn(
-                          'h-4 w-4 p-0 hover:text-foreground',
+                          'size-6 rounded-sm p-0 hover:text-foreground',
                           messageScore === -1
                             ? 'text-foreground'
                             : 'text-muted-foreground',
@@ -1703,7 +1738,7 @@ const AssistantMessageRow = memo(
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      className="size-6 rounded-sm p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onRetry(messageId)}
                       aria-label={t('Retry')}
                       {...analyticsAttrs('agent-retry')}
@@ -2392,9 +2427,18 @@ export function AgentPanelContent({
   const [isVoiceListening, setIsVoiceListening] = useState(false)
   const [isVoiceStarting, setIsVoiceStarting] = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(false)
+  const [voiceSubmitCountdown, setVoiceSubmitCountdown] = useState<
+    number | null
+  >(null)
   const voiceSessionRef = useRef<VoicePromptSession | null>(null)
   const voiceBaseTextRef = useRef('')
   const voiceActiveRef = useRef(false)
+  const voiceAutoSubmitTimeoutRef = useRef<number | null>(null)
+  const voiceCountdownIntervalRef = useRef<number | null>(null)
+  const voiceCountdownActiveRef = useRef(false)
+  const voiceArmedTriggerEndingRef = useRef<string | null>(null)
+  const voiceCancelledTriggerEndingRef = useRef<string | null>(null)
+  const sendComposerRef = useRef<() => void>(() => {})
   const copiedMessageTimeoutRef = useRef<number | null>(null)
   const previousConversationIdRef = useRef<string | null>(null)
   const shouldAutoScrollRef = useRef(true)
@@ -2412,8 +2456,61 @@ export function AgentPanelContent({
     return () => window.clearTimeout(timer)
   }, [conversationSearch])
 
+  const clearVoiceAutoSubmit = useCallback(
+    (options?: { updateCountdownState?: boolean }) => {
+      if (voiceAutoSubmitTimeoutRef.current != null) {
+        window.clearTimeout(voiceAutoSubmitTimeoutRef.current)
+        voiceAutoSubmitTimeoutRef.current = null
+      }
+      if (voiceCountdownIntervalRef.current != null) {
+        window.clearInterval(voiceCountdownIntervalRef.current)
+        voiceCountdownIntervalRef.current = null
+      }
+      voiceCountdownActiveRef.current = false
+      if (options?.updateCountdownState !== false) {
+        setVoiceSubmitCountdown(null)
+      }
+    },
+    [],
+  )
+
+  const scheduleVoiceAutoSubmit = useCallback(() => {
+    clearVoiceAutoSubmit()
+    voiceCountdownActiveRef.current = true
+    const endsAt = Date.now() + VOICE_SUBMIT_COUNTDOWN_MS
+    setVoiceSubmitCountdown(Math.ceil(VOICE_SUBMIT_COUNTDOWN_MS / 1000))
+
+    voiceCountdownIntervalRef.current = window.setInterval(() => {
+      const remainingMs = endsAt - Date.now()
+      if (remainingMs <= 0) {
+        setVoiceSubmitCountdown(null)
+        return
+      }
+      setVoiceSubmitCountdown(Math.ceil(remainingMs / 1000))
+    }, 200)
+
+    voiceAutoSubmitTimeoutRef.current = window.setTimeout(() => {
+      voiceAutoSubmitTimeoutRef.current = null
+      if (voiceCountdownIntervalRef.current != null) {
+        window.clearInterval(voiceCountdownIntervalRef.current)
+        voiceCountdownIntervalRef.current = null
+      }
+      voiceCountdownActiveRef.current = false
+      setVoiceSubmitCountdown(null)
+      sendComposerRef.current()
+    }, VOICE_SUBMIT_COUNTDOWN_MS)
+  }, [clearVoiceAutoSubmit])
+
+  const handleCancelVoiceSubmitCountdown = useCallback(() => {
+    voiceCancelledTriggerEndingRef.current = normalizeVoiceTranscript(input)
+    clearVoiceAutoSubmit()
+  }, [clearVoiceAutoSubmit, input])
+
   // Restore per-conversation composer draft when switching agents (or on refresh).
   useEffect(() => {
+    clearVoiceAutoSubmit()
+    voiceArmedTriggerEndingRef.current = null
+    voiceCancelledTriggerEndingRef.current = null
     voiceActiveRef.current = false
     voiceSessionRef.current?.stop()
     voiceSessionRef.current = null
@@ -2429,15 +2526,16 @@ export function AgentPanelContent({
       el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 128)}px`
       skipDraftPersistRef.current = false
     })
-  }, [activeConversationId])
+  }, [activeConversationId, clearVoiceAutoSubmit])
 
   useEffect(() => {
     return () => {
+      clearVoiceAutoSubmit({ updateCountdownState: false })
       voiceActiveRef.current = false
       voiceSessionRef.current?.stop()
       voiceSessionRef.current = null
     }
-  }, [])
+  }, [clearVoiceAutoSubmit])
 
   useEffect(() => {
     setVoiceSupported(isVoicePromptSupported())
@@ -2503,21 +2601,38 @@ export function AgentPanelContent({
   const scoreMessageMutation = useScoreAssistantMessage()
   const updateConversationMutation = useUpdateAssistantConversation()
   const uploadAssistantAttachmentsMutation = useUploadAssistantAttachments()
-  const { data: assistantModels = [] } = useAssistantModels({
-    enabled: isAuthenticated,
-  })
+  const { data: assistantModelsData } = useAssistantModels(
+    0,
+    ASSISTANT_MODELS_PICKER_PAGE_SIZE,
+    {
+      enabled: isAuthenticated,
+    },
+  )
+  const assistantModels = assistantModelsData?.models ?? EMPTY_ASSISTANT_MODELS
+
+  // Page URLs can point at agents that are not in the sidebar list (e.g.
+  // automation runs). Prefer the route id so by-id fetch can resolve them.
+  const focusedConversationId =
+    (isPageAgentsSection && routeAgentId) || activeConversationId || null
 
   const conversationFromList = useMemo(
     () =>
-      conversations.find(
-        (conversation) => conversation.$id === activeConversationId,
-      ),
-    [activeConversationId, conversations],
+      focusedConversationId
+        ? conversations.find(
+            (conversation) => conversation.$id === focusedConversationId,
+          )
+        : undefined,
+    [conversations, focusedConversationId],
   )
   // Automation runs are excluded from the agents list; fetch by id when needed.
-  const { data: fetchedActiveConversation } = useAssistantConversation(
-    activeConversationId && !conversationFromList
-      ? activeConversationId
+  const {
+    data: fetchedActiveConversation,
+    isPending: activeConversationPending,
+    isFetched: activeConversationFetched,
+    isError: activeConversationError,
+  } = useAssistantConversation(
+    focusedConversationId && !conversationFromList
+      ? focusedConversationId
       : null,
     { enabled: isAuthenticated },
   )
@@ -3018,9 +3133,10 @@ export function AgentPanelContent({
     (transcript: string, persistDraft: boolean) => {
       // Ignore late recognition events after stop/send clears the session.
       if (!voiceActiveRef.current) return
+      const trimmedTranscript = transcript.trim()
       const base = voiceBaseTextRef.current.trimEnd()
-      const nextValue = [base, transcript.trim()].filter(Boolean).join(
-        base && transcript.trim() ? ' ' : '',
+      const nextValue = [base, trimmedTranscript].filter(Boolean).join(
+        base && trimmedTranscript ? ' ' : '',
       )
       setInput(nextValue)
       if (persistDraft && !editingMessageId && !skipDraftPersistRef.current) {
@@ -3029,17 +3145,49 @@ export function AgentPanelContent({
       requestAnimationFrame(() => {
         syncComposerTextareaHeight()
       })
+      // Arm a cancelable countdown only when the transcript ends with the phrase.
+      const lang = getActiveLanguage()
+      if (voiceTranscriptEndsWithSubmitTrigger(nextValue, lang)) {
+        const ending = normalizeVoiceTranscript(nextValue)
+        if (voiceCancelledTriggerEndingRef.current === ending) {
+          // User cancelled this exact ending; wait until the transcript changes.
+          return
+        }
+        if (
+          voiceCountdownActiveRef.current &&
+          voiceArmedTriggerEndingRef.current === ending
+        ) {
+          // Already counting down for this ending; don't restart.
+          return
+        }
+        voiceArmedTriggerEndingRef.current = ending
+        voiceCancelledTriggerEndingRef.current = null
+        scheduleVoiceAutoSubmit()
+      } else {
+        voiceArmedTriggerEndingRef.current = null
+        voiceCancelledTriggerEndingRef.current = null
+        clearVoiceAutoSubmit()
+      }
     },
-    [activeConversationId, editingMessageId, syncComposerTextareaHeight],
+    [
+      activeConversationId,
+      clearVoiceAutoSubmit,
+      editingMessageId,
+      scheduleVoiceAutoSubmit,
+      syncComposerTextareaHeight,
+    ],
   )
 
   const stopVoiceListening = useCallback(() => {
+    clearVoiceAutoSubmit()
+    voiceArmedTriggerEndingRef.current = null
+    voiceCancelledTriggerEndingRef.current = null
     voiceActiveRef.current = false
     voiceSessionRef.current?.stop()
     voiceSessionRef.current = null
     setIsVoiceListening(false)
     setIsVoiceStarting(false)
-  }, [])
+  }, [clearVoiceAutoSubmit])
 
   const getVoiceLevels = useCallback(() => {
     return (
@@ -3063,6 +3211,9 @@ export function AgentPanelContent({
 
     setIsVoiceStarting(true)
     voiceBaseTextRef.current = input
+    voiceArmedTriggerEndingRef.current = null
+    voiceCancelledTriggerEndingRef.current = null
+    clearVoiceAutoSubmit()
     try {
       const session = await startVoicePrompt({
         lang: getActiveLanguage(),
@@ -3073,6 +3224,9 @@ export function AgentPanelContent({
           applyVoiceTranscript(transcript, true)
         },
         onError: (error) => {
+          clearVoiceAutoSubmit()
+          voiceArmedTriggerEndingRef.current = null
+          voiceCancelledTriggerEndingRef.current = null
           voiceActiveRef.current = false
           toast.error(
             t(
@@ -3086,6 +3240,8 @@ export function AgentPanelContent({
           setIsVoiceStarting(false)
         },
         onEnd: () => {
+          // Keep a pending silence timer so a natural recognition end can still
+          // auto-send after the last word. Manual stop clears the timer first.
           voiceActiveRef.current = false
           voiceSessionRef.current = null
           setIsVoiceListening(false)
@@ -3098,6 +3254,7 @@ export function AgentPanelContent({
       setIsVoiceListening(true)
       setIsVoiceStarting(false)
     } catch (error) {
+      clearVoiceAutoSubmit()
       voiceActiveRef.current = false
       const message =
         error instanceof Error ? error.message : 'Could not start voice input'
@@ -3115,6 +3272,7 @@ export function AgentPanelContent({
     }
   }, [
     applyVoiceTranscript,
+    clearVoiceAutoSubmit,
     focusInput,
     input,
     interactionsDisabled,
@@ -3323,15 +3481,22 @@ export function AgentPanelContent({
     setPendingPaneAutomationId(null)
   }, [automationsList, isPageVariant, pendingPaneAutomationId])
 
-  // Keep page route param and active conversation selection in sync.
+  // Page URL → prefs. Only when the route agent id changes. Clicks update prefs
+  // before navigation commits; syncing again from a stale route id loops.
+  const syncedRouteAgentIdRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!isPageAgentsSection) return
-    if (routeAgentId) {
-      if (routeAgentId !== activeConversationId) {
-        setActiveConversationId(routeAgentId)
-      }
+    if (!isPageAgentsSection || !routeAgentId) {
+      if (!routeAgentId) syncedRouteAgentIdRef.current = null
       return
     }
+    if (syncedRouteAgentIdRef.current === routeAgentId) return
+    syncedRouteAgentIdRef.current = routeAgentId
+    setActiveConversationId(routeAgentId)
+  }, [isPageAgentsSection, routeAgentId, setActiveConversationId])
+
+  // Prefs → page URL when `/agent` has no agent id (initial restore).
+  useEffect(() => {
+    if (!isPageAgentsSection || routeAgentId) return
     if (activeConversationId) {
       navigateToAgent(activeConversationId, { replace: true })
     }
@@ -3340,7 +3505,6 @@ export function AgentPanelContent({
     isPageAgentsSection,
     navigateToAgent,
     routeAgentId,
-    setActiveConversationId,
   ])
 
   // Restore or pick a conversation once account prefs + list are ready.
@@ -3350,15 +3514,21 @@ export function AgentPanelContent({
 
     // Page routes with an explicit agent id own selection via the URL.
     if (isPageAgentsSection && routeAgentId) {
-      const exists = conversations.some(
+      const existsInList = conversations.some(
         (conversation: AssistantConversation) =>
           conversation.$id === routeAgentId,
       )
-      if (!exists && !hasConversationSearch) {
-        const fallbackId = conversations[0]?.$id ?? null
-        setActiveConversationId(fallbackId)
-        navigateToAgent(fallbackId, { replace: true })
-      }
+      if (existsInList || hasConversationSearch) return
+
+      // Automation runs (and similar) are filtered out of the agents list but
+      // remain valid via by-id fetch. Wait for that before falling back.
+      if (fetchedActiveConversation?.$id === routeAgentId) return
+      if (activeConversationPending) return
+      if (!activeConversationFetched && !activeConversationError) return
+
+      const fallbackId = conversations[0]?.$id ?? null
+      if (fallbackId === routeAgentId) return
+      navigateToAgent(fallbackId, { replace: true })
       return
     }
 
@@ -3372,6 +3542,11 @@ export function AgentPanelContent({
       ) {
         return
       }
+      // Keep by-id selections (e.g. open automation run in the pane) until the
+      // fetch settles; only then fall through to pick another agent.
+      if (fetchedActiveConversation?.$id === activeConversationId) return
+      if (activeConversationPending) return
+      if (!activeConversationFetched && !activeConversationError) return
     }
 
     if (conversations.length > 0) {
@@ -3391,9 +3566,13 @@ export function AgentPanelContent({
     }
   }, [
     account,
+    activeConversationError,
+    activeConversationFetched,
     activeConversationId,
+    activeConversationPending,
     conversations,
     conversationsLoading,
+    fetchedActiveConversation?.$id,
     hasConversationSearch,
     isPageAgentsSection,
     navigateToAgent,
@@ -3552,10 +3731,8 @@ export function AgentPanelContent({
     },
   )
 
-  const newAgentShortcutLabel = formatDisplayKeys(
-    AGENT_NEW_SHORTCUT_RAW,
-    isMac,
-  ).join('')
+  const newAgentShortcutKeys = formatDisplayKeys(AGENT_NEW_SHORTCUT_RAW, isMac)
+  const newAgentShortcutLabel = newAgentShortcutKeys.join('')
   const focusComposerShortcutLabel = formatDisplayKeys(
     AGENT_FOCUS_COMPOSER_SHORTCUT_RAW,
     isMac,
@@ -4061,6 +4238,9 @@ export function AgentPanelContent({
     } finally {
       setIsWaitingForAttachments(false)
     }
+  }
+  sendComposerRef.current = () => {
+    void handleSend(stripVoiceSubmitTrigger(input, getActiveLanguage()))
   }
 
   // Drain queued follow-ups once the active turn becomes idle.
@@ -4569,8 +4749,8 @@ export function AgentPanelContent({
         <Plus className="h-3.5 w-3.5" />
       )}
       {t('Create agent')}
-      <kbd className="ms-0.5 hidden rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
-        {newAgentShortcutLabel}
+      <kbd className="ms-0.5 hidden items-center rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
+        <ShortcutGlyphs keys={newAgentShortcutKeys} />
       </kbd>
     </Button>
   )
@@ -5415,7 +5595,7 @@ export function AgentPanelContent({
                       </Button>
                     </div>
                   ) : null}
-                  {messages.map((message: AssistantMessage) => {
+                  {messages.map((message: AssistantMessage, messageIndex) => {
                     const messageText = message.contentText || ''
                     const messageAttachments = getMessageAttachments(message)
                     const isUserMessage = message.role.toLowerCase() === 'user'
@@ -5456,6 +5636,16 @@ export function AgentPanelContent({
                     const canScoreMessage =
                       !isUserMessage &&
                       !isAssistantMessageInFlight(message.status)
+                    const followingMessage = messages[messageIndex + 1]
+                    const clarifyFollowingUserText =
+                      !isUserMessage &&
+                      followingMessage?.role.toLowerCase() === 'user'
+                        ? followingMessage.contentText || ''
+                        : null
+                    const clarifyInteractive =
+                      !isUserMessage &&
+                      message.$id === latestMessageId &&
+                      !clarifyFollowingUserText
 
                     return (
                       <AssistantMessageRow
@@ -5468,6 +5658,15 @@ export function AgentPanelContent({
                         openResourceInNewTab={isPageVariant}
                         contextProjectId={contextProjectId}
                         organizationId={organizationId}
+                        clarifyInteractive={clarifyInteractive}
+                        clarifyFollowingUserText={clarifyFollowingUserText}
+                        onSubmitClarifyAnswers={
+                          clarifyInteractive
+                            ? (answersJson) => {
+                                void handleSend(answersJson)
+                              }
+                            : undefined
+                        }
                         onCopyMessage={handleCopyMessage}
                         onSpeakMessage={
                           !isUserMessage &&
@@ -5537,26 +5736,34 @@ export function AgentPanelContent({
                 effectiveExpanded && 'mx-auto w-full max-w-3xl',
               )}
             >
-            {isDebugModeOpen && messages.length > 0 ? (
-              <div className="mb-3">
-                <AssistantBubbleDebugControls
-                  expanded={bubbleDebugExpanded}
-                  onExpandedChange={setBubbleDebugExpanded}
-                  activityMode={bubbleDebugMode}
-                  onActivityModeChange={setBubbleDebugMode}
-                  sizeScale={effectiveSphereSizeScale}
-                  sizeScaleOverride={sphereSizeScaleOverride}
-                  onSizeScaleChange={setSphereSizeScaleOverride}
-                  onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
-                  colorMode={sphereColorMode}
-                  onColorModeChange={setSphereColorMode}
-                  shapeMode={sphereShapeMode}
-                  onShapeModeChange={setSphereShapeMode}
-                  particleCountOverride={sphereParticleCountOverride}
-                  autoParticleCount={sphereAutoParticleCount}
-                  onParticleCountChange={setSphereParticleCountOverride}
-                  onParticleCountAuto={() => setSphereParticleCountOverride(null)}
+            {isDebugModeOpen ? (
+              <div className="mb-3 space-y-2">
+                <AgentChatSurfacesDebugPanel
+                  projectId={contextProjectId}
+                  organizationId={organizationId}
                 />
+                {messages.length > 0 ? (
+                  <AssistantBubbleDebugControls
+                    expanded={bubbleDebugExpanded}
+                    onExpandedChange={setBubbleDebugExpanded}
+                    activityMode={bubbleDebugMode}
+                    onActivityModeChange={setBubbleDebugMode}
+                    sizeScale={effectiveSphereSizeScale}
+                    sizeScaleOverride={sphereSizeScaleOverride}
+                    onSizeScaleChange={setSphereSizeScaleOverride}
+                    onSizeScaleDefault={() => setSphereSizeScaleOverride(null)}
+                    colorMode={sphereColorMode}
+                    onColorModeChange={setSphereColorMode}
+                    shapeMode={sphereShapeMode}
+                    onShapeModeChange={setSphereShapeMode}
+                    particleCountOverride={sphereParticleCountOverride}
+                    autoParticleCount={sphereAutoParticleCount}
+                    onParticleCountChange={setSphereParticleCountOverride}
+                    onParticleCountAuto={() =>
+                      setSphereParticleCountOverride(null)
+                    }
+                  />
+                ) : null}
               </div>
             ) : null}
             {editingMessageId ? (
@@ -5867,6 +6074,8 @@ export function AgentPanelContent({
                 <VoiceRecordingMeter
                   active={isVoiceListening}
                   getLevels={getVoiceLevels}
+                  countdownSeconds={voiceSubmitCountdown}
+                  onCancelCountdown={handleCancelVoiceSubmitCountdown}
                 />
               ) : null}
               <div className="flex items-end gap-2 p-2">
@@ -6049,7 +6258,9 @@ export function AgentPanelContent({
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
               {isVoiceListening
-                ? t('Listening... Click the mic to stop')
+                ? voiceSubmitCountdown != null
+                  ? t('Sending soon. Cancel to keep editing')
+                  : t('Listening... Say "send now" to submit')
                 : hasUploadingAttachments
                   ? t(
                       'Attachments upload in background. Sending waits until they are ready.',

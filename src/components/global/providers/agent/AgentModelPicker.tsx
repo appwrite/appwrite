@@ -1,18 +1,36 @@
-import { useMemo, useState } from 'react'
-import { Check, ChevronDown, Cpu, Settings2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import {
+  Check,
+  ChevronDown,
+  Cpu,
+  Loader2,
+  Settings2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { getAssistantModelIconPath } from '@/lib/assistant/model-providers'
 import {
-  useAssistantModels,
+  ASSISTANT_MODELS_PICKER_PAGE_SIZE,
+  assistantModelQueryOptions,
+  assistantModelsInfiniteQueryOptions,
   type AssistantModel,
 } from '@/lib/react-query/hooks'
 
@@ -69,28 +87,101 @@ export function AgentModelPicker({
 }: AgentModelPickerProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
-  const { data: models = [], isLoading } = useAssistantModels({
-    enabled: !disabled,
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const listScrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    if (!open) setSearch('')
+  }, [open])
+
+  const {
+    data,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    ...assistantModelsInfiniteQueryOptions(
+      ASSISTANT_MODELS_PICKER_PAGE_SIZE,
+      open ? debouncedSearch || undefined : undefined,
+      { enabled: !disabled && open },
+    ),
+    placeholderData: keepPreviousData,
   })
+
+  const { data: selectedModelFromQuery } = useQuery({
+    ...assistantModelQueryOptions(value || undefined, {
+      enabled: !disabled && !!value,
+    }),
+  })
+
+  const models = useMemo(
+    () =>
+      (data?.pages.flatMap((page) => page.models) ?? []).filter(
+        (model) => model.enabled !== false,
+      ),
+    [data?.pages],
+  )
+
+  const selectedModel = useMemo(() => {
+    if (!value) return undefined
+    return (
+      models.find((model) => model.$id === value) ?? selectedModelFromQuery
+    )
+  }, [models, selectedModelFromQuery, value])
+
   const isFormSize = size === 'form'
   const iconClassName = isFormSize ? 'h-4 w-4' : 'h-3.5 w-3.5'
   const itemClassName = isFormSize
     ? 'px-2.5 py-2 text-[13px]'
     : 'px-2 py-1.5 text-[12px]'
 
-  const selectableModels = useMemo(
-    () => models.filter((model) => model.enabled !== false),
-    [models],
-  )
-
-  const selectedModel = useMemo(
-    () => (value ? models.find((model) => model.$id === value) : undefined),
-    [models, value],
-  )
   const selectedLabel = useMemo(() => {
     if (!value) return t('Appwrite default')
     return selectedModel ? modelLabel(selectedModel) : t('Custom model')
   }, [selectedModel, t, value])
+
+  const showDefaultOption = useMemo(() => {
+    if (!debouncedSearch) return true
+    return t('Appwrite default').toLowerCase().includes(debouncedSearch.toLowerCase())
+  }, [debouncedSearch, t])
+
+  const showListSkeleton = isFetching && models.length === 0 && !showDefaultOption
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const root = listScrollRef.current
+    if (
+      !sentinel ||
+      !root ||
+      !open ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      !fetchNextPage
+    ) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage()
+        }
+      },
+      { root, rootMargin: '120px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, open, models.length])
 
   const selectModel = (modelId: string) => {
     onChange(modelId)
@@ -112,6 +203,8 @@ export function AgentModelPicker({
             className,
           )}
           aria-label={t('Model')}
+          aria-expanded={open}
+          role="combobox"
           {...analyticsAttrs('agent-model-picker')}
         >
           {selectedModel ? (
@@ -144,73 +237,132 @@ export function AgentModelPicker({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className={cn('p-1', isFormSize ? 'w-[var(--radix-popover-trigger-width)] min-w-[280px]' : 'w-[240px]')}
+        className={cn(
+          'p-0',
+          isFormSize
+            ? 'w-[var(--radix-popover-trigger-width)] min-w-[280px]'
+            : 'w-[260px]',
+        )}
+        onWheelCapture={(event) => {
+          event.stopPropagation()
+        }}
       >
-        <button
-          type="button"
-          className={cn(
-            'flex w-full cursor-pointer items-center gap-2 rounded-md text-start transition-colors hover:bg-accent',
-            itemClassName,
-            !value && 'bg-accent/60',
-          )}
-          onClick={() => selectModel(DEFAULT_MODEL_ID)}
-        >
-          <img
-            src="/icons/appwrite.svg"
-            alt=""
-            className={cn('shrink-0', iconClassName, PUBLIC_ICON_MUTED_CLASSES)}
-          />
-          <span className="min-w-0 flex-1 truncate">
-            {t('Appwrite default')}
-          </span>
-          {!value ? (
-            <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
-          ) : null}
-        </button>
-
-        {isLoading ? (
-          <p className="px-2 py-2 text-[11px] text-muted-foreground">
-            {t('Loading...')}
-          </p>
-        ) : null}
-
-        {!isLoading && selectableModels.length === 0 ? (
-          <p className="px-2 py-2 text-[11px] leading-snug text-muted-foreground">
-            {t('No custom models')}
-          </p>
-        ) : null}
-
-        {selectableModels.map((model) => {
-          const selected = value === model.$id
-          return (
-            <button
-              key={model.$id}
-              type="button"
+        <Command shouldFilter={false} className="overflow-hidden">
+          <div className="relative">
+            <CommandInput
+              placeholder={t('Search models...')}
+              value={search}
+              onValueChange={setSearch}
               className={cn(
-                'flex w-full cursor-pointer items-center gap-2 rounded-md text-start transition-colors hover:bg-accent',
-                itemClassName,
-                selected && 'bg-accent/60',
+                isFormSize ? 'h-9 text-[13px]' : 'h-8 text-[12px]',
+                isFetching && 'pe-8',
               )}
-              onClick={() => selectModel(model.$id)}
+            />
+            <div
+              className={cn(
+                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                isFetching ? 'opacity-100' : 'opacity-0',
+              )}
+              aria-hidden
             >
-              <ModelIcon
-                providerId={model.provider}
-                modelId={model.model}
-                className={iconClassName}
-              />
-              <span className="min-w-0 flex-1 truncate">
-                {modelLabel(model)}
-              </span>
-              {selected ? (
-                <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
-              ) : null}
-            </button>
-          )
-        })}
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          </div>
+          <CommandList
+            ref={listScrollRef}
+            className="max-h-[240px] overflow-y-auto overscroll-contain"
+          >
+            {showListSkeleton ? (
+              <div className="space-y-0.5 p-1" aria-hidden>
+                {Array.from({ length: 5 }, (_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 rounded-sm px-2 py-1.5"
+                  >
+                    <Skeleton className="h-4 w-4 shrink-0 rounded-sm" />
+                    <Skeleton
+                      className="h-4 rounded-sm"
+                      style={{ width: `${55 + (index % 3) * 12}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <CommandEmpty>{t('No results found')}</CommandEmpty>
+                <CommandGroup>
+                  {showDefaultOption ? (
+                    <CommandItem
+                      value={`default ${t('Appwrite default')}`}
+                      onSelect={() => selectModel(DEFAULT_MODEL_ID)}
+                      className={cn('gap-2', itemClassName, !value && 'bg-accent/50')}
+                    >
+                      <img
+                        src="/icons/appwrite.svg"
+                        alt=""
+                        className={cn(
+                          'shrink-0',
+                          iconClassName,
+                          PUBLIC_ICON_MUTED_CLASSES,
+                        )}
+                      />
+                      <span className="min-w-0 flex-1 truncate">
+                        {t('Appwrite default')}
+                      </span>
+                      {!value ? (
+                        <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
+                      ) : null}
+                    </CommandItem>
+                  ) : null}
+
+                  {models.map((model) => {
+                    const selected = value === model.$id
+                    return (
+                      <CommandItem
+                        key={model.$id}
+                        value={`${model.$id} ${modelLabel(model)}`}
+                        onSelect={() => selectModel(model.$id)}
+                        className={cn(
+                          'gap-2',
+                          itemClassName,
+                          selected && 'bg-accent/50',
+                        )}
+                      >
+                        <ModelIcon
+                          providerId={model.provider}
+                          modelId={model.model}
+                          className={iconClassName}
+                        />
+                        <span className="min-w-0 flex-1 truncate">
+                          {modelLabel(model)}
+                        </span>
+                        {selected ? (
+                          <Check className="h-3.5 w-3.5 shrink-0 text-foreground" />
+                        ) : null}
+                      </CommandItem>
+                    )
+                  })}
+
+                  {hasNextPage ? (
+                    <div
+                      ref={sentinelRef}
+                      className="h-px w-full shrink-0"
+                      aria-hidden
+                    />
+                  ) : null}
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : null}
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
 
         {onManageModels ? (
-          <>
-            <div className="my-1 border-t border-border" />
+          <div className="shrink-0 border-t border-border p-1">
             <button
               type="button"
               className={cn(
@@ -227,7 +379,7 @@ export function AgentModelPicker({
               <Settings2 className={cn('shrink-0', iconClassName)} />
               {t('Manage models')}
             </button>
-          </>
+          </div>
         ) : null}
       </PopoverContent>
     </Popover>

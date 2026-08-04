@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronRight, Cpu, Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModelDrawer'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { getAssistantModelIconPath } from '@/lib/assistant/model-providers'
 import { analyticsAttrs } from '@/lib/analytics-actions'
@@ -10,6 +11,8 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
+  ASSISTANT_SETTINGS_PAGE_SIZE,
+  ASSISTANT_SETTINGS_PAGE_SIZE_OPTIONS,
   useAssistantModels,
   type AssistantModel,
 } from '@/lib/react-query/hooks'
@@ -35,15 +38,39 @@ function modelLabel(model: AssistantModel): string {
 export function Models() {
   const t = useT()
   const { isAuthenticated } = useAuth()
-  const { data: models = [], isLoading } = useAssistantModels({
-    enabled: isAuthenticated,
-  })
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ASSISTANT_SETTINGS_PAGE_SIZE)
   const [editor, setEditor] = useState<
     | { mode: 'closed' }
     | { mode: 'create' }
     | { mode: 'edit'; model: AssistantModel }
   >({ mode: 'closed' })
 
+  const {
+    data: requestedData,
+    isFetching: requestedFetching,
+  } = useAssistantModels(requestedPage - 1, pageSize, {
+    enabled: isAuthenticated,
+  })
+  const { data: displayedData, isLoading: displayedLoading } = useAssistantModels(
+    displayedPage - 1,
+    pageSize,
+    { enabled: isAuthenticated },
+  )
+
+  useEffect(() => {
+    if (
+      !requestedFetching &&
+      requestedPage !== displayedPage &&
+      requestedData
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [displayedPage, requestedData, requestedFetching, requestedPage])
+
+  const models = displayedData?.models ?? []
+  const total = displayedData?.total ?? 0
   const closeEditor = () => setEditor({ mode: 'closed' })
 
   return (
@@ -76,29 +103,29 @@ export function Models() {
           </Button>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          {!isAuthenticated ? (
+        {!isAuthenticated ? (
+          <div className="px-6 py-8">
             <EmptyState
               icon={Cpu}
               iconSize="md"
               title="Sign in to manage models."
               description="Add custom LLM providers and API keys for the Appwrite Agent."
               isEmpty
-              className="py-6"
             />
-          ) : isLoading && models.length === 0 ? (
-            <div className="flex items-center justify-center gap-1.5 py-8 text-[13px] text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {t('Loading...')}
-            </div>
-          ) : models.length === 0 ? (
+          </div>
+        ) : displayedLoading && models.length === 0 ? (
+          <div className="flex items-center justify-center gap-1.5 px-6 py-8 text-[13px] text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {t('Loading...')}
+          </div>
+        ) : total === 0 ? (
+          <div className="px-6 py-8">
             <EmptyState
               icon={Cpu}
               iconSize="md"
               title="No custom models"
               description="No custom models yet. The Appwrite default model is always available."
               isEmpty
-              className="py-6"
               action={
                 <Button
                   type="button"
@@ -112,15 +139,17 @@ export function Models() {
                 </Button>
               }
             />
-          ) : (
-            <ul className="overflow-hidden divide-y divide-border rounded-lg border border-border">
+          </div>
+        ) : (
+          <>
+            <ul className="divide-y divide-border">
               {models.map((model) => {
                 const enabled = model.enabled !== false
                 return (
                   <li key={model.$id}>
                     <button
                       type="button"
-                      className="flex w-full cursor-pointer items-center gap-3 rounded-none px-3 py-3 text-start transition-colors hover:bg-accent/50"
+                      className="flex w-full cursor-pointer items-center gap-3 px-6 py-4 text-start transition-colors hover:bg-accent/50"
                       onClick={() => setEditor({ mode: 'edit', model })}
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
@@ -142,8 +171,25 @@ export function Models() {
                 )
               })}
             </ul>
-          )}
-        </div>
+            <div className="border-t border-border px-6 py-2">
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={[...ASSISTANT_SETTINGS_PAGE_SIZE_OPTIONS]}
+                onPageChange={setRequestedPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setRequestedPage(1)
+                  setDisplayedPage(1)
+                }}
+                itemLabel="models"
+                scrollToTopOnPageChange={false}
+                className="py-0"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <AgentModelDrawer

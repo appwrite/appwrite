@@ -525,7 +525,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Voice input': 'קלט קולי',
   'Stop voice input': 'עצירת קלט קולי',
   'Listening...': 'מקשיבים...',
-  'Listening... Click the mic to stop': 'מקשיבים... לחצו על המיקרופון כדי לעצור',
+  'Listening... Say "send now" to submit':
+    'מקשיבים... אמרו "שלח עכשיו" כדי לשלוח',
+  'Sending soon. Cancel to keep editing':
+    'שולחים בקרוב. בטלו כדי להמשיך לערוך',
+  'Sending in': 'שולחים בעוד',
   'Microphone permission denied': 'הרשאת המיקרופון נדחתה',
   'Voice input is not supported in this browser':
     'קלט קולי אינו נתמך בדפדפן זה',
@@ -592,8 +596,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Title prefix (optional)': 'קידומת כותרת (אופציונלי)',
   'Weekly review': 'סקירה שבועית',
   'Manage models': 'ניהול מודלים',
+  'Search models...': 'חיפוש מודלים...',
   'Run this automation on its schedule.': 'הריצו את האוטומציה לפי לוח הזמנים שלה.',
   Models: 'מודלים',
+  models: 'מודלים',
+  memories: 'זיכרונות',
   'Add model': 'הוספת מודל',
   'Update model': 'עדכון מודל',
   'Add your own LLM providers and API keys for Agents.':
@@ -728,6 +735,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Previous image': 'התמונה הקודמת',
   Ready: 'מוכן',
   'Select values for placeholders': 'בחרו ערכים למצייני המיקום',
+  Confirm: 'אישור',
   'Some attachments failed to upload. Remove them and try again.':
     'חלק מהקבצים המצורפים לא הועלו. הסירו אותם ונסו שוב.',
   'Thinking...': 'חושב...',

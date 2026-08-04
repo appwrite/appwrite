@@ -24,6 +24,7 @@ const META_TOOLS = new Set([
   'appwrite_search_docs',
   'appwrite_list_tools',
   'console',
+  'clarify',
 ])
 
 const CREATE_VERBS = new Set(['create', 'add', 'insert', 'upload', 'new'])

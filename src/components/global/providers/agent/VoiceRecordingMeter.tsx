@@ -7,6 +7,9 @@ type VoiceRecordingMeterProps = {
   active: boolean
   /** Returns normalized 0–1 levels for each bar. Read from a ref so rAF stays cheap. */
   getLevels: () => number[]
+  /** Whole seconds left on the voice submit countdown, if armed. */
+  countdownSeconds?: number | null
+  onCancelCountdown?: () => void
   className?: string
 }
 
@@ -17,12 +20,15 @@ type VoiceRecordingMeterProps = {
 export function VoiceRecordingMeter({
   active,
   getLevels,
+  countdownSeconds = null,
+  onCancelCountdown,
   className,
 }: VoiceRecordingMeterProps) {
   const t = useT()
   const barsRef = useRef<Array<HTMLSpanElement | null>>([])
   const getLevelsRef = useRef(getLevels)
   getLevelsRef.current = getLevels
+  const countdownActive = countdownSeconds != null && countdownSeconds > 0
 
   useEffect(() => {
     if (!active) {
@@ -77,11 +83,25 @@ export function VoiceRecordingMeter({
       )}
       role="status"
       aria-live="polite"
-      aria-label={t('Listening...')}
+      aria-label={
+        countdownActive
+          ? `${t('Sending in')} ${countdownSeconds}`
+          : t('Listening...')
+      }
     >
       <span className="relative flex h-2 w-2 shrink-0">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/60 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+        <span
+          className={cn(
+            'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
+            countdownActive ? 'bg-primary/60' : 'bg-red-500/60',
+          )}
+        />
+        <span
+          className={cn(
+            'relative inline-flex h-2 w-2 rounded-full',
+            countdownActive ? 'bg-primary' : 'bg-red-500',
+          )}
+        />
       </span>
       <div
         className="flex h-7 flex-1 items-center justify-center gap-[2px]"
@@ -102,9 +122,26 @@ export function VoiceRecordingMeter({
           />
         ))}
       </div>
-      <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
-        {t('Listening...')}
-      </span>
+      {countdownActive ? (
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-[11px] font-medium tabular-nums text-foreground">
+            {t('Sending in')} {countdownSeconds}...
+          </span>
+          {onCancelCountdown ? (
+            <button
+              type="button"
+              onClick={onCancelCountdown}
+              className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {t('Cancel')}
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
+          {t('Listening...')}
+        </span>
+      )}
     </div>
   )
 }

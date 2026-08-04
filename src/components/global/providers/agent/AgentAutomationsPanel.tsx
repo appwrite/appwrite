@@ -29,6 +29,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
 import { AGENT_NEW_AUTOMATION_SHORTCUT_RAW } from '@/lib/assistant/agent-shortcuts'
 import {
   useAssistantAutomations,
@@ -56,10 +57,11 @@ export function AgentAutomationsPanel({
 }: AgentAutomationsPanelProps) {
   const t = useT()
   const { isMac } = usePlatform()
-  const newAutomationShortcutLabel = formatDisplayKeys(
+  const newAutomationShortcutKeys = formatDisplayKeys(
     AGENT_NEW_AUTOMATION_SHORTCUT_RAW,
     isMac,
-  ).join('')
+  )
+  const newAutomationShortcutLabel = newAutomationShortcutKeys.join('')
   const [automationSearch, setAutomationSearch] = useState('')
   const [debouncedAutomationSearch, setDebouncedAutomationSearch] = useState('')
   const { data: automations = [], isLoading } = useAssistantAutomations(
@@ -129,8 +131,8 @@ export function AgentAutomationsPanel({
         >
           <Plus className="h-3.5 w-3.5" />
           {t('Create automation')}
-          <kbd className="ms-0.5 hidden rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
-            {newAutomationShortcutLabel}
+          <kbd className="ms-0.5 hidden items-center rounded border border-border bg-muted/50 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
+            <ShortcutGlyphs keys={newAutomationShortcutKeys} />
           </kbd>
         </Button>
       </div>

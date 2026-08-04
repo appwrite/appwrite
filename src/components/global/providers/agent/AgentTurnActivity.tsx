@@ -22,6 +22,7 @@ import { captureExceptionWithContext } from '@/components/global/providers/Sentr
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { getToolVisualSites } from '@/lib/assistant/tool-sites'
+import { isClarifyToolName } from '@/lib/assistant/clarify-protocol'
 import { isConsoleToolName } from '@/lib/assistant/console-protocol'
 import {
   buildTurnView,
@@ -35,7 +36,10 @@ import {
 } from '@/lib/assistant/turn-view'
 
 function visibleTools(tools: TurnToolView[]): TurnToolView[] {
-  return tools.filter((tool) => !isConsoleToolName(tool.name))
+  return tools.filter(
+    (tool) =>
+      !isConsoleToolName(tool.name) && !isClarifyToolName(tool.name),
+  )
 }
 
 /** Avoid duplicate Sentry events when the same assistant error remounts. */

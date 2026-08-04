@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Brain, ChevronRight, Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AgentMemoryDrawer } from '@/components/global/providers/agent/AgentMemoryDrawer'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import {
+  ASSISTANT_SETTINGS_PAGE_SIZE,
+  ASSISTANT_SETTINGS_PAGE_SIZE_OPTIONS,
   useAssistantMemories,
   type AssistantMemory,
 } from '@/lib/react-query/hooks'
@@ -35,15 +38,38 @@ function memoryStatusLabel(
 export function Memory() {
   const t = useT()
   const { isAuthenticated } = useAuth()
-  const { data: memories = [], isLoading } = useAssistantMemories({
-    enabled: isAuthenticated,
-  })
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const [pageSize, setPageSize] = useState(ASSISTANT_SETTINGS_PAGE_SIZE)
   const [editor, setEditor] = useState<
     | { mode: 'closed' }
     | { mode: 'create' }
     | { mode: 'edit'; memory: AssistantMemory }
   >({ mode: 'closed' })
 
+  const {
+    data: requestedData,
+    isFetching: requestedFetching,
+  } = useAssistantMemories(requestedPage - 1, pageSize, {
+    enabled: isAuthenticated,
+  })
+  const { data: displayedData, isLoading: displayedLoading } =
+    useAssistantMemories(displayedPage - 1, pageSize, {
+      enabled: isAuthenticated,
+    })
+
+  useEffect(() => {
+    if (
+      !requestedFetching &&
+      requestedPage !== displayedPage &&
+      requestedData
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [displayedPage, requestedData, requestedFetching, requestedPage])
+
+  const memories = displayedData?.memories ?? []
+  const total = displayedData?.total ?? 0
   const closeEditor = () => setEditor({ mode: 'closed' })
 
   return (
@@ -76,29 +102,29 @@ export function Memory() {
           </Button>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          {!isAuthenticated ? (
+        {!isAuthenticated ? (
+          <div className="px-6 py-8">
             <EmptyState
               icon={Brain}
               iconSize="md"
               title="Sign in to manage memory."
               description="Preferences, instructions, and facts the Appwrite Agent can reuse across conversations."
               isEmpty
-              className="py-6"
             />
-          ) : isLoading && memories.length === 0 ? (
-            <div className="flex items-center justify-center gap-1.5 py-8 text-[13px] text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {t('Loading...')}
-            </div>
-          ) : memories.length === 0 ? (
+          </div>
+        ) : displayedLoading && memories.length === 0 ? (
+          <div className="flex items-center justify-center gap-1.5 px-6 py-8 text-[13px] text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {t('Loading...')}
+          </div>
+        ) : total === 0 ? (
+          <div className="px-6 py-8">
             <EmptyState
               icon={Brain}
               iconSize="md"
               title="No memories"
               description="Add preferences, instructions, or facts for the agent to remember."
               isEmpty
-              className="py-6"
               action={
                 <Button
                   type="button"
@@ -112,13 +138,15 @@ export function Memory() {
                 </Button>
               }
             />
-          ) : (
-            <ul className="overflow-hidden divide-y divide-border rounded-lg border border-border">
+          </div>
+        ) : (
+          <>
+            <ul className="divide-y divide-border">
               {memories.map((memory) => (
                 <li key={memory.$id}>
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-none px-3 py-3 text-start transition-colors hover:bg-accent/50"
+                    className="flex w-full cursor-pointer items-center gap-3 px-6 py-4 text-start transition-colors hover:bg-accent/50"
                     onClick={() => setEditor({ mode: 'edit', memory })}
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
@@ -132,10 +160,7 @@ export function Memory() {
                         <p className="truncate text-[13px] font-medium text-foreground">
                           {memory.key || memory.$id}
                         </p>
-                        <Badge
-                          variant="info"
-                          className="text-[10px] shrink-0"
-                        >
+                        <Badge variant="info" className="text-[10px] shrink-0">
                           {categoryLabel(memory.category, t)}
                         </Badge>
                       </div>
@@ -153,8 +178,25 @@ export function Memory() {
                 </li>
               ))}
             </ul>
-          )}
-        </div>
+            <div className="border-t border-border px-6 py-2">
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={[...ASSISTANT_SETTINGS_PAGE_SIZE_OPTIONS]}
+                onPageChange={setRequestedPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setRequestedPage(1)
+                  setDisplayedPage(1)
+                }}
+                itemLabel="memories"
+                scrollToTopOnPageChange={false}
+                className="py-0"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <AgentMemoryDrawer
