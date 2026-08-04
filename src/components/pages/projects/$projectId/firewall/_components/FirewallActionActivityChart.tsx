@@ -108,6 +108,7 @@ export function FirewallActionActivityChart({
                 <UsageChartYAxis
                   tickFormatter={yAxisTickFormatter}
                   width={ACTIVITY_CHART_Y_AXIS_WIDTH}
+                  allowDecimals={false}
                   domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.05) || 1]}
                 />
                 <Tooltip

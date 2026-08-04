@@ -416,6 +416,7 @@ export function UpdateRule({
                 action={action}
                 resourceType={resourceType}
                 resourceId={resourceId}
+                showActivity
               />
             </div>
           </div>

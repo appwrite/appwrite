@@ -50,6 +50,12 @@ interface RuleImpactPreviewProps {
   action: FirewallCreatableAction
   resourceType: FirewallResourceType
   resourceId?: string
+  /**
+   * Show the challenge activity section (solves / avg solve time). Only for
+   * existing rules — a rule being created has no history yet, so the create
+   * drawer leaves this off.
+   */
+  showActivity?: boolean
 }
 
 export function RuleImpactPreview({
@@ -57,6 +63,7 @@ export function RuleImpactPreview({
   action,
   resourceType,
   resourceId,
+  showActivity = false,
 }: RuleImpactPreviewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
@@ -146,11 +153,13 @@ export function RuleImpactPreview({
     rate: impact?.rate ?? 0,
   }
   const isChallenge = action === WafRuleAction.Challenge
-  // Only Site challenge rules show an activity section (solves / avg solve time):
-  // solves come from the browser HTML-navigation challenge, so they only apply
-  // to sites. Block actions are already represented by "Matched requests".
+  // Only Site challenge rules on an existing rule (update drawer) show an
+  // activity section (solves / avg solve time): solves come from the browser
+  // HTML-navigation challenge, so they only apply to sites, and a not-yet-created
+  // rule has no history. Block actions are already represented by "Matched
+  // requests".
   const activityConfig =
-    isChallenge && resourceType === 'sites'
+    showActivity && isChallenge && resourceType === 'sites'
       ? getFirewallActionMetric(action)
       : undefined
   const activity = previewUnavailable ? undefined : impact?.activity

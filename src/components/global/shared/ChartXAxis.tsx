@@ -117,6 +117,8 @@ type UsageChartYAxisProps = {
   domain?: YAxisProps['domain']
   width?: number
   tick?: YAxisProps['tick']
+  /** Force integer ticks — avoids duplicate labels on small count axes. */
+  allowDecimals?: boolean
 }
 
 /** Shared Y-axis for usage/overview time-series charts. */
@@ -125,6 +127,7 @@ export function UsageChartYAxis({
   domain,
   width = USAGE_CHART_Y_AXIS_WIDTH,
   tick,
+  allowDecimals,
 }: UsageChartYAxisProps) {
   const tickProps =
     typeof tick === 'object' && tick != null && !Array.isArray(tick)
@@ -137,6 +140,7 @@ export function UsageChartYAxis({
       tickLine={false}
       width={width}
       domain={domain}
+      allowDecimals={allowDecimals}
       tickFormatter={tickFormatter}
       tick={{
         fill: 'currentColor',
