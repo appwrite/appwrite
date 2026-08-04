@@ -146,9 +146,13 @@ export function RuleImpactPreview({
     rate: impact?.rate ?? 0,
   }
   const isChallenge = action === WafRuleAction.Challenge
-  // Only challenge rules show an activity section (solves / avg solve time); the
-  // block actions are already represented by "Matched requests".
-  const activityConfig = isChallenge ? getFirewallActionMetric(action) : undefined
+  // Only Site challenge rules show an activity section (solves / avg solve time):
+  // solves come from the browser HTML-navigation challenge, so they only apply
+  // to sites. Block actions are already represented by "Matched requests".
+  const activityConfig =
+    isChallenge && resourceType === 'sites'
+      ? getFirewallActionMetric(action)
+      : undefined
   const activity = previewUnavailable ? undefined : impact?.activity
   const showActivityPlaceholder =
     previewUnavailable || (isLoading && !impact) || !activity

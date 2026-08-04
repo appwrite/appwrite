@@ -451,13 +451,16 @@ export async function fetchFirewallRuleImpact(
     includeConditions: true,
   })
 
-  // Only challenge rules get an activity section: solves / avg solve time are a
-  // site-level signal not captured by "Matched requests". The block actions
-  // (denied / rateLimited / redirected) are already represented by matched
-  // traffic, so we don't fetch or show them here. Challenge scopes by resource
-  // ONLY — clearance is site-wide, so solves aren't tied to a path/condition.
-  const isChallenge = options.action === WafRuleAction.Challenge
-  const activityConfig = isChallenge
+  // Only Site challenge rules get an activity section: solves / avg solve time
+  // come from the browser HTML-navigation challenge, so they only apply to sites
+  // (not functions/api). The block actions (denied / rateLimited / redirected)
+  // are already represented by matched traffic, so we don't fetch or show them.
+  // Challenge scopes by resource ONLY — clearance is site-wide, so solves aren't
+  // tied to a path/condition.
+  const isSiteChallenge =
+    options.action === WafRuleAction.Challenge &&
+    options.resourceType === 'sites'
+  const activityConfig = isSiteChallenge
     ? getFirewallActionMetric(options.action)
     : undefined
   const activityMetrics = activityConfig
