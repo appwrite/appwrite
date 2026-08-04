@@ -53,6 +53,7 @@ import {
   ZoomIn,
   ZoomOut,
   ExternalLink,
+  Download,
   Maximize2,
   Settings,
 } from 'lucide-react'
@@ -92,7 +93,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { cn } from '@/lib/utils'
+import { cn, truncateMiddle } from '@/lib/utils'
 import {
   buildConsoleUrl,
   openInNewTab,
@@ -614,8 +615,28 @@ function formatAttachmentSize(size?: number): string | null {
   return `${value.toFixed(fractionDigits)} ${units[unitIndex]}`
 }
 
+/** Keep the extension visible when trimming long attachment names. */
+const ATTACHMENT_NAME_DISPLAY_MAX = 40
+
+function formatAttachmentDisplayName(name: string): string {
+  return truncateMiddle(name, ATTACHMENT_NAME_DISPLAY_MAX)
+}
+
 function getPreviewAspectClass(isPortrait: boolean): string {
   return isPortrait ? 'aspect-[9/16]' : 'aspect-video'
+}
+
+/** Raster images that can render in the attachment grid (not SVG / file cards). */
+function isGridPreviewableImage(attachment: {
+  isImage: boolean
+  previewUrl: string | null
+  mimeType: string
+  name: string
+}): boolean {
+  if (!attachment.isImage || !attachment.previewUrl) return false
+  if (attachment.mimeType === 'image/svg+xml') return false
+  if (attachment.name.toLowerCase().endsWith('.svg')) return false
+  return true
 }
 
 function isRtlMessageText(text: string): boolean {
@@ -690,16 +711,10 @@ function MessageAttachments({
                 output: avifSupported ? ImageFormat.Avif : undefined,
               })
             : null,
-          openUrl: file?.mimeType?.startsWith('image/')
-            ? sdk.forConsole.storage.getFilePreview({
-                bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
-                fileId,
-                height: 900,
-              })
-            : sdk.forConsole.storage.getFileDownload({
-                bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
-                fileId,
-              }),
+          openUrl: sdk.forConsole.storage.getFileView({
+            bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
+            fileId,
+          }),
           downloadUrl: sdk.forConsole.storage.getFileDownload({
             bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
             fileId,
@@ -709,18 +724,11 @@ function MessageAttachments({
     [filesById, uniqueAttachmentIds, avifSupported],
   )
   const imageAttachments = useMemo(
-    () =>
-      attachments.filter(
-        (attachment) =>
-          attachment.isImage &&
-          attachment.previewUrl &&
-          attachment.mimeType !== 'image/svg+xml' &&
-          !attachment.name.toLowerCase().endsWith('.svg'),
-      ),
+    () => attachments.filter(isGridPreviewableImage),
     [attachments],
   )
   const fileAttachments = useMemo(
-    () => attachments.filter((attachment) => !attachment.isImage),
+    () => attachments.filter((attachment) => !isGridPreviewableImage(attachment)),
     [attachments],
   )
   const visibleImages = useMemo(
@@ -925,11 +933,14 @@ function MessageAttachments({
     <>
       <div
         className={cn(
-          'mt-2 flex',
+          // Keep a readable width under `items-end` / `items-start` parents.
+          // Those align modes shrink-wrap children; truncated file rows then
+          // collapse to icon-only while images still expand via intrinsic size.
+          'mt-2 flex w-full min-w-[min(100%,16rem)] max-w-full self-stretch',
           alignment === 'right' ? 'justify-end' : 'justify-start',
         )}
       >
-        <div className="w-full max-w-[88%] space-y-2">
+        <div className="w-full min-w-0 space-y-2">
           {visibleImages.length > 0 ? (
             <div
               className={cn(
@@ -1027,16 +1038,20 @@ function MessageAttachments({
             >
               {fileAttachments.map((attachment) => {
                 const fileSize = formatAttachmentSize(attachment.size)
+                const displayName = formatAttachmentDisplayName(attachment.name)
                 return (
                   <div
                     key={attachment.id}
-                    className="rounded-lg border border-border bg-card/60 px-2.5 py-2"
+                    className="min-w-0 max-w-full rounded-lg border border-border bg-card px-2.5 py-2"
                   >
                     <div className="flex items-center gap-1.5">
                       <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12px] font-medium text-foreground">
-                          {attachment.name}
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <p
+                          className="truncate text-[12px] font-medium text-foreground"
+                          title={attachment.name}
+                        >
+                          {displayName}
                         </p>
                         <p className="truncate text-[10px] text-muted-foreground">
                           {attachment.mimeType || t('File')}
@@ -1048,7 +1063,7 @@ function MessageAttachments({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
                       >
                         <a
                           href={attachment.openUrl}
@@ -1057,6 +1072,21 @@ function MessageAttachments({
                           aria-label={`${t('Open')} ${attachment.name}`}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
+                      <Button
+                        asChild
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+                      >
+                        <a
+                          href={attachment.downloadUrl}
+                          download={attachment.name}
+                          aria-label={`${t('Download')} ${attachment.name}`}
+                        >
+                          <Download className="h-3.5 w-3.5" />
                         </a>
                       </Button>
                     </div>
@@ -1118,6 +1148,21 @@ function MessageAttachments({
                   aria-label={`${t('Open')} ${activeFullscreenAttachment.name}`}
                 >
                   <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button
+                asChild
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                <a
+                  href={activeFullscreenAttachment.downloadUrl}
+                  download={activeFullscreenAttachment.name}
+                  aria-label={`${t('Download')} ${activeFullscreenAttachment.name}`}
+                >
+                  <Download className="h-4 w-4" />
                 </a>
               </Button>
               <div className="mx-1 h-4 w-px bg-border" />
@@ -1352,14 +1397,16 @@ const AssistantMessageRow = memo(
                 alignRight ? 'items-end' : 'items-start',
               )}
             >
-              <div
-                dir={isRtlMessage ? 'rtl' : 'ltr'}
-                className={cn(
-                  'inline-block max-w-full cursor-default rounded-lg bg-primary px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
-                )}
-              >
-                {messageText}
-              </div>
+              {messageText ? (
+                <div
+                  dir={isRtlMessage ? 'rtl' : 'ltr'}
+                  className={cn(
+                    'inline-block max-w-full cursor-default rounded-lg bg-primary px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap text-primary-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
+                  )}
+                >
+                  {messageText}
+                </div>
+              ) : null}
               <MessageAttachments
                 attachmentIds={messageAttachments}
                 alignment={attachmentsAlignment}
@@ -2925,6 +2972,14 @@ export function AgentPanelContent({
   const hasUploadingAttachments = pendingAttachments.some(
     (attachment) => attachment.status === 'uploading',
   )
+  const hasReadyComposerAttachments =
+    pendingAttachments.some((attachment) => attachment.status === 'ready') ||
+    editingMessageAttachments.length > 0 ||
+    restoredQueueAttachmentIds.length > 0
+  const canSendComposerContent =
+    input.trim().length > 0 ||
+    hasReadyComposerAttachments ||
+    hasUploadingAttachments
   const orderedPendingAttachments = useMemo(
     () => [...pendingAttachments].reverse(),
     [pendingAttachments],
@@ -3727,7 +3782,7 @@ export function AgentPanelContent({
       editingId?: string | null
     }) => {
       const trimmed = content.trim()
-      if (!trimmed) return false
+      if (!trimmed && attachmentIds.length === 0) return false
 
       const conversationProjectId = await resolveConversationProjectId()
       if (!activeConversationId && !conversationProjectId) {
@@ -3760,7 +3815,7 @@ export function AgentPanelContent({
           const createdConversation =
             await createConversationMutation.mutateAsync({
               projectId: conversationProjectId,
-              title: makeConversationTitle(trimmed),
+              title: makeConversationTitle(trimmed || 'Attachment'),
               modelId: selectedModelId || undefined,
               modelTemp: resolveModelTempForSelection(selectedModelId),
             })
@@ -3860,7 +3915,7 @@ export function AgentPanelContent({
   const enqueueComposerMessage = useCallback(
     (content: string, attachmentIds: string[]) => {
       const trimmed = content.trim()
-      if (!trimmed) return
+      if (!trimmed && attachmentIds.length === 0) return
 
       const queued: QueuedComposerMessage = {
         id:
@@ -3912,8 +3967,15 @@ export function AgentPanelContent({
   const handleSend = async (content: string = input) => {
     if (interactionsDisabled) return
     const trimmed = content.trim()
+    const hasPendingOrEditingAttachments =
+      pendingAttachmentsRef.current.some(
+        (attachment) =>
+          attachment.status === 'uploading' || attachment.status === 'ready',
+      ) ||
+      editingMessageAttachments.length > 0 ||
+      restoredQueueAttachmentIds.length > 0
     if (
-      !trimmed ||
+      (!trimmed && !hasPendingOrEditingAttachments) ||
       createMessageMutation.isPending ||
       updateMessageMutation.isPending ||
       isWaitingForAttachments
@@ -5368,6 +5430,7 @@ export function AgentPanelContent({
                     if (
                       !isUserMessage &&
                       !messageText.trim() &&
+                      messageAttachments.length === 0 &&
                       !isLiveAssistant &&
                       !hasTurnChrome
                     ) {
@@ -5519,6 +5582,8 @@ export function AgentPanelContent({
                     const attachmentName =
                       attachmentFile?.name ||
                       `${t('Attachment')} ${attachmentId.slice(0, 8)}`
+                    const attachmentDisplayName =
+                      formatAttachmentDisplayName(attachmentName)
                     const isImageAttachment =
                       attachmentFile?.mimeType?.startsWith('image/')
                     const attachmentSize =
@@ -5574,8 +5639,11 @@ export function AgentPanelContent({
                         )}
                         <div className="flex items-start gap-1.5">
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[11px] font-medium text-foreground">
-                              {attachmentName}
+                            <p
+                              className="truncate text-[11px] font-medium text-foreground"
+                              title={attachmentName}
+                            >
+                              {attachmentDisplayName}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
                               {attachmentSize ?? t('Ready')}
@@ -5741,8 +5809,11 @@ export function AgentPanelContent({
                           )}
                           <div className="flex items-start gap-1.5">
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-[11px] font-medium text-foreground">
-                                {attachment.name}
+                              <p
+                                className="truncate text-[11px] font-medium text-foreground"
+                                title={attachment.name}
+                              >
+                                {formatAttachmentDisplayName(attachment.name)}
                               </p>
                               <p className="text-[10px] text-muted-foreground">
                                 {attachment.status === 'uploading'
@@ -5919,7 +5990,7 @@ export function AgentPanelContent({
                   onClick={() => void handleSend()}
                   disabled={
                     interactionsDisabled ||
-                    !input.trim() ||
+                    !canSendComposerContent ||
                     isWaitingForAttachments ||
                     Boolean(editingMessageId && isConversationRunning) ||
                     (!isConversationRunning && !canSendWhileIdle)
@@ -5927,7 +5998,7 @@ export function AgentPanelContent({
                   className={cn(
                     'mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
                     !interactionsDisabled &&
-                      input.trim() &&
+                      canSendComposerContent &&
                       !isWaitingForAttachments &&
                       !(editingMessageId && isConversationRunning) &&
                       (isConversationRunning || canSendWhileIdle)

@@ -965,20 +965,33 @@ export function View() {
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  asChild
-                  aria-label={t('Back to functions')}
-                >
-                  <Link
-                    to="/projects/$projectId/functions"
-                    params={{ projectId: projectId! }}
+                {projectId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    asChild
+                    aria-label={t('Back to functions')}
+                  >
+                    <Link
+                      to="/projects/$projectId/functions"
+                      params={{ projectId }}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    aria-label={t('Back to functions')}
+                    onClick={() => window.history.back()}
                   >
                     <ArrowLeft className="h-4 w-4" />
-                  </Link>
-                </Button>
+                  </Button>
+                )}
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>{t('Back to functions')}</p>

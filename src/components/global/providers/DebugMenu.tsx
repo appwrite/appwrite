@@ -33,6 +33,7 @@ import {
   MessageSquareQuote,
   Variable,
   Mail,
+  Code2,
 } from 'lucide-react'
 import {
   Popover,
@@ -220,17 +221,26 @@ function isFeatureFlagOverridden(item: MenuItem): boolean {
   )
 }
 
+function matchesMenuItemSearch(item: MenuItem, query: string): boolean {
+  const trimmed = query.trim()
+  if (!trimmed) return true
+
+  const q = trimmed.toLowerCase()
+  if (item.label.toLowerCase().includes(q)) return true
+  if (item.description?.toLowerCase().includes(q)) return true
+  if (item.category?.toLowerCase().includes(q)) return true
+  if (item.submenu?.some((child) => matchesMenuItemSearch(child, query))) {
+    return true
+  }
+  return false
+}
+
 function matchesFeatureFlagSearch(item: MenuItem, query: string): boolean {
   const trimmed = query.trim()
   if (!trimmed) return true
   if (item.label === 'Reset all feature flags') return true
 
-  const q = trimmed.toLowerCase()
-  return (
-    item.label.toLowerCase().includes(q) ||
-    (item.description?.toLowerCase().includes(q) ?? false) ||
-    (item.category?.toLowerCase().includes(q) ?? false)
-  )
+  return matchesMenuItemSearch(item, query)
 }
 
 function filterFeatureFlagMenuItems(
@@ -239,6 +249,19 @@ function filterFeatureFlagMenuItems(
 ): MenuItem[] {
   if (!query.trim()) return items
   return items.filter((item) => matchesFeatureFlagSearch(item, query))
+}
+
+function filterMenuSections(
+  sections: MenuSection[],
+  query: string,
+): MenuSection[] {
+  if (!query.trim()) return sections
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => matchesMenuItemSearch(item, query)),
+    }))
+    .filter((section) => section.items.length > 0)
 }
 
 function groupFeatureFlagMenuItems(items: MenuItem[]): Array<{
@@ -274,13 +297,33 @@ function groupFeatureFlagMenuItems(items: MenuItem[]): Array<{
   return groups
 }
 
-function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
+function DebugMenuSwitchRow({
+  item,
+  id,
+  highlighted = false,
+  navIndex,
+  onHighlight,
+}: {
+  item: MenuItem
+  id?: string
+  highlighted?: boolean
+  navIndex?: number
+  onHighlight?: () => void
+}) {
   const showReset = isFeatureFlagOverridden(item)
 
   return (
     <div
+      id={id}
+      role="option"
+      aria-selected={highlighted}
+      data-debug-nav-index={navIndex}
+      onMouseEnter={onHighlight}
       className={cn(
-        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
+        'flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors',
+        highlighted
+          ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+          : 'hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_10%,transparent)]',
         item.disabled && 'opacity-50',
         item.rowClassName,
       )}
@@ -311,6 +354,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
                 onClick={() => item.onResetToDefault?.()}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--network-globe-edge)]/80 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_15%,transparent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40"
                 aria-label={`Reset ${item.label} to default`}
+                tabIndex={-1}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
@@ -323,9 +367,32 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
           onCheckedChange={item.switchOnChange}
           disabled={item.disabled}
           className="flex-shrink-0"
+          tabIndex={-1}
         />
       </div>
     </div>
+  )
+}
+
+function debugMenuItemRowClassName({
+  disabled,
+  active,
+  highlighted,
+  rowClassName,
+}: {
+  disabled?: boolean
+  active?: boolean
+  highlighted?: boolean
+  rowClassName?: string
+}) {
+  return cn(
+    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40',
+    disabled
+      ? 'cursor-not-allowed opacity-50'
+      : highlighted || active
+        ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
+        : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground',
+    rowClassName,
   )
 }
 
@@ -335,6 +402,12 @@ function renderDebugSubmenuItemRow(
   keyPrefix: string,
   nestedSubmenuParentKey: string | null,
   setActiveSubmenu: (key: string | null) => void,
+  options?: {
+    id?: string
+    highlighted?: boolean
+    navIndex?: number
+    onHighlight?: () => void
+  },
 ) {
   const nestedSubmenuKey = nestedSubmenuParentKey
     ? `${nestedSubmenuParentKey}-${item.label}`
@@ -343,13 +416,28 @@ function renderDebugSubmenuItemRow(
   const key = `${keyPrefix}-${itemIndex}`
 
   if (item.variant === 'switch') {
-    return <DebugMenuSwitchRow key={key} item={item} />
+    return (
+      <DebugMenuSwitchRow
+        key={key}
+        item={item}
+        id={options?.id}
+        highlighted={options?.highlighted}
+        navIndex={options?.navIndex}
+        onHighlight={options?.onHighlight}
+      />
+    )
   }
 
   return (
     <button
       key={key}
+      id={options?.id}
       type="button"
+      role="option"
+      aria-selected={options?.highlighted ?? false}
+      data-debug-nav-index={options?.navIndex}
+      tabIndex={-1}
+      onMouseEnter={options?.onHighlight}
       onClick={() => {
         if (hasNestedSubmenu && nestedSubmenuKey) {
           setActiveSubmenu(nestedSubmenuKey)
@@ -358,13 +446,12 @@ function renderDebugSubmenuItemRow(
         }
       }}
       disabled={item.disabled}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
-        item.disabled
-          ? 'cursor-not-allowed opacity-50'
-          : item.active
-            ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
-            : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
-      } ${item.rowClassName ?? ''}`}
+      className={debugMenuItemRowClassName({
+        disabled: item.disabled,
+        active: item.active,
+        highlighted: options?.highlighted,
+        rowClassName: item.rowClassName,
+      })}
     >
       {item.icon && (
         <span className="flex-shrink-0 text-[var(--network-globe-edge)]">{item.icon}</span>
@@ -389,6 +476,29 @@ function renderDebugSubmenuItemRow(
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-[var(--network-globe-edge)]/60" />
       )}
     </button>
+  )
+}
+
+type DebugNavigableEntry = {
+  id: string
+  item: MenuItem
+  /** Key used when opening this item's submenu. */
+  submenuKey: string | null
+}
+
+function isDebugPanelSubmenuVariant(
+  variant: MenuItem['submenuVariant'] | undefined,
+): boolean {
+  return (
+    variant === 'profileComparison' ||
+    variant === 'communityShareExamples' ||
+    variant === 'prefsDebug' ||
+    variant === 'initDayMock' ||
+    variant === 'initTicketMock' ||
+    variant === 'seedResources' ||
+    variant === 'terminalSettings' ||
+    variant === 'recentResources' ||
+    variant === 'envStatus'
   )
 }
 
@@ -686,7 +796,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [menuSearch, setMenuSearch] = useState('')
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const menuListRef = useRef<HTMLDivElement>(null)
   const languageCopy = DEBUG_MENU_LANGUAGE_COPY
   const { profileId, features } = useConsoleProfile()
   const {
@@ -855,11 +969,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return () => clearInterval(interval)
   }, [getCurrentFavicon, isOpen])
 
-  // Reset submenu when popover closes
+  // Reset submenu and search when popover closes
   useEffect(() => {
     if (!isOpen) {
       setActiveSubmenu(null)
+      setMenuSearch('')
       setFeatureFlagsSearch('')
+      setHighlightedIndex(-1)
     }
   }, [isOpen])
 
@@ -1423,6 +1539,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setIsOpen(false)
                 },
                 icon: <Mail className="h-3 w-3" />,
+              },
+              {
+                label: 'Functions editor',
+                description: 'Preview the Functions local editor.',
+                onClick: () => {
+                  navigate({ to: '/debug/code-editor-preview' })
+                  setIsOpen(false)
+                },
+                icon: <Code2 className="h-3 w-3" />,
               },
               {
                 label: 'Community support',
@@ -2027,7 +2152,16 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     [activeSubmenu, sections],
   )
 
+  const filteredSections = useMemo(
+    () => filterMenuSections(sections, menuSearch),
+    [sections, menuSearch],
+  )
+
   const isFeatureFlagsSubmenu = currentSubmenu?.title === 'Flags'
+  const isPanelSubmenu = isDebugPanelSubmenuVariant(
+    currentSubmenu?.submenuVariant,
+  )
+  const hasSearchField = !currentSubmenu || isFeatureFlagsSubmenu
 
   const filteredFeatureFlagItems = useMemo(() => {
     if (!isFeatureFlagsSubmenu || !currentSubmenu) return []
@@ -2039,11 +2173,244 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     return groupFeatureFlagMenuItems(filteredFeatureFlagItems)
   }, [filteredFeatureFlagItems, isFeatureFlagsSubmenu])
 
+  const navigableItems = useMemo((): DebugNavigableEntry[] => {
+    if (!currentSubmenu) {
+      return filteredSections.flatMap((section) =>
+        section.items.map((item) => ({
+          id: `root__${section.title}__${item.label}`,
+          item,
+          submenuKey: menuItemHasSubmenu(item)
+            ? `${section.title}-${item.label}`
+            : null,
+        })),
+      )
+    }
+
+    if (isPanelSubmenu) return []
+
+    if (isFeatureFlagsSubmenu) {
+      return filteredFeatureFlagItems.map((item) => ({
+        id: `flags__${item.category ?? 'general'}__${item.label}`,
+        item,
+        submenuKey: null,
+      }))
+    }
+
+    return currentSubmenu.items.map((item) => ({
+      id: `submenu__${activeSubmenu}__${item.label}`,
+      item,
+      submenuKey:
+        menuItemHasSubmenu(item) && activeSubmenu
+          ? `${activeSubmenu}-${item.label}`
+          : null,
+    }))
+  }, [
+    activeSubmenu,
+    currentSubmenu,
+    filteredFeatureFlagItems,
+    filteredSections,
+    isFeatureFlagsSubmenu,
+    isPanelSubmenu,
+  ])
+
+  const navigableIndexById = useMemo(() => {
+    const map = new Map<string, number>()
+    navigableItems.forEach((entry, index) => {
+      map.set(entry.id, index)
+    })
+    return map
+  }, [navigableItems])
+
+  const navigableIdsKey = useMemo(
+    () => navigableItems.map((entry) => entry.id).join('\0'),
+    [navigableItems],
+  )
+
   useEffect(() => {
     if (!isFeatureFlagsSubmenu) {
       setFeatureFlagsSearch('')
     }
   }, [isFeatureFlagsSubmenu])
+
+  useEffect(() => {
+    setHighlightedIndex(navigableItems.length > 0 ? 0 : -1)
+  }, [navigableIdsKey, navigableItems.length])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      if (hasSearchField) {
+        searchInputRef.current?.focus()
+        return
+      }
+      if (!isPanelSubmenu) {
+        menuListRef.current?.focus()
+      }
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [isOpen, activeSubmenu, hasSearchField, isPanelSubmenu])
+
+  useEffect(() => {
+    if (highlightedIndex < 0) return
+    const root = menuListRef.current
+    if (!root) return
+    const el = root.querySelector<HTMLElement>(
+      `[data-debug-nav-index="${highlightedIndex}"]`,
+    )
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [highlightedIndex, navigableIdsKey])
+
+  const activateNavigableEntry = useCallback(
+    (entry: DebugNavigableEntry) => {
+      const { item, submenuKey } = entry
+      if (item.disabled) return
+
+      if (item.variant === 'switch') {
+        item.switchOnChange?.(!item.switchValue)
+        return
+      }
+
+      if (submenuKey && menuItemHasSubmenu(item)) {
+        setActiveSubmenu(submenuKey)
+        return
+      }
+
+      item.onClick?.()
+    },
+    [],
+  )
+
+  const handleMenuKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isEditableTarget =
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'INPUT' ||
+        Boolean(target?.isContentEditable)
+
+      // Panel UIs (prefs, env, etc.) keep native typing; Escape still navigates back.
+      if (
+        isPanelSubmenu &&
+        isEditableTarget &&
+        target !== searchInputRef.current &&
+        event.key !== 'Escape'
+      ) {
+        return
+      }
+
+      const moveHighlight = (delta: number) => {
+        if (navigableItems.length === 0) return
+        event.preventDefault()
+        setHighlightedIndex((prev) => {
+          const start = prev < 0 ? (delta > 0 ? -1 : 0) : prev
+          const next =
+            (start + delta + navigableItems.length) % navigableItems.length
+          return next
+        })
+      }
+
+      switch (event.key) {
+        case 'ArrowDown':
+          moveHighlight(1)
+          break
+        case 'ArrowUp':
+          moveHighlight(-1)
+          break
+        case 'Home':
+          if (target === searchInputRef.current) return
+          if (navigableItems.length === 0) return
+          event.preventDefault()
+          setHighlightedIndex(0)
+          break
+        case 'End':
+          if (target === searchInputRef.current) return
+          if (navigableItems.length === 0) return
+          event.preventDefault()
+          setHighlightedIndex(navigableItems.length - 1)
+          break
+        case 'ArrowRight': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry || !entry.submenuKey || !menuItemHasSubmenu(entry.item)) {
+            return
+          }
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        case 'ArrowLeft': {
+          if (!currentSubmenu) return
+          // Don't steal caret movement while editing search text.
+          if (
+            target === searchInputRef.current &&
+            (searchInputRef.current?.value.length ?? 0) > 0
+          ) {
+            return
+          }
+          event.preventDefault()
+          setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+          break
+        }
+        case 'Backspace': {
+          if (target !== searchInputRef.current) return
+          if ((searchInputRef.current?.value.length ?? 0) > 0) return
+          if (!currentSubmenu) return
+          event.preventDefault()
+          setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+          break
+        }
+        case 'Enter': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry) return
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        case ' ': {
+          const entry = navigableItems[highlightedIndex]
+          if (!entry || entry.item.variant !== 'switch') return
+          // Keep Space typing in the search field.
+          if (target === searchInputRef.current) return
+          event.preventDefault()
+          activateNavigableEntry(entry)
+          break
+        }
+        default:
+          break
+      }
+    },
+    [
+      activateNavigableEntry,
+      currentSubmenu,
+      highlightedIndex,
+      isPanelSubmenu,
+      navigableItems,
+    ],
+  )
+
+  const handleEscapeKeyDown = useCallback(
+    (event: Event) => {
+      if (isFeatureFlagsSubmenu && featureFlagsSearch) {
+        event.preventDefault()
+        setFeatureFlagsSearch('')
+        return
+      }
+      if (!currentSubmenu && menuSearch) {
+        event.preventDefault()
+        setMenuSearch('')
+        return
+      }
+      if (currentSubmenu) {
+        event.preventDefault()
+        setActiveSubmenu(currentSubmenu.parentSubmenuKey)
+      }
+    },
+    [
+      currentSubmenu,
+      featureFlagsSearch,
+      isFeatureFlagsSubmenu,
+      menuSearch,
+    ],
+  )
 
   if (!isVisible) return null
 
@@ -2136,6 +2503,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           onWheelCapture={(event) => {
             event.stopPropagation()
           }}
+          onKeyDown={handleMenuKeyDown}
+          onEscapeKeyDown={handleEscapeKeyDown}
         >
           <div className="shrink-0 border-b border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-popover/95 backdrop-blur-sm">
             <div className="px-4 py-3">
@@ -2172,23 +2541,53 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 </Tooltip>
               </div>
             </div>
-            {isFeatureFlagsSubmenu ? (
+            {!currentSubmenu || isFeatureFlagsSubmenu ? (
               <div className="px-4 pb-3">
                 <div className="relative">
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--network-globe-edge)]/60" />
                   <Input
+                    ref={searchInputRef}
                     autoFocus
-                    value={featureFlagsSearch}
-                    onChange={(event) =>
-                      setFeatureFlagsSearch(event.target.value)
+                    role="combobox"
+                    aria-expanded
+                    aria-controls="debug-menu-listbox"
+                    aria-autocomplete="list"
+                    aria-activedescendant={
+                      highlightedIndex >= 0 && navigableItems[highlightedIndex]
+                        ? navigableItems[highlightedIndex].id
+                        : undefined
                     }
-                    placeholder="Search flags..."
+                    value={
+                      isFeatureFlagsSubmenu ? featureFlagsSearch : menuSearch
+                    }
+                    onChange={(event) => {
+                      if (isFeatureFlagsSubmenu) {
+                        setFeatureFlagsSearch(event.target.value)
+                      } else {
+                        setMenuSearch(event.target.value)
+                      }
+                    }}
+                    placeholder={
+                      isFeatureFlagsSubmenu
+                        ? 'Search flags...'
+                        : 'Search menu...'
+                    }
                     className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
                   />
-                  {featureFlagsSearch ? (
+                  {(isFeatureFlagsSubmenu
+                    ? featureFlagsSearch
+                    : menuSearch) ? (
                     <button
                       type="button"
-                      onClick={() => setFeatureFlagsSearch('')}
+                      tabIndex={-1}
+                      onClick={() => {
+                        if (isFeatureFlagsSubmenu) {
+                          setFeatureFlagsSearch('')
+                        } else {
+                          setMenuSearch('')
+                        }
+                        searchInputRef.current?.focus()
+                      }}
                       className="absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-[var(--network-globe-edge)]/70 transition-colors hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
                       aria-label="Clear search"
                     >
@@ -2200,7 +2599,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             ) : null}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
+          <div
+            ref={menuListRef}
+            id="debug-menu-listbox"
+            role="listbox"
+            tabIndex={hasSearchField ? -1 : 0}
+            aria-label={currentSubmenu ? currentSubmenu.title : 'Debug options'}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 outline-none"
+          >
             {currentSubmenu ? (
               currentSubmenu.submenuVariant === 'profileComparison' ? (
                 <div className="px-1" aria-label={currentSubmenu.title}>
@@ -2225,10 +2631,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ) : currentSubmenu.submenuVariant === 'envStatus' ? (
                 <DebugMenuEnvPanel />
               ) : (
-                <nav
-                  className="space-y-0.5"
-                  aria-label={currentSubmenu.title}
-                >
+                <div className="space-y-0.5">
                   {isFeatureFlagsSubmenu &&
                   featureFlagsSearch.trim() &&
                   filteredFeatureFlagItems.every(
@@ -2251,31 +2654,56 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               {group.category}
                             </div>
                           ) : null}
-                          {group.items.map((item, itemIndex) =>
-                            renderDebugSubmenuItemRow(
+                          {group.items.map((item, itemIndex) => {
+                            const entryId = `flags__${item.category ?? 'general'}__${item.label}`
+                            const navIndex = navigableIndexById.get(entryId) ?? -1
+                            return renderDebugSubmenuItemRow(
                               item,
                               itemIndex,
                               `feature-flag-${groupIndex}`,
                               activeSubmenu,
                               setActiveSubmenu,
-                            ),
-                          )}
+                              {
+                                id: entryId,
+                                navIndex,
+                                highlighted: navIndex === highlightedIndex,
+                                onHighlight: () => {
+                                  if (navIndex >= 0) setHighlightedIndex(navIndex)
+                                },
+                              },
+                            )
+                          })}
                         </div>
                       ))
-                    : currentSubmenu.items.map((item, itemIndex) =>
-                        renderDebugSubmenuItemRow(
+                    : currentSubmenu.items.map((item, itemIndex) => {
+                        const entryId = `submenu__${activeSubmenu}__${item.label}`
+                        const navIndex = navigableIndexById.get(entryId) ?? -1
+                        return renderDebugSubmenuItemRow(
                           item,
                           itemIndex,
                           'submenu',
                           activeSubmenu,
                           setActiveSubmenu,
-                        ),
-                      )}
-                </nav>
+                          {
+                            id: entryId,
+                            navIndex,
+                            highlighted: navIndex === highlightedIndex,
+                            onHighlight: () => {
+                              if (navIndex >= 0) setHighlightedIndex(navIndex)
+                            },
+                          },
+                        )
+                      })}
+                </div>
               )
             ) : (
-              <nav className="space-y-5" aria-label="Debug options">
-                {sections.map((section) => (
+              <div className="space-y-5">
+                {menuSearch.trim() && filteredSections.length === 0 ? (
+                  <p className="px-3 py-2 text-[11px] text-[var(--network-globe-edge)]/70">
+                    No matching items
+                  </p>
+                ) : null}
+                {filteredSections.map((section) => (
                   <div key={section.title}>
                     <div className="mb-2 flex items-center gap-2 px-1">
                       <span className="text-[var(--network-globe-edge)]">{section.icon}</span>
@@ -2285,11 +2713,22 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     </div>
                     <div className="space-y-0.5">
                       {section.items.map((item, itemIndex) => {
+                        const entryId = `root__${section.title}__${item.label}`
+                        const navIndex = navigableIndexById.get(entryId) ?? -1
+                        const highlighted = navIndex === highlightedIndex
+                        const onHighlight = () => {
+                          if (navIndex >= 0) setHighlightedIndex(navIndex)
+                        }
+
                         if (item.variant === 'switch') {
                           return (
                             <DebugMenuSwitchRow
                               key={`${section.title}-${itemIndex}`}
                               item={item}
+                              id={entryId}
+                              navIndex={navIndex}
+                              highlighted={highlighted}
+                              onHighlight={onHighlight}
                             />
                           )
                         }
@@ -2300,7 +2739,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         return (
                           <button
                             key={`${section.title}-${itemIndex}`}
+                            id={entryId}
                             type="button"
+                            role="option"
+                            aria-selected={highlighted}
+                            data-debug-nav-index={navIndex}
+                            tabIndex={-1}
+                            onMouseEnter={onHighlight}
                             onClick={(e) => {
                               e.stopPropagation()
                               if (hasSubmenu) {
@@ -2309,11 +2754,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                                 item.onClick()
                               }
                             }}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--network-globe-edge)]/40 ${
-                              item.active
-                                ? 'bg-[color-mix(in_srgb,var(--network-globe-edge)_18%,var(--muted))] text-foreground'
-                                : 'text-foreground/90 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground'
-                            }`}
+                            className={debugMenuItemRowClassName({
+                              active: item.active,
+                              highlighted,
+                            })}
                           >
                             {item.icon && (
                               <span className="flex-shrink-0 text-[var(--network-globe-edge)]">
@@ -2347,7 +2791,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                     </div>
                   </div>
                 ))}
-              </nav>
+              </div>
             )}
           </div>
         </PopoverContent>
