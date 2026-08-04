@@ -229,11 +229,7 @@ export function AppwriteProviderSetup({
             disabled={isBusy || !appName.trim()}
             onClick={() => void handleCreate()}
           >
-            {isBusy ? (
-              <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Plus className="me-1.5 h-3.5 w-3.5" />
-            )}
+            <Plus className="me-1.5 h-3.5 w-3.5" />
             {t('Create and fill credentials')}
           </Button>
         </TabsContent>
@@ -293,9 +289,6 @@ export function AppwriteProviderSetup({
                 disabled={isBusy || !selectedAppId}
                 onClick={() => void handleSelect()}
               >
-                {isBusy ? (
-                  <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : null}
                 {t('Use app and fill credentials')}
               </Button>
             </>

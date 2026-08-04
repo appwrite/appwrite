@@ -563,7 +563,7 @@ function InvoiceRow({
               disabled={!orgId || rowBusy}
             >
               <ShieldCheck className="h-3.5 w-3.5" />
-              {isAuthorizing ? t('Authorizing...') : t('Authorize')}
+              {t('Authorize')}
             </Button>
           )}
           {onRetryPayment && (
@@ -574,7 +574,7 @@ function InvoiceRow({
               onClick={onRetryPayment}
               disabled={!orgId || rowBusy}
             >
-              {isRetrying ? t('Retrying...') : t('Retry payment')}
+              {t('Retry payment')}
             </Button>
           )}
           <Button

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import { Filter, Loader2 } from 'lucide-react'
+import { Filter } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
@@ -549,9 +549,6 @@ export function TransformImagePresetsPopover({
               disabled={isAdding || !saveName.trim()}
               onClick={() => void handleSaveCurrent()}
             >
-              {isAdding ? (
-                <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : null}
               {t('Save preset')}
             </Button>
           </div>

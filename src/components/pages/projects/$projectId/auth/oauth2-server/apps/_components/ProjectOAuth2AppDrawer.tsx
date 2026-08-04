@@ -486,11 +486,7 @@ export function ProjectOAuth2AppDrawer({
                           disabled={isPending}
                           onClick={handleCreateSecret}
                         >
-                          {createSecretMutation.isPending ? (
-                            <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Plus className="me-1.5 h-3.5 w-3.5" />
-                          )}
+                          <Plus className="me-1.5 h-3.5 w-3.5" />
                           {t('Create secret')}
                         </Button>
                       </div>

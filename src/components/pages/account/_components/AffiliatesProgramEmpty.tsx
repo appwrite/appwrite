@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Gift, Link2, Loader2, Share2, Sparkles } from 'lucide-react'
+import { Gift, Link2, Share2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -207,9 +207,6 @@ export function AffiliatesProgramEmpty() {
               onClick={handleCreate}
               {...analyticsAttrs('create-affiliate-link')}
             >
-              {createLink.isPending ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : null}
               {t('Create')}
             </Button>
           </div>

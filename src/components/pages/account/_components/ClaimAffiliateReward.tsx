@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -112,9 +111,6 @@ export function ClaimAffiliateReward({
             onClick={handleClaim}
             {...analyticsAttrs('claim-affiliate-reward')}
           >
-            {claimReward.isPending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
             {t('Claim credits')}
           </Button>
         </div>

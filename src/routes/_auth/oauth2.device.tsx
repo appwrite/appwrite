@@ -223,7 +223,7 @@ function OAuth2DevicePage() {
                     className="w-full"
                     disabled={code.length === 0 || submitMutation.isPending}
                   >
-                    {submitMutation.isPending ? t('Verifying…') : t('Continue')}
+                    {t('Continue')}
                   </Button>
                 </div>
 

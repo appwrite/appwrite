@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Gift, Globe, Link2, Loader2, Plus, Trash2 } from 'lucide-react'
+import { Gift, Globe, Link2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -234,9 +234,6 @@ function CreateLinkDialog({
             onClick={handleCreate}
             {...analyticsAttrs('create-affiliate-link')}
           >
-            {createLink.isPending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
             {t('Create')}
           </Button>
         </div>
@@ -294,9 +291,6 @@ function DeleteLinkDialog({
             onClick={handleDelete}
             {...analyticsAttrs('delete-affiliate-link')}
           >
-            {deleteLink.isPending ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : null}
             {t('Delete')}
           </Button>
         </div>

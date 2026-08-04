@@ -86,14 +86,8 @@ export function PausedProjectCurtain({
             onClick={handleRestore}
             className="gap-1.5"
           >
-            {resumeMutation.isPending ? (
-              <>{t('Resuming…')}</>
-            ) : (
-              <>
-                <RotateCcw className="size-4" />
-                {t('Restore project')}
-              </>
-            )}
+            <RotateCcw className="size-4" />
+            {t('Restore project')}
           </Button>
         </div>
 

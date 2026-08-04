@@ -246,14 +246,7 @@ function AcceptInviteContent() {
                       disabled={isSwitchingAccount}
                       className="w-full"
                     >
-                      {isSwitchingAccount ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          {t('Signing out...')}
-                        </>
-                      ) : (
-                        t('Switch account')
-                      )}
+                      {t('Switch account')}
                     </Button>
                     <Button
                       onClick={() => navigate({ to: '/' })}
@@ -284,14 +277,7 @@ function AcceptInviteContent() {
                         variant="outline"
                         className="w-full"
                       >
-                        {isSwitchingAccount ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            {t('Signing out...')}
-                          </>
-                        ) : (
-                          t('Switch account')
-                        )}
+                        {t('Switch account')}
                       </Button>
                     )}
                     <Button

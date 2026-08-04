@@ -12,7 +12,6 @@ import {
   Copy,
   Folder,
   Link2,
-  Loader2,
   Lock,
   ShieldCheck,
   SlidersHorizontal,
@@ -927,12 +926,8 @@ export function OAuth2ConsentCard({
               approveMutation.mutate()
             }}
           >
-            {approveMutation.isPending ? (
-              <Loader2 className="me-1.5 size-4 animate-spin" />
-            ) : (
-              <Check className="me-1.5 size-4" />
-            )}
-            {approveMutation.isPending ? t('Authorizing…') : t('Authorize')}
+            <Check className="me-1.5 size-4" />
+            {t('Authorize')}
           </Button>
           <Button
             variant="outline"
@@ -943,7 +938,7 @@ export function OAuth2ConsentCard({
               rejectMutation.mutate()
             }}
           >
-            {rejectMutation.isPending ? t('Cancelling…') : t('Cancel')}
+            {t('Cancel')}
           </Button>
         </div>
 
