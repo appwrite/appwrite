@@ -1325,6 +1325,46 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['deploymentId'], $response['body']['deploymentId']);
     }
 
+    public function testUpdateFunctionDeploymentRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $functionId = $data['functionId'];
+        $deploymentId = $data['deploymentId'];
+
+        // A second function the deployment does not belong to.
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — activating through a function that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->updateFunctionDeployment($otherFunctionId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        // Owning function is unchanged.
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId, $function['body']['deploymentId']);
+
+        /**
+         * Test for SUCCESS — the owning function can still activate it.
+         */
+        $response = $this->updateFunctionDeployment($functionId, $deploymentId);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
     public function testListDeployments(): void
     {
         $data = $this->setupTestDeployment();
