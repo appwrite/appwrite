@@ -25,11 +25,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { IdInput } from '@/components/ui/id-input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
 import {
   ExternalLink,
   Loader2,
@@ -61,6 +68,9 @@ import { VariablesSettingsCard } from '@/components/global/shared/VariablesSetti
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
+import { cn } from '@/lib/utils'
 
 interface RepositoryConfigViewProps {
   installationId: string
@@ -125,17 +135,33 @@ export function RepositoryConfigView({
   const [isDeploying, setIsDeploying] = useState(false)
 
   // Fetch repository details (use URL params so it works after refresh)
-  const { data: repository } = useRepository(
+  const {
+    data: repository,
+    error: repositoryError,
+    isFetching: repositoryFetching,
+    refetch: refetchRepository,
+  } = useRepository(
     projectId,
     installationId || null,
     providerRepositoryId || null,
   )
 
-  // Default site name from repo when loaded
-  const repoName = repository?.name ?? ''
-  const repoOwner = repository?.organization ?? ''
+  // Which installation broke, and the authorize URL that repairs it. The
+  // default return URL is right here: this route carries the installation and
+  // repository in its path and re-derives the rest on mount, so the deep URL
+  // survives the redirect better than the wizard entry route would.
+  const {
+    provider: installationProvider,
+    organization: installationOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, installationId || null)
+
+  // Fall back to what the previous step already told us, so a failed lookup
+  // leaves the repository header naming the repo instead of a bare slash.
+  const repoName = repository?.name ?? formData.repositoryName ?? ''
+  const repoOwner = repository?.organization ?? formData.repositoryOwner ?? ''
   const { Icon: RepositoryProviderIcon, label: repositoryProviderLabel } =
-    getVcsProvider(repository?.provider)
+    getVcsProvider(repository?.provider ?? installationProvider)
   useEffect(() => {
     if (repoName && !siteName) setSiteName(repoName)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -183,7 +209,11 @@ export function RepositoryConfigView({
         })
       }
     },
-    onError: () => {
+    onError: (error) => {
+      // A dead token is not a "pick one yourself" problem: the inline alert
+      // names the real cause and offers the reconnect. A transient failure
+      // still leaves the manual framework picker as a working way forward.
+      if (getVcsInstallationErrorKind(error) === 'reconnect') return
       toast.error(t('Could not detect framework. Select one manually.'))
     },
   })
@@ -208,6 +238,18 @@ export function RepositoryConfigView({
     detectFrameworkMutation,
     t,
   ])
+
+  // Both step-level calls hit endpoints that refresh the installation token, so
+  // either one can be the thing that failed. The repository lookup is checked
+  // first because it is what the whole step is built on.
+  const installationErrorKind =
+    getVcsInstallationErrorKind(repositoryError) ??
+    getVcsInstallationErrorKind(detectFrameworkMutation.error)
+
+  const retryRepositoryLoad = useCallback(() => {
+    refetchRepository()
+    runFrameworkDetection()
+  }, [refetchRepository, runFrameworkDetection])
 
   // Run VCS framework detection when we have URL params (repo selected) or root directory changes
   useEffect(() => {
@@ -349,6 +391,24 @@ export function RepositoryConfigView({
     return frameworks.find((f) => f.key === framework)
   }, [frameworks, framework])
 
+  // Single rule behind the Deploy button and the sidebar status, so a green
+  // "Ready to deploy" can never sit next to a Deploy that refuses to run.
+  // Only a dead token blocks: a transient failure clears on retry, and
+  // framework detection failing on its own still leaves the manual picker,
+  // so neither should strand a user who could otherwise deploy.
+  const deployBlockedReason =
+    getVcsInstallationErrorKind(repositoryError) === 'reconnect'
+      ? t(
+          'Reconnect the Git installation before you can deploy this repository.',
+        )
+      : !siteName
+        ? t('Enter a site name to continue.')
+        : !framework
+          ? t('Select a framework to continue.')
+          : !domainValid
+            ? t('Enter a valid domain to continue.')
+            : undefined
+
   const sidebarContent = (
     <div className="rounded-xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden">
       {/* Header with framework */}
@@ -456,9 +516,22 @@ export function RepositoryConfigView({
       {/* Status indicator */}
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div
+            className={cn(
+              'h-2 w-2 rounded-full',
+              installationErrorKind
+                ? 'bg-red-500'
+                : deployBlockedReason
+                  ? 'bg-muted-foreground/40'
+                  : 'bg-emerald-500 animate-pulse',
+            )}
+          />
           <span className="text-[11px] text-muted-foreground">
-            {t('Ready to deploy')}
+            {installationErrorKind
+              ? t('Repository unavailable')
+              : deployBlockedReason
+                ? t('Configuration incomplete')
+                : t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -484,21 +557,48 @@ export function RepositoryConfigView({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={handleDeploy}
-            disabled={
-              isDeploying ||
-              !siteName ||
-              !framework ||
-              !domainValid ||
-              createSiteMutation.isPending
-            }
-          >
-            {t('Deploy')}
-          </Button>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    onClick={handleDeploy}
+                    disabled={
+                      isDeploying ||
+                      createSiteMutation.isPending ||
+                      !!deployBlockedReason
+                    }
+                  >
+                    {t('Deploy')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {deployBlockedReason ? (
+                <TooltipContent className="max-w-xs text-xs">
+                  {deployBlockedReason}
+                </TooltipContent>
+              ) : null}
+            </Tooltip>
+          </TooltipProvider>
         </>
       }
     >
+      {/* Installation failure: everything below is stale or blank until fixed */}
+      {installationErrorKind && (
+        <VcsInstallationErrorAlert
+          kind={installationErrorKind}
+          provider={installationProvider}
+          organization={installationOrganization}
+          reconnectUrl={reconnectUrl}
+          onRetry={retryRepositoryLoad}
+          isRetrying={repositoryFetching || detectFrameworkMutation.isPending}
+        >
+          {t(
+            'This repository could not be read, so its branches, directories and framework are unavailable and the site cannot be deployed yet.',
+          )}
+        </VcsInstallationErrorAlert>
+      )}
+
       {/* Repository card */}
       <div className="rounded-xl border border-border bg-card/50 p-4">
         <div className="flex items-center justify-between">

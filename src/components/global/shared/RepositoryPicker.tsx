@@ -40,6 +40,8 @@ import {
   useRepositories,
   useNamespacesForInstallations,
 } from '@/lib/react-query/hooks'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
@@ -193,6 +195,7 @@ export function RepositoryPicker({
     data: repositoriesData,
     isLoading: reposLoading,
     isFetching: reposFetching,
+    error: reposError,
     refetch: refetchRepos,
   } = useRepositories(
     projectId,
@@ -222,6 +225,11 @@ export function RepositoryPicker({
   }, [repositoriesData, vcsType])
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
   const isFetching = isFetchingProp ?? reposFetching
+
+  // An installation that cannot authenticate returns no repositories, which is
+  // indistinguishable from an organization that genuinely has none. Read the
+  // error so the empty state does not claim a failure was a successful result.
+  const installationErrorKind = getVcsInstallationErrorKind(reposError)
 
   return (
     <div className={cn('flex flex-col', className)}>
@@ -448,6 +456,29 @@ export function RepositoryPicker({
                     },
                   )}
                 </div>
+              ) : installationErrorKind ? (
+                <div className="py-8 px-4">
+                  <VcsInstallationErrorState
+                    kind={installationErrorKind}
+                    provider={selectedInstallation?.provider}
+                    organization={selectedInstallation?.organization}
+                    reconnectUrl={
+                      getKnownVcsProvider(selectedInstallation?.provider)
+                        ? vcsAuthUrl(
+                            getKnownVcsProvider(selectedInstallation?.provider)!
+                              .id,
+                            'update',
+                          )
+                        : undefined
+                    }
+                    onRetry={() => {
+                      refetchRepos()
+                      onRefetch?.()
+                    }}
+                    isRetrying={isFetching}
+                    className="py-0"
+                  />
+                </div>
               ) : (
                 <div className="py-8 px-4 text-center">
                   <EmptyState
@@ -476,6 +507,9 @@ export function RepositoryPicker({
 
             {/* Missing repos / permissions note - compact one-liner */}
             {(() => {
+              // A broken installation is not a scope problem; this hint would
+              // send the user to widen permissions that already cover the repos.
+              if (installationErrorKind) return null
               const knownProvider = getKnownVcsProvider(
                 selectedInstallation?.provider,
               )

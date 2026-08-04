@@ -32,11 +32,58 @@ export function isHttpForbiddenError(error: unknown): boolean {
   return e.code === 403 || e.status === 403
 }
 
+/**
+ * How a failed VCS call should be explained to the user.
+ *
+ * - `reconnect` - the installation's stored OAuth token is dead and cannot be
+ *   refreshed. Only the user can fix it, by re-authorizing the installation.
+ * - `locked` - a concurrent token refresh holds the lock. Transient; retrying
+ *   works. Never offer a reconnect here, the installation is fine.
+ * - `provider` - the provider itself failed (outage, rate limit). Also
+ *   transient, but a dead token can land here too (see below), so a reconnect
+ *   stays available as a secondary action.
+ */
+export type VcsInstallationErrorKind = 'reconnect' | 'locked' | 'provider'
+
+/**
+ * Classify an error from a VCS endpoint that refreshes the installation token
+ * (list/get repositories, branches, namespaces, repository contents).
+ *
+ * The API reports both a dead installation token and a genuine provider outage
+ * as `general_provider_failure`, so the message is the only discriminator: the
+ * token failures are the ones that ask the user to reconnect. That copy is
+ * authored in the backend's `Appwrite\Vcs\InstallationTokens` (`refresh()` and
+ * `exchange()`); if it is ever reworded this falls back to `provider`, which
+ * still shows a real error and still offers a reconnect, just with
+ * outage-first wording.
+ */
+export function getVcsInstallationErrorKind(
+  error: unknown,
+): VcsInstallationErrorKind | null {
+  if (!error || typeof error !== 'object') return null
+  const e = error as { type?: string; message?: string }
+  if (e.type === 'general_resource_locked') return 'locked'
+  if (e.type !== 'general_provider_failure') return null
+  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  return message.includes('reconnect') ? 'reconnect' : 'provider'
+}
+
+/** True when a VCS call failed because the installation must be reconnected. */
+export function isVcsInstallationTokenError(error: unknown): boolean {
+  return getVcsInstallationErrorKind(error) === 'reconnect'
+}
+
 /** True when the API responded with HTTP 404 (resource missing or inaccessible). */
 export function isHttpNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
-  const e = error as { code?: number; status?: number; name?: string; message?: string }
-  if (e.code === 404 || e.status === 404 || e.name === 'NotFoundError') return true
+  const e = error as {
+    code?: number
+    status?: number
+    name?: string
+    message?: string
+  }
+  if (e.code === 404 || e.status === 404 || e.name === 'NotFoundError')
+    return true
   const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
   return (
     message.includes('not found') ||
@@ -62,11 +109,7 @@ export function isHttpPaymentRequiredError(error: unknown): boolean {
 export function isHttpUnauthorizedError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
   const e = error as { code?: number; status?: number; name?: string }
-  return (
-    e.code === 401 ||
-    e.status === 401 ||
-    e.name === 'UnauthorizedError'
-  )
+  return e.code === 401 || e.status === 401 || e.name === 'UnauthorizedError'
 }
 
 /**
@@ -141,8 +184,9 @@ export function formatError(
     ) {
       return {
         title: translate('Not Found'),
-        message:
-          translate('The requested resource could not be found. It may have been deleted or you may not have permission to access it.'),
+        message: translate(
+          'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
+        ),
         isUserFriendly: true,
       }
     }
@@ -165,7 +209,9 @@ export function formatError(
         !message.includes('TypeError')
       const messageToShow = isUserFriendlyMessage
         ? message
-        : translate('You do not have permission to perform this action. Please contact your administrator if you believe this is an error.')
+        : translate(
+            'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.',
+          )
       return {
         title: translate('Access Denied'),
         message: translate(messageToShow),
@@ -177,7 +223,9 @@ export function formatError(
     if (code === 403 || lowerMessage.includes('forbidden')) {
       return {
         title: translate('Forbidden'),
-        message: translate('You do not have permission to access this resource.'),
+        message: translate(
+          'You do not have permission to access this resource.',
+        ),
         isUserFriendly: true,
       }
     }
@@ -193,7 +241,9 @@ export function formatError(
       const specificMessage =
         message.length > 0 && !message.includes('400')
           ? message
-          : translate('The request is invalid. Please check your input and try again.')
+          : translate(
+              'The request is invalid. Please check your input and try again.',
+            )
 
       return {
         title: translate('Invalid Request'),
@@ -212,8 +262,9 @@ export function formatError(
     ) {
       return {
         title: translate('Server Error'),
-        message:
-          translate('An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.'),
+        message: translate(
+          'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.',
+        ),
         isUserFriendly: true,
       }
     }
@@ -228,8 +279,9 @@ export function formatError(
     ) {
       return {
         title: translate('Connection Error'),
-        message:
-          translate('Unable to connect to the server. Please check your internet connection and try again.'),
+        message: translate(
+          'Unable to connect to the server. Please check your internet connection and try again.',
+        ),
         isUserFriendly: true,
       }
     }
@@ -238,7 +290,9 @@ export function formatError(
     if (error.name === 'TimeoutError' || lowerMessage.includes('timeout')) {
       return {
         title: translate('Request Timeout'),
-        message: translate('The request took too long to complete. Please try again.'),
+        message: translate(
+          'The request took too long to complete. Please try again.',
+        ),
         isUserFriendly: true,
       }
     }
