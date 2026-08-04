@@ -2457,10 +2457,23 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $response = json_decode($client->receive(), true);
-        $responseUpdate = json_decode($client->receive(), true);
-
         $executionId = $execution['body']['$id'];
+
+        // The async execution first emits a `create` event, then a terminal `update`
+        // once the runtime finishes. That `update` only arrives after worker pickup,
+        // runtime cold start, and the function's execution timeout, so it can easily
+        // exceed a single read timeout. Skip unrelated frames and wait generously for
+        // each expected event instead of assuming they are the next two frames.
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("functions.{$functionId}.executions.{$executionId}.create", $message['data']['events'] ?? [], true)
+        );
+        $responseUpdate = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("functions.{$functionId}.executions.{$executionId}.update", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -3167,8 +3180,22 @@ final class RealtimeCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]);
 
-        $response = json_decode($client->receive(), true);
+        // The row seed above fires an async .create broadcast on the channels just
+        // subscribed to, and its fanout can land on this connection before the
+        // connected frame is written. Skip event frames until the handshake; any
+        // other frame type falls through to the assertions below.
+        $response = null;
+        $deadline = \time() + 10;
+        while (\time() < $deadline) {
+            $frame = json_decode($client->receive(), true);
+            if (($frame['type'] ?? '') === 'event') {
+                continue;
+            }
+            $response = $frame;
+            break;
+        }
 
+        $this->assertNotNull($response, 'Timed out waiting for the connected frame');
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);

@@ -97,7 +97,7 @@ class Update extends PlatformAction
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', null, new Text(Database::LENGTH_KEY), 'Presence status.', true)
-            ->param('expiresAt', null, new DatetimeValidator(
+            ->param('expiresAt', null, fn () => new DatetimeValidator(
                 new \DateTime(),
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true

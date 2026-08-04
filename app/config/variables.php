@@ -207,7 +207,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -219,6 +219,15 @@ return [
                 'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_URL_SCHEME',
+                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
+                'introduction' => '2.0.0',
+                'default' => 'legacy',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -314,6 +323,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_WORKER_PER_CORE',
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
@@ -380,31 +398,31 @@ return [
     ],
     [
         'category' => 'Database',
-        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between PostgreSQL, MariaDB or MongoDB.',
         'variables' => [
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'description' => 'Which database to use. Must be one of: PostgreSQL, MariaDB, or MongoDB',
                 'introduction' => '1.9.0',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => true,
-                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
+                'question' => 'Choose your database (postgresql|mariadb|mongodb)',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_HOST',
-                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'description' => 'Database server host name address. Default value is: \'postgresql\'.',
                 'introduction' => '',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_PORT',
-                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'description' => 'Database server TCP port. Default value is: \'5432\'.',
                 'introduction' => '',
-                'default' => '27017',
+                'default' => '5432',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -980,6 +998,53 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'introduction' => '1.9.5',
+                'default' => 'local://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BUILDS_VOLUME',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite-builds',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_HOST',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'introduction' => '1.9.0',
+                'default' => 'http://orchestrator-jobs:8080',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_SECRET',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'introduction' => '1.9.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_ENDPOINT',
+                'description' => 'Internal Appwrite endpoint the jobs-service (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
+                'introduction' => '1.9.0',
+                'default' => 'http://appwrite',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BROWSER_HOST',
                 'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
                 'introduction' => '1.8.0',
@@ -1205,6 +1270,87 @@ return [
                 'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
                 'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
                 'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_ENDPOINT',
+                'description' => 'URL of your self-hosted Gitea instance, reachable from the Appwrite server (e.g. for API calls and webhook token exchange).',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+                'description' => 'URL of your Gitea instance reachable from the browser, if different from _APP_VCS_GITEA_ENDPOINT (e.g. when Appwrite and Gitea are on the same Docker network but Gitea is exposed to the browser on a different host). Falls back to _APP_VCS_GITEA_ENDPOINT when unset.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_ID',
+                'description' => 'Gitea OAuth2 application client ID. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_SECRET',
+                'description' => 'Gitea OAuth2 application client secret. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_ID',
+                'description' => 'GitLab OAuth2 application client ID. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_CLIENT_SECRET',
+                'description' => 'GitLab OAuth2 application client secret. You can generate one in your GitLab instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming GitLab webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_WEBHOOK_URL',
+                'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
+                'introduction' => '2.0.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',

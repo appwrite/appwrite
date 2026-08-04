@@ -465,21 +465,6 @@ trait ProjectsBase
         return $project['body']['$id'];
     }
 
-    protected function setupDevKey(mixed $params): array
-    {
-        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $params['projectId'] . '/dev-keys', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        $this->assertEquals(201, $devKey['headers']['status-code'], 'Setup devKey failed with status code: ' . $devKey['headers']['status-code'] . ' and response: ' . json_encode($devKey['body'], JSON_PRETTY_PRINT));
-
-        return [
-            '$id' => $devKey['body']['$id'],
-            'secret' => $devKey['body']['secret'],
-        ];
-    }
-
     protected function setupUserMembership(mixed $params): array
     {
         // Create membership

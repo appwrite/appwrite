@@ -151,9 +151,9 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
-        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
-        'port' => System::getEnv('_APP_DB_PORT', '27017'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT', '5432'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -249,6 +249,8 @@ $register->set('pools', function () {
     // Queue workers consume jobs concurrently with coroutines; each in-flight
     // job may hold a connection, so pools must cover the coroutine count.
     $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
+
+    $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
@@ -384,19 +386,13 @@ $register->set('pools', function () {
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
-            });
+            }, $poolTimeout);
 
             $group->add($pool);
         }
 
         Config::setParam('pools-' . $key, $config);
     }
-
-    $reconnectAttempts = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_ATTEMPTS', 5);
-    $reconnectSleep = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_SLEEP', 2);
-
-    $group->setReconnectAttempts($reconnectAttempts);
-    $group->setReconnectSleep($reconnectSleep);
 
     return $group;
 });
@@ -408,7 +404,7 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
 
     switch ($dbAdapter) {

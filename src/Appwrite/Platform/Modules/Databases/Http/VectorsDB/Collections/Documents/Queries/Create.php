@@ -1,0 +1,63 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Queries;
+
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+
+class Create extends XList
+{
+    public static function getName(): string
+    {
+        return 'createVectorsDBDocumentsQuery';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
+            ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents/query')
+            ->desc('Create query')
+            ->groups(['api', 'database'])
+            ->label('scope', 'documents.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('sdk', new Method(
+                namespace: 'vectorsDB',
+                group: $this->getSdkGroup(),
+                name: 'createQuery',
+                description: '/docs/references/vectorsdb/create-query.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: SwooleResponse::STATUS_CODE_OK,
+                        model: $this->getResponseModel(),
+                    )
+                ],
+                contentType: ContentType::JSON
+            ))
+            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 0 and 86400 (24 hours).', true)
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('user')
+            ->inject('getDatabasesDB')
+            ->inject('usage')
+            ->inject('transactionState')
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+}

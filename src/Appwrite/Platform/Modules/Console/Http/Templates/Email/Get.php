@@ -61,7 +61,7 @@ class Get extends Action
         $locale = $locale ?: System::getEnv('_APP_LOCALE', 'en');
 
         $localeObj = new Locale($locale);
-        $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+        $localeObj->setFallback('en');
 
         $response->dynamic(new Document([
             'templateId'   => $templateId,

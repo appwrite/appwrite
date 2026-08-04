@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -20,6 +20,8 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -27,8 +29,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Request;
@@ -41,7 +41,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -123,12 +123,14 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
+            ->inject('deployments')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -167,12 +169,14 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
+        Deployments $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
     ) {
@@ -303,6 +307,18 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]));
 
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
+
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
@@ -343,8 +359,9 @@ class Create extends Base
                     installation: $installation,
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
+                    deployments: $deployments,
                     template: $template,
-                    github: $github,
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
@@ -352,33 +369,33 @@ class Create extends Base
                 );
 
             } elseif (!$template->isEmpty()) {
-                // Deploy non-VCS from template
-                $deploymentId = ID::unique();
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceId' => $function->getId(),
-                    'resourceInternalId' => $function->getSequence(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $function->getAttribute('entrypoint', ''),
-                    'buildCommands' => $function->getAttribute('commands', ''),
-                    'startCommand' => $function->getAttribute('startCommand', ''),
-                    'type' => 'manual',
-                    'activate' => true,
-                ]));
+                // Deploy non-VCS from the template's public GitHub repository.
+                $templateVersion = Base::resolveTemplateRef($vcsFactory, $templateOwner, $templateRepository, Git::CLONE_TYPE_TAG, $templateVersion);
 
-                $publisherForBuilds->enqueue(new BuildMessage(
-                    project: $project,
-                    resource: $function,
-                    deployment: $deployment,
-                    type: BUILD_TYPE_DEPLOYMENT,
-                    template: $template,
-                    platform: $platform,
-                ));
+                $deployment = $deployments->createFromRef(
+                    $function,
+                    new Document([
+                        '$id' => ID::unique(),
+                        'entrypoint' => $function->getAttribute('entrypoint', ''),
+                        'buildCommands' => $function->getAttribute('commands', ''),
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'providerRepositoryName' => $templateRepository,
+                        'providerRepositoryOwner' => $templateOwner,
+                        'providerRepositoryUrl' => "https://github.com/{$templateOwner}/{$templateRepository}",
+                        'providerBranchUrl' => "https://github.com/{$templateOwner}/{$templateRepository}/blob/{$templateVersion}",
+                        // The coordinates a redeploy needs: remote-source builds
+                        // never store a tarball.
+                        'providerBranch' => $templateVersion,
+                        'providerRootDirectory' => $templateRootDirectory,
+                        'type' => 'vcs',
+                        'activate' => true,
+                    ]),
+                    $templateOwner,
+                    $templateRepository,
+                    Git::CLONE_TYPE_TAG,
+                    $templateVersion,
+                    $templateRootDirectory,
+                );
             }
 
             $functionsDomain = $platform['functionsDomain'];
