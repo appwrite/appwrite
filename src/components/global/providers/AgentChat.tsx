@@ -2846,9 +2846,13 @@ export function AgentPanelContent({
     [activeConversation],
   )
 
-  // Dedicated /agent page only — mirror build-status favicon colors for the
-  // active conversation (blue running, green success, red failed).
-  useAgentConversationFavicon(isPageVariant, activeConversation)
+  // Mirror build-status favicon colors for the active conversation (blue
+  // running, green success, red failed) on both /agent and the console pane.
+  useAgentConversationFavicon({
+    conversation: activeConversation,
+    isPending:
+      createMessageMutation.isPending || updateMessageMutation.isPending,
+  })
 
   const latestAssistantMessage = useMemo(
     () =>

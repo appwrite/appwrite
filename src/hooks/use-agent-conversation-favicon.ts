@@ -36,19 +36,31 @@ function isCancelledOrStopped(status?: string | null): boolean {
   )
 }
 
-/**
- * Swap the tab favicon to match the active agent conversation status while the
- * dedicated `/agent` view is open (blue = in progress, green = success, red =
- * failure). Mirrors the build-notifications favicon convention.
- */
-export function useAgentConversationFavicon(
-  enabled: boolean,
+type AgentConversationFaviconInput = {
+  /** When false, restore the original favicon and stop tracking. */
+  enabled?: boolean
   conversation?: {
     $id?: string | null
     status?: string | null
     lockState?: string | null
-  } | null,
-): void {
+  } | null
+  /**
+   * Local busy signal (e.g. message create pending) so the favicon flips blue
+   * before conversation status catches up from realtime.
+   */
+  isPending?: boolean
+}
+
+/**
+ * Swap the tab favicon to match the active agent conversation status (blue =
+ * in progress, green = success, red = failure). Mirrors the build-notifications
+ * favicon convention. Works for both the `/agent` page and the console pane.
+ */
+export function useAgentConversationFavicon({
+  enabled = true,
+  conversation,
+  isPending = false,
+}: AgentConversationFaviconInput): void {
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const setFaviconRef = useRef(setFavicon)
   setFaviconRef.current = setFavicon
@@ -63,6 +75,8 @@ export function useAgentConversationFavicon(
   const previousConversationIdRef = useRef<string | null>(null)
   const conversationRef = useRef(conversation)
   conversationRef.current = conversation
+  const isPendingRef = useRef(isPending)
+  isPendingRef.current = isPending
 
   const conversationId = conversation?.$id ?? null
   const status = conversation?.status ?? null
@@ -81,7 +95,18 @@ export function useAgentConversationFavicon(
     function captureOriginalFavicon(): void {
       if (originalFaviconRef.current) return
       const current = getCurrentFaviconRef.current()
-      originalFaviconRef.current = current ?? getDefaultFaviconVariant()
+      // Never capture a status color as the "original" — otherwise restore
+      // leaves the tab stuck on blue/green/red.
+      const resolved = current ?? getDefaultFaviconVariant()
+      originalFaviconRef.current =
+        resolved === 'blue' ||
+        resolved === 'green' ||
+        resolved === 'red' ||
+        resolved === 'theme-blue' ||
+        resolved === 'theme-green' ||
+        resolved === 'theme-red'
+          ? getDefaultFaviconVariant()
+          : resolved
     }
 
     function restoreOriginalFavicon(): void {
@@ -107,12 +132,12 @@ export function useAgentConversationFavicon(
 
     function onVisibilityChange(): void {
       if (document.visibilityState !== 'visible') return
-      // Drop terminal green/red once the user is looking at the tab again.
       const currentTone = getAssistantConversationStatusTone(
         conversationRef.current,
       )
       if (
         !isInFlightTone(currentTone) &&
+        !isPendingRef.current &&
         originalFaviconRef.current &&
         resetTimerRef.current !== null
       ) {
@@ -141,8 +166,6 @@ export function useAgentConversationFavicon(
     if (conversationChanged) {
       previousConversationIdRef.current = conversationId
       previousToneRef.current = null
-      // Switching threads mid-flash: drop terminal timers but keep the original
-      // capture so we can restore when this view closes.
       clearResetTimer()
       if (
         trackedInFlightIdRef.current &&
@@ -154,15 +177,21 @@ export function useAgentConversationFavicon(
 
     const previousTone = previousToneRef.current
     previousToneRef.current = tone
+    const inFlight = isInFlightTone(tone) || isPending
 
-    if (isInFlightTone(tone)) {
+    if (inFlight) {
       if (conversationId) {
         trackedInFlightIdRef.current = conversationId
+      } else if (isPending) {
+        // Brand-new send before the conversation id is known.
+        trackedInFlightIdRef.current = trackedInFlightIdRef.current ?? '__pending__'
       }
       applyVariant(inProgressFavicon())
     } else {
       const sawInFlight =
-        !!conversationId && trackedInFlightIdRef.current === conversationId
+        !!conversationId &&
+        (trackedInFlightIdRef.current === conversationId ||
+          trackedInFlightIdRef.current === '__pending__')
       const transitionedFromInFlight =
         previousTone !== null && isInFlightTone(previousTone)
 
@@ -177,14 +206,12 @@ export function useAgentConversationFavicon(
       ) {
         trackedInFlightIdRef.current = null
         if (isCancelledOrStopped(status)) {
-          // Cancel is a user action, not success — restore immediately.
           restoreOriginalFavicon()
         } else {
           applyVariant(successFavicon())
           scheduleRestore()
         }
       } else if (originalFaviconRef.current && !resetTimerRef.current) {
-        // Idle without an observed in-flight turn: keep default.
         restoreOriginalFavicon()
       }
     }
@@ -192,7 +219,7 @@ export function useAgentConversationFavicon(
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [enabled, conversationId, status, lockState])
+  }, [enabled, conversationId, status, lockState, isPending])
 
   useEffect(() => {
     return () => {
