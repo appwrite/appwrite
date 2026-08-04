@@ -469,6 +469,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Traffic broken down by Firewall action':
     'תעבורה מפורקת לפי פעולת חומת האש',
   Challenged: 'אותגרו',
+  'Challenge solves': 'פתרונות Challenge',
+  'Avg solve time': 'זמן פתרון ממוצע',
+  solved: 'נפתרו',
   'Top blocked IPs': 'כתובות ה-IP החסומות המובילות',
   'Top denied IPs': 'כתובות ה-IP שנדחו המובילות',
   'IP addresses with the most blocked requests':

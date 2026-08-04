@@ -53,32 +53,82 @@ import { UsageLogRetentionAlert } from '../usage/_components/UsageLogRetentionAl
 import { UsageChartBrushReferenceArea } from '../usage/_components/UsageChartBrushReferenceArea'
 import { useT } from '@/lib/i18n/translate'
 
-interface StatCardProps {
+interface MetricSubStat {
+  /** Short unit/label shown inline after the value. */
   label: string
+  /** Full name used for the hover title. */
+  title: string
   value: string | number
   change?: number
   trend?: 'up' | 'down'
 }
 
-function MetricTile({ label, value, change, trend }: StatCardProps) {
+interface StatCardProps {
+  label: string
+  value: string | number
+  change?: number
+  trend?: 'up' | 'down'
+  subStats?: MetricSubStat[]
+}
+
+function MetricChange({
+  change,
+  trend,
+}: {
+  change?: number
+  trend?: 'up' | 'down'
+}) {
+  if (change === undefined) return null
+  return (
+    <span
+      className={cn(
+        'text-[12px] font-medium tabular-nums',
+        trend === 'up' && 'text-emerald-600 dark:text-emerald-400',
+        trend === 'down' && 'text-amber-600 dark:text-amber-400',
+        !trend && 'text-muted-foreground',
+      )}
+    >
+      {change > 0 ? '+' : ''}
+      {change}%
+    </span>
+  )
+}
+
+function MetricTile({ label, value, change, trend, subStats }: StatCardProps) {
   return (
     <div className="min-w-0">
       <p className="text-[12px] text-muted-foreground">{label}</p>
-      <div className="mt-0.5 flex items-baseline gap-x-2">
+      <div className="mt-0.5 flex min-w-0 items-baseline gap-x-2">
         <span className="text-[20px] font-semibold tabular-nums text-foreground">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
-        {change !== undefined ? (
-          <span
-            className={cn(
-              'text-[12px] font-medium tabular-nums',
-              trend === 'up' && 'text-emerald-600 dark:text-emerald-400',
-              trend === 'down' && 'text-amber-600 dark:text-amber-400',
-              !trend && 'text-muted-foreground',
-            )}
-          >
-            {change > 0 ? '+' : ''}
-            {change}%
+        <MetricChange change={change} trend={trend} />
+        {subStats && subStats.length > 0 ? (
+          <span className="inline-flex min-w-0 items-baseline gap-x-1.5 truncate text-[12px] text-muted-foreground">
+            <span aria-hidden="true">·</span>
+            {subStats.map((sub, index) => {
+              const formattedValue =
+                typeof sub.value === 'number'
+                  ? sub.value.toLocaleString()
+                  : sub.value
+              const changeSuffix =
+                sub.change !== undefined
+                  ? ` (${sub.change > 0 ? '+' : ''}${sub.change}%)`
+                  : ''
+              return (
+                <span
+                  key={sub.title}
+                  className="inline-flex items-baseline gap-x-1"
+                  title={`${sub.title}: ${formattedValue}${changeSuffix}`}
+                >
+                  {index > 0 ? <span aria-hidden="true">·</span> : null}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {formattedValue}
+                  </span>
+                  {sub.label ? <span>{sub.label}</span> : null}
+                </span>
+              )
+            })}
           </span>
         ) : null}
       </div>
@@ -266,7 +316,7 @@ export function TrafficOverview() {
     [seriesTotals],
   )
 
-  const metrics = [
+  const metrics: StatCardProps[] = [
     {
       label: t('Passed'),
       value: totalPassed,
@@ -284,6 +334,22 @@ export function TrafficOverview() {
       value: totalChallenged,
       change: challengedChange,
       trend: changeTrend(challengedChange),
+      subStats: [
+        {
+          label: t('solved'),
+          title: t('Challenge solves'),
+          value: totalChallengeSolved,
+          change: challengeSolvedChange,
+          trend: changeTrend(challengeSolvedChange),
+        },
+        {
+          label: '',
+          title: t('Avg solve time'),
+          value: formatFirewallSolveTime(avgSolveTimeMs),
+          change: avgSolveTimeChange,
+          trend: changeTrend(avgSolveTimeChange),
+        },
+      ],
     },
     {
       label: t('Rate limited'),
@@ -302,18 +368,6 @@ export function TrafficOverview() {
       value: `${blockRate}%`,
       change: blockRateChange,
       trend: changeTrend(blockRateChange),
-    },
-    {
-      label: t('Challenge solves'),
-      value: totalChallengeSolved,
-      change: challengeSolvedChange,
-      trend: changeTrend(challengeSolvedChange),
-    },
-    {
-      label: t('Avg solve time'),
-      value: formatFirewallSolveTime(avgSolveTimeMs),
-      change: avgSolveTimeChange,
-      trend: changeTrend(avgSolveTimeChange),
     },
   ]
 
@@ -566,6 +620,7 @@ export function TrafficOverview() {
                 value={metric.value}
                 change={metric.change}
                 trend={metric.trend}
+                subStats={metric.subStats}
               />
             </div>
           )
