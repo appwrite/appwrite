@@ -138,6 +138,11 @@ import { GRID_DEFAULT_PAGE_SIZE, isClientQueryEnabled } from '@/lib/react-query/
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleRightPane } from '@/components/global/providers/ConsoleRightPaneContext'
 import { useEnsureAppwriteMcpConnected } from '@/lib/assistant/ensure-appwrite-mcp'
+import {
+  APPWRITE_ASSISTANT_MCP_ID,
+  isAppwriteMcpConnectionCurrent,
+} from '@/lib/assistant/mcp-appwrite'
+import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
 import { AgentAutomationDetail } from '@/components/global/providers/agent/AgentAutomationDetail'
 import { AgentAutomationDrawer } from '@/components/global/providers/agent/AgentAutomationDrawer'
 import { AgentAutomationsPanel } from '@/components/global/providers/agent/AgentAutomationsPanel'
@@ -2473,6 +2478,7 @@ export function AgentPanelContent({
     useAssistantMcpConnections({
       enabled: isAuthenticated,
     })
+  const { effectiveUrl: appwriteMcpUrl } = useDebugMcpEndpoint()
   useEnsureAppwriteMcpConnected({
     enabled: isAuthenticated && !isGuest,
     connections: mcpConnections,
@@ -2480,10 +2486,14 @@ export function AgentPanelContent({
   })
   const hasActiveMcp = useMemo(
     () =>
-      mcpConnections.some(
-        (connection) => connection.hasTokens && connection.enabled,
-      ),
-    [mcpConnections],
+      mcpConnections.some((connection) => {
+        if (!connection.enabled) return false
+        if (connection.$id === APPWRITE_ASSISTANT_MCP_ID) {
+          return isAppwriteMcpConnectionCurrent(connection, appwriteMcpUrl)
+        }
+        return connection.hasTokens
+      }),
+    [appwriteMcpUrl, mcpConnections],
   )
   const emptyStateSuggestions = hasActiveMcp
     ? mcpSuggestedQuestions

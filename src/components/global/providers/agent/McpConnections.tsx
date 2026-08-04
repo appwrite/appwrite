@@ -28,6 +28,7 @@ import {
   APPWRITE_ASSISTANT_MCP_DESCRIPTION,
   APPWRITE_ASSISTANT_MCP_ID,
   APPWRITE_ASSISTANT_MCP_NAME,
+  isAppwriteMcpConnectionCurrent,
   getAppwriteAssistantMcpConnectInput,
 } from '@/lib/assistant/mcp-appwrite'
 import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
@@ -111,10 +112,14 @@ function useMcpConnectionsController(options?: {
 
   const hasActiveMcp = useMemo(
     () =>
-      connections.some(
-        (connection) => connection.hasTokens && connection.enabled,
-      ),
-    [connections],
+      connections.some((connection) => {
+        if (!connection.enabled) return false
+        if (connection.$id === APPWRITE_ASSISTANT_MCP_ID) {
+          return isAppwriteMcpConnectionCurrent(connection, appwriteMcpUrl)
+        }
+        return connection.hasTokens
+      }),
+    [appwriteMcpUrl, connections],
   )
 
   const listItems = useMemo<McpListItem[]>(() => {
@@ -233,9 +238,12 @@ function useMcpConnectionsController(options?: {
       } catch {
         // Fall back to popup OAuth when silent connect is unavailable.
       }
-      const { code } = await startMcpOAuthConnect(
-        getAppwriteAssistantMcpConnectInput(),
-      )
+      // Omit the seeded client id so popup DCR works on fresh instances
+      // that do not have `appwrite-agent` registered yet.
+      const { code } = await startMcpOAuthConnect({
+        ...getAppwriteAssistantMcpConnectInput(),
+        clientId: undefined,
+      })
       await persistConnectedCredentials(code)
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to connect Appwrite MCP')))
@@ -285,6 +293,7 @@ function useMcpConnectionsController(options?: {
     isLoading,
     isBusy,
     hasActiveMcp,
+    appwriteMcpUrl,
     listItems,
     upsertPending: upsertMutation.isPending,
     handleConnectAppwrite,
@@ -308,6 +317,7 @@ function McpConnectionsList({
     isLoading,
     isBusy,
     listItems,
+    appwriteMcpUrl,
     upsertPending,
     handleConnectAppwrite,
     handleToggleEnabled,
@@ -367,8 +377,15 @@ function McpConnectionsList({
   return (
     <ul className="divide-y divide-border">
       {listItems.map((item) => {
-        const connected = !!item.connection?.hasTokens
-        const needsReconnect = !!item.connection && !item.connection.hasTokens
+        const connected = item.isAppwrite
+          ? isAppwriteMcpConnectionCurrent(item.connection, appwriteMcpUrl)
+          : !!item.connection?.hasTokens
+        const needsReconnect =
+          item.isAppwrite
+            ? !!item.connection &&
+              (!item.connection.hasTokens ||
+                !isAppwriteMcpConnectionCurrent(item.connection, appwriteMcpUrl))
+            : !!item.connection && !item.connection.hasTokens
         const enabled = item.connection?.enabled ?? false
 
         return (

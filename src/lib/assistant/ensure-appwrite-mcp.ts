@@ -11,7 +11,10 @@ import { connectMcpOAuthSilently } from '@/lib/assistant/mcp-oauth'
 import {
   APPWRITE_ASSISTANT_MCP_ID,
   getAppwriteAssistantMcpConnectInput,
+  getAppwriteAssistantMcpUrl,
+  isAppwriteMcpConnectionCurrent,
 } from '@/lib/assistant/mcp-appwrite'
+import { subscribeToDebugMcpEndpointChange } from '@/lib/debug-mcp-endpoint'
 import {
   fetchAssistantMcpConnections,
   type AssistantMcpConnection,
@@ -66,8 +69,9 @@ async function persistSilentConnect(
 }
 
 /**
- * Connect Appwrite MCP when missing tokens. Safe to call from multiple mounts;
- * concurrent callers share one in-flight promise.
+ * Connect Appwrite MCP when missing tokens or when the stored URL no longer
+ * matches the effective MCP endpoint (new instance / debug override).
+ * Safe to call from multiple mounts; concurrent callers share one in-flight promise.
  */
 export async function ensureAppwriteMcpConnected(options?: {
   /** Pre-fetched list; when omitted, fetches from the Agent API. */
@@ -82,10 +86,12 @@ export async function ensureAppwriteMcpConnected(options?: {
     const connections =
       options?.connections ?? (await fetchAssistantMcpConnections())
     const existing = appwriteConnectionFromList(connections)
+    const mcpUrl = getAppwriteAssistantMcpUrl()
 
-    // Tokens present means the agent backend can use MCP (enabled is a separate toggle).
-    if (existing?.hasTokens) {
-      return { status: 'already-connected', connection: existing }
+    // Tokens for the *current* MCP URL mean the agent can use MCP.
+    // A prior instance (different URL) must reconnect even if hasTokens is true.
+    if (isAppwriteMcpConnectionCurrent(existing, mcpUrl)) {
+      return { status: 'already-connected', connection: existing! }
     }
 
     const connection = await persistSilentConnect(!!existing)
@@ -98,7 +104,8 @@ export async function ensureAppwriteMcpConnected(options?: {
 }
 
 /**
- * On agent load: if Appwrite MCP is not connected, connect silently in the background.
+ * On agent load: if Appwrite MCP is not connected to the current endpoint,
+ * connect silently in the background. Re-runs when the debug MCP URL changes.
  */
 export function useEnsureAppwriteMcpConnected(options?: {
   enabled?: boolean
@@ -108,35 +115,49 @@ export function useEnsureAppwriteMcpConnected(options?: {
 }) {
   const enabled = options?.enabled ?? true
   const queryClient = useQueryClient()
-  const attemptedRef = useRef(false)
+  const attemptedForUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!enabled) return
     if (options?.connectionsReady === false) return
-    if (attemptedRef.current) return
     if (typeof window === 'undefined') return
     if (!getActiveProfileFeatures().aiAssistant) return
 
-    const connections = options?.connections
-    if (connections) {
-      const existing = appwriteConnectionFromList(connections)
-      if (existing?.hasTokens) {
-        attemptedRef.current = true
-        return
+    const run = () => {
+      const mcpUrl = getAppwriteAssistantMcpUrl()
+      const connections = options?.connections
+      if (connections) {
+        const existing = appwriteConnectionFromList(connections)
+        if (isAppwriteMcpConnectionCurrent(existing, mcpUrl)) {
+          attemptedForUrlRef.current = mcpUrl
+          return
+        }
       }
+
+      if (attemptedForUrlRef.current === mcpUrl) return
+      attemptedForUrlRef.current = mcpUrl
+
+      // Always re-fetch when reconnecting so we do not reuse a stale list
+      // keyed to a previous MCP URL from the first effect run.
+      void ensureAppwriteMcpConnected()
+        .then(async (result) => {
+          if (result.status === 'connected') {
+            await queryClient.refetchQueries({ queryKey: ['agent', 'mcps'] })
+          }
+        })
+        .catch((error) => {
+          // Allow a later mount / endpoint change / manual Connect to try again.
+          if (attemptedForUrlRef.current === mcpUrl) {
+            attemptedForUrlRef.current = null
+          }
+          if (import.meta.env.DEV) {
+            console.warn('[agent] Appwrite MCP auto-connect failed', error)
+          }
+        })
     }
 
-    attemptedRef.current = true
-    void ensureAppwriteMcpConnected({ connections })
-      .then(async (result) => {
-        if (result.status === 'connected') {
-          await queryClient.refetchQueries({ queryKey: ['agent', 'mcps'] })
-        }
-      })
-      .catch(() => {
-        // Allow a later mount / manual Connect to try again.
-        attemptedRef.current = false
-      })
+    run()
+    return subscribeToDebugMcpEndpointChange(run)
   }, [
     enabled,
     options?.connections,

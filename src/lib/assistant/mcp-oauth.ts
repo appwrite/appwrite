@@ -3,12 +3,13 @@
  * the Console assistant MCP SDK — never keep access tokens in React state beyond
  * the handoff.
  *
- * The hosted Appwrite MCP path uses a single pre-registered public client
- * (`appwrite-agent`). Dynamic Client Registration is only a fallback for
- * third-party MCP servers. Silent connect runs authorize + approve via the
- * Console SDK without a popup or consent redirect.
+ * The hosted Appwrite MCP path prefers the pre-registered public client
+ * (`appwrite-agent`). When that client is missing (fresh local/dev instances),
+ * silent connect falls back to Dynamic Client Registration. Silent connect runs
+ * authorize + approve via the Console SDK without a popup or consent redirect.
  */
 
+import { AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export const ASSISTANT_MCP_OAUTH_CALLBACK_PATH = '/agent/mcp/callback'
@@ -351,6 +352,24 @@ function scopeFromInput(input: StartMcpOAuthConnectInput): string {
   return scopeList.join(' ')
 }
 
+/** Seeded `appwrite-agent` (or override) is absent on this authorization server. */
+function isInvalidOAuthClientError(error: unknown): boolean {
+  if (error instanceof AppwriteException) {
+    return (
+      error.type === 'oauth2_invalid_client_id' ||
+      (error.code === 400 && /invalid client/i.test(error.message))
+    )
+  }
+  if (!error || typeof error !== 'object') return false
+  const typed = error as { type?: unknown; code?: unknown; message?: unknown }
+  if (typed.type === 'oauth2_invalid_client_id') return true
+  return (
+    typed.code === 400 &&
+    typeof typed.message === 'string' &&
+    /invalid client/i.test(typed.message)
+  )
+}
+
 export function extractAuthorizationCodeFromRedirectUrl(
   redirectUrl: string,
   expectedState?: string,
@@ -514,10 +533,41 @@ async function resolveAuthorizationCode(params: {
   return extractAuthorizationCodeFromRedirectUrl(redirectUrl, params.state)
 }
 
+async function connectMcpOAuthSilentlyWithDcr(
+  input: StartMcpOAuthConnectInput,
+): Promise<{
+  mcpId: string
+  name: string
+  url: string
+  description?: string
+  tokens: McpOAuthTokenSet
+  clientInfo: McpOAuthClientInfo
+}> {
+  // Omit fixed client id so prepareMcpOAuthSession runs Dynamic Client Registration.
+  const { session, scope, codeChallenge, authorizationDetails } =
+    await prepareMcpOAuthSession({ ...input, clientId: undefined })
+
+  try {
+    const code = await resolveAuthorizationCode({
+      clientId: session.client.client_id,
+      redirectUri: session.redirectUri,
+      scope,
+      state: session.state,
+      codeChallenge,
+      resource: session.resource,
+      authorizationDetails,
+    })
+    return await completeMcpOAuthConnect({ code, session })
+  } catch (error) {
+    clearPendingMcpOAuthSession()
+    throw error
+  }
+}
+
 /**
  * Run the full Appwrite MCP OAuth connect without a popup or consent UI.
  * Uses Console `oauth2.authorize` + `oauth2.approve` with the signed-in session.
- * Prefers the pre-registered Agent client id (no DCR).
+ * Prefers the pre-registered Agent client id; falls back to DCR when it is missing.
  */
 export async function connectMcpOAuthSilently(
   input: StartMcpOAuthConnectInput,
@@ -586,28 +636,15 @@ export async function connectMcpOAuthSilently(
       }
     } catch (error) {
       clearPendingMcpOAuthSession()
+      // Fresh local/dev AS often has no seeded `appwrite-agent` app yet.
+      if (isInvalidOAuthClientError(error)) {
+        return await connectMcpOAuthSilentlyWithDcr(input)
+      }
       throw error
     }
   }
 
-  const { session, scope, codeChallenge, authorizationDetails } =
-    await prepareMcpOAuthSession(input)
-
-  try {
-    const code = await resolveAuthorizationCode({
-      clientId: session.client.client_id,
-      redirectUri: session.redirectUri,
-      scope,
-      state: session.state,
-      codeChallenge,
-      resource: session.resource,
-      authorizationDetails,
-    })
-    return await completeMcpOAuthConnect({ code, session })
-  } catch (error) {
-    clearPendingMcpOAuthSession()
-    throw error
-  }
+  return await connectMcpOAuthSilentlyWithDcr(input)
 }
 
 /**

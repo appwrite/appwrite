@@ -7,6 +7,7 @@
 
 import {
   clampRightPaneWidthPx,
+  RIGHT_PANE_DEFAULT_WIDTH_PX,
   RIGHT_PANE_MAX_WIDTH_PX,
   RIGHT_PANE_MIN_WIDTH_PX,
 } from '@/lib/right-pane/constants'
@@ -2017,8 +2018,11 @@ export function parseRightPaneWidthPx(
     return n
   }
 
-  const legacyAiChatWidth = parseAIChatPanelWidthPx(prefs)
-  return clampRightPaneWidthPx(legacyAiChatWidth)
+  if (hasAIChatPanelWidthPref(prefs)) {
+    return clampRightPaneWidthPx(parseAIChatPanelWidthPx(prefs))
+  }
+
+  return RIGHT_PANE_DEFAULT_WIDTH_PX
 }
 
 export function hasRightPaneWidthPref(

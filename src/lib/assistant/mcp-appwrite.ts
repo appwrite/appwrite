@@ -2,6 +2,7 @@ import { MCP_SERVER_NAME } from '@/lib/config/mcp'
 import {
   getEffectiveMcpEndpointUrl,
   getEnvMcpEndpointUrl,
+  normalizeMcpEndpointUrl,
 } from '@/lib/debug-mcp-endpoint'
 
 /** Stable assistant MCP document id for the hosted Appwrite MCP server. */
@@ -14,9 +15,10 @@ export const APPWRITE_ASSISTANT_MCP_DESCRIPTION =
 
 /**
  * Pre-registered public OAuth2 app used by the console Agent to connect to
- * Appwrite MCP. One client for every user/session - never Dynamic Client
- * Registration. Override with `VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID` when the
- * backend seeds a different app id (e.g. local/dev).
+ * Appwrite MCP. Preferred when the authorization server has seeded this app
+ * (production). On fresh local/dev instances the silent connect path falls
+ * back to Dynamic Client Registration when this id is missing. Override with
+ * `VITE_APPWRITE_AGENT_OAUTH_CLIENT_ID` when the backend seeds a different id.
  */
 export const APPWRITE_AGENT_OAUTH_CLIENT_ID =
   (
@@ -68,4 +70,19 @@ export function getAppwriteAssistantMcpConnectInput() {
     clientId: APPWRITE_AGENT_OAUTH_CLIENT_ID,
     clientName: APPWRITE_AGENT_OAUTH_CLIENT_NAME,
   }
+}
+
+/**
+ * Whether a stored Appwrite MCP connection matches the effective endpoint
+ * (env / debug override). Tokens for a previous instance must not count as
+ * connected after the MCP URL changes.
+ */
+export function isAppwriteMcpConnectionCurrent(
+  connection: { url?: string | null; hasTokens?: boolean } | null | undefined,
+  mcpUrl: string = getAppwriteAssistantMcpUrl(),
+): boolean {
+  if (!connection?.hasTokens) return false
+  const stored = connection.url?.trim()
+  if (!stored) return false
+  return normalizeMcpEndpointUrl(stored) === normalizeMcpEndpointUrl(mcpUrl)
 }
