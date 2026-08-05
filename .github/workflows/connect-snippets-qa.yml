@@ -1,0 +1,10 @@
+name: Connect snippets QA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ok:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Placeholder until PR 116 lands"
