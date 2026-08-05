@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -71,11 +72,11 @@ trait Deployment
             ];
         };
 
+        $checkRuns = new CheckRuns();
+
         // A skipped deployment left the commit with no indicator at all, so a
-        // deliberate skip was indistinguishable from a broken integration. A commit
-        // status has no state for it — 'failure' carries the reason until the richer
-        // check run conclusions land.
-        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
+        // deliberate skip was indistinguishable from a broken integration.
+        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
             if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
             }
@@ -96,6 +97,13 @@ trait Deployment
 
             try {
                 [$owner, $repositoryName] = $resolveIdentity($repository->getAttribute('providerRepositoryId'));
+
+                // Neutral is one of the conclusions a required check accepts, so a
+                // skip reports itself without blocking a merge.
+                if ($checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'Deployment skipped', $reason, $targetUrl)) {
+                    return;
+                }
+
                 $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $reason, $targetUrl, $name);
             } catch (\Throwable $e) {
                 Console::warning("Failed to report a skipped deployment: " . $e->getMessage());
@@ -383,7 +391,11 @@ trait Deployment
                         $message = 'Authorization required: a maintainer must approve this external contribution.';
 
                         try {
-                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                            // action_required is terminal and tells the maintainer the
+                            // next move is theirs, which pending never did.
+                            if (!$checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_ACTION_REQUIRED, 'Authorization required', $message, $authorizeUrl)) {
+                                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                            }
                         } catch (\Throwable $e) {
                             Console::warning("Failed to report required authorization: " . $e->getMessage());
                         }
