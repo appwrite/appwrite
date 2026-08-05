@@ -52,11 +52,16 @@ trait Deployment
         $errors = [];
         $provider = $vcs->getName();
 
-        $identities = [];
-        $resolveIdentity = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$identities): array {
-            if (isset($identities[$providerRepositoryId])) {
-                return $identities[$providerRepositoryId];
+        $resolved = [];
+        $resolveOwnerAndName = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$resolved): array {
+            if (isset($resolved[$providerRepositoryId])) {
+                return $resolved[$providerRepositoryId];
             }
+
+            // Owner first: getRepositoryName reports any unreadable response as
+            // RepositoryNotFound, which the loop treats as a 404 and skips. Letting
+            // an unreachable provider fail here instead keeps it a 500, and retried.
+            $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
             try {
                 $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
@@ -64,15 +69,12 @@ trait Deployment
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
 
-            return $identities[$providerRepositoryId] = [
-                $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId),
-                $repositoryName,
-            ];
+            return $resolved[$providerRepositoryId] = [$owner, $repositoryName];
         };
 
         $checkRuns = new CheckRuns();
 
-        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
+        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveOwnerAndName, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
             if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
             }
@@ -91,16 +93,18 @@ trait Deployment
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
             try {
-                [$owner, $repositoryName] = $resolveIdentity($repository->getAttribute('providerRepositoryId'));
+                [$owner, $repositoryName] = $resolveOwnerAndName($repository->getAttribute('providerRepositoryId'));
 
                 // Neutral is in branch protection's passing set; failure is not.
                 if ($checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'Deployment skipped', $reason, $targetUrl)) {
                     return;
                 }
 
-                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $reason, $targetUrl, $name);
+                // Mirrors the neutral conclusion above: a skip is not a break, and
+                // must not block a merge where this check is required.
+                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'success', $reason, $targetUrl, $name);
             } catch (\Throwable $e) {
-                Console::warning("Failed to report a skipped deployment: " . $e->getMessage());
+                Console::warning("Failed to report a skipped deployment on repository '{$repository->getId()}': " . $e->getMessage());
             }
         };
 
@@ -168,7 +172,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $reportSkip($resource, $project, $repository, "Skipped: branch '{$providerBranch}' does not match the configured branch triggers.");
+                    $reportSkip($resource, $project, $repository, "Skipped: branch '" . \mb_strimwidth($providerBranch, 0, 60, '...') . "' does not match the configured branch triggers.");
                     continue;
                 }
 
@@ -204,7 +208,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                [$owner, $repositoryName] = $resolveIdentity($providerRepositoryId);
+                [$owner, $repositoryName] = $resolveOwnerAndName($providerRepositoryId);
 
                 $isAuthorized = !$external;
 
@@ -388,7 +392,7 @@ trait Deployment
                                 $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
                             }
                         } catch (\Throwable $e) {
-                            Console::warning("Failed to report required authorization: " . $e->getMessage());
+                            Console::warning("Failed to report required authorization on repository '{$repository->getId()}': " . $e->getMessage());
                         }
                     }
 

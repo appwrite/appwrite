@@ -120,10 +120,21 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git add index.js && git commit -m "Update function"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
+        $skippedCommit = \trim(\shell_exec('cd ' . \escapeshellarg($workdir) . ' && git rev-parse HEAD~1') ?? '');
+
         $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v4'), 30000, 1000);
 
         $this->assertCount(\count($knownIds) + 1, $this->listDeploymentIdsHelper($functionId));
+
+        $statuses = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/commits/' . $skippedCommit . '/statuses');
+        $this->assertEquals(200, $statuses['headers']['status-code']);
+
+        $reasons = \array_column($statuses['body'], 'description');
+        $this->assertNotEmpty(
+            \array_filter($reasons, fn ($reason) => \str_contains((string) $reason, 'Skipped')),
+            'The skipped commit carries no status saying so: ' . \json_encode($reasons)
+        );
     }
 
     /**
