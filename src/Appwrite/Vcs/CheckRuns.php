@@ -7,17 +7,9 @@ use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
- * Reports deployment state as provider check runs.
- *
- * A commit status can only say pending, success, failure or error, so a
- * deployment Appwrite deliberately skipped looked identical to one that never
- * ran, and one waiting on a maintainer's authorization sat pending forever. A
- * check run carries a conclusion for both.
- *
- * Only GitHub implements check runs; every other provider keeps the commit
- * status, so callers treat a zero return as "fall back". Reporting is
- * best-effort throughout — a provider that refuses the call must never fail
- * the deployment that triggered it.
+ * Reports deployment state as provider check runs, which carry conclusions a
+ * commit status cannot: skipped, and waiting on authorization. Only GitHub
+ * implements them, so a zero return means fall back to the commit status.
  */
 class CheckRuns
 {
@@ -27,32 +19,22 @@ class CheckRuns
     public const string CONCLUSION_FAILURE = 'failure';
     public const string CONCLUSION_CANCELLED = 'cancelled';
 
-    /**
-     * GitHub rejects a name longer than this.
-     */
     protected const int NAME_LIMIT = 255;
 
     /**
-     * Owners whose installation has already refused a check run. A webhook fans
-     * out to every resource linked to a repository, so without this an
-     * installation that was never granted the permission pays one rejected
-     * call per resource.
+     * Owners whose installation refused a run, so an installation missing the
+     * permission does not pay one rejected call per linked resource.
      *
      * @var array<string, true>
      */
     protected array $refused = [];
 
-    /**
-     * Whether this provider reports check runs at all.
-     */
     public function supports(Git $vcs): bool
     {
         return $vcs instanceof GitHub;
     }
 
     /**
-     * Open a run for a deployment that is about to build.
-     *
      * @return int The run's id, or 0 when none was opened.
      */
     public function open(
@@ -69,8 +51,6 @@ class CheckRuns
     }
 
     /**
-     * Report a deployment that reached a terminal state without building.
-     *
      * @return int The run's id, or 0 when none was opened.
      */
     public function conclude(
@@ -88,8 +68,6 @@ class CheckRuns
     }
 
     /**
-     * Close a run opened earlier.
-     *
      * @return bool Whether the run was closed.
      */
     public function close(
@@ -141,8 +119,7 @@ class CheckRuns
         string $detailsUrl,
         string $externalId = '',
     ): int {
-        // An empty or malformed hash is a 422; a deployment without one has no
-        // commit to report against in the first place.
+        // A malformed hash is a 422, and without one there is nothing to report against.
         if (!\preg_match('/^[0-9a-f]{7,40}$/i', $commitHash)) {
             return 0;
         }
@@ -176,21 +153,13 @@ class CheckRuns
 
     protected function reportable(Git $vcs, string $owner, string $repositoryName): bool
     {
-        if (!$this->supports($vcs)) {
-            return false;
-        }
-
-        if (empty($owner) || empty($repositoryName)) {
+        if (!$this->supports($vcs) || empty($owner) || empty($repositoryName)) {
             return false;
         }
 
         return !isset($this->refused[$owner]);
     }
 
-    /**
-     * An installation predating the check run permission answers 403 to every
-     * call, so stop asking for the rest of this event.
-     */
     protected function remember(string $owner, \Throwable $error): void
     {
         if ($error->getCode() === 403) {

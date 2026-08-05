@@ -495,8 +495,8 @@ class Jobs extends Action
         try {
             GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         } catch (\Throwable $e) {
-            // Best-effort — never fails the build, but say so; a provider that
-            // rejects the report leaves the commit with no build state at all.
+            // Best-effort — never fails the build, but a rejected report leaves the
+            // commit with no build state at all.
             Console::warning("Failed to report build state for deployment '{$deployment->getId()}': " . $e->getMessage());
         }
     }

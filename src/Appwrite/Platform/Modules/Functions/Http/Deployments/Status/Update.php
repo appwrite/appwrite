@@ -141,8 +141,7 @@ class Update extends Action
         } catch (\Throwable) {
         }
 
-        // Nothing else reports a canceled build, so a check run opened when it was
-        // triggered would stay in progress on the commit for good.
+        // Nothing else reports a canceled build, leaving any open run in progress.
         try {
             GitAction::report('canceled', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         } catch (\Throwable) {

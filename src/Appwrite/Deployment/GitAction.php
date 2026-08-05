@@ -21,8 +21,6 @@ final class GitAction
 {
     /**
      * Resolve the provider for a deployment and report a build state to it.
-     * Best-effort: a deployment that never came from git, or whose installation
-     * is gone, reports nothing.
      */
     public static function report(
         string $status,
@@ -73,9 +71,8 @@ final class GitAction
         $checkRunId = (int) $deployment->getAttribute('providerCheckRunId', 0);
         $silent = $resource->getAttribute('providerSilentMode', false) === true;
 
-        // A run Appwrite opened is always closed. Silent mode is force-set when a
-        // resource is disconnected from git, which would otherwise leave the check
-        // spinning on the commit for good.
+        // Silent mode is force-set on git disconnect, so return only once any run
+        // we opened has been closed.
         if ($silent && $checkRunId <= 0) {
             return;
         }
@@ -95,8 +92,7 @@ final class GitAction
                 'ready' => 'success',
                 'failed' => 'failure',
                 'processing' => 'pending',
-                // A commit status has no canceled state, and reporting one as
-                // failed would misrepresent it. Only a check run says this.
+                // No commit status says canceled, and failed would misrepresent it.
                 'canceled' => '',
                 default => $status
             };
@@ -115,7 +111,6 @@ final class GitAction
             };
 
             if ($checkRunId > 0) {
-                // 'processing' leaves the run as it is — it was opened in progress.
                 if (!empty($conclusion)) {
                     $title = match ($status) {
                         'ready' => 'Deployment ready',

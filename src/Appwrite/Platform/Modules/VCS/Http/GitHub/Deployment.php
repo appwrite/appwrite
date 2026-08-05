@@ -53,8 +53,7 @@ trait Deployment
         $provider = $vcs->getName();
         $checkRuns = new CheckRuns();
 
-        // A webhook fans out to every resource linked to the same provider repository,
-        // so resolve its owner and name once per provider repository rather than per resource.
+        // A webhook fans out to every resource linked to the same provider repository.
         $identities = [];
         $resolveIdentity = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$identities): array {
             if (isset($identities[$providerRepositoryId])) {
@@ -73,8 +72,6 @@ trait Deployment
             ];
         };
 
-        // A skipped deployment used to leave the commit with no indicator at all, so
-        // there was no way to tell a deliberate skip from a broken integration.
         $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash): void {
             if (!$checkRuns->supports($vcs) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
@@ -362,8 +359,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    // Gated like every other report: silent mode otherwise left a
-                    // permanent pending status on the commit.
                     if ($resource->getAttribute('providerSilentMode', false) === false) {
                         $resourceName = $resource->getAttribute('name');
                         $projectName = $project->getAttribute('name');
@@ -422,9 +417,8 @@ trait Deployment
                 $name = "{$resourceName} ({$projectName})";
                 $silent = $resource->getAttribute('providerSilentMode', false) === true;
 
-                // Open the run before the deployment is persisted so its id can ride
-                // along: the build worker submitted below can finish before a report
-                // written afterwards lands, which would reopen a completed run.
+                // Open before persisting: the build submitted below can finish first,
+                // and a later report would reopen a run the worker already completed.
                 $checkRunId = 0;
                 if (!$silent) {
                     $checkRunId = $checkRuns->open($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'Starting...', $providerTargetUrl, $deploymentId);
@@ -477,7 +471,6 @@ trait Deployment
                             $resource->getAttribute('providerRootDirectory', ''),
                         ));
                 } catch (\Throwable $e) {
-                    // Nothing will build, so nothing will close the run we just opened.
                     $checkRuns->close($vcs, $owner, $repositoryName, $checkRunId, CheckRuns::CONCLUSION_FAILURE, 'Deployment failed', 'Could not queue the build.', $providerTargetUrl);
 
                     throw $e;
