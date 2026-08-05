@@ -35,6 +35,24 @@ final class CommentTest extends TestCase
         $this->assertSame($firstTip, $secondTip);
     }
 
+    public function testCanceledBuildRendersAStatus(): void
+    {
+        foreach (['function', 'site'] as $resourceType) {
+            $comment = new Comment(['consoleHostname' => 'localhost', 'sitesDomain' => 'sites.localhost']);
+            $comment->addBuild(
+                new Document(['$id' => 'project1', 'name' => 'Test Project', 'region' => 'default']),
+                new Document(['$id' => 'resource1', 'name' => 'Test Resource']),
+                $resourceType,
+                'canceled',
+                'dep1',
+                ['type' => 'logs'],
+                ''
+            );
+
+            $this->assertStringContainsString('_Canceled_', $comment->generateComment(), "Empty status cell for a canceled {$resourceType}");
+        }
+    }
+
     public function testTipIsRestoredFromParsedComment(): void
     {
         $comment = new Comment(['consoleHostname' => 'localhost']);

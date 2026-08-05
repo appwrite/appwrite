@@ -72,8 +72,14 @@ trait Deployment
             ];
         };
 
-        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash): void {
+        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external): void {
             if (!$checkRuns->supports($vcs) || $resource->getAttribute('providerSilentMode', false) === true) {
+                return;
+            }
+
+            // A pull request on this repository also raised a push event, which
+            // reported the same skip on the same commit. A fork raises no push.
+            if (!empty($providerPullRequestId) && !$external) {
                 return;
             }
 
@@ -377,7 +383,11 @@ trait Deployment
                         );
 
                         if ($reported === 0 && !empty($providerCommitHash)) {
-                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Authorization required for external contributor.', $authorizeUrl, $name);
+                            try {
+                                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Authorization required for external contributor.', $authorizeUrl, $name);
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to report required authorization on {$owner}/{$repositoryName}: " . $e->getMessage());
+                            }
                         }
                     }
 
@@ -424,7 +434,13 @@ trait Deployment
                     $checkRunId = $checkRuns->open($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'Starting...', $providerTargetUrl, $deploymentId);
 
                     if ($checkRunId === 0 && !empty($providerCommitHash)) {
-                        $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Starting...', $providerTargetUrl, $name);
+                        // This now runs before the deployment is created, so a rejected
+                        // status must not be what stops it being created.
+                        try {
+                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', 'Starting...', $providerTargetUrl, $name);
+                        } catch (\Throwable $e) {
+                            Console::warning("Failed to report deployment start on {$owner}/{$repositoryName}: " . $e->getMessage());
+                        }
                     }
                 }
 
@@ -471,7 +487,16 @@ trait Deployment
                             $resource->getAttribute('providerRootDirectory', ''),
                         ));
                 } catch (\Throwable $e) {
-                    $checkRuns->close($vcs, $owner, $repositoryName, $checkRunId, CheckRuns::CONCLUSION_FAILURE, 'Deployment failed', 'Could not queue the build.', $providerTargetUrl);
+                    // Nothing will build, so nothing else will resolve what was just
+                    // reported. Never let the compensation mask the original failure.
+                    try {
+                        if ($checkRunId > 0) {
+                            $checkRuns->close($vcs, $owner, $repositoryName, $checkRunId, CheckRuns::CONCLUSION_FAILURE, 'Deployment failed', 'Could not queue the build.', $providerTargetUrl);
+                        } elseif (!$silent && !empty($providerCommitHash)) {
+                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', 'Could not queue the build.', $providerTargetUrl, $name);
+                        }
+                    } catch (\Throwable) {
+                    }
 
                     throw $e;
                 }

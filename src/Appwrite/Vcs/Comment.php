@@ -157,6 +157,8 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        // No icon ships for a canceled build; text alone beats a blank cell.
+                        'canceled' => '_Canceled_',
                         default => '',
                     };
 
@@ -208,6 +210,8 @@ class Comment
                         'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
                         'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
                         'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
+                        // No icon ships for a canceled build; text alone beats a blank cell.
+                        'canceled' => '_Canceled_',
                         default => '',
                     };
 

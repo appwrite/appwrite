@@ -12,10 +12,11 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
 /**
- * Reports a deployment build state to the VCS provider: a commit status and,
- * for pull-request deployments, the PR comment listing the build with its
- * console and preview links. Shared by both build backends; callers own
- * error handling — a failed report never fails a build.
+ * Reports a deployment build state to the VCS provider: the check run opened
+ * when the deployment was triggered, or a commit status where no run was opened,
+ * and for pull-request deployments the PR comment listing the build with its
+ * console and preview links. Shared by both build backends; callers own error
+ * handling — a failed report never fails a build.
  */
 final class GitAction
 {
