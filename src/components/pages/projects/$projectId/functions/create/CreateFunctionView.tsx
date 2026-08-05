@@ -54,6 +54,9 @@ import { RESOURCE_CARD_GRID_2_COL_CLASSNAME } from '../../shared/ResourceCard'
 const TEMPLATE_CARD_FOCUS_CLASSNAME =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -335,10 +338,28 @@ export function CreateFunctionView() {
   }, [projectEndpoint, projectId, selectedInstallationId])
   const getGitHubAuthUrl = getVcsAuthUrl('github')
 
+  // The picked installation lives in component state, seeded from
+  // `?installation=`, so the provider has to return to a URL that still names
+  // it -- the bare current URL would drop the selection on the way back.
+  const reconnectReturnUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId) return undefined
+    const base = `${window.location.origin}/projects/${projectId}/functions/create`
+    return selectedInstallationId
+      ? `${base}?installation=${selectedInstallationId}`
+      : base
+  }, [projectId, selectedInstallationId])
+
+  const { reconnectUrl } = useVcsInstallationReconnect(
+    projectId,
+    selectedInstallationId || null,
+    reconnectReturnUrl,
+  )
+
   const {
     data: repositoriesData,
     isLoading: reposLoading,
     isFetching: reposFetching,
+    error: reposError,
     refetch: refetchRepos,
   } = useRepositories(
     projectId,
@@ -355,6 +376,11 @@ export function CreateFunctionView() {
     [repositoriesData],
   )
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
+
+  // An installation that can no longer authenticate returns nothing, which is
+  // indistinguishable from an organization with no repositories. Read the error
+  // so this step stops reporting a failure as an empty list.
+  const installationErrorKind = getVcsInstallationErrorKind(reposError)
 
   const { data: starterPage } = useQuery({
     ...functionTemplatesPageQueryOptions(
@@ -645,6 +671,18 @@ export function CreateFunctionView() {
                       ),
                     )}
                   </div>
+                ) : installationErrorKind ? (
+                  <div className="px-4 py-8">
+                    <VcsInstallationErrorState
+                      kind={installationErrorKind}
+                      provider={selectedInstallation?.provider}
+                      organization={selectedInstallation?.organization}
+                      reconnectUrl={reconnectUrl}
+                      onRetry={() => refetchRepos()}
+                      isRetrying={reposFetching}
+                      className="py-0"
+                    />
+                  </div>
                 ) : (
                   <div className="py-8 text-center">
                     <p className="text-[12px] text-muted-foreground">
@@ -656,14 +694,20 @@ export function CreateFunctionView() {
                 )}
               </div>
 
-              <SimplePagination
-                currentPage={repoPage}
-                hasMore={hasMoreRepos}
-                onPageChange={setRepoPage}
-                disabled={reposFetching}
-              />
+              {!installationErrorKind && (
+                <SimplePagination
+                  currentPage={repoPage}
+                  hasMore={hasMoreRepos}
+                  onPageChange={setRepoPage}
+                  disabled={reposFetching}
+                />
+              )}
 
               {(() => {
+                // A broken installation is not a scope problem, so this hint
+                // would send the user to widen permissions that are already
+                // wide enough.
+                if (installationErrorKind) return null
                 const knownProvider = getKnownVcsProvider(
                   selectedInstallation?.provider,
                 )

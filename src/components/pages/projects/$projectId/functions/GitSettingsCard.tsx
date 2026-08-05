@@ -26,6 +26,9 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { useT } from '@/lib/i18n/translate'
 import {
   getVcsProvider,
@@ -58,14 +61,32 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     useState<string>('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>('')
 
-  // Fetch repository details if connected
+  // Fetch repository details if connected. Deliberately derived from the
+  // function itself, never from the lookup below: a repository we cannot read
+  // is still a connected repository.
   const hasRepository = func.installationId && func.providerRepositoryId
 
-  const { data: repository, isLoading: repositoryLoading } = useRepository(
+  const {
+    data: repository,
+    isLoading: repositoryLoading,
+    isFetching: repositoryFetching,
+    error: repositoryError,
+    refetch: refetchRepository,
+  } = useRepository(
     projectId,
     func.installationId || null,
     func.providerRepositoryId || null,
   )
+
+  // The lookup refreshes the installation token, so a dead installation fails
+  // here and leaves us with no repository record to render. Untreated that
+  // drops the repository row and the card reads as "nothing connected".
+  const repositoryErrorKind = getVcsInstallationErrorKind(repositoryError)
+  const {
+    provider: installationProvider,
+    organization: installationOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, func.installationId)
 
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
@@ -258,6 +279,12 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     )
   }, [selectedBranch, selectedDir, func])
 
+  // Null while the repository is unreachable: only the provider knows its
+  // owner and name, so the affected rows fall back to generic wording.
+  const repositoryLabel = repository
+    ? `${repository.organization}/${repository.name}`
+    : null
+
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
@@ -351,17 +378,33 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         ) : (
           // Repository connected state
           <div className="space-y-4">
-            {/* Repository info */}
+            {repositoryErrorKind && (
+              <VcsInstallationErrorAlert
+                kind={repositoryErrorKind}
+                provider={installationProvider}
+                organization={installationOrganization}
+                reconnectUrl={reconnectUrl}
+                onRetry={() => refetchRepository()}
+                isRetrying={repositoryFetching}
+              >
+                {t(
+                  'This function is still connected to its repository, but the repository details could not be loaded.',
+                )}
+              </VcsInstallationErrorAlert>
+            )}
+
+            {/* Repository info. Kept on screen for an unreachable repository so
+                the connection stays visible and can still be removed. */}
             {repositoryLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            ) : repository ? (
+            ) : repository || repositoryErrorKind ? (
               <div className="flex items-center gap-3 rounded-md border border-border bg-background px-3 py-2">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
                   {(() => {
                     const { Icon: RepositoryProviderIcon } = getVcsProvider(
-                      repository.provider,
+                      repository?.provider ?? installationProvider,
                     )
                     return (
                       <RepositoryProviderIcon className="h-4 w-4 text-muted-foreground" />
@@ -371,13 +414,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-[13px] font-medium text-foreground">
-                      {repository.organization}/{repository.name}
+                      {repositoryLabel ?? t('Repository details unavailable')}
                     </p>
-                    {repository.private && (
+                    {repository?.private && (
                       <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     )}
                   </div>
-                  {repository.pushedAt && (
+                  {repository?.pushedAt && (
                     <p className="text-[12px] text-muted-foreground">
                       {t('Last updated')}{' '}
                       <DateTooltip date={repository.pushedAt} />
@@ -385,7 +428,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {repository.url && (
+                  {repository?.url && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -418,7 +461,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                         <DialogDescription className="text-[13px] mt-2">
                           {t('Are you sure you want to disconnect')}{' '}
                           <span className="font-medium text-foreground">
-                            {repository.organization}/{repository.name}
+                            {repositoryLabel ?? t('this repository')}
                           </span>{' '}
                           {t(
                             'from this function? This will remove all Git configuration and you will need to reconnect the repository to enable automatic deployments.',
@@ -460,6 +503,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 value={selectedBranch}
                 onChange={setSelectedBranch}
                 label={t('Production branch')}
+                suppressInstallationError={!!repositoryErrorKind}
               />
 
               {/* Root directory selector */}

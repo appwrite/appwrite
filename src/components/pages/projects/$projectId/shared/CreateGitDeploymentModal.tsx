@@ -15,9 +15,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
@@ -25,6 +30,7 @@ import { VCSReferenceType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
   useRepository,
+  repositoryBranchesQueryOptions,
   useVcsInstallations,
   useProject,
   buildSiteUpdateParams,
@@ -33,6 +39,9 @@ import {
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
+import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
+import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { useT } from '@/lib/i18n/translate'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 
@@ -79,7 +88,12 @@ export function CreateGitDeploymentModal({
     string | null
   >(null)
 
-  const { data: repository } = useRepository(
+  const {
+    data: repository,
+    error: repositoryError,
+    isFetching: repositoryFetching,
+    refetch: refetchRepository,
+  } = useRepository(
     projectId,
     hasLinkedRepo ? (resource.installationId ?? null) : null,
     hasLinkedRepo ? (resource.providerRepositoryId ?? null) : null,
@@ -229,6 +243,40 @@ export function CreateGitDeploymentModal({
     ? (resource.providerRepositoryId ?? undefined)
     : selectedRepositoryId || undefined
 
+  // Same query key as BranchSelector's, so this reads its result rather than
+  // issuing a second request. Kept off until the modal opens, since the modal
+  // stays mounted for the whole page.
+  const {
+    error: branchesError,
+    isFetching: branchesFetching,
+    refetch: refetchBranches,
+  } = useQuery({
+    ...repositoryBranchesQueryOptions(
+      projectId,
+      installationId,
+      providerRepositoryId,
+    ),
+    enabled: open && !!installationId && !!providerRepositoryId,
+  })
+
+  // Every call the modal makes refreshes the same installation token, so any of
+  // them failing means the deployment it would create cannot be built either.
+  const installationErrorKind =
+    getVcsInstallationErrorKind(repositoryError) ??
+    getVcsInstallationErrorKind(branchesError) ??
+    getVcsInstallationErrorKind(linkRepoThenDeployMutation.error)
+  const {
+    provider: reconnectProvider,
+    organization: reconnectOrganization,
+    reconnectUrl,
+  } = useVcsInstallationReconnect(projectId, installationId)
+
+  const handleRetryInstallation = () => {
+    linkRepoThenDeployMutation.reset()
+    refetchRepository()
+    refetchBranches()
+  }
+
   const docsUrl =
     resourceType === 'function' ? FUNCTIONS_DEPLOY_DOCS : SITES_DEPLOY_DOCS
   const isPending = linkRepoThenDeployMutation.isPending
@@ -288,6 +336,20 @@ export function CreateGitDeploymentModal({
             </div>
           ) : (
             <>
+              {installationErrorKind && (
+                <VcsInstallationErrorAlert
+                  kind={installationErrorKind}
+                  provider={reconnectProvider}
+                  organization={reconnectOrganization}
+                  reconnectUrl={reconnectUrl}
+                  onRetry={handleRetryInstallation}
+                  isRetrying={repositoryFetching || branchesFetching}
+                >
+                  {t(
+                    'Appwrite could not read this repository, so a deployment created now would fail to build.',
+                  )}
+                </VcsInstallationErrorAlert>
+              )}
               {hasLinkedRepo && repository && (
                 <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
                   <p className="text-[13px] font-medium text-foreground truncate">
@@ -342,6 +404,7 @@ export function CreateGitDeploymentModal({
                 onChange={setBranch}
                 label={t('Production branch')}
                 placeholder={t('Select branch')}
+                suppressInstallationError={!!installationErrorKind}
               />
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -387,13 +450,28 @@ export function CreateGitDeploymentModal({
               >
                 {t('Cancel')}
               </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isPending || !branch?.trim()}
-                className="h-9 text-[13px]"
-              >
-                {t('Create deployment')}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={
+                        isPending || !branch?.trim() || !!installationErrorKind
+                      }
+                      className="h-9 text-[13px]"
+                    >
+                      {t('Create deployment')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {installationErrorKind ? (
+                  <TooltipContent className="max-w-xs text-[13px]">
+                    {t(
+                      'The Git installation could not be reached, so this deployment cannot be created.',
+                    )}
+                  </TooltipContent>
+                ) : null}
+              </Tooltip>
             </>
           )}
           {showRepoPicker && (
