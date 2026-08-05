@@ -59,6 +59,8 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   solid: 'solid.svg',
   solidjs: 'solid.svg',
   'solid-js': 'solid.svg',
+  solidstart: 'solid.svg',
+  'solid-start': 'solid.svg',
 
   refine: 'refine.svg',
 

@@ -106,9 +106,12 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'react', label: 'React' },
     { id: 'vue', label: 'Vue.js' },
     { id: 'sveltekit', label: 'SvelteKit' },
+    { id: 'svelte', label: 'Svelte' },
     { id: 'angular', label: 'Angular' },
+    { id: 'analog', label: 'Analog' },
     { id: 'nuxt', label: 'Nuxt' },
     { id: 'solid', label: 'Solid' },
+    { id: 'solidstart', label: 'SolidStart' },
     { id: 'tanstack', label: 'TanStack Start' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
@@ -1139,6 +1142,51 @@ export class AppComponent {
           },
         ]
       }
+      if (frameworkId === 'analog') {
+        return [
+          { label: envLabel, code: envCode, language: 'env' },
+          {
+            label: 'src/lib/appwrite.ts',
+            code: `import { Client } from 'appwrite'
+
+${clientInitWeb}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/app/pages/index.page.ts',
+            code: `import { Component, signal } from '@angular/core'
+import { Account } from 'appwrite'
+import { client } from '../../lib/appwrite'
+
+@Component({
+  standalone: true,
+  template: \`
+    @if (user(); as u) {
+      <p>Hello, {{ u.name }}</p>
+    } @else {
+      <p>Sign in to get started.</p>
+    }
+  \`,
+})
+export default class HomePageComponent {
+  user = signal<{ name: string } | null>(null)
+
+  constructor() {
+    const account = new Account(client)
+    account
+      .get()
+      .then((u) => this.user.set({ name: u.name }))
+      .catch(() => {})
+  }
+}
+`,
+            language: tsLang,
+          },
+        ]
+      }
       if (frameworkId === 'nuxt') {
         return [
           { label: envLabel, code: envCode, language: 'env' },
@@ -1222,6 +1270,44 @@ function Home() {
         ]
       }
       if (frameworkId === 'solid') {
+        return [
+          { label: envLabel, code: envCode, language: 'env' },
+          {
+            label: 'src/lib/appwrite.ts',
+            code: `import { Client } from 'appwrite'
+
+${clientInitWeb}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/App.tsx',
+            code: `import { createResource, Show } from 'solid-js'
+import { Account } from 'appwrite'
+import { client } from './lib/appwrite'
+
+async function fetchUser() {
+  const account = new Account(client)
+  return account.get().catch(() => null)
+}
+
+export default function App() {
+  const [user] = createResource(fetchUser)
+
+  return (
+    <Show when={user()} fallback={<p>Sign in to get started.</p>}>
+      <p>Hello, {user()?.name}</p>
+    </Show>
+  )
+}
+`,
+            language: tsLang,
+          },
+        ]
+      }
+      if (frameworkId === 'solidstart') {
         return [
           { label: envLabel, code: envCode, language: 'env' },
           {
