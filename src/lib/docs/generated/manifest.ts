@@ -598,6 +598,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "partners/apps/installations",
+    "title": "Installations",
+    "description": "Install your app on an organization and act with installation tokens that need no signed-in user.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "partners/apps/quick-start",
     "title": "Start with Sign in with Appwrite",
     "description": "Register an app and run the full Sign in with Appwrite flow, from consent screen to your first authorized API call.",
@@ -1319,6 +1326,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
     "layout": "article",
     "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/auth/oauth-server/installations",
+    "title": "Installations",
+    "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
+    "layout": "article",
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/oauth-server/quick-start",
