@@ -38,6 +38,8 @@ $telemetry->collect();
 
 ## Metric types
 
+Create instruments wherever it suits your code, including at boot: an instrument reaches the exporter only once it has been written to. An instrument that never records exports nothing, so it cannot produce a metric with zero data points — which Prometheus 3.13 and later rejects, taking the rest of the OTLP request with it.
+
 ### Counter
 
 A monotonically increasing counter. Only positive increments are allowed.

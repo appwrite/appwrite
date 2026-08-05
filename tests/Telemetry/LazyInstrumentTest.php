@@ -11,6 +11,10 @@ use Utopia\Telemetry\Gauge;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
 
+/**
+ * Guards the deprecated `::lazy()` shims: adapters defer instrument registration to the first write
+ * themselves, so the shims must keep behaving exactly like a plain `create*()` call.
+ */
 final class LazyInstrumentTest extends TestCase
 {
     public function testLazyCounterCreatesInnerCounterOnFirstAdd(): void

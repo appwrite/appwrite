@@ -11,6 +11,9 @@ use Utopia\Telemetry\UpDownCounter;
 
 /**
  * Test adapter allows access to the underlying telemetry resources. Can be used in tests to verify metrics.
+ *
+ * Instruments appear in these arrays on first write, mirroring the OpenTelemetry adapter: an
+ * instrument that never records is never exported, so it never shows up here either.
  */
 class Test implements Adapter
 {
@@ -40,26 +43,42 @@ class Test implements Adapter
     public array $observableGauges = [];
 
     /**
+     * Observable gauges awaiting their first callback, kept so that repeated creation of the same
+     * name returns one instrument and every source contributes its own callback.
+     *
+     * @var array<string, ObservableGauge>
+     */
+    private array $unobservedGauges = [];
+
+    /**
      * @param array<string, mixed> $advisory
      */
     public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
     {
-        $counter = new class extends Counter {
+        $register = function (Counter $counter) use ($name): void {
+            $this->counters[$name] = $counter;
+        };
+
+        return new class ($register) extends Counter {
             /**
              * @var array<int, float|int>
              */
             public array $values = [];
 
             /**
+             * @param \Closure(Counter): void $register
+             */
+            public function __construct(private \Closure $register) {}
+
+            /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
             public function add(float|int $amount, iterable $attributes = []): void
             {
+                ($this->register)($this);
                 $this->values[] = $amount;
             }
         };
-        $this->counters[$name] = $counter;
-        return $counter;
     }
 
     /**
@@ -67,22 +86,30 @@ class Test implements Adapter
      */
     public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
     {
-        $histogram = new class extends Histogram {
+        $register = function (Histogram $histogram) use ($name): void {
+            $this->histograms[$name] = $histogram;
+        };
+
+        return new class ($register) extends Histogram {
             /**
              * @var array<int, float|int>
              */
             public array $values = [];
 
             /**
+             * @param \Closure(Histogram): void $register
+             */
+            public function __construct(private \Closure $register) {}
+
+            /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
             public function record(float|int $amount, iterable $attributes = []): void
             {
+                ($this->register)($this);
                 $this->values[] = $amount;
             }
         };
-        $this->histograms[$name] = $histogram;
-        return $histogram;
     }
 
     /**
@@ -90,22 +117,30 @@ class Test implements Adapter
      */
     public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
     {
-        $gauge = new class extends Gauge {
+        $register = function (Gauge $gauge) use ($name): void {
+            $this->gauges[$name] = $gauge;
+        };
+
+        return new class ($register) extends Gauge {
             /**
              * @var array<int, float|int>
              */
             public array $values = [];
 
             /**
+             * @param \Closure(Gauge): void $register
+             */
+            public function __construct(private \Closure $register) {}
+
+            /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
             public function record(float|int $amount, iterable $attributes = []): void
             {
+                ($this->register)($this);
                 $this->values[] = $amount;
             }
         };
-        $this->gauges[$name] = $gauge;
-        return $gauge;
     }
 
     /**
@@ -113,22 +148,30 @@ class Test implements Adapter
      */
     public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
     {
-        $upDownCounter = new class extends UpDownCounter {
+        $register = function (UpDownCounter $upDownCounter) use ($name): void {
+            $this->upDownCounters[$name] = $upDownCounter;
+        };
+
+        return new class ($register) extends UpDownCounter {
             /**
              * @var array<int, float|int>
              */
             public array $values = [];
 
             /**
+             * @param \Closure(UpDownCounter): void $register
+             */
+            public function __construct(private \Closure $register) {}
+
+            /**
              * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
              */
             public function add(float|int $amount, iterable $attributes = []): void
             {
+                ($this->register)($this);
                 $this->values[] = $amount;
             }
         };
-        $this->upDownCounters[$name] = $upDownCounter;
-        return $upDownCounter;
     }
 
     /**
@@ -136,17 +179,27 @@ class Test implements Adapter
      */
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
-        // Cache by name to mirror the real OpenTelemetry adapter: many sources sharing a metric
-        // name (e.g. one per pool) get the same instrument and each contributes its own callback.
-        return $this->observableGauges[$name] ??= new class extends ObservableGauge {
-            /** @var list<\Closure> */
-            public array $callbacks = [];
-
-            public function observe(callable $callback): void
-            {
-                $this->callbacks[] = \Closure::fromCallable($callback);
-            }
+        $register = function (ObservableGauge $gauge) use ($name): void {
+            $this->observableGauges[$name] = $gauge;
         };
+
+        return $this->observableGauges[$name]
+            ?? $this->unobservedGauges[$name]
+            ??= new class ($register) extends ObservableGauge {
+                /** @var list<\Closure> */
+                public array $callbacks = [];
+
+                /**
+                 * @param \Closure(ObservableGauge): void $register
+                 */
+                public function __construct(private \Closure $register) {}
+
+                public function observe(callable $callback): void
+                {
+                    ($this->register)($this);
+                    $this->callbacks[] = \Closure::fromCallable($callback);
+                }
+            };
     }
 
     public function collect(): bool

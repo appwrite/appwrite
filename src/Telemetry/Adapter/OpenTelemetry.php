@@ -6,6 +6,7 @@ use OpenTelemetry\API\Metrics\CounterInterface;
 use OpenTelemetry\API\Metrics\GaugeInterface;
 use OpenTelemetry\API\Metrics\HistogramInterface;
 use OpenTelemetry\API\Metrics\MeterInterface;
+use OpenTelemetry\API\Metrics\ObservableGaugeInterface;
 use OpenTelemetry\API\Metrics\ObserverInterface;
 use OpenTelemetry\API\Metrics\UpDownCounterInterface;
 use OpenTelemetry\Contrib\Otlp\ContentTypes;
@@ -29,6 +30,12 @@ use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\ObservableGauge;
 use Utopia\Telemetry\UpDownCounter;
 
+/**
+ * Instruments are registered with the OpenTelemetry meter on first write, not when they are created.
+ * An instrument registered but never written to exports a metric with zero data points, and
+ * Prometheus 3.13 and later rejects the whole OTLP request over one of those — every healthy metric
+ * sharing the push is discarded with it. Creating instruments up front is therefore always safe.
+ */
 class OpenTelemetry implements Adapter
 {
     private MetricReaderInterface $reader;
@@ -125,16 +132,22 @@ class OpenTelemetry implements Adapter
     public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
     {
         return $this->createMeter(Counter::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Counter {
-            $counter = $this->meter->createCounter($name, $unit, $description, $advisory);
+            $create = fn(): CounterInterface => $this->meter->createCounter($name, $unit, $description, $advisory);
 
-            return new class ($counter) extends Counter {
-                public function __construct(private CounterInterface $counter) {}
+            return new class ($create) extends Counter {
+                private ?CounterInterface $counter = null;
+
+                /**
+                 * @param \Closure(): CounterInterface $create
+                 */
+                public function __construct(private \Closure $create) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
                  */
                 public function add(float|int $amount, iterable $attributes = []): void
                 {
+                    $this->counter ??= ($this->create)();
                     $this->counter->add($amount, $attributes);
                 }
             };
@@ -149,16 +162,22 @@ class OpenTelemetry implements Adapter
     public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
     {
         return $this->createMeter(Histogram::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Histogram {
-            $histogram = $this->meter->createHistogram($name, $unit, $description, $advisory);
+            $create = fn(): HistogramInterface => $this->meter->createHistogram($name, $unit, $description, $advisory);
 
-            return new class ($histogram) extends Histogram {
-                public function __construct(private HistogramInterface $histogram) {}
+            return new class ($create) extends Histogram {
+                private ?HistogramInterface $histogram = null;
+
+                /**
+                 * @param \Closure(): HistogramInterface $create
+                 */
+                public function __construct(private \Closure $create) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
                  */
                 public function record(float|int $amount, iterable $attributes = []): void
                 {
+                    $this->histogram ??= ($this->create)();
                     $this->histogram->record($amount, $attributes);
                 }
             };
@@ -173,16 +192,22 @@ class OpenTelemetry implements Adapter
     public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
     {
         return $this->createMeter(Gauge::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\Gauge {
-            $gauge = $this->meter->createGauge($name, $unit, $description, $advisory);
+            $create = fn(): GaugeInterface => $this->meter->createGauge($name, $unit, $description, $advisory);
 
-            return new class ($gauge) extends Gauge {
-                public function __construct(private GaugeInterface $gauge) {}
+            return new class ($create) extends Gauge {
+                private ?GaugeInterface $gauge = null;
+
+                /**
+                 * @param \Closure(): GaugeInterface $create
+                 */
+                public function __construct(private \Closure $create) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
                  */
                 public function record(float|int $amount, iterable $attributes = []): void
                 {
+                    $this->gauge ??= ($this->create)();
                     $this->gauge->record($amount, $attributes);
                 }
             };
@@ -197,16 +222,22 @@ class OpenTelemetry implements Adapter
     public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
     {
         return $this->createMeter(UpDownCounter::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\UpDownCounter {
-            $upDownCounter = $this->meter->createUpDownCounter($name, $unit, $description, $advisory);
+            $create = fn(): UpDownCounterInterface => $this->meter->createUpDownCounter($name, $unit, $description, $advisory);
 
-            return new class ($upDownCounter) extends UpDownCounter {
-                public function __construct(private UpDownCounterInterface $upDownCounter) {}
+            return new class ($create) extends UpDownCounter {
+                private ?UpDownCounterInterface $upDownCounter = null;
+
+                /**
+                 * @param \Closure(): UpDownCounterInterface $create
+                 */
+                public function __construct(private \Closure $create) {}
 
                 /**
                  * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
                  */
                 public function add(float|int $amount, iterable $attributes = []): void
                 {
+                    $this->upDownCounter ??= ($this->create)();
                     $this->upDownCounter->add($amount, $attributes);
                 }
             };
@@ -221,14 +252,28 @@ class OpenTelemetry implements Adapter
     public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
     {
         return $this->createMeter(ObservableGauge::class, $name, function () use ($name, $unit, $description, $advisory): \Utopia\Telemetry\ObservableGauge {
-            $otelGauge = $this->meter->createObservableGauge($name, $unit, $description, $advisory);
+            $create = fn(): ObservableGaugeInterface => $this->meter->createObservableGauge($name, $unit, $description, $advisory);
 
-            return new class ($otelGauge) extends ObservableGauge {
+            return new class ($create) extends ObservableGauge {
                 /** @var list<\Closure> */
                 private array $callbacks = [];
 
-                public function __construct(private \OpenTelemetry\API\Metrics\ObservableGaugeInterface $gauge)
+                private ?ObservableGaugeInterface $gauge = null;
+
+                /**
+                 * @param \Closure(): ObservableGaugeInterface $create
+                 */
+                public function __construct(private \Closure $create) {}
+
+                public function observe(callable $callback): void
                 {
+                    $this->callbacks[] = \Closure::fromCallable($callback);
+
+                    if ($this->gauge instanceof ObservableGaugeInterface) {
+                        return;
+                    }
+
+                    $this->gauge = ($this->create)();
                     $this->gauge->observe(function (ObserverInterface $observer): void {
                         $observe = function (float|int $value, iterable $attributes = []) use ($observer): void {
                             /** @var iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes */
@@ -238,11 +283,6 @@ class OpenTelemetry implements Adapter
                             $callback($observe);
                         }
                     });
-                }
-
-                public function observe(callable $callback): void
-                {
-                    $this->callbacks[] = \Closure::fromCallable($callback);
                 }
             };
         });

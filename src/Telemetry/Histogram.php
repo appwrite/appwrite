@@ -5,6 +5,8 @@ namespace Utopia\Telemetry;
 abstract class Histogram
 {
     /**
+     * @deprecated Instruments are lazy by default; call Adapter::createHistogram() instead. Removed in the next major.
+     *
      * @param array<string, mixed> $advisory
      */
     public static function lazy(
@@ -14,35 +16,7 @@ abstract class Histogram
         ?string $description = null,
         array $advisory = [],
     ): self {
-        return new class ($telemetry, $name, $unit, $description, $advisory) extends Histogram {
-            private ?Histogram $inner = null;
-
-            /**
-             * @param array<string, mixed> $advisory
-             */
-            public function __construct(
-                private Adapter $telemetry,
-                private string $name,
-                private ?string $unit,
-                private ?string $description,
-                private array $advisory,
-            ) {}
-
-            /**
-             * @param iterable<non-empty-string, array<mixed>|bool|float|int|string|null> $attributes
-             */
-            public function record(float|int $amount, iterable $attributes = []): void
-            {
-                $this->inner ??= $this->telemetry->createHistogram(
-                    $this->name,
-                    $this->unit,
-                    $this->description,
-                    $this->advisory,
-                );
-
-                $this->inner->record($amount, $attributes);
-            }
-        };
+        return $telemetry->createHistogram($name, $unit, $description, $advisory);
     }
 
     /**
