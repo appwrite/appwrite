@@ -4,6 +4,8 @@
  * The snippet code lives as real files under ./connect-snippets/, laid out the
  * way each framework's project would be (so files get proper editor syntax
  * highlighting and are easy to review), and is imported as raw text via Vite.
+ * Which files a sample shows - and their tab order - is derived from the
+ * directory contents, so adding or removing a snippet file is all it takes.
  * Only the generated `.env` entry is built in code, since it embeds the
  * project's endpoint and ID. The snippets directory is excluded from tsc,
  * ESLint, and Prettier - snippet files are content, not app code.
@@ -62,137 +64,80 @@ function getSnippet(path: string, vars: Record<string, string>): string {
   )
 }
 
-interface CodeSample {
+interface SampleOverride {
   /** Snippet directory under ./connect-snippets/; defaults to the lookup key. */
   dir?: string
   /** Label for the generated env/config entry; defaults to '.env'. */
   envLabel?: string
-  /** Ordered snippet files (relative to dir), also used as tab labels. */
-  files: string[]
 }
-
-const REACT_VITE: CodeSample = {
-  dir: 'web/react/vite',
-  files: [
-    'src/lib/appwrite.ts',
-    'src/App.tsx',
-    'src/pages/SignIn.tsx',
-    'src/pages/SignUp.tsx',
-  ],
-}
-
-const NEXT_PAGES: CodeSample = {
-  dir: 'web/next/pages',
-  files: [
-    'lib/appwrite.ts',
-    'pages/index.tsx',
-    'pages/sign-in.tsx',
-    'pages/sign-up.tsx',
-  ],
-}
-
-const WEB_VANILLA: CodeSample = { dir: 'web/vanilla', files: ['main.js'] }
-const NODE_VANILLA: CodeSample = {
-  dir: 'node/vanilla',
-  files: ['src/index.ts'],
-}
-const BUN_VANILLA: CodeSample = { dir: 'bun/vanilla', files: ['src/index.ts'] }
-const DENO_VANILLA: CodeSample = { dir: 'deno/vanilla', files: ['main.ts'] }
 
 /**
- * Code sample per SDK/framework/variant, resolved by `sdk/framework/using`,
- * then `sdk/framework`, then `sdk` (most specific wins). The `sdk/framework`
- * entries for React and Next.js double as the default when the "using" variant
- * is (transiently) unknown; the bare `sdk` entries cover unknown frameworks.
+ * Samples resolve by `sdk/framework/using`, then `sdk/framework`, then `sdk` -
+ * the first candidate whose snippet directory exists wins, and its file list
+ * (and tab order) comes straight from the files on disk. This map only holds
+ * the exceptions: directory aliases and custom env-entry labels. An alias is
+ * REQUIRED for any key whose directory only contains variant subdirectories
+ * (e.g. web/react holds vite/ and cra/) - without one, resolving that key
+ * would merge every variant's files into one sample.
  */
-const CODE_SAMPLES: Record<string, CodeSample> = {
-  'web/next/app': {
-    files: [
-      'lib/appwrite.ts',
-      'app/page.tsx',
-      'app/sign-in/page.tsx',
-      'app/sign-up/page.tsx',
-    ],
-  },
-  'web/next/pages': NEXT_PAGES,
-  'web/next': NEXT_PAGES,
-  'web/tanstack': { files: ['src/lib/appwrite.ts', 'src/routes/index.tsx'] },
-  'web/react/vite': REACT_VITE,
-  'web/react/cra': {
-    files: [
-      'src/lib/appwrite.js',
-      'src/App.js',
-      'src/pages/SignIn.js',
-      'src/pages/SignUp.js',
-    ],
-  },
-  'web/react': REACT_VITE,
-  'web/sveltekit': {
-    files: [
-      'src/lib/appwrite.ts',
-      'src/routes/+page.ts',
-      'src/routes/+page.svelte',
-      'src/routes/sign-in/+page.ts',
-      'src/routes/sign-in/+page.svelte',
-      'src/routes/sign-up/+page.ts',
-      'src/routes/sign-up/+page.svelte',
-    ],
-  },
-  'web/svelte': { files: ['src/lib/appwrite.ts', 'src/App.svelte'] },
-  'web/nuxt': { files: ['utils/appwrite.ts', 'app.vue'] },
-  'web/vue': {
-    files: [
-      'src/lib/appwrite.ts',
-      'src/App.vue',
-      'src/pages/SignIn.vue',
-      'src/pages/SignUp.vue',
-    ],
-  },
-  'web/analog': {
-    files: ['src/lib/appwrite.ts', 'src/app/pages/index.page.ts'],
-  },
-  'web/angular': {
-    files: [
-      'src/lib/appwrite.ts',
-      'src/app/appwrite.service.ts',
-      'src/app/app.component.ts',
-    ],
-  },
-  'web/solidstart': { files: ['src/lib/appwrite.ts', 'src/routes/index.tsx'] },
-  'web/solid': { files: ['src/lib/appwrite.ts', 'src/App.tsx'] },
-  'web/vanilla': WEB_VANILLA,
-  web: WEB_VANILLA,
-  flutter: { files: ['lib/appwrite_client.dart', 'lib/main.dart'] },
-  'react-native': { files: ['lib/appwrite.ts', 'App.tsx'] },
-  apple: {
-    envLabel: 'Config (env or xcconfig)',
-    files: ['AppwriteClient.swift', 'ContentView.swift'],
-  },
-  android: {
-    envLabel: 'Build config / env',
-    files: ['AppwriteClient.kt', 'MainActivity.kt'],
-  },
-  'node/express': { files: ['lib/appwrite.ts', 'src/index.ts'] },
-  'node/koa': { files: ['lib/appwrite.ts', 'src/index.ts'] },
-  'node/vanilla': NODE_VANILLA,
-  node: NODE_VANILLA,
-  'deno/fresh': { files: ['lib/appwrite.ts', 'routes/index.tsx'] },
-  'deno/vanilla': DENO_VANILLA,
-  deno: DENO_VANILLA,
-  'bun/hono': { files: ['src/lib/appwrite.ts', 'src/index.ts'] },
-  'bun/elysia': { files: ['src/lib/appwrite.ts', 'src/index.ts'] },
-  'bun/vanilla': BUN_VANILLA,
-  bun: BUN_VANILLA,
-  go: { files: ['main.go'] },
-  python: { files: ['main.py'] },
-  php: { files: ['index.php'] },
-  ruby: { files: ['main.rb'] },
-  dart: { files: ['bin/main.dart'] },
-  swift: { envLabel: '.env or xcconfig', files: ['main.swift'] },
-  dotnet: { envLabel: '.env or launchSettings', files: ['Program.cs'] },
-  kotlin: { envLabel: '.env or env vars', files: ['Main.kt'] },
-  java: { envLabel: '.env or env vars', files: ['src/main/java/Main.java'] },
-  rust: { files: ['src/main.rs'] },
+const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
+  'web/next': { dir: 'web/next/pages' },
+  'web/react': { dir: 'web/react/vite' },
+  web: { dir: 'web/vanilla' },
+  node: { dir: 'node/vanilla' },
+  deno: { dir: 'deno/vanilla' },
+  bun: { dir: 'bun/vanilla' },
+  apple: { envLabel: 'Config (env or xcconfig)' },
+  android: { envLabel: 'Build config / env' },
+  swift: { envLabel: '.env or xcconfig' },
+  dotnet: { envLabel: '.env or launchSettings' },
+  kotlin: { envLabel: '.env or env vars' },
+  java: { envLabel: '.env or env vars' },
+}
+
+/** Script sources tab-order before same-named markup (+page.ts before +page.svelte). */
+const EXTENSION_PRIORITY = ['ts', 'tsx', 'js', 'jsx']
+
+/** Splits `path` into [path-without-extension, extension]. */
+function splitExtension(path: string): [string, string] {
+  const dot = path.lastIndexOf('.')
+  return dot > path.lastIndexOf('/') + 1
+    ? [path.slice(0, dot), path.slice(dot + 1)]
+    : [path, '']
+}
+
+/** Appwrite client setup file first, then other appwrite-named files, then the rest. */
+function snippetRank(path: string): number {
+  const [stem] = splitExtension(path.split('/').pop()?.toLowerCase() ?? '')
+  if (stem === 'appwrite') return 0
+  return stem.includes('appwrite') ? 1 : 2
+}
+
+function extensionWeight(extension: string): number {
+  const index = EXTENSION_PRIORITY.indexOf(extension)
+  return index === -1 ? EXTENSION_PRIORITY.length : index
+}
+
+/** Tab order: setup files first (snippetRank), then alphabetical; script before same-named markup. */
+function compareSnippetFiles(a: string, b: string): number {
+  const rank = snippetRank(a) - snippetRank(b)
+  if (rank !== 0) return rank
+  const [aStem, aExtension] = splitExtension(a)
+  const [bStem, bExtension] = splitExtension(b)
+  if (aStem !== bStem) return aStem < bStem ? -1 : 1
+  return (
+    extensionWeight(aExtension) - extensionWeight(bExtension) ||
+    aExtension.localeCompare(bExtension)
+  )
+}
+
+/** Ordered snippet files (paths relative to `dir`) found under ./connect-snippets/. */
+function snippetFilesIn(dir: string): string[] {
+  const prefix = `./connect-snippets/${dir}/`
+  return Object.keys(SNIPPET_SOURCES)
+    .filter((path) => path.startsWith(prefix))
+    .map((path) => path.slice(prefix.length))
+    .sort(compareSnippetFiles)
 }
 
 function getEnvExample(
@@ -229,48 +174,50 @@ export function getCodeFiles(
   projectId: string,
   packageManagerId: string,
 ): CodeFile[] {
-  const key = [
+  const candidates = [
     `${sdkId}/${frameworkId}/${usingId}`,
     `${sdkId}/${frameworkId}`,
     sdkId,
-  ].find((candidate) => candidate in CODE_SAMPLES)
-  if (!key) {
-    // Unknown SDK - fall back to the vanilla web quick start.
-    return getCodeFiles(
-      'web',
-      'vanilla',
-      'vite',
-      'client',
-      endpoint,
-      projectId,
-      'npm',
-    )
-  }
-  const sample = CODE_SAMPLES[key]
-  const dir = sample.dir ?? key
-  const vars = {
-    DENO_SDK_SPECIFIER:
-      packageManagerId === 'npm' ? 'npm:node-appwrite' : 'jsr:@appwrite/sdk',
-  }
-  return [
-    {
-      label: sample.envLabel ?? '.env',
-      code: getEnvExample(
-        sdkId,
-        runtime,
-        frameworkId,
-        usingId,
-        endpoint,
-        projectId,
-      ),
-      language: 'env',
-    },
-    ...sample.files.map((file) => ({
-      label: file,
-      code: getSnippet(`${dir}/${file}`, vars),
-      language: languageForFile(file),
-    })),
   ]
+  for (const key of candidates) {
+    const override = SAMPLE_OVERRIDES[key]
+    const dir = override?.dir ?? key
+    const files = snippetFilesIn(dir)
+    if (files.length === 0) continue
+    const vars = {
+      DENO_SDK_SPECIFIER:
+        packageManagerId === 'npm' ? 'npm:node-appwrite' : 'jsr:@appwrite/sdk',
+    }
+    return [
+      {
+        label: override?.envLabel ?? '.env',
+        code: getEnvExample(
+          sdkId,
+          runtime,
+          frameworkId,
+          usingId,
+          endpoint,
+          projectId,
+        ),
+        language: 'env',
+      },
+      ...files.map((file) => ({
+        label: file,
+        code: getSnippet(`${dir}/${file}`, vars),
+        language: languageForFile(file),
+      })),
+    ]
+  }
+  // Unknown SDK - fall back to the vanilla web quick start.
+  return getCodeFiles(
+    'web',
+    'vanilla',
+    'vite',
+    'client',
+    endpoint,
+    projectId,
+    'npm',
+  )
 }
 
 /** Install instructions per SDK; for web/node can filter by package manager. */
