@@ -1,50 +1,5 @@
 # ---------------------------------------------------------------------------
-# Appwrite auth demo — full end-to-end web flow
-#
-# One file, six apps. next-js-app-router, next-js-pages-router,
-# react-create-react-app, react-vite, sveltekit and vue-vite all render the
-# same markup on the same routes (/, /sign-in, /sign-up), so this flow is
-# framework-agnostic on purpose: navigation happens through openLink / real
-# link clicks, never through router internals.
-#
-# Run (start exactly one app first):
-#   next-js-app-router / next-js-pages-router / react-create-react-app  -> :3000
-#     mise run test
-#   react-vite / vue-vite / sveltekit                                   -> :5173
-#     mise run test 5173
-#
-# The `url:` below is only the browser's initial landing page; every real
-# navigation in the flow uses ${output.baseUrl}, which honours -e BASE_URL.
-#
-# SELECTORS — two rules, both learned the hard way:
-#
-# 1. `text:` is a FULL match against the node's whole text, not a substring.
-#    The sign in page exposes " No account? " (JSX whitespace around the
-#    nested <a>) and Appwrite errors are full sentences, so partial matches
-#    are wrapped in `.*...*`. Unwrapped assertions ("Sign out", "Sign in to
-#    get started.") are deliberate exact matches on a node whose entire text
-#    is that string.
-#
-# 2. `css:` costs ~3.2s per command; `text:` costs ~0.34s (measured). Inputs
-#    expose their placeholder as text ("Email", "Password", "Name"), so they
-#    are addressed by text. Note the placeholder is REPLACED by the value once
-#    a field is filled — a filled field can no longer be found by placeholder,
-#    which is why section 11b is the one place that still taps by css.
-#    Submit buttons share their label with the <h1>, so they are addressed as
-#    index: 1 (the <h1> is index 0) — verified against the running app.
-#    css is kept only where the assertion is about the attribute itself
-#    (input[type=password] proves the field is masked).
-#
-# SPEED — every command costs a view-hierarchy round trip, so the flow avoids
-# work rather than tuning waits (waitToSettleTimeoutMs is a no-op on web,
-# measured). Taps ~2.0s, typing ~1.0s + 0.07s/char, assertions ~0.35s,
-# css ~3.2s. Hence: text selectors, short test data, and `pressKey: Enter` to
-# submit a form from the field just typed into instead of a second tap.
-#
-# This flow creates real users in the Appwrite project `isr-demo`
-# (emails: qa<stamp>@example.com). Point it at a throwaway project.
-# ---------------------------------------------------------------------------
-url: http://localhost:55555
+url: http://localhost:55555 # Irrelevant
 name: Auth — home, sign in, sign up
 tags:
   - auth
@@ -55,11 +10,10 @@ tags:
 # ===========================================================================
 # 0. Setup — clean browser state, generate a unique test identity
 # ===========================================================================
+
 - launchApp
 
 - evalScript: "${output.baseUrl = (typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : 'http://localhost:3000'}"
-# Typing costs ~0.07s per character, so the test data is kept short:
-# a base36 timestamp plus 2 random chars is unique but only 10 characters.
 - evalScript: "${output.stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 4)}"
 - evalScript: "${output.email = 'qa' + output.stamp + '@example.com'}"
 - evalScript: "${output.name = 'QA ' + output.stamp}"
@@ -68,7 +22,6 @@ tags:
 - evalScript: "${output.shortPassword = 'abc'}"
 - evalScript: "${output.unknownEmail = 'no' + output.stamp + '@example.com'}"
 
-# Wipes cookies + localStorage for the app origin, so we always start signed out
 - clearState: ${output.baseUrl}
 - openLink: ${output.baseUrl}/
 
@@ -79,12 +32,9 @@ tags:
 - runFlow:
     label: "1. Home (signed out) shows the CTA and both auth links"
     commands:
-      # The apps render "Loading..." until account.get() settles; assertVisible
-      # polls for 7s so this also covers the loading -> loaded transition.
       - assertVisible: "Sign in to get started."
       - assertVisible: "Sign in"
       - assertVisible: "Sign up"
-      # Nothing from the signed-in state may leak through
       - assertNotVisible: ".*Hello,.*"
       - assertNotVisible: "Sign out"
       - assertNotVisible: "Loading..."
@@ -122,10 +72,10 @@ tags:
       - assertVisible: "Sign in"
       - assertVisible: "Email"
       - assertVisible:
-          css: "input[type='password']"   # the field is masked, not type=text
+          css: "input[type='password']"
       - assertVisible:
           text: "Sign in"
-          index: 1                        # the submit button, not the <h1>
+          index: 1 # the submit button, not the <h1>
       - assertVisible: ".*No account\\?.*"
       - assertVisible: "Sign up"
       # No error is shown before the user has done anything
@@ -308,9 +258,6 @@ tags:
 
 # ===========================================================================
 # 9. Signed in user visiting the auth pages
-#    NOTE: none of the six apps redirect an authenticated user away from
-#    /sign-in or /sign-up. These assertions pin the CURRENT behaviour — if you
-#    decide the pages should redirect home, this is the section to flip.
 # ===========================================================================
 - runFlow:
     label: "9a. /sign-in is still reachable while signed in (no redirect — documented behaviour)"

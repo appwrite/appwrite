@@ -1,17 +1,3 @@
-# Manually-triggered QA for the Connect dialog snippets.
-#
-# For every web framework (and "Using" variant) the Connect dialog supports,
-# this workflow scaffolds a fresh starter app non-interactively, pastes the
-# snippet files from src/.../connect-snippets/web/<framework> over it, writes
-# the framework-appropriate Appwrite env/config file (derived at runtime from
-# getEnvExample() in connect-snippets.ts via tests/connect-qa/write-env.mjs),
-# starts the dev server, and runs the Maestro auth flow
-# (tests/connect-qa/.maestro/auth.yaml) against it.
-#
-# Requires two repository variables (Settings -> Secrets and variables ->
-# Actions -> Variables): CODE_SNIPPET_QA_ENDPOINT and CODE_SNIPPET_QA_PROJECT_ID. Point them
-# at a throwaway Appwrite project that allows localhost web platforms - the
-# flow creates real users.
 name: Connect snippets QA
 
 on:
