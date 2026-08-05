@@ -516,8 +516,7 @@ class Jobs extends Action
                 $platform,
             );
         } catch (\Throwable $e) {
-            // Best-effort — never fails the build, but say so; a provider that
-            // rejects the report leaves the commit with no build state at all.
+            // Best-effort — never fails the build.
             Console::warning("Failed to report build state for deployment '{$deployment->getId()}': " . $e->getMessage());
         }
     }

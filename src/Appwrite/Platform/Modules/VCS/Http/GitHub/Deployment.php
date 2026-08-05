@@ -51,8 +51,6 @@ trait Deployment
         $errors = [];
         $provider = $vcs->getName();
 
-        // A webhook fans out to every resource linked to the same provider repository,
-        // so resolve its owner and name once per provider repository rather than per resource.
         $identities = [];
         $resolveIdentity = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$identities): array {
             if (isset($identities[$providerRepositoryId])) {
@@ -71,17 +69,12 @@ trait Deployment
             ];
         };
 
-        // A skipped deployment left the commit with no indicator at all, so a
-        // deliberate skip was indistinguishable from a broken integration. A commit
-        // status has no state for it — 'failure' carries the reason until the richer
-        // check run conclusions land.
         $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
             if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
             }
 
-            // A pull request on this repository also raised a push event, which
-            // reported the same skip on the same commit. A fork raises no push.
+            // A push event already reported this skip; a fork raises no push.
             if (!empty($providerPullRequestId) && !$external) {
                 return;
             }
@@ -373,9 +366,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    // 'pending' reads as "still running", and nothing revisits the
-                    // commit once a maintainer authorizes, so it never resolved.
-                    // Report a terminal state that says what is being waited on.
                     if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                         $resourceName = $resource->getAttribute('name');
                         $projectName = $project->getAttribute('name');
