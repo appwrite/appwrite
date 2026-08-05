@@ -121,6 +121,81 @@ final class DistributedTest extends TestCase
         $lock->release();
     }
 
+    public function testTokenIsTheValueOnTheKeyAndIsClearedOnRelease(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+
+        $this->assertTrue($lock->tryAcquire());
+        $token = $lock->token();
+
+        $this->assertSame(
+            $this->redis->get($this->key),
+            $token,
+            'the token must be the value on the key, so a record naming it can be compared against the live holder',
+        );
+
+        $lock->release();
+        $this->assertNull($lock->token());
+    }
+
+    public function testEachAcquisitionMintsItsOwnToken(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+
+        $this->assertTrue($lock->tryAcquire());
+        $first = $lock->token();
+        $lock->release();
+
+        $this->assertTrue($lock->tryAcquire());
+        $second = $lock->token();
+        $lock->release();
+
+        $this->assertNotSame(
+            $first,
+            $second,
+            'a token identifies one acquisition, so work recorded under a lapsed lease cannot pass for work under its successor',
+        );
+    }
+
+    public function testTokenSurvivesTheLossOfTheLease(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($lock->tryAcquire());
+        $token = $lock->token();
+
+        // The lease lapses and a successor takes the key, exactly as an expired TTL
+        // would leave it.
+        $this->redis->del($this->key);
+        $successor = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($successor->tryAcquire());
+
+        $this->assertFalse($lock->isHeld(), 'the lease is gone, and isHeld is what says so');
+        $this->assertFalse($lock->refresh(), 'a lapsed lease cannot be extended');
+        $this->assertSame(
+            $token,
+            $lock->token(),
+            'the token names the acquisition that did the work, so it must not change when that lease is lost: a record written under it has to stay distinguishable from the successor',
+        );
+        $this->assertNotSame($lock->token(), $successor->token());
+
+        $successor->release();
+    }
+
+    public function testTokenIsNotIssuedForAFailedAcquire(): void
+    {
+        $holder = new Distributed($this->redis, $this->key, 30);
+        $waiter = new Distributed($this->redis, $this->key, 30);
+
+        $this->assertNull($waiter->token(), 'a lock holding no lease has no token to hand out');
+        $this->assertTrue($holder->tryAcquire());
+        $this->assertFalse($waiter->tryAcquire());
+
+        $this->assertNull($waiter->token(), 'a lock that never took the key must not name itself the holder');
+        $this->assertSame($holder->token(), $this->redis->get($this->key));
+
+        $holder->release();
+    }
+
     public function testLoggerReceivesMessages(): void
     {
         $holder = new Distributed($this->redis, $this->key, 30);

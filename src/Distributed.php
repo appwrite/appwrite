@@ -139,6 +139,32 @@ final class Distributed implements Lock
     }
 
     /**
+     * The value the last successful acquisition wrote to the key, or null before
+     * one and after {@see release()}.
+     *
+     * This is what the lock believes it wrote, not proof that the key still holds
+     * it: an expired TTL and a failed {@see refresh()} both leave the value here
+     * untouched. {@see isHeld()} and {@see refresh()} are what answer whether the
+     * lease is live.
+     *
+     * Being unchanged by the loss is what makes it useful. A caller that records
+     * what it did while holding the lease can store this token with the record and
+     * refuse a later write whose stored token no longer matches, which is the only
+     * way to make the write itself conditional on the lease: a refresh proves
+     * ownership at the instant it returns, not at the instant the write commits.
+     *
+     * A new value is generated on every acquisition, so work recorded under a lapsed
+     * lease does not compare equal to work recorded under the lease that replaced it.
+     *
+     * It is also the literal value on the key, so an operator can read the key back
+     * and compare it against a record directly.
+     */
+    public function token(): ?string
+    {
+        return $this->token;
+    }
+
+    /**
      * @param  array<int, string>  $arguments
      */
     private function runScript(string $script, array $arguments): mixed
