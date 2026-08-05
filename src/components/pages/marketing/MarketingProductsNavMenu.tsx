@@ -58,6 +58,8 @@ type ProductNavigationItemsCopy = {
   sitesTagline: string
   realtimeName: string
   realtimeTagline: string
+  agentName: string
+  agentTagline: string
   domainsName: string
   domainsTagline: string
   firewallName: string
@@ -91,10 +93,11 @@ function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
         productIds: category.productIds.filter((id) => {
           if (id === 'firewall') return features.firewall
           if (id === 'domains') return features.domains
+          if (id === 'agent') return features.aiAssistant
           return true
         }),
       })).filter((category) => category.productIds.length > 0),
-    [features.domains, features.firewall],
+    [features.aiAssistant, features.domains, features.firewall],
   )
 }
 
@@ -120,6 +123,7 @@ function getLocalizedProductNavItemName(
   if (navItemId === 'messaging') return productNamesCopy.messaging
   if (navItemId === 'sites') return productNamesCopy.sites
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeName
+  if (navItemId === 'agent') return navigationItemsCopy.agentName
   if (navItemId === 'domains') return navigationItemsCopy.domainsName
   if (navItemId === 'firewall') return navigationItemsCopy.firewallName
   if (navItemId === 'advisor') return navigationItemsCopy.advisorName
@@ -138,6 +142,7 @@ function getLocalizedProductNavItemTagline(
   if (navItemId === 'messaging') return navigationItemsCopy.messagingTagline
   if (navItemId === 'sites') return navigationItemsCopy.sitesTagline
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeTagline
+  if (navItemId === 'agent') return navigationItemsCopy.agentTagline
   if (navItemId === 'domains') return navigationItemsCopy.domainsTagline
   if (navItemId === 'firewall') return navigationItemsCopy.firewallTagline
   if (navItemId === 'advisor') return navigationItemsCopy.advisorTagline

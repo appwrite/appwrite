@@ -1,0 +1,59 @@
+---
+layout: article
+title: Conversations
+description: Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.
+---
+
+A **conversation** is a chat thread with the Appwrite Agent. Each conversation belongs to your Console account. You can keep many conversations, pin important ones, archive others, and open any thread in the panel or at `/agent`.
+
+# What a conversation contains {% #what-a-conversation-contains %}
+
+| Piece | Purpose |
+|-------|---------|
+| Messages | User and assistant turns, including edits, retries, and scores |
+| Timeline | Tool calls and multi-agent activity for a turn |
+| Attachments | Files you upload for the Agent to use in context |
+| Model | The LLM selected for the thread (default or custom) |
+| Status | Active or archived; archive hides the thread from the main list |
+
+Conversations created by [automations](/docs/products/agent/automations) are linked to the automation that produced them and are managed from the automations views rather than the main Agents list.
+
+# Creating and managing threads {% #creating-and-managing-threads %}
+
+- **Create agent** starts a new conversation (keyboard shortcut available in the Console).
+- **Rename** updates the conversation title.
+- **Pin** keeps a conversation easy to find in the list.
+- **Archive** removes it from the active list without deleting history immediately.
+- **Delete** permanently removes the conversation.
+
+In the fullscreen Agent, the left sidebar lists conversations. In the right-hand panel, use the conversation switcher and list controls in the Agent chrome.
+
+# Messaging {% #messaging %}
+
+While chatting you can:
+
+- Send text prompts in the composer
+- Attach files (images and other files the Agent can use)
+- Use voice input where the browser supports speech recognition
+- Stop a run that is still in progress
+- Retry a failed or incomplete turn
+- Edit a previous user message and resend from that point
+- Copy assistant replies
+- Speak replies aloud with text-to-speech where supported
+- Give thumbs up or thumbs down feedback on a reply
+
+When the Agent needs more information, it can present [clarifying prompts](/docs/products/agent/actions#clarification) (choice, confirm, or free text) before continuing the turn.
+
+# Context on every message {% #context-on-every-message %}
+
+Each message can include Console context such as the current organization, project, team, page path, title, and URL. Replies may also resolve placeholders such as `{{APPWRITE_PROJECT_ID}}` to values from your session.
+
+Stay on the project or page you care about before asking project-specific questions so the Agent has the right scope.
+
+# Realtime updates {% #realtime-updates %}
+
+While a turn is running, the Console updates the conversation through realtime events so tool activity and assistant messages appear as they complete. You do not need to refresh the page.
+
+{% arrow_link href="/docs/products/agent/chat" %}
+Chat with the Agent
+{% /arrow_link %}

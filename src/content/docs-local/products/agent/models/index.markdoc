@@ -1,0 +1,47 @@
+---
+layout: article
+title: Models
+description: Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.
+---
+
+**Models** control which large language model the Agent uses for a conversation. You can use Appwrite's default model options, or register your own provider credentials under **Agent** > **Settings** > **Models**.
+
+# Default vs custom {% #default-vs-custom %}
+
+- **Default**: Use the models Appwrite provides in the Agent model picker without adding your own keys.
+- **Custom**: Add a model with your provider API key. The Agent calls that provider with your credentials for conversations that select it.
+
+Pick a model per conversation from the Agent model picker. Automations can also specify a model ID.
+
+# Supported providers {% #supported-providers %}
+
+When adding a custom model, choose a provider and fill in the required fields (API key, model id, and optional base URL).
+
+| Provider | Examples |
+|----------|----------|
+| OpenAI | GPT-4o, GPT-4.1, o3, o4-mini |
+| Anthropic | Claude Sonnet, Opus, Haiku |
+| Google | Gemini 2.5 Pro, Gemini 2.5 Flash |
+| OpenRouter | Routed models across providers |
+| Azure | Azure OpenAI deployments |
+| Custom | Any OpenAI-compatible endpoint |
+
+Exact model lists in the Console may change as providers ship new versions. You can usually enter a model id even when it is not in the preset list.
+
+# Managing models {% #managing-models %}
+
+From **Settings** > **Models** you can:
+
+- **Add model** with provider, credentials, and model id
+- Enable or disable a saved model
+- Update or delete an existing model
+
+Disabled models remain saved but are not offered for new selections until you enable them again.
+
+# Privacy and keys {% #privacy-and-keys %}
+
+Custom API keys are stored for your Console account so the Agent can call the provider you chose. Prefer least-privilege keys and rotate them if they are exposed. When you use a custom provider, that provider’s data policies apply to the prompts and responses sent through that model.
+
+{% arrow_link href="/docs/products/agent/add-model" %}
+Add a custom model
+{% /arrow_link %}

@@ -703,7 +703,6 @@ export const heMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'גלו עוד על Appwrite Network', // pragma: allowlist secret
   'More customers': 'עוד לקוחות',
   'More providers': 'עוד ספקים',
-  'Most popular': 'הפופולרית ביותר',
   'My functions': 'הפונקציות שלי',
   'N/A': 'לא זמין',
   'mySHOEFITTER sized 12,000+ feet accurately for major EU retailers':

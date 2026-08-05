@@ -408,6 +408,7 @@ export function TrafficOverview() {
           <DateRangePicker
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
+            presetId={dateRangePresetId}
             className="h-9 shrink-0"
           />
           <RefreshButton

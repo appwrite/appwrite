@@ -871,6 +871,97 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/agent",
+    "title": "Agent",
+    "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/agent/actions",
+    "title": "Actions",
+    "description": "Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/agent/add-memory",
+    "title": "Add memory",
+    "description": "Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/agent/add-model",
+    "title": "Add a custom model",
+    "description": "Register a provider API key so the Appwrite Agent can use your own LLM credentials.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/agent/automations",
+    "title": "Automations",
+    "description": "Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/chat",
+    "title": "Chat with the Agent",
+    "description": "Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/connect-mcp",
+    "title": "Connect Appwrite MCP",
+    "description": "Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/conversations",
+    "title": "Conversations",
+    "description": "Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/agent/create-automation",
+    "title": "Create an automation",
+    "description": "Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/agent/mcp",
+    "title": "MCP connections",
+    "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/memory",
+    "title": "Memory",
+    "description": "Learn how Appwrite Agent memory stores preferences, instructions, and facts across conversations.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/models",
+    "title": "Models",
+    "description": "Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/agent/quick-start",
+    "title": "Start with Agent",
+    "description": "Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/ai",
     "title": "Artificial intelligence",
     "description": "Learn how to implement machine learning models in your applications.",
@@ -2552,7 +2643,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Actions",
     "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/firewall/conditions",
@@ -3515,10 +3606,10 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tooling/ai/assistant",
-    "title": "Assistant",
-    "description": "AI-powered assistant for precise Appwrite tasks. Troubleshoot issues faster, generate code snippets, and search Appwrite's docs with the use of AI.",
+    "title": "Appwrite Agent",
+    "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "tooling/ai/docs-as-markdown",
@@ -3756,7 +3847,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Agent skills",
     "description": "Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/vector-db-and-embeddings",

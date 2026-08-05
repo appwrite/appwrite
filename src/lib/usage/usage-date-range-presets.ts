@@ -160,8 +160,21 @@ const CALENDAR_USAGE_DATE_RANGE_PRESET_VALUES = [
 
 const MATCH_TOLERANCE_MS = 60_000
 
+/**
+ * Rolling presets are snapshotted at selection/render time and intentionally do
+ * not tick every second. Allow `to` to age this far while still treating the
+ * range as the active rolling preset (rejects clearly historical windows).
+ */
+const ROLLING_PRESET_TO_STALE_MS = 60 * 60 * 1000
+
 function datesMatch(a: Date, b: Date, toleranceMs = MATCH_TOLERANCE_MS) {
   return Math.abs(a.getTime() - b.getTime()) <= toleranceMs
+}
+
+/** True when `to` is still a plausible rolling-window end (near now). */
+function isRollingPresetToAcceptable(to: Date, now = new Date()): boolean {
+  const driftMs = now.getTime() - to.getTime()
+  return driftMs <= ROLLING_PRESET_TO_STALE_MS && driftMs >= -MATCH_TOLERANCE_MS
 }
 
 export function getUsageDateRangePresetByValue(
@@ -221,14 +234,17 @@ export function dateRangeMatchesUsagePreset(
   }
 
   if (preset.value === '1h' || preset.value === '6h' || preset.value === '24h') {
+    // Calendar day ranges (e.g. Today) can be ~24h and must not match rolling.
+    if (isFullCalendarDayRange(range.from, range.to)) return false
+    if (isCalendarDateOnlyRange(range.from, range.to)) return false
+
     const hours = preset.value === '1h' ? 1 : preset.value === '6h' ? 6 : 24
     const expectedDuration = hours * 60 * 60 * 1000
     const actualDuration = range.to.getTime() - range.from.getTime()
-    const toIsRecent = datesMatch(range.to, new Date())
 
     return (
       Math.abs(actualDuration - expectedDuration) <= MATCH_TOLERANCE_MS &&
-      toIsRecent
+      isRollingPresetToAcceptable(range.to)
     )
   }
 

@@ -58,7 +58,10 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
 
   const dateRangePresetId = useMemo(() => {
     const serialized = parseUsageChartDateRangeFromPrefs(accountPrefs)
-    return serialized?.preset ?? null
+    if (serialized?.preset) return serialized.preset
+    // Default overview range is rolling last 24 hours when nothing is saved.
+    if (!serialized) return '24h'
+    return null
   }, [usageFiltersPrefsKey, accountPrefs])
 
   const { dateRange, chartInterval } = useMemo(() => {

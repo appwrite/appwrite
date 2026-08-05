@@ -547,7 +547,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'Appwrite Networkの詳細',
   'More customers': 'より多くの顧客',
   'More providers': 'より多くのプロバイダー',
-  'Most popular': '最も人気',
   'My functions': 'マイFunctions',
   'N/A': 'N/A',
   'Name': '名前',

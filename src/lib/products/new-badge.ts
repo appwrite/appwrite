@@ -11,12 +11,14 @@ export const PRODUCT_LAUNCH_DATES: Partial<Record<ProductNavItemId, string>> = {
   databases: '2026-07-01',
   domains: '2026-07-01',
   firewall: '2026-07-01',
+  agent: '2026-08-04',
 }
 
 const DOCS_PRODUCT_NEW_HREFS: Partial<Record<string, ProductNavItemId>> = {
   '/docs/products/databases': 'databases',
   '/docs/products/domains': 'domains',
   '/docs/products/firewall': 'firewall',
+  '/docs/products/agent': 'agent',
 }
 
 function parseUtcDate(isoDate: string): Date {

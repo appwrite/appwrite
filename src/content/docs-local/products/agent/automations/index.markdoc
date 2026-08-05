@@ -1,0 +1,45 @@
+---
+layout: article
+title: Automations
+description: Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.
+---
+
+**Automations** run Agent prompts on a schedule. Each run creates a new conversation with your prompt, optional model, and project context so you can review the result later.
+
+Manage automations from `/agent/automations` or the Agent automations panel in the Console.
+
+# What an automation contains {% #what-an-automation-contains %}
+
+| Field | Purpose |
+|-------|---------|
+| Name | Label in the automations list |
+| Prompt | The message sent to the Agent on each run |
+| Schedule | Cron expression (UI helpers cover common weekly and daily patterns) |
+| Title prefix | Optional prefix for conversation titles created by the run |
+| Model | Optional custom or default model for the run |
+| Enabled | Whether the schedule is active |
+| Context project | Optional project used as context when the automation runs |
+
+# How runs work {% #how-runs-work %}
+
+1. When the schedule fires, Appwrite creates a new conversation linked to the automation.
+2. The Agent processes the prompt with the configured model and context.
+3. You open the resulting conversation to read the output, tool activity, and any resource cards or charts.
+
+Automation conversations are kept with the automation rather than mixed into the main Agents list, so scheduled work stays organized.
+
+# Enabling and disabling {% #enabling-and-disabling %}
+
+Disable an automation to pause the schedule without deleting it. Enable it again when you want runs to resume. Delete an automation when you no longer need the schedule.
+
+# Example use cases {% #example-use-cases %}
+
+- Weekly summary of Auth signups or error-prone areas to review
+- Recurring checklist: verify storage buckets, function deployments, or domain status
+- Scheduled “what changed?” review for a project you do not open every day
+
+Prompts that need live project data work best when [Appwrite MCP](/docs/products/agent/mcp) stays connected for your account.
+
+{% arrow_link href="/docs/products/agent/create-automation" %}
+Create an automation
+{% /arrow_link %}

@@ -1,0 +1,47 @@
+---
+layout: article
+title: Start with Agent
+description: Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.
+difficulty: beginner
+readtime: 5
+---
+
+You can start chatting with the Agent in under a minute. This quick start opens the Agent, sends a prompt with your current project context, and optionally connects Appwrite MCP for live actions.
+
+# Open the Agent {% #open-the-agent %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Open any project (or stay on an organization page).
+3. Click the **Agent** control in the Console header to open the right-hand panel.
+
+To use the fullscreen experience, go to `/agent` in the Console. Guests see a sign-in prompt before chat is available.
+
+{% info title="Feature availability" %}
+If you do not see Agent, confirm you are on Appwrite Cloud and that the AI agent feature is enabled for your Console profile.
+{% /info %}
+
+# Ask a question {% #ask-a-question %}
+
+1. Click a suggestion chip, or type a question in the composer (for example `How do I create a new database?`).
+2. Send the message.
+3. Review the reply. The Agent uses your current organization, project, and page as context.
+
+You can attach files, use voice input where supported, stop a run in progress, retry a failed turn, or edit and resend a previous message. See [Chat with the Agent](/docs/products/agent/chat).
+
+# Connect Appwrite MCP (optional) {% #connect-mcp %}
+
+Connecting [Appwrite MCP](/docs/tooling/ai/mcp-servers/api) lets the Agent list resources and create or update them with your approval.
+
+1. In the Agent panel or at **Agent** > **Settings** > **MCP**, find **Appwrite MCP**.
+2. Click **Connect** and complete the OAuth consent for **Appwrite Agent**.
+3. Confirm the connection shows **Connected**.
+
+With MCP enabled, try an action prompt such as `List the databases and tables in this project` or `Create a todos table with title and done columns`.
+
+See [Connect Appwrite MCP](/docs/products/agent/connect-mcp) for reconnect and custom servers.
+
+# Next steps {% #next-steps %}
+
+- Add [memory](/docs/products/agent/add-memory) so the Agent remembers preferences across chats.
+- Register a [custom model](/docs/products/agent/add-model) if you want to use your own provider keys.
+- Schedule recurring checks with [automations](/docs/products/agent/create-automation).

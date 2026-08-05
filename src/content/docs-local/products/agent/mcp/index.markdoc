@@ -1,0 +1,43 @@
+---
+layout: article
+title: MCP connections
+description: Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.
+---
+
+**MCP connections** tell the Agent which Model Context Protocol servers it can use. The primary connection is **Appwrite MCP**, the hosted server that lets the Agent take actions in your Appwrite projects. You can also manage other MCP servers from Agent settings.
+
+Manage connections under **Agent** > **Settings** > **MCP**, or from the MCP controls in the Agent UI.
+
+# Appwrite MCP {% #appwrite-mcp %}
+
+**Appwrite MCP** is listed by default. Its purpose is to let the Agent call Appwrite tools with your account after you authorize the **Appwrite Agent** OAuth client.
+
+| State | Meaning |
+|-------|---------|
+| Not connected | The Agent can still answer questions but cannot run Appwrite project tools |
+| Connected | Tools are available; action-oriented suggestions appear in empty states |
+| Reconnect | The previous authorization expired or is invalid; connect again |
+
+Connecting opens an OAuth consent flow. After success, the Console stores the MCP connection on your account and marks it connected. See [Connect Appwrite MCP](/docs/products/agent/connect-mcp).
+
+{% info title="Same MCP, different clients" %}
+Appwrite MCP is also used by [external IDE agents](/docs/tooling/ai/mcp-servers). Appwrite Agent is a first-party client that connects through the same hosted MCP surface (`mcp.appwrite.io` by default).
+{% /info %}
+
+# Enabling and disabling {% #enabling-and-disabling %}
+
+Each connection can be enabled or disabled without deleting it. Disabled connections stay on your account but are not used for tool calls. Use disable when you want to pause tool use temporarily.
+
+# Custom MCP servers {% #custom-mcp-servers %}
+
+Besides Appwrite MCP, you can add other MCP servers the Agent should use. Custom servers appear in the same MCP list with their host and connection status. Remove a connection when you no longer want the Agent to use that server.
+
+For building with MCP outside Appwrite Agent, see the [MCP servers](/docs/tooling/ai/mcp-servers) tooling docs.
+
+# How tools show up in chat {% #how-tools-show-up-in-chat %}
+
+When the Agent calls tools, the conversation timeline can show tool activity for the turn. Successful mutations may also trigger [Console refresh actions](/docs/products/agent/actions#console-ui-actions) so lists update without a full page reload. Resource cards and charts can appear inline in the chat.
+
+{% arrow_link href="/docs/products/agent/connect-mcp" %}
+Connect Appwrite MCP
+{% /arrow_link %}

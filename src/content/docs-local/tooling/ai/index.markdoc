@@ -1,0 +1,152 @@
+---
+layout: article
+title: AI
+description: Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.
+---
+
+Appwrite provides a comprehensive set of tools and resources to help you build with AI, from AI-powered development tools that accelerate your workflow to infrastructure for building AI-powered applications.
+
+# IDEs {% #ides %}
+
+AI-powered IDEs and code editors provide intelligent code completion and context-aware assistance as you write code. These tools support our MCP servers, giving AI agents direct access to your Appwrite project.
+
+{% only_light %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" icon="vscode" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" icon="zed" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" icon="opencode" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/agents/claude-code" title="Claude Code" icon="claude" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/codex" title="Codex" icon="openai" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/cursor" title="Cursor" icon="cursor-ai" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/vscode" title="VS Code" icon="vscode" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/zed" title="Zed" icon="zed" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/opencode" title="OpenCode" icon="opencode" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/agents/antigravity" title="Antigravity" icon="google-antigravity" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
+
+# Vibe coding {% #vibe-coding %}
+
+Vibe coding platforms let you build applications through natural language. Describe what you want to build and the AI generates the application for you.
+
+{% only_light %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" icon="claude" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" icon="lovable" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" icon="emergent" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" icon="bolt" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" icon="zenflow" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_light %}
+
+{% only_dark %}
+{% cards %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/claude-desktop" title="Claude Desktop" icon="claude" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/lovable" title="Lovable" icon="lovable" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/emergent" title="Emergent" icon="emergent" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/bolt" title="Bolt" icon="bolt" %}
+{% /cards_item %}
+
+{% cards_item href="/docs/tooling/ai/vibe-coding/zenflow" title="Zenflow" icon="zenflow" %}
+{% /cards_item %}
+
+{% /cards %}
+{% /only_dark %}
+
+# Tooling {% #tooling %}
+
+These resources help AI tools understand and work with Appwrite. Use them alongside your IDE or agent to get faster, more accurate results.
+
+{% cards %}
+{% cards_item href="/docs/products/agent" title="Appwrite Agent" %}
+Chat in the Console to inspect your project, explain issues, and run approved actions.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts" title="Quickstart prompts" %}
+Pre-built prompts to quickly generate your first Appwrite project with AI assistants.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/mcp-servers/api" title="MCP servers" %}
+Give AI tools direct access to your Appwrite project and docs.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/agents-md" title="AGENTS.md" %}
+Instruction files that help AI agents understand your project's structure and conventions.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/skills" title="Agent skills" %}
+Pre-built Appwrite knowledge for AI agents across supported languages and SDKs.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/arena" title="Appwrite Arena" %}
+Open-source benchmark evaluating how well AI models understand Appwrite's APIs and SDKs.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Guides for building AI-powered features on top of Appwrite, from running models in Functions to building full agent pipelines.
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/ai-in-functions" title="AI in Functions" %}
+Run AI models inside Appwrite Functions with providers like OpenAI and Anthropic.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/vector-db-and-embeddings" title="Vector DB and embeddings" %}
+Store and query vector embeddings for semantic search and RAG pipelines.
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/persistent-agents-with-realtime" title="Persistent agents" %}
+Build stateful AI agents with continuous conversations using Appwrite Realtime.
+{% /cards_item %}
+{% /cards %}

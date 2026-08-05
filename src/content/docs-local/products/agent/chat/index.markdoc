@@ -1,0 +1,54 @@
+---
+layout: article
+title: Chat with the Agent
+description: Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.
+---
+
+Chat is the primary way you use the Appwrite Agent. You can work in a side panel while staying on a Console page, or open the fullscreen Agent for longer sessions.
+
+# Open the Agent {% #open-the-agent %}
+
+### Right-hand panel
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Click the **Agent** control in the Console header.
+3. The Agent panel opens on the right. Your panel open state can persist in account preferences.
+
+### Fullscreen
+
+1. Go to `/agent` (or `/agent/{conversationId}` for a specific thread).
+2. Use the conversation list, composer, settings, and automations from the dedicated Agent shell.
+
+{% info title="Keyboard shortcuts" %}
+The Console includes shortcuts to create a new agent conversation, create an automation, and focus the composer. Open the shortcuts dialog from the Console for the current key bindings.
+{% /info %}
+
+# Start or continue a conversation {% #start-or-continue %}
+
+1. Click **Create agent** for a new thread, or select an existing conversation.
+2. Optionally choose a [model](/docs/products/agent/models) from the model picker.
+3. Type a prompt, pick a suggestion chip, or use voice input.
+4. Optionally attach files before sending.
+5. Send the message and watch the reply and tool timeline update live.
+
+# Work with a turn {% #work-with-a-turn %}
+
+While the Agent is working:
+
+- **Stop** cancels an in-progress run when the conversation is locked for a turn.
+- **Retry** asks the Agent to try the turn again after a failure or stop.
+- **Edit and resend** changes a prior user message and continues from there.
+- **Clarify** prompts may appear; answer them to continue the same turn.
+
+After a reply, you can copy text, use text-to-speech, or leave thumbs up / thumbs down feedback.
+
+# Tips for better results {% #tips-for-better-results %}
+
+- Stay on the project or page you mean before asking project-specific questions.
+- Be specific: include resource names, error text, or the outcome you want.
+- Connect [Appwrite MCP](/docs/products/agent/connect-mcp) when you want the Agent to list or change resources.
+- Save standing preferences in [memory](/docs/products/agent/memory) instead of repeating them every chat.
+
+{% arrow_link href="/docs/products/agent/connect-mcp" %}
+Connect Appwrite MCP
+{% /arrow_link %}

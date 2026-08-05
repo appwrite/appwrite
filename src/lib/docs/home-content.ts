@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowUpDown,
+  BotMessageSquare,
   Database,
   Folder,
   Globe,
@@ -101,6 +102,12 @@ export const DOCS_HOME_PRODUCTS: DocsHomeProductCard[] = [
     description: 'Respond to server events in realtime.',
     href: '/docs/apis/realtime',
     icon: Radio,
+  },
+  {
+    title: 'Agent',
+    description: 'Chat in the Console to inspect projects and take approved actions.',
+    href: '/docs/products/agent',
+    icon: BotMessageSquare,
   },
 ]
 

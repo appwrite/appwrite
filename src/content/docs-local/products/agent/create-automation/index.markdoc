@@ -1,0 +1,36 @@
+---
+layout: article
+title: Create an automation
+description: Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.
+---
+
+Create an automation when you want the Agent to run the same prompt on a schedule and leave the result in a conversation you can review.
+
+# Create {% #create %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Go to `/agent/automations` (or `/agent/automations/create`).
+3. Click the create action if you are on the list view.
+4. Enter a **name**.
+5. Write the **prompt** the Agent should run each time.
+6. Set a **schedule** with the cron editor (for example weekly on Monday).
+7. Optionally set a **title prefix**, choose a **model**, and confirm a **context project** if the prompt is project-specific.
+8. Leave **Enabled** on, then save.
+
+# Review a run {% #review-a-run %}
+
+When the schedule fires, open the automation and its linked conversations to read the Agent output, tool activity, and any inline resource cards or charts.
+
+# Update or pause {% #update-or-pause %}
+
+1. Open the automation from `/agent/automations/{automationId}` or the automations panel.
+2. Change the prompt, schedule, model, or enabled state.
+3. Save your changes.
+
+Disable the automation to pause future runs without deleting it.
+
+{% info title="MCP for live data" %}
+Automations that inspect or change project resources need [Appwrite MCP](/docs/products/agent/mcp) connected on the account that owns the automation.
+{% /info %}
+
+See [Automations](/docs/products/agent/automations) for fields and example use cases.

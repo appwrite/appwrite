@@ -84,6 +84,12 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         icon: 'shield',
         isParent: true,
       },
+      {
+        label: 'Agent',
+        href: '/docs/products/agent',
+        icon: 'bot',
+        isParent: true,
+      },
     ],
   },
   {

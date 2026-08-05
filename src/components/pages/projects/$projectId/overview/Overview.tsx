@@ -219,6 +219,7 @@ export function View({ projectId, initialData }: ViewProps) {
   const {
     dateRange: dashboardChartDateRange,
     chartInterval,
+    dateRangePresetId: dashboardChartDateRangePresetId,
     setDateRange: setDashboardChartDateRange,
     setChartInterval,
   } = useUsageChartFilters(organizationPlan)
@@ -1003,6 +1004,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <DateRangePicker
                     dateRange={dashboardChartDateRange}
                     onDateRangeChange={setDashboardChartDateRange}
+                    presetId={dashboardChartDateRangePresetId}
                     className="h-9 w-full min-w-0 @[520px]:min-w-0 @[520px]:flex-1 @[700px]:w-auto @[700px]:min-w-[180px] @[700px]:flex-none"
                     popoverContentAlign="end"
                   />

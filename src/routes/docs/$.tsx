@@ -3,6 +3,10 @@ import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import {
+  isAgentDocsEnabled,
+  isAgentDocsSlug,
+} from '@/lib/docs/agent-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
@@ -22,6 +26,7 @@ const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 function isFeatureGatedDocsSlugHidden(slug: string): boolean {
   if (isPartnersDocsSlug(slug) && !isPartnersDocsEnabled()) return true
   if (isFirewallDocsSlug(slug) && !isFirewallDocsEnabled()) return true
+  if (isAgentDocsSlug(slug) && !isAgentDocsEnabled()) return true
   return false
 }
 

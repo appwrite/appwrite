@@ -42,6 +42,10 @@ import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
 import {
+  isAgentDocsEnabled,
+  isAgentDocsSlug,
+} from '@/lib/docs/agent-docs-feature'
+import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
@@ -126,6 +130,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
       if (!isPreviewAllowed) return
       if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
       if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
+      if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
@@ -178,6 +183,7 @@ export function DocsPreviewContent() {
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
   const firewallDocsEnabled = features.firewall
+  const agentDocsEnabled = features.aiAssistant
 
   const showMenu =
     slug !== null &&
@@ -185,7 +191,8 @@ export function DocsPreviewContent() {
     view === 'menu' &&
     canShowDocsPreviewMenu(slug) &&
     (!isPartnersDocsSlug(slug) || partnersDocsEnabled) &&
-    (!isFirewallDocsSlug(slug) || firewallDocsEnabled)
+    (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
+    (!isAgentDocsSlug(slug) || agentDocsEnabled)
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -197,6 +204,7 @@ export function DocsPreviewContent() {
       !showMenu &&
       (!isPartnersDocsSlug(slug!) || partnersDocsEnabled) &&
       (!isFirewallDocsSlug(slug!) || firewallDocsEnabled) &&
+      (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -216,11 +224,22 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isAgentDocsSlug(nextSlug) && !agentDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
       if (nextSlug === slug && resolvedView === view) return
       openDocsPreview(nextSlug, { view: nextView })
     },
-    [firewallDocsEnabled, openDocsPreview, partnersDocsEnabled, slug, view],
+    [
+      agentDocsEnabled,
+      firewallDocsEnabled,
+      openDocsPreview,
+      partnersDocsEnabled,
+      slug,
+      view,
+    ],
   )
 
   useEffect(() => {
@@ -231,8 +250,13 @@ export function DocsPreviewContent() {
     }
     if (!firewallDocsEnabled && isFirewallDocsSlug(slug)) {
       openDocsPreview('', { view: 'article' })
+      return
+    }
+    if (!agentDocsEnabled && isAgentDocsSlug(slug)) {
+      openDocsPreview('', { view: 'article' })
     }
   }, [
+    agentDocsEnabled,
     firewallDocsEnabled,
     isOpen,
     openDocsPreview,

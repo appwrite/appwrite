@@ -24,6 +24,7 @@ export type ProductNavItemId =
   | 'domains'
   | 'firewall'
   | 'advisor'
+  | 'agent'
 
 export type ProductNavItem = {
   id: ProductNavItemId

@@ -1,4 +1,5 @@
 import {
+  BotMessageSquare,
   Database,
   Folder,
   Globe,
@@ -108,6 +109,7 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'functions',
   'messaging',
   'realtime',
+  'agent',
   'sites',
   'domains',
   'firewall',
@@ -162,6 +164,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: '/docs/apis/realtime',
     icon: Radio,
     tagline: 'Live events, channels, and presence.',
+  },
+  agent: {
+    id: 'agent',
+    name: 'Agent',
+    group: 'build',
+    href: '/docs/products/agent',
+    icon: BotMessageSquare,
+    tagline: 'Chat to inspect your project and take approved actions.',
   },
   sites: {
     id: 'sites',

@@ -169,6 +169,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-domains': 'Marketing Product Domains Clicked',
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
+  'marketing-product-agent': 'Marketing Product Agent Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -256,6 +257,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   domains: 'marketing-product-domains',
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
+  agent: 'marketing-product-agent',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
