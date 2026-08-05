@@ -70,6 +70,7 @@ class Create extends Action
             ->inject('response')
             ->inject('project')
             ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -86,6 +87,7 @@ class Create extends Action
         Response $response,
         Document $project,
         Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Event $queueForEvents,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -145,7 +147,7 @@ class Create extends Action
         $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
         $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
-            || (new Certificates($rule))->isAutoIssueEnabled();
+            || $certificateIssuer->isAutoIssueEnabled($rule);
 
         if ($needsCertificate) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

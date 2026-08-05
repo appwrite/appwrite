@@ -8,8 +8,13 @@ use Utopia\System\System;
 
 final class Certificates
 {
-    public function __construct(private Document $rule)
+    private string $edition;
+    private string $autoCertificates;
+
+    public function __construct()
     {
+        $this->edition = System::getEnv('_APP_EDITION', 'self-hosted');
+        $this->autoCertificates = System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled');
     }
 
     /**
@@ -18,21 +23,21 @@ final class Certificates
      * certificate already covers the parent domain, or when the domain is not a
      * known public hostname.
      */
-    public function isAutoIssueEnabled(): bool
+    public function isAutoIssueEnabled(Document $rule): bool
     {
-        if ($this->rule->getAttribute('owner', '') !== 'Appwrite') {
+        if ($rule->getAttribute('owner', '') !== 'Appwrite') {
             return false;
         }
 
-        if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
+        if ($this->edition !== 'self-hosted') {
             return false;
         }
 
-        if (System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled') === 'disabled') {
+        if ($this->autoCertificates === 'disabled') {
             return false;
         }
 
-        $domain = new Domain($this->rule->getAttribute('domain', ''));
+        $domain = new Domain($rule->getAttribute('domain', ''));
 
         return $domain->isKnown() && !$domain->isTest();
     }

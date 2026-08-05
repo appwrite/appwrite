@@ -21,12 +21,12 @@ final class CertificatesTest extends TestCase
         $this->setEnvironment('_APP_ROUTER_AUTO_CERTIFICATES', $option);
 
         try {
-            $certificates = new Certificates(new Document([
+            $certificates = new Certificates();
+
+            $this->assertSame($expected, $certificates->isAutoIssueEnabled(new Document([
                 'domain' => $hostname,
                 'owner' => $owner,
-            ]));
-
-            $this->assertSame($expected, $certificates->isAutoIssueEnabled());
+            ])));
         } finally {
             $this->setEnvironment('_APP_EDITION', $previousEdition);
             $this->setEnvironment('_APP_ROUTER_AUTO_CERTIFICATES', $previousOption);

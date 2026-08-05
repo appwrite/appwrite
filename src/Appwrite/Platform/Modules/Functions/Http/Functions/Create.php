@@ -133,6 +133,7 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('request')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
@@ -180,6 +181,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Request $request,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
@@ -464,10 +466,10 @@ class Create extends Base
                     ->from($ruleCreate)
                     ->trigger();
 
-                if ((new Certificates(new Document([
+                if ($certificateIssuer->isAutoIssueEnabled(new Document([
                     'domain' => $domain,
                     'owner' => 'Appwrite',
-                ])))->isAutoIssueEnabled()) {
+                ]))) {
                     $publisherForCertificates->enqueue(new CertificateMessage(
                         project: $project,
                         domain: new Document([
