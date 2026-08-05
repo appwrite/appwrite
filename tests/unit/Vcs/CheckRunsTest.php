@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Vcs\CheckRuns;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -188,7 +189,7 @@ final class CheckRunsTest extends TestCase
         $this->assertFalse((new CheckRuns())->close($adapter, 'owner', 'repo', 0, CheckRuns::CONCLUSION_SUCCESS, 'title', 'summary'));
     }
 
-    private function github(): GitHub
+    private function github(): GitHub&MockObject
     {
         return $this->createMock(GitHub::class);
     }
