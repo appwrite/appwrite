@@ -36,3 +36,15 @@ export function isWebsiteAccessProtectedPath(
   if (normalized === '/i' || normalized.startsWith('/i/')) return false
   return true
 }
+
+/**
+ * Client gate should cover `/access` itself (password form) plus every
+ * protected path. Affiliate short links stay exempt.
+ */
+export function shouldShowWebsiteAccessGate(
+  pathname: string | null | undefined,
+): boolean {
+  const normalized = (pathname ?? '/').replace(/\/+$/, '') || '/'
+  if (normalized === '/i' || normalized.startsWith('/i/')) return false
+  return true
+}

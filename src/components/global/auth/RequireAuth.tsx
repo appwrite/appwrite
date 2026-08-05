@@ -34,6 +34,8 @@ function isAuthPage(pathname: string): boolean {
 /** Console routes that work without sign-in; account is optional. */
 export function isOptionalAuthPage(pathname: string): boolean {
   const features = getActiveProfileFeatures()
+  // Soft-launch password gate; guests land here before marketing/console.
+  if (pathname === '/access') return true
   if (pathname === '/init') return features.init
   // Public fullscreen agent (guest can view empty state + sign-in CTA).
   if (
