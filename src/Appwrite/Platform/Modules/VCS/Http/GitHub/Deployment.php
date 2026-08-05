@@ -71,6 +71,37 @@ trait Deployment
             ];
         };
 
+        // A skipped deployment left the commit with no indicator at all, so a
+        // deliberate skip was indistinguishable from a broken integration. A commit
+        // status has no state for it — 'failure' carries the reason until the richer
+        // check run conclusions land.
+        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
+            if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
+                return;
+            }
+
+            // A pull request on this repository also raised a push event, which
+            // reported the same skip on the same commit. A fork raises no push.
+            if (!empty($providerPullRequestId) && !$external) {
+                return;
+            }
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $hostname = $platform['consoleHostname'] ?? '';
+            $region = $project->getAttribute('region', 'default');
+            $collection = $resource->getCollection();
+            $type = $collection === 'sites' ? 'site' : 'function';
+            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$collection}/{$type}-{$resource->getId()}";
+            $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
+
+            try {
+                [$owner, $repositoryName] = $resolveIdentity($repository->getAttribute('providerRepositoryId'));
+                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $reason, $targetUrl, $name);
+            } catch (\Throwable $e) {
+                Console::warning("Failed to report a skipped deployment: " . $e->getMessage());
+            }
+        };
+
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
 
@@ -126,6 +157,7 @@ trait Deployment
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, 'Skipped: the commit message contains ' . \implode(' or ', VCS_DEPLOYMENT_SKIP_PATTERNS) . '.');
                     continue;
                 }
 
@@ -134,6 +166,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, "Skipped: branch '{$providerBranch}' does not match the configured branch triggers.");
                     continue;
                 }
 
@@ -151,6 +184,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
+                        $reportSkip($resource, $project, $repository, 'Skipped: no changed file matches the configured path filters.');
                         continue;
                     }
                 }
@@ -339,12 +373,22 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Authorization required for external contributor.';
+                    // 'pending' reads as "still running", and nothing revisits the
+                    // commit once a maintainer authorizes, so it never resolved.
+                    // Report a terminal state that says what is being waited on.
+                    if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                        $resourceName = $resource->getAttribute('name');
+                        $projectName = $project->getAttribute('name');
+                        $name = "{$resourceName} ({$projectName})";
+                        $message = 'Authorization required: a maintainer must approve this external contribution.';
 
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                        try {
+                            $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                        } catch (\Throwable $e) {
+                            Console::warning("Failed to report required authorization: " . $e->getMessage());
+                        }
+                    }
+
                     continue;
                 }
 
