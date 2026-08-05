@@ -92,7 +92,7 @@ class Create extends Action
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
                 'database' => $this->getDatabaseDSN($project),
-                'status' => 'ready',
+                'status' => 'processing',
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);

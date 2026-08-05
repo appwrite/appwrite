@@ -708,9 +708,18 @@ class Databases extends Action
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+
+            $dbForProject->updateDocument('databases', $database->getId(), new Document([
+                'status' => 'ready',
+            ]));
         } catch (DuplicateException) {
-            // Metadata collection already exists
+            $dbForProject->updateDocument('databases', $database->getId(), new Document([
+                'status' => 'ready',
+            ]));
         } catch (\Throwable $e) {
+            $dbForProject->updateDocument('databases', $database->getId(), new Document([
+                'status' => 'failed',
+            ]));
             throw new Exception('Failed to create database metadata collection: ' . $e->getMessage(), previous: $e);
         }
     }
