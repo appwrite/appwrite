@@ -19,7 +19,10 @@ async function handleSubmit(event: Event) {
       password: password.value,
       name: name.value.trim() || undefined,
     })
-    await account.createEmailPasswordSession({ email: email.value, password: password.value })
+    await account.createEmailPasswordSession({
+      email: email.value,
+      password: password.value,
+    })
     window.location.href = '/'
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Sign up failed'

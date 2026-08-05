@@ -38,7 +38,9 @@ function renderSignIn() {
       <p>No account? <a href="/sign-up">Sign up</a></p>
     </form>
   `
-  document.querySelector('#sign-in-form').addEventListener('submit', async (e) => {
+  document
+    .querySelector('#sign-in-form')
+    .addEventListener('submit', async (e) => {
     e.preventDefault()
     const form = new FormData(e.target)
     try {
@@ -66,7 +68,9 @@ function renderSignUp() {
       <p>Already have an account? <a href="/sign-in">Sign in</a></p>
     </form>
   `
-  document.querySelector('#sign-up-form').addEventListener('submit', async (e) => {
+  document
+    .querySelector('#sign-up-form')
+    .addEventListener('submit', async (e) => {
     e.preventDefault()
     const form = new FormData(e.target)
     try {

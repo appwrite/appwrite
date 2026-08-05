@@ -118,6 +118,7 @@
         "@types/three": "^0.184.1",
         "@vitejs/plugin-react": "^5.0.3",
         "dotenv": "^16.4.5",
+        "editorconfig-checker": "6.1.1",
         "eslint-plugin-react-hooks": "^7.0.1",
         "eslint-plugin-unused-imports": "^4.3.0",
         "prettier": "^3.5.3",
@@ -1193,6 +1194,8 @@
     "draco3d": ["draco3d@1.5.7", "", {}, "sha512-m6WCKt/erDXcw+70IJXnG7M3awwQPAsZvJGX5zY7beBqpELw6RDGkYVU0W43AFxye4pDZ5i2Lbyc/NNGqwjUVQ=="],
 
     "earcut": ["earcut@3.0.2", "", {}, "sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ=="],
+
+    "editorconfig-checker": ["editorconfig-checker@6.1.1", "", { "bin": { "ec": "dist/index.js", "editorconfig-checker": "dist/index.js" } }, "sha512-kiOb6qaWpMNt7Z/43ba0Pa1Inhr2/t9nKbvEKtCeXJ5AesztoM9AgLOOQVB4QUv/nGjgz3xkbx4pcogVRD2NWw=="],
 
     "electron-to-chromium": ["electron-to-chromium@1.5.227", "", {}, "sha512-ITxuoPfJu3lsNWUi2lBM2PaBPYgH3uqmxut5vmBxgYvyI4AlJ6P3Cai1O76mOrkJCBzq0IxWg/NtqOrpu/0gKA=="],
 
