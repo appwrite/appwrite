@@ -6,7 +6,11 @@ import { ReactNode, useEffect, useRef } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
-import { consoleAccountQueryOptions, performConsoleSignOut } from '@/lib/react-query/hooks/auth'
+import {
+  consoleAccountQueryOptions,
+  isConsoleSigningOut,
+  performConsoleSignOut,
+} from '@/lib/react-query/hooks/auth'
 import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAccessBlockedScreen'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -168,6 +172,8 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
     error.type === 'user_more_factors_required'
 
   useEffect(() => {
+    // Sign-out uses a hard redirect; SPA MFA navigation would flash under it.
+    if (isConsoleSigningOut()) return
     if (!needsMfa || location.pathname === '/mfa') return
     const redirectUrl = getRelativeRedirectUrl(location as unknown)
     const redirectKey = `mfa:${redirectUrl ?? ''}`
@@ -185,6 +191,9 @@ function useAuthErrorNavigation(error: unknown, location: RouterLocation) {
       (error as { status?: number }).status === 401)
 
   useEffect(() => {
+    // Sign-out covers the viewport and hard-navigates to /sign-in. Do not SPA
+    // navigate here or the console will flash empty/guest states mid-logout.
+    if (isConsoleSigningOut()) return
     if (
       !is401 ||
       isAuthPage(location.pathname) ||

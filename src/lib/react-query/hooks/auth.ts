@@ -316,6 +316,37 @@ export function purgeConsoleAccountCaches(queryClient: QueryClient): void {
   queryClient.removeQueries({ queryKey: ['account', 'console'] })
 }
 
+const CONSOLE_SIGN_OUT_COVER_ID = 'console-sign-out-cover'
+
+/** True while sign-out is in progress (covers SPA auth redirects / UI thrash). */
+let consoleSigningOut = false
+
+export function isConsoleSigningOut(): boolean {
+  return consoleSigningOut
+}
+
+/**
+ * Opaque full-viewport cover so async session delete cannot flash logged-out
+ * chrome, empty RequireAuth fallbacks, or SPA /sign-in transitions.
+ */
+function showConsoleSignOutCover(): void {
+  if (typeof document === 'undefined') return
+  if (document.getElementById(CONSOLE_SIGN_OUT_COVER_ID)) return
+  const cover = document.createElement('div')
+  cover.id = CONSOLE_SIGN_OUT_COVER_ID
+  cover.setAttribute('aria-busy', 'true')
+  cover.setAttribute('aria-live', 'polite')
+  cover.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483647',
+    // Match themed app background (avoids white/black flash across light/dark).
+    'background:var(--background)',
+    'pointer-events:auto',
+  ].join(';')
+  document.documentElement.appendChild(cover)
+}
+
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
 export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
@@ -331,31 +362,59 @@ export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   )
 }
 
-/** Clear client auth state, best-effort server session delete, then open sign-in. */
+/**
+ * Clear client auth state, best-effort server session delete, then open sign-in.
+ *
+ * Keep React Query account data until the hard redirect so the console does not
+ * briefly render as logged-out (RequireAuth fallback, header guest state, SPA
+ * /sign-in navigation) while deleteSession is in flight.
+ *
+ * Server revoke must succeed for other apps/domains sharing the same Appwrite
+ * session cookie to be logged out. Local cookie clearing only affects
+ * non-httpOnly cookies on this document host; the real session cookie is
+ * httpOnly on the API host and is cleared via Set-Cookie on deleteSession.
+ */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
   options?: { redirect?: string },
 ): Promise<void> {
+  if (consoleSigningOut) return
+  consoleSigningOut = true
+  showConsoleSignOutCover()
+
+  // Drop impersonation headers only. Do not clear session credentials before
+  // the delete call or the API request may go out unauthenticated.
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
-  purgeConsoleAccountCaches(queryClient)
 
   try {
-    const sessionsResponse = await sdk.forConsole.account.listSessions()
-    const sessions = sessionsResponse.sessions || []
-    const currentSession = sessions.find((session) => session.current === true)
-
-    if (currentSession) {
-      await sdk.forConsole.account.deleteSession({
-        sessionId: currentSession.$id,
-      })
-    } else if (sessions.length > 0) {
-      await sdk.forConsole.account.deleteSessions()
-    }
+    // Preferred Appwrite logout: revoke the current server session by id
+    // alias. Avoid listSessions-first (can skip delete when the list is empty
+    // or `current` is missing) so cross-domain consoles sharing this session
+    // are actually invalidated.
+    await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
   } catch (error) {
-    console.error('Error signing out:', error)
+    console.error('Error signing out (deleteSession current):', error)
+    // Fallback if `current` is rejected: resolve the active session id, then
+    // revoke it. Last resort: wipe all account sessions.
+    try {
+      const sessionsResponse = await sdk.forConsole.account.listSessions()
+      const sessions = sessionsResponse.sessions || []
+      const currentSession = sessions.find((session) => session.current === true)
+
+      if (currentSession) {
+        await sdk.forConsole.account.deleteSession({
+          sessionId: currentSession.$id,
+        })
+      } else if (sessions.length > 0) {
+        await sdk.forConsole.account.deleteSessions()
+      }
+    } catch (fallbackError) {
+      console.error('Error signing out (fallback):', fallbackError)
+    }
   } finally {
     clearConsoleSessionLocally()
+    purgeConsoleAccountCaches(queryClient)
     redirectToSignInAfterConsoleSignOut(options?.redirect)
   }
 }
