@@ -1,10 +1,9 @@
-import { afterNextRender, Component, signal } from '@angular/core'
+import { Component, inject, signal } from '@angular/core'
 import { RouterLink } from '@angular/router'
-import { Account } from 'appwrite'
-import { client } from '../../lib/appwrite'
+import { AppwriteService } from './appwrite.service'
 
 @Component({
-  standalone: true,
+  selector: 'app-home',
   imports: [RouterLink],
   template: `
     @if (loading()) {
@@ -24,24 +23,22 @@ import { client } from '../../lib/appwrite'
     }
   `,
 })
-export default class HomePageComponent {
+export class HomeComponent {
+  private appwrite = inject(AppwriteService)
+
   user = signal<{ name: string } | null>(null)
   loading = signal(true)
 
   constructor() {
-    afterNextRender(() => {
-      const account = new Account(client)
-      account
-        .get()
-        .then((u) => this.user.set({ name: u.name }))
-        .catch(() => this.user.set(null))
-        .finally(() => this.loading.set(false))
-    })
+    this.appwrite
+      .getUser()
+      .then((u) => this.user.set({ name: u.name }))
+      .catch(() => this.user.set(null))
+      .finally(() => this.loading.set(false))
   }
 
   async handleSignOut() {
-    const account = new Account(client)
-    await account.deleteSession({ sessionId: 'current' })
+    await this.appwrite.signOut()
     this.user.set(null)
   }
 }

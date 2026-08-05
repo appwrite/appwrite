@@ -1,7 +1,8 @@
 import { Client } from 'appwrite'
+import { environment } from '../environments/environment'
 
 const client = new Client()
-  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+  .setEndpoint(environment.appwriteEndpoint)
+  .setProject(environment.appwriteProjectId)
 
 export { client }

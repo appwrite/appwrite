@@ -69,13 +69,15 @@ interface SampleOverride {
   dir?: string
   /** Label for the generated env/config entry; defaults to '.env'. */
   envLabel?: string
+  /** Highlight language for the generated env/config entry; defaults to 'env'. */
+  envLanguage?: CodeBlockLanguage
 }
 
 /**
  * Samples resolve by `sdk/framework/using`, then `sdk/framework`, then `sdk` -
  * the first candidate whose snippet directory exists wins, and its file list
  * (and tab order) comes straight from the files on disk. This map only holds
- * the exceptions: directory aliases and custom env-entry labels. An alias is
+ * the exceptions: directory aliases and custom env-entry labels/languages. An alias is
  * REQUIRED for any key whose directory only contains variant subdirectories
  * (e.g. web/react holds vite/ and cra/) - without one, resolving that key
  * would merge every variant's files into one sample.
@@ -83,6 +85,11 @@ interface SampleOverride {
 const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
   'web/next': { dir: 'web/next/pages' },
   'web/react': { dir: 'web/react/vite' },
+  // Angular CLI builds have no import.meta.env; config lives in environment files.
+  'web/angular': {
+    envLabel: 'src/environments/environment.ts',
+    envLanguage: 'typescript',
+  },
   web: { dir: 'web/vanilla' },
   node: { dir: 'node/vanilla' },
   deno: { dir: 'deno/vanilla' },
@@ -159,6 +166,9 @@ function getEnvExample(
     if (frameworkId === 'sveltekit') {
       return `PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nPUBLIC_APPWRITE_PROJECT_ID=${projectId}`
     }
+    if (frameworkId === 'angular') {
+      return `export const environment = {\n  appwriteEndpoint: '${endpoint}',\n  appwriteProjectId: '${projectId}',\n}`
+    }
     return `VITE_APPWRITE_ENDPOINT=${endpoint}\nVITE_APPWRITE_PROJECT_ID=${projectId}`
   }
   return `APPWRITE_ENDPOINT=${endpoint}\nAPPWRITE_PROJECT_ID=${projectId}\nAPPWRITE_API_KEY=your-api-key`
@@ -199,7 +209,7 @@ export function getCodeFiles(
           endpoint,
           projectId,
         ),
-        language: 'env',
+        language: override?.envLanguage ?? 'env',
       },
       ...files.map((file) => ({
         label: file,
