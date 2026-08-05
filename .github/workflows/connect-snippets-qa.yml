@@ -7,4 +7,4 @@ jobs:
   ok:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Placeholder until PR #116 lands"
+      - run: echo "Placeholder until PR 116 lands"
