@@ -87,32 +87,32 @@ const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
   { id: 'node', platform: 'web', label: 'Node.js' },
   { id: 'deno', platform: 'web', label: 'Deno' },
   { id: 'bun', platform: 'web', label: 'Bun' },
+  { id: 'go', platform: 'web', label: 'Go' },
   { id: 'python', platform: 'web', label: 'Python' },
-  { id: 'dart', platform: 'web', label: 'Dart' },
   { id: 'php', platform: 'web', label: 'PHP' },
   { id: 'ruby', platform: 'web', label: 'Ruby' },
+  { id: 'dart', platform: 'web', label: 'Dart' },
+  { id: 'swift', platform: 'apple', label: 'Swift' },
   { id: 'dotnet', platform: 'web', label: '.NET' },
-  { id: 'go', platform: 'web', label: 'Go' },
+  { id: 'kotlin', platform: 'android', label: 'Kotlin' },
   { id: 'java', platform: 'web', label: 'Java' },
   { id: 'rust', platform: 'web', label: 'Rust' },
-  { id: 'swift', platform: 'apple', label: 'Swift' },
-  { id: 'kotlin', platform: 'android', label: 'Kotlin' },
 ]
 
 /** Framework options per SDK (id + label). Aligned with https://appwrite.io/docs/quick-starts */
 const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
   web: [
     { id: 'next', label: 'Next.js' },
+    { id: 'tanstack', label: 'TanStack Start' },
     { id: 'react', label: 'React' },
-    { id: 'vue', label: 'Vue.js' },
     { id: 'sveltekit', label: 'SvelteKit' },
     { id: 'svelte', label: 'Svelte' },
-    { id: 'angular', label: 'Angular' },
-    { id: 'analog', label: 'Analog' },
     { id: 'nuxt', label: 'Nuxt' },
-    { id: 'solid', label: 'Solid' },
+    { id: 'vue', label: 'Vue.js' },
+    { id: 'analog', label: 'Analog' },
+    { id: 'angular', label: 'Angular' },
     { id: 'solidstart', label: 'SolidStart' },
-    { id: 'tanstack', label: 'TanStack Start' },
+    { id: 'solid', label: 'Solid' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
@@ -175,15 +175,15 @@ const PACKAGE_MANAGER_OPTIONS: Record<
     { id: 'yarn', label: 'yarn' },
   ],
   bun: [
-    { id: 'bun', label: 'bun' },
     { id: 'npm', label: 'npm' },
+    { id: 'bun', label: 'bun' },
     { id: 'pnpm', label: 'pnpm' },
     { id: 'yarn', label: 'yarn' },
   ],
   'react-native': [
     { id: 'npm', label: 'npm' },
-    { id: 'pnpm', label: 'pnpm' },
     { id: 'bun', label: 'bun' },
+    { id: 'pnpm', label: 'pnpm' },
     { id: 'yarn', label: 'yarn' },
   ],
   deno: [
@@ -2009,8 +2009,8 @@ function getInstallInstructions(
     }
     case 'bun': {
       const options: InstallOption[] = [
-        { label: 'bun', code: 'bun add node-appwrite', language: 'bash' },
         { label: 'npm', code: 'npm install node-appwrite', language: 'bash' },
+        { label: 'bun', code: 'bun add node-appwrite', language: 'bash' },
         { label: 'pnpm', code: 'pnpm add node-appwrite', language: 'bash' },
         { label: 'yarn', code: 'yarn add node-appwrite', language: 'bash' },
       ]
@@ -2095,13 +2095,13 @@ function getInstallInstructions(
           language: 'bash',
         },
         {
-          label: 'pnpm',
-          code: 'pnpm add react-native-appwrite',
+          label: 'bun',
+          code: 'bun add react-native-appwrite',
           language: 'bash',
         },
         {
-          label: 'bun',
-          code: 'bun add react-native-appwrite',
+          label: 'pnpm',
+          code: 'pnpm add react-native-appwrite',
           language: 'bash',
         },
         {
