@@ -7,7 +7,7 @@ import { AppwriteService } from './appwrite.service'
   selector: 'app-sign-in',
   imports: [FormsModule, RouterLink],
   template: `
-    <form (ngSubmit)="handleSubmit()">
+    <form id="sign-in-form" (ngSubmit)="handleSubmit()">
       <h1>Sign in</h1>
       @if (error()) {
         <p>{{ error() }}</p>
