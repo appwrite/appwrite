@@ -4,6 +4,7 @@ namespace Appwrite\Deployment;
 
 use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -18,6 +19,45 @@ use Utopia\VCS\Adapter\Git;
  */
 final class GitAction
 {
+    /**
+     * Resolve the provider for a deployment and report a build state to it.
+     * Best-effort: a deployment that never came from git, or whose installation
+     * is gone, reports nothing.
+     */
+    public static function report(
+        string $status,
+        Document $deployment,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+    ): void {
+        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
+            return;
+        }
+
+        $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+        $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
+
+        if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
+            return;
+        }
+
+        self::run(
+            $status,
+            $vcsFactory->fromInstallation($installation),
+            $deployment->getAttribute('providerCommitHash', ''),
+            $deployment->getAttribute('providerRepositoryOwner', ''),
+            $deployment->getAttribute('providerRepositoryName', ''),
+            $project,
+            $resource,
+            $deployment,
+            $dbForPlatform,
+            $platform,
+        );
+    }
+
     public static function run(
         string $status,
         Git $vcs,
@@ -55,6 +95,9 @@ final class GitAction
                 'ready' => 'success',
                 'failed' => 'failure',
                 'processing' => 'pending',
+                // A commit status has no canceled state, and reporting one as
+                // failed would misrepresent it. Only a check run says this.
+                'canceled' => '',
                 default => $status
             };
 
@@ -82,7 +125,7 @@ final class GitAction
 
                     (new CheckRuns())->close($vcs, $owner, $repositoryName, $checkRunId, $conclusion, $title, $message, $targetUrl);
                 }
-            } elseif (!$silent) {
+            } elseif (!empty($state)) {
                 $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
             }
         }

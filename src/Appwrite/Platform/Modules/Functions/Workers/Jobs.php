@@ -492,29 +492,8 @@ class Jobs extends Action
      */
     protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
     {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
         try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         } catch (\Throwable $e) {
             // Best-effort — never fails the build, but say so; a provider that
             // rejects the report leaves the commit with no build state at all.
