@@ -1,0 +1,401 @@
+# ---------------------------------------------------------------------------
+url: http://localhost:55555 # Irrelevant
+name: Auth — home, sign in, sign up
+tags:
+  - auth
+  - web
+  - regression
+---
+
+# ===========================================================================
+# 0. Setup — clean browser state, generate a unique test identity
+# ===========================================================================
+
+- launchApp
+
+- evalScript: "${output.baseUrl = (typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : 'http://localhost:3000'}"
+- evalScript: "${output.stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 4)}"
+- evalScript: "${output.email = 'qa' + output.stamp + '@example.com'}"
+- evalScript: "${output.name = 'QA ' + output.stamp}"
+- evalScript: "${output.password = 'Pa55w0rd'}"
+- evalScript: "${output.wrongPassword = 'N0tRight1'}"
+- evalScript: "${output.shortPassword = 'abc'}"
+- evalScript: "${output.unknownEmail = 'no' + output.stamp + '@example.com'}"
+
+- clearState: ${output.baseUrl}
+- openLink: ${output.baseUrl}/
+
+
+# ===========================================================================
+# 1. Home page — signed out
+# ===========================================================================
+- runFlow:
+    label: "1. Home (signed out) shows the CTA and both auth links"
+    commands:
+      - assertVisible: "Sign in to get started."
+      - assertVisible: "Sign in"
+      - assertVisible: "Sign up"
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+      - assertNotVisible: "Loading..."
+      - takeScreenshot: artifacts/01-home-signed-out
+
+
+# ===========================================================================
+# 2. Home page — navigation links actually work
+# ===========================================================================
+- runFlow:
+    label: "2a. Home -> Sign in link navigates to the sign in page"
+    commands:
+      - tapOn: "Sign in"
+      - assertVisible: ".*No account\\?.*"
+      - assertVisible: "Password"
+      - assertNotVisible: "Sign in to get started."
+
+- runFlow:
+    label: "2b. Home -> Sign up link navigates to the sign up page"
+    commands:
+      - openLink: ${output.baseUrl}/
+      - assertVisible: "Sign in to get started."
+      - tapOn: "Sign up"
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertVisible: "Name"
+
+
+# ===========================================================================
+# 3. Sign in page — structure
+# ===========================================================================
+- runFlow:
+    label: "3. Sign in page renders heading, email, password, submit and the sign up link"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - assertVisible: "Sign in"
+      - assertVisible: "Email"
+      - assertVisible:
+          css: "input[type='password']"
+      - assertVisible:
+          text: "Sign in"
+          index: 1 # the submit button, not the <h1>
+      - assertVisible: ".*No account\\?.*"
+      - assertVisible: "Sign up"
+      # No error is shown before the user has done anything
+      - assertNotVisible: ".*Invalid credentials.*"
+      # Sign in page must not leak an authenticated state
+      - assertNotVisible: "Sign out"
+
+- runFlow:
+    label: "3b. Sign in page -> Sign up cross link works"
+    commands:
+      - tapOn: "Sign up"
+      - assertVisible: ".*Already have an account\\?.*"
+
+
+# ===========================================================================
+# 4. Sign in — failure flows
+# ===========================================================================
+- runFlow:
+    label: "4a. Empty form submit is blocked by required validation (no navigation, no crash)"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      # Still on the sign in page: the browser blocked the submit
+      - assertVisible: "Email"
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "4b. Malformed email is blocked by type=email validation"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - tapOn: "Email"
+      - inputText: "not-an-email"
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "4c. Unknown account shows the Appwrite error inline and keeps the user on the page"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - tapOn: "Email"
+      - inputText: ${output.unknownEmail}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: ".*(Invalid credentials|Sign in failed|user with the requested ID could not be found).*"
+          timeout: 15000
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+      - takeScreenshot: artifacts/04-sign-in-error
+
+
+# ===========================================================================
+# 5. Sign up page — structure
+# ===========================================================================
+- runFlow:
+    label: "5. Sign up page renders name, email, password, submit and the sign in link"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - assertVisible: "Sign up"
+      - assertVisible: "Name"            # optional field, no `required`
+      - assertVisible: "Email"
+      - assertVisible:
+          css: "input[type='password']"  # the field is masked, not type=text
+      - assertVisible:
+          text: "Sign up"
+          index: 1                       # the submit button, not the <h1>
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertVisible: "Sign in"
+      - assertNotVisible: "Sign out"
+
+- runFlow:
+    label: "5b. Sign up page -> Sign in cross link works"
+    commands:
+      - tapOn: "Sign in"
+      - assertVisible: ".*No account\\?.*"
+
+
+# ===========================================================================
+# 6. Sign up — failure flows
+# ===========================================================================
+- runFlow:
+    label: "6a. Empty form submit is blocked (email + password are required)"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "6b. Malformed email is blocked by type=email validation"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: "not-an-email"
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "6c. Too short password is rejected by the backend and surfaced inline"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.shortPassword}
+      - pressKey: Enter
+      # Appwrite: "Password must be between 8 and 256 characters long."
+      - extendedWaitUntil:
+          visible: ".*([Pp]assword must be|Invalid `password`|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+      - takeScreenshot: artifacts/06-sign-up-error
+
+
+# ===========================================================================
+# 7. Sign up — happy flow (creates the account used by the rest of the run)
+# ===========================================================================
+- runFlow:
+    label: "7. Sign up succeeds, auto-creates a session and redirects to the signed in home"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 20000
+      - assertNotVisible: "Sign up"
+      - assertNotVisible: "Sign in to get started."
+      - takeScreenshot: artifacts/07-signed-up
+
+
+# ===========================================================================
+# 8. Home page — signed in
+# ===========================================================================
+- runFlow:
+    label: "8a. Signed in home greets the user by name and offers sign out"
+    commands:
+      - assertVisible: ".*Hello, ${output.name}.*"
+      - assertVisible: "Sign out"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: "Sign in"
+      - assertNotVisible: "Sign up"
+      - assertNotVisible: "Loading..."
+
+- runFlow:
+    label: "8b. The session survives a full page reload (cookie/localStorage persistence)"
+    commands:
+      - openLink: ${output.baseUrl}/
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 15000
+      - assertVisible: "Sign out"
+
+
+# ===========================================================================
+# 9. Signed in user visiting the auth pages
+# ===========================================================================
+- runFlow:
+    label: "9a. /sign-in is still reachable while signed in (no redirect — documented behaviour)"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - assertVisible:
+          text: "Sign in"
+          index: 1
+      - assertVisible: ".*No account\\?.*"
+
+- runFlow:
+    label: "9b. /sign-up is still reachable while signed in (no redirect — documented behaviour)"
+    commands:
+      - openLink: ${output.baseUrl}/sign-up
+      - assertVisible:
+          text: "Sign up"
+          index: 1
+      - assertVisible: ".*Already have an account\\?.*"
+
+# ===========================================================================
+# 10. Sign out button
+# ===========================================================================
+- runFlow:
+    label: "10a. Sign out swaps the home page back to the signed out state"
+    commands:
+      - openLink: ${output.baseUrl}/
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 15000
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 15000
+      - assertNotVisible: ".*Hello, ${output.name}.*"
+      - assertNotVisible: "Sign out"
+      - assertVisible: "Sign in"
+      - assertVisible: "Sign up"
+      - takeScreenshot: artifacts/10-signed-out
+
+- runFlow:
+    label: "10b. Sign out is durable — the session is gone after a reload, not just in memory"
+    commands:
+      - openLink: ${output.baseUrl}/
+      - assertVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+
+
+# ===========================================================================
+# 11. Sign in — failure then recovery on the same form
+# ===========================================================================
+- runFlow:
+    label: "11a. Existing account + wrong password shows an inline error"
+    commands:
+      - openLink: ${output.baseUrl}/sign-in
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.wrongPassword}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: ".*(Invalid credentials|Sign in failed).*"
+          timeout: 15000
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "11b. Correcting the password on the same form signs in and clears the error"
+    commands:
+      # css, not "Password": the placeholder is gone once the field has a value
+      - tapOn:
+          css: "input[type='password']"
+      - eraseText
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 20000
+      - assertNotVisible: ".*Invalid credentials.*"
+      - assertVisible: "Sign out"
+      - takeScreenshot: artifacts/11-signed-in
+
+
+# ===========================================================================
+# 12. Sign up — duplicate email (needs to be signed out first)
+# ===========================================================================
+- runFlow:
+    label: "12. Signing up again with an existing email is rejected"
+    commands:
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 15000
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      # Appwrite: "A user with the same id, email, or phone already exists..."
+      - extendedWaitUntil:
+          visible: ".*(already exists|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+
+
+# ===========================================================================
+# 13. The name field is NOT required — Appwrite rejects `name: ""`, so the app
+#     has to omit the key entirely. Creates a second throwaway user.
+# ===========================================================================
+- runFlow:
+    label: "13. Sign up without a name succeeds and renders an empty greeting"
+    commands:
+      - evalScript: "${output.namelessEmail = 'maestro-noname-' + output.stamp + '@example.com'}"
+      - openLink: ${output.baseUrl}/sign-up
+      - tapOn: "Email"
+      - inputText: ${output.namelessEmail}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: ".*Hello,.*"
+          timeout: 20000
+      - assertVisible: "Sign out"
+      - assertNotVisible: ".*(Invalid `name`|at least 1 chars).*"
+      - takeScreenshot: artifacts/13-empty-name
+
+
+# ===========================================================================
+# 14. Teardown — leave the browser signed out for the next run
+# ===========================================================================
+- runFlow:
+    label: "14. Teardown: sign out and clear browser state"
+    commands:
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 15000
+      - clearState: ${output.baseUrl}

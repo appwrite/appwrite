@@ -8,7 +8,7 @@ import { client } from '../../lib/appwrite'
   standalone: true,
   imports: [FormsModule, RouterLink],
   template: `
-    <form (ngSubmit)="handleSubmit()">
+    <form id="sign-up-form" (ngSubmit)="handleSubmit()">
       <h1>Sign up</h1>
       @if (error()) {
         <p>{{ error() }}</p>
