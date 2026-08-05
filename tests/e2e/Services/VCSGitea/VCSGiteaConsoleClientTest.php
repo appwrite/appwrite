@@ -114,8 +114,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git add index.js && git commit -m "Update function [skip ci]"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
-        // The next push synchronises: waiting a fixed interval would hold whether
-        // the skip worked or the webhook died.
+        // The next push synchronises; a fixed interval would pass either way.
         $this->writeFunctionHelper($workdir, 'gitea-v4');
         $this->gitHelper('git add index.js && git commit -m "Update function"', $workdir);
         $this->gitHelper('git push origin main', $workdir);

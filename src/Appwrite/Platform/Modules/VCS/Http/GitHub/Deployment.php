@@ -58,9 +58,8 @@ trait Deployment
                 return $resolved[$providerRepositoryId];
             }
 
-            // Owner first: getRepositoryName reports any unreadable response as
-            // RepositoryNotFound, which the loop treats as a 404 and skips. Letting
-            // an unreachable provider fail here instead keeps it a 500, and retried.
+            // Owner first: getRepositoryName reports an unreadable response as
+            // RepositoryNotFound, which the loop skips as a 404 instead of retrying.
             $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
             try {
@@ -100,8 +99,6 @@ trait Deployment
                     return;
                 }
 
-                // Mirrors the neutral conclusion above: a skip is not a break, and
-                // must not block a merge where this check is required.
                 $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'success', $reason, $targetUrl, $name);
             } catch (\Throwable $e) {
                 Console::warning("Failed to report a skipped deployment on repository '{$repository->getId()}': " . $e->getMessage());
@@ -386,8 +383,6 @@ trait Deployment
                         $message = 'Authorization required: a maintainer must approve this external contribution.';
 
                         try {
-                            // action_required is terminal and tells the maintainer the
-                            // next move is theirs, which pending never did.
                             if (!$checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_ACTION_REQUIRED, 'Authorization required', $message, $authorizeUrl)) {
                                 $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
                             }

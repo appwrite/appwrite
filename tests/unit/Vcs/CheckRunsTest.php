@@ -16,8 +16,6 @@ final class CheckRunsTest extends TestCase
 
     public function testOtherProvidersReportNothing(): void
     {
-        // Gitea and GitLab inherit a throwing default, so the caller has to be
-        // told to keep using the commit status instead.
         $adapter = $this->createMock(Git::class);
         $adapter->expects($this->never())->method('createCheckRun');
 
@@ -107,7 +105,6 @@ final class CheckRunsTest extends TestCase
 
     public function testAProviderFailureIsContained(): void
     {
-        // Reporting must never fail the webhook that triggered it.
         $adapter = $this->createStub(GitHub::class);
         $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
 
@@ -116,9 +113,6 @@ final class CheckRunsTest extends TestCase
 
     public function testAnInstallationThatRefusesIsAskedOnlyOnce(): void
     {
-        // A webhook fans out to every resource linked to the repository. An
-        // installation predating the permission would otherwise pay one
-        // rejected call per resource.
         $adapter = $this->github();
         $adapter->expects($this->once())
             ->method('createCheckRun')

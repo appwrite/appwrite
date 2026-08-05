@@ -7,10 +7,8 @@ use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
- * Reports a deployment that will not build as a provider check run, which
- * carries conclusions a commit status cannot: deliberately skipped, and waiting
- * on authorization. Only GitHub implements them, so a false return means fall
- * back to the commit status.
+ * Only GitHub implements check runs, so a false return means fall back to the
+ * commit status.
  */
 class CheckRuns
 {
@@ -20,8 +18,7 @@ class CheckRuns
     protected const int NAME_LIMIT = 255;
 
     /**
-     * Owners whose installation refused a run, so an installation missing the
-     * permission does not pay one rejected call per linked resource.
+     * Owners that refused a run, so a fan-out pays one rejected call, not one each.
      *
      * @var array<string, true>
      */
@@ -32,11 +29,6 @@ class CheckRuns
         return $vcs instanceof GitHub;
     }
 
-    /**
-     * Report a deployment that reached a terminal state without building.
-     *
-     * @return bool Whether the run was created.
-     */
     public function conclude(
         Git $vcs,
         string $owner,
@@ -48,7 +40,7 @@ class CheckRuns
         string $summary,
         string $detailsUrl = '',
     ): bool {
-        // A malformed hash is a 422, and without one there is nothing to report against.
+        // GitHub answers 422 to a malformed head_sha.
         if (!\preg_match('/^[0-9a-f]{7,40}$/i', $commitHash)) {
             return false;
         }
@@ -72,8 +64,6 @@ class CheckRuns
 
             return true;
         } catch (\Throwable $error) {
-            // An installation predating the check run permission answers 403 to
-            // every call, so stop asking for the rest of this event.
             if ($error->getCode() === 403) {
                 $this->refused[$owner] = true;
             }
