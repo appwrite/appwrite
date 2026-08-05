@@ -108,19 +108,27 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
 
-        // A skipped push reports the reason to the provider. Gitea has no check
-        // runs, so reporting must stay a no-op rather than throw and take the
-        // webhook — and the push must still not deploy.
+        // A skipped push reports its reason to the provider. Gitea has no check
+        // runs, so that report must stay a no-op rather than throw and take the
+        // webhook down with it.
         $knownIds = $this->listDeploymentIdsHelper($functionId);
 
         $this->writeFunctionHelper($workdir, 'gitea-v3');
         $this->gitHelper('git add index.js && git commit -m "Update function [skip ci]"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
-        \sleep(15);
+        // The next ordinary push is the synchronisation point. Waiting a fixed
+        // interval on the skipped push instead would prove nothing: no deployment
+        // appears whether the skip worked or the webhook failed outright.
+        $this->writeFunctionHelper($workdir, 'gitea-v4');
+        $this->gitHelper('git add index.js && git commit -m "Update function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
 
-        $this->assertEqualsCanonicalizing($knownIds, $this->listDeploymentIdsHelper($functionId));
-        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+        $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v4'), 30000, 1000);
+
+        // Exactly one: the skipped push built nothing, and the handler survived it.
+        $this->assertCount(\count($knownIds) + 1, $this->listDeploymentIdsHelper($functionId));
     }
 
     /**
