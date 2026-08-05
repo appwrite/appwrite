@@ -116,36 +116,44 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
-    { id: 'vanilla', label: 'Vanilla' },
     { id: 'express', label: 'Express' },
     { id: 'koa', label: 'Koa' },
+    { id: 'vanilla', label: 'Vanilla' },
   ],
   bun: [
-    { id: 'vanilla', label: 'Vanilla' },
     { id: 'hono', label: 'Hono' },
     { id: 'elysia', label: 'ElysiaJS' },
+    { id: 'vanilla', label: 'Vanilla' },
   ],
-  flutter: [{ id: 'flutter', label: 'Flutter' }],
-  'react-native': [{ id: 'react-native', label: 'React Native' }],
+  // Single-framework platforms keep their platform-specific id (for the
+  // icon and code lookups) but read "Vanilla" when the framework would
+  // otherwise just repeat the platform name.
+  flutter: [{ id: 'flutter', label: 'Vanilla' }],
+  'react-native': [{ id: 'react-native', label: 'Vanilla' }],
   apple: [{ id: 'swift', label: 'Swift' }],
   android: [{ id: 'kotlin', label: 'Kotlin' }],
-  python: [{ id: 'python', label: 'Python' }],
-  dart: [{ id: 'dart', label: 'Dart' }],
-  php: [{ id: 'php', label: 'PHP' }],
-  ruby: [{ id: 'ruby', label: 'Ruby' }],
-  dotnet: [{ id: 'dotnet', label: '.NET' }],
-  go: [{ id: 'go', label: 'Go' }],
-  java: [{ id: 'java', label: 'Java' }],
-  rust: [{ id: 'rust', label: 'Rust' }],
-  swift: [{ id: 'swift', label: 'Swift' }],
-  kotlin: [{ id: 'kotlin', label: 'Kotlin' }],
+  python: [{ id: 'python', label: 'Vanilla' }],
+  dart: [{ id: 'dart', label: 'Vanilla' }],
+  php: [{ id: 'php', label: 'Vanilla' }],
+  ruby: [{ id: 'ruby', label: 'Vanilla' }],
+  dotnet: [{ id: 'dotnet', label: 'Vanilla' }],
+  go: [{ id: 'go', label: 'Vanilla' }],
+  java: [{ id: 'java', label: 'Vanilla' }],
+  rust: [{ id: 'rust', label: 'Vanilla' }],
+  swift: [{ id: 'swift', label: 'Vanilla' }],
+  kotlin: [{ id: 'kotlin', label: 'Vanilla' }],
   deno: [
-    { id: 'vanilla', label: 'Vanilla' },
     { id: 'fresh', label: 'Fresh' },
+    { id: 'vanilla', label: 'Vanilla' },
   ],
 }
 
-/** "Using" variants per framework (e.g. React: Vite vs CRA; Next: App Router vs Pages Router). */
+/**
+ * "Using" variants per framework (e.g. React: Vite vs CRA; Next: App Router
+ * vs Pages Router). Single-entry lists render as a disabled select showing
+ * the implied tooling. Keyed by framework id, so the shared 'vanilla' id
+ * (used by web, node, bun, deno) cannot declare one here.
+ */
 const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   react: [
     { id: 'vite', label: 'Vite' },
@@ -155,6 +163,15 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'app', label: 'App Router' },
     { id: 'pages', label: 'Pages Router' },
   ],
+  tanstack: [{ id: 'vite', label: 'Vite' }],
+  sveltekit: [{ id: 'vite', label: 'Vite' }],
+  svelte: [{ id: 'vite', label: 'Vite' }],
+  nuxt: [{ id: 'vite', label: 'Vite' }],
+  vue: [{ id: 'vite', label: 'Vite' }],
+  analog: [{ id: 'vite', label: 'Vite' }],
+  angular: [{ id: 'cli', label: 'Angular CLI' }],
+  solidstart: [{ id: 'vite', label: 'Vite' }],
+  solid: [{ id: 'vite', label: 'Vite' }],
 }
 
 /** Package manager options per SDK; null = not applicable (use all in install). */
