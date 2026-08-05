@@ -124,7 +124,7 @@ jobs:
             framework: solidstart
             using: vite
             snippets: solidstart
-            create: npx -y create-solid@latest "$APP_DIR" -s --v2 --ts -t ts
+            create: npx -y create-solid@latest "$APP_DIR" -s --v2 --ts -t basic
             port: 3000
             dev: npm run dev -- --port 3000
 
@@ -169,6 +169,13 @@ jobs:
           APP_DIR="app-$(date +%s)-$RANDOM"
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
           ${{ matrix.create }}
+          # Some create CLIs exit 0 without scaffolding (e.g. create-solid on
+          # an invalid template). Without a project here, npm would silently
+          # walk up and run the vibes repo's own scripts.
+          if [ ! -f "$APP_DIR/package.json" ]; then
+            echo "::error::Scaffold did not produce $APP_DIR/package.json"
+            exit 1
+          fi
 
       - name: Paste Connect snippets over the starter
         run: |
@@ -213,11 +220,20 @@ jobs:
       - name: Run Maestro auth flow
         run: |
           mkdir -p artifacts/maestro
-          mise run test ${{ matrix.port }} --headless \
-            --debug-output="$PWD/artifacts/maestro" \
-            --flatten-debug-output \
-            --format=junit \
-            --output="$PWD/artifacts/maestro/report.xml"
+          run_flow() {
+            mise run test ${{ matrix.port }} --headless \
+              --debug-output="$PWD/artifacts/maestro" \
+              --flatten-debug-output \
+              --format=junit \
+              --output="$PWD/artifacts/maestro/report.xml"
+          }
+          # maestro-web's CDP driver can drop a message mid-flow (seen as
+          # "No message with id N received"); one retry absorbs that flake
+          # without hiding real failures.
+          run_flow || {
+            echo "::warning::Maestro flow failed - retrying once"
+            run_flow
+          }
 
       - name: Collect logs and app source
         if: always()
