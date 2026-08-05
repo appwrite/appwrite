@@ -435,19 +435,26 @@ export function scrollToConsoleCard(cardId: string): void {
 
 /** Suggested React Query key prefixes per refresh scope. */
 export const CONSOLE_REFRESH_SCOPE_KEYS: Record<string, string[]> = {
-  databases: ['databases'],
-  tables: ['tables', 'table-rows', 'columns', 'indexes'],
-  buckets: ['buckets'],
-  files: ['files'],
-  users: ['users'],
-  teams: ['teams'],
-  functions: ['functions'],
-  sites: ['sites'],
-  providers: ['providers'],
-  topics: ['topics'],
-  messages: ['messages'],
+  databases: ['databases', 'database'],
+  tables: ['tables', 'table', 'rows', 'columns', 'indexes'],
+  buckets: ['buckets', 'bucket'],
+  files: ['files', 'file', 'file-tokens'],
+  users: ['users', 'user'],
+  teams: ['teams', 'team'],
+  functions: ['functions', 'function'],
+  sites: ['sites', 'site'],
+  providers: ['providers', 'provider'],
+  topics: ['topics', 'topic'],
+  messages: ['messages', 'message'],
   project: ['project'],
   organization: ['organization', 'organizations'],
+  webhooks: ['webhooks', 'webhook'],
+  platforms: ['platforms'],
+  variables: ['variables'],
+  deployments: ['deployments', 'deployment'],
+  executions: ['executions', 'execution'],
+  domains: ['proxy-rules', 'domains'],
+  keys: ['apiKeys'],
 }
 
 export type ConsoleToolResult = {

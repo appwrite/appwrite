@@ -541,6 +541,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Attachments upload in background. Sending waits until they are ready.':
     'קבצים מצורפים מועלים ברקע. השליחה ממתינה עד שהם מוכנים.',
   'Collapse chat': 'כיווץ הצ׳אט',
+  'Close sidebar': 'סגירת סרגל הצד',
+  'Open sidebar': 'פתיחת סרגל הצד',
   'Appwrite Agent': 'Appwrite Agent',
   Agents: 'סוכנים',
   Automations: 'אוטומציות',

@@ -166,6 +166,17 @@ export function StreamingMarkdown({
               </div>
             )
           },
+          img({ src, alt }) {
+            if (!src) return null
+            return (
+              <img
+                src={src}
+                alt={alt || ''}
+                className="my-2 h-auto max-h-64 w-auto max-w-full rounded-md border border-border"
+                loading="lazy"
+              />
+            )
+          },
           pre({ children }) {
             return <>{children}</>
           },
