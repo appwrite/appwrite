@@ -84,7 +84,10 @@ class Update extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deployment->getAttribute('resourceId') !== $site->getId()) {
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
