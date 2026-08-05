@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useRightPaneWidth } from '@/lib/react-query/hooks/auth'
 import { clampRightPaneWidthPx } from '@/lib/right-pane/constants'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
@@ -40,7 +40,7 @@ function isAgentBlockedPath(pathname: string): boolean {
 
 export function ConsoleRightPane() {
   const location = useLocation()
-  const overrides = useDebugOverrides()
+  const { features } = useConsoleProfile()
   const { account } = useAuth()
   const { widthPx, setWidthPx } = useRightPaneWidth(account)
   const { activeContent } = useConsoleRightPane()
@@ -59,9 +59,7 @@ export function ConsoleRightPane() {
   const resolvedContent =
     isMarketingPage || !isConsolePath
       ? null
-      : activeContent === 'agent' &&
-          overrides.showAIAssistant &&
-          !isAgentBlocked
+      : activeContent === 'agent' && features.agent && !isAgentBlocked
         ? 'agent'
         : activeContent === 'docs'
           ? 'docs'

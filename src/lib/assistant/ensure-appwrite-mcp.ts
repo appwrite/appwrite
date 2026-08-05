@@ -78,7 +78,7 @@ export async function ensureAppwriteMcpConnected(options?: {
   connections?: AssistantMcpConnection[]
 }): Promise<EnsureResult> {
   if (typeof window === 'undefined') return { status: 'skipped' }
-  if (!getActiveProfileFeatures().aiAssistant) return { status: 'skipped' }
+  if (!getActiveProfileFeatures().agent) return { status: 'skipped' }
 
   if (ensureInFlight) return ensureInFlight
 
@@ -121,7 +121,7 @@ export function useEnsureAppwriteMcpConnected(options?: {
     if (!enabled) return
     if (options?.connectionsReady === false) return
     if (typeof window === 'undefined') return
-    if (!getActiveProfileFeatures().aiAssistant) return
+    if (!getActiveProfileFeatures().agent) return
 
     const run = () => {
       const mcpUrl = getAppwriteAssistantMcpUrl()

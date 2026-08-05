@@ -20,5 +20,5 @@ export function isAgentDocsHref(href: string): boolean {
 }
 
 export function isAgentDocsEnabled(): boolean {
-  return getActiveProfileFeatures().aiAssistant
+  return getActiveProfileFeatures().agent
 }

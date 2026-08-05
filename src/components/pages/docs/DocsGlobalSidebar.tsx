@@ -480,11 +480,11 @@ export function DocsGlobalSidebar({
       navigate({ to: '/docs', replace: true })
       return
     }
-    if (!features.aiAssistant && isAgentDocsPathname(pathname)) {
+    if (!features.agent && isAgentDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
     }
   }, [
-    features.aiAssistant,
+    features.agent,
     features.firewall,
     features.partnersDocs,
     navigate,

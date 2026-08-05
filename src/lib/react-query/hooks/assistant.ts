@@ -156,7 +156,7 @@ export function assistantConversationsQueryOptions(
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'conversations', normalizedSearch ?? ''],
     queryFn: () => fetchAssistantConversations(normalizedSearch),
@@ -179,7 +179,7 @@ export function assistantConversationQueryOptions(
     (options?.enabled ?? true) &&
     !!conversationId &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'conversation', conversationId ?? ''],
     queryFn: () => fetchAssistantConversation(conversationId!),
@@ -203,7 +203,7 @@ export function assistantMessagesQueryOptions(
   const enabled =
     !!conversationId &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'messages', conversationId, limit],
     queryFn: () => fetchAssistantMessages(conversationId!, limit),
@@ -238,7 +238,7 @@ export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
   const enabled =
     uniqueFileIds.length > 0 &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'attachments', ...uniqueFileIds],
     queryFn: () => fetchAssistantAttachmentFiles(uniqueFileIds),
@@ -527,7 +527,7 @@ export function assistantMcpConnectionsQueryOptions(options?: {
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'mcps'],
     queryFn: fetchAssistantMcpConnections,
@@ -651,7 +651,7 @@ export function assistantMemoriesQueryOptions(
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'memories', page, limit],
     queryFn: () => fetchAssistantMemories(page, limit),
@@ -770,7 +770,7 @@ export function assistantModelQueryOptions(
     (options?.enabled ?? true) &&
     !!modelId &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'models', 'detail', modelId],
     queryFn: () => fetchAssistantModel(modelId!),
@@ -797,7 +797,7 @@ export function assistantModelsQueryOptions(
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'models', page, limit, trimmedSearch ?? ''],
     queryFn: () => fetchAssistantModels(page, limit, trimmedSearch),
@@ -827,7 +827,7 @@ export function assistantModelsInfiniteQueryOptions(
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return infiniteQueryOptions({
     queryKey: ['agent', 'models', 'infinite', limit, trimmedSearch ?? ''],
     queryFn: ({ pageParam }) =>
@@ -973,7 +973,7 @@ export function assistantAutomationRunsQueryOptions(
     (options?.enabled ?? true) &&
     !!automationId &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: [
       'agent',
@@ -1010,7 +1010,7 @@ export function assistantAutomationsQueryOptions(
   const enabled =
     (options?.enabled ?? true) &&
     isClientQueryEnabled &&
-    getActiveProfileFeatures().aiAssistant
+    getActiveProfileFeatures().agent
   return queryOptions({
     queryKey: ['agent', 'automations', normalizedSearch ?? ''],
     queryFn: () => fetchAssistantAutomations(normalizedSearch),

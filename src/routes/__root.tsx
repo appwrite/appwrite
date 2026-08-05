@@ -387,7 +387,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     isFetched && isOperatorAccount(account as OperatorAccount)
   const { data: statusData, isSuccess: isStatusSuccess } =
     useAppwriteCloudStatus(cloudStatusEnabled && showCloudStatusToOperator)
-  const { showFullscreenLoader, showAIAssistant } = useDebugOverrides()
+  const { showFullscreenLoader } = useDebugOverrides()
   useGlobalAnalyticsTracker()
 
   useEffect(() => {
@@ -468,9 +468,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           <DebugModeProvider>
                             <ScreenshotModeProvider>
                               <ConsoleRightPaneProvider>
-                              {/* Mount when the profile feature or the experimental UI
-                                  override is on so the header agent button never no-ops. */}
-                              {features.aiAssistant || showAIAssistant ? (
+                              {/* Mount when the agent profile feature is on so the
+                                  header agent button never no-ops. */}
+                              {features.agent ? (
                                 <AgentChatProvider>
                                   <DocsPreviewProvider>
                                     <PromoBannerProvider>

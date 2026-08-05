@@ -4508,7 +4508,7 @@ export function RowsSpreadsheet({
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
               {/* Row 1 */}
-              {features.aiAssistant &&
+              {features.agent &&
                 (!canWriteTables ? (
                   <Tooltip>
                     <TooltipTrigger asChild>

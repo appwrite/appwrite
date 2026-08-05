@@ -183,7 +183,7 @@ export function DocsPreviewContent() {
   const contentRef = useRef<HTMLDivElement>(null)
   const partnersDocsEnabled = features.partnersDocs
   const firewallDocsEnabled = features.firewall
-  const agentDocsEnabled = features.aiAssistant
+  const agentDocsEnabled = features.agent
 
   const showMenu =
     slug !== null &&

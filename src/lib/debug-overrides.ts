@@ -15,7 +15,6 @@ const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
-  showAIAssistant: 'debug:showAIAssistant',
   showActivityChart: 'debug:showActivityChart',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
@@ -72,8 +71,6 @@ export type DebugLanguageOverride = 'en' | 'he' | 'ja'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
-  /** When true, the AI assistant is shown regardless of profile (experimental). Default false. */
-  showAIAssistant: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
@@ -223,10 +220,6 @@ export function loadDebugOverrides(): DebugOverrides {
     showNativeAppBar: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showNativeAppBar,
     ),
-    showAIAssistant: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showAIAssistant,
-      false,
-    ),
     showActivityChart: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showActivityChart,
       false,
@@ -358,7 +351,6 @@ export function resetDebugOverrides() {
 
 /** Keys toggled from Debug → Settings → Feature flags (not other debug sections). */
 export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
-  'showAIAssistant',
   'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
@@ -383,7 +375,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   DebugOverrides,
   FeatureFlagsMenuDebugKey
 > = {
-  showAIAssistant: false,
   showActivityChart: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
@@ -441,7 +432,6 @@ export function subscribeToDebugOverrides(
 export function getDefaultDebugOverrides(): DebugOverrides {
   return {
     showNativeAppBar: false,
-    showAIAssistant: false,
     showActivityChart: false,
     showSuccessTeamCard: false,
     mockCloudStatusAlert: 'live',

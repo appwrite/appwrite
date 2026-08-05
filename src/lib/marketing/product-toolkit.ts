@@ -29,7 +29,7 @@ const MARKETING_TOOLKIT_NAV_IDS = {
 
 function isToolkitNavItemVisible(id: ProductNavItemId): boolean {
   if (isProductNavItemComingSoon(id)) return false
-  if (id === 'agent') return getActiveProfileFeatures().aiAssistant
+  if (id === 'agent') return getActiveProfileFeatures().agent
   return true
 }
 

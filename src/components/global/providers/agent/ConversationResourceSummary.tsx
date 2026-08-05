@@ -43,7 +43,7 @@ export function ConversationResourceSummary({
       enabled &&
       !!conversationId &&
       isClientQueryEnabled &&
-      getActiveProfileFeatures().aiAssistant,
+      getActiveProfileFeatures().agent,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
   })

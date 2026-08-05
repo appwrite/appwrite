@@ -64,9 +64,9 @@ export function DocsProductsBento() {
   const products = useMemo(
     () =>
       DOCS_HOME_PRODUCTS.filter(
-        (product) => features.aiAssistant || !isAgentDocsHref(product.href),
+        (product) => features.agent || !isAgentDocsHref(product.href),
       ),
-    [features.aiAssistant],
+    [features.agent],
   )
 
   return (

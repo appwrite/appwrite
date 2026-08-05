@@ -118,7 +118,7 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  features: { aiAssistant: boolean },
+  features: { agent: boolean },
 ): readonly ExpandedFooterGroup[] {
   return [
   {
@@ -158,7 +158,7 @@ function getExpandedFooterGroups(
         ...docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
         analyticsAction: getMarketingProductAnalyticsAction('realtime'),
       },
-      ...(features.aiAssistant
+      ...(features.agent
         ? [
             {
               ...docsFooterLink(

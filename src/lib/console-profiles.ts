@@ -47,8 +47,8 @@ export type ConsoleProfileFeatures = {
   oauth2Server: boolean
   /** Organization API keys */
   orgApiKeys: boolean
-  /** In-app AI agent chat panel and header button */
-  aiAssistant: boolean
+  /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
+  agent: boolean
   /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
   executionLogs: boolean
   /** Database backup policies and archives */
@@ -103,7 +103,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauthApps: 'OAuth apps',
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
-  aiAssistant: 'AI agent',
+  agent: 'Agent',
   executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
@@ -149,7 +149,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: true,
       orgApiKeys: false,
-      aiAssistant: true,
+      agent: true,
       executionLogs: true,
       databaseBackups: true,
       dedicatedDbsSupport: false,
@@ -187,7 +187,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauthApps: false,
       oauth2Server: false,
       orgApiKeys: false,
-      aiAssistant: false,
+      agent: false,
       executionLogs: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,
@@ -284,6 +284,19 @@ export function getEnvProfileFeatures(): ConsoleProfileFeatures {
 /** Store the full profile object (actual value), not just the id. */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 
+/** Map legacy stored feature keys onto the current schema. */
+function migrateStoredProfileFeatures(
+  features: Partial<ConsoleProfileFeatures> & Record<string, unknown>,
+): Partial<ConsoleProfileFeatures> {
+  const next = { ...features } as Partial<ConsoleProfileFeatures> &
+    Record<string, unknown>
+  if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
+    next.agent = next.aiAssistant
+  }
+  delete next.aiAssistant
+  return next
+}
+
 function getStoredProfile(): ConsoleProfile | null {
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem(DEBUG_PROFILE_KEY)
@@ -298,7 +311,14 @@ function getStoredProfile(): ConsoleProfile | null {
       'features' in parsed &&
       typeof (parsed as ConsoleProfile).features === 'object'
     ) {
-      return parsed as ConsoleProfile
+      const profile = parsed as ConsoleProfile
+      return {
+        ...profile,
+        features: migrateStoredProfileFeatures(
+          profile.features as Partial<ConsoleProfileFeatures> &
+            Record<string, unknown>,
+        ) as ConsoleProfileFeatures,
+      }
     }
   } catch {
     // ignore

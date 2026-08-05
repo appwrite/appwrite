@@ -1612,7 +1612,7 @@ export function Workspace({
         beforeCreateButtons={
           isDatabaseLevelView ||
           !showTableSecuritySettings ? undefined : activeTab === 'columns' &&
-            features.aiAssistant ? (
+            features.agent ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1635,7 +1635,7 @@ export function Workspace({
                 {dbLabels.suggestSchemaCardTitle}
               </TooltipContent>
             </Tooltip>
-          ) : activeTab === 'indexes' && features.aiAssistant ? (
+          ) : activeTab === 'indexes' && features.agent ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">
@@ -1946,7 +1946,7 @@ export function Workspace({
                   openCreateColumnDialogRef.current = openDialog
                 }}
                 onSuggestReady={
-                  features.aiAssistant
+                  features.agent
                     ? (openDialog) => {
                         openSuggestColumnsDialogRef.current = openDialog
                       }
@@ -1963,7 +1963,7 @@ export function Workspace({
                   openCreateIndexDialogRef.current = openDialog
                 }}
                 onSuggestReady={
-                  features.aiAssistant
+                  features.agent
                     ? (openDialog) => {
                         openSuggestIndexesDialogRef.current = openDialog
                       }

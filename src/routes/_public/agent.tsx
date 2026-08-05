@@ -42,7 +42,7 @@ export const Route = createFileRoute('/_public/agent')({
   }),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
-    if (!getActiveProfileFeatures().aiAssistant) {
+    if (!getActiveProfileFeatures().agent) {
       throw redirect({ to: '/', replace: true })
     }
 

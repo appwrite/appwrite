@@ -55,7 +55,7 @@ export function isOptionalAuthPage(pathname: string): boolean {
     ) {
       return false
     }
-    return features.aiAssistant
+    return features.agent
   }
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).

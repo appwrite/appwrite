@@ -1937,6 +1937,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Docs' },
               ),
               createProfileFeatureFlagItem(
+                'Agent',
+                'In-app AI agent chat, header button, /agent routes, and Agent docs.',
+                'agent',
+                profileId,
+                features.agent,
+                { category: 'UI & tools' },
+              ),
+              createProfileFeatureFlagItem(
                 'Organization marketplace',
                 profileId === 'cloud'
                   ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
@@ -1963,21 +1971,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
                 undefined,
                 'Usage & analytics',
-              ),
-              createDebugFeatureFlagItem(
-                'AI agent',
-                'In-app AI agent chat panel and header button.',
-                'showAIAssistant',
-                overrides.showAIAssistant,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showAIAssistant: checked,
-                  }))
-                  setDebugOverride('showAIAssistant', checked)
-                },
-                undefined,
-                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Show native app bar',
@@ -2340,6 +2333,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.oauth2Server,
     features.orgApiKeys,
     features.marketplace,
+    features.partnersDocs,
+    features.agent,
+    features.firewall,
     features.init,
     endpointPreset,
     endpointCustomUrl,

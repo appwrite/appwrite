@@ -377,7 +377,7 @@ export function ConsoleHeader({
     return item
   })
   const showMarketingNav = marketingNavItems.length > 0
-  const showAIAssistant = overrides.showAIAssistant && !showMarketingNav
+  const showAgent = features.agent && !showMarketingNav
   const showConnectAndCreate = canShowConnectSection(access, features)
   const canCreateProjectFlag = canCreateProject(access, features)
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
@@ -787,7 +787,7 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newOrganization}</span>
                         </DropdownMenuItem>
                       )}
-                      {showAIAssistant ? (
+                      {showAgent ? (
                         <DropdownMenuItem
                           {...analyticsAttrs('create-agent')}
                           onClick={() => {
@@ -1322,8 +1322,8 @@ export function ConsoleHeader({
               {/* Operator tools (render nothing when account is not an impersonator) */}
               <ImpersonateConsoleUserPopover />
 
-              {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
-              {showAIAssistant && (
+              {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
+              {showAgent && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button

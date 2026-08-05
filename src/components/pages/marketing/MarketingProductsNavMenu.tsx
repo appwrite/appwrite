@@ -93,11 +93,11 @@ function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
         productIds: category.productIds.filter((id) => {
           if (id === 'firewall') return features.firewall
           if (id === 'domains') return features.domains
-          if (id === 'agent') return features.aiAssistant
+          if (id === 'agent') return features.agent
           return true
         }),
       })).filter((category) => category.productIds.length > 0),
-    [features.aiAssistant, features.domains, features.firewall],
+    [features.agent, features.domains, features.firewall],
   )
 }
 
