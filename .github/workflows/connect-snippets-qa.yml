@@ -1,11 +1,3 @@
-# Placeholder that registers the "Connect snippets QA" workflow with GitHub.
-#
-# workflow_dispatch workflows are only runnable once their file exists on the
-# default branch. Merging this stub makes the workflow appear under Actions ->
-# Run workflow, where any branch can be selected - GitHub then executes that
-# branch's version of this file. The real workflow (14-framework matrix that
-# scaffolds each starter, pastes the Connect snippets, and runs the Maestro
-# auth flow) ships in PR #116 and replaces this stub on merge.
 name: Connect snippets QA
 
 on:
@@ -15,4 +7,4 @@ jobs:
   ok:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "OK - placeholder until PR #116 lands"
+      - run: echo "Placeholder until PR #116 lands"
