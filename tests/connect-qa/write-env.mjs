@@ -1,16 +1,8 @@
 #!/usr/bin/env node
+
 /**
- * Writes the framework-appropriate Appwrite env/config file into a scaffolded
- * QA app.
- *
- * The content is produced by getEnvExample() from connect-snippets.ts - the
- * exact function the Connect dialog uses to render the `.env` tab. It is
- * extracted from the source and evaluated here (after stripping the type
- * annotations) so this helper can never drift from what we tell users to
- * paste.
- *
+ * Writes the framework-appropriate Appwrite env/config file into a scaffolded QA app.
  * Usage: node write-env.mjs <frameworkId> <usingId> <appDir>
- * Env:   CODE_SNIPPET_QA_ENDPOINT, CODE_SNIPPET_QA_PROJECT_ID
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
