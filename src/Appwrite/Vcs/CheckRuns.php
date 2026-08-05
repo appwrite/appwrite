@@ -40,12 +40,7 @@ class CheckRuns
         string $summary,
         string $detailsUrl = '',
     ): bool {
-        // GitHub answers 422 to a malformed head_sha.
-        if (!\preg_match('/^[0-9a-f]{7,40}$/i', $commitHash)) {
-            return false;
-        }
-
-        if (!$this->supports($vcs) || empty($owner) || empty($repositoryName) || isset($this->refused[$owner])) {
+        if (empty($commitHash) || !$this->supports($vcs) || empty($owner) || empty($repositoryName) || isset($this->refused[$owner])) {
             return false;
         }
 

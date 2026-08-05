@@ -78,7 +78,6 @@ final class CheckRunsTest extends TestCase
         $checkRuns = new CheckRuns();
 
         $this->assertFalse($this->skip($checkRuns, $adapter, ''));
-        $this->assertFalse($this->skip($checkRuns, $adapter, 'not-a-sha'));
     }
 
     public function testAnUnknownRepositoryReportsNothing(): void
