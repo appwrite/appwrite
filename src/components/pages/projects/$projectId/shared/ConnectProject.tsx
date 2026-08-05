@@ -190,11 +190,21 @@ const PACKAGE_MANAGER_OPTIONS: Record<
     { id: 'jsr', label: 'jsr' },
     { id: 'npm', label: 'npm' },
   ],
-  flutter: null,
-  apple: null,
-  android: null,
+  flutter: [{ id: 'pub', label: 'pub' }],
+  python: [{ id: 'pip', label: 'pip' }],
+  dart: [{ id: 'pub', label: 'pub' }],
+  php: [{ id: 'composer', label: 'Composer' }],
+  ruby: [{ id: 'gem', label: 'gem' }],
+  dotnet: [{ id: 'nuget', label: 'NuGet' }],
+  go: [{ id: 'go', label: 'go get' }],
+  apple: [{ id: 'spm', label: 'Swift Package Manager' }],
+  swift: [{ id: 'spm', label: 'Swift Package Manager' }],
+  android: [{ id: 'gradle', label: 'Gradle' }],
+  kotlin: [{ id: 'gradle', label: 'Gradle' }],
+  rust: [{ id: 'cargo', label: 'cargo' }],
+  // Java intentionally has no single manager: Gradle and Maven are both
+  // shown in the install instructions.
   java: null,
-  rust: null,
 }
 
 function getEnvExample(
@@ -2528,12 +2538,16 @@ export function ConnectProject({
                   </SelectContent>
                 </Select>
               </div>
-              {frameworks.length > 1 && (
+              {frameworks.length > 0 && (
                 <div className="min-w-[120px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
                     {t('Framework')}
                   </label>
-                  <Select value={frameworkId} onValueChange={setFrameworkId}>
+                  <Select
+                    value={frameworkId}
+                    onValueChange={setFrameworkId}
+                    disabled={frameworks.length === 1}
+                  >
                     <SelectTrigger className="w-full h-9 text-[13px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -2554,12 +2568,16 @@ export function ConnectProject({
                   </Select>
                 </div>
               )}
-              {usingVariants && usingVariants.length > 1 && (
+              {usingVariants && usingVariants.length > 0 && (
                 <div className="min-w-[140px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
                     {t('Using')}
                   </label>
-                  <Select value={usingId} onValueChange={setUsingId}>
+                  <Select
+                    value={usingId}
+                    onValueChange={setUsingId}
+                    disabled={usingVariants.length === 1}
+                  >
                     <SelectTrigger className="w-full h-9 text-[13px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -2577,7 +2595,7 @@ export function ConnectProject({
                   </Select>
                 </div>
               )}
-              {packageManagers && packageManagers.length > 1 && (
+              {packageManagers && packageManagers.length > 0 && (
                 <div className="min-w-[100px]">
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
                     {t('Package manager')}
@@ -2585,6 +2603,7 @@ export function ConnectProject({
                   <Select
                     value={packageManagerId}
                     onValueChange={setPackageManagerId}
+                    disabled={packageManagers.length === 1}
                   >
                     <SelectTrigger className="w-full h-9 text-[13px]">
                       <SelectValue />
