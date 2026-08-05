@@ -5,11 +5,13 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
@@ -91,6 +93,7 @@ class Databases extends Action
         $log->addTag('databaseId', $database->getId());
 
         match (\strval($type)) {
+            DATABASE_TYPE_CREATE_DATABASE => $this->createDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $dbForProject, $dbForDatabases),
             DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
@@ -672,6 +675,43 @@ class Databases extends Action
         } finally {
             $queueForRealtime->reset();
         }
+    }
 
+    /**
+     * @param Document $database
+     * @param Database $dbForProject
+     * @param Database $dbForDatabases
+     * @return void
+     * @throws Exception
+     */
+    protected function createDatabase(Document $database, Database $dbForProject, Database $dbForDatabases): void
+    {
+        $dbType = $database->getAttribute('type', 'databases');
+        $collections = match ($dbType) {
+            'vectorsdb' => (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [],
+            default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
+        };
+
+        if (empty($collections)) {
+            throw new Exception('The "collections" collection is not configured.');
+        }
+
+        $attributes = [];
+        foreach ($collections['attributes'] as $attribute) {
+            $attributes[] = new Document($attribute);
+        }
+
+        $indexes = [];
+        foreach ($collections['indexes'] as $index) {
+            $indexes[] = new Document($index);
+        }
+
+        try {
+            $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+        } catch (DuplicateException) {
+            // Metadata collection already exists
+        } catch (\Throwable $e) {
+            throw new Exception('Failed to create database metadata collection: ' . $e->getMessage(), previous: $e);
+        }
     }
 }
