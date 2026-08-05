@@ -36,13 +36,16 @@ export const jaCatalog: EnCatalog = {
         ...enCatalog.app.header.createMenu,
         newProject: '新規プロジェクト',
         newOrganization: '新規組織',
+        newAgent: '新規エージェント',
         buildSection: '構築',
         deploySection: 'デプロイ',
+        protectSection: '保護',
         newDatabase: '新規データベース',
         newUser: '新規ユーザー',
         newBucket: '新規バケット',
         newFunction: '新規関数',
         newMessage: '新規メッセージ',
+        newFirewallRule: '新規 Firewall ルール',
         newSite: '新規サイト',
       },
       permissions: {
@@ -53,6 +56,8 @@ export const jaCatalog: EnCatalog = {
         createBuckets: 'バケットを作成する権限がありません。',
         createFunctions: '関数を作成する権限がありません。',
         createTopics: 'メッセージングトピックを作成する権限がありません。',
+        createFirewallRules:
+          'ファイアウォールルールを作成する権限がありません。',
         createSites: 'サイトを作成する権限がありません。',
       },
       accountMenu: {

@@ -28,13 +28,16 @@ export const enCatalog = {
       createMenu: {
         newProject: 'New Project',
         newOrganization: 'New Organization',
+        newAgent: 'New Agent',
         buildSection: 'Build',
         deploySection: 'Deploy',
+        protectSection: 'Protect',
         newDatabase: 'New Database',
         newUser: 'New User',
         newBucket: 'New Bucket',
         newFunction: 'New Function',
         newMessage: 'New Message',
+        newFirewallRule: 'New Firewall Rule',
         newSite: 'New Site',
       },
       permissions: {
@@ -44,6 +47,8 @@ export const enCatalog = {
         createBuckets: "You don't have permission to create buckets.",
         createFunctions: "You don't have permission to create functions.",
         createTopics: "You don't have permission to create messaging topics.",
+        createFirewallRules:
+          "You don't have permission to create firewall rules.",
         createSites: "You don't have permission to create sites.",
       },
       accountMenu: {

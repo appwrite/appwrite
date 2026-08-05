@@ -3,6 +3,16 @@ import { cn } from '@/lib/utils'
 import { VOICE_LEVEL_BAR_COUNT } from '@/lib/assistant/voice-prompt'
 import { useT } from '@/lib/i18n/translate'
 
+/** Shared highlighter yellow for the submit phrase mark and countdown chrome. */
+export const VOICE_SUBMIT_MARKER = {
+  mark: 'box-decoration-clone rounded-[3px] bg-[#FFE566] px-1.5 py-0.5 text-amber-950 dark:bg-amber-400/45 dark:text-amber-50',
+  solid: 'bg-[#FFE566] dark:bg-amber-400',
+  soft: 'bg-[#FFE566]/70 dark:bg-amber-400/60',
+  text: 'text-amber-900 dark:text-amber-200',
+  bar: 'bg-[#E6C200] dark:bg-amber-400',
+  row: 'bg-[#FFE566]/15 dark:bg-amber-400/10',
+} as const
+
 type VoiceRecordingMeterProps = {
   active: boolean
   /** Returns normalized 0–1 levels for each bar. Read from a ref so rAF stays cheap. */
@@ -78,7 +88,8 @@ export function VoiceRecordingMeter({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 border-b border-border px-3 py-2',
+        'flex items-center gap-2.5 border-b border-border px-3 py-2 transition-colors',
+        countdownActive && VOICE_SUBMIT_MARKER.row,
         className,
       )}
       role="status"
@@ -93,13 +104,13 @@ export function VoiceRecordingMeter({
         <span
           className={cn(
             'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
-            countdownActive ? 'bg-primary/60' : 'bg-red-500/60',
+            countdownActive ? VOICE_SUBMIT_MARKER.soft : 'bg-red-500/60',
           )}
         />
         <span
           className={cn(
             'relative inline-flex h-2 w-2 rounded-full',
-            countdownActive ? 'bg-primary' : 'bg-red-500',
+            countdownActive ? VOICE_SUBMIT_MARKER.solid : 'bg-red-500',
           )}
         />
       </span>
@@ -113,7 +124,10 @@ export function VoiceRecordingMeter({
             ref={(node) => {
               barsRef.current[index] = node
             }}
-            className="w-[2.5px] origin-center rounded-full bg-primary will-change-transform"
+            className={cn(
+              'w-[2.5px] origin-center rounded-full will-change-transform',
+              countdownActive ? VOICE_SUBMIT_MARKER.bar : 'bg-primary',
+            )}
             style={{
               height: '100%',
               transform: 'scaleY(0.12)',
@@ -124,7 +138,12 @@ export function VoiceRecordingMeter({
       </div>
       {countdownActive ? (
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-[11px] font-medium tabular-nums text-foreground">
+          <span
+            className={cn(
+              'text-[11px] font-medium tabular-nums',
+              VOICE_SUBMIT_MARKER.text,
+            )}
+          >
             {t('Sending in')} {countdownSeconds}...
           </span>
           {onCancelCountdown ? (

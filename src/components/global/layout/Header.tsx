@@ -66,6 +66,7 @@ import {
   canCreateFunction,
   canCreateSite,
   canWriteTopics,
+  canWriteRules,
   canShowOrgDomainsTab,
 } from '@/lib/console-access-checks'
 import {
@@ -293,7 +294,7 @@ export function ConsoleHeader({
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
-  const { toggleChat } = useAgentChat()
+  const { toggleChat, requestCreateAgent } = useAgentChat()
   const queryClient = useQueryClient()
   const {
     account,
@@ -383,6 +384,7 @@ export function ConsoleHeader({
   const canCreateFunctionFlag = canCreateFunction(access, features)
   const canCreateSiteFlag = canCreateSite(access, features)
   const canCreateTopicFlag = canWriteTopics(access, features)
+  const canCreateFirewallRuleFlag = canWriteRules(access, features)
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan, isFetched: isPlanFetched } =
@@ -783,6 +785,18 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newOrganization}</span>
                         </DropdownMenuItem>
                       )}
+                      {showAIAssistant ? (
+                        <DropdownMenuItem
+                          {...analyticsAttrs('create-agent')}
+                          onClick={() => {
+                            requestCreateAgent()
+                          }}
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <BotMessageSquare className="h-4 w-4" />
+                          <span>{headerCopy.createMenu.newAgent}</span>
+                        </DropdownMenuItem>
+                      ) : null}
 
                       {projectId && (
                         <>
@@ -979,7 +993,6 @@ export function ConsoleHeader({
                           )}
 
                           <DropdownMenuSeparator />
-                          {/* Deploy Category */}
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             {headerCopy.createMenu.deploySection}
                           </DropdownMenuLabel>
@@ -1017,6 +1030,59 @@ export function ConsoleHeader({
                               <span>{headerCopy.createMenu.newSite}</span>
                             </DropdownMenuItem>
                           )}
+
+                          {features.firewall ? (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                                {headerCopy.createMenu.protectSection}
+                              </DropdownMenuLabel>
+                              {!canCreateFirewallRuleFlag ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="block">
+                                      <DropdownMenuItem
+                                        disabled
+                                        className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                      >
+                                        <Shield className="h-4 w-4" />
+                                        <span>
+                                          {
+                                            headerCopy.createMenu
+                                              .newFirewallRule
+                                          }
+                                        </span>
+                                      </DropdownMenuItem>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      {
+                                        headerCopy.permissions
+                                          .createFirewallRules
+                                      }
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <DropdownMenuItem
+                                  {...analyticsAttrs('create-firewall-rule')}
+                                  onClick={() => {
+                                    navigate({
+                                      to: '/projects/$projectId/firewall/create',
+                                      params: { projectId },
+                                    })
+                                  }}
+                                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                                >
+                                  <Shield className="h-4 w-4" />
+                                  <span>
+                                    {headerCopy.createMenu.newFirewallRule}
+                                  </span>
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          ) : null}
                         </>
                       )}
                     </DropdownMenuContent>

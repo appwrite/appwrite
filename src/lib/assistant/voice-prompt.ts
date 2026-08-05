@@ -53,10 +53,12 @@ const SPEECH_RECOGNITION_LANG: Record<SupportedLanguage, string> = {
 
 /**
  * Spoken phrase that starts a cancelable submit countdown when it ends the
- * transcript (e.g. "… create a bucket send now").
+ * transcript (e.g. "… create a bucket submit now").
+ *
+ * Prefer "submit now" over "send now": Web Speech often hears "send" as "sent".
  */
 export const VOICE_SUBMIT_TRIGGER_BY_LANG: Record<SupportedLanguage, string> = {
-  en: 'send now',
+  en: 'submit now',
   he: 'שלח עכשיו',
   ja: '今すぐ送信',
 }
@@ -78,11 +80,11 @@ function voiceSubmitTriggersForLang(lang?: SupportedLanguage): string[] {
   const primary =
     VOICE_SUBMIT_TRIGGER_BY_LANG[lang ?? 'en'] ??
     VOICE_SUBMIT_TRIGGER_BY_LANG.en
-  // Always accept English "send now" too; people often keep the English command.
+  // Always accept English "submit now" too; people often keep the English command.
   return Array.from(
     new Set([
       normalizeVoiceTranscript(primary),
-      normalizeVoiceTranscript('send now'),
+      normalizeVoiceTranscript('submit now'),
     ]),
   ).filter(Boolean)
 }
@@ -100,27 +102,44 @@ export function voiceTranscriptEndsWithSubmitTrigger(
   })
 }
 
+/**
+ * Locate a trailing voice submit trigger in the raw transcript.
+ * Returns character offsets into `text` for the matched phrase (not punctuation).
+ */
+export function findTrailingVoiceSubmitTriggerRange(
+  text: string,
+  lang?: SupportedLanguage,
+): { start: number; end: number } | null {
+  const triggers = voiceSubmitTriggersForLang(lang).sort(
+    (a, b) => b.length - a.length,
+  )
+  const trimEndCount = text.length - text.trimEnd().length
+  const working = trimEndCount > 0 ? text.slice(0, -trimEndCount) : text
+  for (const trigger of triggers) {
+    const escaped = trigger
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\s+/g, '\\s+')
+    const match = new RegExp(`(^|\\s)(${escaped})([\\p{P}\\p{S}]*)$`, 'iu').exec(
+      working,
+    )
+    if (!match || match.index == null) continue
+    const start = match.index + match[1].length
+    const end = start + match[2].length
+    return { start, end }
+  }
+  return null
+}
+
 /** Remove a trailing voice submit trigger phrase before sending. */
 export function stripVoiceSubmitTrigger(
   text: string,
   lang?: SupportedLanguage,
 ): string {
-  const triggers = voiceSubmitTriggersForLang(lang).sort(
-    (a, b) => b.length - a.length,
-  )
-  let result = text.trim()
-  for (const trigger of triggers) {
-    const escaped = trigger
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/\s+/g, '\\s+')
-    const stripped = result
-      .replace(new RegExp(`(?:^|\\s)${escaped}[\\p{P}\\p{S}]*$`, 'iu'), '')
-      .trim()
-    if (stripped !== result.trim()) {
-      return stripped
-    }
-  }
-  return result
+  const range = findTrailingVoiceSubmitTriggerRange(text, lang)
+  if (!range) return text.trim()
+  return `${text.slice(0, range.start)}${text.slice(range.end)}`
+    .replace(/[\p{P}\p{S}]+$/gu, '')
+    .trim()
 }
 
 function getSpeechRecognitionConstructor():

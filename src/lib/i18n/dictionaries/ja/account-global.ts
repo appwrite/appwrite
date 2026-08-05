@@ -352,7 +352,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Voice input': '音声入力',
   'Stop voice input': '音声入力を停止',
   'Listening...': '聞いています...',
-  'Listening... Say "send now" to submit':
+  'Listening... Say "submit now" to submit':
     '聞いています... 「今すぐ送信」と言うと送信',
   'Sending soon. Cancel to keep editing':
     'まもなく送信します。キャンセルして編集を続ける',

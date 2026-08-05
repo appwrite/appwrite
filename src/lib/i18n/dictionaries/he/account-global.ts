@@ -525,7 +525,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Voice input': 'קלט קולי',
   'Stop voice input': 'עצירת קלט קולי',
   'Listening...': 'מקשיבים...',
-  'Listening... Say "send now" to submit':
+  'Listening... Say "submit now" to submit':
     'מקשיבים... אמרו "שלח עכשיו" כדי לשלוח',
   'Sending soon. Cancel to keep editing':
     'שולחים בקרוב. בטלו כדי להמשיך לערוך',

@@ -165,7 +165,10 @@ import { AgentConversationContextMenu } from '@/components/global/providers/agen
 import { AgentRenameDialog } from '@/components/global/providers/agent/AgentRenameDialog'
 import { ConversationResourceSummary } from '@/components/global/providers/agent/ConversationResourceSummary'
 import { AgentEmptyState } from '@/components/global/providers/agent/AgentEmptyState'
-import { VoiceRecordingMeter } from '@/components/global/providers/agent/VoiceRecordingMeter'
+import {
+  VoiceRecordingMeter,
+  VOICE_SUBMIT_MARKER,
+} from '@/components/global/providers/agent/VoiceRecordingMeter'
 import { useAgentConversationFavicon } from '@/hooks/use-agent-conversation-favicon'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
@@ -183,6 +186,7 @@ import {
 } from '@/lib/assistant/composer-draft'
 import { resolveAssistantModelTemp } from '@/lib/assistant/model-providers'
 import {
+  findTrailingVoiceSubmitTriggerRange,
   isVoicePromptSupported,
   normalizeVoiceTranscript,
   startVoicePrompt,
@@ -298,6 +302,15 @@ interface AgentChatContextValue {
   closeChat: () => void
   toggleChat: () => void
   setActiveConversationId: (conversationId: string | null) => void
+  /**
+   * Open the agent surface (pane or `/agent`) and create a new agent conversation.
+   * Safe to call from the header create menu before the panel is mounted.
+   */
+  requestCreateAgent: () => void
+  /** Monotonic tick; AgentPanelContent watches this to run a pending create. */
+  pendingCreateAgentTick: number
+  /** Returns true once if a create was requested; clears the pending flag. */
+  consumePendingCreateAgent: () => boolean
 }
 
 const AgentChatContext = createContext<AgentChatContextValue | null>(null)
@@ -390,6 +403,8 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const { activeConversationId, setActiveConversationId } =
     useAIChatActiveConversationId(account)
   const hasRestoredOpenPrefRef = useRef(false)
+  const pendingCreateAgentRef = useRef(false)
+  const [pendingCreateAgentTick, setPendingCreateAgentTick] = useState(0)
 
   const openChat = useCallback(() => {
     if (isAgentBlocked || isMarketingPage) return
@@ -433,6 +448,32 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     openChat,
   ])
 
+  const consumePendingCreateAgent = useCallback(() => {
+    if (!pendingCreateAgentRef.current) return false
+    pendingCreateAgentRef.current = false
+    return true
+  }, [])
+
+  const requestCreateAgent = useCallback(() => {
+    if (isAgentBlocked || isMarketingPage) return
+    pendingCreateAgentRef.current = true
+    setPendingCreateAgentTick((tick) => tick + 1)
+    if (location.pathname === '/agent' || location.pathname.startsWith('/agent/')) {
+      return
+    }
+    // Always use the fullscreen agent surface for "New Agent" from the header.
+    setIsOpen(false)
+    hideRightPane()
+    void navigate({ to: '/agent' })
+  }, [
+    hideRightPane,
+    isAgentBlocked,
+    isMarketingPage,
+    location.pathname,
+    navigate,
+    setIsOpen,
+  ])
+
   useEffect(() => {
     if (!isConsolePath || isMarketingPage) {
       if (isOpen) {
@@ -468,6 +509,9 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         closeChat,
         toggleChat,
         setActiveConversationId,
+        requestCreateAgent,
+        pendingCreateAgentTick,
+        consumePendingCreateAgent,
       }}
     >
       {children}
@@ -486,6 +530,9 @@ export function useAgentChat() {
       closeChat: () => {},
       toggleChat: () => {},
       setActiveConversationId: () => {},
+      requestCreateAgent: () => {},
+      pendingCreateAgentTick: 0,
+      consumePendingCreateAgent: () => false,
     }
   }
   return context
@@ -560,7 +607,7 @@ function applyPlaceholderValues(
 
 /** Distance from bottom that still counts as "following" the conversation. */
 const AUTO_SCROLL_BOTTOM_THRESHOLD = 96
-/** Cancelable countdown after the spoken submit phrase (e.g. "send now"). */
+/** Cancelable countdown after the spoken submit phrase (e.g. "submit now"). */
 const VOICE_SUBMIT_COUNTDOWN_MS = 3000
 
 interface AssistantMessageRowProps {
@@ -2184,8 +2231,13 @@ export function AgentPanelContent({
   const t = useT()
   const { isMac } = usePlatform()
   const navigate = useNavigate()
-  const { closeChat, activeConversationId, setActiveConversationId } =
-    useAgentChat()
+  const {
+    closeChat,
+    activeConversationId,
+    setActiveConversationId,
+    pendingCreateAgentTick,
+    consumePendingCreateAgent,
+  } = useAgentChat()
   const params = useParams({ strict: false }) as {
     projectId?: string
     orgId?: string
@@ -2423,6 +2475,7 @@ export function AgentPanelContent({
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesContentRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const voiceTriggerHighlightRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isVoiceListening, setIsVoiceListening] = useState(false)
   const [isVoiceStarting, setIsVoiceStarting] = useState(false)
@@ -3108,6 +3161,10 @@ export function AgentPanelContent({
     [pendingAttachments],
   )
   const isInputRtl = useMemo(() => isRtlMessageText(input), [input])
+  const voiceSubmitTriggerRange = useMemo(() => {
+    if (voiceSubmitCountdown == null) return null
+    return findTrailingVoiceSubmitTriggerRange(input, getActiveLanguage())
+  }, [input, voiceSubmitCountdown])
   const focusInput = useCallback((placeCursorAtEnd = false) => {
     if (typeof window === 'undefined') return
     window.setTimeout(() => {
@@ -3657,6 +3714,16 @@ export function AgentPanelContent({
 
   const handleCreateConversationRef = useRef(handleCreateConversation)
   handleCreateConversationRef.current = handleCreateConversation
+
+  useEffect(() => {
+    if (interactionsDisabled) return
+    if (!consumePendingCreateAgent()) return
+    void handleCreateConversationRef.current()
+  }, [
+    consumePendingCreateAgent,
+    interactionsDisabled,
+    pendingCreateAgentTick,
+  ])
 
   const canCreateAgentShortcut =
     !interactionsDisabled &&
@@ -6086,48 +6153,78 @@ export function AgentPanelContent({
                   className="hidden"
                   onChange={handleAttachmentFileChange}
                 />
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => {
-                    if (interactionsDisabled) return
-                    const nextValue = e.target.value
-                    setInput(nextValue)
-                    if (!editingMessageId && !skipDraftPersistRef.current) {
-                      writeComposerDraft(activeConversationId, nextValue)
+                <div className="relative max-h-32 min-h-10 flex-1">
+                  {voiceSubmitTriggerRange ? (
+                    <div
+                      ref={voiceTriggerHighlightRef}
+                      aria-hidden
+                      dir={isInputRtl ? 'rtl' : 'ltr'}
+                      className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words px-2 py-2.5 text-[13px] leading-5 text-foreground"
+                    >
+                      {input.slice(0, voiceSubmitTriggerRange.start)}
+                      <mark className={VOICE_SUBMIT_MARKER.mark}>
+                        {input.slice(
+                          voiceSubmitTriggerRange.start,
+                          voiceSubmitTriggerRange.end,
+                        )}
+                      </mark>
+                      {input.slice(voiceSubmitTriggerRange.end)}
+                    </div>
+                  ) : null}
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => {
+                      if (interactionsDisabled) return
+                      const nextValue = e.target.value
+                      setInput(nextValue)
+                      if (!editingMessageId && !skipDraftPersistRef.current) {
+                        writeComposerDraft(activeConversationId, nextValue)
+                      }
+                      if (messages.length === 0) {
+                        registerTypingKeystroke()
+                      }
+                    }}
+                    onPaste={interactionsDisabled ? undefined : handleInputPaste}
+                    onKeyDown={interactionsDisabled ? undefined : handleKeyDown}
+                    onScroll={(e) => {
+                      const highlight = voiceTriggerHighlightRef.current
+                      if (!highlight) return
+                      highlight.scrollTop = e.currentTarget.scrollTop
+                      highlight.scrollLeft = e.currentTarget.scrollLeft
+                    }}
+                    placeholder={
+                      interactionsDisabled
+                        ? t('Sign in to chat with the agent...')
+                        : isVoiceListening
+                          ? t('Listening...')
+                          : editingMessageId
+                            ? t('Edit message...')
+                            : isConversationRunning || messageQueue.length > 0
+                              ? t('Add a follow-up')
+                              : t('Ask anything, or tell me what to do...')
                     }
-                    if (messages.length === 0) {
-                      registerTypingKeystroke()
-                    }
-                  }}
-                  onPaste={interactionsDisabled ? undefined : handleInputPaste}
-                  onKeyDown={interactionsDisabled ? undefined : handleKeyDown}
-                  placeholder={
-                    interactionsDisabled
-                      ? t('Sign in to chat with the agent...')
-                      : isVoiceListening
-                        ? t('Listening...')
-                        : editingMessageId
-                          ? t('Edit message...')
-                          : isConversationRunning || messageQueue.length > 0
-                            ? t('Add a follow-up')
-                            : t('Ask anything, or tell me what to do...')
-                  }
-                  dir={isInputRtl ? 'rtl' : 'ltr'}
-                  rows={1}
-                  disabled={interactionsDisabled}
-                  title={`${t('Focus prompt')} (${focusComposerShortcutLabel})`}
-                  className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2.5 text-[13px] leading-5 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{
-                    height: '40px',
-                    minHeight: '40px',
-                  }}
-                  onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement
-                    target.style.height = '40px'
-                    target.style.height = `${Math.min(Math.max(target.scrollHeight, 40), 128)}px`
-                  }}
-                />
+                    dir={isInputRtl ? 'rtl' : 'ltr'}
+                    rows={1}
+                    disabled={interactionsDisabled}
+                    title={`${t('Focus prompt')} (${focusComposerShortcutLabel})`}
+                    className={cn(
+                      'max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-2.5 text-[13px] leading-5 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60',
+                      voiceSubmitTriggerRange
+                        ? 'caret-foreground text-transparent'
+                        : 'text-foreground',
+                    )}
+                    style={{
+                      height: '40px',
+                      minHeight: '40px',
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement
+                      target.style.height = '40px'
+                      target.style.height = `${Math.min(Math.max(target.scrollHeight, 40), 128)}px`
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleAttachmentInputClick}
@@ -6260,7 +6357,7 @@ export function AgentPanelContent({
               {isVoiceListening
                 ? voiceSubmitCountdown != null
                   ? t('Sending soon. Cancel to keep editing')
-                  : t('Listening... Say "send now" to submit')
+                  : t('Listening... Say "submit now" to submit')
                 : hasUploadingAttachments
                   ? t(
                       'Attachments upload in background. Sending waits until they are ready.',
