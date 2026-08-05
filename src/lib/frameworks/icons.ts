@@ -88,10 +88,20 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   kotlin: 'kotlin.svg',
   node: 'node.svg',
   express: 'node.svg',
+  koa: 'koa.svg',
+  koajs: 'koa.svg',
+  'koa-js': 'koa.svg',
   deno: 'deno.svg',
+  fresh: 'fresh.svg',
+  hono: 'hono.svg',
+  elysia: 'elysia.svg',
+  elysiajs: 'elysia.svg',
+  'elysia-js': 'elysia.svg',
 
   pnpm: 'pnpm.svg',
   npm: 'npm.svg',
+  yarn: 'yarn.svg',
+  jsr: 'jsr.svg',
 
   appwrite: 'appwrite.svg',
 

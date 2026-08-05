@@ -6,6 +6,8 @@ const PACKAGE_MANAGER_ICON_MAP: Record<string, string> = {
   npm: 'npm.svg',
   bun: 'bun.svg',
   pnpm: 'pnpm.svg',
+  yarn: 'yarn.svg',
+  jsr: 'jsr.svg',
 }
 
 export interface PackageManagerIconProps {
@@ -21,8 +23,8 @@ const sizeClasses = {
 }
 
 /**
- * PackageManagerIcon displays the icon for npm, bun, pnpm, etc.
- * Icons are in /public/icons/ (npm.svg, bun.svg, pnpm.svg).
+ * PackageManagerIcon displays the icon for npm, bun, pnpm, yarn, jsr, etc.
+ * Icons are in /public/icons/ (npm.svg, bun.svg, pnpm.svg, yarn.svg, jsr.svg).
  */
 export function PackageManagerIcon({
   packageManager,

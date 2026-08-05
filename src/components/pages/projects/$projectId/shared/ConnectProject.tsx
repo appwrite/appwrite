@@ -86,12 +86,15 @@ const CLIENT_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
 const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
   { id: 'node', platform: 'web', label: 'Node.js' },
   { id: 'deno', platform: 'web', label: 'Deno' },
+  { id: 'bun', platform: 'web', label: 'Bun' },
   { id: 'python', platform: 'web', label: 'Python' },
   { id: 'dart', platform: 'web', label: 'Dart' },
   { id: 'php', platform: 'web', label: 'PHP' },
   { id: 'ruby', platform: 'web', label: 'Ruby' },
   { id: 'dotnet', platform: 'web', label: '.NET' },
   { id: 'go', platform: 'web', label: 'Go' },
+  { id: 'java', platform: 'web', label: 'Java' },
+  { id: 'rust', platform: 'web', label: 'Rust' },
   { id: 'swift', platform: 'apple', label: 'Swift' },
   { id: 'kotlin', platform: 'android', label: 'Kotlin' },
 ]
@@ -105,14 +108,19 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'sveltekit', label: 'SvelteKit' },
     { id: 'angular', label: 'Angular' },
     { id: 'nuxt', label: 'Nuxt' },
-    { id: 'refine', label: 'Refine' },
     { id: 'solid', label: 'Solid' },
     { id: 'tanstack', label: 'TanStack Start' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
-    { id: 'vanilla', label: 'Node' },
+    { id: 'vanilla', label: 'Vanilla' },
     { id: 'express', label: 'Express' },
+    { id: 'koa', label: 'Koa' },
+  ],
+  bun: [
+    { id: 'vanilla', label: 'Vanilla' },
+    { id: 'hono', label: 'Hono' },
+    { id: 'elysia', label: 'ElysiaJS' },
   ],
   flutter: [{ id: 'flutter', label: 'Flutter' }],
   'react-native': [{ id: 'react-native', label: 'React Native' }],
@@ -124,9 +132,14 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
   ruby: [{ id: 'ruby', label: 'Ruby' }],
   dotnet: [{ id: 'dotnet', label: '.NET' }],
   go: [{ id: 'go', label: 'Go' }],
+  java: [{ id: 'java', label: 'Java' }],
+  rust: [{ id: 'rust', label: 'Rust' }],
   swift: [{ id: 'swift', label: 'Swift' }],
   kotlin: [{ id: 'kotlin', label: 'Kotlin' }],
-  deno: [{ id: 'deno', label: 'Deno' }],
+  deno: [
+    { id: 'vanilla', label: 'Vanilla' },
+    { id: 'fresh', label: 'Fresh' },
+  ],
 }
 
 /** "Using" variants per framework (e.g. React: Vite vs CRA; Next: App Router vs Pages Router). */
@@ -141,7 +154,7 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   ],
 }
 
-/** Package manager options for web/node; null = not applicable (use all in install). */
+/** Package manager options per SDK; null = not applicable (use all in install). */
 const PACKAGE_MANAGER_OPTIONS: Record<
   string,
   { id: string; label: string }[] | null
@@ -150,16 +163,35 @@ const PACKAGE_MANAGER_OPTIONS: Record<
     { id: 'npm', label: 'npm' },
     { id: 'bun', label: 'bun' },
     { id: 'pnpm', label: 'pnpm' },
+    { id: 'yarn', label: 'yarn' },
   ],
   node: [
     { id: 'npm', label: 'npm' },
     { id: 'bun', label: 'bun' },
     { id: 'pnpm', label: 'pnpm' },
+    { id: 'yarn', label: 'yarn' },
+  ],
+  bun: [
+    { id: 'bun', label: 'bun' },
+    { id: 'npm', label: 'npm' },
+    { id: 'pnpm', label: 'pnpm' },
+    { id: 'yarn', label: 'yarn' },
+  ],
+  'react-native': [
+    { id: 'npm', label: 'npm' },
+    { id: 'pnpm', label: 'pnpm' },
+    { id: 'bun', label: 'bun' },
+    { id: 'yarn', label: 'yarn' },
+  ],
+  deno: [
+    { id: 'jsr', label: 'jsr' },
+    { id: 'npm', label: 'npm' },
   ],
   flutter: null,
   apple: null,
   android: null,
-  deno: null,
+  java: null,
+  rust: null,
 }
 
 function getEnvExample(
@@ -183,7 +215,7 @@ function getEnvExample(
   return `APPWRITE_ENDPOINT=${endpoint}\nAPPWRITE_PROJECT_ID=${projectId}\nAPPWRITE_API_KEY=your-api-key`
 }
 
-/** Returns file-based code snippets tailored to the selected SDK, framework, and variant (using). */
+/** Returns file-based code snippets tailored to the selected SDK, framework, variant (using), and package manager. */
 function getCodeFiles(
   sdkId: string,
   frameworkId: string,
@@ -191,6 +223,7 @@ function getCodeFiles(
   runtime: 'client' | 'server',
   endpoint: string,
   projectId: string,
+  packageManagerId: string,
 ): CodeFile[] {
   const envCode = getEnvExample(
     sdkId,
@@ -1230,21 +1263,6 @@ export default function Home() {
           },
         ]
       }
-      if (frameworkId === 'refine') {
-        return [
-          { label: envLabel, code: envCode, language: 'env' },
-          {
-            label: 'src/lib/appwrite.ts',
-            code: `import { Client } from 'appwrite'\n\n${clientInitWeb}\n\nexport { client }\n`,
-            language: tsLang,
-          },
-          {
-            label: 'src/App.tsx',
-            code: `import { client } from './lib/appwrite'\nimport { Account } from 'appwrite'\nconst account = new Account(client)\naccount.get().then((u) => console.log('Hello,', u.name)).catch(console.error)\n`,
-            language: tsLang,
-          },
-        ]
-      }
       // Vanilla / Web
       return [
         { label: envLabel, code: envCode, language: 'env' },
@@ -1294,6 +1312,130 @@ app.get('/data', async (req, res) => {
 })
 
 app.listen(3000, () => console.log('Listening on http://localhost:3000'))
+`,
+            language: tsLang,
+          },
+        ]
+      }
+      if (frameworkId === 'koa') {
+        return [
+          { label: '.env', code: envCode, language: 'env' },
+          {
+            label: 'lib/appwrite.ts',
+            code: `import { Client } from 'node-appwrite'
+
+${clientInitNode}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/index.ts',
+            code: `import Koa from 'koa'
+import Router from '@koa/router'
+import { client } from '../lib/appwrite'
+import { Databases } from 'node-appwrite'
+
+const app = new Koa()
+const router = new Router()
+const databases = new Databases(client)
+
+router.get('/data', async (ctx) => {
+  try {
+    ctx.body = await databases.listCollections('your-database-id')
+  } catch (err) {
+    ctx.status = 500
+    ctx.body = { error: String(err) }
+  }
+})
+
+app.use(router.routes())
+app.listen(3000, () => console.log('Listening on http://localhost:3000'))
+`,
+            language: tsLang,
+          },
+        ]
+      }
+      return [
+        { label: '.env', code: envCode, language: 'env' },
+        {
+          label: 'src/index.ts',
+          code: `import { Client, Databases } from 'node-appwrite'
+
+${clientInitNode}
+
+const databases = new Databases(client)
+// const list = await databases.listCollections('your-database-id')
+`,
+          language: tsLang,
+        },
+      ]
+    }
+    case 'bun': {
+      if (frameworkId === 'hono') {
+        return [
+          { label: '.env', code: envCode, language: 'env' },
+          {
+            label: 'src/lib/appwrite.ts',
+            code: `import { Client } from 'node-appwrite'
+
+${clientInitNode}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/index.ts',
+            code: `import { Hono } from 'hono'
+import { client } from './lib/appwrite'
+import { Databases } from 'node-appwrite'
+
+const app = new Hono()
+const databases = new Databases(client)
+
+app.get('/data', async (c) => {
+  try {
+    const list = await databases.listCollections('your-database-id')
+    return c.json(list)
+  } catch (err) {
+    return c.json({ error: String(err) }, 500)
+  }
+})
+
+export default app
+`,
+            language: tsLang,
+          },
+        ]
+      }
+      if (frameworkId === 'elysia') {
+        return [
+          { label: '.env', code: envCode, language: 'env' },
+          {
+            label: 'src/lib/appwrite.ts',
+            code: `import { Client } from 'node-appwrite'
+
+${clientInitNode}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'src/index.ts',
+            code: `import { Elysia } from 'elysia'
+import { client } from './lib/appwrite'
+import { Databases } from 'node-appwrite'
+
+const databases = new Databases(client)
+
+const app = new Elysia()
+  .get('/data', () => databases.listCollections('your-database-id'))
+  .listen(3000)
+
+console.log(\`Listening on http://localhost:\${app.server?.port}\`)
 `,
             language: tsLang,
           },
@@ -1628,23 +1770,104 @@ fun main() {
           language: 'kotlin',
         },
       ]
-    case 'deno':
+    case 'deno': {
+      const denoSdkSpecifier =
+        packageManagerId === 'npm' ? 'npm:node-appwrite' : 'jsr:@appwrite/sdk'
+      const clientInitDeno = `const client = new Client()
+  .setEndpoint(Deno.env.get("APPWRITE_ENDPOINT")!)
+  .setProject(Deno.env.get("APPWRITE_PROJECT_ID")!)
+  .setKey(Deno.env.get("APPWRITE_API_KEY")!)`
+      if (frameworkId === 'fresh') {
+        return [
+          { label: '.env', code: envCode, language: 'env' },
+          {
+            label: 'lib/appwrite.ts',
+            code: `import { Client } from "${denoSdkSpecifier}"
+
+${clientInitDeno}
+
+export { client }
+`,
+            language: tsLang,
+          },
+          {
+            label: 'routes/index.tsx',
+            code: `import { Handlers, PageProps } from "$fresh/server.ts"
+import { Users } from "${denoSdkSpecifier}"
+import { client } from "../lib/appwrite.ts"
+
+export const handler: Handlers = {
+  async GET(_req, ctx) {
+    const users = new Users(client)
+    const list = await users.list().catch(() => null)
+    return ctx.render({ total: list?.total ?? 0 })
+  },
+}
+
+export default function Home({ data }: PageProps<{ total: number }>) {
+  return <p>Your project has {data.total} users.</p>
+}
+`,
+            language: tsLang,
+          },
+        ]
+      }
       return [
         { label: '.env', code: envCode, language: 'env' },
         {
           label: 'main.ts',
-          code: `import { Client, Account } from "jsr:/@appwrite/sdk"
+          code: `import { Client, Account } from "${denoSdkSpecifier}"
 
-const client = new Client()
-  .setEndpoint(Deno.env.get("APPWRITE_ENDPOINT")!)
-  .setProject(Deno.env.get("APPWRITE_PROJECT_ID")!)
-  .setKey(Deno.env.get("APPWRITE_API_KEY")!)
+${clientInitDeno}
 
 const account = new Account(client)
 const user = await account.get()
 console.log("Hello,", user.name)
 `,
           language: tsLang,
+        },
+      ]
+    }
+    case 'java':
+      return [
+        { label: '.env or env vars', code: envCode, language: 'env' },
+        {
+          label: 'src/main/java/Main.java',
+          code: `import io.appwrite.Client;
+import io.appwrite.services.Account;
+
+public class Main {
+  public static void main(String[] args) {
+    Client client = new Client()
+      .setEndpoint(System.getenv("APPWRITE_ENDPOINT"))
+      .setProject(System.getenv("APPWRITE_PROJECT_ID"))
+      .setKey(System.getenv("APPWRITE_API_KEY"));
+
+    Account account = new Account(client);
+    // Use the account service (and others) for API calls
+  }
+}
+`,
+          language: 'java',
+        },
+      ]
+    case 'rust':
+      return [
+        { label: '.env', code: envCode, language: 'env' },
+        {
+          label: 'src/main.rs',
+          code: `use appwrite::client::Client;
+
+fn main() {
+    let client = Client::new()
+        .set_endpoint(&std::env::var("APPWRITE_ENDPOINT").unwrap())
+        .set_project(&std::env::var("APPWRITE_PROJECT_ID").unwrap())
+        .set_key(&std::env::var("APPWRITE_API_KEY").unwrap());
+
+    // Use the client with Appwrite services, e.g. account or databases
+}
+`,
+          language: 'rust',
         },
       ]
     default:
@@ -1655,6 +1878,7 @@ console.log("Hello,", user.name)
         'client',
         endpoint,
         projectId,
+        'npm',
       )
   }
 }
@@ -1676,6 +1900,7 @@ function getInstallInstructions(
         { label: 'npm', code: 'npm install appwrite', language: 'bash' },
         { label: 'bun', code: 'bun add appwrite', language: 'bash' },
         { label: 'pnpm', code: 'pnpm add appwrite', language: 'bash' },
+        { label: 'yarn', code: 'yarn add appwrite', language: 'bash' },
       ]
       const filtered =
         packageManagerId && packageManagerId !== 'any'
@@ -1688,6 +1913,7 @@ function getInstallInstructions(
         { label: 'npm', code: 'npm install node-appwrite', language: 'bash' },
         { label: 'bun', code: 'bun add node-appwrite', language: 'bash' },
         { label: 'pnpm', code: 'pnpm add node-appwrite', language: 'bash' },
+        { label: 'yarn', code: 'yarn add node-appwrite', language: 'bash' },
       ]
       const filtered =
         packageManagerId && packageManagerId !== 'any'
@@ -1695,17 +1921,38 @@ function getInstallInstructions(
           : options
       return { title: 'Install the Node.js SDK', options: filtered }
     }
-    case 'deno':
-      return {
-        title: 'Install the Deno SDK',
-        options: [
-          {
-            label: 'Import from JSR',
-            code: 'import { Client } from "jsr:/@appwrite/sdk"',
-            language: 'typescript',
-          },
-        ],
-      }
+    case 'bun': {
+      const options: InstallOption[] = [
+        { label: 'bun', code: 'bun add node-appwrite', language: 'bash' },
+        { label: 'npm', code: 'npm install node-appwrite', language: 'bash' },
+        { label: 'pnpm', code: 'pnpm add node-appwrite', language: 'bash' },
+        { label: 'yarn', code: 'yarn add node-appwrite', language: 'bash' },
+      ]
+      const filtered =
+        packageManagerId && packageManagerId !== 'any'
+          ? options.filter((o) => o.label === packageManagerId)
+          : options
+      return { title: 'Install the Bun SDK', options: filtered }
+    }
+    case 'deno': {
+      const options: InstallOption[] = [
+        {
+          label: 'jsr',
+          code: 'deno add jsr:@appwrite/sdk',
+          language: 'bash',
+        },
+        {
+          label: 'npm',
+          code: 'deno add npm:node-appwrite',
+          language: 'bash',
+        },
+      ]
+      const filtered =
+        packageManagerId && packageManagerId !== 'any'
+          ? options.filter((o) => o.label === packageManagerId)
+          : options
+      return { title: 'Install the Deno SDK', options: filtered }
+    }
     case 'flutter':
       return {
         title: 'Install the Flutter SDK',
@@ -1754,22 +2001,35 @@ function getInstallInstructions(
           },
         ],
       }
-    case 'react-native':
-      return {
-        title: 'Install the React Native SDK',
-        options: [
-          {
-            label: 'npm',
-            code: 'npm install react-native-appwrite',
-            language: 'bash',
-          },
-          {
-            label: 'bun',
-            code: 'bun add react-native-appwrite',
-            language: 'bash',
-          },
-        ],
-      }
+    case 'react-native': {
+      const options: InstallOption[] = [
+        {
+          label: 'npm',
+          code: 'npm install react-native-appwrite',
+          language: 'bash',
+        },
+        {
+          label: 'pnpm',
+          code: 'pnpm add react-native-appwrite',
+          language: 'bash',
+        },
+        {
+          label: 'bun',
+          code: 'bun add react-native-appwrite',
+          language: 'bash',
+        },
+        {
+          label: 'yarn',
+          code: 'yarn add react-native-appwrite',
+          language: 'bash',
+        },
+      ]
+      const filtered =
+        packageManagerId && packageManagerId !== 'any'
+          ? options.filter((o) => o.label === packageManagerId)
+          : options
+      return { title: 'Install the React Native SDK', options: filtered }
+    }
     case 'python':
       return {
         title: 'Install the Python SDK',
@@ -1825,6 +2085,33 @@ function getInstallInstructions(
           {
             label: 'go get',
             code: 'go get github.com/appwrite/sdk-for-go',
+            language: 'bash',
+          },
+        ],
+      }
+    case 'java':
+      return {
+        title: 'Install the Java SDK',
+        options: [
+          {
+            label: 'Gradle (build.gradle.kts)',
+            code: 'implementation("io.appwrite:sdk-for-kotlin:12.0.0")',
+            language: 'kotlin',
+          },
+          {
+            label: 'Maven (pom.xml)',
+            code: '<dependency>\n  <groupId>io.appwrite</groupId>\n  <artifactId>sdk-for-kotlin</artifactId>\n  <version>12.0.0</version>\n</dependency>',
+            language: 'markup',
+          },
+        ],
+      }
+    case 'rust':
+      return {
+        title: 'Install the Rust SDK',
+        options: [
+          {
+            label: 'cargo',
+            code: 'cargo add appwrite',
             language: 'bash',
           },
         ],
@@ -1953,8 +2240,17 @@ export function ConnectProject({
         runtime,
         endpoint ?? '',
         projectId ?? '',
+        packageManagerId,
       ),
-    [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
+    [
+      sdkId,
+      frameworkId,
+      usingId,
+      runtime,
+      endpoint,
+      projectId,
+      packageManagerId,
+    ],
   )
   const [connectTab, setConnectTab] = useState<ConnectProjectTab>(
     DEFAULT_CONNECT_PROJECT_TAB,
