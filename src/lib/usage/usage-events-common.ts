@@ -33,6 +33,7 @@ import {
 } from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
+import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'
 export {
@@ -675,6 +676,33 @@ export async function fetchUsageMetricsChartSeriesByMetric(
     comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
+  if (isScreenshotModeActive()) {
+    const result = new Map<
+      string,
+      Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>
+    >()
+    for (const metric of metrics) {
+      const chartPoints = buildScreenshotModeChartPoints(
+        from,
+        to,
+        resolvedInterval,
+        metric,
+      )
+      const previousChartPoints =
+        comparisonMode === 'first_half'
+          ? getUsageChartFirstHalfPoints(chartPoints)
+          : buildScreenshotModeChartPoints(
+              previousFrom,
+              previousTo,
+              resolvedInterval,
+              metric,
+              { quieter: true },
+            )
+      result.set(metric, { chartPoints, previousChartPoints })
+    }
+    return result
+  }
+
   const currentByMetric = await listUsageEventGroupsByMetric(projectId, {
     metrics,
     interval: resolvedInterval,
@@ -1038,6 +1066,94 @@ export function fillGaugeChartPointsGaps(
   })
 }
 
+function hashScreenshotMetric(metric: string): number {
+  let hash = 0
+  for (let i = 0; i < metric.length; i++) {
+    hash = (hash * 31 + metric.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+function getScreenshotMetricScale(metric: string): {
+  base: number
+  amplitude: number
+  gauge?: boolean
+} {
+  const m = metric.toLowerCase()
+  if (
+    m.includes('network') ||
+    m.includes('bandwidth') ||
+    m.includes('inbound') ||
+    m.includes('outbound')
+  ) {
+    return { base: 920_000_000, amplitude: 380_000_000 }
+  }
+  if (m.includes('storage') || m.includes('imagestransformed')) {
+    return { base: 48_000_000_000, amplitude: 6_000_000_000, gauge: true }
+  }
+  if (
+    m.includes('gbhour') ||
+    m.includes('gb-hour') ||
+    m.includes('compute') ||
+    m.includes('execution')
+  ) {
+    return { base: 14_500, amplitude: 4_800 }
+  }
+  if (m.includes('request') || m.includes('http')) {
+    return { base: 128_000, amplitude: 42_000 }
+  }
+  if (m.includes('auth') || m.includes('mau') || m.includes('signup')) {
+    return { base: 18_400, amplitude: 2_200, gauge: true }
+  }
+  if (
+    m.includes('realtime') ||
+    m.includes('message') ||
+    m.includes('connection')
+  ) {
+    return { base: 64_000, amplitude: 22_000 }
+  }
+  if (m.includes('database') || m.includes('read') || m.includes('write')) {
+    return { base: 240_000, amplitude: 80_000 }
+  }
+  if (m.includes('webhook') || m.includes('messaging') || m.includes('sms')) {
+    return { base: 32_000, amplitude: 12_000 }
+  }
+  return { base: 72_000, amplitude: 24_000 }
+}
+
+/** Dense mock series for screenshot mode - same buckets/labels as live charts. */
+export function buildScreenshotModeChartPoints(
+  from: Date,
+  to: Date,
+  interval: UsageChartInterval,
+  metric: string,
+  options?: { quieter?: boolean; gauge?: boolean },
+): UsageChartPoint[] {
+  const skeleton = options?.gauge
+    ? fillGaugeChartPointsGaps(new Map(), from, to, interval)
+    : fillChartPointsGaps(new Map(), from, to, interval)
+
+  if (skeleton.length === 0) return skeleton
+
+  const scale = getScreenshotMetricScale(metric)
+  const phase = (hashScreenshotMetric(metric) % 1000) / 100
+  const quieter = options?.quieter ? 0.72 : 1
+  const base = scale.base * quieter
+  const amplitude = scale.amplitude * quieter
+
+  return skeleton.map((point, index) => {
+    const t = index / Math.max(skeleton.length - 1, 1)
+    const wave = Math.sin(phase + t * Math.PI * 2.15) * amplitude
+    const secondary = Math.sin(phase * 1.6 + index * 0.37) * amplitude * 0.22
+    const trend = options?.gauge || scale.gauge ? base * 0.08 * t : 0
+    const peak = !scale.gauge && t > 0.55 && t < 0.82 ? amplitude * 0.35 : 0
+    return {
+      ...point,
+      total: Math.max(0, Math.round(base + wave + secondary + trend + peak)),
+    }
+  })
+}
+
 async function listUsageEventGroupsByMetric(
   projectId: string,
   params: ListUsageEventGroupsParams,
@@ -1161,6 +1277,33 @@ export async function fetchProjectUsageChartOverview(
     interval: resolvedInterval,
     comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
+
+  if (isScreenshotModeActive()) {
+    const metricKey = metrics.join('|') || 'requests'
+    const chartPoints = buildScreenshotModeChartPoints(
+      from,
+      to,
+      resolvedInterval,
+      metricKey,
+    )
+    const previousChartPoints =
+      comparisonMode === 'first_half'
+        ? getUsageChartFirstHalfPoints(chartPoints)
+        : buildScreenshotModeChartPoints(
+            previousFrom,
+            previousTo,
+            resolvedInterval,
+            metricKey,
+            { quieter: true },
+          )
+    return {
+      changePercent: computeChangePercent(
+        sumUsageChartPointsForComparison(chartPoints, comparisonMode),
+        sumUsageChartPoints(previousChartPoints),
+      ),
+      chartPoints,
+    }
+  }
 
   const currentGroups = await listUsageEventGroupsForMetrics(projectId, metrics, {
     interval: resolvedInterval,

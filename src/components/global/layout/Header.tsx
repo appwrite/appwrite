@@ -41,6 +41,7 @@ import {
   useAuth,
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
+import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import {
@@ -302,10 +303,11 @@ export function ConsoleHeader({
     isAuthenticated,
     isFetched: isAuthFetched,
   } = useAuth()
-  const headerAccount =
+  const headerAccount = applyScreenshotModeAccount(
     (account as Models.User | undefined) ??
-    (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
-    getConsoleAccountSync()
+      (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
+      getConsoleAccountSync(),
+  )
   const operatorAccount = headerAccount as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
   const location = useLocation()

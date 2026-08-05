@@ -364,6 +364,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'attachment selected': '件の添付ファイルを選択',
   'attachments selected': '件の添付ファイルを選択',
   'Collapse chat': 'チャットを折りたたむ',
+  'Close sidebar': 'サイドバーを閉じる',
+  'Open sidebar': 'サイドバーを開く',
   'Copy message': 'メッセージをコピー',
   'Read message aloud': 'メッセージを読み上げ',
   'Stop reading aloud': '読み上げを停止',

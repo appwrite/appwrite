@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Brain, ChevronLeft, Cpu, ExternalLink } from 'lucide-react'
+import { Brain, ChevronLeft, Cpu, ExternalLink, PanelLeft } from 'lucide-react'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
@@ -29,6 +29,8 @@ type AgentSettingsContentProps = {
   onBack: () => void
   /** Right-pane only: open the matching `/agent/settings/...` route in a new tab. */
   onOpenInNewTab?: () => void
+  /** Fullscreen page: reopen the conversations sidebar when it is closed. */
+  onOpenSidebar?: () => void
 }
 
 function SettingsSection({ section }: { section: AgentSettingsSectionId }) {
@@ -43,6 +45,7 @@ export function AgentSettingsContent({
   onSectionChange,
   onBack,
   onOpenInNewTab,
+  onOpenSidebar,
 }: AgentSettingsContentProps) {
   const t = useT()
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
@@ -85,6 +88,18 @@ export function AgentSettingsContent({
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-background">
       <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
         <div className="flex min-w-0 items-center gap-1">
+          {onOpenSidebar ? (
+            <button
+              type="button"
+              onClick={onOpenSidebar}
+              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={t('Open sidebar')}
+              title={t('Open sidebar')}
+              {...analyticsAttrs('agent-sidebar-open')}
+            >
+              <PanelLeft className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onBack}

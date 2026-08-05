@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
@@ -55,6 +56,8 @@ import {
   ExternalLink,
   Download,
   Maximize2,
+  PanelLeft,
+  PanelLeftClose,
   Settings,
 } from 'lucide-react'
 import {
@@ -226,6 +229,7 @@ import {
 } from '@/lib/assistant/turn-view'
 import { useAvifSupport } from '@/lib/avif-support'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
+import { useAgentResourceRefreshEffects } from '@/hooks/use-agent-resource-refresh-effects'
 import { useConsoleProtocolEffects } from '@/hooks/use-console-protocol-effects'
 
 const EMPTY_ASSISTANT_CONVERSATIONS: AssistantConversation[] = []
@@ -698,6 +702,9 @@ function getPreviewAspectClass(isPortrait: boolean): string {
   return isPortrait ? 'aspect-[9/16]' : 'aspect-video'
 }
 
+/** Cap chat image previews while preserving intrinsic aspect ratio. */
+const MESSAGE_IMAGE_PREVIEW_MAX_H_CLASS = 'max-h-64'
+
 /** Raster images that can render in the attachment grid (not SVG / file cards). */
 function isGridPreviewableImage(attachment: {
   isImage: boolean
@@ -741,9 +748,6 @@ function MessageAttachments({
   const [fullscreenPan, setFullscreenPan] = useState({ x: 0, y: 0 })
   const [loadedImageKeys, setLoadedImageKeys] = useState<Set<string>>(new Set())
   const avifSupported = useAvifSupport()
-  const [imageOrientations, setImageOrientations] = useState<
-    Record<string, 'portrait' | 'landscape'>
-  >({})
   const [imageDimensions, setImageDimensions] = useState<
     Record<string, { width: number; height: number }>
   >({})
@@ -1016,7 +1020,7 @@ function MessageAttachments({
           {visibleImages.length > 0 ? (
             <div
               className={cn(
-                'grid gap-1.5',
+                'grid items-start gap-1.5',
                 visibleImages.length === 1 && 'grid-cols-1',
                 visibleImages.length === 2 && 'grid-cols-2',
                 visibleImages.length >= 3 && 'grid-cols-2',
@@ -1033,7 +1037,7 @@ function MessageAttachments({
                     type="button"
                     onClick={() => openFullscreenById(attachment.id)}
                     className={cn(
-                      'group relative overflow-hidden rounded-md border border-border bg-muted/20',
+                      'group relative w-fit max-w-full overflow-hidden rounded-md border border-border bg-muted/20',
                       isThreeImageMainTile && 'row-span-2',
                     )}
                   >
@@ -1047,15 +1051,6 @@ function MessageAttachments({
                           return next
                         })
                         const image = event.currentTarget as HTMLImageElement
-                        const orientation =
-                          image.naturalHeight > image.naturalWidth
-                            ? 'portrait'
-                            : 'landscape'
-                        setImageOrientations((previous) =>
-                          previous[attachment.id] === orientation
-                            ? previous
-                            : { ...previous, [attachment.id]: orientation },
-                        )
                         setImageDimensions((previous) => {
                           const existing = previous[attachment.id]
                           if (
@@ -1075,10 +1070,8 @@ function MessageAttachments({
                         })
                       }}
                       className={cn(
-                        getPreviewAspectClass(
-                          imageOrientations[attachment.id] === 'portrait',
-                        ),
-                        'w-full object-cover transition-[opacity,transform] duration-300 group-hover:scale-[1.01]',
+                        MESSAGE_IMAGE_PREVIEW_MAX_H_CLASS,
+                        'h-auto w-auto max-w-full transition-[opacity,transform] duration-300 group-hover:scale-[1.01]',
                         loadedImageKeys.has(`preview:${attachment.id}`)
                           ? 'opacity-100'
                           : 'opacity-35',
@@ -2456,6 +2449,7 @@ export function AgentPanelContent({
   const [isWaitingForAttachments, setIsWaitingForAttachments] = useState(false)
   const [conversationsPopoverOpen, setConversationsPopoverOpen] =
     useState(false)
+  const [conversationsSidebarOpen, setConversationsSidebarOpen] = useState(true)
   const [conversationsMenuTab, setConversationsMenuTab] = useState<
     'agents' | 'automations'
   >('agents')
@@ -2917,6 +2911,10 @@ export function AgentPanelContent({
     conversationId: activeConversationId,
     projectId: contextProjectId,
     organizationId,
+  })
+  useAgentResourceRefreshEffects(messages, {
+    conversationId: activeConversationId,
+    projectId: contextProjectId,
   })
 
   const routeProjectId = nonEmptyId(params.projectId)
@@ -4826,6 +4824,7 @@ export function AgentPanelContent({
     dense?: boolean
     hideHeader?: boolean
     hideCreateButton?: boolean
+    onCloseSidebar?: () => void
     onSelectConversation?: () => void
   }) => (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -4834,9 +4833,21 @@ export function AgentPanelContent({
           <ConsoleHeaderLogo
             className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
           />
-          <p className="truncate text-[13px] font-semibold text-foreground">
+          <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
             {t('Appwrite Agent')}
           </p>
+          {options?.onCloseSidebar ? (
+            <button
+              type="button"
+              onClick={options.onCloseSidebar}
+              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={t('Close sidebar')}
+              title={t('Close sidebar')}
+              {...analyticsAttrs('agent-sidebar-close')}
+            >
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
         </div>
       )}
       <Tabs
@@ -5254,7 +5265,10 @@ export function AgentPanelContent({
   const conversationsSidebar = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {renderConversationsMenuBody({ dense: true })}
+        {renderConversationsMenuBody({
+          dense: true,
+          onCloseSidebar: () => setConversationsSidebarOpen(false),
+        })}
       </div>
       <div className="shrink-0 border-t border-border bg-background p-2">
         <Button
@@ -5273,32 +5287,52 @@ export function AgentPanelContent({
     </div>
   )
 
+  const renderOpenSidebarButton = () =>
+    isPageVariant && !conversationsSidebarOpen ? (
+      <button
+        type="button"
+        onClick={() => setConversationsSidebarOpen(true)}
+        className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        aria-label={t('Open sidebar')}
+        title={t('Open sidebar')}
+        {...analyticsAttrs('agent-sidebar-open')}
+      >
+        <PanelLeft className="h-3.5 w-3.5" />
+      </button>
+    ) : null
+
+  const wrapWithConversationsSidebar = (content: ReactNode) =>
+    isPageVariant && conversationsSidebarOpen ? (
+      <AgentConversationsResizableLayout sidebar={conversationsSidebar}>
+        {content}
+      </AgentConversationsResizableLayout>
+    ) : (
+      content
+    )
+
   if (isSettingsSection) {
     return (
       <div className="flex h-full min-h-0 w-full min-w-0 flex-col bg-background">
-        {isPageVariant ? (
-          <AgentConversationsResizableLayout sidebar={conversationsSidebar}>
-            <AgentSettingsContent
-              section={settingsSection}
-              onSectionChange={(next) => {
-                navigateToSettings(next)
-              }}
-              onBack={() => {
-                navigateToAgent(activeConversationId)
-              }}
-            />
-          </AgentConversationsResizableLayout>
-        ) : (
+        {wrapWithConversationsSidebar(
           <AgentSettingsContent
             section={settingsSection}
             onSectionChange={(next) => {
               navigateToSettings(next)
             }}
             onBack={() => {
+              if (isPageVariant) {
+                navigateToAgent(activeConversationId)
+                return
+              }
               navigateToAgent(null)
             }}
-            onOpenInNewTab={handleOpenInNewTab}
-          />
+            onOpenInNewTab={isPageVariant ? undefined : handleOpenInNewTab}
+            onOpenSidebar={
+              isPageVariant && !conversationsSidebarOpen
+                ? () => setConversationsSidebarOpen(true)
+                : undefined
+            }
+          />,
         )}
       </div>
     )
@@ -5314,7 +5348,9 @@ export function AgentPanelContent({
   const automationsMain = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1">
+          {renderOpenSidebarButton()}
+          <div className="min-w-0">
           {isPageVariant ? (
             <span className="truncate px-1.5 text-[13px] font-semibold text-foreground">
               {automationHeaderTitle}
@@ -5349,6 +5385,7 @@ export function AgentPanelContent({
               </PopoverContent>
             </Popover>
           )}
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -5418,6 +5455,7 @@ export function AgentPanelContent({
           <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
+                {renderOpenSidebarButton()}
                 {effectiveExpanded ? (
                   <button
                     type="button"
@@ -6380,13 +6418,7 @@ export function AgentPanelContent({
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col bg-background">
-      {isPageVariant ? (
-        <AgentConversationsResizableLayout sidebar={conversationsSidebar}>
-          {mainPanel}
-        </AgentConversationsResizableLayout>
-      ) : (
-        mainPanel
-      )}
+      {wrapWithConversationsSidebar(mainPanel)}
       <AgentModelDrawer
         open={isModelEditorOpen}
         onOpenChange={(open) => {

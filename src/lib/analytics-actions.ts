@@ -46,6 +46,8 @@ export const ANALYTICS_ACTIONS = {
   'agent-settings': 'Agent Settings Clicked',
   'agent-open-new-tab': 'Agent Open In New Tab Clicked',
   'agent-close': 'Agent Close Clicked',
+  'agent-sidebar-close': 'Agent Sidebar Close Clicked',
+  'agent-sidebar-open': 'Agent Sidebar Open Clicked',
   'agent-back': 'Agent Back Clicked',
   'agent-tab-agents': 'Agent Agents Tab Clicked',
   'agent-tab-automations': 'Agent Automations Tab Clicked',

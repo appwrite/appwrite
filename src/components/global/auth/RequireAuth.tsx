@@ -2,7 +2,7 @@ import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { clearConsoleSessionLocally } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
-import { ReactNode, useEffect, useRef } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
@@ -16,6 +16,10 @@ import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleIm
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
 import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import {
+  applyScreenshotModeAccount,
+  subscribeScreenshotMode,
+} from '@/lib/screenshot-mode'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -307,7 +311,7 @@ export function RequireAuth({
 
   // Client-side authentication check using Console SDK
   const {
-    data: account,
+    data: accountData,
     isLoading,
     isPending,
     isFetched,
@@ -316,13 +320,22 @@ export function RequireAuth({
     consoleAccountQueryOptions({ revision: consoleImpersonationRevision }),
   )
 
+  const [, setScreenshotModeEpoch] = useState(0)
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
+
+  const account = applyScreenshotModeAccount(accountData)
+
   useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
   const isMfaRequired = isMfaRequiredError(error)
   const isAuthenticated = !!account && !error
   const needsEmailVerification =
-    isAuthenticated && requiresConsoleEmailVerification(account)
+    isAuthenticated && requiresConsoleEmailVerification(accountData)
 
   // Unverified console accounts cannot use org/project APIs. Keep them on
   // /verify-email (with a return path) instead of rendering a broken console.
@@ -427,9 +440,16 @@ export function useAuth(): AuthData {
   const location = useLocation()
   const queryClient = useQueryClient()
   const consoleImpersonationRevision = useConsoleImpersonationRevision()
+  const [, setScreenshotModeEpoch] = useState(0)
+
+  useEffect(() => {
+    return subscribeScreenshotMode(() => {
+      setScreenshotModeEpoch((epoch) => epoch + 1)
+    })
+  }, [])
 
   const {
-    data: account,
+    data: accountData,
     isLoading,
     isPending,
     isFetched,
@@ -441,6 +461,7 @@ export function useAuth(): AuthData {
   useAuthErrorNavigation(error, location)
 
   const accountAccessBlocked = !!error && isHttpForbiddenError(error)
+  const account = applyScreenshotModeAccount(accountData)
 
   return {
     currentUser,
