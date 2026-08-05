@@ -52,8 +52,6 @@ trait Deployment
         $errors = [];
         $provider = $vcs->getName();
 
-        // A webhook fans out to every resource linked to the same provider repository,
-        // so resolve its owner and name once per provider repository rather than per resource.
         $identities = [];
         $resolveIdentity = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$identities): array {
             if (isset($identities[$providerRepositoryId])) {
@@ -74,15 +72,12 @@ trait Deployment
 
         $checkRuns = new CheckRuns();
 
-        // A skipped deployment left the commit with no indicator at all, so a
-        // deliberate skip was indistinguishable from a broken integration.
         $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveIdentity, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
             if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
             }
 
-            // A pull request on this repository also raised a push event, which
-            // reported the same skip on the same commit. A fork raises no push.
+            // A push event already reported this skip; a fork raises no push.
             if (!empty($providerPullRequestId) && !$external) {
                 return;
             }
@@ -98,8 +93,7 @@ trait Deployment
             try {
                 [$owner, $repositoryName] = $resolveIdentity($repository->getAttribute('providerRepositoryId'));
 
-                // Neutral is one of the conclusions a required check accepts, so a
-                // skip reports itself without blocking a merge.
+                // Neutral is in branch protection's passing set; failure is not.
                 if ($checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'Deployment skipped', $reason, $targetUrl)) {
                     return;
                 }
@@ -381,9 +375,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    // 'pending' reads as "still running", and nothing revisits the
-                    // commit once a maintainer authorizes, so it never resolved.
-                    // Report a terminal state that says what is being waited on.
                     if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                         $resourceName = $resource->getAttribute('name');
                         $projectName = $project->getAttribute('name');
