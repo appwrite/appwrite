@@ -17,7 +17,7 @@ async function handleSubmit(event: Event) {
       userId: ID.unique(),
       email: email.value,
       password: password.value,
-      name: name.value,
+      name: name.value.trim() || undefined,
     })
     await account.createEmailPasswordSession({ email: email.value, password: password.value })
     window.location.href = '/'

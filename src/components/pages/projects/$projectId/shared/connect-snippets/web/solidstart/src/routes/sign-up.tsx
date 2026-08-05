@@ -19,7 +19,7 @@ export default function SignUpPage() {
         userId: ID.unique(),
         email: email(),
         password: password(),
-        name: name(),
+        name: name().trim() || undefined,
       })
       await account.createEmailPasswordSession({
         email: email(),

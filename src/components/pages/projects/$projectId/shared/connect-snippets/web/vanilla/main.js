@@ -74,7 +74,7 @@ function renderSignUp() {
         userId: ID.unique(),
         email: form.get('email'),
         password: form.get('password'),
-        name: form.get('name'),
+        name: form.get('name').trim() || undefined,
       })
       await account.createEmailPasswordSession({
         email: form.get('email'),

@@ -11,7 +11,12 @@ export class AppwriteService {
   }
 
   signUp(name: string, email: string, password: string) {
-    return this.account.create({ userId: ID.unique(), email, password, name })
+    return this.account.create({
+      userId: ID.unique(),
+      email,
+      password,
+      name: name.trim() || undefined,
+    })
   }
 
   signIn(email: string, password: string) {

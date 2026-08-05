@@ -56,7 +56,7 @@ export default class SignUpPageComponent {
         userId: ID.unique(),
         email: this.email(),
         password: this.password(),
-        name: this.name(),
+        name: this.name().trim() || undefined,
       })
       await account.createEmailPasswordSession({
         email: this.email(),

@@ -20,7 +20,7 @@ export default function SignUpPage() {
         userId: ID.unique(),
         email,
         password,
-        name,
+        name: name.trim() || undefined,
       })
       await account.createEmailPasswordSession({ email, password })
       router.push('/')

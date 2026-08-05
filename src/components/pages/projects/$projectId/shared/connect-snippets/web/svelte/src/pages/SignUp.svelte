@@ -16,7 +16,7 @@
         userId: ID.unique(),
         email,
         password,
-        name,
+        name: name.trim() || undefined,
       })
       await account.createEmailPasswordSession({ email, password })
       window.location.href = '/'
