@@ -35,6 +35,7 @@ import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
 import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
+import { ScreenshotModeProvider } from '@/components/global/providers/ScreenshotMode'
 import { AnalyticsSessionPropsSync } from '@/components/global/providers/AnalyticsSessionPropsSync'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { RootShellCatchBoundary } from '@/components/global/providers/RootShellCatchBoundary'
@@ -54,6 +55,10 @@ import {
 import { STALE_CHUNK_BOOT_SCRIPT } from '@/lib/stale-chunk-error'
 import { getStatusBannerParts } from '@/lib/cloud-status-copy'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import {
+  applyScreenshotModeOrganizationName,
+  isScreenshotModeActive,
+} from '@/lib/screenshot-mode'
 import { PageDirectionProvider } from '@/lib/layout/page-direction'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
@@ -324,11 +329,16 @@ function ContextualDocumentTitle() {
             | undefined
         )?.teams?.find((team) => team.$id === orgId)
       : undefined
-    const contextPart = project?.name ?? organization?.name
+    const organizationName = organization?.name
+      ? isScreenshotModeActive()
+        ? applyScreenshotModeOrganizationName({ name: organization.name }).name
+        : organization.name
+      : undefined
+    const contextPart = project?.name ?? organizationName
 
     const nextTitle = withPageTitleNameContext(document.title, {
       projectName: project?.name,
-      organizationName: organization?.name,
+      organizationName,
       previousContextPart,
     })
     if (document.title !== nextTitle) {
@@ -456,7 +466,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                       <SentryContextProvider>
                         <RootShellCatchBoundary>
                           <DebugModeProvider>
-                            <ConsoleRightPaneProvider>
+                            <ScreenshotModeProvider>
+                              <ConsoleRightPaneProvider>
                               {/* Mount when the profile feature or the experimental UI
                                   override is on so the header agent button never no-ops. */}
                               {features.aiAssistant || showAIAssistant ? (
@@ -483,7 +494,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               <ClientOnly>
                                 <CommunitySupportPromptProvider />
                               </ClientOnly>
-                            </ConsoleRightPaneProvider>
+                              </ConsoleRightPaneProvider>
+                            </ScreenshotModeProvider>
                           </DebugModeProvider>
                         </RootShellCatchBoundary>
                       </SentryContextProvider>

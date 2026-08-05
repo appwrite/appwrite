@@ -14,6 +14,7 @@ import {
   fillGaugeChartPointsGaps,
   getUsageChartFirstHalfPoints,
   resolveOverviewUsagePeriod,
+  buildScreenshotModeChartPoints,
   type ProjectUsageChartOverview,
   type UsageChartPoint,
   type UsageTopEndpoint,
@@ -21,6 +22,7 @@ import {
 import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
+import { isScreenshotModeActive } from '@/lib/screenshot-mode'
 
 export type { UsageTopEndpoint, UsageChartInterval } from '@/lib/usage/usage-events-common'
 
@@ -377,6 +379,34 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
     comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
+  if (isScreenshotModeActive()) {
+    const chartPointsBySeries = new Map<string, UsageChartPoint[]>()
+    const previousChartPointsBySeries = new Map<string, UsageChartPoint[]>()
+    for (const entry of series) {
+      const chartPoints = buildScreenshotModeChartPoints(
+        from,
+        to,
+        resolvedInterval,
+        `${metric}:${entry.key}`,
+        { gauge: true },
+      )
+      chartPointsBySeries.set(entry.key, chartPoints)
+      previousChartPointsBySeries.set(
+        entry.key,
+        comparisonMode === 'first_half'
+          ? getUsageChartFirstHalfPoints(chartPoints)
+          : buildScreenshotModeChartPoints(
+              previousFrom,
+              previousTo,
+              resolvedInterval,
+              `${metric}:${entry.key}`,
+              { quieter: true, gauge: true },
+            ),
+      )
+    }
+    return { chartPointsBySeries, previousChartPointsBySeries }
+  }
+
   const resourceTypes = series.flatMap((entry) => [...entry.resourceTypes])
   const scopedQueries = [
     ...(queries ?? []),
@@ -469,6 +499,28 @@ export async function fetchProjectUsageGaugeChartSeries(
     interval: resolvedInterval,
     comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
+
+  if (isScreenshotModeActive()) {
+    const metricKey = metrics.join('|')
+    const chartPoints = buildScreenshotModeChartPoints(
+      from,
+      to,
+      resolvedInterval,
+      metricKey,
+      { gauge: true },
+    )
+    const previousChartPoints =
+      comparisonMode === 'first_half'
+        ? getUsageChartFirstHalfPoints(chartPoints)
+        : buildScreenshotModeChartPoints(
+            previousFrom,
+            previousTo,
+            resolvedInterval,
+            metricKey,
+            { quieter: true, gauge: true },
+          )
+    return { chartPoints, previousChartPoints }
+  }
 
   const currentGroups = await listUsageGaugeGroupsForMetrics(projectId, metrics, {
     interval: resolvedInterval,
