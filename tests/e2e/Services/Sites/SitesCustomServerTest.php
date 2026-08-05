@@ -1461,6 +1461,57 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCancelDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — canceling through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->cancelDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateDeployment(): void
     {
         $siteId = $this->setupSite([
@@ -1500,6 +1551,129 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deploymentId']);
 
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testUpdateSiteDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'true'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — activating through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->updateSiteDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        // Owning site is unchanged.
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals($deploymentId, $site['body']['deploymentId']);
+
+        /**
+         * Test for SUCCESS — the owning site can still activate it.
+         */
+        $response = $this->updateSiteDeployment($siteId, $deploymentId);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDuplicateDeploymentRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — duplicating through a site that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->createDuplicateDeployment($otherSiteId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning site can still duplicate it.
+         */
+        $response = $this->createDuplicateDeployment($siteId, $deploymentId);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $this->cleanupSite($otherSiteId);
         $this->cleanupDeployment($siteId, $deploymentId);
         $this->cleanupSite($siteId);
     }

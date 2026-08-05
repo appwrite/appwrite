@@ -62,8 +62,8 @@ class XList extends Base
         foreach ($allSpecs as $spec) {
             $spec['enabled'] = true;
 
-            if (array_key_exists($planKey, $plan)) {
-                $spec['enabled'] = in_array($spec['slug'], $plan[$planKey]);
+            if (array_key_exists($planKey, $plan) && !in_array($spec['slug'], $plan[$planKey], true)) {
+                continue;
             }
 
             $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
