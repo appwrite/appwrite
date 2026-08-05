@@ -83,7 +83,7 @@ jobs:
             framework: nuxt
             using: vite
             snippets: nuxt
-            create: npx -y create-nuxt@latest "$APP_DIR" --packageManager npm --gitInit false --no-modules
+            create: npx -y create-nuxt@latest "$APP_DIR" -t v4 --packageManager npm --gitInit false --no-modules
             # Nuxt 4 keeps app code under app/; drop the scaffold's welcome
             # app.vue so the copied pages/ take over routing.
             copy_to: app
@@ -111,7 +111,7 @@ jobs:
             framework: angular
             using: cli
             snippets: angular
-            create: npx -y @angular/cli@latest new "$APP_DIR" --defaults --style css --ssr false
+            create: npx -y @angular/cli@latest new "$APP_DIR" --defaults --package-manager npm --style css --ssr false
             # Modern ng new scaffolds app.ts + app.html (placeholder page above
             # its router-outlet); reduce it to the outlet and drop our now
             # redundant app.component.ts. Older scaffolds (app.component.html)
