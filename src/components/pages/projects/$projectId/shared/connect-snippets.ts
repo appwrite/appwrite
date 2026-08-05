@@ -8,7 +8,10 @@
  * directory contents, so adding or removing a snippet file is all it takes.
  * Only the generated `.env` entry is built in code, since it embeds the
  * project's endpoint and ID. The snippets directory is excluded from tsc,
- * ESLint, and Prettier - snippet files are content, not app code.
+ * ESLint, and Prettier - snippet files are content, not app code. Snippet
+ * lines are capped at 80 chars (the modal's code panel fits ~86 monospace
+ * chars at full width before scrolling horizontally); `bun run lint:snippets`
+ * enforces this in CI.
  */
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 
@@ -230,7 +233,12 @@ export function getCodeFiles(
   )
 }
 
-/** Install instructions per SDK; for web/node can filter by package manager. */
+/**
+ * Install instructions per SDK; for web/node can filter by package manager.
+ * These render in the Connect modal's narrow left column, which fits only
+ * ~53 monospace chars at full modal width - keep every code line at 52 or
+ * fewer chars or it scrolls horizontally.
+ */
 export function getInstallInstructions(
   sdkId: string,
   packageManagerId: string,
@@ -321,7 +329,7 @@ export function getInstallInstructions(
           },
           {
             label: 'Package.swift',
-            code: 'dependencies: [\n  .package(url: "https://github.com/appwrite/sdk-for-apple", from: "5.0.0")\n]',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-apple",\n  from: "5.0.0"\n)',
             language: 'swift',
           },
         ],
@@ -332,7 +340,7 @@ export function getInstallInstructions(
         options: [
           {
             label: '1. Add to build.gradle.kts (module)',
-            code: 'dependencies {\n  implementation("io.appwrite:sdk-for-android:5.0.0")\n}',
+            code: 'implementation("io.appwrite:sdk-for-android:5.0.0")',
             language: 'kotlin',
           },
           {
@@ -462,9 +470,9 @@ export function getInstallInstructions(
         title: 'Install the Swift SDK',
         options: [
           {
-            label: 'Swift Package Manager',
-            code: '.package(url: "https://github.com/appwrite/sdk-for-swift", from: "13.0.0")',
-            language: 'plaintext',
+            label: 'Package.swift',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-swift",\n  from: "13.0.0"\n)',
+            language: 'swift',
           },
         ],
       }

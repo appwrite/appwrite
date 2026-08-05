@@ -11,7 +11,10 @@ async function handleSubmit(event: Event) {
   error.value = ''
   try {
     const account = new Account(client)
-    await account.createEmailPasswordSession({ email: email.value, password: password.value })
+    await account.createEmailPasswordSession({
+      email: email.value,
+      password: password.value,
+    })
     await navigateTo('/')
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Sign in failed'
