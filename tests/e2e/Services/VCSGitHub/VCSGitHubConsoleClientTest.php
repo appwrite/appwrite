@@ -697,7 +697,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
     }
 
-    public function testGitHubPushMatchingSkipPatternCreatesNoDeployment(): void
+    public function testPushMatchingSkipPatternCreatesNoDeployment(): void
     {
         $data = $this->setupFunctionUsingVCS();
         $github = new GitHub(new Cache(new None()));

@@ -70,7 +70,7 @@ final class CheckRunsTest extends TestCase
         $this->assertTrue($reported);
     }
 
-    public function testDeploymentWithoutACommitReportsNothing(): void
+    public function testDeploymentWithoutCommitReportsNothing(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->never())->method('createCheckRun');
@@ -80,7 +80,7 @@ final class CheckRunsTest extends TestCase
         $this->assertFalse($this->skip($checkRuns, $adapter, ''));
     }
 
-    public function testAnUnknownRepositoryReportsNothing(): void
+    public function testUnknownRepositoryReportsNothing(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->never())->method('createCheckRun');
@@ -88,7 +88,7 @@ final class CheckRunsTest extends TestCase
         $this->assertFalse((new CheckRuns())->conclude($adapter, '', '', self::SHA, 'name', CheckRuns::CONCLUSION_NEUTRAL, 'title', 'summary'));
     }
 
-    public function testAnOverlongNameIsTruncated(): void
+    public function testOverlongNameIsTruncated(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->once())
@@ -102,7 +102,7 @@ final class CheckRunsTest extends TestCase
         (new CheckRuns())->conclude($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), CheckRuns::CONCLUSION_NEUTRAL, 'title', 'summary');
     }
 
-    public function testAProviderFailureIsContained(): void
+    public function testProviderFailureIsContained(): void
     {
         $adapter = $this->createStub(GitHub::class);
         $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
@@ -110,7 +110,7 @@ final class CheckRunsTest extends TestCase
         $this->assertFalse($this->skip(new CheckRuns(), $adapter));
     }
 
-    public function testAnInstallationThatRefusesIsAskedOnlyOnce(): void
+    public function testInstallationRefusingIsAskedOnlyOnce(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->once())
