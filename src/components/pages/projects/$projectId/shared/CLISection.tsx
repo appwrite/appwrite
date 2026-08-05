@@ -3,21 +3,31 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, Key, Terminal } from 'lucide-react'
+import { ExternalLink, Key, Plus, Terminal } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
 import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useUserOs } from '@/hooks/use-user-os'
-import { canShowProjectTerminal } from '@/lib/console-access-checks'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import {
+  canCreateKey,
+  canShowProjectTerminal,
+} from '@/lib/console-access-checks'
+import {
+  useCreateApiKey,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { getUserOsLabel, type UserOs } from '@/lib/user-os'
 import { useT } from '@/lib/i18n/translate'
+
+const CLI_CICD_API_KEY_DEFAULT_NAME = 'CI/CD'
 
 const CLI_INSTALL_URL = '/docs/tooling/command-line/installation'
 const CLI_COMMANDS_URL = '/docs/tooling/command-line/commands'
@@ -86,12 +96,17 @@ export function CLISection({
   const { os: resolvedOs, orderOptions } = useUserOs()
   const showTerminal =
     Boolean(cliShell) && canShowProjectTerminal(access, features)
+  const noCreatePermission = !canCreateKey(access, features)
+  const createMutation = useCreateApiKey(projectId)
 
   const [mode, setMode] = useState<CliMode>('interactive')
   const [cliInstallOs, setCliInstallOs] = useState<UserOs>(resolvedOs)
   const [installMethodId, setInstallMethodId] = useState<string>(() => {
     return installCommands(resolvedOs)[0]?.id ?? 'npm'
   })
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
   const osOptions = orderOptions()
 
   useEffect(() => {
@@ -124,7 +139,34 @@ export function CLISection({
     cliShell?.setOpen(true)
   }
 
+  const handleCopyKey = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  const handleCreateApiKey = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    createMutation.mutate(data, {
+      onSuccess: (createdKey) => {
+        toast.success(t('API key created successfully'))
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+        } else {
+          setCreateDrawerOpen(false)
+        }
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
+      },
+    })
+  }
+
   return (
+    <>
     <div className="flex flex-col gap-4 pt-4 min-h-0 h-full overflow-hidden">
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-1">
@@ -269,6 +311,35 @@ export function CLISection({
               showCopy
               wrapLines
             />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-8 gap-1.5 text-[12px]"
+                onClick={() => setCreateDrawerOpen(true)}
+                disabled={noCreatePermission}
+                title={
+                  noCreatePermission
+                    ? t("You don't have permission to create API keys.")
+                    : undefined
+                }
+                {...analyticsAttrs('create-api-key')}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('Create API key')}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-8 gap-1.5 text-[12px]"
+                onClick={onViewApiKeys}
+              >
+                <Key className="h-3.5 w-3.5" />
+                {t('View API keys')}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -289,25 +360,13 @@ export function CLISection({
               <ExternalLink className="h-3 w-3" />
             </DocsRouteLink>
           ) : (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-auto gap-1 px-0 py-0 text-[12px] text-muted-foreground hover:text-foreground"
-                onClick={onViewApiKeys}
-              >
-                <Key className="h-3 w-3" />
-                {t('View API keys')}
-              </Button>
-              <DocsRouteLink
-                href={CLI_NON_INTERACTIVE_URL}
-                className="inline-flex items-center gap-1 link-neutral text-[12px]"
-              >
-                {t('CI docs')}
-                <ExternalLink className="h-3 w-3" />
-              </DocsRouteLink>
-            </>
+            <DocsRouteLink
+              href={CLI_NON_INTERACTIVE_URL}
+              className="inline-flex items-center gap-1 link-neutral text-[12px]"
+            >
+              {t('CI docs')}
+              <ExternalLink className="h-3 w-3" />
+            </DocsRouteLink>
           )}
           <DocsRouteLink
             href={CLI_COMMANDS_URL}
@@ -319,5 +378,20 @@ export function CLISection({
         </div>
       </div>
     </div>
+
+    <ApiKeyDrawer
+      open={createDrawerOpen}
+      onOpenChange={(open) => {
+        setCreateDrawerOpen(open)
+        if (!open) setCreatedKeySecret(null)
+      }}
+      onSubmit={handleCreateApiKey}
+      isLoading={createMutation.isPending}
+      createdKeySecret={createdKeySecret}
+      onCopy={handleCopyKey}
+      copiedField={copiedField}
+      initialName={t(CLI_CICD_API_KEY_DEFAULT_NAME)}
+    />
+    </>
   )
 }

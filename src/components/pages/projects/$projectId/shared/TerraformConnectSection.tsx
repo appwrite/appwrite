@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, ExternalLink, Key } from 'lucide-react'
+import { Check, Copy, ExternalLink, Key, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   CodeBlock,
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
+import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
 import { cn } from '@/lib/utils'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { canCreateKey } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  useCreateApiKey,
+  useOrganizationScopes,
+  useProject,
+} from '@/lib/react-query/hooks'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 
 const TERRAFORM_PROVIDER_REPO =
@@ -16,6 +26,8 @@ const TERRAFORM_PROVIDER_REPO =
 /** Provider docs on the public Terraform Registry (pinned line matches published 0.0.x) */
 const TERRAFORM_REGISTRY_PROVIDER_DOCS =
   'https://registry.terraform.io/providers/appwrite/appwrite/latest/docs'
+
+const TERRAFORM_API_KEY_DEFAULT_NAME = 'Terraform'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -193,9 +205,17 @@ export function TerraformConnectSection({
   onViewApiKeys,
 }: TerraformConnectSectionProps) {
   const t = useT()
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateKey(access, features)
+  const createMutation = useCreateApiKey(projectId)
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [copied, setCopied] = useState(false)
   const [apiKeyMethod, setApiKeyMethod] = useState<'env' | 'tfvars'>('env')
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const codeFiles = useMemo(
     () => buildTerraformExampleFiles(endpoint, projectId),
@@ -217,6 +237,32 @@ export function TerraformConnectSection({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleCopyKey = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  const handleCreateApiKey = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    createMutation.mutate(data, {
+      onSuccess: (createdKey) => {
+        toast.success(t('API key created successfully'))
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+        } else {
+          setCreateDrawerOpen(false)
+        }
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
+      },
+    })
+  }
+
   const selectTfvarsExample = () => {
     const index = codeFiles.findIndex(
       (file) => file.label === 'terraform.tfvars',
@@ -228,6 +274,7 @@ export function TerraformConnectSection({
   }
 
   return (
+    <div className="flex min-h-0 flex-1 flex-col">
     <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
       <div className="space-y-5 min-w-0 min-h-0 overflow-y-auto">
         <div className="space-y-2">
@@ -302,15 +349,35 @@ export function TerraformConnectSection({
               )}
             </p>
           )}
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-9 text-[13px] gap-1.5"
-            onClick={onViewApiKeys}
-          >
-            <Key className="h-4 w-4" />
-            {t('View API keys')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
+              onClick={() => setCreateDrawerOpen(true)}
+              disabled={noCreatePermission}
+              title={
+                noCreatePermission
+                  ? t("You don't have permission to create API keys.")
+                  : undefined
+              }
+              {...analyticsAttrs('create-api-key')}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t('Create API key')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 gap-1.5 text-[12px]"
+              onClick={onViewApiKeys}
+            >
+              <Key className="h-3.5 w-3.5" />
+              {t('View API keys')}
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -412,6 +479,21 @@ export function TerraformConnectSection({
           </p>
         )}
       </div>
+    </div>
+
+    <ApiKeyDrawer
+      open={createDrawerOpen}
+      onOpenChange={(open) => {
+        setCreateDrawerOpen(open)
+        if (!open) setCreatedKeySecret(null)
+      }}
+      onSubmit={handleCreateApiKey}
+      isLoading={createMutation.isPending}
+      createdKeySecret={createdKeySecret}
+      onCopy={handleCopyKey}
+      copiedField={copiedField}
+      initialName={t(TERRAFORM_API_KEY_DEFAULT_NAME)}
+    />
     </div>
   )
 }

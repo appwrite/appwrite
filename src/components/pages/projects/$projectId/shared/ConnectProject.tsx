@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Check, Copy, ExternalLink, Key } from 'lucide-react'
+import { Check, Copy, ExternalLink, Key, Plus } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Dialog,
@@ -23,7 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useConnectProjectTab, useProject } from '@/lib/react-query/hooks'
+import {
+  useConnectProjectTab,
+  useCreateApiKey,
+  useOrganizationScopes,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getApiEndpoint, getBaseEndpoint } from '@/lib/appwrite/sdk'
@@ -35,6 +40,7 @@ import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSec
 import { CLISection } from '@/components/pages/projects/$projectId/shared/CLISection'
 import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
+import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
 import {
   CodeBlock,
@@ -48,9 +54,14 @@ import {
   APPWRITE_AGENT_SKILLS_REPO,
 } from '@/lib/seo/agent-discovery'
 import { SKILLS_TRY_IT_PROMPTS } from '@/lib/skills-adoption'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { canCreateKey } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 const APPWRITE_DOCS_URL = '/docs'
 const APPWRITE_SKILLS_DOCS_URL = '/docs/tooling/skills'
+const SDK_API_KEY_DEFAULT_NAME = 'SDK'
 
 // This link always points at a GitHub-hosted repo (appwrite/skills),
 // not a user-connected VCS installation, so the provider is hardcoded here.
@@ -1924,6 +1935,10 @@ export function ConnectProject({
   }, [frameworkId, usingId])
 
   const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateKey(access, features)
+  const createMutation = useCreateApiKey(projectId)
   const endpoint = useMemo(
     () => getApiEndpoint(project?.region),
     [project?.region],
@@ -1965,6 +1980,9 @@ export function ConnectProject({
   const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
     null,
   )
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
   useEffect(() => {
     setSelectedFileIndex(0)
   }, [sdkId, frameworkId, usingId, runtime])
@@ -1986,9 +2004,36 @@ export function ConnectProject({
     navigate({ to: '/projects/$projectId/api-keys', params: { projectId } })
   }
 
+  const handleCopyKey = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  const handleCreateApiKey = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    createMutation.mutate(data, {
+      onSuccess: (createdKey) => {
+        toast.success(t('API key created successfully'))
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+        } else {
+          setCreateDrawerOpen(false)
+        }
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
+      },
+    })
+  }
+
   if (!project) return null
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-6xl h-[70dvh] max-h-[70dvh] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
@@ -2218,22 +2263,42 @@ export function ConnectProject({
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <Button
+                          type="button"
                           variant="secondary"
                           size="sm"
-                          className="h-9 text-[13px] gap-1.5"
+                          className="h-8 gap-1.5 text-[12px]"
+                          onClick={() => setCreateDrawerOpen(true)}
+                          disabled={noCreatePermission}
+                          title={
+                            noCreatePermission
+                              ? t(
+                                  "You don't have permission to create API keys.",
+                                )
+                              : undefined
+                          }
+                          {...analyticsAttrs('create-api-key')}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          {t('Create API key')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 gap-1.5 text-[12px]"
                           onClick={handleViewApiKeys}
                         >
-                          <Key className="h-4 w-4" />
+                          <Key className="h-3.5 w-3.5" />
                           {t('View API keys')}
                         </Button>
-                        <DocsRouteLink
-                          href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
-                          className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
-                        >
-                          {t('Server setup guide')}
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </DocsRouteLink>
                       </div>
+                      <DocsRouteLink
+                        href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
+                        className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
+                      >
+                        {t('Server setup guide')}
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </DocsRouteLink>
                     </div>
                   </div>
                 )}
@@ -2496,5 +2561,20 @@ export function ConnectProject({
         </div>
       </DialogContent>
     </Dialog>
+
+    <ApiKeyDrawer
+      open={createDrawerOpen}
+      onOpenChange={(nextOpen) => {
+        setCreateDrawerOpen(nextOpen)
+        if (!nextOpen) setCreatedKeySecret(null)
+      }}
+      onSubmit={handleCreateApiKey}
+      isLoading={createMutation.isPending}
+      createdKeySecret={createdKeySecret}
+      onCopy={handleCopyKey}
+      copiedField={copiedField}
+      initialName={t(SDK_API_KEY_DEFAULT_NAME)}
+    />
+    </>
   )
 }

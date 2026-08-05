@@ -230,8 +230,9 @@ export function S3ConnectSection({
             />
             <div className="flex flex-wrap gap-2 border-t border-border pt-3">
               <Button
+                variant="secondary"
                 size="sm"
-                className="h-9 text-[13px] gap-1.5"
+                className="h-8 gap-1.5 text-[12px]"
                 onClick={() => setCreateDrawerOpen(true)}
                 disabled={noCreatePermission}
                 title={
@@ -240,16 +241,16 @@ export function S3ConnectSection({
                     : undefined
                 }
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('Create S3 API key')}
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-9 text-[13px] gap-1.5"
+                className="h-8 gap-1.5 text-[12px]"
                 onClick={onViewApiKeys}
               >
-                <Key className="h-4 w-4" />
+                <Key className="h-3.5 w-3.5" />
                 {t('View API keys')}
               </Button>
             </div>
