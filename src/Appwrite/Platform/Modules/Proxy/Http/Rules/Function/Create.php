@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -69,7 +70,6 @@ class Create extends Action
             ->inject('response')
             ->inject('project')
             ->inject('publisherForCertificates')
-            ->inject('canAutoIssueCertificate')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -86,7 +86,6 @@ class Create extends Action
         Response $response,
         Document $project,
         Certificate $publisherForCertificates,
-        callable $canAutoIssueCertificate,
         Event $queueForEvents,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -145,9 +144,8 @@ class Create extends Action
 
         $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
-        $isAppwriteOwned = $rule->getAttribute('owner', '') === 'Appwrite';
         $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
-            || ($isAppwriteOwned && $canAutoIssueCertificate($rule->getAttribute('domain', '')));
+            || (new Certificates($rule))->isAutoIssueEnabled();
 
         if ($needsCertificate) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

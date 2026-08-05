@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -31,12 +32,11 @@ class Maintenance extends Action
             ->inject('dbForPlatform')
             ->inject('console')
             ->inject('publisherForCertificates')
-            ->inject('canAutoIssueCertificate')
             ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, callable $canAutoIssueCertificate, DeletePublisher $publisherForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, DeletePublisher $publisherForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -61,7 +61,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $canAutoIssueCertificate) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -94,7 +94,7 @@ class Maintenance extends Action
             ));
 
             $this->notifyDeleteConnections($publisherForDeletes);
-            $this->renewCertificates($dbForPlatform, $publisherForCertificates, $canAutoIssueCertificate);
+            $this->renewCertificates($dbForPlatform, $publisherForCertificates);
             $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
@@ -124,7 +124,7 @@ class Maintenance extends Action
         $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
     }
 
-    private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, callable $canAutoIssueCertificate): void
+    private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate): void
     {
         $time = DatabaseDateTime::now();
 
@@ -159,8 +159,9 @@ class Maintenance extends Action
             }
 
             // Respect the operator opt-out. If Appwrite would not auto-issue this
-            // subdomain today, it must not auto-renew it either.
-            if ($rule->getAttribute('owner') === 'Appwrite' && !$canAutoIssueCertificate($domain)) {
+            // subdomain today, it must not auto-renew it either. Keep the owner
+            // gate so custom-domain renewals are never skipped.
+            if ($rule->getAttribute('owner') === 'Appwrite' && !(new Certificates($rule))->isAutoIssueEnabled()) {
                 continue;
             }
 

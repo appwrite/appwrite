@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
@@ -132,7 +133,6 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('publisherForCertificates')
-            ->inject('canAutoIssueCertificate')
             ->inject('request')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
@@ -180,7 +180,6 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Certificate $publisherForCertificates,
-        callable $canAutoIssueCertificate,
         Request $request,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
@@ -465,7 +464,10 @@ class Create extends Base
                     ->from($ruleCreate)
                     ->trigger();
 
-                if ($canAutoIssueCertificate($domain)) {
+                if ((new Certificates(new Document([
+                    'domain' => $domain,
+                    'owner' => 'Appwrite',
+                ])))->isAutoIssueEnabled()) {
                     $publisherForCertificates->enqueue(new CertificateMessage(
                         project: $project,
                         domain: new Document([
