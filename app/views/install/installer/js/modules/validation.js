@@ -69,12 +69,14 @@
             const parts = trimmed.split(':');
             if (parts.length > 2) return false;
             if (parts.length === 2) {
+                // Trailing colon with no digits is an explicit but empty port.
+                if (!parts[1]) return false;
                 host = parts[0];
                 port = parts[1];
             }
         }
 
-        if (port !== null && port !== '' && !isValidPort(port)) {
+        if (port !== null && !isValidPort(port)) {
             return false;
         }
 
