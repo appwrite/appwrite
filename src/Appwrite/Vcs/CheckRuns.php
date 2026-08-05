@@ -24,7 +24,7 @@ class CheckRuns
      */
     protected array $refused = [];
 
-    public function supports(Git $vcs): bool
+    protected function supports(Git $vcs): bool
     {
         return $vcs instanceof GitHub;
     }

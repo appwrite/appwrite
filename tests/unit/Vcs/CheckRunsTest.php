@@ -21,7 +21,6 @@ final class CheckRunsTest extends TestCase
 
         $checkRuns = new CheckRuns();
 
-        $this->assertFalse($checkRuns->supports($adapter));
         $this->assertFalse($this->skip($checkRuns, $adapter));
     }
 
