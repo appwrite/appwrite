@@ -104,13 +104,18 @@ class Create extends Action
 
         $queueForEvents->setParam('databaseId', $database->getId());
 
-        $publisherForDatabase->enqueue(new DatabaseMessage(
-            project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
-            type: DATABASE_TYPE_CREATE_DATABASE,
-            database: $database,
-            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
-        ));
+        try {
+            $publisherForDatabase->enqueue(new DatabaseMessage(
+                project: $queueForEvents->getProject(),
+                user: $queueForEvents->getUser(),
+                type: DATABASE_TYPE_CREATE_DATABASE,
+                database: $database,
+                events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+            ));
+        } catch (\Throwable $e) {
+            $dbForProject->deleteDocument('databases', $database->getId());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to enqueue database creation job: ' . $e->getMessage(), previous: $e);
+        }
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
