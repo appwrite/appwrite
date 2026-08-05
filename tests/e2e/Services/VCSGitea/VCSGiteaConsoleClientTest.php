@@ -107,6 +107,20 @@ final class VCSGiteaConsoleClientTest extends Scope
         $webhookDeploymentId = $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertNotContains($webhookDeploymentId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
+
+        // A skipped push reports the reason to the provider. Gitea has no check
+        // runs, so reporting must stay a no-op rather than throw and take the
+        // webhook — and the push must still not deploy.
+        $knownIds = $this->listDeploymentIdsHelper($functionId);
+
+        $this->writeFunctionHelper($workdir, 'gitea-v3');
+        $this->gitHelper('git add index.js && git commit -m "Update function [skip ci]"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        \sleep(15);
+
+        $this->assertEqualsCanonicalizing($knownIds, $this->listDeploymentIdsHelper($functionId));
+        $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v2'), 30000, 1000);
     }
 
     /**
