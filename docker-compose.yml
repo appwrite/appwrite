@@ -1169,7 +1169,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.0
+    image: appwrite/geo:0.3.1
     restart: unless-stopped
     networks:
       - appwrite
