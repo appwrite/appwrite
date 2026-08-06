@@ -42,7 +42,7 @@ class Create extends Action
             ->desc('Create project SMTP test')
             ->groups(['api', 'project'])
             ->label('audits.event', 'project.smtp.test')
-            ->label('audits.resource', 'project/{request.projectId}')
+            ->label('audits.resource', 'project/{project.$id}')
             ->label('scope', 'project.write')
             ->label('sdk', new Method(
                 namespace: 'project',
