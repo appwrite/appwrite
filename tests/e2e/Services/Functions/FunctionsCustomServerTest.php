@@ -2322,6 +2322,164 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $user['headers']['status-code']);
     }
 
+    public function testUserUpdateEventPayload(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test User Update Event',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.update.name',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('event-handler'),
+            'activate' => true
+        ]);
+
+        // Create user
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'name' => 'Old Event User'
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $userId = $user['body']['$id'] ?? '';
+
+        // Update user name to trigger users.*.update.name event
+        $update = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Updated Event User'
+        ]);
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        // Verify function received updated user payload
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            $executionsList = $executions['body']['executions'] ?? [];
+
+            $this->assertNotEmpty($executionsList);
+
+            $lastExecution = $executionsList[0];
+
+            $this->assertEquals('completed', $lastExecution['status']);
+
+            $this->assertStringContainsString(
+                $userId,
+                (string) $lastExecution['logs']
+            );
+
+            $this->assertStringContainsString(
+                'Updated Event User',
+                (string) $lastExecution['logs']
+            );
+
+        }, 20_000, 500);
+
+        $this->cleanupFunction($functionId);
+
+        // Cleanup user
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $user['headers']['status-code']);
+    }
+
+    public function testUserUpdateEventPayload(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test User Update Event',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.update.name',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('event-handler'),
+            'activate' => true
+        ]);
+
+        // Create user
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'name' => 'Old Event User'
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $userId = $user['body']['$id'] ?? '';
+
+        // Update user name to trigger users.*.update.name event
+        $update = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Updated Event User'
+        ]);
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        // Verify function received updated user payload
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+
+            $executionsList = $executions['body']['executions'] ?? [];
+
+            $this->assertNotEmpty($executionsList);
+
+            $lastExecution = $executionsList[0];
+
+            $this->assertEquals('completed', $lastExecution['status']);
+
+            $this->assertStringContainsString(
+                $userId,
+                (string) $lastExecution['logs']
+            );
+
+            $this->assertStringContainsString(
+                'Updated Event User',
+                (string) $lastExecution['logs']
+            );
+
+        }, 20_000, 500);
+
+        $this->cleanupFunction($functionId);
+
+        // Cleanup user
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $user['headers']['status-code']);
+    }
+
     public function testScopes()
     {
         $functionId = $this->setupFunction([
