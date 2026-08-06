@@ -1,0 +1,5 @@
+[tools]
+hurl = "latest"  # Asserts the HTTP samples' PATCH/GET /v1/policies endpoints
+bats = "latest"  # Asserts the CLI samples' exit code and printed output
+
+# Per-platform runtimes are added by the CI/CD workflow

@@ -1,4 +1,4 @@
-name: Connect snippets QA
+name: Connect snippets QA (web)
 
 on:
   workflow_dispatch:
@@ -259,6 +259,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: connect-qa-${{ matrix.id }}
+          name: connect-qa-web-${{ matrix.id }}
           path: tests/connect-qa/artifacts/
           if-no-files-found: warn
