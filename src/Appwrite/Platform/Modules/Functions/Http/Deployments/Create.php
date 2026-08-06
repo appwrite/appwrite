@@ -221,6 +221,13 @@ class Create extends Action
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -285,6 +292,13 @@ class Create extends Action
                 $uploaded = 0;
 
                 if (!$deployment->isEmpty()) {
+                    if (
+                        $deployment->getAttribute('resourceId') !== $function->getId()
+                        || $deployment->getAttribute('resourceType') !== 'functions'
+                    ) {
+                        throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);

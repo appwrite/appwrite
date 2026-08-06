@@ -494,9 +494,13 @@ class Certificates extends Action
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+        $isAppwriteOwned = $rule->getAttribute('owner') === 'Appwrite';
 
-        if ($isMainDomain) {
-            // Main domain validation
+        // Skip DNS verification for the main domain and Appwrite-owned subdomains
+        // (auto-generated under _APP_DOMAIN_FUNCTIONS / _APP_DOMAIN_SITES). Appwrite
+        // created those subdomains itself; they typically rely on a wildcard A/AAAA
+        // record rather than a per-subdomain CNAME to _APP_DOMAIN_TARGET_CNAME.
+        if ($isMainDomain || $isAppwriteOwned) {
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
             return;
         }

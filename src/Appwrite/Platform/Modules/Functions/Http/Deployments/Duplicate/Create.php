@@ -93,6 +93,13 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if (
+            $deployment->getAttribute('resourceId') !== $function->getId()
+            || $deployment->getAttribute('resourceType') !== 'functions'
+        ) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         // Remote-source deployments (templates / VCS) on the jobs-service
         // backend never store a source tarball — the build sidecar fetches
         // it — so a duplicate re-fetches the same source from the
