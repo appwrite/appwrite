@@ -14,17 +14,7 @@ final class CheckRunsTest extends TestCase
 {
     private const string SHA = '60c0416257a9cbcdd96b2d370c38d8f8d150ccfb';
 
-    public function testOtherProvidersReportNothing(): void
-    {
-        $adapter = $this->createMock(Git::class);
-        $adapter->expects($this->never())->method('createCheckRun');
-
-        $checkRuns = new CheckRuns();
-
-        $this->assertFalse($this->skip($checkRuns, $adapter));
-    }
-
-    public function testSkipReportsItsReasonAsNeutral(): void
+    public function testGitHubGetsACheckRunAndNoCommitStatus(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->once())
@@ -38,8 +28,30 @@ final class CheckRunsTest extends TestCase
 
                 return ['id' => 7];
             });
+        $adapter->expects($this->never())->method('updateCommitStatus');
 
-        $this->assertTrue($this->skip(new CheckRuns(), $adapter));
+        $this->report(new CheckRuns(), $adapter);
+    }
+
+    public function testOtherProvidersGetTheCommitStatus(): void
+    {
+        // Gitea and GitLab inherit a throwing default for check runs.
+        $adapter = $this->createMock(Git::class);
+        $adapter->expects($this->never())->method('createCheckRun');
+        $adapter->expects($this->once())
+            ->method('updateCommitStatus')
+            ->with('repo', self::SHA, 'owner', 'success', 'Commit message matched a skip pattern.', '', 'my-function (my-project)');
+
+        $this->report(new CheckRuns(), $adapter);
+    }
+
+    public function testACheckRunFailureFallsBackToTheCommitStatus(): void
+    {
+        $adapter = $this->github();
+        $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
+        $adapter->expects($this->once())->method('updateCommitStatus');
+
+        $this->report(new CheckRuns(), $adapter);
     }
 
     public function testAuthorizationIsReportedAsActionRequired(): void
@@ -54,37 +66,36 @@ final class CheckRunsTest extends TestCase
                 return ['id' => 8];
             });
 
-        $reported = (new CheckRuns())->conclude(
+        (new CheckRuns())->report(
             $adapter,
             'owner',
             'repo',
             self::SHA,
             'name',
             CheckRuns::CONCLUSION_ACTION_REQUIRED,
+            'failure',
             'Authorization required',
             'A maintainer must approve this external contribution.',
             'https://console.example.com/authorize',
         );
-
-        $this->assertTrue($reported);
     }
 
-    public function testDeploymentWithoutCommitReportsNothing(): void
+    public function testCommitWithoutHashReportsNothing(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->never())->method('createCheckRun');
+        $adapter->expects($this->never())->method('updateCommitStatus');
 
-        $checkRuns = new CheckRuns();
-
-        $this->assertFalse($this->skip($checkRuns, $adapter, ''));
+        $this->report(new CheckRuns(), $adapter, '');
     }
 
     public function testUnknownRepositoryReportsNothing(): void
     {
         $adapter = $this->github();
         $adapter->expects($this->never())->method('createCheckRun');
+        $adapter->expects($this->never())->method('updateCommitStatus');
 
-        $this->assertFalse((new CheckRuns())->conclude($adapter, '', '', self::SHA, 'name', CheckRuns::CONCLUSION_NEUTRAL, 'title', 'summary'));
+        (new CheckRuns())->report($adapter, '', '', self::SHA, 'name', CheckRuns::CONCLUSION_NEUTRAL, 'success', 'title', 'summary');
     }
 
     public function testOverlongNameIsTruncated(): void
@@ -98,40 +109,62 @@ final class CheckRunsTest extends TestCase
                 return ['id' => 1];
             });
 
-        (new CheckRuns())->conclude($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), CheckRuns::CONCLUSION_NEUTRAL, 'title', 'summary');
+        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), CheckRuns::CONCLUSION_NEUTRAL, 'success', 'title', 'summary');
     }
 
-    public function testProviderFailureIsContained(): void
+    public function testAProviderRejectingBothIsContained(): void
     {
         $adapter = $this->createStub(GitHub::class);
         $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
+        $adapter->method('updateCommitStatus')->willThrowException(new \Exception('HTTP 500', 500));
 
-        $this->assertFalse($this->skip(new CheckRuns(), $adapter));
+        $this->report(new CheckRuns(), $adapter);
+
+        $this->expectNotToPerformAssertions();
     }
 
-    public function testInstallationRefusingIsAskedOnlyOnce(): void
+    public function testRepositoryRefusingIsAskedOnlyOnce(): void
     {
-        $adapter = $this->github();
+        // A webhook fans out to every linked resource, and the owner, repository and
+        // commit are the same for all of them.
+        $adapter = $this->createMock(Git::class);
         $adapter->expects($this->once())
-            ->method('createCheckRun')
+            ->method('updateCommitStatus')
             ->willThrowException(new \Exception('HTTP 403', 403));
 
         $checkRuns = new CheckRuns();
 
         foreach (\range(1, 5) as $ignored) {
-            $this->assertFalse($this->skip($checkRuns, $adapter));
+            $this->report($checkRuns, $adapter);
         }
     }
 
-    private function skip(CheckRuns $checkRuns, Git $adapter, string $commitHash = self::SHA): bool
+    public function testARejectedReportStaysRetryable(): void
     {
-        return $checkRuns->conclude(
+        // 422 complains about this report, not about access, so the next resource
+        // in the fan-out must still be attempted.
+        $adapter = $this->createMock(Git::class);
+        $adapter->expects($this->exactly(3))
+            ->method('updateCommitStatus')
+            ->willThrowException(new \Exception('HTTP 422', 422));
+
+        $checkRuns = new CheckRuns();
+
+        foreach (\range(1, 3) as $ignored) {
+            $this->report($checkRuns, $adapter);
+        }
+    }
+
+    private function report(CheckRuns $checkRuns, Git $adapter, string $commitHash = self::SHA): void
+    {
+        $checkRuns->report(
             $adapter,
             'owner',
             'repo',
             $commitHash,
             'my-function (my-project)',
             CheckRuns::CONCLUSION_NEUTRAL,
+            'success',
             'Deployment skipped',
             'Commit message matched a skip pattern.',
         );

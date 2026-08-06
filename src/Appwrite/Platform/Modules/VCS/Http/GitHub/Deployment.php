@@ -112,16 +112,15 @@ trait Deployment
 
             try {
                 [$owner, $repositoryName] = $resolveOwnerAndName($repository->getAttribute('providerRepositoryId'));
-
-                // Neutral is in branch protection's passing set; failure is not.
-                if ($checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'Deployment skipped', $reason, $targetUrl)) {
-                    return;
-                }
-
-                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'success', $reason, $targetUrl, $name);
             } catch (\Throwable $e) {
-                Console::warning("Failed to report a skipped deployment on repository '{$repository->getId()}': " . $e->getMessage());
+                Console::warning("Failed to resolve repository '{$repository->getId()}' to report a skip: " . $e->getMessage());
+
+                return;
             }
+
+            // Neutral is in branch protection's passing set; success is its nearest
+            // commit status — neither asserts a break, so neither blocks a merge.
+            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'success', 'Deployment skipped', $reason, $targetUrl);
         };
 
         foreach ($repositories as $repository) {
@@ -401,13 +400,7 @@ trait Deployment
                         $name = "{$resourceName} ({$projectName})";
                         $message = 'Authorization required: a maintainer must approve this external contribution.';
 
-                        try {
-                            if (!$checkRuns->conclude($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_ACTION_REQUIRED, 'Authorization required', $message, $authorizeUrl)) {
-                                $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
-                            }
-                        } catch (\Throwable $e) {
-                            Console::warning("Failed to report required authorization on repository '{$repository->getId()}': " . $e->getMessage());
-                        }
+                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_ACTION_REQUIRED, 'failure', 'Authorization required', $message, $authorizeUrl);
                     }
 
                     continue;
