@@ -37,6 +37,8 @@ class Update extends Action
             ->setHttpPath('/v1/projects/:projectId/team')
             ->desc('Update project team')
             ->groups(['api', 'projects'])
+            ->label('audits.event', 'projects.team.update')
+            ->label('audits.resource', 'project/{request.projectId}')
             ->label('scope', 'projects.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
