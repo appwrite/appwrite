@@ -15,13 +15,18 @@ import {
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import { fetchProjectUsageGaugeChartSeries } from '@/lib/usage/usage-gauges-common'
 import {
   mergeBandwidthDualChartPoints,
   type BandwidthDualChartPoint,
 } from '@/lib/usage/bandwidth-events'
 
-/** Peak concurrent WebSocket connections (event metric on usage.listEvents). */
-export const REALTIME_CONNECTIONS_EVENT_METRIC = 'realtime.connections' as const
+/**
+ * Concurrent WebSocket connections - a *gauge*, read from usage.listGauges.
+ * The events table holds the raw +/-1 deltas it is folded from; the events
+ * endpoint refuses the metric because their sum is not a concurrency figure.
+ */
+export const REALTIME_CONNECTIONS_METRIC = 'realtime.connections' as const
 
 /** Messages sent through the Realtime service (event counter). */
 export const REALTIME_MESSAGES_EVENT_METRIC = 'realtime.messages.sent' as const
@@ -32,8 +37,8 @@ export const REALTIME_INBOUND_EVENT_METRIC = 'realtime.inbound' as const
 /** Realtime outbound bandwidth (event counter, bytes). */
 export const REALTIME_OUTBOUND_EVENT_METRIC = 'realtime.outbound' as const
 
-export const REALTIME_CONNECTIONS_EVENT_METRICS = [
-  REALTIME_CONNECTIONS_EVENT_METRIC,
+export const REALTIME_CONNECTIONS_METRICS = [
+  REALTIME_CONNECTIONS_METRIC,
 ] as const
 
 export const REALTIME_BANDWIDTH_EVENT_METRICS = [
@@ -97,29 +102,41 @@ export function getUsageChartPeakValue(points: UsageChartPoint[]): number {
   return Math.max(...points.map((point) => point.total))
 }
 
-/** Concurrent connections time series from usage.listEvents. */
+/**
+ * Concurrent connections time series from usage.listGauges.
+ *
+ * Not an event metric: `realtime.connections` is emitted as +/-1 per connect
+ * and disconnect, so summing it over a window gives the net change rather than
+ * a concurrency figure. The server folds those deltas into a level and samples
+ * it into a gauge of the same name, which `aggregate=max` reads as the peak per
+ * bucket. The events endpoint refuses the metric for that reason.
+ */
 export async function fetchProjectRealtimeConnectionsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<RealtimeUsageChartOverview> {
-  const overview = await fetchProjectUsageMetricSeriesOverview(
-    projectId,
-    REALTIME_CONNECTIONS_EVENT_METRIC,
-    dateRange,
-    interval,
-    [],
-    0,
-    options,
-  )
+  const { chartPoints, previousChartPoints } =
+    await fetchProjectUsageGaugeChartSeries(
+      projectId,
+      dateRange,
+      REALTIME_CONNECTIONS_METRICS,
+      interval,
+      options?.queries,
+      0,
+      options?.resourceId,
+      options?.resourceType,
+      undefined,
+      'max',
+    )
 
   return {
     changePercent: computeChangePercent(
-      getUsageChartPeakValue(overview.chartPoints),
-      getUsageChartPeakValue(overview.previousChartPoints),
+      getUsageChartPeakValue(chartPoints),
+      getUsageChartPeakValue(previousChartPoints),
     ),
-    chartPoints: overview.chartPoints,
+    chartPoints,
   }
 }
 
