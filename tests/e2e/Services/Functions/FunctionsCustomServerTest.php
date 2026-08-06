@@ -1391,6 +1391,40 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($otherFunctionId);
     }
 
+    public function testCreateDuplicateDeploymentRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $functionId = $data['functionId'];
+        $deploymentId = $data['deploymentId'];
+
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — duplicating through a function that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->createDuplicateDeployment($otherFunctionId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning function can still duplicate it.
+         */
+        $response = $this->createDuplicateDeployment($functionId, $deploymentId);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
     public function testListDeployments(): void
     {
         $data = $this->setupTestDeployment();
