@@ -14,8 +14,8 @@ const policy = await project.updatePasswordStrengthPolicy({
   symbols: true
 })
 
-console.log(policy)
+console.log(JSON.stringify(policy, null, 2))
 
 const policies = await project.listPolicies()
 
-console.log(policies)
+console.log(JSON.stringify(policies, null, 2))

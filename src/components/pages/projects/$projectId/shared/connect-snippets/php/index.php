@@ -15,8 +15,8 @@ $policy = $project->updatePasswordStrengthPolicy(
   symbols: true
 );
 
-print_r($policy);
+echo json_encode($policy, JSON_PRETTY_PRINT) . "\n";
 
 $policies = $project->listPolicies();
 
-print_r($policies);
+echo json_encode($policies, JSON_PRETTY_PRINT) . "\n";

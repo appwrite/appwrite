@@ -1,3 +1,4 @@
+import json
 import os
 from appwrite.client import Client
 from appwrite.services.project import Project
@@ -16,8 +17,8 @@ policy = project.update_password_strength_policy(
     symbols=True
 )
 
-print(policy)
+print(json.dumps(policy, indent=2))
 
 policies = project.list_policies()
 
-print(policies)
+print(json.dumps(policies, indent=2))
