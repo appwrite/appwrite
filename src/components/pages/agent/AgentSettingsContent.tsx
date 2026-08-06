@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
-import { Brain, ChevronLeft, Cpu, ExternalLink, PanelLeft } from 'lucide-react'
+import { BarChart3, Brain, ChevronLeft, Cpu, ExternalLink, PanelLeft } from 'lucide-react'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
 import { Memory } from '@/components/pages/agent/settings/Memory'
 import { Mcp } from '@/components/pages/agent/settings/Mcp'
+import { Usage } from '@/components/pages/agent/settings/Usage'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { AGENT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/agent-settings-cards'
 import { useT } from '@/lib/i18n/translate'
 
-export type AgentSettingsSectionId = 'models' | 'memory' | 'mcp'
+export type AgentSettingsSectionId = 'models' | 'memory' | 'mcp' | 'usage'
 
 export function agentSettingsPath(section: AgentSettingsSectionId): string {
   switch (section) {
@@ -17,6 +18,8 @@ export function agentSettingsPath(section: AgentSettingsSectionId): string {
       return '/agent/settings/mcp'
     case 'memory':
       return '/agent/settings/memory'
+    case 'usage':
+      return '/agent/settings/usage'
     case 'models':
     default:
       return '/agent/settings/models'
@@ -36,6 +39,7 @@ type AgentSettingsContentProps = {
 function SettingsSection({ section }: { section: AgentSettingsSectionId }) {
   if (section === 'mcp') return <Mcp />
   if (section === 'memory') return <Memory />
+  if (section === 'usage') return <Usage />
   return <Models />
 }
 
@@ -79,6 +83,22 @@ export function AgentSettingsContent({
         to: '/agent/settings/mcp',
         icon: McpIcon,
         keywords: ['mcp', 'server', 'oauth', 'tools', 'connect'],
+      },
+      {
+        id: 'usage',
+        label: t('Usage'),
+        to: '/agent/settings/usage',
+        icon: BarChart3,
+        keywords: [
+          'usage',
+          'runs',
+          'messages',
+          'conversations',
+          'tokens',
+          'tool calls',
+          'automations',
+          'metrics',
+        ],
       },
     ],
     [t],
@@ -140,7 +160,8 @@ export function AgentSettingsContent({
               if (
                 sectionId === 'models' ||
                 sectionId === 'memory' ||
-                sectionId === 'mcp'
+                sectionId === 'mcp' ||
+                sectionId === 'usage'
               ) {
                 onSectionChange(sectionId)
               }

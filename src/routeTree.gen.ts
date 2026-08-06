@@ -141,6 +141,7 @@ import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './route
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
+import { Route as PublicAgentSettingsUsageRouteImport } from './routes/_public/agent.settings.usage'
 import { Route as PublicAgentSettingsModelsRouteImport } from './routes/_public/agent.settings.models'
 import { Route as PublicAgentSettingsMemoryRouteImport } from './routes/_public/agent.settings.memory'
 import { Route as PublicAgentSettingsMcpRouteImport } from './routes/_public/agent.settings.mcp'
@@ -1078,6 +1079,12 @@ const PublicOrganizationsOrgIdAppsRoute =
     id: '/apps',
     path: '/apps',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicAgentSettingsUsageRoute =
+  PublicAgentSettingsUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicAgentSettingsRoute,
   } as any)
 const PublicAgentSettingsModelsRoute =
   PublicAgentSettingsModelsRouteImport.update({
@@ -2808,6 +2815,7 @@ export interface FileRoutesByFullPath {
   '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
   '/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
+  '/agent/settings/usage': typeof PublicAgentSettingsUsageRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -3168,6 +3176,7 @@ export interface FileRoutesByTo {
   '/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
   '/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/agent/settings/models': typeof PublicAgentSettingsModelsRoute
+  '/agent/settings/usage': typeof PublicAgentSettingsUsageRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
@@ -3504,6 +3513,7 @@ export interface FileRoutesById {
   '/_public/agent/settings/mcp': typeof PublicAgentSettingsMcpRoute
   '/_public/agent/settings/memory': typeof PublicAgentSettingsMemoryRoute
   '/_public/agent/settings/models': typeof PublicAgentSettingsModelsRoute
+  '/_public/agent/settings/usage': typeof PublicAgentSettingsUsageRoute
   '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -3874,6 +3884,7 @@ export interface FileRouteTypes {
     | '/agent/settings/mcp'
     | '/agent/settings/memory'
     | '/agent/settings/models'
+    | '/agent/settings/usage'
     | '/organizations/$orgId/apps'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/domains'
@@ -4234,6 +4245,7 @@ export interface FileRouteTypes {
     | '/agent/settings/mcp'
     | '/agent/settings/memory'
     | '/agent/settings/models'
+    | '/agent/settings/usage'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
@@ -4569,6 +4581,7 @@ export interface FileRouteTypes {
     | '/_public/agent/settings/mcp'
     | '/_public/agent/settings/memory'
     | '/_public/agent/settings/models'
+    | '/_public/agent/settings/usage'
     | '/_public/organizations/$orgId/apps'
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/domains'
@@ -5781,6 +5794,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/apps'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/agent/settings/usage': {
+      id: '/_public/agent/settings/usage'
+      path: '/usage'
+      fullPath: '/agent/settings/usage'
+      preLoaderRoute: typeof PublicAgentSettingsUsageRouteImport
+      parentRoute: typeof PublicAgentSettingsRoute
     }
     '/_public/agent/settings/models': {
       id: '/_public/agent/settings/models'
@@ -7616,6 +7636,7 @@ interface PublicAgentSettingsRouteChildren {
   PublicAgentSettingsMcpRoute: typeof PublicAgentSettingsMcpRoute
   PublicAgentSettingsMemoryRoute: typeof PublicAgentSettingsMemoryRoute
   PublicAgentSettingsModelsRoute: typeof PublicAgentSettingsModelsRoute
+  PublicAgentSettingsUsageRoute: typeof PublicAgentSettingsUsageRoute
   PublicAgentSettingsIndexRoute: typeof PublicAgentSettingsIndexRoute
 }
 
@@ -7623,6 +7644,7 @@ const PublicAgentSettingsRouteChildren: PublicAgentSettingsRouteChildren = {
   PublicAgentSettingsMcpRoute: PublicAgentSettingsMcpRoute,
   PublicAgentSettingsMemoryRoute: PublicAgentSettingsMemoryRoute,
   PublicAgentSettingsModelsRoute: PublicAgentSettingsModelsRoute,
+  PublicAgentSettingsUsageRoute: PublicAgentSettingsUsageRoute,
   PublicAgentSettingsIndexRoute: PublicAgentSettingsIndexRoute,
 }
 
