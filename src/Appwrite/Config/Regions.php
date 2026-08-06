@@ -97,4 +97,34 @@ final class Regions
             return \is_string($value) && self::poolKeyMatchesRegion($value, $region);
         }));
     }
+
+    /**
+     * Prefer the catalog entry marked default (and enabled); otherwise first enabled id.
+     *
+     * @param array $catalog
+     * @param string $fallback
+     * @return string
+     */
+    public static function getDefaultRegionId(array $catalog, string $fallback = 'default'): string
+    {
+        foreach ($catalog as $id => $config) {
+            if (!\is_array($config)) {
+                continue;
+            }
+            if (!empty($config['default']) && empty($config['disabled'])) {
+                return (string) ($config['$id'] ?? $id);
+            }
+        }
+
+        foreach ($catalog as $id => $config) {
+            if (!\is_array($config)) {
+                continue;
+            }
+            if (empty($config['disabled'])) {
+                return (string) ($config['$id'] ?? $id);
+            }
+        }
+
+        return $fallback;
+    }
 }

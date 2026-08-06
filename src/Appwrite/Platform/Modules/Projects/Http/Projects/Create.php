@@ -56,7 +56,7 @@ class Create extends Action
             ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('teamId', '', new UID(), 'Team unique ID.')
-            ->param('region', System::getEnv('_APP_REGION', 'default'), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true, enum: new Enum(name: 'Region'))
+            ->param('region', Regions::getDefaultRegionId(Config::getParam('regions', []), System::getEnv('_APP_REGION', 'default')), new WhiteList(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true, enum: new Enum(name: 'Region'))
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -127,12 +127,19 @@ class Create extends Action
             $databases = Regions::filterPoolKeysForRegion($keys, $region);
         }
 
+        if (empty($databases)) {
+            throw new Exception(
+                Exception::PROJECT_REGION_UNSUPPORTED,
+                'No database pool configured for region "' . $region . '". Check _APP_DATABASE_KEYS.'
+            );
+        }
+
         $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $dsn = $databases[$index];
         } else {
-            $dsn = $databases[array_rand($databases)];
+            $dsn = $databases[\array_rand($databases)];
         }
 
         // TODO: Temporary until all projects are using shared tables.

@@ -153,4 +153,50 @@ final class RegionsTest extends TestCase
             Regions::filterPoolKeysForRegion($keys, 'france')
         );
     }
+
+    public function testGetDefaultRegionIdPrefersEnabledCatalogDefault(): void
+    {
+        $catalog = [
+            'default' => [
+                '$id' => 'default',
+                'name' => 'Default',
+                'disabled' => true,
+                'default' => false,
+            ],
+            'fra' => [
+                '$id' => 'fra',
+                'name' => 'Frankfurt',
+                'disabled' => false,
+                'default' => true,
+            ],
+            'nyc' => [
+                '$id' => 'nyc',
+                'name' => 'New York',
+                'disabled' => false,
+                'default' => false,
+            ],
+        ];
+
+        $this->assertEquals('fra', Regions::getDefaultRegionId($catalog, 'default'));
+    }
+
+    public function testGetDefaultRegionIdFallsBackToFirstEnabled(): void
+    {
+        $catalog = [
+            'default' => [
+                '$id' => 'default',
+                'name' => 'Default',
+                'disabled' => true,
+                'default' => false,
+            ],
+            'nyc' => [
+                '$id' => 'nyc',
+                'name' => 'New York',
+                'disabled' => false,
+                'default' => false,
+            ],
+        ];
+
+        $this->assertEquals('nyc', Regions::getDefaultRegionId($catalog, 'default'));
+    }
 }
