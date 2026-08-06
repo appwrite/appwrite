@@ -1145,6 +1145,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'בנו ערוץ Realtime להרשמה. השתמשו בתווים כלליים (*) כדי להתאים למספר משאבים.',
   'Select events that will trigger your function or webhook.':
     'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
+  'Select file': 'בחירת קובץ',
   Service: 'שירות',
   'Bucket (optional)': 'באקט (אופציונלי)',
   'Function (optional)': 'פונקציה (אופציונלי)',

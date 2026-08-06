@@ -8,9 +8,14 @@ import { useT } from '@/lib/i18n/translate'
 
 type CodeSnippetCopyButtonProps = {
   content: string
+  /** Called after content is successfully written to the clipboard. */
+  onCopied?: () => void
 }
 
-export function CodeSnippetCopyButton({ content }: CodeSnippetCopyButtonProps) {
+export function CodeSnippetCopyButton({
+  content,
+  onCopied,
+}: CodeSnippetCopyButtonProps) {
   const t = useT()
   const [copied, setCopied] = useState(false)
 
@@ -18,6 +23,7 @@ export function CodeSnippetCopyButton({ content }: CodeSnippetCopyButtonProps) {
     try {
       await navigator.clipboard.writeText(content)
       setCopied(true)
+      onCopied?.()
       toast.success(t('Copied to clipboard'))
       setTimeout(() => setCopied(false), 2000)
     } catch {

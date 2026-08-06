@@ -491,3 +491,102 @@ export function getInstallInstructions(
       return getInstallInstructions('web', 'npm')
   }
 }
+
+function markdownFenceLanguage(
+  language: CodeBlockLanguage | undefined,
+  fileLabel: string,
+): string {
+  if (!language || language === 'plaintext') {
+    const ext = fileLabel.split('.').pop()?.toLowerCase()
+    if (ext && ext !== fileLabel.toLowerCase()) return ext
+    return ''
+  }
+  if (language === 'markup') {
+    const ext = fileLabel.split('.').pop()?.toLowerCase()
+    if (ext === 'svelte' || ext === 'vue' || ext === 'html' || ext === 'xml') {
+      return ext
+    }
+    return 'html'
+  }
+  if (language === 'node' || language === 'deno' || language === 'bun') {
+    return 'javascript'
+  }
+  if (language === 'dotnet') return 'csharp'
+  return language
+}
+
+export type ConnectSdkPromptInput = {
+  projectId: string
+  projectName?: string
+  endpoint: string
+  sdkLabel: string
+  runtime: 'client' | 'server'
+  frameworkLabel?: string
+  usingLabel?: string
+  packageManagerLabel?: string
+  installTitle: string
+  installOptions: InstallOption[]
+  codeFiles: CodeFile[]
+}
+
+/** Markdown handoff for coding agents from the Connect SDK tab. */
+export function buildConnectSdkPrompt(input: ConnectSdkPromptInput): string {
+  const lines: string[] = [
+    'Connect this app to Appwrite using the SDK setup below.',
+    'Apply the install step and create each file with the exact contents shown.',
+    '',
+    '## Project',
+    '',
+    `- Project ID: \`${input.projectId}\``,
+  ]
+
+  if (input.projectName?.trim()) {
+    lines.push(`- Project name: ${input.projectName.trim()}`)
+  }
+
+  lines.push(
+    `- Endpoint: \`${input.endpoint}\``,
+    `- SDK / Platform: ${input.sdkLabel} (${input.runtime})`,
+  )
+
+  if (input.frameworkLabel) {
+    lines.push(`- Framework: ${input.frameworkLabel}`)
+  }
+  if (input.usingLabel) {
+    lines.push(`- Using: ${input.usingLabel}`)
+  }
+  if (input.packageManagerLabel) {
+    lines.push(`- Package manager: ${input.packageManagerLabel}`)
+  }
+
+  lines.push('', `## ${input.installTitle}`, '')
+
+  for (const option of input.installOptions) {
+    const fence = markdownFenceLanguage(option.language, option.label)
+    if (input.installOptions.length > 1) {
+      lines.push(`### ${option.label}`, '')
+    }
+    lines.push(`\`\`\`${fence}`, option.code.trimEnd(), '```', '')
+  }
+
+  if (input.codeFiles.length > 0) {
+    lines.push('## Project files', '')
+    for (const file of input.codeFiles) {
+      const fence = markdownFenceLanguage(file.language, file.label)
+      lines.push(`### \`${file.label}\``, '', `\`\`\`${fence}`, file.code.trimEnd(), '```', '')
+    }
+  }
+
+  lines.push('## Notes', '')
+  if (input.runtime === 'server') {
+    lines.push(
+      '- Server and backend code need an Appwrite API key with the right scopes. Create one in the project console and keep it secret (do not commit it).',
+    )
+  }
+  lines.push(
+    '- Prefer the latest Appwrite SDK release when installing packages.',
+    '- Docs: https://appwrite.io/docs',
+  )
+
+  return lines.join('\n').trimEnd() + '\n'
+}
