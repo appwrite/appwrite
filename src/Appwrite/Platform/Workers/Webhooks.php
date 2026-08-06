@@ -182,10 +182,19 @@ class Webhooks extends Action
 
             $updatePayload = ['logs' => $logs];
 
-            if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
+            // increaseDocumentAttribute is atomic, so concurrent failures get
+            // distinct attempt counts. Always disable once at/over the limit,
+            // but alert only on the exact threshold so a race cannot enqueue
+            // duplicate "paused" notices. Re-enable resets attempts
+            // (see Webhooks\Update).
+            $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
+            if ($attempts >= $maxAttempts) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+
+                if ($attempts === $maxAttempts) {
+                    $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+                }
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
