@@ -77,24 +77,20 @@ trait Deployment
                 return;
             }
 
-            // A push event already reported this skip; a fork raises no push.
-            if (!empty($providerPullRequestId) && !$external) {
+            $reportedByPush = !empty($providerPullRequestId) && !$external;
+            $isTag = \str_starts_with($providerBranch, 'refs/');
+
+            if ($reportedByPush || $isTag) {
                 return;
             }
 
-            // Only refs/heads is stripped, so a tag arrives whole and matches nothing.
-            if (\str_starts_with($providerBranch, 'refs/')) {
-                return;
-            }
-
-            // Shares its context with the build result, and only the latest survives.
-            $built = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
+            $alreadyDeployed = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resourceCollection]),
                 Query::equal('providerCommitHash', [$providerCommitHash]),
             ]));
 
-            if (!$built->isEmpty()) {
+            if (!$alreadyDeployed->isEmpty()) {
                 return;
             }
 
@@ -114,7 +110,6 @@ trait Deployment
                 return;
             }
 
-            // Neither asserts a break, so neither blocks a merge.
             $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'success', 'Deployment skipped', $reason, $targetUrl);
         };
 
