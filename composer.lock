@@ -5417,16 +5417,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "2.4.19",
+            "version": "2.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "d0e58c93a8d7021a69d2a5d6b30fa826a5404fb9"
+                "reference": "68a417436c8c0c3c98f913c86b0cd79d9b5936de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d0e58c93a8d7021a69d2a5d6b30fa826a5404fb9",
-                "reference": "d0e58c93a8d7021a69d2a5d6b30fa826a5404fb9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/68a417436c8c0c3c98f913c86b0cd79d9b5936de",
+                "reference": "68a417436c8c0c3c98f913c86b0cd79d9b5936de",
                 "shasum": ""
             },
             "require": {
@@ -5463,9 +5463,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/2.4.19"
+                "source": "https://github.com/appwrite/sdk-generator/tree/2.5.1"
             },
-            "time": "2026-07-24T06:18:23+00:00"
+            "time": "2026-07-28T11:56:13+00:00"
         },
         {
             "name": "brianium/paratest",

@@ -304,7 +304,7 @@ return [
             [
                 'key' => 'claude-plugin',
                 'name' => 'ClaudePlugin',
-                'version' => '0.1.0',
+                'version' => '0.2.0',
                 'url' => 'https://github.com/appwrite/claude-plugin.git',
                 'enabled' => true,
                 'beta' => false,
@@ -324,7 +324,7 @@ return [
             [
                 'key' => 'codex-plugin',
                 'name' => 'CodexPlugin',
-                'version' => '0.1.1',
+                'version' => '0.2.0',
                 'url' => 'https://github.com/appwrite/codex-plugin.git',
                 'enabled' => true,
                 'beta' => false,
