@@ -94,6 +94,7 @@ class Create extends Action
         }
 
         if (
+            // Cross-resource / cross-type IDs must not be rebuildable here.
             $deployment->getAttribute('resourceId') !== $function->getId()
             || $deployment->getAttribute('resourceType') !== 'functions'
         ) {
