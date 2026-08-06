@@ -1678,6 +1678,64 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateDeploymentResumeRequiresOwnership(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Owner Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false'
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $otherSiteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Other Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        /**
+         * Test for FAILURE — resuming/creating via x-appwrite-id under a
+         * site that does not own the deployment must not succeed.
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/sites/' . $otherSiteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-id' => $deploymentId,
+        ], $this->getHeaders()), [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupSite($otherSiteId);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([
