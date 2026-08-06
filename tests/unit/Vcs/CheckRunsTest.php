@@ -35,7 +35,6 @@ final class CheckRunsTest extends TestCase
 
     public function testOtherProvidersGetTheCommitStatus(): void
     {
-        // Gitea and GitLab inherit a throwing default for check runs.
         $adapter = $this->createMock(Git::class);
         $adapter->expects($this->never())->method('createCheckRun');
         $adapter->expects($this->once())
@@ -125,8 +124,6 @@ final class CheckRunsTest extends TestCase
 
     public function testRepositoryRefusingIsAskedOnlyOnce(): void
     {
-        // A webhook fans out to every linked resource, and the owner, repository and
-        // commit are the same for all of them.
         $adapter = $this->createMock(Git::class);
         $adapter->expects($this->once())
             ->method('updateCommitStatus')
@@ -141,8 +138,7 @@ final class CheckRunsTest extends TestCase
 
     public function testARejectedReportStaysRetryable(): void
     {
-        // 422 complains about this report, not about access, so the next resource
-        // in the fan-out must still be attempted.
+        // 422 complains about this report, not about access.
         $adapter = $this->createMock(Git::class);
         $adapter->expects($this->exactly(3))
             ->method('updateCommitStatus')

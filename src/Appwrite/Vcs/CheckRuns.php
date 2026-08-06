@@ -8,7 +8,8 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
  * Reports a verdict on a commit as a check run, falling back to a commit status
- * where check runs are unavailable — only GitHub implements them.
+ * where check runs are unavailable. Never throws: a failed report must not fail
+ * the event that produced it.
  */
 class CheckRuns
 {
@@ -18,15 +19,10 @@ class CheckRuns
     protected const int NAME_LIMIT = 255;
 
     /**
-     * Repositories that refused a report, so a fan-out pays one rejected call, not one each.
-     *
-     * @var array<string, true>
+     * @var array<string, true> Repositories that refused, so a fan-out pays one call, not one each.
      */
     protected array $refused = [];
 
-    /**
-     * Never throws: a failed report must not fail the event that produced it.
-     */
     public function report(
         Git $vcs,
         string $owner,
@@ -102,9 +98,7 @@ class CheckRuns
     }
 
     /**
-     * Owner, repository and commit are identical for every resource in a fan-out, so a
-     * provider rejecting those will reject them all. Only the context differs, so a
-     * complaint about the report itself must stay retryable.
+     * Only what a fan-out shares — a complaint about this report stays retryable.
      */
     protected function remember(string $owner, string $repositoryName, \Throwable $error): void
     {

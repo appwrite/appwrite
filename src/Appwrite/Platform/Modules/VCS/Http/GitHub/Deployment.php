@@ -58,8 +58,7 @@ trait Deployment
                 return $resolved[$providerRepositoryId];
             }
 
-            // Owner first: getRepositoryName reports an unreadable response as
-            // RepositoryNotFound, which the loop skips as a 404 instead of retrying.
+            // Owner first: getRepositoryName reports any failure as a 404 the loop skips.
             $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
             try {
@@ -83,15 +82,12 @@ trait Deployment
                 return;
             }
 
-            // Only refs/heads is stripped from the payload, so a tag arrives whole.
-            // It never matches a branch trigger, and saying so would be nonsense.
+            // Only refs/heads is stripped, so a tag arrives whole and matches nothing.
             if (\str_starts_with($providerBranch, 'refs/')) {
                 return;
             }
 
-            // This reports under the same context a build does, and a provider keeps
-            // only the latest per context — so never speak for a commit that already
-            // built, or pushing it to a second branch would overwrite its verdict.
+            // Shares its context with the build result, and only the latest survives.
             $built = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resourceCollection]),
@@ -118,8 +114,7 @@ trait Deployment
                 return;
             }
 
-            // Neutral is in branch protection's passing set; success is its nearest
-            // commit status — neither asserts a break, so neither blocks a merge.
+            // Neither asserts a break, so neither blocks a merge.
             $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'success', 'Deployment skipped', $reason, $targetUrl);
         };
 
