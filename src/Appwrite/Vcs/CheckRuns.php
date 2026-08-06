@@ -13,8 +13,8 @@ use Utopia\VCS\Adapter\Git\GitHub;
  */
 class CheckRuns
 {
-    protected const int NAME_LIMIT = 255;
-    protected const int DESCRIPTION_LIMIT = 140;
+    protected const int NAME_MAX_LENGTH = 255;
+    protected const int DESCRIPTION_MAX_LENGTH = 140;
 
     /**
      * @var array<string, true> Repositories that refused a check run, so a fan-out pays one call, not one each.
@@ -45,12 +45,12 @@ class CheckRuns
             return;
         }
 
-        if (!$this->addressable($owner, $repositoryName, $commitHash) || isset($this->refusedStatuses["{$owner}/{$repositoryName}"])) {
+        if (!$this->isAddressable($owner, $repositoryName, $commitHash) || isset($this->refusedStatuses["{$owner}/{$repositoryName}"])) {
             return;
         }
 
         try {
-            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, \mb_strimwidth($summary, 0, self::DESCRIPTION_LIMIT, '...'), $detailsUrl, $name);
+            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, \mb_strimwidth($summary, 0, self::DESCRIPTION_MAX_LENGTH, '...'), $detailsUrl, $name);
         } catch (\Throwable $error) {
             $this->remember($this->refusedStatuses, $owner, $repositoryName, $error);
             Console::warning("Failed to report on {$owner}/{$repositoryName}: " . $error->getMessage());
@@ -68,7 +68,7 @@ class CheckRuns
         string $summary,
         string $detailsUrl,
     ): bool {
-        if (!$vcs instanceof GitHub || !$this->addressable($owner, $repositoryName, $commitHash)) {
+        if (!$vcs instanceof GitHub || !$this->isAddressable($owner, $repositoryName, $commitHash)) {
             return false;
         }
 
@@ -81,7 +81,7 @@ class CheckRuns
                 owner: $owner,
                 repositoryName: $repositoryName,
                 headSha: $commitHash,
-                name: \mb_strimwidth($name, 0, self::NAME_LIMIT, '...'),
+                name: \mb_strimwidth($name, 0, self::NAME_MAX_LENGTH, '...'),
                 status: 'completed',
                 conclusion: $conclusion,
                 title: $title,
@@ -98,7 +98,7 @@ class CheckRuns
         }
     }
 
-    protected function addressable(string $owner, string $repositoryName, string $commitHash): bool
+    protected function isAddressable(string $owner, string $repositoryName, string $commitHash): bool
     {
         return !empty($owner) && !empty($repositoryName) && !empty($commitHash);
     }

@@ -43,7 +43,7 @@ final class CheckRunsTest extends TestCase
         $this->report(new CheckRuns(), $adapter);
     }
 
-    public function testACheckRunFailureFallsBackToTheCommitStatus(): void
+    public function testCheckRunFailureFallsBackToCommitStatus(): void
     {
         $adapter = $this->createMock(GitHub::class);
         // 403 is the App without checks:write — the case the fallback exists for.
@@ -118,7 +118,7 @@ final class CheckRunsTest extends TestCase
         }
     }
 
-    public function testARejectedReportStaysRetryable(): void
+    public function testRejectedReportStaysRetryable(): void
     {
         // 422 complains about this report, not about access.
         $adapter = $this->createMock(Git::class);
