@@ -891,6 +891,20 @@ final class VCSGitHubConsoleClientTest extends Scope
                 'providerBranch' => 'main',
             ]);
             $this->assertEquals(404, $updatedSite['headers']['status-code']);
+
+            // deleteInstallation from another project must not succeed
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/vcs/installations/' . $installationId, array_merge([
+                'x-appwrite-project' => $project2Id,
+            ], $this->getHeaders()));
+            $this->assertEquals(404, $deleted['headers']['status-code']);
+            $this->assertEquals('installation_not_found', $deleted['body']['type']);
+
+            // Owning project can still read the installation
+            $stillThere = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $stillThere['headers']['status-code']);
+            $this->assertEquals($installationId, $stillThere['body']['$id']);
         } finally {
             $this->client->call(Client::METHOD_DELETE, '/projects/' . $project2Id, $consoleHeaders);
             $this->client->call(Client::METHOD_DELETE, '/teams/' . $team['body']['$id'], $consoleHeaders);
