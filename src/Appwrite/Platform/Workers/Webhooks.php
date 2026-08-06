@@ -162,9 +162,6 @@ class Webhooks extends Action
         $error = null;
 
         if (!empty($curlError) || $statusCode >= 400) {
-            $webhook = $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
-            $attempts = $webhook->getAttribute('attempts');
-
             $logs = '';
             $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
             $logs .= 'Method: ' . 'POST' . "\n";
@@ -177,23 +174,41 @@ class Webhooks extends Action
                 $logs .= 'Body: ' . "\n" . \mb_strcut($responseBody, 0, 10000) . "\n"; // Limit to 10kb
             }
 
-            $webhook->setAttribute('logs', $logs);
-
-            $updatePayload = ['logs' => $logs];
-
             $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
-            if ($attempts >= $maxAttempts) {
-                $webhook->setAttribute('enabled', false);
-                $updatePayload['enabled'] = false;
+            $webhookId = $webhook->getId();
 
-                // Alert only when this locked increment crosses the limit.
-                // Concurrent overshoot sees previousAttempts >= max and skips.
-                if (($attempts - 1) < $maxAttempts) {
-                    $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
+            // Serialize attempt bump, disable, and alert claim under one
+            // forUpdate transaction so concurrent failures cannot double-notify
+            // (including when the configured max is lowered mid-flight).
+            [$webhook, $attempts, $shouldAlert] = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $webhookId, $logs, $maxAttempts) {
+                $current = $dbForPlatform->getDocument('webhooks', $webhookId, forUpdate: true);
+                $previousAttempts = $current->getAttribute('attempts', 0);
+                $attempts = $previousAttempts + 1;
+                $wasEnabled = $current->getAttribute('enabled', true);
+
+                $updatePayload = [
+                    'attempts' => $attempts,
+                    'logs' => $logs,
+                ];
+                $shouldAlert = false;
+
+                if ($attempts >= $maxAttempts) {
+                    $updatePayload['enabled'] = false;
+                    $shouldAlert = $wasEnabled && (
+                        $previousAttempts < $maxAttempts
+                        || $previousAttempts > $maxAttempts
+                    );
                 }
+
+                $updated = $dbForPlatform->updateDocument('webhooks', $webhookId, new Document($updatePayload));
+
+                return [$updated, $attempts, $shouldAlert];
+            });
+
+            if ($shouldAlert) {
+                $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $error = $logs;
