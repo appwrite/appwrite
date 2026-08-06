@@ -413,6 +413,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Older: 'それ以前',
   'Previous 7 days': '過去 7 日',
   'Previous 30 days': '過去 30 日',
+  'Toggle agent': 'エージェントの表示を切り替え',
   'New agent': '新しいエージェント',
   'Focus prompt': 'プロンプトにフォーカス',
   'New automation': '新しいオートメーション',

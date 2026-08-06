@@ -702,6 +702,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Older: 'ישן יותר',
   'Previous 7 days': '7 הימים הקודמים',
   'Previous 30 days': '30 הימים הקודמים',
+  'Toggle agent': 'פתיחה או סגירה של הסוכן',
   'New agent': 'סוכן חדש',
   'Focus prompt': 'מיקוד בפרומפט',
   'New automation': 'אוטומציה חדשה',

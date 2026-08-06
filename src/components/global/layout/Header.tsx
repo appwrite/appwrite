@@ -112,6 +112,9 @@ import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
+import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
+import { AGENT_TOGGLE_SHORTCUT_RAW } from '@/lib/assistant/agent-shortcuts'
 import { useChangelogNavBadge } from '@/hooks/use-changelog-nav-badge'
 import {
   getBlogPageUrl,
@@ -466,7 +469,11 @@ export function ConsoleHeader({
   const marketingNavLinksExternal = isMarketingPageExternal(features.marketing)
   const showCenterSearch = centerSearch && !hideSearch
   const showRightSearch = !hideSearch && !centerSearch
-  const { modKey: searchModKey } = usePlatform()
+  const { modKey: searchModKey, isMac } = usePlatform()
+  const agentToggleShortcutKeys = formatDisplayKeys(
+    AGENT_TOGGLE_SHORTCUT_RAW,
+    isMac,
+  )
   const logoColumnWidth = showMarketingNav ? 158 : 60
 
   return (
@@ -1346,7 +1353,12 @@ export function ConsoleHeader({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{headerCopy.actions.assistant}</p>
+                    <p className="flex items-center gap-1.5">
+                      <span>{headerCopy.actions.assistant}</span>
+                      <kbd className="pointer-events-none inline-flex items-center rounded bg-background/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-background">
+                        <ShortcutGlyphs keys={agentToggleShortcutKeys} />
+                      </kbd>
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               )}

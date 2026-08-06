@@ -217,6 +217,7 @@ import {
   AGENT_NEW_AUTOMATION_SHORTCUT_COMBOS,
   AGENT_NEW_SHORTCUT_COMBOS,
   AGENT_NEW_SHORTCUT_RAW,
+  AGENT_TOGGLE_SHORTCUT_COMBOS,
 } from '@/lib/assistant/agent-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
 import { ShortcutGlyphs } from '@/components/global/shared/ShortcutGlyphs'
@@ -506,6 +507,21 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     onAgentPage,
     openChat,
   ])
+
+  const onToggleAgentShortcut = useCallback(() => {
+    toggleChat()
+  }, [toggleChat])
+
+  useKeyboardShortcut(AGENT_TOGGLE_SHORTCUT_COMBOS[0], onToggleAgentShortcut, {
+    enabled: true,
+    ignoreInputs: false,
+    capture: true,
+  })
+  useKeyboardShortcut(AGENT_TOGGLE_SHORTCUT_COMBOS[1], onToggleAgentShortcut, {
+    enabled: true,
+    ignoreInputs: false,
+    capture: true,
+  })
 
   const consumePendingCreateAgent = useCallback(() => {
     if (!pendingCreateAgentRef.current) return false
