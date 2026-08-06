@@ -35,8 +35,8 @@ jobs:
         #   kind: http - the sample serves PATCH/GET /v1/policies; Hurl
         #     (policies.hurl) asserts status, content type and JSON body
         #     against the running server.
-        #   kind: cli - the sample runs to completion; bats (cli.bats)
-        #     asserts its exit code and printed output.
+        #   kind: cli - the sample runs to completion; commander
+        #     (commander.yaml) asserts its exit code and printed output.
         # Runtimes not preinstalled on ubuntu-latest come from mise (tools:)
         # or a setup action (swift, dart); python, php, ruby, go, rust and
         # dotnet use the runner's.
@@ -147,9 +147,6 @@ jobs:
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && go mod init connect-qa
             install: go mod tidy
             run: go run .
-            # fmt.Println prints struct values without field names, so the
-            # default policy pattern never appears; the min value does.
-            expect: 8 true
 
           - id: java
             kind: cli
@@ -204,7 +201,7 @@ jobs:
         with:
           install: false
 
-      - name: Install tooling via mise (hurl, bats, platform runtime)
+      - name: Install tooling via mise (hurl, commander, platform runtime)
         run: |
           mise trust
           mise install
@@ -277,16 +274,14 @@ jobs:
             --report-html artifacts/hurl \
             policies.hurl
 
-      - name: Assert the CLI output (bats)
+      - name: Assert the CLI output (commander)
         if: matrix.kind == 'cli'
         env:
           SNIPPET_CMD: ${{ matrix.run }}
-          SNIPPET_EXPECT: ${{ matrix.expect || 'min|polic' }}
-        run: |
-          mkdir -p artifacts
-          bats --print-output-on-failure \
-            --report-formatter junit --output artifacts \
-            cli.bats
+        # No --verbose: it dumps the whole environment (API key included)
+        # into the job log. Plain output already reports the failing
+        # property, and the sample's own stderr is echoed above it.
+        run: commander test commander.yaml
 
       - name: Collect logs and app source
         if: always()
