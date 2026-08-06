@@ -166,6 +166,9 @@ class Builds extends Action
         Span::add('deployment.id', $deployment->getId());
         Span::add('build.timeout', $timeout);
 
+        $cpus = 0.0;
+        $memory = 0;
+
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
         $phaseStart = $durationStart;
@@ -202,9 +205,14 @@ class Builds extends Action
         Span::add('build.runtime', $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime', ''));
         Span::add('build.version', $version);
 
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        Span::add('build.cpus', (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
-        Span::add('build.memory', (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT));
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification') ?? APP_COMPUTE_SPECIFICATION_DEFAULT] ?? null;
+        if (empty($spec)) {
+            $spec = Config::getParam('specifications')[APP_COMPUTE_SPECIFICATION_DEFAULT] ?? [];
+        }
+        $cpus = (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
+        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
+        Span::add('build.cpus', $cpus);
+        Span::add('build.memory', $memory);
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -393,101 +401,6 @@ class Builds extends Action
                 $queueForRealtime
                     ->setPayload($deployment->getArrayCopy())
                     ->trigger();
-            }
-
-            // The only build reaching this worker is the template-into-repo push
-            // above (a git *write* the jobs-service artifact system has no
-            // primitive for). With the commit pushed, hand the build to the
-            // jobs-service like any other VCS commit, via the same Deployments
-            // service the HTTP endpoints use.
-            $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-            $deployments->createFromUrl(
-                $resource,
-                $deployment,
-                $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
-                $resource->getAttribute('providerRootDirectory', ''),
-            );
-
-            Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
-        } catch (\Throwable $th) {
-            if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
-                $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
-
-                return;
-            }
-
-            $isUserFacing = $th instanceof BuildException;
-            $message = $isUserFacing
-                ? $th->getMessage()
-                : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
-
-            // Record user-facing failures on the span here, since they're not
-            // re-raised to the harness (which records internal errors via setError).
-            if ($isUserFacing) {
-                Span::add('build.exception.type', $th->getType());
-                Span::add('build.exception.message', $th->getMessage());
-            }
-
-            // Color message red
-            if (! \str_contains($message, '')) {
-                $message = '[31m' . $message;
-            }
-
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
-
-            // Append error to whatever build logs were already streamed
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $previousLogs = $deployment->getAttribute('buildLogs', '');
-            if (! empty($previousLogs)) {
-                $message = $previousLogs . "\n" . $message;
-            }
-
-            $endTime = DateTime::now();
-            $durationEnd = \microtime(true);
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment->setAttribute('status', 'failed');
-            Span::add('deployment.status', 'failed');
-            Span::add('build.duration', $deployment->getAttribute('buildDuration'));
-
-            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($message));
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
-                'buildDuration' => $deployment->getAttribute('buildDuration'),
-                'status' => 'failed',
-                'buildLogs' => $this->truncateBuildLogs($message),
-            ]));
-
-            $resource = $this->updateLatestDeployment($dbForProject, $resource);
-
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
-            $this->runGitAction('failed', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
-
-            // Let the worker harness record internal errors via the span and logger.
-            if (! $isUserFacing) {
-                throw $th;
-            }
-        } finally {
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
-            $this->sendUsage(
-                resource: $resource,
-                deployment: $deployment,
-                project: $project,
-                usage: $usage,
-                publisherForUsage: $publisherForUsage
-            );
-        }
-    }
-
-    protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
-    {
         BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
     }
 
