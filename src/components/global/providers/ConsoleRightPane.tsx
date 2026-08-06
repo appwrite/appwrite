@@ -117,7 +117,9 @@ export function ConsoleRightPane() {
         onMouseDown={handleMouseDown}
         style={resizeHandleOnInlineStartEdgeStyle()}
         className={cn(
-          'absolute top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+          // Above the agent composer (`relative z-10`) so the border hover
+          // highlight is not covered along the prompt section.
+          'absolute top-0 z-20 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
           isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
         )}
         aria-hidden
