@@ -348,6 +348,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
+      editorconfig-checker:
+        specifier: 6.1.1
+        version: 6.1.1
       eslint-plugin-react-hooks:
         specifier: ^7.0.1
         version: 7.1.1(eslint@9.39.2(jiti@2.7.0))
@@ -3643,6 +3646,11 @@ packages:
 
   earcut@3.2.0:
     resolution: {integrity: sha512-qy0wTgkOKsKC0cHVd4cKFfaO5u7egzs0F2bQ/9l5Pvm0EJM4XDdUMFoCJrxmWc2Fc3sRFa8l6gds8tx+6BcN8g==}
+
+  editorconfig-checker@6.1.1:
+    resolution: {integrity: sha512-kiOb6qaWpMNt7Z/43ba0Pa1Inhr2/t9nKbvEKtCeXJ5AesztoM9AgLOOQVB4QUv/nGjgz3xkbx4pcogVRD2NWw==}
+    engines: {node: '>=20.11.0'}
+    hasBin: true
 
   electron-to-chromium@1.5.383:
     resolution: {integrity: sha512-I2484/KkAvl8lm9VyjH2JnbOIV0d/UCqT7gbzs6l+o6Vmn9wgB66uVcKX+Vk6HrXtY6fbWTOEXuv8waDTuFNCw==}
@@ -8890,6 +8898,8 @@ snapshots:
   draco3d@1.5.7: {}
 
   earcut@3.2.0: {}
+
+  editorconfig-checker@6.1.1: {}
 
   electron-to-chromium@1.5.383: {}
 
