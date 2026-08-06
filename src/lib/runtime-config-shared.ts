@@ -21,6 +21,8 @@ export interface RuntimeConfig {
   userVerification: string
   /** Override for the profile's cookieBanner feature ('' = profile default). */
   cookieBanner: string
+  /** Override for the profile's blogDrafts feature ('' = profile default). */
+  blogDrafts: string
 }
 
 /**
@@ -103,6 +105,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
     userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
     cookieBanner: read('VITE_CONSOLE_COOKIE_BANNER'),
+    blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
   }
 }
 

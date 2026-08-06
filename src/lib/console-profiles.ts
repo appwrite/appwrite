@@ -84,6 +84,12 @@ export type ConsoleProfileFeatures = {
    * When false, consent is treated as granted and tracking scripts may load.
    */
   cookieBanner: boolean
+  /**
+   * Draft blog posts (`draft: true` frontmatter). When true, the blog index
+   * lists every draft above "Explore by topic" and draft post pages resolve
+   * instead of 404ing. Preview-only: keep off for public deployments.
+   */
+  blogDrafts: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -123,6 +129,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   firewall: 'Firewall',
   affiliates: 'Affiliates',
   cookieBanner: 'Cookie banner',
+  blogDrafts: 'Blog drafts',
 }
 
 export type ConsoleProfile = {
@@ -170,6 +177,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       firewall: true,
       affiliates: true,
       cookieBanner: true,
+      blogDrafts: false,
     },
   },
   'self-hosted': {
@@ -209,6 +217,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       firewall: false,
       affiliates: false,
       cookieBanner: false,
+      blogDrafts: false,
     },
   },
 }
@@ -387,7 +396,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 
 /**
  * Per-feature overrides from runtime env vars (e.g.
- * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER), applied on top
+ * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
+ * VITE_CONSOLE_BLOG_DRAFTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -402,6 +412,10 @@ function applyEnvFeatureOverrides(
   const cookieBanner = parseEnvFeatureOverride(config.cookieBanner)
   if (cookieBanner !== null) {
     next = { ...next, cookieBanner }
+  }
+  const blogDrafts = parseEnvFeatureOverride(config.blogDrafts)
+  if (blogDrafts !== null) {
+    next = { ...next, blogDrafts }
   }
   return next
 }
