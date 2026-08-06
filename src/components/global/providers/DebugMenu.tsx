@@ -1892,6 +1892,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Cookie banner',
+                'Show the locale-gated cookie consent banner and footer cookie settings.',
+                'cookieBanner',
+                profileId,
+                features.cookieBanner,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Firewall',
                 'Show the project Firewall section, routes, rules, analytics, and logs.',
                 'firewall',
@@ -2329,6 +2337,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMySQL,
     features.nativeDbsMongo,
     features.userVerification,
+    features.cookieBanner,
     features.oauthApps,
     features.oauth2Server,
     features.orgApiKeys,

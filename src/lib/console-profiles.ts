@@ -79,6 +79,11 @@ export type ConsoleProfileFeatures = {
   firewall: boolean
   /** Account affiliates program (referral codes, rewards, credit claims) */
   affiliates: boolean
+  /**
+   * Cookie consent banner (locale-gated GDPR prompt, footer cookie settings).
+   * When false, consent is treated as granted and tracking scripts may load.
+   */
+  cookieBanner: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -117,6 +122,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   userVerification: 'User verification',
   firewall: 'Firewall',
   affiliates: 'Affiliates',
+  cookieBanner: 'Cookie banner',
 }
 
 export type ConsoleProfile = {
@@ -163,6 +169,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       userVerification: true,
       firewall: true,
       affiliates: true,
+      cookieBanner: true,
     },
   },
   'self-hosted': {
@@ -201,6 +208,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       userVerification: false,
       firewall: false,
       affiliates: false,
+      cookieBanner: false,
     },
   },
 }
@@ -379,17 +387,23 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 
 /**
  * Per-feature overrides from runtime env vars (e.g.
- * VITE_CONSOLE_USER_VERIFICATION), applied on top of the canonical profile.
- * A stored debug override still wins.
+ * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER), applied on top
+ * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
   features: ConsoleProfileFeatures,
 ): ConsoleProfileFeatures {
-  const userVerification = parseEnvFeatureOverride(
-    getRuntimeConfig().userVerification,
-  )
-  if (userVerification === null) return features
-  return { ...features, userVerification }
+  const config = getRuntimeConfig()
+  let next = features
+  const userVerification = parseEnvFeatureOverride(config.userVerification)
+  if (userVerification !== null) {
+    next = { ...next, userVerification }
+  }
+  const cookieBanner = parseEnvFeatureOverride(config.cookieBanner)
+  if (cookieBanner !== null) {
+    next = { ...next, cookieBanner }
+  }
+  return next
 }
 
 export function getActiveProfile(): ConsoleProfile {

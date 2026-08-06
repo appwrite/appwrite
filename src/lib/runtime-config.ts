@@ -38,6 +38,7 @@ const EMPTY_CONFIG: RuntimeConfig = {
   sentryDsn: '',
   plausibleScriptSrc: '',
   userVerification: '',
+  cookieBanner: '',
 }
 
 /**

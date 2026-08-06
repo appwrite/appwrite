@@ -77,6 +77,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override post-signup email verification',
   },
   {
+    key: 'VITE_CONSOLE_COOKIE_BANNER',
+    group: 'Runtime',
+    description: 'Override cookie consent banner',
+  },
+  {
     key: 'VITE_CONSTRUCTION',
     group: 'Other',
     description: 'Vite DEV header construction bar (false/0/off to hide; unset = on)',
@@ -209,6 +214,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_SENTRY_DSN: isNonEmpty(config.sentryDsn),
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
+    VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
   }
 }
 
