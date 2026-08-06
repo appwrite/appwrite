@@ -213,7 +213,12 @@ trait Deployment
                     $activate = true;
                 }
 
-                [$owner, $repositoryName] = $resolveOwnerAndName($providerRepositoryId);
+                $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+                try {
+                    $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
 
                 $isAuthorized = !$external;
 
