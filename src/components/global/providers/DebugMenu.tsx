@@ -138,7 +138,17 @@ import {
 } from '@/lib/debug-menu-position'
 import { getEnglishCatalog } from '@/lib/i18n'
 import { sendSentryDebugTestError } from '@/lib/sentry/init-client'
+import {
+  COMMUNITY_SUPPORT_REMINDER_MS,
+  COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+} from '@/lib/community/support-prompt'
 import { toast } from 'sonner'
+
+const COMMUNITY_SUPPORT_REMINDER_DAYS = Math.round(
+  COMMUNITY_SUPPORT_REMINDER_MS / (24 * 60 * 60 * 1000),
+)
+/** Debug-only cadence note for the community support wizard. */
+const COMMUNITY_SUPPORT_WIZARD_CADENCE = `Shows the "A note from the team" wizard after ${COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD} unique console days, then again every ~${COMMUNITY_SUPPORT_REMINDER_DAYS} days until the user picks an action.`
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 /** Debug menu stays English + LTR regardless of app language (developer tooling). */
@@ -191,6 +201,8 @@ interface MenuItem {
   onResetToDefault?: () => void
   description?: string
   submenu?: MenuItem[]
+  /** Optional note shown at the top of this item's submenu list. */
+  submenuNote?: string
   /** Opens the profile comparison table instead of a submenu list. */
   submenuVariant?:
     | 'profileComparison'
@@ -346,7 +358,7 @@ function DebugMenuSwitchRow({
           )}
         </div>
         {item.description && (
-          <div className="mt-0.5 text-[11px] text-[var(--network-globe-edge)]/80">
+          <div className="mt-0.5 whitespace-pre-line text-[11px] text-[var(--network-globe-edge)]/80">
             {item.description}
           </div>
         )}
@@ -466,7 +478,7 @@ function renderDebugSubmenuItemRow(
         <span className="block font-medium">{item.label}</span>
         {item.description && (
           <span
-            className="mt-0.5 block break-all text-[11px] font-normal opacity-80"
+            className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
             title={item.description}
           >
             {item.description}
@@ -568,6 +580,8 @@ type ResolvedSubmenu = {
   /** Menu key to return to on back; null opens the root debug list. */
   parentSubmenuKey: string | null
   submenuVariant?: MenuItem['submenuVariant']
+  /** Optional note shown above the submenu item list. */
+  note?: string
 }
 
 function menuItemHasSubmenu(item: MenuItem): boolean {
@@ -608,6 +622,7 @@ function resolveMenuItemSubmenu(
         items: item.submenu,
         parentSection: sectionTitle,
         parentSubmenuKey,
+        note: item.submenuNote,
       }
     }
   }
@@ -1762,25 +1777,33 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               },
               {
                 label: 'Community support',
-                description: overrides.previewCommunitySupportWizard
-                  ? 'Previewing'
-                  : 'Force-show the wizard',
-                active: overrides.previewCommunitySupportWizard,
-                onClick: () => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    previewCommunitySupportWizard: true,
-                  }))
-                  setDebugOverride('previewCommunitySupportWizard', true)
-                  setIsOpen(false)
-                },
+                description: 'Wizard preview and X share examples',
                 icon: <HeartHandshake className="h-3 w-3" />,
-              },
-              {
-                label: 'Community support X examples',
-                description: 'Review all Cloud and self-hosted share drafts',
-                icon: <MessageSquareQuote className="h-3 w-3" />,
-                submenuVariant: 'communityShareExamples',
+                submenuNote: COMMUNITY_SUPPORT_WIZARD_CADENCE,
+                submenu: [
+                  {
+                    label: 'Preview wizard',
+                    description: overrides.previewCommunitySupportWizard
+                      ? 'Previewing'
+                      : 'Force-show the fullscreen wizard',
+                    active: overrides.previewCommunitySupportWizard,
+                    onClick: () => {
+                      setOverrides((prev) => ({
+                        ...prev,
+                        previewCommunitySupportWizard: true,
+                      }))
+                      setDebugOverride('previewCommunitySupportWizard', true)
+                      setIsOpen(false)
+                    },
+                    icon: <HeartHandshake className="h-3 w-3" />,
+                  },
+                  {
+                    label: 'X share examples',
+                    description: 'Review all Cloud and self-hosted share drafts',
+                    icon: <MessageSquareQuote className="h-3 w-3" />,
+                    submenuVariant: 'communityShareExamples',
+                  },
+                ],
               },
             ],
           },
@@ -2076,7 +2099,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createDebugFeatureFlagItem(
                 'Preview community support wizard',
-                'Force-show the skippable community support fullscreen wizard.',
+                `Force-show the skippable "A note from the team" wizard. ${COMMUNITY_SUPPORT_WIZARD_CADENCE}`,
                 'previewCommunitySupportWizard',
                 overrides.previewCommunitySupportWizard,
                 (checked) => {
@@ -2854,6 +2877,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuEnvPanel />
               ) : (
                 <div className="space-y-0.5">
+                  {currentSubmenu.note ? (
+                    <p className="mb-2 px-3 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
+                      {currentSubmenu.note}
+                    </p>
+                  ) : null}
                   {isFeatureFlagsSubmenu &&
                   featureFlagsSearch.trim() &&
                   filteredFeatureFlagItems.every(
@@ -2992,7 +3020,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                               </span>
                               {item.description ? (
                                 <span
-                                  className="mt-0.5 block break-all text-[11px] font-normal opacity-80"
+                                  className="mt-0.5 block whitespace-pre-line break-all text-[11px] font-normal opacity-80"
                                   title={item.description}
                                 >
                                   {item.description}
