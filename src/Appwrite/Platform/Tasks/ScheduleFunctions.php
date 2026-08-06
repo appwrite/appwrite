@@ -49,6 +49,16 @@ class ScheduleFunctions extends ScheduleBase
         return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
     }
 
+    /**
+     * Spread window, in seconds, for a given schedule. The default applies
+     * _APP_FUNCTIONS_SCHEDULE_SPREAD to every schedule; override to scope
+     * or vary the window per schedule (e.g. by project or plan).
+     */
+    protected function spreadWindow(array $schedule, Database $dbForPlatform): int
+    {
+        return (int) System::getEnv('_APP_FUNCTIONS_SCHEDULE_SPREAD', '0');
+    }
+
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
@@ -92,7 +102,7 @@ class ScheduleFunctions extends ScheduleBase
 
             $promiseStart = \time(); // in seconds
             $executionStart = $nextDate->getTimestamp(); // in seconds
-            $offset = self::spreadOffset($schedule['resourceId'], $spread);
+            $offset = self::spreadOffset($schedule['resourceId'], $this->spreadWindow($schedule, $dbForPlatform));
             $delay = $executionStart - $promiseStart + $offset; // Time to wait from now until execution needs to be queued
 
             if (!isset($delayedExecutions[$delay])) {
