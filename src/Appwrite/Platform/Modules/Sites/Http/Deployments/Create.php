@@ -232,6 +232,7 @@ class Create extends Action
 
                 if (!$deployment->isEmpty()) {
                     if (
+                        // Resume / completed short-circuit must not cross resources.
                         $deployment->getAttribute('resourceId') !== $site->getId()
                         || $deployment->getAttribute('resourceType') !== 'sites'
                     ) {
