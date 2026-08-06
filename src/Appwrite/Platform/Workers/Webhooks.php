@@ -162,8 +162,10 @@ class Webhooks extends Action
         $error = null;
 
         if (!empty($curlError) || $statusCode >= 400) {
-            $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
-            $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
+            // Returns the post-increment document from a locked read, so each
+            // concurrent worker observes a distinct attempts value even when
+            // they race at the threshold.
+            $webhook = $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $attempts = $webhook->getAttribute('attempts');
 
             $logs = '';
@@ -182,11 +184,9 @@ class Webhooks extends Action
 
             $updatePayload = ['logs' => $logs];
 
-            // increaseDocumentAttribute is atomic, so concurrent failures get
-            // distinct attempt counts. Always disable once at/over the limit,
-            // but alert only on the exact threshold so a race cannot enqueue
-            // duplicate "paused" notices. Re-enable resets attempts
-            // (see Webhooks\Update).
+            // Always disable once at/over the limit, but alert only on the
+            // exact threshold so a race cannot enqueue duplicate "paused"
+            // notices. Re-enable resets attempts (see Webhooks\Update).
             $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
             if ($attempts >= $maxAttempts) {
                 $webhook->setAttribute('enabled', false);
