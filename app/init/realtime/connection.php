@@ -295,7 +295,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
                 $user = new User([]);
             }
         }

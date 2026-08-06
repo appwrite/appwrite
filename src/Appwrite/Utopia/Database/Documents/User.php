@@ -174,4 +174,22 @@ class User extends Document
 
         return false;
     }
+
+    /**
+     * Check that a session exists on the user and has not expired.
+     *
+     * Used by JWT authentication, which binds to a session ID rather than a
+     * session secret.
+     */
+    public function sessionActive(string $sessionId): bool
+    {
+        $session = $this->find('$id', $sessionId, 'sessions');
+
+        if (empty($session)) {
+            return false;
+        }
+
+        return $session->isSet('expire')
+            && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
+    }
 }

@@ -542,10 +542,8 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                    $user = new User([]);
-                }
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+                $user = new User([]);
             }
         }
 
