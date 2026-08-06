@@ -9,6 +9,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Span\Span;
+use Utopia\System\System;
 
 /**
  * ScheduleFunctions
@@ -36,10 +37,24 @@ class ScheduleFunctions extends ScheduleBase
         return RESOURCE_TYPE_FUNCTIONS;
     }
 
+    /**
+     * Deterministic per-function offset, in seconds, within [0, $window).
+     *
+     * Schedules that share a cron slot (everyone runs `0 * * * *`) are spread
+     * across the window instead of all being enqueued in the same second,
+     * while each function keeps a stable slot so run intervals stay exact.
+     */
+    public static function spreadOffset(string $resourceId, int $window): int
+    {
+        return $window <= 1 ? 0 : \abs(\crc32($resourceId)) % $window;
+    }
+
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
+
+        $spread = (int) System::getEnv('_APP_FUNCTIONS_SCHEDULE_SPREAD', '0');
 
         // TODO: Track the last enqueue timestamp to subtract ENQUEUE_TIMER drift from
         // the time frame. Previously this used $this->lastEnqueueUpdate as a property
@@ -47,7 +62,7 @@ class ScheduleFunctions extends ScheduleBase
         $enqueueDiff = 0;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
-        Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff)");
+        Console::log("Enqueue tick: started at: $time (with diff $enqueueDiff, spread {$spread}s)");
 
         $total = 0;
 
@@ -77,13 +92,16 @@ class ScheduleFunctions extends ScheduleBase
 
             $promiseStart = \time(); // in seconds
             $executionStart = $nextDate->getTimestamp(); // in seconds
-            $delay = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
+            $offset = self::spreadOffset($schedule['resourceId'], $spread);
+            $delay = $executionStart - $promiseStart + $offset; // Time to wait from now until execution needs to be queued
 
             if (!isset($delayedExecutions[$delay])) {
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
+            // nextDate carries the offset so enqueue-delay telemetry measures
+            // lateness against the intended (spread) enqueue time.
+            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate->modify("+{$offset} seconds")];
         }
 
         foreach ($delayedExecutions as $delay => $schedules) {
