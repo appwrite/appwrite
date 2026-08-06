@@ -875,70 +875,70 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Agent",
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/actions",
     "title": "Actions",
     "description": "Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/add-memory",
     "title": "Add memory",
     "description": "Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/add-model",
     "title": "Add a custom model",
     "description": "Register a provider API key so the Appwrite Agent can use your own LLM credentials.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/automations",
     "title": "Automations",
     "description": "Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/chat",
     "title": "Chat with the Agent",
     "description": "Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/connect-mcp",
     "title": "Connect Appwrite MCP",
     "description": "Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/conversations",
     "title": "Conversations",
-    "description": "Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.",
+    "description": "Learn how Appwrite Agent conversations work, including context, attachments, voice, queueing, and thread management.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/create-automation",
     "title": "Create an automation",
     "description": "Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/mcp",
     "title": "MCP connections",
     "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/memory",
@@ -952,14 +952,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Models",
     "description": "Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/quick-start",
     "title": "Start with Agent",
     "description": "Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/ai",
@@ -2643,7 +2643,28 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Actions",
     "description": "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/firewall/allowlist-ips",
+    "title": "Allowlist trusted IP addresses",
+    "description": "Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/firewall/block-countries",
+    "title": "Block traffic by country",
+    "description": "Create Appwrite Firewall deny rules that block project API traffic from specific countries.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/firewall/challenge-bots",
+    "title": "Challenge automated traffic",
+    "description": "Create Appwrite Firewall challenge rules that verify suspected bots before their requests continue.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/conditions",
@@ -2651,20 +2672,6 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn how Firewall conditions match requests by hostname, path, method, headers, query parameters, IP, client, and location in Appwrite.",
     "layout": "article",
     "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/firewall/create",
-    "title": "Create a rule",
-    "description": "Create an Appwrite Firewall rule with resource scope, conditions, action, and priority from the Console wizard.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/firewall/delete",
-    "title": "Delete a rule",
-    "description": "Remove an Appwrite Firewall rule from a project and understand the impact on traffic.",
-    "layout": "article",
-    "readingTimeMinutes": 2
   },
   {
     "slug": "products/firewall/monitor",
@@ -2688,6 +2695,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/firewall/rate-limit-auth",
+    "title": "Rate limit authentication traffic",
+    "description": "Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "products/firewall/rules",
     "title": "Rules",
     "description": "Learn what Appwrite Firewall rules contain, how enabled state works, and how plan limits apply.",
@@ -2702,9 +2716,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 3
   },
   {
-    "slug": "products/firewall/update",
-    "title": "Update a rule",
-    "description": "Change an existing Appwrite Firewall rule's name, scope, conditions, action settings, priority, or enabled state.",
+    "slug": "products/firewall/site-maintenance",
+    "title": "Redirect a site for maintenance",
+    "description": "Create Appwrite Firewall rules that send visitors of a site to a maintenance page and back.",
     "layout": "article",
     "readingTimeMinutes": 2
   },

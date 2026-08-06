@@ -310,20 +310,28 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Guides',
         items: [
           {
-            label: 'Create a rule',
-            href: '/docs/products/firewall/create',
+            label: 'Block traffic by country',
+            href: '/docs/products/firewall/block-countries',
           },
           {
-            label: 'Update a rule',
-            href: '/docs/products/firewall/update',
+            label: 'Allowlist trusted IPs',
+            href: '/docs/products/firewall/allowlist-ips',
+          },
+          {
+            label: 'Rate limit auth traffic',
+            href: '/docs/products/firewall/rate-limit-auth',
+          },
+          {
+            label: 'Challenge automated traffic',
+            href: '/docs/products/firewall/challenge-bots',
+          },
+          {
+            label: 'Redirect for maintenance',
+            href: '/docs/products/firewall/site-maintenance',
           },
           {
             label: 'Monitor traffic',
             href: '/docs/products/firewall/monitor',
-          },
-          {
-            label: 'Delete a rule',
-            href: '/docs/products/firewall/delete',
           },
         ],
       },

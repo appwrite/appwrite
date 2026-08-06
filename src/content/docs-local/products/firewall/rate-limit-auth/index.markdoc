@@ -1,0 +1,51 @@
+---
+layout: article
+title: Rate limit authentication traffic
+description: Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.
+difficulty: beginner
+readtime: 5
+---
+
+A rate limit rule sets a request quota for matching traffic. Use it on authentication paths to slow brute-force attacks without blocking normal users.
+
+This guide limits session creation. Each client IP address can send `10` matching requests per `60` seconds. Requests over the quota receive a `429` response with a `Retry-After` header.
+
+# Create the rate limit rule {% #create-the-rate-limit-rule %}
+
+{% only_dark %}
+![Create firewall rule wizard with rate limit settings](/images/docs/firewall/dark/rate-limit-auth.avif)
+{% /only_dark %}
+{% only_light %}
+![Create firewall rule wizard with rate limit settings](/images/docs/firewall/rate-limit-auth.avif)
+{% /only_light %}
+
+1. Open **Firewall** in your project.
+2. Click **Create rule**.
+3. Enter a **Rule name** (for example `Rate limit sign-in attempts`).
+4. Keep **Resource type** set to **API**.
+5. Under conditions, set **Path** **Starts with** `/v1/account/sessions`.
+6. Set **Action** to **Rate limit**.
+7. Set **Request limit** to `10`.
+8. Keep **Interval (seconds)** at `60`.
+9. Keep **Limit by** set to **IP address**.
+10. Review the impact preview, then click **Create rule**.
+
+# Choose the quota {% #choose-the-quota %}
+
+Size the quota against the traffic you see in the impact preview. A quota below normal client behavior creates false positives. A quota far above attack speed gives no protection.
+
+The quota uses a fixed window that aligns to the interval. Counts reset at each interval boundary. The `Retry-After` header reports the seconds until the current window resets.
+
+Set **Limit by** to **User ID** to count the quota per authenticated user instead of per client IP address. Requests without an authenticated user skip the rule, and later rules still run for them. See [Rate limit](/docs/products/firewall/actions#rate-limit).
+
+# Verify the rule {% #verify-the-rule %}
+
+1. Send more than `10` matching requests in one minute with a client SDK or an API key.
+2. Confirm the requests over the quota receive a `429` response with a `Retry-After` header.
+3. Open **Firewall** and confirm the **Rate limited** series rises in the traffic overview.
+
+A matching request under the quota is allowed, and rule evaluation stops for that request. Under-quota requests count under **Passed**, not under **Rate limited**.
+
+{% arrow_link href="/docs/products/firewall/actions" %}
+Actions
+{% /arrow_link %}

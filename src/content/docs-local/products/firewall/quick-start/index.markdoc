@@ -18,7 +18,14 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
 
 # Create a deny rule {% #create-a-deny-rule %}
 
-1. Click **Create rule** (or the create action for the **API** tab).
+{% only_dark %}
+![Create firewall rule wizard with a deny rule](/images/docs/firewall/dark/create-rule.avif)
+{% /only_dark %}
+{% only_light %}
+![Create firewall rule wizard with a deny rule](/images/docs/firewall/create-rule.avif)
+{% /only_light %}
+
+1. Click **Create rule**.
 2. Enter a **Rule name** (for example `Deny staging admin path`).
 3. Leave **Resource type** set to **API** so the rule applies to project API traffic (`/v1/...`).
 4. Under conditions, set:
@@ -34,17 +41,24 @@ If you do not see **Firewall**, confirm your Console profile includes the featur
 Path conditions use the URL path only. Query strings are ignored. Prefer **starts with** for API prefixes.
 {% /info %}
 
-See [Create a rule](/docs/products/firewall/create) for functions and sites scopes, rate limits, and redirects.
+See the [guides](/docs/products/firewall#guides) for country blocks, IP allowlists, rate limits, challenges, and redirects.
 
 # Confirm the rule {% #confirm-the-rule %}
 
-1. On the Firewall page, open the **API** tab if it is not already selected.
-2. Find your rule in the list. It should show **Deny** and **Enabled**.
-3. Optionally open the rule to update conditions, priority, scope, or enabled state. See [Update a rule](/docs/products/firewall/update).
+{% only_dark %}
+![Firewall rules list with the new deny rule](/images/docs/firewall/dark/rules-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Firewall rules list with the new deny rule](/images/docs/firewall/rules-list.avif)
+{% /only_light %}
+
+1. On the Firewall page, make sure the resource selector above the rules list shows **API**.
+2. Find your rule in the list. It should show **Deny** and its status toggle should be on.
+3. Optionally open the rule's actions menu and choose **Update** to change conditions, priority, scope, or enabled state.
 
 # Monitor traffic {% #monitor-traffic %}
 
-The Firewall overview chart shows overall request volume (**Passed**) plus Firewall outcomes: denied, challenged, rate-limited, and redirected. After traffic hits your deny rule, the denied series should rise when matching API requests arrive.
+The Firewall overview chart shows requests that got through (**Passed**) plus Firewall outcomes: denied, challenged, rate-limited, and redirected. After traffic hits your deny rule, the denied series should rise when matching API requests arrive.
 
 {% info title="Testing from the Console" %}
 Firewall does not block Console access. To verify a rule, send a request with a client SDK or API key.

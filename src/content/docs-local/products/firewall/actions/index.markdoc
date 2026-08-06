@@ -52,6 +52,7 @@ Behavior:
 
 - The Console creates challenge rules with the platform default challenge type. The API also accepts an optional `challengeType` parameter.
 - Like other actions, a matching challenge rule stops further rule evaluation for that request.
+- The interactive challenge page is served for **function** and **site** traffic when a browser navigates to the resource. **API**-scoped challenge rules reject matching requests with a `403` challenge-required error, since API clients cannot solve an interactive challenge. Prefer deny or rate limit for API scopes unless your clients handle the challenge flow.
 
 Challenged requests appear in [traffic overview](/docs/products/firewall/monitor) under the **Challenged** series.
 
@@ -62,15 +63,16 @@ Rate limit throttles matching requests that exceed a quota. The quota is counted
 | Setting | Purpose | Limits |
 |---------|---------|--------|
 | **Request limit** | Maximum matching requests allowed in the interval | `1` to `1000000` (Console default `100`) |
-| **Interval (seconds)** | Sliding window length for the quota | `1` to `86400` (Console default `60`) |
-| **Limit by** | What the quota is bucketed by: `ip` counts per client IP, `userId` counts per authenticated user | `ip` or `userId` (Console default `ip`) |
+| **Interval (seconds)** | Length of the fixed counting window for the quota | `1` to `86400` (Console default `60`) |
+| **Limit by** | What the quota is bucketed by: **IP address** counts per client IP, **User ID** counts per authenticated user | `ip` or `userId` (Console default `ip`) |
 
 Example: limit `100` with interval `60` and **Limit by** `ip` allows up to 100 matching requests per minute from each client IP for that rule. Choose `userId` instead to enforce the quota per authenticated user regardless of the IP they connect from.
 
-When **Limit by** is set to `userId`, Appwrite reads the authenticated user from the `x-appwrite-user-jwt` request header, which must contain a valid user JWT. Requests that reach a `userId` rate limit rule without this header cannot be attributed to a user and are not counted against the per-user quota, so pair the rule with conditions (or an earlier deny rule) if unauthenticated traffic should be handled separately.
+When **Limit by** is set to `userId`, the quota is counted against the request's authenticated user. For **API** traffic, that is the user behind the request's session or JWT. For **function** and **site** traffic, the user is resolved from the `x-appwrite-user-jwt` request header, which must contain a valid user JWT. Requests that cannot be attributed to a user skip the rule entirely (later rules still run for them), so pair the rule with conditions or an earlier rule if unauthenticated traffic should be handled separately.
 
 Important behaviors:
 
+- The quota uses a fixed window aligned to the interval: counts reset at each interval boundary, and `Retry-After` reports the seconds until the current window resets.
 - A request that **matches** a rate limit rule and is **under** the quota is allowed, and **later rules are still skipped** (same stop-on-match behavior as bypass).
 - A request **over** the quota receives `429` and a `Retry-After` header.
 - If the rate limiter backend fails, Appwrite **fails open** (allows the request) so a limiter outage does not block traffic.
@@ -88,6 +90,6 @@ Redirect sends matching clients to another URL without running later Firewall ru
 
 Use redirects for maintenance pages, deprecated endpoints, or moving traffic off a path without denying it.
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% arrow_link href="/docs/products/firewall/rate-limit-auth" %}
+Rate limit authentication traffic
 {% /arrow_link %}

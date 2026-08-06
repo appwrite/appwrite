@@ -33,9 +33,16 @@ Use disable when you want to pause a rule without deleting it (for example durin
 
 # Console layout {% #console-layout %}
 
-The Firewall page groups rules by resource scope tabs (**API**, **Functions**, **Sites**). Each tab lists rules for that scope. Function and site rules can be grouped by the target resource.
+{% only_dark %}
+![Firewall rules list in the Console](/images/docs/firewall/dark/rules-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Firewall rules list in the Console](/images/docs/firewall/rules-list.avif)
+{% /only_light %}
 
-Empty states differ by tab: API rules protect project API traffic; function and site rules target a selected resource's public traffic. See [Resource scopes](/docs/products/firewall/scopes).
+The Firewall page filters rules with a resource selector above the list. The **Project** group holds the **API** scope, and each function and site in the project appears under its own **Functions** or **Sites** group. Selecting a function or site shows only the rules for that resource.
+
+Each row shows the rule's status toggle, name, action, priority, conditions, and last update. Use the status toggle to enable or disable a rule directly from the list, or open the row's actions menu to update or delete it. See [Resource scopes](/docs/products/firewall/scopes).
 
 # Plan limits {% #plan-limits %}
 
@@ -45,8 +52,9 @@ Firewall rule limits are **per project** and depend on your organization plan:
 |------|------------------:|
 | Free (Starter) | 2 |
 | Pro | 50 |
+| Scale | 50 |
 
-Creating a rule is blocked when you reach the limit until you [delete a rule](/docs/products/firewall/delete) or [upgrade your plan](/docs/advanced/platform/billing). Disabled rules count toward the same limit.
+Creating a rule is blocked when you reach the limit until you delete a rule or [upgrade your plan](/docs/advanced/platform/billing). Delete a rule from its actions menu in the rules list. Disabled rules count toward the same limit.
 
 The Console shows current usage next to the Firewall title when a limit applies.
 
@@ -56,6 +64,6 @@ Firewall API scopes are `wafRules.read` and `wafRules.write`. On Appwrite Cloud 
 
 When organization roles are disabled, all organization members can manage rules where the feature is available.
 
-{% arrow_link href="/docs/products/firewall/create" %}
-Create a rule
+{% arrow_link href="/docs/products/firewall/quick-start" %}
+Quick start
 {% /arrow_link %}
