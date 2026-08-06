@@ -18,6 +18,8 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
@@ -32,16 +34,50 @@ Http::init()
     ->inject('request')
     ->inject('response')
     ->inject('authorization')
-    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
+    ->inject('dbForPlatform')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization, Database $dbForPlatform, Database $dbForProject, string $mode) {
         $response->setUser($user);
         $request->setUser($user);
 
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
-            && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
+            && ! $project->getAttribute('apis', [])['graphql']
+            && ! ($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
+        }
+
+        // Update project last activity
+        if ($project->getId() !== 'console') {
+            $accessedAt = $project->getAttribute('accessedAt', 0);
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime, -APP_PROJECT_ACCESS)) > $accessedAt) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => DateTime::now(),
+                ])));
+            }
+        }
+
+        // Update user last activity
+        if (! empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
+            $accessedAt = $user->getAttribute('accessedAt', 0);
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime, -APP_USER_ACCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
+                    $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt'),
+                    ]));
+                } else {
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt'),
+                    ])));
+                }
+            }
         }
     });
 
@@ -60,7 +96,7 @@ Http::get('/v1/graphql')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_ANY,
-            )
+            ),
         ]
     ))
     ->label('abuse-limit', 60)
@@ -77,11 +113,11 @@ Http::get('/v1/graphql')
             'query' => $query,
         ];
 
-        if (!empty($operationName)) {
+        if (! empty($operationName)) {
             $query['operationName'] = $operationName;
         }
 
-        if (!empty($variables)) {
+        if (! empty($variables)) {
             $query['variables'] = \json_decode($variables, true);
         }
 
@@ -106,11 +142,11 @@ Http::post('/v1/graphql/mutation')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_ANY,
-            )
+            ),
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON, 'description' => 'The query or queries to execute.', 'optional' => false],
         ],
     ))
     ->label('abuse-limit', 60)
@@ -157,11 +193,11 @@ Http::post('/v1/graphql')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_ANY,
-            )
+            ),
         ],
         type: MethodType::GRAPHQL,
         additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+            'query' => ['default' => [], 'validator' => new JSON, 'description' => 'The query or queries to execute.', 'optional' => false],
         ],
     ))
     ->label('abuse-limit', 60)
@@ -197,10 +233,6 @@ Http::post('/v1/graphql')
 /**
  * Execute a GraphQL request
  *
- * @param GQLSchema $schema
- * @param Adapter $promiseAdapter
- * @param array $query
- * @return array
  * @throws Exception
  */
 function execute(
@@ -212,7 +244,7 @@ function execute(
     $maxComplexity = System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
     $maxDepth = System::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
-    if (!empty($query) && !isset($query[0])) {
+    if (! empty($query) && ! isset($query[0])) {
         $query = [$query];
     }
     if (empty($query)) {
@@ -255,7 +287,7 @@ function execute(
     }
 
     $output = [];
-    $wg = new WaitGroup();
+    $wg = new WaitGroup;
     $wg->add();
     $promiseAdapter->all($promises)->then(
         function (array $results) use (&$output, &$wg, $flags) {
@@ -273,9 +305,6 @@ function execute(
 
 /**
  * Parse an "application/graphql" type request
- *
- * @param Request $request
- * @return array
  */
 function parseGraphql(Request $request): array
 {
@@ -284,10 +313,6 @@ function parseGraphql(Request $request): array
 
 /**
  * Parse an "multipart/form-data" type request
- *
- * @param array $query
- * @param Request $request
- * @return array
  */
 function parseMultipart(array $query, Request $request): array
 {
@@ -298,7 +323,7 @@ function parseMultipart(array $query, Request $request): array
         foreach ($locations as $location) {
             $items = &$operations;
             foreach (\explode('.', $location) as $key) {
-                if (!isset($items[$key]) || !\is_array($items[$key])) {
+                if (! isset($items[$key]) || ! \is_array($items[$key])) {
                     $items[$key] = [];
                 }
                 $items = &$items[$key];
@@ -318,15 +343,11 @@ function parseMultipart(array $query, Request $request): array
 
 /**
  * Process an array of results for output.
- *
- * @param $result
- * @param $debugFlags
- * @return array
  */
 function processResult($result, $debugFlags): array
 {
     // Only one query, return the result
-    if (!isset($result[1])) {
+    if (! isset($result[1])) {
         return $result[0]->toArray($debugFlags);
     }
 
