@@ -1405,15 +1405,20 @@ final class FunctionsCustomServerTest extends Scope
         ]);
 
         /**
-         * Test for FAILURE — resuming/creating via x-appwrite-id under a
+         * Test for FAILURE — resuming via content-range + x-appwrite-id under a
          * function that does not own the deployment must not succeed.
+         * x-appwrite-id is only honored when content-range is present.
          */
+        $code = $this->packageFunction('basic');
+        $size = \filesize($code->getFilename());
+
         $response = $this->client->call(Client::METHOD_POST, '/functions/' . $otherFunctionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
             'x-appwrite-id' => $deploymentId,
         ], $this->getHeaders()), [
-            'code' => $this->packageFunction('basic'),
+            'code' => $code,
             'activate' => 'false',
         ]);
 
