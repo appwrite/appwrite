@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
@@ -124,6 +125,11 @@ $container->set('publisherForCertificates', fn (Publisher $publisher) => new Cer
     $publisher,
     new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
+
+$container->set('certificateIssuer', fn () => new Certificates(
+    System::getEnv('_APP_EDITION', 'self-hosted'),
+    System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled'),
+), []);
 
 $container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
     $publisher,
