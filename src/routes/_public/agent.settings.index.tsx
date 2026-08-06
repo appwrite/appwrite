@@ -1,7 +1,11 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { redirectLegacyAgentLocation } from '@/lib/assistant/agent-paths'
 
 export const Route = createFileRoute('/_public/agent/settings/')({
-  beforeLoad: () => {
-    throw redirect({ to: '/agent/settings/models', replace: true })
+  beforeLoad: async ({ context, location }) => {
+    await redirectLegacyAgentLocation({
+      queryClient: context.queryClient,
+      pathname: location.pathname,
+    })
   },
 })

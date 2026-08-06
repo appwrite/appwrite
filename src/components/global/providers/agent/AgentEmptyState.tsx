@@ -100,7 +100,7 @@ export function AgentEmptyState({
             >
               <Link
                 to="/sign-up"
-                search={{ redirect: '/agent' }}
+                search={{ redirect: '/' }}
                 {...analyticsAttrs('auth-sign-up')}
               >
                 {t('Create an account')}

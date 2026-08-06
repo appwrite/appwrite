@@ -19,9 +19,6 @@ import {
   type RealtimeResponseEvent,
 } from '@appwrite.io/console'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
-import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
-import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
-import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
   Check,
@@ -152,14 +149,13 @@ import { AgentAutomationDrawer } from '@/components/global/providers/agent/Agent
 import { AgentAutomationsPanel } from '@/components/global/providers/agent/AgentAutomationsPanel'
 import {
   AgentSettingsContent,
-  agentSettingsPath,
   type AgentSettingsSectionId,
 } from '@/components/pages/agent/AgentSettingsContent'
 import { AgentConversationsResizableLayout } from '@/components/global/providers/agent/AgentConversationsResizableLayout'
 import { AgentMessageDebugCard } from '@/components/global/providers/agent/AgentMessageDebugCard'
 import { AgentModelDrawer } from '@/components/global/providers/agent/AgentModelDrawer'
 import { AgentModelPicker } from '@/components/global/providers/agent/AgentModelPicker'
-import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
+import { AgentProjectPicker } from '@/components/global/providers/agent/AgentProjectPicker'
 import { AgentTurnActivity } from '@/components/global/providers/agent/AgentTurnActivity'
 import { AgentClarifySurfaces } from '@/components/global/providers/agent/AgentClarifySurfaces'
 import { AgentChatSurfacesDebugPanel } from '@/components/global/providers/agent/AgentChatSurfacesDebugPanel'
@@ -175,6 +171,18 @@ import {
 import { useAgentConversationFavicon } from '@/hooks/use-agent-conversation-favicon'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
+import {
+  agentAutomationCreatePath,
+  agentAutomationDetailPath,
+  agentAutomationsPath,
+  agentConversationPath,
+  agentIndexPath,
+  agentSettingsPath,
+  isAgentPagePath,
+  preferredOrganizationId,
+} from '@/lib/assistant/agent-paths'
+import { parseOrganizationIdFromPath } from '@/lib/organization-overview-prefetch'
+import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import {
@@ -307,7 +315,7 @@ interface AgentChatContextValue {
   toggleChat: () => void
   setActiveConversationId: (conversationId: string | null) => void
   /**
-   * Open the agent surface (pane or `/agent`) and create a new agent conversation.
+   * Open the agent surface (pane or org agent page) and create a new agent conversation.
    * Safe to call from the header create menu before the panel is mounted.
    */
   requestCreateAgent: () => void
@@ -389,6 +397,12 @@ function groupConversationsByTime(
 export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const params = useParams({ strict: false }) as {
+    projectId?: string
+    orgId?: string
+  }
+  const { project } = useProject(params.projectId)
   const { activeContent, showAgent, hideRightPane } = useConsoleRightPane()
   const isAgentBlocked = useMemo(
     () => isAgentBlockedPath(location.pathname),
@@ -397,6 +411,10 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const isMarketingPage = useIsMarketingPage()
   const isConsolePath = useMemo(
     () => isConsoleRightPanePath(location.pathname),
+    [location.pathname],
+  )
+  const onAgentPage = useMemo(
+    () => isAgentPagePath(location.pathname),
     [location.pathname],
   )
   const { data: account } = useQuery({
@@ -410,12 +428,46 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const pendingCreateAgentRef = useRef(false)
   const [pendingCreateAgentTick, setPendingCreateAgentTick] = useState(0)
 
+  const resolveAgentOrgId = useCallback(async (): Promise<string | null> => {
+    const fromRoute =
+      params.orgId?.trim() ||
+      parseOrganizationIdFromPath(location.pathname) ||
+      project?.teamId?.trim() ||
+      preferredOrganizationId(
+        (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+      )
+    if (fromRoute) return fromRoute
+    if (!account) return null
+    try {
+      return await resolvePostAuthOrganizationId(account, queryClient)
+    } catch {
+      return null
+    }
+  }, [
+    account,
+    location.pathname,
+    params.orgId,
+    project?.teamId,
+    queryClient,
+  ])
+
+  const navigateToAgentPage = useCallback(
+    async (hrefForOrg?: (orgId: string) => string) => {
+      const orgId = await resolveAgentOrgId()
+      if (!orgId) return
+      const path = hrefForOrg ? hrefForOrg(orgId) : agentIndexPath(orgId)
+      void navigate({ to: path as never })
+    },
+    [navigate, resolveAgentOrgId],
+  )
+
   const openChat = useCallback(() => {
     if (isAgentBlocked || isMarketingPage) return
+    if (onAgentPage) return
     if (!isConsolePath) {
       // Header is visible on some console routes where the docked pane is not
       // (e.g. `/`). Open the full agent surface instead of silently no-oping.
-      void navigate({ to: '/agent' })
+      void navigateToAgentPage()
       return
     }
     showAgent()
@@ -424,7 +476,8 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     isAgentBlocked,
     isConsolePath,
     isMarketingPage,
-    navigate,
+    navigateToAgentPage,
+    onAgentPage,
     setIsOpen,
     showAgent,
   ])
@@ -434,6 +487,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   }, [hideRightPane, setIsOpen])
   const toggleChat = useCallback(() => {
     if (isAgentBlocked || isMarketingPage) return
+    if (onAgentPage) return
     if (!isConsolePath) {
       openChat()
       return
@@ -449,6 +503,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     isAgentBlocked,
     isConsolePath,
     isMarketingPage,
+    onAgentPage,
     openChat,
   ])
 
@@ -462,24 +517,24 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     if (isAgentBlocked || isMarketingPage) return
     pendingCreateAgentRef.current = true
     setPendingCreateAgentTick((tick) => tick + 1)
-    if (location.pathname === '/agent' || location.pathname.startsWith('/agent/')) {
+    if (onAgentPage) {
       return
     }
-    // Always use the fullscreen agent surface for "New Agent" from the header.
+    // Always use the dedicated agent surface for "New Agent" from the header.
     setIsOpen(false)
     hideRightPane()
-    void navigate({ to: '/agent' })
+    void navigateToAgentPage()
   }, [
     hideRightPane,
     isAgentBlocked,
     isMarketingPage,
-    location.pathname,
-    navigate,
+    navigateToAgentPage,
+    onAgentPage,
     setIsOpen,
   ])
 
   useEffect(() => {
-    if (!isConsolePath || isMarketingPage) {
+    if (onAgentPage || !isConsolePath || isMarketingPage) {
       if (isOpen) {
         setIsOpen(false)
       }
@@ -487,7 +542,15 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         hideRightPane()
       }
     }
-  }, [activeContent, hideRightPane, isConsolePath, isMarketingPage, isOpen, setIsOpen])
+  }, [
+    activeContent,
+    hideRightPane,
+    isConsolePath,
+    isMarketingPage,
+    isOpen,
+    onAgentPage,
+    setIsOpen,
+  ])
 
   useEffect(() => {
     if (isAgentBlocked && isOpen) {
@@ -2210,13 +2273,13 @@ export function AgentPanelContent({
   automationMode: automationModeProp,
   settingsSection: settingsSectionProp,
 }: {
-  /** `page` = dedicated /agent route; `pane` = console right pane (same UI). */
+  /** `page` = dedicated org agent route; `pane` = console right pane (same UI). */
   variant?: 'pane' | 'page'
   /** Controlled section (page routes). Pane manages this locally when omitted. */
   section?: AgentSurfaceSection
-  /** Active agent (conversation) id from `/agent/$agentId`. */
+  /** Active agent (conversation) id from `/organizations/$orgId/agent/$agentId`. */
   routeAgentId?: string
-  /** Active automation id from `/agent/automations/$automationId`. */
+  /** Active automation id from `/organizations/$orgId/agent/automations/$automationId`. */
   routeAutomationId?: string
   automationMode?: 'list' | 'create' | 'detail'
   settingsSection?: AgentSettingsSectionId
@@ -2278,6 +2341,11 @@ export function AgentPanelContent({
       : null
     : paneDetailAutomationId
 
+  const pageOrgId =
+    nonEmptyId(params.orgId) ??
+    parseOrganizationIdFromPath(location.pathname) ??
+    null
+
   const navigateToAgent = useCallback(
     (
       agentId: string | null,
@@ -2289,17 +2357,22 @@ export function AgentPanelContent({
         setPendingPaneAutomationId(null)
         return
       }
+      if (!pageOrgId) return
       if (agentId) {
         void navigate({
-          to: '/agent/$agentId',
-          params: { agentId },
+          to: '/organizations/$orgId/agent/$agentId',
+          params: { orgId: pageOrgId, agentId },
           replace: options?.replace,
         })
         return
       }
-      void navigate({ to: '/agent', replace: options?.replace })
+      void navigate({
+        to: '/organizations/$orgId/agent',
+        params: { orgId: pageOrgId },
+        replace: options?.replace,
+      })
     },
-    [isPageVariant, navigate],
+    [isPageVariant, navigate, pageOrgId],
   )
 
   const navigateToAutomations = useCallback(
@@ -2329,24 +2402,30 @@ export function AgentPanelContent({
         }
         return
       }
+      if (!pageOrgId) return
       if (target.mode === 'create') {
         void navigate({
-          to: '/agent/automations/create',
+          to: '/organizations/$orgId/agent/automations/create',
+          params: { orgId: pageOrgId },
           replace: options?.replace,
         })
         return
       }
       if (target.mode === 'detail') {
         void navigate({
-          to: '/agent/automations/$automationId',
-          params: { automationId: target.automationId },
+          to: '/organizations/$orgId/agent/automations/$automationId',
+          params: { orgId: pageOrgId, automationId: target.automationId },
           replace: options?.replace,
         })
         return
       }
-      void navigate({ to: '/agent/automations', replace: options?.replace })
+      void navigate({
+        to: '/organizations/$orgId/agent/automations',
+        params: { orgId: pageOrgId },
+        replace: options?.replace,
+      })
     },
-    [isPageVariant, navigate],
+    [isPageVariant, navigate, pageOrgId, setActiveConversationId],
   )
 
   const navigateToSettings = useCallback(
@@ -2359,28 +2438,28 @@ export function AgentPanelContent({
         setPendingPaneAutomationId(null)
         return
       }
+      if (!pageOrgId) return
+      const settingsRoute =
+        next === 'mcp'
+          ? '/organizations/$orgId/agent/settings/mcp'
+          : next === 'memory'
+            ? '/organizations/$orgId/agent/settings/memory'
+            : next === 'usage'
+              ? '/organizations/$orgId/agent/settings/usage'
+              : '/organizations/$orgId/agent/settings/models'
       void navigate({
-        to: agentSettingsPath(next),
+        to: settingsRoute,
+        params: { orgId: pageOrgId },
         replace: options?.replace,
       })
     },
-    [isPageVariant, navigate],
+    [isPageVariant, navigate, pageOrgId],
   )
   const isAgentBlocked = useMemo(
     () => isAgentBlockedPath(location.pathname),
     [location.pathname],
   )
   const { isDebugModeOpen } = useDebugMode()
-  const [themeMounted, setThemeMounted] = useState(false)
-  const { theme, resolvedTheme } = useTheme()
-  useEffect(() => {
-    setThemeMounted(true)
-  }, [])
-  const headerLogoClassName = getConsoleHeaderLogoClass(
-    theme,
-    resolvedTheme,
-    themeMounted,
-  )
   const [bubbleDebugExpanded, setBubbleDebugExpanded] = useState(false)
   const [bubbleDebugMode, setBubbleDebugMode] =
     useState<BubbleActivityDebugMode>('auto')
@@ -4598,8 +4677,16 @@ export function AgentPanelContent({
   }
 
   const leaveAgentPage = useCallback(() => {
+    if (pageOrgId) {
+      void navigate({
+        to: '/organizations/$orgId',
+        params: { orgId: pageOrgId },
+        replace: false,
+      })
+      return
+    }
     void navigate({ to: '/', replace: false })
-  }, [navigate])
+  }, [navigate, pageOrgId])
 
   const handleCloseChat = useCallback(() => {
     if (isPageVariant) {
@@ -4615,19 +4702,24 @@ export function AgentPanelContent({
     setPendingPaneAutomationId(null)
     // Create lives on its own route; edit drawer closes in place on detail.
     if (isPageVariant && wasCreate) {
+      if (!pageOrgId) return
       if (routeAutomationId) {
         void navigate({
-          to: '/agent/automations/$automationId',
-          params: { automationId: routeAutomationId },
+          to: '/organizations/$orgId/agent/automations/$automationId',
+          params: { orgId: pageOrgId, automationId: routeAutomationId },
         })
         return
       }
-      void navigate({ to: '/agent/automations' })
+      void navigate({
+        to: '/organizations/$orgId/agent/automations',
+        params: { orgId: pageOrgId },
+      })
     }
   }, [
     automationEditor.mode,
     isPageVariant,
     navigate,
+    pageOrgId,
     routeAutomationId,
   ])
 
@@ -4642,22 +4734,42 @@ export function AgentPanelContent({
   }, [])
 
   const getAgentSurfacePath = useCallback(() => {
+    const accountPrefs = (
+      account as { prefs?: Record<string, unknown> } | null | undefined
+    )?.prefs
+    const orgId =
+      pageOrgId ??
+      nonEmptyId(params.orgId) ??
+      nonEmptyId(params.teamId) ??
+      nonEmptyId(project?.teamId) ??
+      preferredOrganizationId(accountPrefs)
+    if (!orgId) return '/'
+
     if (section === 'settings') {
-      return agentSettingsPath(settingsSection)
+      return agentSettingsPath(orgId, settingsSection)
     }
     if (section === 'automations') {
-      if (automationEditor.mode === 'create') return '/agent/automations/create'
-      if (detailAutomationId) {
-        return `/agent/automations/${detailAutomationId}`
+      if (automationEditor.mode === 'create') {
+        return agentAutomationCreatePath(orgId)
       }
-      return '/agent/automations'
+      if (detailAutomationId) {
+        return agentAutomationDetailPath(orgId, detailAutomationId)
+      }
+      return agentAutomationsPath(orgId)
     }
-    if (activeConversationId) return `/agent/${activeConversationId}`
-    return '/agent'
+    if (activeConversationId) {
+      return agentConversationPath(orgId, activeConversationId)
+    }
+    return agentIndexPath(orgId)
   }, [
+    account,
     activeConversationId,
     automationEditor.mode,
     detailAutomationId,
+    pageOrgId,
+    params.orgId,
+    params.teamId,
+    project?.teamId,
     section,
     settingsSection,
   ])
@@ -4822,34 +4934,10 @@ export function AgentPanelContent({
 
   const renderConversationsMenuBody = (options?: {
     dense?: boolean
-    hideHeader?: boolean
     hideCreateButton?: boolean
-    onCloseSidebar?: () => void
     onSelectConversation?: () => void
   }) => (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      {options?.hideHeader ? null : (
-        <div className="flex h-14 min-h-14 shrink-0 items-center gap-2.5 border-b border-border px-3">
-          <ConsoleHeaderLogo
-            className={cn('h-6 w-6 shrink-0', headerLogoClassName)}
-          />
-          <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
-            {t('Appwrite Agent')}
-          </p>
-          {options?.onCloseSidebar ? (
-            <button
-              type="button"
-              onClick={options.onCloseSidebar}
-              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label={t('Close sidebar')}
-              title={t('Close sidebar')}
-              {...analyticsAttrs('agent-sidebar-close')}
-            >
-              <PanelLeftClose className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
-        </div>
-      )}
       <Tabs
         value={conversationsMenuTab}
         onValueChange={(value) => {
@@ -5267,37 +5355,32 @@ export function AgentPanelContent({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {renderConversationsMenuBody({
           dense: true,
-          onCloseSidebar: () => setConversationsSidebarOpen(false),
         })}
-      </div>
-      <div className="shrink-0 border-t border-border bg-background p-2">
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-9 w-full justify-start gap-1.5 px-2 text-[13px] text-muted-foreground hover:text-foreground"
-          {...analyticsAttrs('agent-back')}
-          onClick={() => {
-            leaveAgentPage()
-          }}
-        >
-          <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
-          {isAuthenticated ? t('Back to console') : t('Back to Appwrite')}
-        </Button>
       </div>
     </div>
   )
 
-  const renderOpenSidebarButton = () =>
-    isPageVariant && !conversationsSidebarOpen ? (
+  const renderSidebarToggleButton = () =>
+    isPageVariant ? (
       <button
         type="button"
-        onClick={() => setConversationsSidebarOpen(true)}
+        onClick={() => setConversationsSidebarOpen((open) => !open)}
         className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        aria-label={t('Open sidebar')}
-        title={t('Open sidebar')}
-        {...analyticsAttrs('agent-sidebar-open')}
+        aria-label={
+          conversationsSidebarOpen ? t('Close sidebar') : t('Open sidebar')
+        }
+        title={
+          conversationsSidebarOpen ? t('Close sidebar') : t('Open sidebar')
+        }
+        {...analyticsAttrs(
+          conversationsSidebarOpen ? 'agent-sidebar-close' : 'agent-sidebar-open',
+        )}
       >
-        <PanelLeft className="h-3.5 w-3.5" />
+        {conversationsSidebarOpen ? (
+          <PanelLeftClose className="h-3.5 w-3.5" />
+        ) : (
+          <PanelLeft className="h-3.5 w-3.5" />
+        )}
       </button>
     ) : null
 
@@ -5309,6 +5392,13 @@ export function AgentPanelContent({
     ) : (
       content
     )
+
+  // Match ConsoleHeader side padding (`ps-3 pe-3 @[640px]:… @[1000px]:pe-6`)
+  // with viewport breakpoints so the settings control aligns when the
+  // conversations sidebar shrinks this pane below those container sizes.
+  const toolbarPaddingClass = isPageVariant
+    ? 'ps-3 pe-3 min-[640px]:ps-4 min-[640px]:pe-4 min-[1000px]:pe-6'
+    : 'px-3'
 
   if (isSettingsSection) {
     return (
@@ -5327,11 +5417,13 @@ export function AgentPanelContent({
               navigateToAgent(null)
             }}
             onOpenInNewTab={isPageVariant ? undefined : handleOpenInNewTab}
-            onOpenSidebar={
-              isPageVariant && !conversationsSidebarOpen
-                ? () => setConversationsSidebarOpen(true)
+            onToggleSidebar={
+              isPageVariant
+                ? () => setConversationsSidebarOpen((open) => !open)
                 : undefined
             }
+            sidebarOpen={isPageVariant ? conversationsSidebarOpen : undefined}
+            toolbarClassName={toolbarPaddingClass}
           />,
         )}
       </div>
@@ -5347,9 +5439,13 @@ export function AgentPanelContent({
 
   const automationsMain = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
-        <div className="flex min-w-0 items-center gap-1">
-          {renderOpenSidebarButton()}
+      <div
+        className={cn(
+          'flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border',
+          toolbarPaddingClass,
+        )}
+      >        <div className="flex min-w-0 items-center gap-1">
+          {renderSidebarToggleButton()}
           <div className="min-w-0">
           {isPageVariant ? (
             <span className="truncate px-1.5 text-[13px] font-semibold text-foreground">
@@ -5376,7 +5472,6 @@ export function AgentPanelContent({
               <PopoverContent align="start" className="w-[300px] p-0">
                 <div className="flex max-h-[360px] flex-col overflow-hidden">
                   {renderConversationsMenuBody({
-                    hideHeader: true,
                     hideCreateButton: true,
                     onSelectConversation: () =>
                       setConversationsPopoverOpen(false),
@@ -5428,6 +5523,7 @@ export function AgentPanelContent({
         disabled={interactionsDisabled}
         selectedRunId={activeConversationId}
         defaultTab="settings"
+        organizationId={organizationId ?? pageOrgId}
         onAddModel={() => navigateToSettings('models')}
         onDeleted={() => navigateToAutomations({ mode: 'list' })}
         onSelectRun={(conversation) => {
@@ -5452,10 +5548,14 @@ export function AgentPanelContent({
 
   const chatMain = (
       <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
-            <div className="min-w-0">
+          <div
+            className={cn(
+              'flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border',
+              toolbarPaddingClass,
+            )}
+          >            <div className="min-w-0">
               <div className="flex items-center gap-1">
-                {renderOpenSidebarButton()}
+                {renderSidebarToggleButton()}
                 {effectiveExpanded ? (
                   <button
                     type="button"
@@ -5500,7 +5600,6 @@ export function AgentPanelContent({
                       <PopoverContent align="start" className="w-[300px] p-0">
                         <div className="flex max-h-[360px] flex-col overflow-hidden">
                           {renderConversationsMenuBody({
-                            hideHeader: true,
                             hideCreateButton: true,
                             onSelectConversation: () =>
                               setConversationsPopoverOpen(false),
@@ -6240,7 +6339,7 @@ export function AgentPanelContent({
                             ? t('Edit message...')
                             : isConversationRunning || messageQueue.length > 0
                               ? t('Add a follow-up')
-                              : t('Ask anything, or tell me what to do...')
+                              : t('Ask anything...')
                     }
                     dir={isInputRtl ? 'rtl' : 'ltr'}
                     rows={1}
@@ -6383,10 +6482,10 @@ export function AgentPanelContent({
                         : () => navigateToSettings('models')
                     }
                   />
-                  <ProjectSelector
-                    projectId={contextProjectId || undefined}
-                    onProjectSelect={setSelectedContextProjectId}
-                    compact
+                  <AgentProjectPicker
+                    organizationId={organizationId ?? pageOrgId}
+                    value={contextProjectId || ''}
+                    onChange={setSelectedContextProjectId}
                     disabled={interactionsDisabled}
                   />
                 </div>

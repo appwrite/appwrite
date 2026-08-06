@@ -323,7 +323,7 @@ export function DatabaseSelector({
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="max-h-[240px]">
+          <CommandList className="min-h-[180px] max-h-[240px]">
             {items.length === 0 && (
               <CommandEmpty>
                 {isFetching ? '' : t(resolvedEmptyLabel)}

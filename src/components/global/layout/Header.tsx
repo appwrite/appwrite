@@ -98,6 +98,7 @@ import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
 import { useAgentChat } from '@/components/global/providers/AgentChat'
+import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -428,6 +429,9 @@ export function ConsoleHeader({
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
+  const isAgentScope = isAgentPagePath(location.pathname)
+  const showBackToOrganization =
+    (isAccountScope || isAgentScope) && Boolean(orgId)
   const isInitScope = features.init && location.pathname === '/init'
   const initHeaderNavCta = isInitScope
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
@@ -632,8 +636,8 @@ export function ConsoleHeader({
             )
           })()}
 
-          {/* Account scope quick return */}
-          {isAccountScope && orgId && (
+          {/* Account / agent scope quick return */}
+          {showBackToOrganization && orgId ? (
             <Button
               asChild
               variant="ghost"
@@ -645,7 +649,7 @@ export function ConsoleHeader({
                 {headerCopy.actions.backToOrganization}
               </Link>
             </Button>
-          )}
+          ) : null}
 
           {/* Init scope exit / try CTA */}
           {initHeaderNavCta ? (

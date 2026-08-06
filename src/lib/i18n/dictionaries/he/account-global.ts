@@ -520,7 +520,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   // AI chat
   'Add a follow-up': 'הוסיפו הודעת המשך',
   'Add to queue': 'הוספה לתור',
-  'Ask anything, or tell me what to do...': 'שאלו כל דבר, או אמרו לי מה לעשות...',
   'Attach files': 'צירוף קבצים',
   'Voice input': 'קלט קולי',
   'Stop voice input': 'עצירת קלט קולי',

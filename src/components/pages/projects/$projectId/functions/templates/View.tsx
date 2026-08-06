@@ -841,7 +841,7 @@ function TemplateCatalogFilters({
                     clearDisabled={!useCaseHasSelection}
                   />
                 ) : null}
-                <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
+                <CommandList className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
                     {t('No use cases match')}
                   </CommandEmpty>
@@ -915,7 +915,7 @@ function TemplateCatalogFilters({
                     clearDisabled={!runtimeHasSelection}
                   />
                 ) : null}
-                <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
+                <CommandList className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain">
                   <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
                     {t('No runtimes match')}
                   </CommandEmpty>

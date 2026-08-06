@@ -134,7 +134,7 @@ export function PostgresSchemaSelector({
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               </div>
-              <CommandList ref={listScrollRef} className="max-h-[240px]">
+              <CommandList ref={listScrollRef} className="min-h-[180px] max-h-[240px]">
                 {showInitialLoading ? (
                   <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
                     {t('Loading schemas…')}

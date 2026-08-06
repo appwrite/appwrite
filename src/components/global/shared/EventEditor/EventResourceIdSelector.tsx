@@ -466,7 +466,7 @@ export function EventResourceIdSelector({
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="max-h-[200px]">
+          <CommandList className="min-h-[160px] max-h-[200px]">
             <CommandEmpty>
               {isFetching ? t('Loading...') : t('No results found')}
             </CommandEmpty>

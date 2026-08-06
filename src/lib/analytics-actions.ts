@@ -53,6 +53,7 @@ export const ANALYTICS_ACTIONS = {
   'agent-tab-agents': 'Agent Agents Tab Clicked',
   'agent-tab-automations': 'Agent Automations Tab Clicked',
   'agent-model-picker': 'Agent Model Picker Clicked',
+  'agent-project-picker': 'Agent Project Picker Clicked',
   'agent-manage-models': 'Agent Manage Models Clicked',
   'agent-mcp-connect': 'Agent MCP Connect Clicked',
   'agent-mcp-disconnect': 'Agent MCP Disconnect Clicked',

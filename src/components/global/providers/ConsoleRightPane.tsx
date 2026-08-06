@@ -8,6 +8,7 @@ import { useRightPaneWidth } from '@/lib/react-query/hooks/auth'
 import { clampRightPaneWidthPx } from '@/lib/right-pane/constants'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
+import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import {
   inlineEndPaneWidthFromPointer,
   isRtlElement,
@@ -35,7 +36,7 @@ const AUTH_ROUTE_PATHNAMES = new Set([
 ])
 
 function isAgentBlockedPath(pathname: string): boolean {
-  return AUTH_ROUTE_PATHNAMES.has(pathname)
+  return AUTH_ROUTE_PATHNAMES.has(pathname) || isAgentPagePath(pathname)
 }
 
 export function ConsoleRightPane() {
