@@ -578,8 +578,8 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
+    "title": "Sign in with Appwrite",
+    "description": "Build apps that access your users' Appwrite projects and organizations with consent-based, scoped OAuth2 tokens instead of pasted API keys.",
     "layout": "article",
     "readingTimeMinutes": 3
   },
@@ -875,70 +875,70 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Agent",
     "description": "Chat with the Appwrite Agent in the Console to inspect your project, explain issues, suggest next steps, and run approved actions.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/actions",
     "title": "Actions",
     "description": "Learn what the Appwrite Agent can inspect, clarify, and do in your projects and in the Console.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/add-memory",
     "title": "Add memory",
     "description": "Save a preference, instruction, or fact for the Appwrite Agent to reuse across conversations.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/add-model",
     "title": "Add a custom model",
     "description": "Register a provider API key so the Appwrite Agent can use your own LLM credentials.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/automations",
     "title": "Automations",
     "description": "Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/chat",
     "title": "Chat with the Agent",
     "description": "Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/connect-mcp",
     "title": "Connect Appwrite MCP",
     "description": "Authorize Appwrite MCP so Appwrite Agent can take approved actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/conversations",
     "title": "Conversations",
-    "description": "Learn how Appwrite Agent conversations work, including threading, attachments, voice, and conversation management.",
+    "description": "Learn how Appwrite Agent conversations work, including context, attachments, voice, queueing, and thread management.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/agent/create-automation",
     "title": "Create an automation",
     "description": "Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/agent/mcp",
     "title": "MCP connections",
     "description": "Learn how the Appwrite Agent uses MCP servers to call tools and take actions in your projects.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/memory",
@@ -952,14 +952,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Models",
     "description": "Learn how Appwrite Agent models work, including the default model and bring-your-own provider keys.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/agent/quick-start",
     "title": "Start with Agent",
     "description": "Open the Appwrite Agent in the Console, ask your first question, and optionally connect MCP so it can take actions.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/ai",
@@ -1454,6 +1454,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "How to implement SSR authentication with Appwrite",
     "layout": "article",
     "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/auth/sign-in-with-appwrite",
+    "title": "Sign in with Appwrite",
+    "description": "Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/auth/team-invites",
