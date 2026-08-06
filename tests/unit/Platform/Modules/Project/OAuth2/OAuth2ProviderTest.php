@@ -40,7 +40,7 @@ final class OAuth2ProviderTest extends TestCase
             'amazon', 'apple', 'appwrite', 'auth0', 'authentik', 'autodesk',
             'bitbucket', 'bitly', 'box', 'dailymotion', 'discord', 'disqus',
             'dropbox', 'etsy', 'facebook', 'figma', 'fusionauth', 'github',
-            'gitlab', 'google', 'keycloak', 'kick', 'linkedin', 'microsoft',
+            'gitlab', 'google', 'huggingface', 'keycloak', 'kick', 'linkedin', 'microsoft',
             'notion', 'oidc', 'okta', 'paypal', 'paypalSandbox', 'podio',
             'salesforce', 'slack', 'spotify', 'stripe', 'tradeshift',
             'tradeshiftBox', 'twitch', 'wordpress', 'x', 'yahoo', 'yandex',
