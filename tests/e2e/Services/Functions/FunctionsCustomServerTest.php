@@ -1423,7 +1423,6 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
 
         $this->cleanupFunction($otherFunctionId);
-        $this->cleanupFunction($functionId);
     }
 
     public function testListDeployments(): void
