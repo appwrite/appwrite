@@ -1,0 +1,19 @@
+package com.example;
+
+import io.appwrite.Client;
+import io.appwrite.services.Project;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppwriteConfig {
+  @Bean
+  public Project project() {
+    Client client = new Client()
+      .setEndpoint(System.getenv("APPWRITE_ENDPOINT"))
+      .setProject(System.getenv("APPWRITE_PROJECT_ID"))
+      .setKey(System.getenv("APPWRITE_API_KEY"));
+
+    return new Project(client);
+  }
+}
