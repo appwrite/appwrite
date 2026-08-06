@@ -73,13 +73,32 @@ trait Deployment
 
         $checkRuns = new CheckRuns();
 
-        $reportSkip = function (Document $resource, Document $project, Document $repository, string $reason) use ($checkRuns, $vcs, $resolveOwnerAndName, $providerCommitHash, $providerPullRequestId, $external, $platform): void {
+        $reportSkip = function (Document $resource, Document $project, Document $repository, Database $dbForProject, string $resourceCollection, string $reason) use ($checkRuns, $vcs, $resolveOwnerAndName, $authorization, $providerCommitHash, $providerBranch, $providerPullRequestId, $external, $platform): void {
             if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
                 return;
             }
 
             // A push event already reported this skip; a fork raises no push.
             if (!empty($providerPullRequestId) && !$external) {
+                return;
+            }
+
+            // Only refs/heads is stripped from the payload, so a tag arrives whole.
+            // It never matches a branch trigger, and saying so would be nonsense.
+            if (\str_starts_with($providerBranch, 'refs/')) {
+                return;
+            }
+
+            // This reports under the same context a build does, and a provider keeps
+            // only the latest per context — so never speak for a commit that already
+            // built, or pushing it to a second branch would overwrite its verdict.
+            $built = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
+                Query::equal('resourceInternalId', [$resource->getSequence()]),
+                Query::equal('resourceType', [$resourceCollection]),
+                Query::equal('providerCommitHash', [$providerCommitHash]),
+            ]));
+
+            if (!$built->isEmpty()) {
                 return;
             }
 
@@ -160,7 +179,7 @@ trait Deployment
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $reportSkip($resource, $project, $repository, 'Skipped: the commit message contains ' . \implode(' or ', VCS_DEPLOYMENT_SKIP_PATTERNS) . '.');
+                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, 'Skipped: the commit message contains ' . \implode(' or ', VCS_DEPLOYMENT_SKIP_PATTERNS) . '.');
                     continue;
                 }
 
@@ -169,7 +188,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $reportSkip($resource, $project, $repository, "Skipped: branch '" . \mb_strimwidth($providerBranch, 0, 60, '...') . "' does not match the configured branch triggers.");
+                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, "Skipped: branch '" . \mb_strimwidth($providerBranch, 0, 60, '...') . "' does not match the configured branch triggers.");
                     continue;
                 }
 
@@ -187,7 +206,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
-                        $reportSkip($resource, $project, $repository, 'Skipped: no changed file matches the configured path filters.');
+                        $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, 'Skipped: no changed file matches the configured path filters.');
                         continue;
                     }
                 }
