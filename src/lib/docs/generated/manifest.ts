@@ -1332,7 +1332,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installations",
     "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/auth/oauth-server/quick-start",

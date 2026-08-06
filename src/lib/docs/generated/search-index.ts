@@ -2075,7 +2075,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/auth/oauth-server/installations",
     "title": "Installations",
     "description": "Let clients install on teams in your project and act with installation tokens that need no signed-in user.",
-    "excerpt": "An installation connects a client to one team in your project. A team owner installs the client once. After that, the client's backend creates its own access tokens for that team, signed by your project's keys. The tokens carry the scopes the installation granted, and they work without a signed-in user. Installations give your OAuth2 server a machine access model next to user consent. A user grant acts as one person and dies with their session or revocation. An installation…",
+    "excerpt": "A client is a third-party app registered on your OAuth2 server. Your server can grant a client access in two ways. The first is **user consent**: the authorization flow sends a user to your consent screen, the user approves, and the client receives tokens that act as that user. The grant ends when the user revokes it or leaves. An **installation** is the second way. It connects a client to one team in your project. A team owner installs the…",
     "breadcrumbs": [
       "OAuth2 server",
       "Concepts",

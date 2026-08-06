@@ -31,7 +31,12 @@ Identity scopes such as `openid` have no place in the list, because no user take
 
 # Request installation scopes {% #request-scopes %}
 
-A client declares the scopes it requests at install time in its own `installationScopes` setting, with the `update` method. The `create` method does not accept installation fields, so register the client first and then update it. A client can request only values from the project's allowed list; anything else fails validation, and the error message lists the accepted scopes. The `listInstallationScopes` method returns the allowed list, so a client can discover it. The client can also set an `installationRedirectUrl`; Appwrite redirects the owner there after each install or update.
+A client declares the scopes it requests at install time in its `installationScopes` setting.
+
+- Set the scopes with the `update` method. The `create` method does not accept installation fields, so register the client first, then update it.
+- A client can request only values from the project's allowed list. Other values fail validation, and the error message lists the accepted scopes.
+- The `listInstallationScopes` method returns the allowed list, so a client can discover it.
+- The optional `installationRedirectUrl` tells your product where to send the owner after an install or update. Appwrite stores the URL; your install flow performs the redirect.
 
 {% multicode %}
 ```client-web
@@ -171,7 +176,9 @@ const app = await apps.update({
 
 Request the smallest set that serves the client. The owner sees every scope at install time, and a long list costs installs.
 
-**Scopes are a snapshot.** Each installation copies the client's scopes at the moment the owner creates or updates it. When the client's `installationScopes` change later, existing installations keep their old grant until their owner updates them.
+{% info title="Scopes are a snapshot" %}
+Each installation copies the client's scopes at the moment the owner creates or updates it. When the client's scopes change later, existing installations keep their old grant until their owner updates them.
+{% /info %}
 
 # Install on a team {% #install %}
 
@@ -488,7 +495,7 @@ An installation token is a JWT of type `at+jwt`, signed by your project's keys, 
 
 # Update and remove {% #lifecycle %}
 
-The team owner stays in control after the install. Updating an installation refreshes its grant to the client's current `installationScopes` and revokes every active token for it. Removing it deletes the grant and every token together. Both emit `teams.[teamId].installations.[installationId].update` and `.delete` [events](/docs/apis/events), so integrations can react.
+The team owner stays in control after the install. Updating an installation refreshes its grant to the client's current scopes and revokes every active token for it. Removing it deletes the grant and every token together. Both emit `teams.[teamId].installations.[installationId].update` and `.delete` [events](/docs/apis/events), so integrations can react.
 
 The owner updates an installation with the `updateInstallation` method. Pass `authorizationDetails` to change the stored entries, or omit it to keep them:
 
