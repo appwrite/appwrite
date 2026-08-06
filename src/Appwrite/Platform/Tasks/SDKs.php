@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
-use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
+use Appwrite\SDK\Language\GoCLI;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Node;
@@ -198,6 +198,7 @@ class SDKs extends Action
 
                     $releaseTitle = $releaseVersion;
                     $releaseTarget = $language['repoBranch'] ?? 'main';
+                    $isPrerelease = (bool) \preg_match('/^v?\d+\.\d+\.\d+-/', $releaseVersion);
 
                     if ($repoName === '/') {
                         Console::warning('  Not a releasable SDK, skipping');
@@ -255,6 +256,7 @@ class SDKs extends Action
                         Console::log("    Version:          {$releaseVersion}");
                         Console::log("    Title:            {$releaseTitle}");
                         Console::log("    Target Branch:    {$releaseTarget}");
+                        Console::log('    Prerelease:       ' . ($isPrerelease ? 'yes' : 'no'));
                         Console::log('    Previous Version: ' . ($previousVersion ?: 'N/A'));
                         Console::log('    Release Notes:');
                         Console::log('    ' . str_replace("\n", "\n    ", $formattedNotes));
@@ -264,12 +266,13 @@ class SDKs extends Action
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
-                            --repo ' . \escapeshellarg($repoName) . ' \
-                            --title ' . \escapeshellarg($releaseTitle) . ' \
-                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
-                            --target ' . \escapeshellarg($releaseTarget) . ' \
-                            2>&1';
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion)
+                            . ' --repo ' . \escapeshellarg($repoName)
+                            . ' --title ' . \escapeshellarg($releaseTitle)
+                            . ' --notes-file ' . \escapeshellarg($tempNotesFile)
+                            . ' --target ' . \escapeshellarg($releaseTarget)
+                            . ($isPrerelease ? ' --prerelease' : '')
+                            . ' 2>&1';
 
                         $releaseOutput = [];
                         $releaseReturnCode = 0;
@@ -356,10 +359,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         }
                         break;
                     case 'cli':
-                        $config = new CLI();
+                        $config = new GoCLI();
                         $config->setNPMPackage('appwrite-cli');
                         $config->setExecutableName('appwrite');
-                        $config->setLogo(json_encode("
+                        $config->setLogo("
     _                            _ _           ___   __   _____
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
   //_\\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
@@ -367,7 +370,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/
        |_|   |_|
 
-"));
+");
                         $config->setLogoUnescaped("
      _                            _ _           ___   __   _____
     /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
