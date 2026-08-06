@@ -126,7 +126,10 @@ $container->set('publisherForCertificates', fn (Publisher $publisher) => new Cer
     new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('certificateIssuer', fn () => new Certificates(), []);
+$container->set('certificateIssuer', fn () => new Certificates(
+    System::getEnv('_APP_EDITION', 'self-hosted'),
+    System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled'),
+), []);
 
 $container->set('publisherForScreenshots', fn (Publisher $publisher) => new ScreenshotPublisher(
     $publisher,

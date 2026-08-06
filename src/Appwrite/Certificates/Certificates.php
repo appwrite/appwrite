@@ -4,17 +4,13 @@ namespace Appwrite\Certificates;
 
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
-use Utopia\System\System;
 
 final class Certificates
 {
-    private string $edition;
-    private string $autoCertificates;
-
-    public function __construct()
-    {
-        $this->edition = System::getEnv('_APP_EDITION', 'self-hosted');
-        $this->autoCertificates = System::getEnv('_APP_ROUTER_AUTO_CERTIFICATES', 'enabled');
+    public function __construct(
+        private string $edition = 'self-hosted',
+        private string $autoCertificates = 'enabled',
+    ) {
     }
 
     /**
