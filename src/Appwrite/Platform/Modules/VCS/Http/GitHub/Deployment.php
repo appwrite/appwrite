@@ -84,22 +84,21 @@ trait Deployment
                 return;
             }
 
-            $alreadyDeployed = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
+            $existingDeployment = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resourceCollection]),
                 Query::equal('providerCommitHash', [$providerCommitHash]),
             ]));
 
-            if (!$alreadyDeployed->isEmpty()) {
+            if (!$existingDeployment->isEmpty()) {
                 return;
             }
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = $platform['consoleHostname'] ?? '';
             $region = $project->getAttribute('region', 'default');
-            $collection = $resource->getCollection();
-            $type = $collection === 'sites' ? 'site' : 'function';
-            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$collection}/{$type}-{$resource->getId()}";
+            $type = $resourceCollection === 'sites' ? 'site' : 'function';
+            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$resourceCollection}/{$type}-{$resource->getId()}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
             try {
@@ -110,7 +109,7 @@ trait Deployment
                 return;
             }
 
-            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_NEUTRAL, 'success', 'Deployment skipped', $reason, $targetUrl);
+            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'neutral', 'success', 'Deployment skipped', $reason, $targetUrl);
         };
 
         foreach ($repositories as $repository) {
@@ -395,7 +394,7 @@ trait Deployment
                         $name = "{$resourceName} ({$projectName})";
                         $message = 'Authorization required: a maintainer must approve this external contribution.';
 
-                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::CONCLUSION_ACTION_REQUIRED, 'failure', 'Authorization required', $message, $authorizeUrl);
+                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'action_required', 'failure', 'Authorization required', $message, $authorizeUrl);
                     }
 
                     continue;

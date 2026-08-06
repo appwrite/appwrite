@@ -13,16 +13,21 @@ use Utopia\VCS\Adapter\Git\GitHub;
  */
 class CheckRuns
 {
-    public const string CONCLUSION_NEUTRAL = 'neutral';
-    public const string CONCLUSION_ACTION_REQUIRED = 'action_required';
-
     protected const int NAME_LIMIT = 255;
     protected const int DESCRIPTION_LIMIT = 140;
 
     /**
-     * @var array<string, true> Repositories that refused, so a fan-out pays one call, not one each.
+     * @var array<string, true> Repositories that refused a check run, so a fan-out pays one call, not one each.
      */
-    protected array $refused = [];
+    protected array $refusedCheckRuns = [];
+
+    /**
+     * Writing check runs and writing statuses are granted separately, so a refusal
+     * of one says nothing about the other.
+     *
+     * @var array<string, true>
+     */
+    protected array $refusedStatuses = [];
 
     public function report(
         Git $vcs,
@@ -40,14 +45,14 @@ class CheckRuns
             return;
         }
 
-        if (!$this->reportable($owner, $repositoryName, $commitHash)) {
+        if (!$this->addressable($owner, $repositoryName, $commitHash) || isset($this->refusedStatuses["{$owner}/{$repositoryName}"])) {
             return;
         }
 
         try {
             $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, \mb_strimwidth($summary, 0, self::DESCRIPTION_LIMIT, '...'), $detailsUrl, $name);
         } catch (\Throwable $error) {
-            $this->remember($owner, $repositoryName, $error);
+            $this->remember($this->refusedStatuses, $owner, $repositoryName, $error);
             Console::warning("Failed to report on {$owner}/{$repositoryName}: " . $error->getMessage());
         }
     }
@@ -63,7 +68,11 @@ class CheckRuns
         string $summary,
         string $detailsUrl,
     ): bool {
-        if (!$vcs instanceof GitHub || !$this->reportable($owner, $repositoryName, $commitHash)) {
+        if (!$vcs instanceof GitHub || !$this->addressable($owner, $repositoryName, $commitHash)) {
+            return false;
+        }
+
+        if (isset($this->refusedCheckRuns["{$owner}/{$repositoryName}"])) {
             return false;
         }
 
@@ -82,29 +91,29 @@ class CheckRuns
 
             return true;
         } catch (\Throwable $error) {
-            $this->remember($owner, $repositoryName, $error);
+            $this->remember($this->refusedCheckRuns, $owner, $repositoryName, $error);
             Console::warning("Failed to create check run on {$owner}/{$repositoryName}: " . $error->getMessage());
 
             return false;
         }
     }
 
-    protected function reportable(string $owner, string $repositoryName, string $commitHash): bool
+    protected function addressable(string $owner, string $repositoryName, string $commitHash): bool
     {
-        if (empty($owner) || empty($repositoryName) || empty($commitHash)) {
-            return false;
-        }
-
-        return !isset($this->refused["{$owner}/{$repositoryName}"]);
+        return !empty($owner) && !empty($repositoryName) && !empty($commitHash);
     }
 
     /**
-     * Only what a fan-out shares — a complaint about this report stays retryable.
+     * Owner, repository and commit are the same for every resource in a fan-out, so a
+     * provider refusing access refuses them all. A complaint about this particular
+     * report stays retryable.
+     *
+     * @param array<string, true> $refused
      */
-    protected function remember(string $owner, string $repositoryName, \Throwable $error): void
+    protected function remember(array &$refused, string $owner, string $repositoryName, \Throwable $error): void
     {
         if (\in_array($error->getCode(), [401, 403, 404], true)) {
-            $this->refused["{$owner}/{$repositoryName}"] = true;
+            $refused["{$owner}/{$repositoryName}"] = true;
         }
     }
 }

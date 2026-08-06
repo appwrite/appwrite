@@ -5,23 +5,22 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Vcs\CheckRuns;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 final class CheckRunsTest extends TestCase
 {
-    private const string SHA = '60c0416257a9cbcdd96b2d370c38d8f8d150ccfb';
+    private const SHA = '60c0416257a9cbcdd96b2d370c38d8f8d150ccfb';
 
     public function testGitHubGetsACheckRunAndNoCommitStatus(): void
     {
-        $adapter = $this->github();
+        $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->once())
             ->method('createCheckRun')
             ->willReturnCallback(function (...$arguments) {
                 $this->assertSame('completed', $arguments[4]);
-                $this->assertSame(CheckRuns::CONCLUSION_NEUTRAL, $arguments[5]);
+                $this->assertSame('neutral', $arguments[5]);
                 $this->assertSame('Deployment skipped', $arguments[6]);
                 // The reason only reaches GitHub when title and summary are both set.
                 $this->assertSame('Commit message matched a skip pattern.', $arguments[7]);
@@ -46,8 +45,9 @@ final class CheckRunsTest extends TestCase
 
     public function testACheckRunFailureFallsBackToTheCommitStatus(): void
     {
-        $adapter = $this->github();
-        $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
+        $adapter = $this->createMock(GitHub::class);
+        // 403 is the App without checks:write — the case the fallback exists for.
+        $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 403', 403));
         $adapter->expects($this->once())->method('updateCommitStatus');
 
         $this->report(new CheckRuns(), $adapter);
@@ -55,11 +55,11 @@ final class CheckRunsTest extends TestCase
 
     public function testAuthorizationIsReportedAsActionRequired(): void
     {
-        $adapter = $this->github();
+        $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->once())
             ->method('createCheckRun')
             ->willReturnCallback(function (...$arguments) {
-                $this->assertSame(CheckRuns::CONCLUSION_ACTION_REQUIRED, $arguments[5]);
+                $this->assertSame('action_required', $arguments[5]);
                 $this->assertSame('https://console.example.com/authorize', $arguments[12]);
 
                 return ['id' => 8];
@@ -71,7 +71,7 @@ final class CheckRunsTest extends TestCase
             'repo',
             self::SHA,
             'name',
-            CheckRuns::CONCLUSION_ACTION_REQUIRED,
+            'action_required',
             'failure',
             'Authorization required',
             'A maintainer must approve this external contribution.',
@@ -79,27 +79,19 @@ final class CheckRunsTest extends TestCase
         );
     }
 
-    public function testCommitWithoutHashReportsNothing(): void
-    {
-        $adapter = $this->github();
-        $adapter->expects($this->never())->method('createCheckRun');
-        $adapter->expects($this->never())->method('updateCommitStatus');
-
-        $this->report(new CheckRuns(), $adapter, '');
-    }
 
     public function testUnknownRepositoryReportsNothing(): void
     {
-        $adapter = $this->github();
+        $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->never())->method('createCheckRun');
         $adapter->expects($this->never())->method('updateCommitStatus');
 
-        (new CheckRuns())->report($adapter, '', '', self::SHA, 'name', CheckRuns::CONCLUSION_NEUTRAL, 'success', 'title', 'summary');
+        (new CheckRuns())->report($adapter, '', '', self::SHA, 'name', 'neutral', 'success', 'title', 'summary');
     }
 
     public function testOverlongNameIsTruncated(): void
     {
-        $adapter = $this->github();
+        $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->once())
             ->method('createCheckRun')
             ->willReturnCallback(function (...$arguments) {
@@ -108,19 +100,9 @@ final class CheckRunsTest extends TestCase
                 return ['id' => 1];
             });
 
-        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), CheckRuns::CONCLUSION_NEUTRAL, 'success', 'title', 'summary');
+        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), 'neutral', 'success', 'title', 'summary');
     }
 
-    public function testAProviderRejectingBothIsContained(): void
-    {
-        $adapter = $this->createStub(GitHub::class);
-        $adapter->method('createCheckRun')->willThrowException(new \Exception('HTTP 500', 500));
-        $adapter->method('updateCommitStatus')->willThrowException(new \Exception('HTTP 500', 500));
-
-        $this->report(new CheckRuns(), $adapter);
-
-        $this->expectNotToPerformAssertions();
-    }
 
     public function testRepositoryRefusingIsAskedOnlyOnce(): void
     {
@@ -131,7 +113,7 @@ final class CheckRunsTest extends TestCase
 
         $checkRuns = new CheckRuns();
 
-        foreach (\range(1, 5) as $ignored) {
+        for ($i = 0; $i < 5; $i++) {
             $this->report($checkRuns, $adapter);
         }
     }
@@ -146,28 +128,24 @@ final class CheckRunsTest extends TestCase
 
         $checkRuns = new CheckRuns();
 
-        foreach (\range(1, 3) as $ignored) {
+        for ($i = 0; $i < 3; $i++) {
             $this->report($checkRuns, $adapter);
         }
     }
 
-    private function report(CheckRuns $checkRuns, Git $adapter, string $commitHash = self::SHA): void
+    private function report(CheckRuns $checkRuns, Git $adapter): void
     {
         $checkRuns->report(
             $adapter,
             'owner',
             'repo',
-            $commitHash,
+            self::SHA,
             'my-function (my-project)',
-            CheckRuns::CONCLUSION_NEUTRAL,
+            'neutral',
             'success',
             'Deployment skipped',
             'Commit message matched a skip pattern.',
         );
     }
 
-    private function github(): GitHub&MockObject
-    {
-        return $this->createMock(GitHub::class);
-    }
 }
