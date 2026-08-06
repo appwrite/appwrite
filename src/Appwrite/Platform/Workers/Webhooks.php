@@ -183,10 +183,19 @@ class Webhooks extends Action
 
             $maxAttempts = \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'));
             if ($attempts >= $maxAttempts) {
+                $wasEnabled = $webhook->getAttribute('enabled', true);
+                $previousAttempts = $attempts - 1;
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
 
-                if ($attempts === $maxAttempts) {
+                // Alert when this increment crosses the limit, or when the
+                // webhook was still enabled while already above it (e.g. the
+                // env max was lowered). Concurrent overshoot (previous == max)
+                // is left to the worker that crossed, so only one notice fires.
+                if (
+                    $wasEnabled
+                    && ($previousAttempts < $maxAttempts || $previousAttempts > $maxAttempts)
+                ) {
                     $this->sendAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForNotifications, $plan);
                 }
             }
