@@ -1960,6 +1960,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Organization' },
               ),
               createProfileFeatureFlagItem(
+                'Blog drafts',
+                'List draft blog posts above "Explore by topic" and open draft post pages (noindex).',
+                'blogDrafts',
+                profileId,
+                features.blogDrafts,
+                { category: 'Docs' },
+              ),
+              createProfileFeatureFlagItem(
                 'Partners docs',
                 'Partner documentation hub, audience switcher, and /docs/partners routes.',
                 'partnersDocs',
@@ -2361,6 +2369,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.nativeDbsMongo,
     features.userVerification,
     features.cookieBanner,
+    features.blogDrafts,
     features.oauthApps,
     features.oauth2Server,
     features.orgApiKeys,
