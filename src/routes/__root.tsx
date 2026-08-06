@@ -25,7 +25,9 @@ import {
   LEGACY_ICON_SRC,
 } from '@/lib/legacy-theme-assets'
 import { AgentChatProvider } from '@/components/global/providers/AgentChat'
-import { DocsPreviewProvider } from '@/components/global/providers/DocsPreview'
+import { DocsPreviewProvider } from '@/components/global/providers/DocsPreviewProvider'
+import { DocsContentHmrRefresh } from '@/lib/docs/DocsContentHmrRefresh'
+import '@/lib/docs/docs-content-hmr-runtime'
 import {
   ConsoleRightPane,
   ConsoleRightPaneProvider,
@@ -499,6 +501,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                           </DebugModeProvider>
                         </RootShellCatchBoundary>
                       </SentryContextProvider>
+                      <ClientOnly>
+                        <DocsContentHmrRefresh />
+                      </ClientOnly>
                       <ClientOnly>
                         <Toaster />
                       </ClientOnly>

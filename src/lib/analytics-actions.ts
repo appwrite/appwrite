@@ -16,6 +16,7 @@ export const ANALYTICS_ACTIONS = {
   'theme-toggle': 'Theme Toggle Clicked',
   'sidebar-collapse': 'Sidebar Collapse Clicked',
   'connect-project': 'Connect Project Clicked',
+  'copy-connect-sdk-prompt': 'Connect SDK Prompt Copied',
   'header-create-menu': 'Header Create Menu Clicked',
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',

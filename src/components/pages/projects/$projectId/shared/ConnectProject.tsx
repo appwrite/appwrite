@@ -41,9 +41,10 @@ import { CLISection } from '@/components/pages/projects/$projectId/shared/CLISec
 import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ApiKeyDrawer } from '@/components/pages/projects/$projectId/api-keys/ApiKeyDrawer'
-import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
+import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import {
+  buildConnectSdkPrompt,
   getCodeFiles,
   getInstallInstructions,
 } from '@/components/pages/projects/$projectId/shared/connect-snippets'
@@ -55,9 +56,10 @@ import {
   APPWRITE_AGENT_SKILLS_REPO,
 } from '@/lib/seo/agent-discovery'
 import { SKILLS_TRY_IT_PROMPTS } from '@/lib/skills-adoption'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { analyticsAttrs, ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import { canCreateKey } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useAnalytics } from '@/hooks/use-analytics'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 const APPWRITE_DOCS_URL = '/docs'
@@ -303,6 +305,7 @@ export function ConnectProject({
 }: ConnectProjectProps) {
   const t = useT()
   const navigate = useNavigate()
+  const { track } = useAnalytics()
   const [sdkId, setSdkId] = useState(() => {
     const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
     const inServer = SERVER_SDK_OPTIONS.some((o) => o.id === initialSdk)
@@ -394,28 +397,88 @@ export function ConnectProject({
   }, [open, initialConnectTab])
 
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
   const [copiedSkillsPrompt, setCopiedSkillsPrompt] = useState<string | null>(
     null,
   )
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
   useEffect(() => {
     setSelectedFileIndex(0)
   }, [sdkId, frameworkId, usingId, runtime])
   const selectedFile = codeFiles[selectedFileIndex] ?? codeFiles[0]
-  const handleCopyCode = () => {
-    if (!selectedFile) return
-    navigator.clipboard.writeText(selectedFile.code)
-    setCopied(true)
-    toast.success(t('Copied to clipboard'))
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const codeFileTabs = useMemo(
+    () =>
+      codeFiles.map((file, index) => ({
+        id: String(index),
+        label: file.label,
+      })),
+    [codeFiles],
+  )
   const installInstructions = useMemo(
     () => getInstallInstructions(sdkId, packageManagerId),
     [sdkId, packageManagerId],
   )
+
+  const sdkLabel =
+    [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].find((o) => o.id === sdkId)
+      ?.label ?? sdkId
+  const frameworkLabel = frameworks.find((fw) => fw.id === frameworkId)?.label
+  const usingLabel = usingVariants?.find((v) => v.id === usingId)?.label
+  const packageManagerLabel = packageManagers?.find(
+    (pm) => pm.id === packageManagerId,
+  )?.label
+
+  const connectSdkPrompt = useMemo(
+    () =>
+      buildConnectSdkPrompt({
+        projectId,
+        projectName: project?.name,
+        endpoint: endpoint ?? getBaseEndpoint(),
+        sdkLabel,
+        runtime,
+        frameworkLabel: frameworks.length > 0 ? frameworkLabel : undefined,
+        usingLabel:
+          usingVariants && usingVariants.length > 0 ? usingLabel : undefined,
+        packageManagerLabel:
+          packageManagers && packageManagers.length > 0
+            ? packageManagerLabel
+            : undefined,
+        installTitle: installInstructions.title,
+        installOptions: installInstructions.options,
+        codeFiles,
+      }),
+    [
+      projectId,
+      project?.name,
+      endpoint,
+      sdkLabel,
+      runtime,
+      frameworks.length,
+      frameworkLabel,
+      usingVariants,
+      usingLabel,
+      packageManagers,
+      packageManagerLabel,
+      installInstructions,
+      codeFiles,
+    ],
+  )
+
+  const handleCopyConnectPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(connectSdkPrompt)
+      track(ANALYTICS_ACTIONS['copy-connect-sdk-prompt'], {
+        platform: sdkId,
+      })
+      setCopiedPrompt(true)
+      toast.success(t('Prompt copied to clipboard'))
+      setTimeout(() => setCopiedPrompt(false), 2000)
+    } catch {
+      toast.error(t('Failed to copy prompt'))
+    }
+  }
 
   const handleViewApiKeys = () => {
     onOpenChange(false)
@@ -654,6 +717,23 @@ export function ConnectProject({
                     </Select>
                   </div>
                 )}
+                <div className="ms-auto flex shrink-0 items-end self-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 text-[12px]"
+                    data-analytics-track="manual"
+                    onClick={() => void handleCopyConnectPrompt()}
+                  >
+                    {copiedPrompt ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {t('Copy prompt')}
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
@@ -738,49 +818,15 @@ export function ConnectProject({
                   </DocsRouteLink>
                 </div>
                 {/* Right: File-based code examples */}
-                <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-                  <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-                    {codeFiles.length > 1 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {codeFiles.map((file, i) => (
-                          <button
-                            key={file.label}
-                            type="button"
-                            onClick={() => setSelectedFileIndex(i)}
-                            className={cn(
-                              'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                              i === selectedFileIndex
-                                ? 'bg-muted text-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                            )}
-                          >
-                            {t(file.label)}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <span />
-                    )}
-                    {selectedFile && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-                        onClick={handleCopyCode}
-                      >
-                        {copied ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        {t('Copy')}
-                      </Button>
-                    )}
-                  </div>
+                <div className="min-w-0 min-h-0 flex flex-col flex-1">
                   {selectedFile && (
-                    <ConnectCodePanel
+                    <ConnectCodeExample
                       code={selectedFile.code}
                       language={selectedFile.language ?? 'plaintext'}
+                      tabs={codeFileTabs}
+                      activeTabId={String(selectedFileIndex)}
+                      onTabChange={(id) => setSelectedFileIndex(Number(id))}
+                      selectorAriaLabel={t('Select file')}
                       fixedHeight="100%"
                       className="flex-1 min-h-0"
                     />

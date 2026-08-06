@@ -873,6 +873,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '購読する Realtime チャンネルを作成します。複数のリソースに一致させるにはワイルドカード (*) を使用してください。',
   'Select events that will trigger your function or webhook.':
     '関数または Webhook をトリガーするイベントを選択してください。',
+  'Select file': 'ファイルを選択',
   'e.g. account or databases.*.tables.*.rows.*':
     '例: account または databases.*.tables.*.rows.*',
   'e.g. databases.*.tables.*.rows.*.create':

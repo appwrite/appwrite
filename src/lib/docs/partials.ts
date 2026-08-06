@@ -12,13 +12,28 @@ for (const modulePath of Object.keys(partialLoaders)) {
 const partialCache = new Map<string, string>()
 
 async function loadPartial(fileName: string): Promise<string> {
-  const cached = partialCache.get(fileName)
-  if (cached !== undefined) return cached
+  if (!import.meta.env.DEV) {
+    const cached = partialCache.get(fileName)
+    if (cached !== undefined) return cached
+  }
 
   const modulePath = partialPathByFileName.get(fileName)
   if (!modulePath) {
     partialCache.set(fileName, '')
     return ''
+  }
+
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    try {
+      const response = await fetch(`${modulePath}?t=${Date.now()}`)
+      if (response.ok) {
+        const content = await response.text()
+        partialCache.set(fileName, content)
+        return content
+      }
+    } catch {
+      // Fall through to glob loader.
+    }
   }
 
   const loader = partialLoaders[modulePath]

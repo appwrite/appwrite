@@ -5,10 +5,20 @@ import { preloadPartialsForContent, resolvePartials } from './partials'
 import { extractDocsToc } from './toc'
 import type { DocsPageData, DocsPageMeta } from './types'
 
-const importedContentLoaders = import.meta.glob('/src/content/docs/**/index.markdoc', {
-  query: '?raw',
-  import: 'default',
-}) as Record<string, () => Promise<string>>
+export { getDocsSlugFromPath } from './docs-slug'
+
+/**
+ * Lazy glob keeps markdoc edits from forcing a full Vite program reload of this
+ * module (eager globs did). Browser DEV loads always fetch with a cache-bust so
+ * HMR still sees fresh content.
+ */
+const importedContentLoaders = import.meta.glob(
+  '/src/content/docs/**/index.markdoc',
+  {
+    query: '?raw',
+    import: 'default',
+  },
+) as Record<string, () => Promise<string>>
 
 const localContentLoaders = import.meta.glob(
   '/src/content/docs-local/**/index.markdoc',
@@ -33,6 +43,7 @@ for (const modulePath of Object.keys(importedContentLoaders)) {
   contentPathBySlug.set(slugFromModulePath(modulePath, 'docs'), modulePath)
 }
 for (const modulePath of Object.keys(localContentLoaders)) {
+  // Local overrides win when the same slug exists in both trees.
   contentPathBySlug.set(slugFromModulePath(modulePath, 'docs-local'), modulePath)
 }
 
@@ -54,16 +65,29 @@ function touchRawContentCache(slug: string, value: string): string {
 }
 
 async function loadRawContent(slug: string): Promise<string | null> {
-  const cached = rawContentCache.get(slug)
-  if (cached !== undefined) return touchRawContentCache(slug, cached)
-
   const modulePath = contentPathBySlug.get(slug)
   if (!modulePath) return null
+
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    try {
+      const response = await fetch(`${modulePath}?t=${Date.now()}`)
+      if (!response.ok) return null
+      return await response.text()
+    } catch {
+      // Fall through to glob loader.
+    }
+  }
+
+  if (!import.meta.env.DEV) {
+    const cached = rawContentCache.get(slug)
+    if (cached !== undefined) return touchRawContentCache(slug, cached)
+  }
 
   const loader = contentLoaders[modulePath]
   if (!loader) return null
 
   const raw = await loader()
+  if (import.meta.env.DEV) return raw
   return touchRawContentCache(slug, raw)
 }
 
@@ -105,13 +129,6 @@ function buildDocsPage(meta: DocsPageMeta, raw: string): DocsPageData {
     toc: extractDocsToc(withPartials),
     ...(promptPath ? { promptPath } : {}),
   }
-}
-
-export function getDocsSlugFromPath(pathname: string): string {
-  const normalized = pathname.replace(/\/+$/, '')
-  if (normalized === '/docs') return ''
-  if (!normalized.startsWith('/docs/')) return ''
-  return normalized.slice('/docs/'.length)
 }
 
 export function getDocsPageMeta(slug: string): DocsPageMeta | null {
