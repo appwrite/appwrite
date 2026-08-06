@@ -177,7 +177,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, "Skipped: branch '" . \mb_strimwidth($providerBranch, 0, 60, '...') . "' does not match the configured branch triggers.");
+                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, "Skipped: branch '{$providerBranch}' does not match the configured branch triggers.");
                     continue;
                 }
 

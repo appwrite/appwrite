@@ -17,6 +17,7 @@ class CheckRuns
     public const string CONCLUSION_ACTION_REQUIRED = 'action_required';
 
     protected const int NAME_LIMIT = 255;
+    protected const int DESCRIPTION_LIMIT = 140;
 
     /**
      * @var array<string, true> Repositories that refused, so a fan-out pays one call, not one each.
@@ -44,7 +45,7 @@ class CheckRuns
         }
 
         try {
-            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $summary, $detailsUrl, $name);
+            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, \mb_strimwidth($summary, 0, self::DESCRIPTION_LIMIT, '...'), $detailsUrl, $name);
         } catch (\Throwable $error) {
             $this->remember($owner, $repositoryName, $error);
             Console::warning("Failed to report on {$owner}/{$repositoryName}: " . $error->getMessage());
