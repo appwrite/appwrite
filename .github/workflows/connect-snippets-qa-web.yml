@@ -136,6 +136,15 @@ jobs:
             port: 5173
             dev: npm run dev -- --port 5173 --strictPort
 
+          # Astro's dev server defaults to 4321, not Vite's 5173.
+          - id: astro
+            framework: astro
+            using: vite
+            snippets: astro
+            create: npm create astro@latest "$APP_DIR" -- --template minimal --no-install --no-git --skip-houston --yes
+            port: 4321
+            dev: npm run dev -- --port 4321
+
           - id: vanilla-vite
             framework: vanilla
             using: vite

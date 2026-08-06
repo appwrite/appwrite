@@ -49,6 +49,35 @@ jobs:
             install: npm install node-appwrite tsx
             run: npx tsx src/index.ts
 
+          - id: node-hono
+            kind: http
+            snippets: node/hono
+            tools: node@24
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && npm init -y && npm pkg set type=module
+            install: npm install hono @hono/node-server node-appwrite tsx
+            port: 3000
+            start: npx tsx src/index.ts
+
+          - id: node-fastify
+            kind: http
+            snippets: node/fastify
+            tools: node@24
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && npm init -y && npm pkg set type=module
+            install: npm install fastify node-appwrite tsx
+            port: 3000
+            start: npx tsx src/index.ts
+
+          # `nest new` scaffolds and installs its own dependencies; the sample
+          # only adds the Appwrite SDK on top.
+          - id: node-nestjs
+            kind: http
+            snippets: node/nestjs
+            tools: node@24
+            create: npx -y @nestjs/cli new "$APP_DIR" --package-manager npm --skip-git
+            install: npm install node-appwrite
+            port: 3000
+            start: npm run start
+
           - id: node-express
             kind: http
             snippets: node/express
@@ -103,6 +132,15 @@ jobs:
             install: deno cache main.ts
             run: deno run -A main.ts
 
+          - id: deno-hono
+            kind: http
+            snippets: deno/hono
+            tools: deno@2
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && deno init
+            install: deno cache main.ts
+            port: 8000
+            start: deno run -A main.ts
+
           # Fresh's init prompts for Tailwind and VS Code config; answer both
           # with no via stdin.
           - id: deno-fresh
@@ -115,76 +153,236 @@ jobs:
 
           - id: python
             kind: cli
-            snippets: python
+            snippets: python/vanilla
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
             install: .venv/bin/pip install --quiet appwrite
             run: .venv/bin/python main.py
 
+          - id: python-fastapi
+            kind: http
+            snippets: python/fastapi
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
+            install: .venv/bin/pip install --quiet appwrite fastapi uvicorn
+            port: 8000
+            start: .venv/bin/uvicorn main:app --port 8000
+
+          # django-admin only exists once Django is installed, so the scaffold
+          # step creates the venv and installs it before calling startproject.
+          - id: python-django
+            kind: http
+            snippets: python/django
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv && .venv/bin/pip install --quiet django && .venv/bin/django-admin startproject config .
+            install: .venv/bin/pip install --quiet appwrite
+            port: 8000
+            start: .venv/bin/python manage.py runserver 8000
+
+          - id: python-flask
+            kind: http
+            snippets: python/flask
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && python3 -m venv .venv
+            install: .venv/bin/pip install --quiet appwrite flask
+            port: 5000
+            start: .venv/bin/python app.py
+
           - id: php
             kind: cli
-            snippets: php
+            snippets: php/vanilla
             create: mkdir -p "$APP_DIR"
             install: composer require --no-interaction --quiet appwrite/appwrite
             run: php index.php
 
+          - id: php-laravel
+            kind: http
+            snippets: php/laravel
+            create: composer create-project --quiet --no-interaction laravel/laravel "$APP_DIR"
+            install: composer require --no-interaction --quiet appwrite/appwrite
+            port: 8000
+            start: php artisan serve --port=8000
+
+          # No symfony CLI on the runner; PHP's built-in server with the front
+          # controller as the router script serves the app just as well.
+          - id: php-symfony
+            kind: http
+            snippets: php/symfony
+            create: composer create-project --quiet --no-interaction symfony/skeleton "$APP_DIR"
+            install: composer require --no-interaction --quiet appwrite/appwrite
+            port: 8000
+            start: php -S 127.0.0.1:8000 -t public public/index.php
+
           - id: ruby
             kind: cli
-            snippets: ruby
+            snippets: ruby/vanilla
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && bundle init
             install: bundle add appwrite
             run: bundle exec ruby main.rb
 
+          - id: ruby-rails
+            kind: http
+            snippets: ruby/rails
+            create: gem install rails --no-document && rails new "$APP_DIR" --api --skip-git --skip-test --skip-bundle
+            install: bundle add appwrite
+            port: 3000
+            start: bin/rails server -p 3000
+
           - id: dotnet
             kind: cli
-            snippets: dotnet
+            snippets: dotnet/vanilla
             create: dotnet new console -o "$APP_DIR"
             install: dotnet add package Appwrite
             run: dotnet run
 
+          - id: dotnet-minimal
+            kind: http
+            snippets: dotnet/minimal
+            create: dotnet new web -o "$APP_DIR"
+            install: dotnet add package Appwrite
+            port: 5000
+            start: dotnet run
+
+          - id: dotnet-controllers
+            kind: http
+            snippets: dotnet/controllers
+            create: dotnet new web -o "$APP_DIR"
+            install: dotnet add package Appwrite
+            port: 5000
+            start: dotnet run
+
           - id: go
             kind: cli
-            snippets: go
+            snippets: go/vanilla
             create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && go mod init connect-qa
             install: go mod tidy
             run: go run .
 
+          - id: go-gin
+            kind: http
+            snippets: go/gin
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && go mod init connect-qa
+            install: go mod tidy
+            port: 3000
+            start: go run .
+
+          - id: go-echo
+            kind: http
+            snippets: go/echo
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && go mod init connect-qa
+            install: go mod tidy
+            port: 3000
+            start: go run .
+
+          - id: go-fiber
+            kind: http
+            snippets: go/fiber
+            create: mkdir -p "$APP_DIR" && cd "$APP_DIR" && go mod init connect-qa
+            install: go mod tidy
+            port: 3000
+            start: go run .
+
           - id: java
             kind: cli
-            snippets: java
-            tools: java@temurin-17 gradle@8
+            snippets: java/vanilla
+            tools: java@temurin-21 gradle@8
             create: mkdir -p "$APP_DIR" && cp -R templates/java/. "$APP_DIR/"
             run: gradle run -q --console=plain
 
+          - id: java-spring
+            kind: http
+            snippets: java/spring
+            tools: java@temurin-21 gradle@8
+            create: mkdir -p "$APP_DIR" && cp -R templates/java-spring/. "$APP_DIR/"
+            port: 8080
+            start: gradle bootRun -q --console=plain
+
+          # quarkusDev asks about build analytics on first run; opting out keeps
+          # it from blocking on stdin.
+          - id: java-quarkus
+            kind: http
+            snippets: java/quarkus
+            tools: java@temurin-21 gradle@8
+            create: mkdir -p "$APP_DIR" && cp -R templates/java-quarkus/. "$APP_DIR/"
+            port: 8080
+            start: gradle quarkusDev --console=plain -Dquarkus.analytics.disabled=true
+
           - id: kotlin
             kind: cli
-            snippets: kotlin
-            tools: java@temurin-17 gradle@8
+            snippets: kotlin/vanilla
+            tools: java@temurin-21 gradle@8
             create: mkdir -p "$APP_DIR" && cp -R templates/kotlin/. "$APP_DIR/"
             copy_to: src/main/kotlin
             run: gradle run -q --console=plain
 
+          - id: kotlin-ktor
+            kind: http
+            snippets: kotlin/ktor
+            tools: java@temurin-21 gradle@8
+            create: mkdir -p "$APP_DIR" && cp -R templates/kotlin-ktor/. "$APP_DIR/"
+            port: 8080
+            start: gradle run -q --console=plain
+
+          - id: kotlin-spring
+            kind: http
+            snippets: kotlin/spring
+            tools: java@temurin-21 gradle@8
+            create: mkdir -p "$APP_DIR" && cp -R templates/kotlin-spring/. "$APP_DIR/"
+            port: 8080
+            start: gradle bootRun -q --console=plain
+
           - id: swift
             kind: cli
-            snippets: swift
+            snippets: swift/vanilla
             create: mkdir -p "$APP_DIR" && cp -R templates/swift/. "$APP_DIR/"
             copy_to: Sources
             run: swift run
+
+          # Vapor pulls in BoringSSL, which takes minutes to compile; build it
+          # up front so the readiness poll only covers process start.
+          - id: swift-vapor
+            kind: http
+            snippets: swift/vapor
+            create: mkdir -p "$APP_DIR" && cp -R templates/swift-vapor/. "$APP_DIR/"
+            install: swift build
+            port: 8080
+            start: swift run
 
           # `dart create` rejects dashes in package names, so scaffold under
           # a valid name and move it into place.
           - id: dart
             kind: cli
-            snippets: dart
+            snippets: dart/vanilla
             create: dart create -t console "$RUNNER_TEMP/connect_qa" && mv "$RUNNER_TEMP/connect_qa" "$APP_DIR"
-            install: dart pub add appwrite
+            install: dart pub add dart_appwrite
             run: dart run bin/main.dart
+
+          - id: dart-frog
+            kind: http
+            snippets: dart/frog
+            create: dart pub global activate dart_frog_cli && dart_frog create "$APP_DIR"
+            install: dart pub add dart_appwrite
+            port: 8080
+            start: dart_frog dev --port 8080
 
           - id: rust
             kind: cli
-            snippets: rust
+            snippets: rust/vanilla
             create: cargo new "$APP_DIR" --name connect-qa
-            install: cargo add appwrite && cargo add tokio --features full
+            install: cargo add appwrite serde_json && cargo add tokio --features full
             run: cargo run -q
+
+          - id: rust-axum
+            kind: http
+            snippets: rust/axum
+            create: cargo new "$APP_DIR" --name connect-qa
+            install: cargo add appwrite axum tokio -F tokio/full
+            port: 3000
+            start: cargo run -q
+
+          - id: rust-actix
+            kind: http
+            snippets: rust/actix
+            create: cargo new "$APP_DIR" --name connect-qa
+            install: cargo add appwrite actix-web
+            port: 3000
+            start: cargo run -q
 
     steps:
       - uses: actions/checkout@v4
@@ -212,20 +410,22 @@ jobs:
           fi
 
       - name: Install Swift
-        if: matrix.id == 'swift'
+        if: startsWith(matrix.id, 'swift')
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.0"
 
       - name: Install Dart
-        if: matrix.id == 'dart'
+        if: startsWith(matrix.id, 'dart')
         uses: dart-lang/setup-dart@v1
 
       - name: Scaffold starter project
         run: |
           APP_DIR="app-$(date +%s)-$RANDOM"
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          ${{ matrix.create }}
+          # Subshell: most scaffolds end with `cd "$APP_DIR"`, and letting that
+          # leak would make the check below look for $APP_DIR inside itself.
+          ( ${{ matrix.create }} )
           if [ ! -d "$APP_DIR" ]; then
             echo "::error::Scaffold did not produce $APP_DIR"
             exit 1
@@ -297,6 +497,7 @@ jobs:
               -x "*/node_modules/*" "*/.git/*" "*/vendor/*" "*/.venv/*" \
               "*/target/*" "*/build/*" "*/.gradle/*" "*/obj/*" \
               "*/bin/Debug/*" "*/.dart_tool/*" "*/.build/*" "*/_fresh/*" \
+              "*/.dart_frog/*" "*/storage/framework/*" "*/var/cache/*" \
               || true
           fi
 

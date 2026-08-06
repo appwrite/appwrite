@@ -39,6 +39,8 @@ const EXTENSION_LANGUAGES: Record<string, CodeBlockLanguage> = {
   js: 'javascript',
   vue: 'markup',
   svelte: 'markup',
+  astro: 'markup',
+  yaml: 'yaml',
   dart: 'dart',
   py: 'python',
   php: 'php',
@@ -99,10 +101,36 @@ const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
   bun: { dir: 'bun/vanilla' },
   apple: { envLabel: 'Config (env or xcconfig)' },
   android: { envLabel: 'Build config / env' },
-  swift: { envLabel: '.env or xcconfig' },
-  dotnet: { envLabel: '.env or launchSettings' },
-  kotlin: { envLabel: '.env or env vars' },
-  java: { envLabel: '.env or env vars' },
+  'python/python': { dir: 'python/vanilla' },
+  python: { dir: 'python/vanilla' },
+  'php/php': { dir: 'php/vanilla' },
+  php: { dir: 'php/vanilla' },
+  'ruby/ruby': { dir: 'ruby/vanilla' },
+  ruby: { dir: 'ruby/vanilla' },
+  'go/go': { dir: 'go/vanilla' },
+  go: { dir: 'go/vanilla' },
+  'rust/rust': { dir: 'rust/vanilla' },
+  rust: { dir: 'rust/vanilla' },
+  'dart/dart': { dir: 'dart/vanilla' },
+  dart: { dir: 'dart/vanilla' },
+  'swift/swift': { dir: 'swift/vanilla', envLabel: '.env or xcconfig' },
+  swift: { dir: 'swift/vanilla', envLabel: '.env or xcconfig' },
+  'dotnet/dotnet': {
+    dir: 'dotnet/vanilla',
+    envLabel: '.env or launchSettings',
+  },
+  dotnet: { dir: 'dotnet/vanilla', envLabel: '.env or launchSettings' },
+  'kotlin/kotlin': { dir: 'kotlin/vanilla', envLabel: '.env or env vars' },
+  kotlin: { dir: 'kotlin/vanilla', envLabel: '.env or env vars' },
+  'java/java': { dir: 'java/vanilla', envLabel: '.env or env vars' },
+  java: { dir: 'java/vanilla', envLabel: '.env or env vars' },
+  'java/spring': { envLabel: '.env or env vars' },
+  'java/quarkus': { envLabel: '.env or env vars' },
+  'kotlin/spring': { envLabel: '.env or env vars' },
+  'kotlin/ktor': { envLabel: '.env or env vars' },
+  'swift/vapor': { envLabel: '.env or env vars' },
+  'dotnet/minimal': { envLabel: '.env or launchSettings' },
+  'dotnet/controllers': { envLabel: '.env or launchSettings' },
 }
 
 /** Script sources tab-order before same-named markup (+page.ts before +page.svelte). */
@@ -171,7 +199,7 @@ function getEnvExample(
     if (frameworkId === 'react' && usingId === 'cra') {
       return `REACT_APP_APPWRITE_ENDPOINT=${endpoint}\nREACT_APP_APPWRITE_PROJECT_ID=${projectId}`
     }
-    if (frameworkId === 'sveltekit') {
+    if (frameworkId === 'sveltekit' || frameworkId === 'astro') {
       return `PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nPUBLIC_APPWRITE_PROJECT_ID=${projectId}`
     }
     if (frameworkId === 'angular') {

@@ -108,9 +108,13 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'angular', label: 'Angular' },
     { id: 'solidstart', label: 'SolidStart' },
     { id: 'solid', label: 'Solid' },
+    { id: 'astro', label: 'Astro' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
+    { id: 'hono', label: 'Hono' },
+    { id: 'fastify', label: 'Fastify' },
+    { id: 'nestjs', label: 'NestJS' },
     { id: 'express', label: 'Express' },
     { id: 'koa', label: 'Koa' },
     { id: 'vanilla', label: 'Vanilla' },
@@ -127,17 +131,58 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
   'react-native': [{ id: 'react-native', label: 'Vanilla' }],
   apple: [{ id: 'swift', label: 'Swift' }],
   android: [{ id: 'kotlin', label: 'Kotlin' }],
-  python: [{ id: 'python', label: 'Vanilla' }],
-  dart: [{ id: 'dart', label: 'Vanilla' }],
-  php: [{ id: 'php', label: 'Vanilla' }],
-  ruby: [{ id: 'ruby', label: 'Vanilla' }],
-  dotnet: [{ id: 'dotnet', label: 'Vanilla' }],
-  go: [{ id: 'go', label: 'Vanilla' }],
-  java: [{ id: 'java', label: 'Vanilla' }],
-  rust: [{ id: 'rust', label: 'Vanilla' }],
-  swift: [{ id: 'swift', label: 'Vanilla' }],
-  kotlin: [{ id: 'kotlin', label: 'Vanilla' }],
+  python: [
+    { id: 'fastapi', label: 'FastAPI' },
+    { id: 'django', label: 'Django' },
+    { id: 'flask', label: 'Flask' },
+    { id: 'python', label: 'Vanilla' },
+  ],
+  dart: [
+    { id: 'serverpod', label: 'Serverpod' },
+    { id: 'frog', label: 'Dart Frog' },
+    { id: 'dart', label: 'Vanilla' },
+  ],
+  php: [
+    { id: 'laravel', label: 'Laravel' },
+    { id: 'symfony', label: 'Symfony' },
+    { id: 'php', label: 'Vanilla' },
+  ],
+  ruby: [
+    { id: 'rails', label: 'Rails' },
+    { id: 'ruby', label: 'Vanilla' },
+  ],
+  dotnet: [
+    { id: 'minimal', label: 'Minimal API' },
+    { id: 'controllers', label: 'Controllers' },
+    { id: 'dotnet', label: 'Vanilla' },
+  ],
+  go: [
+    { id: 'gin', label: 'Gin' },
+    { id: 'echo', label: 'Echo' },
+    { id: 'fiber', label: 'Fiber' },
+    { id: 'go', label: 'Vanilla' },
+  ],
+  java: [
+    { id: 'spring', label: 'Spring Boot' },
+    { id: 'quarkus', label: 'Quarkus' },
+    { id: 'java', label: 'Vanilla' },
+  ],
+  rust: [
+    { id: 'axum', label: 'Axum' },
+    { id: 'actix', label: 'Actix Web' },
+    { id: 'rust', label: 'Vanilla' },
+  ],
+  swift: [
+    { id: 'vapor', label: 'Vapor' },
+    { id: 'swift', label: 'Vanilla' },
+  ],
+  kotlin: [
+    { id: 'ktor', label: 'Ktor' },
+    { id: 'spring', label: 'Spring Boot' },
+    { id: 'kotlin', label: 'Vanilla' },
+  ],
   deno: [
+    { id: 'hono', label: 'Hono' },
     { id: 'fresh', label: 'Fresh' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
@@ -167,6 +212,7 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   angular: [{ id: 'cli', label: 'Angular CLI' }],
   solidstart: [{ id: 'vite', label: 'Vite' }],
   solid: [{ id: 'vite', label: 'Vite' }],
+  astro: [{ id: 'vite', label: 'Vite' }],
 }
 
 /** Package manager options per SDK; null = not applicable (use all in install). */
@@ -220,7 +266,12 @@ const PACKAGE_MANAGER_OPTIONS: Record<
 }
 
 export type ConnectProjectTab =
-  'app' | 'cli' | 'mcp' | 'skills' | 'terraform' | 's3'
+  | 'app'
+  | 'cli'
+  | 'mcp'
+  | 'skills'
+  | 'terraform'
+  | 's3'
 
 const CONNECT_PROJECT_TAB_IDS = [
   'mcp',
