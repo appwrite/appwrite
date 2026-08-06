@@ -2,10 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -128,6 +132,8 @@ class Create extends Base
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
+            ->inject('publisherForCertificates')
+            ->inject('certificateIssuer')
             ->inject('request')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
@@ -174,6 +180,8 @@ class Create extends Base
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
+        Certificate $publisherForCertificates,
+        Certificates $certificateIssuer,
         Request $request,
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
@@ -457,6 +465,20 @@ class Create extends Base
                     ->setSubscribers(['console', $project->getId()])
                     ->from($ruleCreate)
                     ->trigger();
+
+                if ($certificateIssuer->isAutoIssueEnabled(new Document([
+                    'domain' => $domain,
+                    'owner' => 'Appwrite',
+                ]))) {
+                    $publisherForCertificates->enqueue(new CertificateMessage(
+                        project: $project,
+                        domain: new Document([
+                            'domain' => $domain,
+                            'domainType' => 'function',
+                        ]),
+                        action: CertificateEvent::ACTION_GENERATION,
+                    ));
+                }
             }
         }
 
