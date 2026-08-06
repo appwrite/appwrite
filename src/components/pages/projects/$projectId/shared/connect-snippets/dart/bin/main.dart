@@ -7,7 +7,18 @@ final client = Client()
   ..setKey(Platform.environment['APPWRITE_API_KEY']!);
 
 void main() async {
-  final account = Account(client);
-  final user = await account.get();
-  print('Hello, ${user.name}');
+  final project = Project(client);
+
+  final policy = await project.updatePasswordStrengthPolicy(
+    min: 8,
+    uppercase: true,
+    number: true,
+    symbols: true,
+  );
+
+  print(policy);
+
+  final policies = await project.listPolicies();
+
+  print(policies);
 }

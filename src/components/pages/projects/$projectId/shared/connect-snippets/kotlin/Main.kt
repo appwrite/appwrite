@@ -1,13 +1,24 @@
 import io.appwrite.Client
-import io.appwrite.services.Account
+import io.appwrite.services.Project
 
-fun main() {
+suspend fun main() {
   val client = Client()
     .setEndpoint(System.getenv("APPWRITE_ENDPOINT"))
     .setProject(System.getenv("APPWRITE_PROJECT_ID"))
     .setKey(System.getenv("APPWRITE_API_KEY"))
 
-  val account = Account(client)
-  val user = account.get()
-  println("Hello, ${user.name}")
+  val project = Project(client)
+
+  val policy = project.updatePasswordStrengthPolicy(
+    min = 8,
+    uppercase = true,
+    number = true,
+    symbols = true
+  )
+
+  println(policy)
+
+  val policies = project.listPolicies()
+
+  println(policies)
 }

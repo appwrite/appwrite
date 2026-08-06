@@ -6,6 +6,17 @@ $client = (new \Appwrite\Client())
   ->setProject(getenv('APPWRITE_PROJECT_ID'))
   ->setKey(getenv('APPWRITE_API_KEY'));
 
-$account = new \Appwrite\Services\Account($client);
-$user = $account->get();
-echo "Hello, " . $user['name'];
+$project = new \Appwrite\Services\Project($client);
+
+$policy = $project->updatePasswordStrengthPolicy(
+  min: 8,
+  uppercase: true,
+  number: true,
+  symbols: true
+);
+
+print_r($policy);
+
+$policies = $project->listPolicies();
+
+print_r($policies);

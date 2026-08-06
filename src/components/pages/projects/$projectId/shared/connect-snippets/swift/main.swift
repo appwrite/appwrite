@@ -5,6 +5,17 @@ let client = Client()
   .setProject(ProcessInfo.processInfo.environment["APPWRITE_PROJECT_ID"]!)
   .setKey(ProcessInfo.processInfo.environment["APPWRITE_API_KEY"]!)
 
-let account = Account(client)
-let user = try await account.get()
-print("Hello, \(user.name)")
+let project = Project(client)
+
+let policy = try await project.updatePasswordStrengthPolicy(
+  min: 8,
+  uppercase: true,
+  number: true,
+  symbols: true
+)
+
+print(policy)
+
+let policies = try await project.listPolicies()
+
+print(policies)

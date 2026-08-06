@@ -1,5 +1,6 @@
 import io.appwrite.Client;
-import io.appwrite.services.Account;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Project;
 
 public class Main {
   public static void main(String[] args) {
@@ -8,7 +9,20 @@ public class Main {
       .setProject(System.getenv("APPWRITE_PROJECT_ID"))
       .setKey(System.getenv("APPWRITE_API_KEY"));
 
-    Account account = new Account(client);
-    // Use the account service (and others) for API calls
+    Project project = new Project(client);
+
+    project.updatePasswordStrengthPolicy(
+      8,    // min
+      true, // uppercase
+      true, // number
+      true, // symbols
+      new CoroutineCallback<>((policy, error) -> {
+        System.out.println(policy);
+      })
+    );
+
+    project.listPolicies(new CoroutineCallback<>((policies, error) -> {
+      System.out.println(policies);
+    }));
   }
 }

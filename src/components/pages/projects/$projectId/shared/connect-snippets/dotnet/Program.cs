@@ -6,6 +6,17 @@ var client = new Client()
   .SetProject(Environment.GetEnvironmentVariable("APPWRITE_PROJECT_ID")!)
   .SetKey(Environment.GetEnvironmentVariable("APPWRITE_API_KEY")!);
 
-var account = new Account(client);
-var user = await account.GetAsync();
-Console.WriteLine($"Hello, {user.Name}");
+var project = new Project(client);
+
+var policy = await project.UpdatePasswordStrengthPolicy(
+  min: 8,
+  uppercase: true,
+  number: true,
+  symbols: true
+);
+
+Console.WriteLine(policy);
+
+var policies = await project.ListPolicies();
+
+Console.WriteLine(policies);

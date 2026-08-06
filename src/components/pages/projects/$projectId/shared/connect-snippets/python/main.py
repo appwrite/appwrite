@@ -1,13 +1,23 @@
 import os
 from appwrite.client import Client
-from appwrite.services.account import Account
+from appwrite.services.project import Project
 
 client = Client()
 client.set_endpoint(os.environ.get("APPWRITE_ENDPOINT"))
 client.set_project(os.environ.get("APPWRITE_PROJECT_ID"))
 client.set_key(os.environ.get("APPWRITE_API_KEY"))
 
-# Example: get current user
-account = Account(client)
-user = account.get()
-print(f"Hello, {user['name']}")
+project = Project(client)
+
+policy = project.update_password_strength_policy(
+    min=8,
+    uppercase=True,
+    number=True,
+    symbols=True
+)
+
+print(policy)
+
+policies = project.list_policies()
+
+print(policies)
