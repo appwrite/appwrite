@@ -41,6 +41,8 @@ class Create extends Action
             ->httpAlias('/v1/projects/:projectId/smtp/tests')
             ->desc('Create project SMTP test')
             ->groups(['api', 'project'])
+            ->label('audits.event', 'project.smtp.test')
+            ->label('audits.resource', 'project/{project.$id}')
             ->label('scope', 'project.write')
             ->label('sdk', new Method(
                 namespace: 'project',
