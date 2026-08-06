@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from '@tanstack/react-router'
 import type { ComponentProps, MouseEvent, ReactNode } from 'react'
-import { useDocsPreview } from '@/components/global/providers/DocsPreview'
+import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { docsHrefToPreviewSlug } from '@/lib/docs/docs-href'

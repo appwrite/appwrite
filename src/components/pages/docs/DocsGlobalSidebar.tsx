@@ -470,8 +470,16 @@ export function DocsGlobalSidebar({
   const marketingEnabled = features.marketing
   const audience = getDocsAudienceFromPathname(pathname)
   const globalNav = getDocsGlobalNav(audience)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  useEffect(() => {
+    // Wait until after mount so localStorage debug overrides are applied before
+    // we decide to bounce feature-gated docs sections.
+    if (!hasMounted) return
     if (!features.partnersDocs && isPartnersDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
       return
@@ -487,6 +495,7 @@ export function DocsGlobalSidebar({
     features.agent,
     features.firewall,
     features.partnersDocs,
+    hasMounted,
     navigate,
     pathname,
   ])

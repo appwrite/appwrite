@@ -8,7 +8,7 @@ import {
   API_REFERENCE_COLUMNS_DEFAULT_LAYOUT,
   normalizeApiReferenceColumnsLayout,
 } from '@/lib/resizable-layout'
-import { getDocsSlugFromPath } from '@/lib/docs/content'
+import { getDocsSlugFromPath } from '@/lib/docs/docs-slug'
 import { getDocsSectionNav } from '@/lib/docs/navigation'
 import type {
   ReferencePlatform,
