@@ -116,11 +116,16 @@ function splitExtension(path: string): [string, string] {
     : [path, '']
 }
 
-/** Appwrite client setup file first, then other appwrite-named files, then the rest. */
+/**
+ * Project config files first (like the generated env entry, they're one-time
+ * setup), then the Appwrite client setup file, then other appwrite-named
+ * files, then the rest.
+ */
 function snippetRank(path: string): number {
   const [stem] = splitExtension(path.split('/').pop()?.toLowerCase() ?? '')
-  if (stem === 'appwrite') return 0
-  return stem.includes('appwrite') ? 1 : 2
+  if (stem === 'config' || stem.endsWith('.config')) return 0
+  if (stem === 'appwrite') return 1
+  return stem.includes('appwrite') ? 2 : 3
 }
 
 function extensionWeight(extension: string): number {
