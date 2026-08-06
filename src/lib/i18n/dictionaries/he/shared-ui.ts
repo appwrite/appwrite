@@ -1146,6 +1146,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Select events that will trigger your function or webhook.':
     'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
   'Select file': 'בחירת קובץ',
+  'Select tool': 'בחירת כלי',
   Service: 'שירות',
   'Bucket (optional)': 'באקט (אופציונלי)',
   'Function (optional)': 'פונקציה (אופציונלי)',

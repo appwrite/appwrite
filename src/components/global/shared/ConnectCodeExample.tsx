@@ -26,6 +26,8 @@ const CODE_EXAMPLE_HEADER_LABEL_CLASS =
 export type ConnectCodeExampleTab = {
   id: string
   label: string
+  /** Optional leading icon (e.g. MCP tool logos). */
+  icon?: ReactNode
 }
 
 type ConnectCodePanelProps = {
@@ -186,13 +188,14 @@ export function ConnectCodeExample({
                       }
                       onClick={() => onTabChange?.(tab.id)}
                       className={cn(
-                        'cursor-pointer shrink-0 rounded-md px-2.5 py-1 text-[12px] font-medium transition-[color,background-color,opacity]',
+                        'cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-[color,background-color,opacity]',
                         selectedTabId === tab.id
                           ? 'bg-muted text-foreground'
                           : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
                         isCopied && 'opacity-40',
                       )}
                     >
+                      {tab.icon}
                       {tab.label}
                     </button>
                   )

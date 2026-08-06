@@ -874,6 +874,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Select events that will trigger your function or webhook.':
     '関数または Webhook をトリガーするイベントを選択してください。',
   'Select file': 'ファイルを選択',
+  'Select tool': 'ツールを選択',
   'e.g. account or databases.*.tables.*.rows.*':
     '例: account または databases.*.tables.*.rows.*',
   'e.g. databases.*.tables.*.rows.*.create':

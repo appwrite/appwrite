@@ -4957,7 +4957,7 @@ export function AgentPanelContent({
         }}
         className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden"
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5">
           <TabsList className="mb-3 grid h-9 w-full grid-cols-2 shadow-none">
             <TabsTrigger
               value="agents"
