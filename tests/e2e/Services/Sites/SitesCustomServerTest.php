@@ -1619,6 +1619,85 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testDeploymentEndpointsRequireMatchingResourceType(): void
+    {
+        $sharedId = ID::unique();
+
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Resource type site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => $sharedId,
+        ]);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'functionId' => $sharedId,
+            'name' => 'Resource type function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-single-file'),
+            'activate' => 'false',
+        ]);
+
+        /**
+         * Test for FAILURE — a function that shares the site custom ID must not
+         * read or mutate the site deployment (resourceType mismatch).
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $sharedId . '/deployment', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'deploymentId' => $deploymentId,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning site path still works.
+         */
+        $response = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['$id']);
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $sharedId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->cleanupDeployment($siteId, $deploymentId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateDuplicateDeploymentRequiresOwnership(): void
     {
         $siteId = $this->setupSite([
