@@ -1191,6 +1191,14 @@ services:
     networks:
       - appwrite
   openruntimes-executor:
+    # container_name and hostname must be identical: on startup the executor
+    # looks up its own container in Docker by matching `hostname` against
+    # container `name`. If you change one of these in a custom compose file,
+    # keep the other in sync, and also update _APP_EXECUTOR_HOST (.env),
+    # which points at this hostname (default: http://exc1/v1) — otherwise
+    # the executor will crash-loop on start, or Appwrite won't be able to
+    # reach it.
+    # See https://github.com/appwrite/appwrite/issues/13016
     container_name: exc1
     hostname: exc1
     logging:
