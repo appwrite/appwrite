@@ -149,9 +149,31 @@ class Create extends Action
 
     public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
-        $data = \is_string($data)
-            ? \json_decode($data, true)
-            : $data;
+        $normalizeDocument = static function (mixed $document, string $parameter): array {
+            if (\is_string($document)) {
+                $decoded = \json_decode($document);
+
+                if (\json_last_error() !== JSON_ERROR_NONE || !\is_object($decoded)) {
+                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Param \"$parameter\" must contain valid JSON objects.");
+                }
+
+                $document = \json_decode($document, true);
+            }
+
+            if (!\is_array($document) || (!empty($document) && \array_is_list($document))) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Param \"$parameter\" must contain valid JSON objects.");
+            }
+
+            return $document;
+        };
+
+        $data = $normalizeDocument($data, 'data');
+
+        if ($documents !== null) {
+            foreach ($documents as $key => $document) {
+                $documents[$key] = $normalizeDocument($document, $this->getSDKGroup());
+            }
+        }
 
         $supportsEmptyDocument = $this->getSupportForEmptyDocument();
         $hasData = !empty($data);

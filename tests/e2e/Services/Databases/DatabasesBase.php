@@ -2692,6 +2692,88 @@ trait DatabasesBase
         }
     }
 
+    public function testCreateDocumentInvalidData(): void
+    {
+        $data = $this->setupIndexes();
+        $databaseId = $data['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $documentId = ID::unique();
+        $invalid = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => $documentId,
+                'data' => \json_encode('not-an-object'),
+            ]
+        );
+
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalid['body']['type']);
+        $this->assertEquals('Param "data" must contain valid JSON objects.', $invalid['body']['message']);
+
+        $notCreated = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $documentId),
+            $headers
+        );
+
+        $this->assertEquals(404, $notCreated['headers']['status-code']);
+
+        $encodedDocument = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => \json_encode([
+                    'title' => 'Encoded object',
+                    'releaseYear' => 2000,
+                ]),
+            ]
+        );
+
+        $this->assertEquals(201, $encodedDocument['headers']['status-code']);
+        $this->assertEquals('Encoded object', $encodedDocument['body']['title']);
+
+        if ($this->getSide() !== 'server') {
+            return;
+        }
+
+        $bulkDocumentId = ID::unique();
+        $invalidBulk = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordResource() => [
+                    [
+                        '$id' => $bulkDocumentId,
+                        'title' => 'Must not be created',
+                        'releaseYear' => 2000,
+                    ],
+                    \json_encode('not-an-object'),
+                ],
+            ]
+        );
+
+        $this->assertEquals(400, $invalidBulk['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalidBulk['body']['type']);
+        $this->assertEquals('Param "' . $this->getRecordResource() . '" must contain valid JSON objects.', $invalidBulk['body']['message']);
+
+        $bulkNotCreated = $this->client->call(
+            Client::METHOD_GET,
+            $this->getRecordUrl($databaseId, $data['moviesId'], $bulkDocumentId),
+            $headers
+        );
+
+        $this->assertEquals(404, $bulkNotCreated['headers']['status-code']);
+    }
+
     public function testUpsertDocument(): void
     {
         $data = $this->setupIndexes();
