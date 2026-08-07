@@ -2689,7 +2689,7 @@ trait MessagingBase
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        // Test for FAILURE
+        // A message already handed to the worker stays deletable.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2701,14 +2701,17 @@ trait MessagingBase
             'content' => 'Test content',
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
+        // Test for FAILURE
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/does_not_exist', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -34,6 +34,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
@@ -287,7 +288,7 @@ class Create extends Action
                 }
 
                 if ($file->isEmpty()) {
-                    $deviceForFiles->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
+                    $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
                         $doc = new Document([
@@ -357,7 +358,7 @@ class Create extends Action
             $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
-                $deviceForFiles->finalizeUpload($path, $chunks, $metadata);
+                $deviceForFiles->finalize($path, $chunks, $metadata);
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
@@ -379,7 +380,7 @@ class Create extends Action
                 // Compression
                 $algorithm = $bucket->getAttribute('compression', Compression::NONE);
                 if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {
-                    $data = $deviceForFiles->read($path);
+                    $data = (string) $deviceForFiles->read($path);
                     switch ($algorithm) {
                         case Compression::ZSTD:
                             $compressor = new Zstd();
@@ -399,7 +400,7 @@ class Create extends Action
 
                 if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                     if (empty($data)) {
-                        $data = $deviceForFiles->read($path);
+                        $data = (string) $deviceForFiles->read($path);
                     }
                     $key = System::getEnv('_APP_OPENSSL_KEY_V1');
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -407,7 +408,7 @@ class Create extends Action
                 }
 
                 if (!empty($data)) {
-                    if (!$deviceForFiles->write($path, $data, $mimeType)) {
+                    if (!$deviceForFiles->write($path, new Stream($data), $mimeType)) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to save file');
                     }
                 }
@@ -516,7 +517,14 @@ class Create extends Action
         };
 
         try {
-            $chunksUploaded = $deviceForFiles->uploadChunk($deviceForLocal->read($fileTmpName), $path, $chunk, $chunks, $metadata);
+            $chunksUploaded = $deviceForFiles->upload(
+                $deviceForLocal->read($fileTmpName),
+                $path,
+                $metadata['content_type'] ?? '',
+                $chunk,
+                $chunks,
+                $metadata
+            );
 
             if (empty($chunksUploaded)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');

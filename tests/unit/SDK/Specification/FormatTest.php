@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
 use Appwrite\Utopia\Response\Model\PlatformAndroid;
 use Appwrite\Utopia\Response\Model\PlatformApple;
@@ -32,6 +33,7 @@ use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\TestCase;
@@ -317,6 +319,98 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiPrefs['type']);
         $this->assertSame([['$ref' => '#/components/schemas/preferences']], $openApiPrefs['allOf']);
 
+    }
+
+    /**
+     * A route only matches when every path segment is present, so a path
+     * parameter is always supplied no matter what the PHP param declares.
+     * Marking one optional produced a Go SDK that does not compile
+     * (`undefined: SessionId`) and a Python SDK that requested
+     * `/account/sessions/None`.
+     */
+    public function testOptionalPathParameterIsEmittedAsRequired(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/:sessionId'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getPathTest',
+                description: 'Get test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(code: 200, model: Response::MODEL_NONE),
+                ],
+            ))
+            ->param('sessionId', 'current', new Text(256), 'Session ID.', true)
+            ->param('filter', '', new Text(256), 'Optional query filter.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [new NoneModel()], [], 0, 'console'))->parse();
+
+        $parameters = [];
+        foreach ($openApi['paths']['/tests/{sessionId}']['get']['parameters'] as $parameter) {
+            $parameters[$parameter['name']] = $parameter;
+        }
+
+        $this->assertSame('path', $parameters['sessionId']['in']);
+        $this->assertTrue($parameters['sessionId']['required']);
+
+        // An optional query parameter is untouched — only the path is forced.
+        $this->assertSame('query', $parameters['filter']['in']);
+        $this->assertFalse($parameters['filter']['required']);
+    }
+
+    /**
+     * The project usage handler writes the text embedding metrics as four
+     * per-period lists plus four scalar totals. A typed SDK generated from a
+     * schema that calls all eight a single metric object rejects every valid
+     * response, so pin the emitted schema rather than the rule table.
+     */
+    public function testUsageProjectEmbeddingsTextSchema(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/usage'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getUsageTest',
+                description: 'Get test.',
+                auth: [],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_USAGE_PROJECT,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new UsageProject(),
+            new Metric(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], 0, 'console'))->parse();
+
+        $properties = $openApi['components']['schemas']['usageProject']['properties'];
+
+        foreach (['embeddingsText', 'embeddingsTextTokens', 'embeddingsTextDuration', 'embeddingsTextErrors'] as $key) {
+            $this->assertSame('array', $properties[$key]['type'], $key);
+            $this->assertSame(['$ref' => '#/components/schemas/metric'], $properties[$key]['items'], $key);
+            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
+        }
+
+        foreach (['embeddingsTextTotal', 'embeddingsTextTokensTotal', 'embeddingsTextDurationTotal', 'embeddingsTextErrorsTotal'] as $key) {
+            $this->assertSame('integer', $properties[$key]['type'], $key);
+            $this->assertArrayNotHasKey('allOf', $properties[$key], $key);
+            $this->assertArrayNotHasKey('items', $properties[$key], $key);
+        }
     }
 
     public function testArrayItemsSchemaInfersTypesFromJsonStringExamples(): void

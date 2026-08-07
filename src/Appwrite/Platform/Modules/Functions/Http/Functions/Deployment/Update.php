@@ -88,6 +88,10 @@ class Update extends Base
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         if ($deployment->getAttribute('status') !== 'ready') {
             throw new Exception(Exception::BUILD_NOT_READY);
         }

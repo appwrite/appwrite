@@ -89,6 +89,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_ROUTER_AUTO_CERTIFICATES',
+                'description' => 'Allows Appwrite to automatically issue TLS certificates for function and site domains. By default, set to \'enabled\'. Set to \'disabled\' when a wildcard TLS certificate already covers those domains, for example one issued through Traefik\'s DNS challenge.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPENSSL_KEY_V1',
                 'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
                 'introduction' => '',
@@ -207,7 +216,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses or wildcard domains, such as *@appwrite.io, separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -318,6 +327,15 @@ return [
                 'description' => 'This variable allows you to enable logging errors to third party providers. This value is empty by default, set a DSN value to one of the following `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/`, , `logowl://SERVICE_TICKET@SERIVCE_HOST/` `raygun://RAYGUN_API_KEY/`, `appSignal://API_KEY/` to enable the logger.\n\nFor versions prior `1.5.6` you can use the old syntax.\n\nOld syntax: If using Sentry, this should be \'SENTRY_API_KEY;SENTRY_APP_ID\'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key. If using LogOwl, this should be LogOwl Service Ticket.',
                 'introduction' => '0.12.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LOGGING_FORMAT',
+                'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
+                'introduction' => '1.9.6',
+                'default' => 'pretty',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -989,6 +1007,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_CONNECTION_STORAGE',
+                'description' => "DSN for Open Runtimes executor storage. When `_APP_STORAGE_DEVICE` is not local, point this at the same backend so the executor can read deployment artifacts. Defaults to `local://localhost`.\n\nExamples:\n- Local: `local://localhost`\n- AWS S3: `s3://ACCESS_KEY:SECRET@BUCKET.s3.REGION.amazonaws.com?region=REGION`\n- S3-compatible: `s3://ACCESS_KEY:SECRET@localhost/BUCKET?region=REGION&url=http%3A%2F%2Fminio%3A9000`",
+                'introduction' => '1.9.5',
+                'default' => 'local://localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BUILDS_VOLUME',
                 'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
@@ -1170,6 +1197,15 @@ return [
                 'default' => '3600',
                 'required' => false,
                 'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
+                'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
+                'introduction' => '2.0.0',
+                'default' => '0',
+                'required' => false,
                 'question' => '',
                 'filter' => ''
             ],

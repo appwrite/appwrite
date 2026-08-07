@@ -6,11 +6,11 @@ CPU architecture support for Docker images used by the Appwrite stack. Platforms
 |---|---|---|---|---|---|---|---|
 | **Core** | | | | | | | |
 | appwrite/appwrite | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
-| appwrite/base:1.4.4 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
+| appwrite/base:2.0.0 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | appwrite/assistant:0.8.4 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | appwrite/browser:0.3.3 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | appwrite/embedding:0.1.0 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
-| appwrite/geo:0.3.0 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
+| appwrite/geo:0.3.1 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | appwrite/postgres:0.1.0 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | openruntimes/executor:0.25.4 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |
 | ghcr.io/open-runtimes/orchestrator/jobs-service:0.13.0 | 🟢 | 🟢 | 🔴 | 🔴 | 🟢 | 🔴 | 🔴 |

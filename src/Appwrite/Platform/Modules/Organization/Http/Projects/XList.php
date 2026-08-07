@@ -54,7 +54,7 @@ class XList extends Action
                 description: <<<EOT
                 Get a list of all projects. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

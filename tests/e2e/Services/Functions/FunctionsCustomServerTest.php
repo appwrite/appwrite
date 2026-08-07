@@ -1325,6 +1325,218 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['deploymentId'], $response['body']['deploymentId']);
     }
 
+    public function testCancelDeploymentRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $functionId = $data['functionId'];
+        $deploymentId = $data['deploymentId'];
+
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — canceling through a function that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->cancelDeployment($otherFunctionId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
+    public function testUpdateFunctionDeploymentRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $functionId = $data['functionId'];
+        $deploymentId = $data['deploymentId'];
+
+        // A second function the deployment does not belong to.
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — activating through a function that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->updateFunctionDeployment($otherFunctionId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        // Owning function is unchanged.
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($deploymentId, $function['body']['deploymentId']);
+
+        /**
+         * Test for SUCCESS — the owning function can still activate it.
+         */
+        $response = $this->updateFunctionDeployment($functionId, $deploymentId);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
+    public function testCreateDuplicateDeploymentRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $functionId = $data['functionId'];
+        $deploymentId = $data['deploymentId'];
+
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — duplicating through a function that does not own
+         * the deployment must not succeed.
+         */
+        $response = $this->createDuplicateDeployment($otherFunctionId, $deploymentId);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — the owning function can still duplicate it.
+         */
+        $response = $this->createDuplicateDeployment($functionId, $deploymentId);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
+    public function testCreateDeploymentPartialResumeRequiresOwnership(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Owner function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        $folder = 'large';
+        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$folder";
+        $code = "$folderPath/code.tar.gz";
+        Console::execute('cd ' . $folderPath . ' && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+
+        $totalSize = \filesize($code);
+        $chunkSize = 5 * 1024 * 1024;
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Test file must span at least 2 chunks');
+
+        $handle = fopen($code, 'rb');
+        $this->assertNotFalse($handle);
+        $firstChunk = fread($handle, $chunkSize);
+        fclose($handle);
+
+        $mimeType = 'application/x-gzip';
+        $curlFile = new \CURLFile(
+            'data://' . $mimeType . ';base64,' . base64_encode($firstChunk),
+            $mimeType,
+            'large-fx.tar.gz'
+        );
+
+        $partial = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => $curlFile,
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(202, $partial['headers']['status-code']);
+        $deploymentId = $partial['body']['$id'];
+        $this->assertNotEmpty($deploymentId);
+
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — resuming a partial upload through a function that
+         * does not own the deployment must not succeed.
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $otherFunctionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize,
+            'x-appwrite-id' => $deploymentId,
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => $curlFile,
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupFunction($otherFunctionId);
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testCreateDeploymentResumeRequiresOwnership(): void
+    {
+        $data = $this->setupTestDeployment();
+        $deploymentId = $data['deploymentId'];
+
+        $otherFunctionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Other function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        /**
+         * Test for FAILURE — resuming via content-range + x-appwrite-id under a
+         * function that does not own the deployment must not succeed.
+         * x-appwrite-id is only honored when content-range is present.
+         */
+        $code = $this->packageFunction('basic');
+        $size = \filesize($code->getFilename());
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $otherFunctionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => $deploymentId,
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'false',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('deployment_not_found', $response['body']['type']);
+
+        $this->cleanupFunction($otherFunctionId);
+    }
+
     public function testListDeployments(): void
     {
         $data = $this->setupTestDeployment();

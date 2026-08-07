@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Ahc\Jwt\JWT;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -331,12 +332,12 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-
-                $bus->dispatch(new ExecutionScheduled(
-                    execution: $execution->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                ));
             }
+
+            $bus->dispatch(new ExecutionScheduled(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+            ));
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
                 $publisherForDeletes->enqueue(new DeleteMessage(
@@ -415,11 +416,7 @@ class Create extends Base
 
         try {
             $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-
-            if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
-            }
+            $command = Deployments::startCommand($deployment, $runtime['startCommand']);
 
             $source = $deployment->getAttribute('buildPath', '');
             $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";

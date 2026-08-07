@@ -100,6 +100,13 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
         // Remote-source deployments (templates / VCS) on the jobs-service
         // backend never store a source tarball — the build sidecar fetches
         // it — so a duplicate re-fetches the same source from the
@@ -119,7 +126,7 @@ class Create extends Action
         $destination = '';
         if ($hasSource) {
             $destination = $deviceForSites->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-            $deviceForSites->transfer($path, $destination, $deviceForSites);
+            $deviceForSites->copy($path, $destination);
         }
 
         $commands = [];

@@ -55,7 +55,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4326;
-const APP_VERSION_STABLE = '1.9.5';
+const APP_VERSION_STABLE = '1.9.6';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -274,6 +274,7 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+const APP_AUTH_TYPE_ORGANIZATION = 'Organization';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const APP_LIMIT_UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
