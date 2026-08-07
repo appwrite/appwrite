@@ -35,6 +35,34 @@ jobs:
             build: npx expo prebuild --platform android --no-install && ./android/gradlew -p android assembleRelease --no-daemon
             apk: android/app/build/outputs/apk/release/app-release.apk
 
+          - id: flutter
+            sdk: flutter
+            snippets: flutter
+            template: ''
+            config_file: env.json
+            copy_to: .
+            create: flutter create --org io.appwrite --project-name connectqa "$APP_DIR"
+            configure: 'true'
+            install: flutter pub add appwrite
+            build: flutter build apk --debug --dart-define-from-file=env.json
+            apk: build/app/outputs/flutter-apk/app-debug.apk
+
+          - id: android
+            sdk: android
+            snippets: android
+            template: android
+            config_file: gradle.properties
+            copy_to: app/src/main/java/io/appwrite/connectqa
+            create: mkdir -p "$APP_DIR"
+            configure: >-
+              rm -f app/src/main/java/io/appwrite/connectqa/build.gradle.kts &&
+              for f in app/src/main/java/io/appwrite/connectqa/*.kt; do
+              printf 'package io.appwrite.connectqa\n\n' | cat - "$f" > "$f.tmp" &&
+              mv "$f.tmp" "$f"; done
+            install: 'true'
+            build: gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+            apk: app/build/outputs/apk/release/app-release.apk
+
     steps:
       - uses: actions/checkout@v4
 
@@ -56,10 +84,17 @@ jobs:
         with:
           install: false
 
-      - name: Install tooling via mise (node, maestro, java)
+      - name: Install tooling via mise (node, maestro, java, gradle)
         run: |
           mise trust
           mise install
+
+      - name: Install Flutter
+        if: matrix.id == 'flutter'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
       - name: Scaffold starter app
         run: |
@@ -111,7 +146,7 @@ jobs:
 
       - name: Assert the endpoint is embedded in the APK
         run: |
-          if ! unzip -p "$APK_PATH" 'assets/*' | strings | grep -qF "$CODE_SNIPPET_QA_ENDPOINT"; then
+          if ! unzip -p "$APK_PATH" | strings | grep -qF "$CODE_SNIPPET_QA_ENDPOINT"; then
             echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the APK - the env vars never reached the bundle."
             exit 1
           fi
