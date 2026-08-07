@@ -46,9 +46,10 @@ export function SignIn({
       <Pressable onPress={handleSubmit}>
         <Text>Sign in</Text>
       </Pressable>
-      <Text>
-        No account? <Text onPress={onGoToSignUp}>Sign up</Text>
-      </Text>
+      <View style={{ flexDirection: 'row' }}>
+        <Text>No account? </Text>
+        <Text onPress={onGoToSignUp}>Sign up</Text>
+      </View>
     </View>
   )
 }

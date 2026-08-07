@@ -44,7 +44,7 @@ export function SignIn({
       />
       <IonButton onClick={handleSubmit}>Sign in</IonButton>
       <IonText>
-        No account? <a onClick={onGoToSignUp}>Sign up</a>
+        No account? <button type="button" onClick={onGoToSignUp}>Sign up</button>
       </IonText>
     </>
   )

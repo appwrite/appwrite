@@ -79,8 +79,8 @@ class _SignUpState extends State<SignUp> {
         Row(
           children: [
             const Text('Already have an account? '),
-            GestureDetector(
-              onTap: widget.onGoToSignIn,
+            TextButton(
+              onPressed: widget.onGoToSignIn,
               child: const Text('Sign in'),
             ),
           ],
