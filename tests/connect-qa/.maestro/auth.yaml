@@ -17,7 +17,10 @@ tags:
 - evalScript: "${output.stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 4)}"
 - evalScript: "${output.email = 'qa' + output.stamp + '@example.com'}"
 - evalScript: "${output.name = 'QA ' + output.stamp}"
-- evalScript: "${output.password = 'Pa55w0rd'}"
+# The QA project runs the strength policy from the bun/elysia snippet
+# (min 8 + uppercase + number + symbols), so the symbol here is required.
+- evalScript: "${output.password = 'Pa55w0rd!'}"
+# Only ever submitted to sign in, where the policy does not apply.
 - evalScript: "${output.wrongPassword = 'N0tRight1'}"
 - evalScript: "${output.shortPassword = 'abc'}"
 - evalScript: "${output.unknownEmail = 'no' + output.stamp + '@example.com'}"
