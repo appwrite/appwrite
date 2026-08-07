@@ -3,12 +3,14 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -60,6 +62,10 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('deployments')
             ->inject('locks')
+            ->inject('dbForPlatform')
+            ->inject('project')
+            ->inject('vcsFactory')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -70,7 +76,11 @@ class Update extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Deployments $deployments,
-        callable $locks
+        callable $locks,
+        Database $dbForPlatform,
+        Document $project,
+        VcsFactory $vcsFactory,
+        array $platform,
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -133,6 +143,12 @@ class Update extends Action
         // Best-effort cleanup — the deployment is already marked 'canceled'.
         try {
             $deployments->cancel($deploymentId);
+        } catch (\Throwable) {
+        }
+
+        // Nothing else reports a canceled build, leaving any open run in progress.
+        try {
+            GitAction::report('canceled', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         } catch (\Throwable) {
         }
 

@@ -1726,6 +1726,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('providerCheckRunId'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 8,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('sourceSize'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',

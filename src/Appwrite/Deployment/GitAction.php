@@ -2,7 +2,9 @@
 
 namespace Appwrite\Deployment;
 
+use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -10,13 +12,51 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
 /**
- * Reports a deployment build state to the VCS provider: a commit status and,
- * for pull-request deployments, the PR comment listing the build with its
- * console and preview links. Shared by both build backends; callers own
- * error handling — a failed report never fails a build.
+ * Reports a deployment build state to the VCS provider: the check run opened
+ * when the deployment was triggered, or a commit status where no run was opened,
+ * and for pull-request deployments the PR comment listing the build with its
+ * console and preview links. Shared by both build backends; callers own error
+ * handling — a failed report never fails a build.
  */
 final class GitAction
 {
+    /**
+     * Resolve the provider for a deployment and report a build state to it.
+     */
+    public static function report(
+        string $status,
+        Document $deployment,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+    ): void {
+        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
+            return;
+        }
+
+        $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
+        $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
+
+        if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
+            return;
+        }
+
+        self::run(
+            $status,
+            $vcsFactory->fromInstallation($installation),
+            $deployment->getAttribute('providerCommitHash', ''),
+            $deployment->getAttribute('providerRepositoryOwner', ''),
+            $deployment->getAttribute('providerRepositoryName', ''),
+            $project,
+            $resource,
+            $deployment,
+            $dbForPlatform,
+            $platform,
+        );
+    }
+
     public static function run(
         string $status,
         Git $vcs,
@@ -29,7 +69,12 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($resource->getAttribute('providerSilentMode', false) === true) {
+        $checkRunId = (int) $deployment->getAttribute('providerCheckRunId', 0);
+        $silent = $resource->getAttribute('providerSilentMode', false) === true;
+
+        // Silent mode is force-set on git disconnect, so return only once any run
+        // we opened has been closed.
+        if ($silent && $checkRunId <= 0) {
             return;
         }
 
@@ -41,12 +86,15 @@ final class GitAction
                 'ready' => 'Build succeeded.',
                 'failed' => 'Build failed.',
                 'processing' => 'Building...',
+                'canceled' => 'Build canceled.',
                 default => $status
             };
             $state = match ($status) {
                 'ready' => 'success',
                 'failed' => 'failure',
                 'processing' => 'pending',
+                // No commit status says canceled, and failed would misrepresent it.
+                'canceled' => '',
                 default => $status
             };
 
@@ -56,7 +104,30 @@ final class GitAction
             $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$segment}";
             $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
 
-            $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
+            $conclusion = match ($status) {
+                'ready' => CheckRuns::CONCLUSION_SUCCESS,
+                'failed' => CheckRuns::CONCLUSION_FAILURE,
+                'canceled' => CheckRuns::CONCLUSION_CANCELLED,
+                default => ''
+            };
+
+            if ($checkRunId > 0) {
+                if (!empty($conclusion)) {
+                    $title = match ($status) {
+                        'ready' => 'Deployment ready',
+                        'failed' => 'Deployment failed',
+                        default => 'Deployment canceled'
+                    };
+
+                    (new CheckRuns())->close($vcs, $owner, $repositoryName, $checkRunId, $conclusion, $title, $message, $targetUrl);
+                }
+            } elseif (!empty($state)) {
+                $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, $message, $targetUrl, $name);
+            }
+        }
+
+        if ($silent) {
+            return;
         }
 
         $commentId = $deployment->getAttribute('providerCommentId', '');

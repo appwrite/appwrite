@@ -18,6 +18,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Cache\Cache;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -491,31 +492,12 @@ class Jobs extends Action
      */
     protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
     {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
         try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
-        } catch (\Throwable) {
-            // Best-effort — never fails the build.
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+        } catch (\Throwable $e) {
+            // Best-effort — never fails the build, but a rejected report leaves the
+            // commit with no build state at all.
+            Console::warning("Failed to report build state for deployment '{$deployment->getId()}': " . $e->getMessage());
         }
     }
 

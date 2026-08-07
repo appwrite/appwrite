@@ -161,6 +161,9 @@ class Create extends Action
             'buildSize' => 0,
             'buildPath' => '',
             'buildLogs' => '',
+            // Belongs to the commit the source deployment reported on; inheriting it
+            // would rewrite that already-concluded check run.
+            'providerCheckRunId' => null,
             'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual',
             // Not inherited: a redeploy always goes live, and the source's own
             // flag is unset by deactivateOthers() once anything newer builds.
