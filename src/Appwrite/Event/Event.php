@@ -554,15 +554,15 @@ class Event
         $attribute = $parsed['attribute'];
 
         if ($resource && !\in_array(\trim($resource, "\[\]"), $paramKeys)) {
-            throw new InvalidArgumentException("{$resource} is missing from the params.");
+            return [];
         }
 
         if ($subResource && !\in_array(\trim($subResource, "\[\]"), $paramKeys)) {
-            throw new InvalidArgumentException("{$subResource} is missing from the params.");
+            return [];
         }
 
         if ($subSubResource && !\in_array(\trim($subSubResource, "\[\]"), $paramKeys)) {
-            throw new InvalidArgumentException("{$subSubResource} is missing from the params.");
+            return [];
         }
 
         /**
