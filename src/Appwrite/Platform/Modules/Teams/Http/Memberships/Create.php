@@ -16,6 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
@@ -81,8 +82,9 @@ class Create extends Action
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
             ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
             ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 81 characters long.', false, ['project']) // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
-            ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
+            ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add our own built-in confirm page
             ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('user')
@@ -101,7 +103,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
         $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -110,7 +112,16 @@ class Create extends Action
 
         if (empty($url)) {
             if (! $isAppUser && ! $isPrivilegedUser) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+                $host = $platform['consoleHostname'] ?? '';
+                $port = $request->getPort();
+                $callbackBase = $protocol . '://' . $host;
+                if ($protocol === 'https' && $port !== '443') {
+                    $callbackBase .= ':' . $port;
+                } elseif ($protocol === 'http' && $port !== '80') {
+                    $callbackBase .= ':' . $port;
+                }
+                $url = $callbackBase . '/console';
             }
         }
 
@@ -322,9 +333,27 @@ class Create extends Action
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
-            $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
-            $url = Template::unParseURL($url);
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $host = $platform['apiHostname'] ?? $request->getHostname();
+            $port = $request->getPort();
+            $callbackBase = $protocol . '://' . $host;
+            if ($protocol === 'https' && $port !== '443') {
+                $callbackBase .= ':' . $port;
+            } elseif ($protocol === 'http' && $port !== '80') {
+                $callbackBase .= ':' . $port;
+            }
+
+            $inviteUrl = $callbackBase . '/v1/teams/' . $teamId . '/memberships/' . $membership->getId() . '/status';
+            $inviteUrl = Template::parseURL($inviteUrl);
+            $inviteUrl['query'] = Template::mergeQuery(((isset($inviteUrl['query'])) ? $inviteUrl['query'] : ''), [
+                'membershipId' => $membership->getId(),
+                'userId' => $invitee->getId(),
+                'secret' => $secret,
+                'teamId' => $teamId,
+                'teamName' => $team->getAttribute('name'),
+                'redirectUrl' => $url,
+            ]);
+            $url = Template::unParseURL($inviteUrl);
             if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
