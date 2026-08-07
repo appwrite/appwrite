@@ -74,6 +74,7 @@ class Get extends Action
                 || (
                     empty($resourceType)
                     && $deployment->getAttribute('resourceInternalId') === $site->getSequence()
+                    && $dbForProject->getDocument('functions', $site->getId())->isEmpty()
                 )
             );
         if (!$ownsDeployment) {

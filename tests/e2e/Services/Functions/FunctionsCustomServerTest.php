@@ -1419,11 +1419,18 @@ final class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $site['headers']['status-code']);
 
-        $deploymentId = $this->setupDeployment($functionId, [
+        $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
-            'activate' => false,
+            'activate' => 'false',
             'entrypoint' => 'index.js',
         ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
 
         /**
          * Test for FAILURE — a site that shares the function custom ID must not

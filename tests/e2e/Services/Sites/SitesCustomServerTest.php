@@ -1647,10 +1647,17 @@ final class SitesCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $deploymentId = $this->setupDeployment($siteId, [
+        $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
-            'activate' => false,
+            'activate' => 'false',
         ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
 
         /**
          * Test for FAILURE — a function that shares the site custom ID must not

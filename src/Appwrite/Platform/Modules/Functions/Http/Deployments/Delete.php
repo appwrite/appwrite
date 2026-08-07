@@ -94,6 +94,7 @@ class Delete extends Action
                 || (
                     empty($resourceType)
                     && $deployment->getAttribute('resourceInternalId') === $function->getSequence()
+                    && $dbForProject->getDocument('sites', $function->getId())->isEmpty()
                 )
             );
         if (!$ownsDeployment) {
