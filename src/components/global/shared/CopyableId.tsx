@@ -38,17 +38,18 @@ const sizeStyles: Record<
   xs: {
     text: 'text-[10px]',
     icon: 'h-2.5 w-2.5',
-    padding: 'px-1.5 py-0.5',
+    // Extra end padding so the copy icon isn't flush with the badge edge.
+    padding: 'ps-1.5 pe-2 py-0.5',
   },
   sm: {
     text: 'text-[11px]',
     icon: 'h-3 w-3',
-    padding: 'px-1.5 py-0.5',
+    padding: 'ps-1.5 pe-2 py-0.5',
   },
   md: {
     text: 'text-[12px]',
     icon: 'h-3 w-3',
-    padding: 'px-2.5 py-1.5',
+    padding: 'ps-2.5 pe-3 py-1.5',
   },
 }
 
@@ -94,14 +95,14 @@ export function CopyableId({
       onClick={handleCopy}
       title={nativeTitle}
       className={cn(
-        'group/copyable inline-flex items-center cursor-pointer transition-colors',
+        'group/copyable inline-flex max-w-full items-center cursor-pointer transition-colors',
         copyLabel ? 'font-medium' : 'font-mono',
         variant === 'badge'
           ? 'gap-1.5 rounded bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
           : 'gap-1.5 rounded-md border border-transparent bg-transparent text-foreground transition-[color,background-color,border-color] hover:border-border hover:bg-muted/40 hover:text-foreground',
         styles.text,
         styles.padding,
-        constrainToContainer && 'min-w-0 max-w-full flex-1',
+        constrainToContainer && 'min-w-0 w-full',
         className,
       )}
     >
@@ -109,7 +110,7 @@ export function CopyableId({
         className={cn(
           'min-w-0',
           shouldTruncate
-            ? cn('truncate', constrainToContainer && 'max-w-full')
+            ? cn('truncate', constrainToContainer && 'flex-1')
             : 'break-words whitespace-normal',
         )}
         style={

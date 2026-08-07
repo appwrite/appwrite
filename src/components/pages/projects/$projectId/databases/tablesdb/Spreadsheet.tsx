@@ -31,7 +31,8 @@ import {
   type MappedTableColumnListItem,
 } from '@/lib/utils/database-columns'
 import { NumericValueTooltip } from '@/components/global/shared/NumericValueTooltip'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { getErrorMessage, formatError } from '@/lib/utils/error-formatting'
+import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { copyToClipboard, openInNewWindow } from '@/lib/utils/context-menu'
 import {
   closeDialogBeforeOverlayUnmount,
@@ -64,6 +65,7 @@ import {
   Columns3,
   Eye,
   EyeOff,
+  AlertCircle,
 } from 'lucide-react'
 import {
   type Collection,
@@ -2936,9 +2938,11 @@ export function RowsSpreadsheet({
     [displayedSearch, displayedFilterQueryString],
   )
   const hasInitedDisplayedRef = useRef(false)
-  const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
+  const [displayedSortBy, setDisplayedSortBy] = useState<string>(
+    urlDriven ? rowsSortBy : '$createdAt',
+  )
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
-    'desc',
+    urlDriven ? rowsSortOrder : 'desc',
   )
   const [pageSize, setPageSize] = useState(
     urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE,
@@ -3152,28 +3156,37 @@ export function RowsSpreadsheet({
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
+    // Reset requested + displayed list state together so table switches do not
+    // keep the previous table's page/search/filters and fire a second listRows.
+    // Depend only on table identity (not page/search) so in-table pagination
+    // can still keep the previous page visible until the next page loads.
     if (!urlDriven) {
       setRequestedPage(1)
       setDisplayedPage(1)
+      setDisplayedSearch('')
+      setDisplayedFilterQueryString('')
       setDisplayedSortBy('$createdAt')
       setDisplayedSortOrder('desc')
       setSortBy('$createdAt')
       setSortOrder('desc')
+      setPageSize(ROWS_DEFAULT_PAGE_SIZE)
     } else {
+      const nextPage = rowsUrlPage ?? 1
+      const nextSearch = rowsUrlSearch ?? ''
+      const nextFilters = rowsFilterQueryString ?? ''
+      setRequestedPage(nextPage)
+      setDisplayedPage(nextPage)
+      setDisplayedSearch(nextSearch)
+      setDisplayedFilterQueryString(nextFilters)
       setDisplayedSortBy(rowsSortBy)
       setDisplayedSortOrder(rowsSortOrder)
       setSortBy(rowsSortBy)
       setSortOrder(rowsSortOrder)
+      if (rowsUrlLimit != null) setPageSize(rowsUrlLimit)
+      hasInitedDisplayedRef.current = true
     }
-  }, [
-    location.pathname,
-    projectId,
-    databaseId,
-    tableId,
-    urlDriven,
-    rowsSortBy,
-    rowsSortOrder,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only on table/route identity change
+  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
 
   const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
   const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
@@ -3190,6 +3203,8 @@ export function RowsSpreadsheet({
     isLoading: rowsLoading,
     refetch,
     isFetching: rowsFetching,
+    error: rowsError,
+    isPlaceholderData: rowsIsPlaceholderData,
   } = useProjectTableRows(
     projectId,
     databaseId,
@@ -3208,6 +3223,10 @@ export function RowsSpreadsheet({
     rows: apiRows,
     total: displayedRowsTotal,
     isLoading: displayedRowsLoading,
+    isFetching: displayedRowsFetching,
+    error: displayedRowsError,
+    isPlaceholderData: displayedRowsIsPlaceholderData,
+    refetch: refetchDisplayedRows,
   } = useProjectTableRows(
     projectId,
     databaseId,
@@ -3221,6 +3240,45 @@ export function RowsSpreadsheet({
     effectiveDisplayedFilterQueries,
     rowsListSelectAttrKeys,
   )
+
+  const rowsLoadError = displayedRowsError ?? rowsError
+  const rowsLoadFormatted = rowsLoadError
+    ? formatError(rowsLoadError, dbLabels.failedToLoadRecordsTitle)
+    : null
+  // keepPreviousData can leave prior-table rows in `apiRows` after a failed
+  // fetch (e.g. HTTP 408 database_timeout). Still show the error UI whenever
+  // the active query failed and we are not mid-load.
+  const showRowsLoadError =
+    !!rowsLoadError &&
+    !displayedRowsLoading &&
+    (apiRows.length === 0 ||
+      displayedRowsIsPlaceholderData ||
+      rowsIsPlaceholderData)
+
+  useEffect(() => {
+    if (!showRowsLoadError || !rowsLoadError) return
+    const err = rowsLoadError as {
+      code?: number
+      status?: number
+      type?: string
+    }
+    const status = Number(err.code ?? err.status)
+    captureExceptionWithContext(rowsLoadError, {
+      source: 'tablesdb-spreadsheet-rows-load',
+      projectId,
+      databaseId,
+      tableId,
+      httpStatus: Number.isFinite(status) ? status : undefined,
+      errorType: typeof err.type === 'string' ? err.type : undefined,
+    })
+  }, [showRowsLoadError, rowsLoadError, projectId, databaseId, tableId])
+
+  const handleRetryRowsLoad = () => {
+    void refetch()
+    if (refetchDisplayedRows !== refetch) {
+      void refetchDisplayedRows()
+    }
+  }
 
   useEffect(() => {
     if (!urlDriven || rowsFetching || rowsLoading) return
@@ -4408,6 +4466,30 @@ export function RowsSpreadsheet({
   // This component fills available space and handles its own scrolling
   // Only show loading if we don't have data yet (data is prefetched in route loader)
   // This prevents showing loading when switching tables since data is already cached
+  if (showRowsLoadError && rowsLoadFormatted) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-6 py-12">
+        <AlertCircle className="h-9 w-9 text-destructive" />
+        <h3 className="mt-4 text-[15px] font-semibold text-foreground">
+          {rowsLoadFormatted.title}
+        </h3>
+        <p className="mt-2 max-w-md text-center text-[13px] text-muted-foreground">
+          {rowsLoadFormatted.message}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-6"
+          onClick={handleRetryRowsLoad}
+          disabled={rowsFetching || displayedRowsFetching}
+        >
+          {t('Try again')}
+        </Button>
+      </div>
+    )
+  }
+
   if (showRowsLoading || (columnsLoading && apiColumns.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -4981,7 +5063,10 @@ export function RowsSpreadsheet({
                   return (
                     <th
                       key="th-$id"
-                      className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}
+                      className={cn(
+                        'w-[180px] min-w-[180px] max-w-[180px] px-3 py-2',
+                        headerCellBorderClass,
+                      )}
                     >
                       <div className="flex items-center gap-2">
                         <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -5328,12 +5413,18 @@ export function RowsSpreadsheet({
                         <td
                           key="td-$id"
                           className={cn(
-                            'w-[180px] px-3 py-1.5',
+                            'w-[180px] min-w-[180px] max-w-[180px] px-3 py-1.5',
                             bodyCellBorderClass,
                           )}
                           data-column="$id"
                         >
-                          <CopyableId id={row.$id} size="xs" />
+                          <div className="min-w-0 max-w-full overflow-hidden">
+                            <CopyableId
+                              id={row.$id}
+                              size="xs"
+                              constrainToContainer
+                            />
+                          </div>
                         </td>
                       )
                     }

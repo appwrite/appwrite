@@ -87,6 +87,33 @@ export function isHttpNotFoundError(error: unknown): boolean {
   )
 }
 
+/** True when the API responded with HTTP 408 (request timeout). */
+export function isHttpRequestTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as {
+    code?: number
+    status?: number
+    name?: string
+    message?: string
+    type?: string
+  }
+  if (
+    e.code === 408 ||
+    e.status === 408 ||
+    e.name === 'TimeoutError' ||
+    e.type === 'database_timeout'
+  ) {
+    return true
+  }
+  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  return (
+    message.includes('request timeout') ||
+    message.includes('timed out') ||
+    message.includes('database timed out') ||
+    /\b408\b/.test(message)
+  )
+}
+
 /** True when the API responded with HTTP 402 (payment / budget limit required). */
 export function isHttpPaymentRequiredError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
@@ -281,13 +308,35 @@ export function formatError(
       }
     }
 
-    // Check for timeout errors
-    if (error.name === 'TimeoutError' || lowerMessage.includes('timeout')) {
+    // Check for timeout errors (HTTP 408 / database_timeout / client TimeoutError).
+    // Prefer the API message when it is already actionable (e.g. TablesDB
+    // "Database timed out. Try adjusting your queries or adding an index.").
+    const errorType =
+      'type' in error && typeof (error as { type?: unknown }).type === 'string'
+        ? (error as { type: string }).type
+        : undefined
+    if (
+      error.name === 'TimeoutError' ||
+      code === 408 ||
+      errorType === 'database_timeout' ||
+      lowerMessage.includes('timeout') ||
+      lowerMessage.includes('timed out')
+    ) {
+      const apiMessageLooksUseful =
+        message.length > 0 &&
+        message.length <= 200 &&
+        !message.includes('at ') &&
+        (lowerMessage.includes('timed out') ||
+          lowerMessage.includes('timeout') ||
+          lowerMessage.includes('index') ||
+          lowerMessage.includes('quer'))
       return {
         title: translate('Request Timeout'),
-        message: translate(
-          'The request took too long to complete. Please try again.',
-        ),
+        message: apiMessageLooksUseful
+          ? translate(message)
+          : translate(
+              'The request took too long to complete. Please try again.',
+            ),
         isUserFriendly: true,
       }
     }

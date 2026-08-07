@@ -36,6 +36,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create',
 )({
   head: () => ({ meta: [{ title: pageTitle('Create', 'Sites') }] }),
+  pendingMs: 0,
   pendingComponent: WizardPending,
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return

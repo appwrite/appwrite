@@ -9,6 +9,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Server Error': 'サーバーエラー',
   'Connection Error': '接続エラー',
   'Request Timeout': 'リクエストがタイムアウトしました',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'データベースがタイムアウトしました。クエリを調整するか、インデックスを追加してください。',
   'Something went wrong. Please try again.':
     '問題が発生しました。もう一度お試しください。',
   // Punctuated fragments and short segments

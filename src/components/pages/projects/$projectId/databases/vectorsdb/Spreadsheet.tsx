@@ -4585,7 +4585,12 @@ export function RowsSpreadsheet({
                   </div>
                 </th>
               ) : null}
-              <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
+              <th
+                className={cn(
+                  'w-[180px] min-w-[180px] max-w-[180px] px-3 py-2',
+                  headerCellBorderClass,
+                )}
+              >
                 <div className="flex items-center gap-2">
                   <IdHeaderIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <button
@@ -4892,12 +4897,18 @@ export function RowsSpreadsheet({
                   ) : null}
                   <td
                     className={cn(
-                      'w-[180px] px-3 py-1.5',
+                      'w-[180px] min-w-[180px] max-w-[180px] px-3 py-1.5',
                       bodyCellBorderClass,
                     )}
                     data-column="$id"
                   >
-                    <CopyableId id={row.$id} size="xs" />
+                    <div className="min-w-0 max-w-full overflow-hidden">
+                      <CopyableId
+                        id={row.$id}
+                        size="xs"
+                        constrainToContainer
+                      />
+                    </div>
                   </td>
                   {columns.map((col: string) => (
                     <td

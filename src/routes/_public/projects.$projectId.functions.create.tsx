@@ -42,6 +42,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create',
 )({
   head: () => ({ meta: [{ title: pageTitle('Create', 'Functions') }] }),
+  pendingMs: 0,
   pendingComponent: WizardPending,
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return

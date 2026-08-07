@@ -850,6 +850,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to load DocumentsDB': 'טעינת DocumentsDB נכשלה',
   'Failed to load VectorsDB': 'טעינת VectorsDB נכשלה',
   'Failed to load TablesDB': 'טעינת TablesDB נכשלה',
+  'Failed to load rows': 'טעינת השורות נכשלה',
+  'Failed to load documents': 'טעינת המסמכים נכשלה',
   'Failed to load': 'הטעינה נכשלה',
   'Every TablesDB, DocumentsDB, and VectorsDB database in this project.':
     'כל מסדי הנתונים של TablesDB, DocumentsDB ו-VectorsDB בפרויקט זה.',

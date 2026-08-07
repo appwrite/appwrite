@@ -80,6 +80,7 @@ export type DatabaseConsoleLabels = {
   createSchemaCardHint: string
   createSchemaDisabledHint: string
   loadingRecordsLabel: string
+  failedToLoadRecordsTitle: string
   loadingContainersLabel: string
   addSchemaForSampleDataHint: string
   oneRecordSelectedLabel: string
@@ -167,6 +168,7 @@ const TABLES: DatabaseConsoleLabels = {
   createSchemaCardHint: 'Create columns manually',
   createSchemaDisabledHint: '',
   loadingRecordsLabel: 'Loading rows…',
+  failedToLoadRecordsTitle: 'Failed to load rows',
   loadingContainersLabel: 'Loading tables…',
   addSchemaForSampleDataHint: 'Add at least one column to generate sample data.',
   oneRecordSelectedLabel: '1 row selected',
@@ -253,6 +255,7 @@ const DOCUMENTS: DatabaseConsoleLabels = {
   createSchemaCardHint: '',
   createSchemaDisabledHint: 'Add attributes with the Documents API or SDK',
   loadingRecordsLabel: 'Loading documents…',
+  failedToLoadRecordsTitle: 'Failed to load documents',
   loadingContainersLabel: 'Loading collections…',
   addSchemaForSampleDataHint:
     'Add at least one attribute to generate sample data.',
@@ -339,6 +342,7 @@ const VECTORS: DatabaseConsoleLabels = {
   createSchemaCardHint: '',
   createSchemaDisabledHint: 'Add attributes with the Vectors API or SDK',
   loadingRecordsLabel: 'Loading documents…',
+  failedToLoadRecordsTitle: 'Failed to load documents',
   loadingContainersLabel: 'Loading collections…',
   addSchemaForSampleDataHint:
     'Add at least one attribute to generate sample data.',
@@ -424,6 +428,7 @@ const TRANSLATABLE_DATABASE_LABEL_KEYS = [
   'createSchemaCardHint',
   'createSchemaDisabledHint',
   'loadingRecordsLabel',
+  'failedToLoadRecordsTitle',
   'loadingContainersLabel',
   'addSchemaForSampleDataHint',
   'oneRecordSelectedLabel',
