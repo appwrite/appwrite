@@ -175,6 +175,9 @@ class Create extends Base
             // If the framework default was absent, disallowed, or unregistered,
             // fall back to the first runtime that is both permitted and valid.
             if (empty($buildRuntime)) {
+                if (! empty($allowList) && empty($permittedRuntimes)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'No valid runtimes available. Please contact the server administrator.');
+                }
                 $buildRuntime = ! empty($permittedRuntimes) ? $permittedRuntimes[0] : $globalRuntimes[0];
             }
         }
