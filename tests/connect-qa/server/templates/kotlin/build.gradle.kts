@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
   implementation("io.appwrite:sdk-for-kotlin:19.1.0")
+  // The SDK ships gson at runtime only, so declare it to print models as JSON.
+  implementation("com.google.code.gson:gson:2.14.0")
 }
 
 application {

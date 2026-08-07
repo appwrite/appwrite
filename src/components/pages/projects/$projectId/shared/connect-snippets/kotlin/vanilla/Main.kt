@@ -1,7 +1,10 @@
+import com.google.gson.Gson
 import io.appwrite.Client
 import io.appwrite.services.Project
 
 suspend fun main() {
+  val gson = Gson()
+
   val client = Client()
     .setEndpoint(System.getenv("APPWRITE_ENDPOINT"))
     .setProject(System.getenv("APPWRITE_PROJECT_ID"))
@@ -16,9 +19,9 @@ suspend fun main() {
     symbols = true
   )
 
-  println(policy)
+  println(gson.toJson(policy.toMap()))
 
   val policies = project.listPolicies()
 
-  println(policies)
+  println(gson.toJson(policies.toMap()))
 }

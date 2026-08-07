@@ -327,11 +327,16 @@ jobs:
             port: 8080
             start: gradle bootRun -q --console=plain
 
+          # Build up front, like swift-vapor: `swift run` would otherwise
+          # compile the whole SDK dependency tree inside the commander step,
+          # which both hid ~5 minutes of build time in the assertion's timing
+          # and reported compile errors as "stdout did not contain min".
           - id: swift
             kind: cli
             snippets: swift/vanilla
             create: mkdir -p "$APP_DIR" && cp -R templates/swift/. "$APP_DIR/"
             copy_to: Sources
+            install: swift build
             run: swift run
 
           # Vapor pulls in BoringSSL, which takes minutes to compile; build it

@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.exceptions.AppwriteException;
@@ -7,6 +8,8 @@ import java.util.concurrent.CountDownLatch;
 public class Main {
   public static void main(String[] args)
     throws AppwriteException, InterruptedException {
+    Gson gson = new Gson();
+
     Client client = new Client()
       .setEndpoint(System.getenv("APPWRITE_ENDPOINT"))
       .setProject(System.getenv("APPWRITE_PROJECT_ID"))
@@ -25,7 +28,7 @@ public class Main {
       true, // number
       true, // symbols
       new CoroutineCallback<>((policy, error) -> {
-        System.out.println(error == null ? policy.toMap() : error);
+        System.out.println(error == null ? gson.toJson(policy.toMap()) : error);
         done.countDown();
       })
     );
@@ -34,7 +37,7 @@ public class Main {
       null, // queries
       null, // total
       new CoroutineCallback<>((policies, error) -> {
-        System.out.println(error == null ? policies.toMap() : error);
+        System.out.println(error == null ? gson.toJson(policies.toMap()) : error);
         done.countDown();
       })
     );
