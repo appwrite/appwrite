@@ -74,7 +74,7 @@ class V25 extends Migration
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: 0);
+                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);
                             } catch (Throwable $th) {
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
