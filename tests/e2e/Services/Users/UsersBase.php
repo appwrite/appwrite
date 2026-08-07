@@ -2250,7 +2250,67 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 204);
     }
 
-    // TODO add test for session delete
+    public function testDeleteUserSessionRequiresOwnership(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $userAId = ID::unique();
+        $userA = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userAId,
+            'email' => 'session-owner-' . $userAId . '@example.com',
+            'password' => 'password',
+            'name' => 'Session Owner',
+        ]);
+        $this->assertEquals(201, $userA['headers']['status-code']);
+
+        $userBId = ID::unique();
+        $userB = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $userBId,
+            'email' => 'session-other-' . $userBId . '@example.com',
+            'password' => 'password',
+            'name' => 'Other User',
+        ]);
+        $this->assertEquals(201, $userB['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userAId . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionId = $session['body']['$id'];
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $userAId . '/sessions', $headers);
+        $this->assertEquals(200, $sessions['headers']['status-code']);
+        $this->assertEquals(1, $sessions['body']['total']);
+        $this->assertCount(1, $sessions['body']['sessions']);
+        $this->assertEquals($sessionId, $sessions['body']['sessions'][0]['$id']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userBId . '/sessions/' . $sessionId, $headers);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_session_not_found', $response['body']['type']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $userAId . '/sessions', $headers);
+        $this->assertEquals(200, $sessions['headers']['status-code']);
+        $this->assertEquals(1, $sessions['body']['total']);
+        $this->assertCount(1, $sessions['body']['sessions']);
+        $this->assertEquals($sessionId, $sessions['body']['sessions'][0]['$id']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userAId . '/sessions/' . $sessionId, $headers);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $userAId . '/sessions', $headers);
+        $this->assertEquals(200, $sessions['headers']['status-code']);
+        $this->assertEquals(0, $sessions['body']['total']);
+        $this->assertEmpty($sessions['body']['sessions']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userAId, $headers);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userBId, $headers);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     // TODO add test for all sessions delete
 
     /**
