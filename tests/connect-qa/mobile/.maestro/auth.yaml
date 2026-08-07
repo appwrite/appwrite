@@ -20,9 +20,11 @@ tags:
 #   * Password masking: web uses `css: input[type='password']`; here the
 #     plaintext is asserted absent from the view hierarchy (4b, 6b), which
 #     only holds while the field is actually masked.
-#   * No browser-native `required` / `type=email` validation. The snippet
-#     guards empty fields itself; a malformed email is rejected by Appwrite
-#     and surfaces inline instead of being blocked client-side (4b, 6b).
+#   * Native apps have no browser `required` / `type=email` validation (the
+#     snippet guards empty fields itself), but the WebView lanes (capacitor,
+#     tauri) do. 4b/6b therefore use a malformed email with a dotless domain
+#     (not@an): HTML5 validation lets it through everywhere, while Appwrite's
+#     stricter server-side validator rejects it inline in every lane.
 #   * `hideKeyboard` runs only on Android: its soft keyboard can cover the
 #     submit button. iOS Simulators keep the hardware keyboard attached, so
 #     no soft keyboard ever appears and the command errors out ("Couldn't
@@ -138,7 +140,7 @@ tags:
     label: "4b. Malformed email is rejected by Appwrite and surfaced inline"
     commands:
       - tapOn: "Email"
-      - inputText: "not-an-email"
+      - inputText: "not@an"
       - tapOn: "Password"
       - inputText: ${output.password}
       # The web flow proves the field is masked with `css: input[type=
@@ -234,7 +236,7 @@ tags:
       - tapOn: "Name"
       - inputText: ${output.name}
       - tapOn: "Email"
-      - inputText: "not-an-email"
+      - inputText: "not@an"
       - tapOn: "Password"
       - inputText: ${output.password}
       # Same masking check as 4b, on the sign up screen's own field.
