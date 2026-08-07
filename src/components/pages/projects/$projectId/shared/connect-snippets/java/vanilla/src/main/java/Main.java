@@ -28,7 +28,11 @@ public class Main {
       true, // number
       true, // symbols
       new CoroutineCallback<>((policy, error) -> {
-        System.out.println(error == null ? gson.toJson(policy.toMap()) : error);
+        if (error != null) {
+          System.out.println(error);
+        } else {
+          System.out.println(gson.toJson(policy.toMap()));
+        }
         done.countDown();
       })
     );
@@ -37,7 +41,11 @@ public class Main {
       null, // queries
       null, // total
       new CoroutineCallback<>((policies, error) -> {
-        System.out.println(error == null ? gson.toJson(policies.toMap()) : error);
+        if (error != null) {
+          System.out.println(error);
+        } else {
+          System.out.println(gson.toJson(policies.toMap()));
+        }
         done.countDown();
       })
     );
