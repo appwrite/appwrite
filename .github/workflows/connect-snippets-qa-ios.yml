@@ -185,6 +185,13 @@ jobs:
           DEST="$APP_DIR/${{ matrix.copy_to || '.' }}"
           mkdir -p "$DEST"
           cp -Rv "$SRC/." "$DEST/"
+          # The Connect dialog substitutes {{NAME}} template variables when it
+          # renders these files (getSnippet in connect-snippets.ts); mirror the
+          # ones the mobile snippets use. Only the freshly pasted files are
+          # rewritten - scaffold assets can be binary.
+          (cd "$SRC" && find . -type f) | while read -r f; do
+            sed -i '' "s/{{PROJECT_ID}}/$CODE_SNIPPET_QA_PROJECT_ID/g" "$DEST/$f"
+          done
 
       - name: Install dependencies + Appwrite SDK
         run: |

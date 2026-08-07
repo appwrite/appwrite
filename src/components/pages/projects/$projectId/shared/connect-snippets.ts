@@ -272,6 +272,9 @@ export function getCodeFiles(
     const vars = {
       DENO_SDK_SPECIFIER:
         packageManagerId === 'npm' ? 'npm:node-appwrite' : 'jsr:@appwrite/sdk',
+      // Used where a snippet needs the id outside the SDK client, e.g. the
+      // capacitor config's appwrite-callback-<id> WebView scheme.
+      PROJECT_ID: projectId,
     }
     return [
       {
