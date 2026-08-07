@@ -47,7 +47,7 @@ class XList extends Base
                     )
                 ]
             ))
-            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds.', true)
+            ->param('type', 'runtimes', new WhiteList(['runtimes', 'builds']), 'Specification type to list. Can be one of: runtimes, builds. Defaults to runtimes.', true)
             ->inject('response')
             ->inject('plan')
             ->callback($this->action(...));
