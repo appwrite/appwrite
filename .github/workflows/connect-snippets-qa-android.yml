@@ -1,0 +1,39 @@
+name: Connect snippets QA (Android)
+
+# PLACEHOLDER - the real suite is not wired up yet.
+#
+# This exists so the workflow is registered on the default branch and can be
+# dispatched from the Actions UI. The steps below only echo; no app is built
+# and nothing is asserted, so a green run here means "the workflow is
+# reachable", not "the Android snippets work".
+#
+# The real implementation builds a release APK per framework, installs it on
+# an emulator (reactivecircus/android-emulator-runner, KVM enabled) and drives
+# the shared Maestro auth flow against it.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: ${{ matrix.id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: react-native
+          - id: flutter
+          - id: android
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Placeholder
+        run: |
+          echo "Connect snippets QA (Android) - ${{ matrix.id }}"
+          echo "Placeholder run: no app is built and nothing is asserted yet."

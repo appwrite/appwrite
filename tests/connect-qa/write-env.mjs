@@ -2,15 +2,20 @@
 
 /**
  * Writes the framework-appropriate Appwrite env/config file into a scaffolded QA app.
- * Usage: node write-env.mjs <frameworkId> <usingId> <appDir>
+ * Usage: node write-env.mjs <sdkId> <frameworkId> <usingId> <appDir>
+ *
+ * The SDK id is explicit so the mobile suites can reuse this: getEnvExample
+ * keys the variable names off it, and only `web` varies by framework/using.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const [framework, using, appDir] = process.argv.slice(2)
-if (!framework || !using || !appDir) {
-  throw new Error('Usage: node write-env.mjs <frameworkId> <usingId> <appDir>')
+const [sdk, framework, using, appDir] = process.argv.slice(2)
+if (!sdk || !framework || !using || !appDir) {
+  throw new Error(
+    'Usage: node write-env.mjs <sdkId> <frameworkId> <usingId> <appDir>',
+  )
 }
 const endpoint = process.env.CODE_SNIPPET_QA_ENDPOINT
 const projectId = process.env.CODE_SNIPPET_QA_PROJECT_ID
@@ -56,13 +61,15 @@ if (/[a-zA-Z)]:\s*[a-zA-Z'|]/.test(fn.slice(0, fn.indexOf(')') + 10))) {
 }
 const getEnvExample = new Function(`${fn}; return getEnvExample`)()
 
-const content = getEnvExample('web', 'client', framework, using, endpoint, projectId)
+const content = getEnvExample(sdk, 'client', framework, using, endpoint, projectId)
 const target =
-  framework === 'angular'
-    ? join(appDir, 'src/environments/environment.ts')
-    : framework === 'next'
-      ? join(appDir, '.env.local')
-      : join(appDir, '.env')
+  sdk !== 'web'
+    ? join(appDir, '.env')
+    : framework === 'angular'
+      ? join(appDir, 'src/environments/environment.ts')
+      : framework === 'next'
+        ? join(appDir, '.env.local')
+        : join(appDir, '.env')
 
 mkdirSync(dirname(target), { recursive: true })
 writeFileSync(target, `${content}\n`)
