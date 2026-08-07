@@ -61,15 +61,30 @@ if (/[a-zA-Z)]:\s*[a-zA-Z'|]/.test(fn.slice(0, fn.indexOf(')') + 10))) {
 }
 const getEnvExample = new Function(`${fn}; return getEnvExample`)()
 
+/**
+ * Where each client SDK expects its config, mirroring the `envLabel` the
+ * Connect dialog shows for that SDK in connect-snippets.ts SAMPLE_OVERRIDES.
+ * None of these platforms can read a process environment at runtime, so the
+ * filename is part of the contract the snippet documents.
+ */
+const CONFIG_FILES = {
+  'react-native': '.env', // loaded by Expo CLI, inlined by Metro
+  flutter: 'env.json', // flutter run --dart-define-from-file=env.json
+  android: 'gradle.properties', // read by build.gradle.kts into BuildConfig
+  apple: 'Appwrite.xcconfig', // surfaced to the app via Info.plist
+}
+
 const content = getEnvExample(sdk, 'client', framework, using, endpoint, projectId)
 const target =
-  sdk !== 'web'
-    ? join(appDir, '.env')
-    : framework === 'angular'
-      ? join(appDir, 'src/environments/environment.ts')
-      : framework === 'next'
-        ? join(appDir, '.env.local')
-        : join(appDir, '.env')
+  sdk in CONFIG_FILES
+    ? join(appDir, CONFIG_FILES[sdk])
+    : sdk !== 'web'
+      ? join(appDir, '.env')
+      : framework === 'angular'
+        ? join(appDir, 'src/environments/environment.ts')
+        : framework === 'next'
+          ? join(appDir, '.env.local')
+          : join(appDir, '.env')
 
 mkdirSync(dirname(target), { recursive: true })
 writeFileSync(target, `${content}\n`)

@@ -70,14 +70,36 @@ const SDK_API_KEY_DEFAULT_NAME = 'SDK'
 // not a user-connected VCS installation, so the provider is hardcoded here.
 const { Icon: GitHubIcon } = getVcsProvider('github')
 
-/** Client SDKs – [docs](https://appwrite.io/docs/sdks#client) */
-const CLIENT_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
-  { id: 'web', platform: 'web', label: 'Web' },
-  { id: 'flutter', platform: 'flutter', label: 'Flutter' },
-  { id: 'react-native', platform: 'react-native', label: 'React Native' },
-  { id: 'apple', platform: 'apple', label: 'Apple' },
-  { id: 'android', platform: 'android', label: 'Android' },
+/**
+ * Client platforms shown in the first dropdown –
+ * [docs](https://appwrite.io/docs/sdks#client). Ionic, Capacitor, and Tauri
+ * build on web tech, so they resolve to the Web SDK under the hood (`sdkId`,
+ * which drives snippets, install steps, and analytics) and register as a Web
+ * platform in the console; the other entries are Appwrite SDKs of their own.
+ */
+const CLIENT_PLATFORM_OPTIONS: {
+  id: string
+  label: string
+  /** Underlying SDK when it differs from the platform id. */
+  sdkId?: string
+}[] = [
+  { id: 'web', label: 'Web' },
+  { id: 'flutter', label: 'Flutter' },
+  { id: 'react-native', label: 'React Native' },
+  { id: 'ionic', label: 'Ionic', sdkId: 'web' },
+  { id: 'capacitor', label: 'Capacitor', sdkId: 'web' },
+  { id: 'tauri', label: 'Tauri', sdkId: 'web' },
+  { id: 'apple', label: 'Apple' },
+  { id: 'android', label: 'Android' },
 ]
+
+/** True for ids selectable in the platform dropdown (client or server). */
+function isKnownPlatform(id: string): boolean {
+  return (
+    CLIENT_PLATFORM_OPTIONS.some((o) => o.id === id) ||
+    SERVER_SDK_OPTIONS.some((o) => o.id === id)
+  )
+}
 
 /** Server SDKs – [docs](https://appwrite.io/docs/sdks#server) */
 const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
@@ -96,8 +118,11 @@ const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
   { id: 'rust', platform: 'web', label: 'Rust' },
 ]
 
-/** Framework options per SDK (id + label). Aligned with https://appwrite.io/docs/quick-starts */
-const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
+/** Framework options per platform (id + label). Aligned with https://appwrite.io/docs/quick-starts */
+const FRAMEWORK_OPTIONS: Record<
+  string,
+  { id: string; label: string; icon?: string }[]
+> = {
   web: [
     { id: 'next', label: 'Next.js' },
     { id: 'tanstack', label: 'TanStack Start' },
@@ -126,13 +151,20 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'elysia', label: 'ElysiaJS' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
-  // Single-framework platforms keep their platform-specific id (for the
-  // icon and code lookups) but read "Vanilla" when the framework would
-  // otherwise just repeat the platform name.
+  // Single-framework platforms keep their snippet-specific id (for the code
+  // lookups) but read "Vanilla" when the framework would otherwise just
+  // repeat the platform name.
   flutter: [{ id: 'flutter', label: 'Vanilla' }],
-  'react-native': [{ id: 'react-native', label: 'Vanilla' }],
+  'react-native': [{ id: 'expo', label: 'Vanilla', icon: 'react-native' }],
+  ionic: [{ id: 'ionic', label: 'Vanilla' }],
+  capacitor: [{ id: 'capacitor', label: 'Vanilla' }],
+  tauri: [{ id: 'tauri', label: 'Vanilla' }],
+  // Android and Apple render these as a "Language" dropdown.
   apple: [{ id: 'swift', label: 'Swift' }],
-  android: [{ id: 'kotlin', label: 'Kotlin' }],
+  android: [
+    { id: 'kotlin', label: 'Kotlin' },
+    { id: 'java', label: 'Java' },
+  ],
   python: [
     { id: 'fastapi', label: 'FastAPI' },
     { id: 'django', label: 'Django' },
@@ -215,6 +247,9 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   solidstart: [{ id: 'vite', label: 'Vite' }],
   solid: [{ id: 'vite', label: 'Vite' }],
   astro: [{ id: 'vite', label: 'Vite' }],
+  ionic: [{ id: 'vite', label: 'Ionic React' }],
+  capacitor: [{ id: 'vite', label: 'Vite' }],
+  tauri: [{ id: 'vite', label: 'Vite' }],
 }
 
 /** Package manager options per SDK; null = not applicable (use all in install). */
@@ -306,17 +341,23 @@ export function ConnectProject({
   const t = useT()
   const navigate = useNavigate()
   const { track } = useAnalytics()
-  const [sdkId, setSdkId] = useState(() => {
-    const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    const inServer = SERVER_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    if (inClient || inServer) return initialSdk
-    return CLIENT_SDK_OPTIONS[0].id
-  })
+  const [platformId, setPlatformId] = useState(() =>
+    isKnownPlatform(initialSdk) ? initialSdk : 'web',
+  )
   const [frameworkId, setFrameworkId] = useState('vanilla')
   const [usingId, setUsingId] = useState('vite')
   const [packageManagerId, setPackageManagerId] = useState('npm')
 
-  const frameworks = FRAMEWORK_OPTIONS[sdkId] ?? FRAMEWORK_OPTIONS.web
+  // The platform resolves to a real SDK (Ionic/Capacitor/Tauri use the Web
+  // SDK); snippets, install steps, and analytics all key off the SDK id.
+  const sdkId =
+    CLIENT_PLATFORM_OPTIONS.find((o) => o.id === platformId)?.sdkId ??
+    platformId
+
+  const frameworkOptions =
+    FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
+  // Android and Apple pick a language (Kotlin, Swift), not a framework.
+  const isLanguagePlatform = platformId === 'android' || platformId === 'apple'
   const usingVariants = USING_OPTIONS[frameworkId]
   const packageManagers = PACKAGE_MANAGER_OPTIONS[sdkId]
   const isServer = SERVER_SDK_OPTIONS.some((o) => o.id === sdkId)
@@ -324,27 +365,27 @@ export function ConnectProject({
 
   useEffect(() => {
     if (!open) return
-    const inClient = CLIENT_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    const inServer = SERVER_SDK_OPTIONS.some((o) => o.id === initialSdk)
-    if (inClient || inServer) setSdkId(initialSdk)
+    if (isKnownPlatform(initialSdk)) setPlatformId(initialSdk)
   }, [open, initialSdk])
 
   useEffect(() => {
-    const nextFrameworks = FRAMEWORK_OPTIONS[sdkId] ?? FRAMEWORK_OPTIONS.web
-    const nextFwId = nextFrameworks[0]?.id ?? 'vanilla'
-    setFrameworkId(nextFwId)
-    const variants = USING_OPTIONS[nextFwId]
-    setUsingId(variants?.[0]?.id ?? 'vite')
-    const nextPm = PACKAGE_MANAGER_OPTIONS[sdkId]
-    setPackageManagerId(nextPm?.[0]?.id ?? 'npm')
-  }, [sdkId])
+    const nextFrameworks =
+      FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
+    setFrameworkId(nextFrameworks[0]?.id ?? 'vanilla')
+  }, [platformId])
 
   useEffect(() => {
-    const variants = USING_OPTIONS[frameworkId]
-    if (variants?.length && !variants.some((v) => v.id === usingId)) {
-      setUsingId(variants[0].id)
-    }
-  }, [frameworkId, usingId])
+    setUsingId((prev) => {
+      const variants = USING_OPTIONS[frameworkId]
+      return variants?.some((v) => v.id === prev)
+        ? prev
+        : (variants?.[0]?.id ?? 'vite')
+    })
+  }, [frameworkId])
+
+  useEffect(() => {
+    setPackageManagerId(PACKAGE_MANAGER_OPTIONS[sdkId]?.[0]?.id ?? 'npm')
+  }, [sdkId])
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -421,10 +462,14 @@ export function ConnectProject({
     [sdkId, packageManagerId],
   )
 
+  // Label by platform, not SDK: the prompt should say "Ionic", not "Web".
   const sdkLabel =
-    [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].find((o) => o.id === sdkId)
-      ?.label ?? sdkId
-  const frameworkLabel = frameworks.find((fw) => fw.id === frameworkId)?.label
+    [...CLIENT_PLATFORM_OPTIONS, ...SERVER_SDK_OPTIONS].find(
+      (o) => o.id === platformId,
+    )?.label ?? platformId
+  const frameworkLabel = frameworkOptions.find(
+    (fw) => fw.id === frameworkId,
+  )?.label
   const usingLabel = usingVariants?.find((v) => v.id === usingId)?.label
   const packageManagerLabel = packageManagers?.find(
     (pm) => pm.id === packageManagerId,
@@ -438,7 +483,7 @@ export function ConnectProject({
         endpoint: endpoint ?? getBaseEndpoint(),
         sdkLabel,
         runtime,
-        frameworkLabel: frameworks.length > 0 ? frameworkLabel : undefined,
+        frameworkLabel: frameworkOptions.length > 0 ? frameworkLabel : undefined,
         usingLabel:
           usingVariants && usingVariants.length > 0 ? usingLabel : undefined,
         packageManagerLabel:
@@ -455,7 +500,7 @@ export function ConnectProject({
       endpoint,
       sdkLabel,
       runtime,
-      frameworks.length,
+      frameworkOptions.length,
       frameworkLabel,
       usingVariants,
       usingLabel,
@@ -576,16 +621,7 @@ export function ConnectProject({
                   <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
                     {t('SDK / Platform')}
                   </label>
-                  <Select
-                    value={
-                      [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].some(
-                        (o) => o.id === sdkId,
-                      )
-                        ? sdkId
-                        : 'web'
-                    }
-                    onValueChange={setSdkId}
-                  >
+                  <Select value={platformId} onValueChange={setPlatformId}>
                     <SelectTrigger className="w-full h-9 text-[13px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -594,14 +630,18 @@ export function ConnectProject({
                         <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                           {t('Client')}
                         </SelectLabel>
-                        {CLIENT_SDK_OPTIONS.map((opt) => (
+                        {CLIENT_PLATFORM_OPTIONS.map((opt) => (
                           <SelectItem
                             key={opt.id}
                             value={opt.id}
                             className="text-[13px]"
                           >
                             <span className="flex items-center gap-1.5">
-                              <PlatformIcon platform={opt.platform} size="sm" />
+                              {opt.sdkId ? (
+                                <FrameworkIcon framework={opt.id} size="sm" />
+                              ) : (
+                                <PlatformIcon platform={opt.id} size="sm" />
+                              )}
                               {opt.label}
                             </span>
                           </SelectItem>
@@ -627,28 +667,31 @@ export function ConnectProject({
                     </SelectContent>
                   </Select>
                 </div>
-                {frameworks.length > 0 && (
+                {frameworkOptions.length > 0 && (
                   <div className="min-w-[120px]">
                     <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                      {t('Framework')}
+                      {isLanguagePlatform ? t('Language') : t('Framework')}
                     </label>
                     <Select
                       value={frameworkId}
                       onValueChange={setFrameworkId}
-                      disabled={frameworks.length === 1}
+                      disabled={frameworkOptions.length === 1}
                     >
                       <SelectTrigger className="w-full h-9 text-[13px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {frameworks.map((fw) => (
+                        {frameworkOptions.map((fw) => (
                           <SelectItem
                             key={fw.id}
                             value={fw.id}
                             className="text-[13px]"
                           >
                             <span className="flex items-center gap-1.5">
-                              <FrameworkIcon framework={fw.id} size="sm" />
+                              <FrameworkIcon
+                                framework={fw.icon ?? fw.id}
+                                size="sm"
+                              />
                               {fw.label}
                             </span>
                           </SelectItem>

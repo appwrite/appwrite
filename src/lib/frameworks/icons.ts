@@ -72,6 +72,11 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   vitejs: 'vite.svg',
   'vite-js': 'vite.svg',
 
+  ionic: 'ionic.svg',
+  capacitor: 'capacitor.svg',
+  capacitorjs: 'capacitor.svg',
+  tauri: 'tauri.svg',
+
   flutter: 'flutter.svg',
 
   android: 'android.svg',

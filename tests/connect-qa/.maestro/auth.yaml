@@ -7,6 +7,12 @@ tags:
   - regression
 ---
 
+# The mobile suites run tests/connect-qa/mobile/.maestro/auth.yaml, which
+# mirrors this file section for section so the web and mobile Connect
+# snippets are held to the same contract. If you add, renumber or retire a
+# section here, update that flow too - its header lists the few places the
+# two deliberately differ and why.
+
 # ===========================================================================
 # 0. Setup — clean browser state, generate a unique test identity
 # ===========================================================================
