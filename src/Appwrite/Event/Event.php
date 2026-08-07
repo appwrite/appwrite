@@ -795,4 +795,23 @@ class Event
         $queue = new Queue($this->getQueue());
         return $this->publisher->getQueueSize($queue, $failed);
     }
+
+    /**
+     * Truncates a text string in the middle with an ellipsis if it exceeds maxLength.
+     *
+     * @param string $text
+     * @param int $maxLength
+     * @return string
+     */
+    public static function truncateMiddle(string $text, int $maxLength): string
+    {
+        $length = \mb_strlen($text);
+        if ($length <= $maxLength || $maxLength <= 3) {
+            return $text;
+        }
+        $charsToShow = $maxLength - 3;
+        $frontChars = (int) \ceil($charsToShow / 2);
+        $backChars = (int) \floor($charsToShow / 2);
+        return \mb_substr($text, 0, $frontChars) . '...' . \mb_substr($text, $length - $backChars);
+    }
 }
