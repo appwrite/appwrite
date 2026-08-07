@@ -111,9 +111,10 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $resourceType = $deployment->getAttribute('resourceType');
         if (
             $deployment->getAttribute('resourceId') !== $function->getId()
-            || $deployment->getAttribute('resourceType') !== 'functions'
+            || ($resourceType !== 'functions' && !empty($resourceType))
         ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
