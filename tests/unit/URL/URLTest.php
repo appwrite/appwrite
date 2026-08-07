@@ -91,6 +91,26 @@ final class URLTest extends TestCase
         $this->assertSame('https://eldad:fux@appwrite.io/#bottom', $url);
 
         $url = URL::unparse([
+            'scheme' => 'redis',
+            'user' => '0',
+            'pass' => '0',
+            'host' => 'redis',
+            'port' => 6379,
+        ]);
+
+        $this->assertSame('redis://0:0@redis:6379', $url);
+
+        $url = URL::unparse([
+            'scheme' => 'redis',
+            'user' => 'appwrite',
+            'pass' => '',
+            'host' => 'redis',
+            'port' => 6379,
+        ]);
+
+        $this->assertSame('redis://appwrite@redis:6379', $url);
+
+        $url = URL::unparse([
             'scheme' => 'https',
             'user' => '',
             'pass' => '',
