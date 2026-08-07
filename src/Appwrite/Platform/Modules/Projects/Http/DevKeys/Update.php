@@ -70,11 +70,7 @@ class Update extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $key
-            ->setAttribute('name', $name)
-            ->setAttribute('expire', $expire);
-
-        $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document(['name' => $name, 'expire' => $expire]));
+        $key = $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document(['name' => $name, 'expire' => $expire]));
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
