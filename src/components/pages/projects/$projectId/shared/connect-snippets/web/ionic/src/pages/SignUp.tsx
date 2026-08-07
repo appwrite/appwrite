@@ -56,7 +56,10 @@ export function SignUp({
       />
       <IonButton onClick={handleSubmit}>Sign up</IonButton>
       <IonText>
-        Already have an account? <button type="button" onClick={onGoToSignIn}>Sign in</button>
+        Already have an account?{' '}
+        <button type="button" onClick={onGoToSignIn}>
+          Sign in
+        </button>
       </IonText>
     </>
   )
