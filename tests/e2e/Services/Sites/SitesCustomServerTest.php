@@ -1649,7 +1649,7 @@ final class SitesCustomServerTest extends Scope
 
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
-            'activate' => 'false',
+            'activate' => false,
         ]);
 
         /**

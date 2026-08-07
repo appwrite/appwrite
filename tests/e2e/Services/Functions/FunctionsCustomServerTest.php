@@ -1421,7 +1421,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
-            'activate' => 'false',
+            'activate' => false,
             'entrypoint' => 'index.js',
         ]);
 
