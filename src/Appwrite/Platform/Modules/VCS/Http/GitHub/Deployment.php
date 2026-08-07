@@ -25,6 +25,15 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
 {
+    protected function shouldSkipGitDeployment(string $providerCommitMessage): bool
+    {
+        if ($providerCommitMessage === '') {
+            return false;
+        }
+
+        return \preg_match('/\[(skip deploy|skip deployment)\]/i', $providerCommitMessage) === 1;
+    }
+
     protected function createGitDeployments(
         Git $vcs,
         string $providerInstallationId,
@@ -63,6 +72,21 @@ trait Deployment
                 Span::add('project.id', $projectId);
                 Span::add("{$logBase}.resource.id", $resourceId);
                 Span::add("{$logBase}.resource.type", $resourceType);
+
+                if ($this->shouldSkipGitDeployment($providerCommitMessage)) {
+                    Span::add("{$logBase}.build.skipped", 'commit-message');
+                    continue;
+                }
+
+                $repositoryId = $repository->getId();
+                $projectId = $repository->getAttribute('projectId');
+                $resourceId = $repository->getAttribute('resourceId');
+                $resourceType = $repository->getAttribute('resourceType');
+
+                $logBase = "vcs.github.event.repo.{$repositoryId}";
+                Span::add("{$logBase}.projectId", $projectId);
+                Span::add("{$logBase}.resourceId", $resourceId);
+                Span::add("{$logBase}.resourceType", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
