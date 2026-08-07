@@ -89,10 +89,15 @@ class Update extends Base
         }
 
         $resourceType = $deployment->getAttribute('resourceType');
-        if (
-            $deployment->getAttribute('resourceId') !== $function->getId()
-            || ($resourceType !== 'functions' && !empty($resourceType))
-        ) {
+        $ownsDeployment = $deployment->getAttribute('resourceId') === $function->getId()
+            && (
+                $resourceType === 'functions'
+                || (
+                    empty($resourceType)
+                    && $deployment->getAttribute('resourceInternalId') === $function->getSequence()
+                )
+            );
+        if (!$ownsDeployment) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

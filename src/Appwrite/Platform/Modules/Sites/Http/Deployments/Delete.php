@@ -87,10 +87,16 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if (
-            $deployment->getAttribute('resourceId') !== $site->getId()
-            || $deployment->getAttribute('resourceType') !== 'sites'
-        ) {
+        $resourceType = $deployment->getAttribute('resourceType');
+        $ownsDeployment = $deployment->getAttribute('resourceId') === $site->getId()
+            && (
+                $resourceType === 'sites'
+                || (
+                    empty($resourceType)
+                    && $deployment->getAttribute('resourceInternalId') === $site->getSequence()
+                )
+            );
+        if (!$ownsDeployment) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
