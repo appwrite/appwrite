@@ -152,22 +152,30 @@ class Create extends Base
         }
 
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
+        $globalRuntimes = \array_keys(Config::getParam('runtimes'));
+
+        // Only the runtimes that are both operator-permitted and globally
+        // registered. Guards against stale or misspelled entries in
+        // _APP_SITES_RUNTIMES being selected and later rejected at build time
+        // by Deployments::runtime() with FUNCTION_RUNTIME_UNSUPPORTED.
+        $permittedRuntimes = ! empty($allowList)
+            ? \array_values(\array_intersect(\array_values($allowList), $globalRuntimes))
+            : $globalRuntimes;
 
         if (empty($buildRuntime)) {
             // Try the framework's preferred build runtime first, but only if it
-            // is permitted by the operator's allowlist. If it isn't, skip it so
-            // we don't select a runtime we're about to reject.
+            // is permitted by the operator's allowlist and globally registered.
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $frameworkDefault = $configFramework['buildRuntime'] ?? '';
 
-            if (!empty($frameworkDefault) && (empty($allowList) || \in_array($frameworkDefault, $allowList, true))) {
+            if (! empty($frameworkDefault) && \in_array($frameworkDefault, $permittedRuntimes, true)) {
                 $buildRuntime = $frameworkDefault;
             }
 
-            // If the framework default was absent or not allowed, fall back to
-            // the first permitted runtime (or the first globally available one).
+            // If the framework default was absent, disallowed, or unregistered,
+            // fall back to the first runtime that is both permitted and valid.
             if (empty($buildRuntime)) {
-                $buildRuntime = ! empty($allowList) ? \array_values($allowList)[0] : \array_keys(Config::getParam('runtimes'))[0];
+                $buildRuntime = ! empty($permittedRuntimes) ? $permittedRuntimes[0] : $globalRuntimes[0];
             }
         }
 
