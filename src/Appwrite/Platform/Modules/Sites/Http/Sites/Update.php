@@ -159,6 +159,16 @@ class Update extends Base
         Deployments $deployments,
         array $platform
     ) {
+        $site = $dbForProject->getDocument('sites', $siteId);
+
+        if ($site->isEmpty()) {
+            throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        if (empty($framework)) {
+            $framework = $site->getAttribute('framework');
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
@@ -170,16 +180,24 @@ class Update extends Base
 
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
 
-        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
+        if (empty($buildRuntime)) {
+            $buildRuntime = $site->getAttribute('buildRuntime', '');
+        }
+
+        if (empty($buildRuntime)) {
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $buildRuntime = $configFramework['buildRuntime'] ?? '';
+
+            if (empty($buildRuntime)) {
+                $buildRuntime = !empty($allowList) ? \array_values($allowList)[0] : \array_keys(Config::getParam('runtimes'))[0];
+            }
+        }
+
+        if (!empty($allowList) && !\in_array($buildRuntime, $allowList, true)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
         }
 
         // TODO: If only branch changes, re-deploy
-        $site = $dbForProject->getDocument('sites', $siteId);
-
-        if ($site->isEmpty()) {
-            throw new Exception(Exception::SITE_NOT_FOUND);
-        }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
@@ -189,10 +207,6 @@ class Update extends Base
 
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
-        }
-
-        if (empty($framework)) {
-            $framework = $site->getAttribute('framework');
         }
 
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);

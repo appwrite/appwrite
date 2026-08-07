@@ -12,6 +12,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -506,7 +507,7 @@ readonly class Deployments
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
         $runtime = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', [])[$key] ?? null;
         if ($runtime === null) {
-            throw new \Exception('Runtime "' . $key . '" is not supported');
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $key . '" is not supported');
         }
 
         return $runtime;
