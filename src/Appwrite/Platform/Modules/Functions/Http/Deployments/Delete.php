@@ -88,17 +88,20 @@ class Delete extends Action
         }
 
         $resourceType = $deployment->getAttribute('resourceType');
-        $ownsDeployment = $deployment->getAttribute('resourceId') === $function->getId()
-            && (
-                $resourceType === 'functions'
-                || (
-                    empty($resourceType)
-                    && $deployment->getAttribute('resourceInternalId') === $function->getSequence()
-                    && $dbForProject->getAuthorization()->skip(
-                        fn () => $dbForProject->getDocument('sites', $function->getId())
-                    )->isEmpty()
-                )
-            );
+        $ownsDeployment = false;
+        if ($deployment->getAttribute('resourceId') === $function->getId()) {
+            if ($resourceType === 'functions') {
+                $ownsDeployment = true;
+            } elseif (empty($resourceType) && $deployment->getAttribute('resourceInternalId') === $function->getSequence()) {
+                // Sequences are per-collection. An opposite-type resource with the same
+                // public ID is fine unless its sequence also matches, which would make
+                // an untyped deployment ambiguous across namespaces.
+                $opposite = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->getDocument('sites', $function->getId())
+                );
+                $ownsDeployment = $opposite->isEmpty() || $opposite->getSequence() !== $function->getSequence();
+            }
+        }
         if (!$ownsDeployment) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }

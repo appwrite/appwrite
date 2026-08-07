@@ -111,17 +111,20 @@ class Get extends Action
         }
 
         $resourceType = $deployment->getAttribute('resourceType');
-        $ownsDeployment = $deployment->getAttribute('resourceId') === $site->getId()
-            && (
-                $resourceType === 'sites'
-                || (
-                    empty($resourceType)
-                    && $deployment->getAttribute('resourceInternalId') === $site->getSequence()
-                    && $dbForProject->getAuthorization()->skip(
-                        fn () => $dbForProject->getDocument('functions', $site->getId())
-                    )->isEmpty()
-                )
-            );
+        $ownsDeployment = false;
+        if ($deployment->getAttribute('resourceId') === $site->getId()) {
+            if ($resourceType === 'sites') {
+                $ownsDeployment = true;
+            } elseif (empty($resourceType) && $deployment->getAttribute('resourceInternalId') === $site->getSequence()) {
+                // Sequences are per-collection. An opposite-type resource with the same
+                // public ID is fine unless its sequence also matches, which would make
+                // an untyped deployment ambiguous across namespaces.
+                $opposite = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->getDocument('functions', $site->getId())
+                );
+                $ownsDeployment = $opposite->isEmpty() || $opposite->getSequence() !== $site->getSequence();
+            }
+        }
         if (!$ownsDeployment) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
