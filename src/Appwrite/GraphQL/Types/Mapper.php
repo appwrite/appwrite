@@ -349,7 +349,11 @@ class Mapper
                 $type = Types::assoc();
                 break;
             case \Utopia\Validator\JSON::class:
+            case \Utopia\Validator\JSON\ObjectValidator::class:
                 $type = Types::json();
+                break;
+            case \Utopia\Validator\JSON\ArrayValidator::class:
+                $type = Type::listOf(Types::json());
                 break;
             case \Appwrite\Utopia\Request\Validator\File::class:
                 $type = Types::inputFile();

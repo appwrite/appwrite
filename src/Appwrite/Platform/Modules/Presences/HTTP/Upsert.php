@@ -102,7 +102,7 @@ class Upsert extends PlatformAction
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
-            ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
+            ->param('metadata', [], new JSON\ObjectValidator(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')

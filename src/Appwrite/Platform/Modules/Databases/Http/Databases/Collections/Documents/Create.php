@@ -128,9 +128,9 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
-            ->param('data', [], new JSON(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
+            ->param('data', [], new JSON\ObjectValidator(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSON\ObjectValidator(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
@@ -149,32 +149,18 @@ class Create extends Action
 
     public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
-        $normalizeDocument = static function (mixed $document, string $parameter): array {
-            if (\is_string($document)) {
-                $decoded = \json_decode($document);
-
-                if (\json_last_error() !== JSON_ERROR_NONE || !\is_object($decoded)) {
-                    throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Param \"$parameter\" must contain valid JSON objects.");
-                }
-
-                $document = \json_decode($document, true);
-            }
-
-            // Associative JSON decoding maps both `{}` and `[]` to an empty array. Keep
-            // that value for DocumentsDB's supported empty documents, while rejecting
-            // encoded lists above and non-empty list-shaped arrays here.
-            if (!\is_array($document) || ($document !== [] && \array_is_list($document))) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Param \"$parameter\" must contain valid JSON objects.");
-            }
-
-            return $document;
-        };
-
-        $data = $normalizeDocument($data, 'data');
+        // The JSON object validators guarantee object shape for both parameters, so
+        // decoding is all that is left. Encoded scalars and lists are rejected during
+        // validation, before the handler adds system fields or touches the database.
+        $data = \is_string($data)
+            ? \json_decode($data, true)
+            : $data;
 
         if ($documents !== null) {
             foreach ($documents as $key => $document) {
-                $documents[$key] = $normalizeDocument($document, $this->getSDKGroup());
+                if (\is_string($document)) {
+                    $documents[$key] = \json_decode($document, true);
+                }
             }
         }
 

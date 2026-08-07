@@ -2714,7 +2714,8 @@ trait DatabasesBase
 
         $this->assertEquals(400, $invalid['headers']['status-code']);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalid['body']['type']);
-        $this->assertEquals('Param "data" must contain valid JSON objects.', $invalid['body']['message']);
+        $this->assertStringContainsString('Invalid `data` param', $invalid['body']['message']);
+        $this->assertStringContainsString('Value must be a valid JSON object', $invalid['body']['message']);
 
         $notCreated = $this->client->call(
             Client::METHOD_GET,
@@ -2776,7 +2777,8 @@ trait DatabasesBase
 
         $this->assertEquals(400, $invalidBulk['headers']['status-code']);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalidBulk['body']['type']);
-        $this->assertEquals('Param "' . $this->getRecordResource() . '" must contain valid JSON objects.', $invalidBulk['body']['message']);
+        $this->assertStringContainsString('Invalid `' . $this->getRecordResource() . '` param', $invalidBulk['body']['message']);
+        $this->assertStringContainsString('Value must be a valid JSON object', $invalidBulk['body']['message']);
 
         $bulkNotCreated = $this->client->call(
             Client::METHOD_GET,
