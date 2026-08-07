@@ -1,0 +1,81 @@
+name: Welcome first time contributors
+
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
+
+jobs:
+  welcome:
+    name: Post welcome message
+    if: ${{ !contains(fromJson('["dependabot[bot]", "github-actions[bot]"]'), github.actor) }} # zizmor: ignore[obfuscation]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    env:
+      ISSUE_WELCOME_MSG: |
+        Welcome to the Appwrite repository! 🎉 Thank you for reporting your first issue.
+        
+        Please make sure to review our [contributing guidelines](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md). Our team and the community will look into this issue shortly!
+      PR_WELCOME_MSG: |
+        Welcome to the Appwrite repository! 🎉 Thank you for creating your first pull request.
+        
+        Please make sure to check out our [contributing guidelines](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md). The maintainers will review your contribution soon!
+    steps:
+    - name: Run Welcome Script
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+      with:
+        github-token: ${{ github.token }}
+        script: |
+          const isIssue = !!context.payload.issue;
+          const sender = context.payload.sender.login;
+          let isFirstContribution = false;
+          
+          if (isIssue) {
+            const query = `query($owner:String!, $name:String!, $contributor:String!) {
+              repository(owner:$owner, name:$name){
+                issues(first: 2, filterBy: {createdBy:$contributor, states:[OPEN, CLOSED]}) {
+                  totalCount
+                }
+              }
+            }`;
+            const variables = {
+              owner: context.repo.owner,
+              name: context.repo.repo,
+              contributor: sender
+            };
+            const { repository: { issues: { totalCount } } } = await github.graphql(query, variables);
+            isFirstContribution = totalCount === 1;
+          } else {
+            const query = `is:pr author:${sender} repo:${context.repo.owner}/${context.repo.repo}`;
+            const pullsList = await github.rest.search.issuesAndPullRequests({
+              q: query,
+              per_page: 2
+            });
+            isFirstContribution = pullsList.data.total_count === 1;
+          }
+          
+          if (!isFirstContribution) {
+            console.log(`Not ${sender}'s first contribution.`);
+            return;
+          }
+          
+          const message = isIssue ? process.env.ISSUE_WELCOME_MSG : process.env.PR_WELCOME_MSG;
+          
+          if (isIssue) {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: message
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: message
+            });
+          }
