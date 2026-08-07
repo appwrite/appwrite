@@ -241,6 +241,21 @@ export function GitConfigurationCard({
                   {t('Connect to GitLab')}
                 </a>
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a
+                  href={vcsAuthUrl('bitbucket')}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                  {t('Connect to Bitbucket')}
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -466,6 +481,21 @@ export function GitConfigurationCard({
               <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
                 <VcsIcon type="gitlab" className="me-1.5 h-4 w-4" />
                 {t('Connect with GitLab')}
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
+              <a
+                href={vcsAuthUrl('bitbucket')}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                {t('Connect with Bitbucket')}
               </a>
             </Button>
           </div>

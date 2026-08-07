@@ -294,6 +294,12 @@ export function ConnectRepositorySection({
                 {t('Connect to GitLab')}
               </a>
             </Button>
+            <Button variant="secondary" asChild>
+              <a href={vcsAuthUrl('bitbucket')}>
+                <VcsIcon type="bitbucket" className="me-1.5 h-4 w-4" />
+                {t('Connect to Bitbucket')}
+              </a>
+            </Button>
           </div>
         </div>
       </div>
