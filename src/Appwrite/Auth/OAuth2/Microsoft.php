@@ -215,7 +215,8 @@ class Microsoft extends OAuth2
     protected function getTenantID(): string
     {
         $secret = $this->getAppSecret();
+        $tenantID = $secret['tenantID'] ?? '';
 
-        return $secret['tenantID'] ?? '';
+        return !empty($tenantID) ? $tenantID : 'common';
     }
 }

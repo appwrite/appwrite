@@ -153,11 +153,7 @@ class Update extends Base
         // to match the shape Authentik's OAuth2 adapter expects (getAuthentikDomain()).
         // The `endpoint` param is optional; if omitted, the existing stored endpoint is preserved.
         // `clientSecret` is optional; if omitted, the existing stored secret is preserved.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $existing = $this->decodeStoredSecret($project);
         $encodedSecret = \json_encode([
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
             'authentikDomain' => $endpoint ?? ($existing['authentikDomain'] ?? ''),

@@ -163,11 +163,7 @@ class Update extends Base
         // to match the shape Microsoft's OAuth2 adapter expects (getTenantID()).
         // The `tenant` param is optional; if omitted, the existing stored tenant is preserved.
         // `applicationSecret` is optional; if omitted, the existing stored secret is preserved.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $existing = $this->decodeStoredSecret($project);
         $encodedSecret = \json_encode([
             'clientSecret' => $applicationSecret ?? ($existing['clientSecret'] ?? ''),
             'tenantID' => $tenant ?? ($existing['tenantID'] ?? ''),
