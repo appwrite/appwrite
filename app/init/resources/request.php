@@ -536,16 +536,16 @@ return function (Container $context): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                    $user = new User([]);
-                }
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+                $user = new User([]);
             }
         }
 
