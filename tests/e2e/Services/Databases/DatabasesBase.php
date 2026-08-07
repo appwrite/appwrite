@@ -2724,6 +2724,19 @@ trait DatabasesBase
 
         $this->assertEquals(404, $notCreated['headers']['status-code']);
 
+        $invalidList = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $data['moviesId']),
+            $headers,
+            [
+                $this->getRecordIdParam() => ID::unique(),
+                'data' => \json_encode([]),
+            ]
+        );
+
+        $this->assertEquals(400, $invalidList['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $invalidList['body']['type']);
+
         $encodedDocument = $this->client->call(
             Client::METHOD_POST,
             $this->getRecordUrl($databaseId, $data['moviesId']),

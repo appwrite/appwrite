@@ -160,7 +160,10 @@ class Create extends Action
                 $document = \json_decode($document, true);
             }
 
-            if (!\is_array($document) || (!empty($document) && \array_is_list($document))) {
+            // Associative JSON decoding maps both `{}` and `[]` to an empty array. Keep
+            // that value for DocumentsDB's supported empty documents, while rejecting
+            // encoded lists above and non-empty list-shaped arrays here.
+            if (!\is_array($document) || ($document !== [] && \array_is_list($document))) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Param \"$parameter\" must contain valid JSON objects.");
             }
 
