@@ -109,7 +109,7 @@ trait Deployment
                 return;
             }
 
-            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'neutral', 'success', 'Deployment skipped', $reason, $targetUrl);
+            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::SKIPPED, 'Deployment skipped', $reason, $targetUrl);
         };
 
         foreach ($repositories as $repository) {
@@ -394,7 +394,7 @@ trait Deployment
                         $name = "{$resourceName} ({$projectName})";
                         $message = 'Authorization required: a maintainer must approve this external contribution.';
 
-                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, 'action_required', 'failure', 'Authorization required', $message, $authorizeUrl);
+                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::BLOCKED, 'Authorization required', $message, $authorizeUrl);
                     }
 
                     continue;

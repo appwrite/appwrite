@@ -79,8 +79,7 @@ final class CheckRunsTest extends TestCase
             'repo',
             self::SHA,
             'name',
-            'action_required',
-            'failure',
+            CheckRuns::BLOCKED,
             'Authorization required',
             'A maintainer must approve this external contribution.',
             'https://console.example.com/authorize',
@@ -93,7 +92,7 @@ final class CheckRunsTest extends TestCase
         $adapter->expects($this->never())->method('createCheckRun');
         $adapter->expects($this->never())->method('updateCommitStatus');
 
-        (new CheckRuns())->report($adapter, '', '', self::SHA, 'name', 'neutral', 'success', 'title', 'summary');
+        (new CheckRuns())->report($adapter, '', '', self::SHA, 'name', CheckRuns::SKIPPED, 'title', 'summary');
     }
 
     public function testOverlongNameIsTruncated(): void
@@ -103,7 +102,7 @@ final class CheckRunsTest extends TestCase
             ->method('createCheckRun')
             ->with('owner', 'repo', self::SHA, \str_repeat('a', 252) . '...');
 
-        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), 'neutral', 'success', 'title', 'summary');
+        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), CheckRuns::SKIPPED, 'title', 'summary');
     }
 
     public function testOverlongDescriptionIsTruncated(): void
@@ -114,7 +113,7 @@ final class CheckRunsTest extends TestCase
             ->method('updateCommitStatus')
             ->with('repo', self::SHA, 'owner', 'success', \str_repeat('b', 137) . '...');
 
-        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, 'name', 'neutral', 'success', 'title', \str_repeat('b', 200));
+        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, 'name', CheckRuns::SKIPPED, 'title', \str_repeat('b', 200));
     }
 
     public function testCheckRunRefusalIsAskedOnlyOnce(): void
@@ -157,8 +156,7 @@ final class CheckRunsTest extends TestCase
             'repo',
             self::SHA,
             'my-function (my-project)',
-            'neutral',
-            'success',
+            CheckRuns::SKIPPED,
             'Deployment skipped',
             self::REASON,
         );

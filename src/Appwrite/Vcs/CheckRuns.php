@@ -13,6 +13,21 @@ use Utopia\VCS\Adapter\Git\GitHub;
  */
 class CheckRuns
 {
+    public const string SKIPPED = 'skipped';
+    public const string BLOCKED = 'blocked';
+
+    /**
+     * Each verdict in both provider vocabularies. The commit status is a decision, not a
+     * translation: a provider with no way to say "neither passed nor failed" is told the
+     * commit passed, so a skip never blocks a merge.
+     *
+     * @var array<string, array{conclusion: string, state: string}>
+     */
+    private const array VERDICTS = [
+        self::SKIPPED => ['conclusion' => 'neutral', 'state' => 'success'],
+        self::BLOCKED => ['conclusion' => 'action_required', 'state' => 'failure'],
+    ];
+
     protected const int NAME_MAX_LENGTH = 255;
     protected const int DESCRIPTION_MAX_LENGTH = 140;
 
@@ -32,8 +47,7 @@ class CheckRuns
         string $repositoryName,
         string $commitHash,
         string $name,
-        string $conclusion,
-        string $state,
+        string $verdict,
         string $title,
         string $summary,
         string $detailsUrl = '',
@@ -43,6 +57,7 @@ class CheckRuns
         }
 
         $repository = "{$owner}/{$repositoryName}";
+        ['conclusion' => $conclusion, 'state' => $state] = self::VERDICTS[$verdict];
 
         if ($vcs instanceof GitHub && !isset($this->refused[$repository])) {
             try {
