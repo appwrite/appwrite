@@ -2,7 +2,7 @@
 node = "24"          # Scaffolding + Metro bundling for the cross-platform frameworks
 maestro = "latest"   # Maestro CLI (github:mobile-dev-inc/maestro); drives the emulator over adb
 java = "temurin-17"  # Gradle/AGP toolchain for every Android build (Maestro also needs 17+)
-gradle = "8.9"       # Native Kotlin lane only; React Native and Flutter bring their own wrapper
+gradle = "8.14"      # Native Kotlin lane only (AGP 8.13 needs 8.13+); RN and Flutter bring their own wrapper
 
 # Run the shared mobile auth flow against the QA app already installed on the
 # connected emulator/device (Maestro finds it through adb). The flow lives in

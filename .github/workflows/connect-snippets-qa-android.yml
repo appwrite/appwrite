@@ -60,7 +60,9 @@ jobs:
               printf 'package io.appwrite.connectqa\n\n' | cat - "$f" > "$f.tmp" &&
               mv "$f.tmp" "$f"; done
             install: 'true'
-            build: gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+            build: >-
+              gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+              -Pandroid.suppressUnsupportedCompileSdk=37
             apk: app/build/outputs/apk/release/app-release.apk
 
           - id: capacitor
@@ -69,6 +71,7 @@ jobs:
             using: vite
             snippets: web/capacitor
             template: ''
+            java: temurin-21
             config_file: .env
             copy_to: .
             create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
@@ -83,6 +86,7 @@ jobs:
             using: vite
             snippets: web/ionic
             template: ionic
+            java: temurin-21
             config_file: .env
             copy_to: .
             create: npx -y create-vite@latest "$APP_DIR" --template react-ts
@@ -108,6 +112,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The default runner image leaves ~14 GB free, which the SDK caches,
+      # Gradle builds, and the emulator system image + AVD overflow (flutter
+      # and react-native died with ENOSPC mid-run). Drop the big preinstalled
+      # toolchains we never touch. Keep /usr/local/lib/android (the SDK) and
+      # /opt/hostedtoolcache (flutter-action installs there).
+      - name: Free up runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af > /dev/null 2>&1 || true
+          df -h /
+
       - name: Check Appwrite variables
         run: |
           if [ -z "$CODE_SNIPPET_QA_ENDPOINT" ] || [ -z "$CODE_SNIPPET_QA_PROJECT_ID" ]; then
@@ -129,6 +145,11 @@ jobs:
       - name: Install tooling via mise (node, maestro, java, gradle)
         run: |
           mise trust
+          # Capacitor's android library ships Java 21 bytecode; the shared
+          # default stays on 17 because React Native and Flutter test it.
+          if [ -n "${{ matrix.java }}" ]; then
+            mise use "java@${{ matrix.java }}"
+          fi
           mise install
 
       - name: Install Flutter

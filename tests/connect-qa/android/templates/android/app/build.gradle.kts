@@ -6,7 +6,8 @@ plugins {
 
 android {
   namespace = "io.appwrite.connectqa"
-  compileSdk = 35
+  // sdk-for-android 26.x publishes AAR metadata requiring compileSdk 37+.
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "io.appwrite.connectqa"
@@ -43,9 +44,11 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
+}
 
-  kotlinOptions {
-    jvmTarget = "17"
+kotlin {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
   }
 }
 
