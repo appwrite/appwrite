@@ -1463,6 +1463,16 @@ trait UsersBase
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertEmpty($user['body']['password']);
 
+        // Clearing the password must not fall through to hashing and storing the empty
+        // string as a real password afterwards.
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEmpty($user['body']['password']);
+
         $this->assertEventually(function () {
             $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
                 'content-type' => 'application/json',
