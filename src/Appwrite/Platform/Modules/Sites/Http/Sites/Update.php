@@ -181,7 +181,15 @@ class Update extends Base
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
 
         if (empty($buildRuntime)) {
-            $buildRuntime = $site->getAttribute('buildRuntime', '');
+            // Restore the persisted runtime only when it is still permitted by
+            // the operator's allowlist. If the operator has since removed that
+            // runtime from _APP_SITES_RUNTIMES, fall through to the framework
+            // default / global fallback so an unrelated update (e.g. name
+            // change) is not blocked by a stale runtime value.
+            $storedBuildRuntime = $site->getAttribute('buildRuntime', '');
+            if (! empty($storedBuildRuntime) && (empty($allowList) || \in_array($storedBuildRuntime, $allowList, true))) {
+                $buildRuntime = $storedBuildRuntime;
+            }
         }
 
         if (empty($buildRuntime)) {
