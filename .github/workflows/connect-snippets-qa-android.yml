@@ -9,8 +9,6 @@ permissions:
 env:
   CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
-  # Every mobile QA app is built under this applicationId so the one shared
-  # flow (../mobile/.maestro/auth.yaml) drives Android and iOS alike.
   APP_ID: io.appwrite.connectqa
 
 defaults:
@@ -26,30 +24,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # `create` scaffolds a starter, `configure` adapts it to the QA
-          # harness (applicationId + any build config the snippet needs),
-          # `install` adds the Appwrite SDK, `build` must leave a signed,
-          # self-contained APK at `apk` (relative to $APP_DIR).
           - id: react-native
-            # `sdk` is the connect-snippets.ts SDK id (drives the env var names
-            # via getEnvExample); `snippets` is the directory to paste from.
             sdk: react-native
             snippets: react-native
-            # Optional harness-only overlay from templates/<template>/.
-            # React Native needs none: Expo CLI loads .env itself and Metro
-            # inlines the EXPO_PUBLIC_-prefixed vars the snippet reads.
             template: ''
-            # The file write-env.mjs produces for this SDK, i.e. the one the
-            # Connect dialog names.
             config_file: .env
             create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
             configure: jq --arg id "$APP_ID" '.expo.android.package = $id' app.json > app.json.tmp && mv app.json.tmp app.json
             install: npm install && npm install react-native-appwrite
-            # prebuild must run after the SDK install so autolinking picks up
-            # react-native-appwrite's native deps (expo-file-system).
-            # assembleRelease (not Debug): RN's release buildType reuses the
-            # generated debug.keystore and is not in `debuggableVariants`, so
-            # the JS bundle is embedded and no Metro server is needed on CI.
             build: npx expo prebuild --platform android --no-install && ./android/gradlew -p android assembleRelease --no-daemon
             apk: android/app/build/outputs/apk/release/app-release.apk
 
@@ -63,8 +45,6 @@ jobs:
             exit 1
           fi
 
-      # Without a writable /dev/kvm the emulator falls back to full software
-      # emulation and boot goes from ~1min to well past this job's timeout.
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -85,8 +65,6 @@ jobs:
         run: |
           APP_DIR="app-$(date +%s)-$RANDOM"
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          # Subshell: a scaffold that ends with `cd "$APP_DIR"` would otherwise
-          # make the check below look for $APP_DIR inside itself.
           ( ${{ matrix.create }} )
           if [ ! -d "$APP_DIR" ]; then
             echo "::error::Scaffold did not produce $APP_DIR"
@@ -102,9 +80,6 @@ jobs:
 
       - name: Apply QA harness overlay and configure the app
         run: |
-          # Harness-only files that are never part of the snippet. Guarded on
-          # a non-empty matrix.template: an unset value would expand to
-          # "templates/", copying every framework's overlay at once.
           TEMPLATE="${{ matrix.template }}"
           if [ -n "$TEMPLATE" ] && [ -d "templates/$TEMPLATE" ]; then
             cp -Rv "templates/$TEMPLATE/." "$APP_DIR/"
@@ -117,9 +92,6 @@ jobs:
           cd "$APP_DIR"
           ${{ matrix.install }}
 
-      # Writes exactly the file the Connect dialog tells users to write, with
-      # exactly the variable names it documents - so a drift between the docs
-      # and what the snippet reads shows up as a failed build assertion below.
       - name: Write env file (derived from connect-snippets.ts)
         run: |
           node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.sdk }}" "${{ matrix.sdk }}" "$APP_DIR"
@@ -137,14 +109,8 @@ jobs:
           echo "APK_PATH=$APK" >> "$GITHUB_ENV"
           ls -lh "$APK"
 
-      # Guards the whole env-injection chain. If the babel inlining silently
-      # stops working the app still renders "Sign in to get started." (the
-      # snippet swallows the failed account.get()), so the Maestro flow alone
-      # would pass against an unconfigured client.
       - name: Assert the endpoint is embedded in the APK
         run: |
-          # No `set -o pipefail` here on purpose: `grep -q` exits on the first
-          # match and SIGPIPEs unzip, which pipefail would report as a failure.
           if ! unzip -p "$APK_PATH" 'assets/*' | strings | grep -qF "$CODE_SNIPPET_QA_ENDPOINT"; then
             echo "::error::$CODE_SNIPPET_QA_ENDPOINT is not present in the APK - the env vars never reached the bundle."
             exit 1
@@ -174,8 +140,6 @@ jobs:
                 --output="$PWD/artifacts/maestro/report.xml"
             }
 
-            # A cold emulator can drop the first adb/UiAutomator connection;
-            # one retry absorbs that without hiding a real failure.
             status=0
             run_flow || {
               echo "::warning::Maestro flow failed - retrying once"
@@ -183,9 +147,6 @@ jobs:
               run_flow || status=1
             }
 
-            # Dumped (not streamed) so there is no background process left to
-            # hang this step, and so the log is captured on failure too - it is
-            # where a native crash or an unhandled SDK exception shows up.
             adb logcat -d > artifacts/logcat.txt 2>&1 || true
             exit $status
 
@@ -193,16 +154,12 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts
-          # Safety net: if a future maestro version ignores --debug-output,
-          # grab whatever landed in the default location instead.
           if [ -d "$HOME/.maestro/tests" ]; then
             cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
           fi
           if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
             cp "$APK_PATH" artifacts/ || true
           fi
-          # The exact app that was tested (snippets pasted, env written), ready
-          # for a local rebuild - dependency trees and build output excluded.
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
             zip -qr artifacts/app-source.zip "$APP_DIR" \
               -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/.gradle/*" \

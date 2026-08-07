@@ -55,8 +55,6 @@ function Home({
 }
 
 export default function App() {
-  // Native apps have no URL bar, so the screen is picked from state instead
-  // of window.location.pathname.
   const [route, setRoute] = useState('home')
 
   return (

@@ -15,8 +15,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Native apps have no URL bar, so the screen is picked from state instead
-/// of window.location.pathname.
 class Router extends StatefulWidget {
   const Router({super.key});
 

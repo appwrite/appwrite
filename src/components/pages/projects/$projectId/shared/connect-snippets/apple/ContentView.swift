@@ -2,8 +2,6 @@ import Appwrite
 import SwiftUI
 
 struct ContentView: View {
-  // Native apps have no URL bar, so the screen is picked from state
-  // instead of window.location.pathname.
   @State private var route = "home"
 
   var body: some View {

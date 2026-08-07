@@ -1,7 +1,3 @@
-// Module-level build.gradle.kts - the two blocks Appwrite needs.
-//
-// Put the values in gradle.properties (keep that file out of version
-// control) and Gradle bakes them into BuildConfig at build time.
 android {
   buildFeatures {
     buildConfig = true

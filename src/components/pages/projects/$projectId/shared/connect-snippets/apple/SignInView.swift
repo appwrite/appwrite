@@ -29,8 +29,6 @@ struct SignInView: View {
   }
 
   private func submit() {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native fields have no equivalent, so check it here.
     guard !email.isEmpty, !password.isEmpty else { return }
     error = ""
     Task {

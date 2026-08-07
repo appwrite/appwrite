@@ -27,8 +27,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App() {
-  // Native apps have no URL bar, so the screen is picked from state
-  // instead of window.location.pathname.
   var route by remember { mutableStateOf("home") }
 
   Column(modifier = Modifier.padding(24.dp)) {

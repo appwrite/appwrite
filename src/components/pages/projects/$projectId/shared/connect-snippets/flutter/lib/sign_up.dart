@@ -31,8 +31,6 @@ class _SignUpState extends State<SignUp> {
   }
 
   Future<void> _submit() async {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native fields have no equivalent, so check it here.
     if (email.text.isEmpty || password.text.isEmpty) return;
     setState(() => error = '');
     try {
@@ -41,7 +39,6 @@ class _SignUpState extends State<SignUp> {
         userId: ID.unique(),
         email: email.text,
         password: password.text,
-        // Appwrite rejects an empty name, so pass null instead.
         name: name.text.trim().isEmpty ? null : name.text.trim(),
       );
       await account.createEmailPasswordSession(

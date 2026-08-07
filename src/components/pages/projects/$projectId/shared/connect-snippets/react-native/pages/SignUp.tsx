@@ -16,8 +16,6 @@ export function SignUp({
   const [error, setError] = useState('')
 
   async function handleSubmit() {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native inputs have no equivalent, so check it here.
     if (!email || !password) return
     setError('')
     try {
@@ -26,7 +24,6 @@ export function SignUp({
         userId: ID.unique(),
         email,
         password,
-        // Appwrite rejects an empty name, so omit the key entirely.
         name: name.trim() || undefined,
       })
       await account.createEmailPasswordSession({ email, password })

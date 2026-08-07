@@ -1,14 +1,3 @@
-# QA harness only - not part of the Connect snippet.
-#
-# Apple ships no CLI that scaffolds an Xcode project (unlike create-expo-app
-# or flutter create), and xcodebuild can only build a project that already
-# exists. XcodeGen generates one from this spec, so the harness stays text
-# and reviewable instead of carrying a checked-in .xcodeproj blob.
-#
-# The point of the config wiring below is that CI exercises the exact path
-# the Connect dialog documents: Appwrite.xcconfig defines the two build
-# settings, Info.plist surfaces them as $(...) references, and the snippet
-# reads them back with Bundle.main.object(forInfoDictionaryKey:).
 name: ConnectQA
 options:
   bundleIdPrefix: io.appwrite
@@ -34,13 +23,8 @@ targets:
       Release: Appwrite.xcconfig
     settings:
       base:
-        # Must match the appId in the shared Maestro flow.
         PRODUCT_BUNDLE_IDENTIFIER: io.appwrite.connectqa
-        # Use the Info.plist below rather than a synthesised one, so the
-        # two Appwrite keys actually reach the bundle.
         GENERATE_INFOPLIST_FILE: NO
-        # Simulator builds need no signing; this keeps CI free of any
-        # certificate or provisioning profile setup.
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
     info:
@@ -50,6 +34,5 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        # Expanded from Appwrite.xcconfig during "Process Info.plist".
         APPWRITE_ENDPOINT: $(APPWRITE_ENDPOINT)
         APPWRITE_PROJECT_ID: $(APPWRITE_PROJECT_ID)

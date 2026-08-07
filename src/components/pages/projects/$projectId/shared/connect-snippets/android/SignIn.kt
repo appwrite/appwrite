@@ -40,8 +40,6 @@ fun SignIn(onSignedIn: () -> Unit, onGoToSignUp: () -> Unit) {
 
   TextButton(
     onClick = {
-      // On the web the browser blocks this via the inputs' `required`
-      // attribute; native fields have no equivalent, so check it here.
       if (email.isEmpty() || password.isEmpty()) return@TextButton
       error = ""
       scope.launch {

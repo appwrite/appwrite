@@ -1,7 +1,5 @@
 name: Connect snippets QA (iOS)
 
-# macOS runners bill at ~10x Linux and this repo is private, so this stays
-# manual - same trigger as the web/server/Android suites.
 on:
   workflow_dispatch:
 
@@ -11,8 +9,6 @@ permissions:
 env:
   CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
-  # Every mobile QA app is built under this bundle id so the one shared flow
-  # (../mobile/.maestro/auth.yaml) drives Android and iOS alike.
   APP_ID: io.appwrite.connectqa
 
 defaults:
@@ -28,18 +24,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # `create` scaffolds a starter, `configure` adapts it to the QA
-          # harness (bundle id + anything the snippet needs), `install` adds
-          # the Appwrite SDK, `build` must leave a simulator .app somewhere
-          # under `app_search`.
-          #
-          # Unlike Android there is no signing setup anywhere here: an
-          # iphonesimulator build is never signed, so no certificates or
-          # provisioning profiles are involved.
-
-          # Native SwiftUI. Apple ships no project-scaffolding CLI, so the
-          # harness template carries an XcodeGen spec + the @main entry point
-          # a real Xcode project would already have.
           - id: apple
             sdk: apple
             snippets: apple
@@ -48,7 +32,7 @@ jobs:
             copy_to: Sources
             create: mkdir -p "$APP_DIR"
             configure: xcodegen generate
-            install: 'true' # SPM resolves during the build
+            install: 'true'
             build: xcodebuild -project ConnectQA.xcodeproj -scheme ConnectQA -configuration Release -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
             app_search: build/Build/Products/Release-iphonesimulator
 
@@ -60,9 +44,6 @@ jobs:
             create: npx -y create-expo-app@latest "$APP_DIR" --template blank-typescript --no-install
             configure: jq --arg id "$APP_ID" '.expo.ios.bundleIdentifier = $id' app.json > app.json.tmp && mv app.json.tmp app.json
             install: npm install && npm install react-native-appwrite
-            # prebuild after the SDK install so autolinking sees its native
-            # deps; --no-install then an explicit pod install, so a CocoaPods
-            # failure is its own step in the log rather than buried in prebuild.
             build: npx expo prebuild --platform ios --no-install && pod install --project-directory=ios && xcodebuild -workspace ios/*.xcworkspace -scheme "$(xcodebuild -workspace ios/*.xcworkspace -list -json | jq -r '.workspace.schemes[0]')" -configuration Release -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
             app_search: build/Build/Products/Release-iphonesimulator
 
@@ -72,11 +53,9 @@ jobs:
             template: ''
             config_file: env.json
             copy_to: .
-            # --org + --project-name yields the io.appwrite.connectqa bundle id.
             create: flutter create --org io.appwrite --project-name connectqa "$APP_DIR"
             configure: 'true'
             install: flutter pub add appwrite
-            # --simulator implies a debug (JIT) build, which needs no signing.
             build: flutter build ios --simulator --debug --dart-define-from-file=env.json
             app_search: build/ios/iphonesimulator
 
@@ -120,8 +99,6 @@ jobs:
         run: |
           APP_DIR="app-$(date +%s)-$RANDOM"
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          # Subshell: a scaffold that ends with `cd "$APP_DIR"` would otherwise
-          # make the check below look for $APP_DIR inside itself.
           ( ${{ matrix.create }} )
           if [ ! -d "$APP_DIR" ]; then
             echo "::error::Scaffold did not produce $APP_DIR"
@@ -130,9 +107,6 @@ jobs:
 
       - name: Apply QA harness overlay
         run: |
-          # Harness-only files that are never part of the snippet. Guarded on
-          # a non-empty matrix.template: an unset value would expand to
-          # "templates/", copying every framework's overlay at once.
           TEMPLATE="${{ matrix.template }}"
           if [ -n "$TEMPLATE" ] && [ -d "templates/$TEMPLATE" ]; then
             cp -Rv "templates/$TEMPLATE/." "$APP_DIR/"
@@ -150,9 +124,6 @@ jobs:
           cd "$APP_DIR"
           ${{ matrix.install }}
 
-      # Writes exactly the file the Connect dialog tells users to write, with
-      # exactly the variable names it documents - so drift between the docs
-      # and what the snippet reads shows up as a failed assertion below.
       - name: Write config file (derived from connect-snippets.ts)
         run: |
           node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.sdk }}" "${{ matrix.sdk }}" "$APP_DIR"
@@ -175,12 +146,6 @@ jobs:
           echo "APP_PATH=$PWD/$APP_PATH" >> "$GITHUB_ENV"
           echo "Built $APP_PATH"
 
-      # Guards the whole config chain. Each platform injects the endpoint
-      # differently (Info.plist here, the JS bundle for React Native, the Dart
-      # snapshot for Flutter), but in every case the value has to end up
-      # somewhere inside the bundle - and if it does not, the app still renders
-      # "Sign in to get started." because the snippet swallows the failed
-      # account.get(), so the Maestro flow alone would pass regardless.
       - name: Assert the endpoint is embedded in the app bundle
         run: |
           if ! grep -raqF "$CODE_SNIPPET_QA_ENDPOINT" "$APP_PATH"; then
@@ -191,8 +156,6 @@ jobs:
 
       - name: Boot a single iOS Simulator
         run: |
-          # Exactly one booted device, so Maestro has no ambiguity about which
-          # to drive and needs no --device flag.
           xcrun simctl shutdown all || true
           UDID="$(xcrun simctl list devices available -j \
             | jq -r '[.devices[][] | select(.name | startswith("iPhone"))] | last | .udid')"
@@ -219,8 +182,6 @@ jobs:
               --output="$PWD/artifacts/maestro/report.xml"
           }
 
-          # A cold simulator can drop Maestro's first XCUITest connection; one
-          # retry absorbs that without hiding a real failure.
           status=0
           run_flow || {
             echo "::warning::Maestro flow failed - retrying once"
@@ -228,7 +189,6 @@ jobs:
             run_flow || status=1
           }
 
-          # Captured on failure too - this is where a native crash shows up.
           xcrun simctl spawn "$SIM_UDID" log collect --output artifacts/sim-logs.logarchive 2>/dev/null || true
           exit $status
 
@@ -236,13 +196,9 @@ jobs:
         if: always()
         run: |
           mkdir -p artifacts
-          # Safety net: if a future maestro version ignores --debug-output,
-          # grab whatever landed in the default location instead.
           if [ -d "$HOME/.maestro/tests" ]; then
             cp -R "$HOME/.maestro/tests/." artifacts/maestro-default-output/ || true
           fi
-          # The exact app that was tested (snippets pasted, config written),
-          # ready for a local rebuild - dependency trees and build output out.
           if [ -n "$APP_DIR" ] && [ -d "$APP_DIR" ]; then
             zip -qr artifacts/app-source.zip "$APP_DIR" \
               -x "*/node_modules/*" "*/.git/*" "*/build/*" "*/Pods/*" \

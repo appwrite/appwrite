@@ -31,8 +31,6 @@ struct SignUpView: View {
   }
 
   private func submit() {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native fields have no equivalent, so check it here.
     guard !email.isEmpty, !password.isEmpty else { return }
     error = ""
     Task {
@@ -43,7 +41,6 @@ struct SignUpView: View {
           userId: ID.unique(),
           email: email,
           password: password,
-          // Appwrite rejects an empty name, so pass nil instead.
           name: trimmed.isEmpty ? nil : trimmed
         )
         _ = try await account.createEmailPasswordSession(

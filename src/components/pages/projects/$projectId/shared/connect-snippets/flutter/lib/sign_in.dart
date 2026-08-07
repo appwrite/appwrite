@@ -29,8 +29,6 @@ class _SignInState extends State<SignIn> {
   }
 
   Future<void> _submit() async {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native fields have no equivalent, so check it here.
     if (email.text.isEmpty || password.text.isEmpty) return;
     setState(() => error = '');
     try {

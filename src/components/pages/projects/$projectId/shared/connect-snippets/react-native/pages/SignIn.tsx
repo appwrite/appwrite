@@ -15,8 +15,6 @@ export function SignIn({
   const [error, setError] = useState('')
 
   async function handleSubmit() {
-    // On the web the browser blocks this via the inputs' `required`
-    // attribute; native inputs have no equivalent, so check it here.
     if (!email || !password) return
     setError('')
     try {
