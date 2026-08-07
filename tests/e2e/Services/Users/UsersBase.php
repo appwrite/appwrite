@@ -627,6 +627,31 @@ trait UsersBase
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: blocked users must not get a new session created
+         */
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => false,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(403, $response['headers']['status-code']);
+
+        // Reset status back to true for other tests
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => true,
+        ]);
     }
 
 
