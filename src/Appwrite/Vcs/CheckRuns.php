@@ -17,17 +17,14 @@ class CheckRuns
     protected const int DESCRIPTION_MAX_LENGTH = 140;
 
     /**
-     * @var array<string, true> Repositories that refused a check run, so a fan-out pays one call, not one each.
-     */
-    protected array $refusedCheckRuns = [];
-
-    /**
-     * Writing check runs and writing statuses are granted separately, so a refusal
-     * of one says nothing about the other.
+     * Repositories that refused a check run. Owner, repository and commit are the same
+     * for every resource a webhook fans out to, so a provider refusing access refuses
+     * them all; a complaint about this particular report stays retryable. Keyed without
+     * a provider, which holds only because this lives for one event with one adapter.
      *
      * @var array<string, true>
      */
-    protected array $refusedStatuses = [];
+    protected array $refused = [];
 
     public function report(
         Git $vcs,
@@ -41,79 +38,40 @@ class CheckRuns
         string $summary,
         string $detailsUrl = '',
     ): void {
-        if ($this->conclude($vcs, $owner, $repositoryName, $commitHash, $name, $conclusion, $title, $summary, $detailsUrl)) {
+        if (empty($owner) || empty($repositoryName) || empty($commitHash)) {
             return;
         }
 
-        if (!$this->isAddressable($owner, $repositoryName, $commitHash) || isset($this->refusedStatuses["{$owner}/{$repositoryName}"])) {
-            return;
+        $repository = "{$owner}/{$repositoryName}";
+
+        if ($vcs instanceof GitHub && !isset($this->refused[$repository])) {
+            try {
+                $vcs->createCheckRun(
+                    owner: $owner,
+                    repositoryName: $repositoryName,
+                    headSha: $commitHash,
+                    name: \mb_strimwidth($name, 0, self::NAME_MAX_LENGTH, '...'),
+                    status: 'completed',
+                    conclusion: $conclusion,
+                    title: $title,
+                    summary: $summary,
+                    detailsUrl: $detailsUrl,
+                );
+
+                return;
+            } catch (\Throwable $error) {
+                if (\in_array($error->getCode(), [401, 403, 404], true)) {
+                    $this->refused[$repository] = true;
+                }
+
+                Console::warning("Failed to create check run on {$repository}: " . $error->getMessage());
+            }
         }
 
         try {
             $vcs->updateCommitStatus($repositoryName, $commitHash, $owner, $state, \mb_strimwidth($summary, 0, self::DESCRIPTION_MAX_LENGTH, '...'), $detailsUrl, $name);
         } catch (\Throwable $error) {
-            $this->remember($this->refusedStatuses, $owner, $repositoryName, $error);
-            Console::warning("Failed to report on {$owner}/{$repositoryName}: " . $error->getMessage());
-        }
-    }
-
-    protected function conclude(
-        Git $vcs,
-        string $owner,
-        string $repositoryName,
-        string $commitHash,
-        string $name,
-        string $conclusion,
-        string $title,
-        string $summary,
-        string $detailsUrl,
-    ): bool {
-        if (!$vcs instanceof GitHub || !$this->isAddressable($owner, $repositoryName, $commitHash)) {
-            return false;
-        }
-
-        if (isset($this->refusedCheckRuns["{$owner}/{$repositoryName}"])) {
-            return false;
-        }
-
-        try {
-            $vcs->createCheckRun(
-                owner: $owner,
-                repositoryName: $repositoryName,
-                headSha: $commitHash,
-                name: \mb_strimwidth($name, 0, self::NAME_MAX_LENGTH, '...'),
-                status: 'completed',
-                conclusion: $conclusion,
-                title: $title,
-                summary: $summary,
-                detailsUrl: $detailsUrl,
-            );
-
-            return true;
-        } catch (\Throwable $error) {
-            $this->remember($this->refusedCheckRuns, $owner, $repositoryName, $error);
-            Console::warning("Failed to create check run on {$owner}/{$repositoryName}: " . $error->getMessage());
-
-            return false;
-        }
-    }
-
-    protected function isAddressable(string $owner, string $repositoryName, string $commitHash): bool
-    {
-        return !empty($owner) && !empty($repositoryName) && !empty($commitHash);
-    }
-
-    /**
-     * Owner, repository and commit are the same for every resource in a fan-out, so a
-     * provider refusing access refuses them all. A complaint about this particular
-     * report stays retryable.
-     *
-     * @param array<string, true> $refused
-     */
-    protected function remember(array &$refused, string $owner, string $repositoryName, \Throwable $error): void
-    {
-        if (\in_array($error->getCode(), [401, 403, 404], true)) {
-            $refused["{$owner}/{$repositoryName}"] = true;
+            Console::warning("Failed to update commit status on {$repository}: " . $error->getMessage());
         }
     }
 }

@@ -12,21 +12,15 @@ use Utopia\VCS\Adapter\Git\GitHub;
 final class CheckRunsTest extends TestCase
 {
     private const SHA = '60c0416257a9cbcdd96b2d370c38d8f8d150ccfb';
+    private const REASON = 'Commit message matched a skip pattern.';
 
     public function testGitHubGetsACheckRunAndNoCommitStatus(): void
     {
         $adapter = $this->createMock(GitHub::class);
+        // The reason only reaches GitHub when title and summary are both set.
         $adapter->expects($this->once())
             ->method('createCheckRun')
-            ->willReturnCallback(function (...$arguments) {
-                $this->assertSame('completed', $arguments[4]);
-                $this->assertSame('neutral', $arguments[5]);
-                $this->assertSame('Deployment skipped', $arguments[6]);
-                // The reason only reaches GitHub when title and summary are both set.
-                $this->assertSame('Commit message matched a skip pattern.', $arguments[7]);
-
-                return ['id' => 7];
-            });
+            ->with('owner', 'repo', self::SHA, 'my-function (my-project)', 'completed', 'neutral', 'Deployment skipped', self::REASON);
         $adapter->expects($this->never())->method('updateCommitStatus');
 
         $this->report(new CheckRuns(), $adapter);
@@ -38,7 +32,7 @@ final class CheckRunsTest extends TestCase
         $adapter->expects($this->never())->method('createCheckRun');
         $adapter->expects($this->once())
             ->method('updateCommitStatus')
-            ->with('repo', self::SHA, 'owner', 'success', 'Commit message matched a skip pattern.', '', 'my-function (my-project)');
+            ->with('repo', self::SHA, 'owner', 'success', self::REASON, '', 'my-function (my-project)');
 
         $this->report(new CheckRuns(), $adapter);
     }
@@ -58,9 +52,23 @@ final class CheckRunsTest extends TestCase
         $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->once())
             ->method('createCheckRun')
-            ->willReturnCallback(function (...$arguments) {
-                $this->assertSame('action_required', $arguments[5]);
-                $this->assertSame('https://console.example.com/authorize', $arguments[12]);
+            ->willReturnCallback(function (
+                string $owner,
+                string $repositoryName,
+                string $headSha,
+                string $name,
+                string $status,
+                string $conclusion,
+                string $title,
+                string $summary,
+                string $text = '',
+                array $annotations = [],
+                array $images = [],
+                array $actions = [],
+                string $detailsUrl = '',
+            ) {
+                $this->assertSame('action_required', $conclusion);
+                $this->assertSame('https://console.example.com/authorize', $detailsUrl);
 
                 return ['id' => 8];
             });
@@ -93,21 +101,31 @@ final class CheckRunsTest extends TestCase
         $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->once())
             ->method('createCheckRun')
-            ->willReturnCallback(function (...$arguments) {
-                $this->assertSame(255, \mb_strlen($arguments[3]));
-
-                return ['id' => 1];
-            });
+            ->with('owner', 'repo', self::SHA, \str_repeat('a', 252) . '...');
 
         (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), 'neutral', 'success', 'title', 'summary');
     }
 
-    public function testRepositoryRefusingIsAskedOnlyOnce(): void
+    public function testOverlongDescriptionIsTruncated(): void
     {
+        // A commit status description over 140 characters is rejected outright.
         $adapter = $this->createMock(Git::class);
         $adapter->expects($this->once())
             ->method('updateCommitStatus')
+            ->with('repo', self::SHA, 'owner', 'success', \str_repeat('b', 137) . '...');
+
+        (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, 'name', 'neutral', 'success', 'title', \str_repeat('b', 200));
+    }
+
+    public function testCheckRunRefusalIsAskedOnlyOnce(): void
+    {
+        // A webhook fans out to every linked resource, and the repository is the same
+        // for all of them — but the fallback must still run for each.
+        $adapter = $this->createMock(GitHub::class);
+        $adapter->expects($this->once())
+            ->method('createCheckRun')
             ->willThrowException(new \Exception('HTTP 403', 403));
+        $adapter->expects($this->exactly(5))->method('updateCommitStatus');
 
         $checkRuns = new CheckRuns();
 
@@ -116,12 +134,12 @@ final class CheckRunsTest extends TestCase
         }
     }
 
-    public function testRejectedReportStaysRetryable(): void
+    public function testRejectedCheckRunStaysRetryable(): void
     {
         // 422 complains about this report, not about access.
-        $adapter = $this->createMock(Git::class);
+        $adapter = $this->createMock(GitHub::class);
         $adapter->expects($this->exactly(3))
-            ->method('updateCommitStatus')
+            ->method('createCheckRun')
             ->willThrowException(new \Exception('HTTP 422', 422));
 
         $checkRuns = new CheckRuns();
@@ -142,7 +160,7 @@ final class CheckRunsTest extends TestCase
             'neutral',
             'success',
             'Deployment skipped',
-            'Commit message matched a skip pattern.',
+            self::REASON,
         );
     }
 }
