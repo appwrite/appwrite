@@ -50,6 +50,7 @@ class Delete extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->inject('response')
+            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('publisherForDeletes')
             ->inject('project')
@@ -59,6 +60,7 @@ class Delete extends Action
     public function action(
         string $installationId,
         Response $response,
+        Document $project,
         Database $dbForPlatform,
         DeletePublisher $publisherForDeletes,
         Document $project,
