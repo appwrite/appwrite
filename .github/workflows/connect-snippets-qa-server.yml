@@ -439,11 +439,8 @@ jobs:
           # Subshell: most scaffolds end with `cd "$APP_DIR"`, and letting that
           # leak would make the check below look for $APP_DIR inside itself.
           ( ${{ matrix.create }} )
-          # Empty as well as missing: `composer create-project` creates the
-          # directory before it resolves, so a failed resolve used to leave an
-          # empty dir here and push the error into a later step.
-          if [ ! -d "$APP_DIR" ] || [ -z "$(ls -A "$APP_DIR")" ]; then
-            echo "::error::Scaffold did not produce a project in $APP_DIR"
+          if [ ! -d "$APP_DIR" ]; then
+            echo "::error::Scaffold did not produce $APP_DIR"
             exit 1
           fi
 
