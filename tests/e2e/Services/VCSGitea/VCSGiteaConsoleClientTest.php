@@ -119,7 +119,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git add index.js && git commit -m "Update function"', $workdir);
         $this->gitHelper('git push origin main', $workdir);
 
-        $skippedCommit = \trim(\shell_exec('cd ' . \escapeshellarg($workdir) . ' && git rev-parse HEAD~1') ?? '');
+        \exec('cd ' . \escapeshellarg($workdir) . ' && git rev-parse HEAD~1 2>&1', $revision, $exitCode);
+        $this->assertSame(0, $exitCode, 'Could not resolve the skipped commit: ' . \implode("\n", $revision));
+        $skippedCommit = \trim($revision[0] ?? '');
 
         $this->waitForNewDeploymentReadyHelper($functionId, $knownIds);
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'gitea-v4'), 30000, 1000);
