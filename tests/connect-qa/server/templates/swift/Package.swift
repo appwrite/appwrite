@@ -8,7 +8,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/appwrite/sdk-for-swift",
-            from: "13.0.0"
+            from: "20.0.0"
         )
     ],
     targets: [

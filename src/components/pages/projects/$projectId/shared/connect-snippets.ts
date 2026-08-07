@@ -477,12 +477,12 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Gradle (build.gradle.kts)',
-            code: 'implementation("io.appwrite:sdk-for-kotlin:12.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-kotlin:19.1.0")\nimplementation("com.google.code.gson:gson:2.14.0")',
             language: 'kotlin',
           },
           {
             label: 'Maven (pom.xml)',
-            code: '<dependency>\n  <groupId>io.appwrite</groupId>\n  <artifactId>sdk-for-kotlin</artifactId>\n  <version>12.0.0</version>\n</dependency>',
+            code: '<dependency>\n  <groupId>io.appwrite</groupId>\n  <artifactId>sdk-for-kotlin</artifactId>\n  <version>19.1.0</version>\n</dependency>\n<dependency>\n  <groupId>com.google.code.gson</groupId>\n  <artifactId>gson</artifactId>\n  <version>2.14.0</version>\n</dependency>',
             language: 'markup',
           },
         ],
@@ -504,7 +504,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Package.swift',
-            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-swift",\n  from: "13.0.0"\n)',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-swift",\n  from: "20.0.0"\n)',
             language: 'swift',
           },
         ],
@@ -515,7 +515,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Add to build.gradle.kts',
-            code: 'implementation("io.appwrite:sdk-for-kotlin:12.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-kotlin:19.1.0")\nimplementation("com.google.code.gson:gson:2.14.0")',
             language: 'kotlin',
           },
         ],

@@ -188,14 +188,14 @@ jobs:
             kind: cli
             snippets: php/vanilla
             create: mkdir -p "$APP_DIR"
-            install: composer require --no-interaction --quiet appwrite/appwrite
+            install: composer require --no-interaction appwrite/appwrite
             run: php index.php
 
           - id: php-laravel
             kind: http
             snippets: php/laravel
-            create: composer create-project --quiet --no-interaction laravel/laravel "$APP_DIR"
-            install: composer require --no-interaction --quiet appwrite/appwrite
+            create: composer create-project --no-interaction laravel/laravel "$APP_DIR"
+            install: composer require --no-interaction appwrite/appwrite
             port: 8000
             start: php artisan serve --port=8000
 
@@ -204,8 +204,8 @@ jobs:
           - id: php-symfony
             kind: http
             snippets: php/symfony
-            create: composer create-project --quiet --no-interaction symfony/skeleton "$APP_DIR"
-            install: composer require --no-interaction --quiet appwrite/appwrite
+            create: composer create-project --no-interaction symfony/skeleton "$APP_DIR"
+            install: composer require --no-interaction appwrite/appwrite
             port: 8000
             start: php -S 127.0.0.1:8000 -t public public/index.php
 
@@ -283,7 +283,7 @@ jobs:
             snippets: java/vanilla
             tools: java@temurin-21 gradle@8
             create: mkdir -p "$APP_DIR" && cp -R templates/java/. "$APP_DIR/"
-            run: gradle run -q --console=plain
+            run: gradle run -q --console plain
 
           - id: java-spring
             kind: http
@@ -309,7 +309,7 @@ jobs:
             tools: java@temurin-21 gradle@8
             create: mkdir -p "$APP_DIR" && cp -R templates/kotlin/. "$APP_DIR/"
             copy_to: src/main/kotlin
-            run: gradle run -q --console=plain
+            run: gradle run -q --console plain
 
           - id: kotlin-ktor
             kind: http
@@ -332,6 +332,7 @@ jobs:
             snippets: swift/vanilla
             create: mkdir -p "$APP_DIR" && cp -R templates/swift/. "$APP_DIR/"
             copy_to: Sources
+            install: swift build
             run: swift run
 
           # Vapor pulls in BoringSSL, which takes minutes to compile; build it
@@ -345,7 +346,8 @@ jobs:
             start: swift run
 
           # `dart create` rejects dashes in package names, so scaffold under
-          # a valid name and move it into place.
+          # a valid name and move it into place. `dart_frog create` takes
+          # --project-name instead, so it can scaffold straight into $APP_DIR.
           - id: dart
             kind: cli
             snippets: dart/vanilla
@@ -356,7 +358,7 @@ jobs:
           - id: dart-frog
             kind: http
             snippets: dart/frog
-            create: dart pub global activate dart_frog_cli && dart_frog create "$APP_DIR"
+            create: dart pub global activate dart_frog_cli && dart_frog create "$APP_DIR" --project-name connect_qa
             install: dart pub add dart_appwrite
             port: 8080
             start: dart_frog dev --port 8080
@@ -413,11 +415,23 @@ jobs:
         if: startsWith(matrix.id, 'swift')
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.0"
+          swift-version: "6.1"
 
       - name: Install Dart
         if: startsWith(matrix.id, 'dart')
         uses: dart-lang/setup-dart@v1
+
+      - name: Install Ruby
+        if: startsWith(matrix.id, 'ruby')
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Install PHP
+        if: startsWith(matrix.id, 'php')
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
 
       - name: Scaffold starter project
         run: |

@@ -1,4 +1,8 @@
 import Appwrite
+import Foundation
+
+let encoder = JSONEncoder()
+encoder.outputFormatting = .prettyPrinted
 
 let client = Client()
   .setEndpoint(ProcessInfo.processInfo.environment["APPWRITE_ENDPOINT"]!)
@@ -14,8 +18,8 @@ let policy = try await project.updatePasswordStrengthPolicy(
   symbols: true
 )
 
-print(policy)
+print(String(decoding: try encoder.encode(policy), as: UTF8.self))
 
 let policies = try await project.listPolicies()
 
-print(policies)
+print(String(decoding: try encoder.encode(policies), as: UTF8.self))

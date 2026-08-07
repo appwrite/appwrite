@@ -17,8 +17,8 @@ policy = project.update_password_strength_policy(
     symbols=True
 )
 
-print(json.dumps(policy, indent=2))
+print(json.dumps(policy.model_dump(by_alias=True), indent=2))
 
 policies = project.list_policies()
 
-print(json.dumps(policies, indent=2))
+print(json.dumps(policies.model_dump(by_alias=True), indent=2))
