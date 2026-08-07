@@ -69,8 +69,8 @@ class Create extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
-            ->param('enabled', true, new Boolean, 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean, 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
+            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
+            ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
@@ -82,7 +82,7 @@ class Create extends Base
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean, 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -154,9 +154,18 @@ class Create extends Base
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
 
         if (empty($buildRuntime)) {
+            // Try the framework's preferred build runtime first, but only if it
+            // is permitted by the operator's allowlist. If it isn't, skip it so
+            // we don't select a runtime we're about to reject.
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
-            $buildRuntime = $configFramework['buildRuntime'] ?? '';
+            $frameworkDefault = $configFramework['buildRuntime'] ?? '';
 
+            if (!empty($frameworkDefault) && (empty($allowList) || \in_array($frameworkDefault, $allowList, true))) {
+                $buildRuntime = $frameworkDefault;
+            }
+
+            // If the framework default was absent or not allowed, fall back to
+            // the first permitted runtime (or the first globally available one).
             if (empty($buildRuntime)) {
                 $buildRuntime = ! empty($allowList) ? \array_values($allowList)[0] : \array_keys(Config::getParam('runtimes'))[0];
             }
