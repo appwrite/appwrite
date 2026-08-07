@@ -4,8 +4,8 @@
  * Writes the framework-appropriate Appwrite env/config file into a scaffolded QA app.
  * Usage: node write-env.mjs <sdkId> <frameworkId> <usingId> <appDir>
  *
- * Non-web SDKs (react-native, flutter, android, apple) ignore framework/using
- * in getEnvExample; pass the sdk id for both so the call site stays readable.
+ * The SDK id is explicit so the mobile suites can reuse this: getEnvExample
+ * keys the variable names off it, and only `web` varies by framework/using.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'

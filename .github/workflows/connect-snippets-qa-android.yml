@@ -9,8 +9,8 @@ permissions:
 env:
   CODE_SNIPPET_QA_ENDPOINT: ${{ vars.CODE_SNIPPET_QA_ENDPOINT }}
   CODE_SNIPPET_QA_PROJECT_ID: ${{ vars.CODE_SNIPPET_QA_PROJECT_ID }}
-  # Every Android QA app is built under this applicationId so one Maestro flow
-  # (.maestro/home.yaml) drives React Native, Flutter and native Kotlin alike.
+  # Every mobile QA app is built under this applicationId so the one shared
+  # flow (../mobile/.maestro/auth.yaml) drives Android and iOS alike.
   APP_ID: io.appwrite.connectqa
 
 defaults:
