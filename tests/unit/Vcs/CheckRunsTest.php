@@ -79,7 +79,6 @@ final class CheckRunsTest extends TestCase
         );
     }
 
-
     public function testUnknownRepositoryReportsNothing(): void
     {
         $adapter = $this->createMock(GitHub::class);
@@ -102,7 +101,6 @@ final class CheckRunsTest extends TestCase
 
         (new CheckRuns())->report($adapter, 'owner', 'repo', self::SHA, \str_repeat('a', 300), 'neutral', 'success', 'title', 'summary');
     }
-
 
     public function testRepositoryRefusingIsAskedOnlyOnce(): void
     {
@@ -147,5 +145,4 @@ final class CheckRunsTest extends TestCase
             'Commit message matched a skip pattern.',
         );
     }
-
 }
