@@ -47,8 +47,6 @@ fun SignUp(onSignedUp: () -> Unit, onGoToSignIn: () -> Unit) {
 
   TextButton(
     onClick = {
-      // On the web the browser blocks this via the inputs' `required`
-      // attribute; native fields have no equivalent, so check it here.
       if (email.isEmpty() || password.isEmpty()) return@TextButton
       error = ""
       scope.launch {
@@ -58,7 +56,6 @@ fun SignUp(onSignedUp: () -> Unit, onGoToSignIn: () -> Unit) {
             userId = ID.unique(),
             email = email,
             password = password,
-            // Appwrite rejects an empty name, so pass null instead.
             name = name.trim().ifEmpty { null },
           )
           account.createEmailPasswordSession(email, password)

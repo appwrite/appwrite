@@ -9,16 +9,29 @@ tags:
   - regression
 ---
 
-# This mirrors the web flow (tests/connect-qa/.maestro/auth.yaml) section for
-# section. Three things cannot carry over, and are adapted rather than
-# dropped:
+# Section numbers match the web flow (tests/connect-qa/.maestro/auth.yaml)
+# one for one - keep them in step when either side changes.
+#
+# Adapted, same property asserted:
 #   * No URL bar, so `openLink <base>/` becomes `launchApp` - the snippet's
 #     route state resets to home on a cold start.
 #   * No CSS selectors, so fields are matched by placeholder text and buttons
 #     by `text` + `index` (index 1 is the submit, index 0 the heading).
+#   * Password masking: web uses `css: input[type='password']`; here the
+#     plaintext is asserted absent from the view hierarchy (4b, 6b), which
+#     only holds while the field is actually masked.
 #   * No browser-native `required` / `type=email` validation. The snippet
 #     guards empty fields itself; a malformed email is rejected by Appwrite
-#     and surfaces inline instead of being blocked client-side.
+#     and surfaces inline instead of being blocked client-side (4b, 6b).
+#
+# Genuinely not equivalent - do not read these as covered:
+#   * Web 9a/9b (auth pages still reachable while signed in) has no analogue:
+#     the signed in home renders only a sign out button, and without a URL
+#     bar there is no way to reach the auth screens from it.
+#   * 11b is weaker than web's. Web corrects the password in place and
+#     asserts the error clears; the masked field has no stable selector once
+#     it holds a value, so this retries from a fresh screen instead. The
+#     "error clears on correction" behaviour is therefore untested here.
 
 # ===========================================================================
 # 0. Setup — clean install state, generate a unique test identity
@@ -124,6 +137,11 @@ tags:
       - inputText: "not-an-email"
       - tapOn: "Password"
       - inputText: ${output.password}
+      # The web flow proves the field is masked with `css: input[type=
+      # 'password']`, which has no native equivalent. Asserting the plaintext
+      # is not in the view hierarchy tests the same property directly: it only
+      # holds while secureTextEntry / obscureText / SecureField is in effect.
+      - assertNotVisible: ${output.password}
       - hideKeyboard
       - tapOn:
           text: "Sign in"
@@ -131,6 +149,10 @@ tags:
       - extendedWaitUntil:
           visible: ".*([Ii]nvalid.*email|Sign in failed).*"
           timeout: 15000
+      # Still on the sign in screen - nothing navigated away (web asserts the
+      # same pair after its browser-side validation blocks the submit).
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: "Sign in to get started."
       - assertNotVisible: ".*Hello,.*"
 
 - runFlow:
@@ -195,8 +217,32 @@ tags:
       - assertNotVisible: ".*Hello,.*"
 
 - runFlow:
+    label: "6b. Malformed email is rejected by Appwrite and surfaced inline"
+    commands:
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: "not-an-email"
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      # Same masking check as 4b, on the sign up screen's own field.
+      - assertNotVisible: ${output.password}
+      - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*([Ii]nvalid.*email|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
     label: "6c. Too short password is rejected by the backend and surfaced inline"
     commands:
+      - launchApp
+      - tapOn: "Sign up"
       - tapOn: "Name"
       - inputText: ${output.name}
       - tapOn: "Email"
