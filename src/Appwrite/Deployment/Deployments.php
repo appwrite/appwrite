@@ -13,6 +13,7 @@ use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
