@@ -18,6 +18,8 @@ Self-hosted Backend-as-a-Service platform. Hybrid monolithic-microservice archit
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
 
+_Note: When running `composer check` or `composer analyze`, be aware that running this for entire project is very slow, and running for specific files is always recommended during development._
+
 ## Stack
 
 - PHP 8.3+, Swoole 6.x (async runtime, replaces PHP-FPM)
