@@ -203,8 +203,20 @@ class Create extends Action
             }
 
             $adapter = new AdapterDatabase($dbForProject);
-            $audit = new Audit($adapter);
-            $audit->setup();
+            try {
+                $indexDocs = array_filter(
+                    $adapter->getIndexDocuments(),
+                    fn ($doc) => $doc->getAttribute('type') !== Database::INDEX_FULLTEXT
+                        || $dbForProject->getAdapter()->getSupportForFulltextIndex()
+                );
+                $dbForProject->createCollection(
+                    $adapter->getCollectionName(),
+                    $adapter->getAttributeDocuments(),
+                    $indexDocs,
+                );
+            } catch (Duplicate) {
+                // Audit collection already exists
+            }
 
             if ($create) {
                 /** @var array $collections */
