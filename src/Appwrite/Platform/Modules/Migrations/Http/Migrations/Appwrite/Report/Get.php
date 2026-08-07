@@ -68,9 +68,20 @@ class Get extends Action
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
+            $code = (int) $e->getCode();
+
+            // 401/403 are expected user errors (bad key, missing scope): surface them as a 4xx so
+            // they are not published to Sentry.
+            if ($code === 401 || $code === 403) {
+                throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, $e->getMessage());
+            }
+
+            // Genuine source failure — throw as 5xx so the central error handler publishes it.
             throw new Exception(
                 Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.',
+                code: 502,
+                previous: $e
             );
         }
 
