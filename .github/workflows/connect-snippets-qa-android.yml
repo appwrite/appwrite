@@ -61,9 +61,12 @@ jobs:
               printf 'package io.appwrite.connectqa\n\n' | cat - "$f" > "$f.tmp" &&
               mv "$f.tmp" "$f"; done
             install: 'true'
+            # The AGP 9 opt-out flags keep the template on the external Kotlin
+            # plugin and classic DSL; they live here because write-env.mjs
+            # overwrites gradle.properties with the Appwrite variables.
             build: >-
               gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
-              -Pandroid.suppressUnsupportedCompileSdk=37
+              -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
             apk: app/build/outputs/apk/release/app-release.apk
 
           - id: android-java
@@ -82,7 +85,7 @@ jobs:
             install: 'true'
             build: >-
               gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
-              -Pandroid.suppressUnsupportedCompileSdk=37
+              -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
             apk: app/build/outputs/apk/release/app-release.apk
 
           - id: capacitor
@@ -120,7 +123,7 @@ jobs:
             framework: tauri
             using: vite
             snippets: web/tauri
-            template: ''
+            template: tauri
             config_file: .env
             copy_to: .
             create: npx -y create-tauri-app@latest "$APP_DIR" --template vanilla-ts --manager npm --yes
@@ -167,8 +170,11 @@ jobs:
           mise trust
           # Capacitor's android library ships Java 21 bytecode; the shared
           # default stays on 17 because React Native and Flutter test it.
+          # Export JAVA_HOME too: gradlew resolves it before consulting PATH,
+          # and the runner image pre-sets it to the system JDK 17.
           if [ -n "${{ matrix.java }}" ]; then
             mise use "java@${{ matrix.java }}"
+            echo "JAVA_HOME=$(mise where java)" >> "$GITHUB_ENV"
           fi
           mise install
 
@@ -249,28 +255,12 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
           working-directory: tests/connect-qa/android
+          # android-emulator-runner executes each script line as a separate
+          # `sh -c`, so anything multi-line lives in run-maestro.sh instead.
           script: |
-            mkdir -p artifacts/maestro
             adb install -r "$APK_PATH"
             adb logcat -c
-
-            run_flow() {
-              mise run test \
-                --debug-output="$PWD/artifacts/maestro" \
-                --flatten-debug-output \
-                --format=junit \
-                --output="$PWD/artifacts/maestro/report.xml"
-            }
-
-            status=0
-            run_flow || {
-              echo "::warning::Maestro flow failed - retrying once"
-              adb shell am force-stop "$APP_ID" || true
-              run_flow || status=1
-            }
-
-            adb logcat -d > artifacts/logcat.txt 2>&1 || true
-            exit $status
+            bash run-maestro.sh
 
       - name: Collect logs and app source
         if: always()

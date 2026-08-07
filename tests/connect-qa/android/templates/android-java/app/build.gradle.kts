@@ -4,7 +4,8 @@ plugins {
 
 android {
   namespace = "io.appwrite.connectqa"
-  compileSdk = 35
+  // sdk-for-android 26.x publishes AAR metadata requiring compileSdk 37+.
+  compileSdk = 37
 
   defaultConfig {
     applicationId = "io.appwrite.connectqa"
