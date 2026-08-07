@@ -103,7 +103,11 @@ const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
   deno: { dir: 'deno/vanilla' },
   bun: { dir: 'bun/vanilla' },
   apple: { envLabel: 'Appwrite.xcconfig' },
-  android: { envLabel: 'gradle.properties' },
+  // android/ only holds language variants (kotlin/, java/), so the bare key
+  // needs an alias per the rule above.
+  android: { dir: 'android/kotlin', envLabel: 'gradle.properties' },
+  'android/kotlin': { envLabel: 'gradle.properties' },
+  'android/java': { envLabel: 'gradle.properties' },
   flutter: { envLabel: 'env.json', envLanguage: 'json' },
   'python/python': { dir: 'python/vanilla' },
   python: { dir: 'python/vanilla' },

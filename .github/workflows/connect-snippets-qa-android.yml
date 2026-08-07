@@ -47,9 +47,10 @@ jobs:
             build: flutter build apk --debug --dart-define-from-file=env.json
             apk: build/app/outputs/flutter-apk/app-debug.apk
 
-          - id: android
+          - id: android-kotlin
             sdk: android
-            snippets: android
+            framework: kotlin
+            snippets: android/kotlin
             template: android
             config_file: gradle.properties
             copy_to: app/src/main/java/io/appwrite/connectqa
@@ -58,6 +59,25 @@ jobs:
               rm -f app/src/main/java/io/appwrite/connectqa/build.gradle.kts &&
               for f in app/src/main/java/io/appwrite/connectqa/*.kt; do
               printf 'package io.appwrite.connectqa\n\n' | cat - "$f" > "$f.tmp" &&
+              mv "$f.tmp" "$f"; done
+            install: 'true'
+            build: >-
+              gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
+              -Pandroid.suppressUnsupportedCompileSdk=37
+            apk: app/build/outputs/apk/release/app-release.apk
+
+          - id: android-java
+            sdk: android
+            framework: java
+            snippets: android/java
+            template: android-java
+            config_file: gradle.properties
+            copy_to: app/src/main/java/io/appwrite/connectqa
+            create: mkdir -p "$APP_DIR"
+            configure: >-
+              rm -f app/src/main/java/io/appwrite/connectqa/build.gradle.kts &&
+              for f in app/src/main/java/io/appwrite/connectqa/*.java; do
+              printf 'package io.appwrite.connectqa;\n\n' | cat - "$f" > "$f.tmp" &&
               mv "$f.tmp" "$f"; done
             install: 'true'
             build: >-
