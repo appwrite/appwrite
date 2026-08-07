@@ -177,6 +177,7 @@ class Base extends Action
                 $deployment,
                 $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
                 $function->getAttribute('providerRootDirectory', ''),
+                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -398,6 +399,7 @@ class Base extends Action
                 $deployment,
                 $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
                 $site->getAttribute('providerRootDirectory', ''),
+                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             $publisherForBuilds->enqueue(new BuildMessage(

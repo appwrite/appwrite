@@ -118,13 +118,18 @@ readonly class Deployments
      * Same as createFromUpload(), but builds from a remote tarball at $url
      * (a VCS presigned URL) instead of the deployment's own uploaded source.
      */
+    /**
+     * @param array<string, string> $headers Sent with the source fetch, for a
+     *                                       url whose provider authenticates by header
+     */
     public function createFromUrl(
         Document $resource,
         Document $deployment,
         string $url,
         string $rootDirectory = '',
+        array $headers = [],
     ): Document {
-        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
+        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
     }
 
     private function submit(Document $resource, Document $deployment, ?array $source): Document
@@ -322,7 +327,7 @@ readonly class Deployments
         if ($source !== null) {
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
-                new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
+                new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
                 // Appwrite never sees the remote source (the sidecar fetches it),
                 // so unlike the uploaded-tarball path it can't size it. Stat the
