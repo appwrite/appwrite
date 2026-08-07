@@ -162,6 +162,7 @@ class Create extends Action
                 $deployment,
                 $github->getRepositoryPresignedUrl($owner, $repository, $ref),
                 $deployment->getAttribute('providerRootDirectory', ''),
+                $github->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,

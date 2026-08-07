@@ -397,6 +397,7 @@ trait Deployment
                         $deployment,
                         $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
                         $resource->getAttribute('providerRootDirectory', ''),
+                        $vcs->getRepositoryPresignedUrlHeaders(),
                     ));
 
                 if ($resource->getCollection() === 'sites') {

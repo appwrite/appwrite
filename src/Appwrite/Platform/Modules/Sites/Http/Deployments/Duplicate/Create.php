@@ -183,6 +183,7 @@ class Create extends Action
                 $deployment,
                 $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
                 $deployment->getAttribute('providerRootDirectory', ''),
+                $vcs->getRepositoryPresignedUrlHeaders(),
             );
         } else {
             // Public template repo: providerBranch holds the resolved ref,
