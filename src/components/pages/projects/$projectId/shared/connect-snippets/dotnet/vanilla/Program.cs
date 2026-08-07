@@ -1,5 +1,8 @@
+using System.Text.Json;
 using Appwrite;
 using Appwrite.Services;
+
+var json = new JsonSerializerOptions { WriteIndented = true };
 
 var client = new Client()
   .SetEndpoint(Environment.GetEnvironmentVariable("APPWRITE_ENDPOINT")!)
@@ -15,8 +18,8 @@ var policy = await project.UpdatePasswordStrengthPolicy(
   symbols: true
 );
 
-Console.WriteLine(policy);
+Console.WriteLine(JsonSerializer.Serialize(policy.ToMap(), json));
 
 var policies = await project.ListPolicies();
 
-Console.WriteLine(policies);
+Console.WriteLine(JsonSerializer.Serialize(policies.ToMap(), json));

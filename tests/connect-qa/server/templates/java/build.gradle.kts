@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-  implementation("io.appwrite:sdk-for-kotlin:12.0.0")
+  implementation("io.appwrite:sdk-for-kotlin:19.1.0")
 }
 
 application {
