@@ -1,3 +1,11 @@
+# Version 1.9.7
+
+## What's Changed
+
+### Miscellaneous
+
+* Update the self-hosted Console image to [8.7.37](https://github.com/appwrite/console/releases/tag/8.7.37) for array column editing, relationship filtering, messaging permission, and dependency audit fixes
+
 # Version 1.9.6
 
 ## What's Changed
