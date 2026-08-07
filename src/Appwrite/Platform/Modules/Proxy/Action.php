@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Proxy;
 
+use Appwrite\Certificates\Scheduler as CertificateScheduler;
+use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
@@ -288,5 +290,57 @@ class Action extends PlatformAction
         }
 
         return false;
+    }
+
+    /**
+     * Schedule TLS certificate generation for a newly created proxy rule.
+     *
+     * Custom domains that completed DNS verification enqueue a certificate job
+     * immediately. Appwrite-owned domains (auto-generated function/site
+     * subdomains under _APP_DOMAIN_FUNCTIONS / _APP_DOMAIN_SITES) skip DNS
+     * verification but still need a certificate on self-hosted installs that
+     * do not terminate TLS with a Traefik wildcard cert.
+     *
+     * Local/test hostnames (e.g. *.functions.localhost) are skipped.
+     */
+    protected function scheduleCertificateForRule(
+        CertificatePublisher $publisherForCertificates,
+        Document $project,
+        Document $rule,
+    ): void {
+        $status = $rule->getAttribute('status', '');
+        $owner = $rule->getAttribute('owner', '');
+        $domain = $rule->getAttribute('domain', '');
+        $domainType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type', ''));
+
+        if ($status === RULE_STATUS_CERTIFICATE_GENERATING) {
+            // Custom domains reach this status after DNS verification. If an
+            // Appwrite-owned domain ever lands here, still require a public
+            // hostname so localhost/test TLDs do not hit Let's Encrypt.
+            $isAppwriteOwned = $owner === 'Appwrite';
+            CertificateScheduler::enqueueGeneration(
+                $publisherForCertificates,
+                $project,
+                $domain,
+                $domainType,
+                skipRenewCheck: $isAppwriteOwned,
+                requirePublicHostname: $isAppwriteOwned,
+            );
+            return;
+        }
+
+        // Appwrite-owned auto domains are marked verified without a certificate.
+        // Issue one when the hostname can receive a public certificate.
+        // Keep in sync with Functions\Http\Functions\Create (legacy pre-1.7 path).
+        if ($owner === 'Appwrite' && $status === RULE_STATUS_VERIFIED) {
+            CertificateScheduler::enqueueGeneration(
+                $publisherForCertificates,
+                $project,
+                $domain,
+                $domainType,
+                skipRenewCheck: true,
+                requirePublicHostname: true,
+            );
+        }
     }
 }
