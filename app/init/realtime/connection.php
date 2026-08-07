@@ -288,8 +288,10 @@ return function (Container $container): void {
             $jwtUserId = $payload['userId'] ?? '';
             if (!empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
