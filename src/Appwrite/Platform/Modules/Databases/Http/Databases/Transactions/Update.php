@@ -451,8 +451,15 @@ class Update extends Action
 
                 foreach ($documentsToTrigger as $doc) {
                     $payload = $doc->getArrayCopy();
-                    $payload['$tableId'] = $collection->getId();
-                    $payload['$collectionId'] = $collection->getId();
+                    $payload['$databaseId'] = $database->getId();
+
+                    if ($this->isCollectionsAPI()) {
+                        $payload['$collectionId'] = $collection->getId();
+                        unset($payload['$tableId']);
+                    } else {
+                        $payload['$tableId'] = $collection->getId();
+                        unset($payload['$collectionId']);
+                    }
 
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
