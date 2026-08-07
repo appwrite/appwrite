@@ -46,7 +46,7 @@ use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -982,7 +982,7 @@ Http::post('/v1/messaging/providers/fcm')
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2296,7 +2296,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSONObject()), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -3400,7 +3400,7 @@ Http::post('/v1/messaging/messages/push')
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
-    ->param('data', null, new Nullable(new JSON()), 'Additional key-value pair data for push notification.', true)
+    ->param('data', null, new Nullable(new JSONObject()), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
@@ -4194,7 +4194,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
     ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
-    ->param('data', null, new Nullable(new JSON()), 'Additional Data for push notification.', true)
+    ->param('data', null, new Nullable(new JSONObject()), 'Additional Data for push notification.', true)
     ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
     ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', null, new Nullable(new Text(256)), 'Icon for push notification. Available only for Android and Web platforms.', true)

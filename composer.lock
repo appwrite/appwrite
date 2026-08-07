@@ -5121,16 +5121,16 @@
         },
         {
             "name": "utopia-php/validators",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/validators.git",
-                "reference": "d9c2269ebd2596a09681ccd2fd133eeedfcdf9ba"
+                "reference": "444a3dbfcd5f2d167214f07f6e8a9962048def1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/d9c2269ebd2596a09681ccd2fd133eeedfcdf9ba",
-                "reference": "d9c2269ebd2596a09681ccd2fd133eeedfcdf9ba",
+                "url": "https://api.github.com/repos/utopia-php/validators/zipball/444a3dbfcd5f2d167214f07f6e8a9962048def1c",
+                "reference": "444a3dbfcd5f2d167214f07f6e8a9962048def1c",
                 "shasum": ""
             },
             "require": {
@@ -5155,9 +5155,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/0.3.1"
+                "source": "https://github.com/utopia-php/validators/tree/0.4.0"
             },
-            "time": "2026-07-14T11:55:48+00:00"
+            "time": "2026-08-07T10:53:49+00:00"
         },
         {
             "name": "utopia-php/vcs",

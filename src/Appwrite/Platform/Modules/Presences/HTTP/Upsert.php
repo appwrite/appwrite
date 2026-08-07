@@ -23,7 +23,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\JSON;
+use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Upsert extends PlatformAction
@@ -102,7 +102,7 @@ class Upsert extends PlatformAction
                 (new \DateTime())->modify('+30 days'),
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
-            ->param('metadata', [], new JSON(), 'Presence metadata object.', true)
+            ->param('metadata', [], new JSONObject(), 'Presence metadata object.', true)
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
