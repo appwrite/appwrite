@@ -3262,10 +3262,9 @@ Http::patch('/v1/account/name')
     ->inject('queueForEvents')
     ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $user->setAttribute('name', $name);
-
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'name' => $user->getAttribute('name'),
+            'name' => $name,
+            'search' => '', // rebuilt by the `userSearch` filter.
         ]));
 
         $queueForEvents->setParam('userId', $user->getId());
