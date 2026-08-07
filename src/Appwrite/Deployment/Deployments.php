@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -12,7 +13,6 @@ use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
-use Appwrite\Extend\Exception;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -50,8 +50,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
-    ) {
-    }
+    ) {}
 
     /**
      * Saves chunked-upload progress onto the deployment — source path/size,
@@ -120,8 +119,8 @@ readonly class Deployments
      * (a VCS presigned URL) instead of the deployment's own uploaded source.
      */
     /**
-     * @param array<string, string> $headers Sent with the source fetch, for a
-     *                                       url whose provider authenticates by header
+     * @param  array<string, string>  $headers  Sent with the source fetch, for a
+     *                                          url whose provider authenticates by header
      */
     public function createFromUrl(
         Document $resource,
@@ -212,7 +211,7 @@ readonly class Deployments
      */
     protected function deactivateOthers(Document $resource, Document $deployment): array
     {
-        if (!$deployment->getAttribute('activate', false)) {
+        if (! $deployment->getAttribute('activate', false)) {
             return [];
         }
 
@@ -256,7 +255,7 @@ readonly class Deployments
             $framework['envCommand'] ?? '',
             $command,
             $framework['bundleCommand'] ?? '',
-        ], fn ($command) => !empty($command)));
+        ], fn ($command) => ! empty($command)));
     }
 
     /**
@@ -282,7 +281,7 @@ readonly class Deployments
 
         $escaped = \str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $command);
 
-        return 'cd /usr/local/server/src/function/ && ' . $escaped;
+        return 'cd /usr/local/server/src/function/ && '.$escaped;
     }
 
     /**
@@ -342,7 +341,7 @@ readonly class Deployments
             // build window plus transfer slack.
             $ttl = $timeout + 300;
             $base = "{$endpoint}/v1/{$resource->getCollection()}/{$resource->getId()}/deployments/{$deploymentId}";
-            $sourceUrl = "{$base}/download?" . \http_build_query([
+            $sourceUrl = "{$base}/download?".\http_build_query([
                 'type' => Token::TYPE_SOURCE,
                 'project' => $projectId,
                 'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
@@ -380,7 +379,7 @@ readonly class Deployments
         return [
             'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => '/usr/local/server/helpers/build.sh '.\escapeshellarg($command),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
@@ -396,7 +395,7 @@ readonly class Deployments
             'artifacts' => [...$sourceArtifacts, ...$manifestArtifacts, ...$output['artifacts']],
             'volumes' => $output['volumes'],
             'callback' => new Callback(
-                url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
+                url: "{$endpoint}/v1/jobs/event?".\http_build_query(['project' => $projectId]),
                 events: $events,
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
@@ -417,7 +416,7 @@ readonly class Deployments
      */
     public static function outputDirectory(string $projectId, string $deploymentId): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}";
+        return APP_STORAGE_BUILDS."/app-{$projectId}/{$deploymentId}";
     }
 
     /**
@@ -425,7 +424,7 @@ readonly class Deployments
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {
-        return static::outputDirectory($projectId, $deploymentId) . '/' . static::artifact();
+        return static::outputDirectory($projectId, $deploymentId).'/'.static::artifact();
     }
 
     /**
@@ -456,7 +455,7 @@ readonly class Deployments
 
     public static function cachePath(string $projectId, string $cacheKey): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/cache/{$cacheKey}.sqfs";
+        return APP_STORAGE_BUILDS."/app-{$projectId}/cache/{$cacheKey}.sqfs";
     }
 
     /**
@@ -507,7 +506,7 @@ readonly class Deployments
         $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
         $runtime = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', [])[$key] ?? null;
         if ($runtime === null) {
-            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $key . '" is not supported');
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "'.$key.'" is not supported');
         }
 
         return $runtime;
@@ -559,7 +558,7 @@ readonly class Deployments
             'APPWRITE_VCS_COMMIT_AUTHOR_URL' => $deployment->getAttribute('providerCommitAuthorUrl', ''),
             'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             "APPWRITE_{$prefix}_API_ENDPOINT" => "{$endpoint}/v1",
-            "APPWRITE_{$prefix}_API_KEY" => API_KEY_EPHEMERAL . '_' . $apiKey,
+            "APPWRITE_{$prefix}_API_KEY" => API_KEY_EPHEMERAL.'_'.$apiKey,
             "APPWRITE_{$prefix}_ID" => $resource->getId(),
             "APPWRITE_{$prefix}_NAME" => $resource->getAttribute('name'),
             "APPWRITE_{$prefix}_DEPLOYMENT" => $deployment->getId(),
