@@ -55,7 +55,7 @@ class Create extends Base
                 namespace: 'sites',
                 group: 'sites',
                 name: 'create',
-                description: <<<EOT
+                description: <<<'EOT'
                 Create a new site.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -63,14 +63,14 @@ class Create extends Base
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_SITE,
-                    )
+                    ),
                 ],
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
-            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
+            ->param('enabled', true, new Boolean, 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
+            ->param('logging', true, new Boolean, 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
@@ -82,7 +82,7 @@ class Create extends Base
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', false, new Boolean, 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -142,11 +142,11 @@ class Create extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks
     ) {
-        if (!empty($adapter)) {
+        if (! empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
             $validator = new WhiteList($adapters, true);
-            if (!$validator->isValid($adapter)) {
+            if (! $validator->isValid($adapter)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
             }
         }
@@ -158,27 +158,27 @@ class Create extends Base
             $buildRuntime = $configFramework['buildRuntime'] ?? '';
 
             if (empty($buildRuntime)) {
-                $buildRuntime = !empty($allowList) ? \array_values($allowList)[0] : \array_keys(Config::getParam('runtimes'))[0];
+                $buildRuntime = ! empty($allowList) ? \array_values($allowList)[0] : \array_keys(Config::getParam('runtimes'))[0];
             }
         }
 
-        if (!empty($allowList) && !\in_array($buildRuntime, $allowList, true)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
+        if (! empty($allowList) && ! \in_array($buildRuntime, $allowList, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "'.$buildRuntime.'" is not supported');
         }
 
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if (!empty($installationId) && $installation->isEmpty()) {
+        if (! empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+        if (! empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
+        if (! empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
@@ -221,7 +221,7 @@ class Create extends Base
             throw new Exception(Exception::SITE_ALREADY_EXISTS);
         }
 
-        if (!empty($providerRepositoryId)) {
+        if (! empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
                 '$id' => ID::unique(),
@@ -234,14 +234,14 @@ class Create extends Base
                 'resourceId' => $site->getId(),
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
-                'providerPullRequestIds' => []
+                'providerPullRequestIds' => [],
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             try {
                 $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                if (! \in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int) $providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
                     $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
                 }
