@@ -18,6 +18,7 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Cache\Cache;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -514,8 +515,9 @@ class Jobs extends Action
                 $dbForPlatform,
                 $platform,
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             // Best-effort — never fails the build.
+            Console::warning("Failed to report build state for deployment '{$deployment->getId()}': " . $e->getMessage());
         }
     }
 

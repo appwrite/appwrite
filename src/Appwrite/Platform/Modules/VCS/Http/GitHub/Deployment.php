@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Vcs\CheckRuns;
 use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -50,6 +51,67 @@ trait Deployment
     ) {
         $errors = [];
         $provider = $vcs->getName();
+
+        $resolved = [];
+        $resolveOwnerAndName = function (string $providerRepositoryId) use ($vcs, $providerInstallationId, &$resolved): array {
+            if (isset($resolved[$providerRepositoryId])) {
+                return $resolved[$providerRepositoryId];
+            }
+
+            // Owner first: getRepositoryName reports any failure as a 404 the loop skips.
+            $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+
+            try {
+                $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+            } catch (RepositoryNotFound $e) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+
+            return $resolved[$providerRepositoryId] = [$owner, $repositoryName];
+        };
+
+        $checkRuns = new CheckRuns();
+
+        $reportSkip = function (Document $resource, Document $project, Document $repository, Database $dbForProject, string $resourceCollection, string $reason) use ($checkRuns, $vcs, $resolveOwnerAndName, $authorization, $providerCommitHash, $providerBranch, $providerPullRequestId, $external, $platform): void {
+            if (empty($providerCommitHash) || $resource->getAttribute('providerSilentMode', false) === true) {
+                return;
+            }
+
+            $reportedByPush = !empty($providerPullRequestId) && !$external;
+            $isTag = \str_starts_with($providerBranch, 'refs/');
+
+            if ($reportedByPush || $isTag) {
+                return;
+            }
+
+            $existingDeployment = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
+                Query::equal('resourceInternalId', [$resource->getSequence()]),
+                Query::equal('resourceType', [$resourceCollection]),
+                Query::equal('providerCommitHash', [$providerCommitHash]),
+            ]));
+
+            if (!$existingDeployment->isEmpty()) {
+                return;
+            }
+
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $hostname = $platform['consoleHostname'] ?? '';
+            $region = $project->getAttribute('region', 'default');
+            $type = $resourceCollection === 'sites' ? 'site' : 'function';
+            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$resourceCollection}/{$type}-{$resource->getId()}";
+            $name = $resource->getAttribute('name') . ' (' . $project->getAttribute('name') . ')';
+
+            try {
+                [$owner, $repositoryName] = $resolveOwnerAndName($repository->getAttribute('providerRepositoryId'));
+            } catch (\Throwable $e) {
+                Console::warning("Failed to resolve repository '{$repository->getId()}' to report a skip: " . $e->getMessage());
+
+                return;
+            }
+
+            $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::SKIPPED, 'Deployment skipped', $reason, $targetUrl);
+        };
+
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
 
@@ -94,12 +156,18 @@ trait Deployment
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+
+                if ($resource->isEmpty()) {
+                    throw new Exception($resourceType === 'function' ? Exception::FUNCTION_NOT_FOUND : Exception::SITE_NOT_FOUND, 'Repository references non-existent ' . $resourceType);
+                }
+
                 $resourceInternalId = $resource->getSequence();
 
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, 'Skipped: the commit message contains ' . \implode(' or ', VCS_DEPLOYMENT_SKIP_PATTERNS) . '.');
                     continue;
                 }
 
@@ -108,6 +176,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, "Skipped: branch '{$providerBranch}' does not match the configured branch triggers.");
                     continue;
                 }
 
@@ -125,6 +194,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
+                        $reportSkip($resource, $project, $repository, $dbForProject, $resourceCollection, 'Skipped: no changed file matches the configured path filters.');
                         continue;
                     }
                 }
@@ -318,19 +388,15 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Authorization required for external contributor.';
+                    if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                        $resourceName = $resource->getAttribute('name');
+                        $projectName = $project->getAttribute('name');
+                        $name = "{$resourceName} ({$projectName})";
+                        $message = 'Authorization required: a maintainer must approve this external contribution.';
 
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                        $checkRuns->report($vcs, $owner, $repositoryName, $providerCommitHash, $name, CheckRuns::BLOCKED, 'Authorization required', $message, $authorizeUrl);
                     }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+
                     continue;
                 }
 
@@ -339,6 +405,8 @@ trait Deployment
                     $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
                         'providerCommentId' => \strval($latestCommentId)
                     ]), [
+                        Query::equal('resourceInternalId', [$resourceInternalId]),
+                        Query::equal('resourceType', [$resourceCollection]),
                         Query::equal('providerCommitHash', [$providerCommitHash]),
                         Query::equal('providerBranch', [$providerBranch]),
                     ]));
@@ -547,14 +615,6 @@ trait Deployment
                     $region = $project->getAttribute('region', 'default');
                     $name = "{$resourceName} ({$projectName})";
                     $message = 'Starting...';
-
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
