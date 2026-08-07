@@ -4,14 +4,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import {
-  Check,
-  Copy,
-  ExternalLink,
-  Key,
-  MonitorSmartphone,
-  Plus,
-} from 'lucide-react'
+import { Check, Copy, ExternalLink, Key, Plus } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Dialog,
@@ -78,79 +71,34 @@ const SDK_API_KEY_DEFAULT_NAME = 'SDK'
 const { Icon: GitHubIcon } = getVcsProvider('github')
 
 /**
- * Client SDKs – [docs](https://appwrite.io/docs/sdks#client). Not rendered
- * directly: the dropdown shows CLIENT_PLATFORM_OPTIONS categories instead.
- * Kept as the SDK registry for prompt labels and the `initialSdk` prop.
+ * Client platforms shown in the first dropdown –
+ * [docs](https://appwrite.io/docs/sdks#client). Ionic, Capacitor, and Tauri
+ * build on web tech, so they resolve to the Web SDK under the hood (`sdkId`,
+ * which drives snippets, install steps, and analytics) and register as a Web
+ * platform in the console; the other entries are Appwrite SDKs of their own.
  */
-const CLIENT_SDK_OPTIONS: { id: string; label: string }[] = [
+const CLIENT_PLATFORM_OPTIONS: {
+  id: string
+  label: string
+  /** Underlying SDK when it differs from the platform id. */
+  sdkId?: string
+}[] = [
   { id: 'web', label: 'Web' },
   { id: 'flutter', label: 'Flutter' },
   { id: 'react-native', label: 'React Native' },
+  { id: 'ionic', label: 'Ionic', sdkId: 'web' },
+  { id: 'capacitor', label: 'Capacitor', sdkId: 'web' },
+  { id: 'tauri', label: 'Tauri', sdkId: 'web' },
   { id: 'apple', label: 'Apple' },
   { id: 'android', label: 'Android' },
 ]
 
-/**
- * Client platform categories shown in the first dropdown. Categories are
- * presentational: every selection resolves to a real (sdk, framework) pair
- * below, which keeps driving snippets, install steps, and analytics.
- */
-const CLIENT_PLATFORM_OPTIONS: { id: string; label: string }[] = [
-  { id: 'web', label: 'Web' },
-  { id: 'cross-platform', label: 'Cross-platform' },
-  { id: 'android', label: 'Android' },
-  { id: 'apple', label: 'Apple' },
-]
-
-/**
- * Cross-platform targets with the SDK + framework pair each resolves to.
- * Ionic, Capacitor, and Tauri build on web tech, so they use the Web SDK
- * (and register as a Web platform in the console); Flutter and React Native
- * have SDKs of their own. Ordered by adoption; Flutter is the default.
- */
-const CROSS_PLATFORM_TARGETS: {
-  id: string
-  label: string
-  sdkId: string
-  frameworkId: string
-  icon: string
-}[] = [
-  {
-    id: 'flutter',
-    label: 'Flutter',
-    sdkId: 'flutter',
-    frameworkId: 'flutter',
-    icon: 'flutter',
-  },
-  {
-    id: 'react-native',
-    label: 'React Native',
-    sdkId: 'react-native',
-    frameworkId: 'expo',
-    icon: 'react-native',
-  },
-  { id: 'ionic', label: 'Ionic', sdkId: 'web', frameworkId: 'ionic', icon: 'ionic' },
-  {
-    id: 'capacitor',
-    label: 'Capacitor',
-    sdkId: 'web',
-    frameworkId: 'capacitor',
-    icon: 'capacitor',
-  },
-  { id: 'tauri', label: 'Tauri', sdkId: 'web', frameworkId: 'tauri', icon: 'tauri' },
-]
-
-/** Maps an SDK id (the `initialSdk` deep-link vocabulary) to dropdown state. */
-function selectionForSdk(
-  sdk: string,
-): { platformId: string; crossTargetId?: string } | null {
-  if (sdk === 'flutter' || sdk === 'react-native') {
-    return { platformId: 'cross-platform', crossTargetId: sdk }
-  }
-  const known = [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].some(
-    (o) => o.id === sdk,
+/** True for ids selectable in the platform dropdown (client or server). */
+function isKnownPlatform(id: string): boolean {
+  return (
+    CLIENT_PLATFORM_OPTIONS.some((o) => o.id === id) ||
+    SERVER_SDK_OPTIONS.some((o) => o.id === id)
   )
-  return known ? { platformId: sdk } : null
 }
 
 /** Server SDKs – [docs](https://appwrite.io/docs/sdks#server) */
@@ -170,8 +118,11 @@ const SERVER_SDK_OPTIONS: { id: string; platform: string; label: string }[] = [
   { id: 'rust', platform: 'web', label: 'Rust' },
 ]
 
-/** Framework options per SDK (id + label). Aligned with https://appwrite.io/docs/quick-starts */
-const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
+/** Framework options per platform (id + label). Aligned with https://appwrite.io/docs/quick-starts */
+const FRAMEWORK_OPTIONS: Record<
+  string,
+  { id: string; label: string; icon?: string }[]
+> = {
   web: [
     { id: 'next', label: 'Next.js' },
     { id: 'tanstack', label: 'TanStack Start' },
@@ -200,10 +151,14 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'elysia', label: 'ElysiaJS' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
-  // Flutter and React Native are selected via the Cross-platform category;
-  // these entries only back the prompt's framework label.
+  // Single-framework platforms keep their snippet-specific id (for the code
+  // lookups) but read "Vanilla" when the framework would otherwise just
+  // repeat the platform name.
   flutter: [{ id: 'flutter', label: 'Vanilla' }],
-  'react-native': [{ id: 'expo', label: 'Expo' }],
+  'react-native': [{ id: 'expo', label: 'Vanilla', icon: 'react-native' }],
+  ionic: [{ id: 'ionic', label: 'Vanilla' }],
+  capacitor: [{ id: 'capacitor', label: 'Vanilla' }],
+  tauri: [{ id: 'tauri', label: 'Vanilla' }],
   // Android and Apple render these as a "Language" dropdown.
   apple: [{ id: 'swift', label: 'Swift' }],
   android: [
@@ -386,32 +341,21 @@ export function ConnectProject({
   const t = useT()
   const navigate = useNavigate()
   const { track } = useAnalytics()
-  const [platformId, setPlatformId] = useState(
-    () => selectionForSdk(initialSdk)?.platformId ?? 'web',
+  const [platformId, setPlatformId] = useState(() =>
+    isKnownPlatform(initialSdk) ? initialSdk : 'web',
   )
-  const [crossTargetId, setCrossTargetId] = useState(
-    () =>
-      selectionForSdk(initialSdk)?.crossTargetId ??
-      CROSS_PLATFORM_TARGETS[0].id,
-  )
-  const [baseFrameworkId, setBaseFrameworkId] = useState('vanilla')
+  const [frameworkId, setFrameworkId] = useState('vanilla')
   const [usingId, setUsingId] = useState('vite')
   const [packageManagerId, setPackageManagerId] = useState('npm')
 
-  // Every dropdown selection resolves to a real (sdk, framework) pair; all
-  // downstream lookups (snippets, install steps, analytics) key off these.
-  const crossTarget =
-    platformId === 'cross-platform'
-      ? (CROSS_PLATFORM_TARGETS.find((t) => t.id === crossTargetId) ??
-        CROSS_PLATFORM_TARGETS[0])
-      : undefined
-  const sdkId = crossTarget?.sdkId ?? platformId
-  const frameworkId = crossTarget?.frameworkId ?? baseFrameworkId
+  // The platform resolves to a real SDK (Ionic/Capacitor/Tauri use the Web
+  // SDK); snippets, install steps, and analytics all key off the SDK id.
+  const sdkId =
+    CLIENT_PLATFORM_OPTIONS.find((o) => o.id === platformId)?.sdkId ??
+    platformId
 
-  const frameworkOptions: { id: string; label: string; icon?: string }[] =
-    crossTarget
-      ? CROSS_PLATFORM_TARGETS
-      : (FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web)
+  const frameworkOptions =
+    FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
   // Android and Apple pick a language (Kotlin, Swift), not a framework.
   const isLanguagePlatform = platformId === 'android' || platformId === 'apple'
   const usingVariants = USING_OPTIONS[frameworkId]
@@ -421,15 +365,13 @@ export function ConnectProject({
 
   useEffect(() => {
     if (!open) return
-    const selection = selectionForSdk(initialSdk)
-    if (!selection) return
-    setPlatformId(selection.platformId)
-    if (selection.crossTargetId) setCrossTargetId(selection.crossTargetId)
+    if (isKnownPlatform(initialSdk)) setPlatformId(initialSdk)
   }, [open, initialSdk])
 
   useEffect(() => {
-    const nextFrameworks = FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
-    setBaseFrameworkId(nextFrameworks[0]?.id ?? 'vanilla')
+    const nextFrameworks =
+      FRAMEWORK_OPTIONS[platformId] ?? FRAMEWORK_OPTIONS.web
+    setFrameworkId(nextFrameworks[0]?.id ?? 'vanilla')
   }, [platformId])
 
   useEffect(() => {
@@ -520,15 +462,14 @@ export function ConnectProject({
     [sdkId, packageManagerId],
   )
 
+  // Label by platform, not SDK: the prompt should say "Ionic", not "Web".
   const sdkLabel =
-    [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].find((o) => o.id === sdkId)
-      ?.label ?? sdkId
-  // For cross-platform targets, prefer the SDK's own framework label (e.g.
-  // Expo for React Native); web-SDK targets like Ionic use the target label.
-  const frameworkLabel = crossTarget
-    ? (FRAMEWORK_OPTIONS[sdkId]?.find((fw) => fw.id === frameworkId)?.label ??
-      crossTarget.label)
-    : frameworkOptions.find((fw) => fw.id === frameworkId)?.label
+    [...CLIENT_PLATFORM_OPTIONS, ...SERVER_SDK_OPTIONS].find(
+      (o) => o.id === platformId,
+    )?.label ?? platformId
+  const frameworkLabel = frameworkOptions.find(
+    (fw) => fw.id === frameworkId,
+  )?.label
   const usingLabel = usingVariants?.find((v) => v.id === usingId)?.label
   const packageManagerLabel = packageManagers?.find(
     (pm) => pm.id === packageManagerId,
@@ -696,8 +637,8 @@ export function ConnectProject({
                             className="text-[13px]"
                           >
                             <span className="flex items-center gap-1.5">
-                              {opt.id === 'cross-platform' ? (
-                                <MonitorSmartphone className="h-4 w-4" />
+                              {opt.sdkId ? (
+                                <FrameworkIcon framework={opt.id} size="sm" />
                               ) : (
                                 <PlatformIcon platform={opt.id} size="sm" />
                               )}
@@ -732,10 +673,8 @@ export function ConnectProject({
                       {isLanguagePlatform ? t('Language') : t('Framework')}
                     </label>
                     <Select
-                      value={crossTarget ? crossTarget.id : baseFrameworkId}
-                      onValueChange={
-                        crossTarget ? setCrossTargetId : setBaseFrameworkId
-                      }
+                      value={frameworkId}
+                      onValueChange={setFrameworkId}
                       disabled={frameworkOptions.length === 1}
                     >
                       <SelectTrigger className="w-full h-9 text-[13px]">

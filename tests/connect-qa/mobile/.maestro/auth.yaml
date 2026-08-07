@@ -23,6 +23,10 @@ tags:
 #   * No browser-native `required` / `type=email` validation. The snippet
 #     guards empty fields itself; a malformed email is rejected by Appwrite
 #     and surfaces inline instead of being blocked client-side (4b, 6b).
+#   * `hideKeyboard` runs only on Android: its soft keyboard can cover the
+#     submit button. iOS Simulators keep the hardware keyboard attached, so
+#     no soft keyboard ever appears and the command errors out ("Couldn't
+#     hide the keyboard") instead of no-opping.
 #
 # Genuinely not equivalent - do not read these as covered:
 #   * Web 9a/9b (auth pages still reachable while signed in) has no analogue:
@@ -142,7 +146,11 @@ tags:
       # is not in the view hierarchy tests the same property directly: it only
       # holds while secureTextEntry / obscureText / SecureField is in effect.
       - assertNotVisible: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign in"
           index: 1
@@ -164,7 +172,11 @@ tags:
       - inputText: ${output.unknownEmail}
       - tapOn: "Password"
       - inputText: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign in"
           index: 1
@@ -227,7 +239,11 @@ tags:
       - inputText: ${output.password}
       # Same masking check as 4b, on the sign up screen's own field.
       - assertNotVisible: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign up"
           index: 1
@@ -249,7 +265,11 @@ tags:
       - inputText: ${output.email}
       - tapOn: "Password"
       - inputText: ${output.shortPassword}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign up"
           index: 1
@@ -275,7 +295,11 @@ tags:
       - inputText: ${output.email}
       - tapOn: "Password"
       - inputText: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign up"
           index: 1
@@ -354,7 +378,11 @@ tags:
       - inputText: ${output.email}
       - tapOn: "Password"
       - inputText: ${output.wrongPassword}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign in"
           index: 1
@@ -372,7 +400,11 @@ tags:
       - inputText: ${output.email}
       - tapOn: "Password"
       - inputText: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign in"
           index: 1
@@ -400,7 +432,11 @@ tags:
       - inputText: ${output.email}
       - tapOn: "Password"
       - inputText: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign up"
           index: 1
@@ -425,7 +461,11 @@ tags:
       - inputText: ${output.namelessEmail}
       - tapOn: "Password"
       - inputText: ${output.password}
-      - hideKeyboard
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
       - tapOn:
           text: "Sign up"
           index: 1

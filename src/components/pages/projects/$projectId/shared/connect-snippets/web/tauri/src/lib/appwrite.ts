@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { Client } from 'appwrite'
 
 const client = new Client()

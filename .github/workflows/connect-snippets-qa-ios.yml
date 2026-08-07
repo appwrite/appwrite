@@ -142,7 +142,14 @@ jobs:
       - name: Select the newest Xcode (Swift 6.2 + iOS 26 SDK)
         if: matrix.id == 'flutter' || matrix.id == 'react-native'
         run: |
-          XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -1)"
+          # expo-modules-jsi does not compile under Xcode 26.3's Swift yet
+          # (expo/expo#47957 - the fix is merged but unreleased), so the
+          # react-native lane stays on the newest 26.x below 26.3.
+          if [ "${{ matrix.id }}" = "react-native" ]; then
+            XCODE="$(ls -d /Applications/Xcode_26.[012]*.app | grep -iv beta | sort -V | tail -1)"
+          else
+            XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -1)"
+          fi
           echo "Selecting $XCODE"
           sudo xcode-select -s "$XCODE/Contents/Developer"
 
