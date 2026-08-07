@@ -41,6 +41,7 @@ const EXTENSION_LANGUAGES: Record<string, CodeBlockLanguage> = {
   svelte: 'markup',
   astro: 'markup',
   yaml: 'yaml',
+  json: 'json',
   dart: 'dart',
   py: 'python',
   php: 'php',

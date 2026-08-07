@@ -111,6 +111,9 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'solidstart', label: 'SolidStart' },
     { id: 'solid', label: 'Solid' },
     { id: 'astro', label: 'Astro' },
+    { id: 'ionic', label: 'Ionic' },
+    { id: 'capacitor', label: 'Capacitor' },
+    { id: 'tauri', label: 'Tauri' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
   node: [
@@ -126,11 +129,8 @@ const FRAMEWORK_OPTIONS: Record<string, { id: string; label: string }[]> = {
     { id: 'elysia', label: 'ElysiaJS' },
     { id: 'vanilla', label: 'Vanilla' },
   ],
-  // Single-framework platforms keep their platform-specific id (for the
-  // icon and code lookups) but read "Vanilla" when the framework would
-  // otherwise just repeat the platform name.
   flutter: [{ id: 'flutter', label: 'Vanilla' }],
-  'react-native': [{ id: 'react-native', label: 'Vanilla' }],
+  'react-native': [{ id: 'expo', label: 'Expo' }],
   apple: [{ id: 'swift', label: 'Swift' }],
   android: [{ id: 'kotlin', label: 'Kotlin' }],
   python: [
@@ -215,6 +215,9 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
   solidstart: [{ id: 'vite', label: 'Vite' }],
   solid: [{ id: 'vite', label: 'Vite' }],
   astro: [{ id: 'vite', label: 'Vite' }],
+  ionic: [{ id: 'vite', label: 'Ionic React' }],
+  capacitor: [{ id: 'vite', label: 'Vite' }],
+  tauri: [{ id: 'vite', label: 'Vite' }],
 }
 
 /** Package manager options per SDK; null = not applicable (use all in install). */

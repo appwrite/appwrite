@@ -63,6 +63,48 @@ jobs:
             build: gradle assembleRelease --no-daemon -Pandroid.useAndroidX=true
             apk: app/build/outputs/apk/release/app-release.apk
 
+          - id: capacitor
+            sdk: web
+            framework: capacitor
+            using: vite
+            snippets: web/capacitor
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/android
+            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            apk: android/app/build/outputs/apk/debug/app-debug.apk
+
+          - id: ionic
+            sdk: web
+            framework: ionic
+            using: vite
+            snippets: web/ionic
+            template: ionic
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template react-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/android
+            build: npm run build && npx cap add android && npx cap sync android && ./android/gradlew -p android assembleDebug
+            apk: android/app/build/outputs/apk/debug/app-debug.apk
+
+          - id: tauri
+            sdk: web
+            framework: tauri
+            using: vite
+            snippets: web/tauri
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-tauri-app@latest "$APP_DIR" --template vanilla-ts --manager npm --yes
+            configure: 'true'
+            install: npm install && npm install appwrite
+            build: npm run tauri android init -- --ci && npm run tauri android build -- --apk --debug
+            apk: src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +137,10 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - name: Install Rust (Tauri only)
+        if: matrix.id == 'tauri'
+        run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 
       - name: Scaffold starter app
         run: |
@@ -129,7 +175,7 @@ jobs:
 
       - name: Write env file (derived from connect-snippets.ts)
         run: |
-          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.sdk }}" "${{ matrix.sdk }}" "$APP_DIR"
+          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.framework || matrix.sdk }}" "${{ matrix.using || matrix.sdk }}" "$APP_DIR"
           cat "$APP_DIR/${{ matrix.config_file }}"
 
       - name: Build the APK

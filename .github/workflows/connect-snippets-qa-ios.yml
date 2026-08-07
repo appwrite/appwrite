@@ -59,6 +59,48 @@ jobs:
             build: flutter build ios --simulator --debug --dart-define-from-file=env.json
             app_search: build/ios/iphonesimulator
 
+          - id: capacitor
+            sdk: web
+            framework: capacitor
+            using: vite
+            snippets: web/capacitor
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/ios
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Debug-iphonesimulator
+
+          - id: ionic
+            sdk: web
+            framework: ionic
+            using: vite
+            snippets: web/ionic
+            template: ionic
+            config_file: .env
+            copy_to: .
+            create: npx -y create-vite@latest "$APP_DIR" --template react-ts
+            configure: 'true'
+            install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/ios
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            app_search: build/Build/Products/Debug-iphonesimulator
+
+          - id: tauri
+            sdk: web
+            framework: tauri
+            using: vite
+            snippets: web/tauri
+            template: ''
+            config_file: .env
+            copy_to: .
+            create: npx -y create-tauri-app@latest "$APP_DIR" --template vanilla-ts --manager npm --yes
+            configure: 'true'
+            install: npm install && npm install appwrite
+            build: npm run tauri ios init -- --ci && npm run tauri ios build -- --debug --target aarch64-sim
+            app_search: src-tauri/gen/apple/build
+
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +137,10 @@ jobs:
           xcodebuild -version
           xcrun simctl list runtimes
 
+      - name: Install Rust (Tauri only)
+        if: matrix.id == 'tauri'
+        run: rustup target add aarch64-apple-ios-sim aarch64-apple-ios
+
       - name: Scaffold starter app
         run: |
           APP_DIR="app-$(date +%s)-$RANDOM"
@@ -126,7 +172,7 @@ jobs:
 
       - name: Write config file (derived from connect-snippets.ts)
         run: |
-          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.sdk }}" "${{ matrix.sdk }}" "$APP_DIR"
+          node ../write-env.mjs "${{ matrix.sdk }}" "${{ matrix.framework || matrix.sdk }}" "${{ matrix.using || matrix.sdk }}" "$APP_DIR"
           cat "$APP_DIR/${{ matrix.config_file }}"
 
       - name: Configure the app for the QA harness
