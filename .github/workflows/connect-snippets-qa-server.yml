@@ -278,11 +278,6 @@ jobs:
             port: 3000
             start: go run .
 
-          # `--console plain`, not `--console=plain`: commander inherits the
-          # environment by splitting on the first `=`, so an `=` anywhere in
-          # SNIPPET_CMD truncates the value there (verified on commander
-          # v2.5.0). Only the `run:` commands are affected - `start:` runs
-          # straight from bash.
           - id: java
             kind: cli
             snippets: java/vanilla
@@ -415,8 +410,6 @@ jobs:
             mise use ${{ matrix.tools }}
           fi
 
-      # 6.1, not 6.0: sdk-for-swift 20.x declares swift-tools-version 6.1 and
-      # an older toolchain refuses to resolve it at all.
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')
         uses: swift-actions/setup-swift@v2
@@ -427,13 +420,17 @@ jobs:
         if: startsWith(matrix.id, 'dart')
         uses: dart-lang/setup-dart@v1
 
-      # The runner's system Ruby has no bundler on PATH and an unwritable gem
-      # dir, so `bundle init` and `gem install rails` both fail against it.
       - name: Install Ruby
         if: startsWith(matrix.id, 'ruby')
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
+
+      - name: Install PHP
+        if: startsWith(matrix.id, 'php')
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
 
       - name: Scaffold starter project
         run: |
