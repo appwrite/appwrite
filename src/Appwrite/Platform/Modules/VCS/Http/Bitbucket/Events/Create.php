@@ -78,9 +78,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your Bitbucket repository settings and in the _APP_VCS_BITBUCKET_WEBHOOK_SECRET environment variable');
         }
 
-        // A single push delivery can batch several branches; getEvent() would
-        // only report the first, silently dropping the rest, so every parsed
-        // event from the delivery is handled.
+        // A single Bitbucket push delivery batches every branch it touched
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {

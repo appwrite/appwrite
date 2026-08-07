@@ -78,15 +78,17 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitLab repository settings and in the _APP_VCS_GITLAB_WEBHOOK_SECRET environment variable');
         }
 
-        $parsedPayload = $vcs->getEvent($event, $payload);
+        $parsedPayloads = $vcs->getEvents($event, $payload);
 
-        match ($event) {
-            'Push Hook' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-            'Merge Request Hook' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-            default => null,
-        };
+        foreach ($parsedPayloads as $parsedPayload) {
+            match ($event) {
+                'Push Hook' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+                'Merge Request Hook' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+                default => null,
+            };
+        }
 
-        $response->json($parsedPayload);
+        $response->json(['events' => $parsedPayloads]);
     }
 
     private function resolveGitlabInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
