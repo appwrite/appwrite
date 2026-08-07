@@ -49,8 +49,10 @@ const EXTENSION_LANGUAGES: Record<string, CodeBlockLanguage> = {
   go: 'go',
   swift: 'swift',
   kt: 'kotlin',
+  kts: 'kotlin',
   java: 'java',
   rs: 'rust',
+  xcconfig: 'plaintext',
 }
 
 function languageForFile(path: string): CodeBlockLanguage | undefined {
@@ -99,8 +101,9 @@ const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
   node: { dir: 'node/vanilla' },
   deno: { dir: 'deno/vanilla' },
   bun: { dir: 'bun/vanilla' },
-  apple: { envLabel: 'Config (env or xcconfig)' },
-  android: { envLabel: 'Build config / env' },
+  apple: { envLabel: 'Appwrite.xcconfig' },
+  android: { envLabel: 'gradle.properties' },
+  flutter: { envLabel: 'env.json', envLanguage: 'json' },
   'python/python': { dir: 'python/vanilla' },
   python: { dir: 'python/vanilla' },
   'php/php': { dir: 'php/vanilla' },
@@ -150,8 +153,13 @@ function splitExtension(path: string): [string, string] {
  * files, then the rest.
  */
 function snippetRank(path: string): number {
-  const [stem] = splitExtension(path.split('/').pop()?.toLowerCase() ?? '')
+  const [stem, extension] = splitExtension(
+    path.split('/').pop()?.toLowerCase() ?? '',
+  )
   if (stem === 'config' || stem.endsWith('.config')) return 0
+  // Build-system config (android/build.gradle.kts) is one-time setup too, but
+  // its stem is 'build.gradle', so match on the extension instead.
+  if (extension === 'kts' || extension === 'gradle') return 0
   if (stem === 'appwrite') return 1
   return stem.includes('appwrite') ? 2 : 3
 }
@@ -192,6 +200,32 @@ function getEnvExample(
   projectId: string,
 ): string {
   const isServer = runtime === 'server' || sdkId === 'node' || sdkId === 'deno'
+  // Client-side mobile SDKs: each platform has its own config channel, and
+  // none of them can read a plain process environment at runtime.
+  if (sdkId === 'react-native') {
+    // Metro only inlines EXPO_PUBLIC_-prefixed variables.
+    return `EXPO_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nEXPO_PUBLIC_APPWRITE_PROJECT_ID=${projectId}`
+  }
+  if (sdkId === 'flutter') {
+    // Consumed by `flutter run --dart-define-from-file=env.json`.
+    return `{\n  "APPWRITE_ENDPOINT": "${endpoint}",\n  "APPWRITE_PROJECT_ID": "${projectId}"\n}`
+  }
+  if (sdkId === 'android') {
+    // Read by build.gradle.kts and baked into BuildConfig.
+    return `APPWRITE_ENDPOINT=${endpoint}\nAPPWRITE_PROJECT_ID=${projectId}`
+  }
+  if (sdkId === 'apple') {
+    // xcconfig treats // as the start of a comment, which would truncate the
+    // endpoint to "https:". $() is an empty variable placed BETWEEN the two
+    // slashes so the raw text never contains //; it expands to nothing, so
+    // the build setting still reads https://host/v1.
+    return [
+      '// Add to the target config, then point both Info.plist keys at',
+      '// $(APPWRITE_ENDPOINT) and $(APPWRITE_PROJECT_ID).',
+      `APPWRITE_ENDPOINT = ${endpoint.replace('//', '/$()/')}`,
+      `APPWRITE_PROJECT_ID = ${projectId}`,
+    ].join('\n')
+  }
   if (sdkId === 'web' && !isServer) {
     if (frameworkId === 'next') {
       return `NEXT_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nNEXT_PUBLIC_APPWRITE_PROJECT_ID=${projectId}`
@@ -341,7 +375,7 @@ export function getInstallInstructions(
         options: [
           {
             label: '1. Add to pubspec.yaml',
-            code: 'dependencies:\n  appwrite: ^13.0.0',
+            code: 'dependencies:\n  appwrite: ^25.4.0',
             language: 'plaintext',
           },
           {
@@ -362,7 +396,7 @@ export function getInstallInstructions(
           },
           {
             label: 'Package.swift',
-            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-apple",\n  from: "5.0.0"\n)',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-apple",\n  from: "18.3.0"\n)',
             language: 'swift',
           },
         ],
@@ -373,7 +407,7 @@ export function getInstallInstructions(
         options: [
           {
             label: '1. Add to build.gradle.kts (module)',
-            code: 'implementation("io.appwrite:sdk-for-android:5.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-android:26.0.0")',
             language: 'kotlin',
           },
           {
@@ -425,7 +459,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Add to pubspec.yaml',
-            code: 'dependencies:\n  appwrite: ^13.0.0',
+            code: 'dependencies:\n  appwrite: ^25.4.0',
             language: 'plaintext',
           },
           { label: 'Install', code: 'dart pub get', language: 'bash' },

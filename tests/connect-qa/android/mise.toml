@@ -1,0 +1,19 @@
+[tools]
+node = "24"          # Scaffolding + Metro/Babel bundling for the cross-platform frameworks
+maestro = "latest"   # Maestro CLI (github:mobile-dev-inc/maestro); drives the emulator over adb
+java = "temurin-17"  # Gradle/AGP toolchain for the Android build (Maestro also needs 17+)
+
+# Run the shared mobile auth flow against the QA app already installed on the
+# connected emulator/device (Maestro finds it through adb). The flow lives in
+# ../mobile/.maestro so Android and iOS assert exactly the same behaviour.
+#   mise run test
+#   mise run test --debug-output=artifacts/maestro --flatten-debug-output
+[tasks.test]
+description = "Run the shared Maestro auth flow against the connected emulator"
+usage = '''
+flag "-f --flow <flow>" help="Flow file to run" default="../mobile/.maestro/auth.yaml"
+arg "[maestro_args]..." help="Extra flags passed straight to `maestro test`"
+'''
+# eval: usage shell-quotes $usage_maestro_args; without eval the quotes reach
+# maestro as literal characters and flags like --debug-output=<path> break.
+run = 'eval maestro test $usage_flow $usage_maestro_args'

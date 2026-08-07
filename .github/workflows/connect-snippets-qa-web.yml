@@ -202,7 +202,7 @@ jobs:
           npm install appwrite
 
       - name: Write env file (derived from connect-snippets.ts)
-        run: node write-env.mjs "${{ matrix.framework }}" "${{ matrix.using }}" "$APP_DIR"
+        run: node write-env.mjs web "${{ matrix.framework }}" "${{ matrix.using }}" "$APP_DIR"
 
       - name: Start dev server on :${{ matrix.port }}
         run: |
