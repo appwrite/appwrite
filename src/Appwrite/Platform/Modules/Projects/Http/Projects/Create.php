@@ -119,18 +119,22 @@ class Create extends Action
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $databases = Config::getParam('pools-database', []);
+        $registeredPools = Config::getParam('pools-database', []);
 
         if ($region !== 'default') {
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = \explode(',', $databaseKeys);
-            $databases = Regions::filterPoolKeysForRegion($keys, $region);
+            $keys = \array_values(\array_filter(\array_map('trim', \explode(',', $databaseKeys))));
+            $candidateKeys = Regions::filterPoolKeysForRegion($keys, $region);
+            // Only persist pool names that are actually registered from _APP_CONNECTIONS_DATABASE.
+            $databases = \array_values(\array_intersect($candidateKeys, $registeredPools));
+        } else {
+            $databases = $registeredPools;
         }
 
         if (empty($databases)) {
             throw new Exception(
                 Exception::PROJECT_REGION_UNSUPPORTED,
-                'No database pool configured for region "' . $region . '". Check _APP_DATABASE_KEYS.'
+                'No registered database pool for region "' . $region . '". Check _APP_DATABASE_KEYS and _APP_CONNECTIONS_DATABASE.'
             );
         }
 
