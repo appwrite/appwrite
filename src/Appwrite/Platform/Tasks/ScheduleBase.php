@@ -125,6 +125,8 @@ abstract class ScheduleBase extends Action
         $loadStart = microtime(true);
         $time = DateTime::now();
 
+        Console::info("[schedule-timing] collectSchedules start (initial=" . ($initialLoad ? 'true' : 'false') . ")");
+
         $limit = 10_000;
         $sum = $limit;
         $total = 0;
@@ -230,19 +232,26 @@ abstract class ScheduleBase extends Action
             $batchSize = APP_DATABASE_QUERY_MAX_VALUES_WORKER;
             $batches = array_chunk($projectIdsToLoad, $batchSize);
             $projectsLoadStart = microtime(true);
+            $dbQueryDuration = 0;
+            $transformDuration = 0;
 
             foreach ($batches as $batch) {
+                $dbStart = microtime(true);
                 $documents = $dbForPlatform->find('projects', [
                     Query::equal('$id', $batch),
                     Query::limit(count($batch)),
                 ]);
+                $dbQueryDuration += microtime(true) - $dbStart;
 
+                $transformStart = microtime(true);
                 foreach ($documents as $document) {
                     $map[$document->getId()] = $document;
                 }
+                $transformDuration += microtime(true) - $transformStart;
             }
 
             $projectsLoadDuration = microtime(true) - $projectsLoadStart;
+            Console::info("[schedule-timing] projects load: batch size=" . count($projectIdsToLoad) . " db query=" . round($dbQueryDuration * 1000) . "ms transform=" . round($transformDuration * 1000) . "ms total=" . round($projectsLoadDuration * 1000) . "ms");
             Console::success("Projects map loaded in " . $projectsLoadDuration . " seconds with " . count($projectIdsToLoad) . " new projects (total: " . count($map) . " projects)");
         } else {
             Console::success("No new projects to load (using " . count($map) . " cached projects)");
@@ -307,6 +316,7 @@ abstract class ScheduleBase extends Action
         $duration = microtime(true) - $loadStart;
         $this->collectSchedulesTelemetryDuration->record($duration, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
         $this->collectSchedulesTelemetryCount->record($total, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
+        Console::info("[schedule-timing] collectSchedules total: " . round($duration * 1000) . "ms (initial=" . ($initialLoad ? 'true' : 'false') . ", {$total} " . static::getName() . ")");
         Console::success("Timer loaded {$total} " . static::getName() . " in " . $duration . " seconds");
     }
 
