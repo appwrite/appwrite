@@ -70,7 +70,9 @@ jobs:
             create: npx -y create-vite@latest "$APP_DIR" --template vanilla-ts
             configure: 'true'
             install: npm install && npm install appwrite @capacitor/core @capacitor/cli @capacitor/ios
-            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            # Capacitor 8 adds the iOS platform in SPM mode: an App.xcodeproj plus a
+            # local CapApp-SPM package, no CocoaPods workspace.
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
             app_search: build/Build/Products/Debug-iphonesimulator
 
           - id: ionic
@@ -84,7 +86,7 @@ jobs:
             create: npx -y create-vite@latest "$APP_DIR" --template react-ts
             configure: 'true'
             install: npm install && npm install appwrite @ionic/react @capacitor/core @capacitor/cli @capacitor/ios
-            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            build: npm run build && npx cap add ios && npx cap sync ios && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO
             app_search: build/Build/Products/Debug-iphonesimulator
 
           - id: tauri
@@ -131,6 +133,18 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      # The default Xcode 16.4 ships Swift 6.1 and the iOS 18 SDK. Expo's
+      # expo-modules-jsi package declares Swift tools 6.2, and device_info_plus
+      # (pulled in by the Appwrite Flutter SDK) calls the iOS 26 SDK's
+      # NSProcessInfo.isiOSAppOnVision, so these two lanes need the newest
+      # Xcode already installed on the runner.
+      - name: Select the newest Xcode (Swift 6.2 + iOS 26 SDK)
+        if: matrix.id == 'flutter' || matrix.id == 'react-native'
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -1)"
+          echo "Selecting $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
 
       - name: Show the toolchain in use
         run: |
