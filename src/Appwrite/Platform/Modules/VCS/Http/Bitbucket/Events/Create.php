@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Gitea\Events;
+namespace Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -9,6 +9,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -25,14 +26,14 @@ class Create extends Action
 
     public static function getName()
     {
-        return 'createVCSGiteaEvent';
+        return 'createVCSBitbucketEvent';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/vcs/gitea/events')
+            ->setHttpPath('/v1/vcs/bitbucket/events')
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
@@ -61,28 +62,29 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform
     ) {
-        $vcs = $vcsFactory->fromProvider('gitea');
+        $vcs = $vcsFactory->fromProvider('bitbucket');
 
         $event = $request->getHeaderLine($vcs->getEventHeaderName(), '');
-        Span::add('vcs.gitea.event.name', $event);
+        Span::add('vcs.bitbucket.event.name', $event);
 
         $payload = $request->getRawPayload();
         $signature = $request->getHeaderLine($vcs->getSignatureHeaderName(), '');
-        $secretKey = $vcsWebhookSecret('gitea');
+        $secretKey = $vcsWebhookSecret('bitbucket');
 
         $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
-        Span::add('vcs.gitea.event.signature.valid', $valid);
+        Span::add('vcs.bitbucket.event.signature.valid', $valid);
 
         if (!$valid) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your Gitea repository settings and in the _APP_VCS_GITEA_WEBHOOK_SECRET environment variable');
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your Bitbucket repository settings and in the _APP_VCS_BITBUCKET_WEBHOOK_SECRET environment variable');
         }
 
+        // A single Bitbucket push delivery batches every branch it touched
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {
             match ($event) {
-                'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
-                'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+                'repo:push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+                'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
                 default => null,
             };
         }
@@ -90,11 +92,11 @@ class Create extends Action
         $response->json(['events' => $parsedPayloads]);
     }
 
-    private function resolveGiteaInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
+    private function resolveBitbucketInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
     {
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
-        if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== 'gitea') {
+        if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== 'bitbucket') {
             return null;
         }
 
@@ -103,11 +105,11 @@ class Create extends Action
 
     /**
      * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
-     * caller can surface a non-2xx response and Gitea logs it as a failed delivery.
+     * caller can surface a non-2xx response and Bitbucket logs it as a failed delivery.
      */
     private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
     {
-        $installation = $this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization);
+        $installation = $this->resolveBitbucketInstallation($repository, $dbForPlatform, $authorization);
 
         if ($installation === null) {
             return null;
@@ -118,9 +120,9 @@ class Create extends Action
 
             return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {
-            $message = "Failed to resolve Gitea adapter for installation '{$installation->getId()}': " . $error->getMessage();
+            $message = "Failed to resolve Bitbucket adapter for installation '{$installation->getId()}': " . $error->getMessage();
             Console::warning($message);
-            Span::add("vcs.gitea.event.installation.{$installation->getId()}.error", $message);
+            Span::add("vcs.bitbucket.event.installation.{$installation->getId()}.error", $message);
             $errors[] = $message;
             return null;
         }
@@ -150,11 +152,11 @@ class Create extends Action
         $providerCommitMessage = $parsedPayload['headCommitMessage'] ?? '';
         $providerCommitUrl = $parsedPayload['headCommitUrl'] ?? '';
 
-        Span::add('vcs.gitea.event.repo.id', $providerRepositoryId);
-        Span::add('vcs.gitea.event.repo.name', $providerRepositoryName);
-        Span::add('vcs.gitea.event.branch', $providerBranch);
+        Span::add('vcs.bitbucket.event.repo.id', $providerRepositoryId);
+        Span::add('vcs.bitbucket.event.repo.name', $providerRepositoryName);
+        Span::add('vcs.bitbucket.event.branch', $providerBranch);
 
-        if ($providerCommitAuthorEmail === APP_VCS_GITEA_EMAIL || $providerBranchDeleted) {
+        if ($providerCommitAuthorEmail === APP_VCS_BITBUCKET_EMAIL || $providerBranchDeleted) {
             return;
         }
 
@@ -208,9 +210,9 @@ class Create extends Action
             $providerCommitUrl = $parsedPayload['headCommitUrl'] ?? '';
             $providerCommitAuthorUrl = $parsedPayload['authorUrl'] ?? '';
 
-            Span::add('vcs.gitea.event.repo.id', $providerRepositoryId);
-            Span::add('vcs.gitea.event.repo.name', $providerRepositoryName);
-            Span::add('vcs.gitea.event.branch', $providerBranch);
+            Span::add('vcs.bitbucket.event.repo.id', $providerRepositoryId);
+            Span::add('vcs.bitbucket.event.repo.name', $providerRepositoryName);
+            Span::add('vcs.bitbucket.event.branch', $providerBranch);
 
             // Ignore sync for non-external. We handle it in the push webhook.
             if (!$external && $action === 'synchronize') {
@@ -263,24 +265,7 @@ class Create extends Action
                 return;
             }
 
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::orderDesc('$createdAt'),
-                Query::limit(100),
-            ]));
-
-            foreach ($repositories as $repository) {
-                if ($this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization) === null) {
-                    continue;
-                }
-
-                $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
-
-                if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                    $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
-                }
-            }
+            (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'bitbucket', $providerRepositoryId, $providerPullRequestId);
         }
     }
 }

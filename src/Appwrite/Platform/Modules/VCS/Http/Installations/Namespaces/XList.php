@@ -97,7 +97,24 @@ class XList extends Action
 
         $page = ($offset / $limit) + 1;
 
-        ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
+        // listNamespaces() has a throwing default on the abstract Git class
+        // rather than being absent, so a provider that doesn't report
+        // namespaces is found by catching, not by checking for the method.
+        try {
+            ['items' => $namespaces, 'total' => $total] = $vcs->listNamespaces($page, $limit, $search);
+        } catch (\Throwable) {
+            $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
+            $owner = $vcs->getOwnerName($providerInstallationId);
+            $matches = empty($search) || \stripos($owner, $search) !== false;
+            $namespaces = $matches ? [[
+                'id' => $providerInstallationId,
+                'name' => $owner,
+                'path' => $owner,
+                'kind' => $installation->getAttribute('personal', false) ? 'user' : 'group',
+                'avatarUrl' => '',
+            ]] : [];
+            $total = \count($namespaces);
+        }
 
         $namespaces = \array_map(fn ($namespace) => new Document([
             '$id' => $namespace['id'] ?? '',

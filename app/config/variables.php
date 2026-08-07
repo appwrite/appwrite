@@ -1366,6 +1366,33 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_ID',
+                'description' => 'Bitbucket OAuth2 consumer key. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_CLIENT_SECRET',
+                'description' => 'Bitbucket OAuth2 consumer secret. You can generate one in your Bitbucket workspace under Settings > OAuth consumers.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_BITBUCKET_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Bitbucket webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
