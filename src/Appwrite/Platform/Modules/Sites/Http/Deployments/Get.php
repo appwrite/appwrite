@@ -67,17 +67,10 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $resourceType = $deployment->getAttribute('resourceType');
-        $ownsDeployment = $deployment->getAttribute('resourceId') === $site->getId()
-            && (
-                $resourceType === 'sites'
-                || (
-                    empty($resourceType)
-                    && $deployment->getAttribute('resourceInternalId') === $site->getSequence()
-                    && $dbForProject->getDocument('functions', $site->getId())->isEmpty()
-                )
-            );
-        if (!$ownsDeployment) {
+        if (
+            $deployment->getAttribute('resourceId') !== $site->getId()
+            || $deployment->getAttribute('resourceType') !== 'sites'
+        ) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
