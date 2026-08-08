@@ -1807,8 +1807,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                             Permission::delete(Role::user($userId)),
                         ],
                         'email' => $email,
-                        'emailVerification' => true,
-                        'status' => true, // Email should already be authenticated by OAuth2 provider
+                        'emailVerification' => $isVerified, // Trust the provider's userinfo claim, not the mere fact an email was returned
+                        'status' => true,
                         'password' => null,
                         'hash' => $proofForPassword->getHash()->getName(),
                         'hashOptions' => $proofForPassword->getHash()->getOptions(),
@@ -1866,6 +1866,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsFree' => null,
             ];
 
+            $isVerified = $oauth2->isEmailVerified($accessToken);
+
             try {
                 $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
@@ -1874,7 +1876,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     || ($plan['supportsCanonicalEmailValidation'] ?? false)
                 )
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
-                    && $oauth2->isEmailVerified($accessToken);
+                    && $isVerified;
                 $email = $canonicalize ? $canonical : $providerEmail;
                 $emails = array_values(array_unique([$email, $providerEmail]));
                 $emailMetadata = [
@@ -1913,6 +1915,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $user->setAttribute('email', $email);
+            // Never downgrade an already-verified user; only ever promote to verified
+            $user->setAttribute('emailVerification', $user->getAttribute('emailVerification', false) || $isVerified);
             $user->setAttribute('emailCanonical', $emailMetadata['emailCanonical']);
             $user->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical']);
             $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
