@@ -192,7 +192,7 @@ $register->set('pools', function () {
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => $fallbackForDB,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],
@@ -262,11 +262,12 @@ $register->set('pools', function () {
             $dsn = explode('=', $dsn);
             $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
-            $config[] = $name;
             if (empty($dsn)) {
+                // Skip empty DSNs entirely — do not record a phantom name in pools-*.
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
+            $config[] = $name;
 
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
