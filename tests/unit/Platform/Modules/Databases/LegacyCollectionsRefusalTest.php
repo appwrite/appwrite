@@ -23,6 +23,15 @@ use Utopia\Database\Validator\Authorization;
  */
 final class LegacyCollectionsRefusalTest extends TestCase
 {
+    /**
+     * Whether the action queried `database_{sequence}`.
+     *
+     * An instance property rather than a return value, because the call under test
+     * throws on the path this suite cares about — a returned flag would be lost with
+     * the stack, leaving the assertion to pass on the catch alone.
+     */
+    private bool $reached = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,11 +41,10 @@ final class LegacyCollectionsRefusalTest extends TestCase
 
     /**
      * @param array<string, mixed> $attributes
-     * @return array{reached: bool}
      */
-    private function listCollections(array $attributes): array
+    private function listCollections(array $attributes): void
     {
-        $reached = false;
+        $this->reached = false;
 
         $dbForProject = $this->createMock(Database::class);
         $dbForProject
@@ -44,15 +52,15 @@ final class LegacyCollectionsRefusalTest extends TestCase
             ->willReturn(new Document(['$id' => 'db', '$sequence' => '7', ...$attributes]));
         $dbForProject
             ->method('find')
-            ->willReturnCallback(function () use (&$reached): array {
-                $reached = true;
+            ->willReturnCallback(function (): array {
+                $this->reached = true;
 
                 return [];
             });
         $dbForProject
             ->method('count')
-            ->willReturnCallback(function () use (&$reached): int {
-                $reached = true;
+            ->willReturnCallback(function (): int {
+                $this->reached = true;
 
                 return 0;
             });
@@ -62,12 +70,10 @@ final class LegacyCollectionsRefusalTest extends TestCase
             [],
             '',
             false,
-            $this->createMock(UtopiaResponse::class),
+            $this->createStub(UtopiaResponse::class),
             $dbForProject,
             new Authorization(),
         );
-
-        return ['reached' => $reached];
     }
 
     public function testAVectorsDatabaseIsRefusedBeforeTheBackendIsQueried(): void
@@ -92,20 +98,18 @@ final class LegacyCollectionsRefusalTest extends TestCase
 
     /**
      * The mismatched call must not reach `database_{sequence}` at all — that query is
-     * where the 500 came from.
+     * where the 500 came from. Refusing and querying anyway would still 500.
      */
     public function testTheRefusedCallNeverReachesTheBackend(): void
     {
         foreach ([DATABASE_TYPE_VECTORSDB, DATABASE_TYPE_DOCUMENTSDB] as $type) {
-            $reached = true;
-
             try {
-                $reached = $this->listCollections(['type' => $type])['reached'];
+                $this->listCollections(['type' => $type]);
             } catch (Exception) {
-                $reached = false;
+                // The refusal is expected here; what it did on the way is the assertion.
             }
 
-            $this->assertFalse($reached, "a '{$type}' database must be refused before database_{sequence} is queried");
+            $this->assertFalse($this->reached, "a '{$type}' database must be refused before database_{sequence} is queried");
         }
     }
 
@@ -116,8 +120,10 @@ final class LegacyCollectionsRefusalTest extends TestCase
     public function testTheServedTypesStillReachTheBackend(): void
     {
         foreach ([DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB] as $type) {
+            $this->listCollections(['type' => $type]);
+
             $this->assertTrue(
-                $this->listCollections(['type' => $type])['reached'],
+                $this->reached,
                 "a '{$type}' database must still be served by /v1/databases/{id}/collections",
             );
         }
