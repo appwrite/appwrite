@@ -4,7 +4,8 @@
  * Success screen with site preview and next steps.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,10 @@ import {
   SITE_SCREENSHOT_LARGE_WIDTH,
   SITE_SCREENSHOT_LARGE_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import {
+  deploymentHasScreenshot,
+  refetchSitePreviewCaches,
+} from '@/lib/sites/deployment-screenshots'
 import { useAvifSupport } from '@/lib/avif-support'
 import { ImageFormat } from '@appwrite.io/console'
 import {
@@ -53,6 +58,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { theme, resolvedTheme } = useTheme()
   const { formData, resetFormData } = useWizard()
 
@@ -62,6 +68,8 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
 
   // Local state
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [isNavigatingToDashboard, setIsNavigatingToDashboard] = useState(false)
+  const didRefetchPreviewCachesRef = useRef(false)
 
   // Fetch site details
   const { data: site } = useProjectSite(projectId, actualSiteId)
@@ -72,6 +80,24 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     actualSiteId,
     actualDeploymentId,
   )
+
+  useEffect(() => {
+    if (
+      !projectId ||
+      !actualSiteId ||
+      !deploymentHasScreenshot(deployment) ||
+      didRefetchPreviewCachesRef.current
+    ) {
+      return
+    }
+    didRefetchPreviewCachesRef.current = true
+    void refetchSitePreviewCaches(
+      queryClient,
+      projectId,
+      actualSiteId,
+      actualDeploymentId,
+    )
+  }, [projectId, actualSiteId, actualDeploymentId, deployment, queryClient])
 
   // Fetch site domains
   const { rules: domains } = useSiteDomains(projectId, actualSiteId, 0, 10)
@@ -121,14 +147,32 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
   }, [siteUrl])
 
-  const handleGoToDashboard = () => {
-    // Reset wizard state
+  const handleGoToDashboard = async () => {
+    if (isNavigatingToDashboard) return
+    setIsNavigatingToDashboard(true)
+
+    const siteIdToOpen = actualSiteId
+    const deploymentIdToRefresh = actualDeploymentId
+
+    try {
+      if (projectId && siteIdToOpen) {
+        await refetchSitePreviewCaches(
+          queryClient,
+          projectId,
+          siteIdToOpen,
+          deploymentIdToRefresh,
+        )
+      }
+    } catch {
+      // Navigation should still proceed; hard reload remains a fallback.
+    }
+
     resetFormData()
 
-    if (actualSiteId) {
+    if (siteIdToOpen) {
       navigate({
         to: '/projects/$projectId/sites/$siteId',
-        params: { projectId: projectId!, siteId: actualSiteId },
+        params: { projectId: projectId!, siteId: siteIdToOpen },
       })
     } else {
       navigate({
@@ -167,7 +211,12 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
-        <Button onClick={handleGoToDashboard}>{t('Go to dashboard')}</Button>
+        <Button
+          onClick={handleGoToDashboard}
+          disabled={isNavigatingToDashboard}
+        >
+          {t('Go to dashboard')}
+        </Button>
       }
     >
       {/* Site preview card */}

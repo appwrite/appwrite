@@ -28,10 +28,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { sdk } from '@/lib/appwrite/sdk'
 import {
   RefreshProvider,
   useRefresh,
@@ -120,6 +121,8 @@ function SiteLayoutContent() {
   const executionLogsEnabled = features.executionLogs
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+
   const cancelBuildMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !siteId || !activeDeployment?.$id) {
@@ -139,6 +142,32 @@ function SiteLayoutContent() {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to cancel build'))
+    },
+  })
+
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createDuplicateDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success(t('Deployment rebuild started'))
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to redeploy'))
     },
   })
 
@@ -284,6 +313,79 @@ function SiteLayoutContent() {
 
   const isLogsTabLayout = activeTab === 'logs'
 
+  const buildingAlert = isBuilding ? (
+    <div className="border-b border-border bg-blue-500/5">
+      <div
+        className={cn(
+          'w-full px-4 py-3 sm:px-6',
+          activeTab !== 'logs' && 'mx-auto max-w-7xl',
+        )}
+      >
+        <Alert variant="default" className="border-blue-500/30 bg-transparent">
+          <Info className="h-4 w-4 text-blue-500 shrink-0" />
+          <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
+            <span>{t('Your site is currently being deployed.')}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
+              onClick={handleCancelBuild}
+              disabled={cancelBuildMutation.isPending}
+            >
+              {t('Cancel build')}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
+  ) : undefined
+
+  // Settings changes that need a redeploy (API sets live=false)
+  const configAlert =
+    !isBuilding && site && !site.live ? (
+      <div className="border-b border-border bg-amber-500/5">
+        <div
+          className={cn(
+            'w-full px-4 py-3 sm:px-6',
+            activeTab !== 'logs' && 'mx-auto max-w-7xl',
+          )}
+        >
+          <Alert
+            variant="default"
+            className="border-amber-500/30 bg-transparent"
+          >
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <div className="flex flex-1 items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                  {t('Settings changes are not live yet')}
+                </AlertTitle>
+                <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                  <span className="inline">
+                    {t(
+                      "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.",
+                    )}
+                  </span>
+                </AlertDescription>
+              </div>
+              <Button
+                size="sm"
+                className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+                onClick={() => setRedeployDialogOpen(true)}
+                disabled={
+                  !site.deploymentId ||
+                  !activeDeployment ||
+                  redeployMutation.isPending
+                }
+              >
+                {t('Redeploy')}
+              </Button>
+            </div>
+          </Alert>
+        </div>
+      </div>
+    ) : undefined
+
   return (
     <CreateDeploymentProvider
       onOpenGit={() => setGitDeployOpen(true)}
@@ -371,33 +473,10 @@ function SiteLayoutContent() {
           }
           beforeCreateButtons={undefined}
           contentAfterBorder={
-            isBuilding ? (
-              <div className="border-b border-border bg-blue-500/5">
-                <div
-                  className={cn(
-                    'w-full px-4 py-3 sm:px-6',
-                    activeTab !== 'logs' && 'mx-auto max-w-7xl',
-                  )}
-                >
-                  <Alert
-                    variant="default"
-                    className="border-blue-500/30 bg-transparent"
-                  >
-                    <Info className="h-4 w-4 text-blue-500 shrink-0" />
-                    <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                      <span>{t('Your site is currently being deployed.')}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
-                        onClick={handleCancelBuild}
-                        disabled={cancelBuildMutation.isPending}
-                      >
-                        {t('Cancel build')}
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                </div>
+            buildingAlert || configAlert ? (
+              <div>
+                {buildingAlert}
+                {configAlert}
               </div>
             ) : undefined
           }
@@ -519,6 +598,43 @@ function SiteLayoutContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {activeDeployment && (
+        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-start">
+              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                {t(
+                  "This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.",
+                )}
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRedeployDialogOpen(false)}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => redeployMutation.mutate()}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {t('Redeploy')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </CreateDeploymentProvider>
   )
 }

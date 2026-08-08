@@ -31,11 +31,12 @@ export function FunctionDeploymentRetentionCard({
         buildFunctionUpdateParams(func, { deploymentRetention }),
       )
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Retention has been updated'))
-      queryClient.invalidateQueries({
-        queryKey: ['function', 'project', projectId, functionId],
-      })
+      queryClient.setQueryData(
+        ['function', 'project', projectId, functionId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['functions', 'project', projectId],
       })

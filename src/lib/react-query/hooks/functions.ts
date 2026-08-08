@@ -1246,6 +1246,13 @@ export function useCreateFunctionVariable(
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
       })
+      // Env var changes set function.live=false; refresh parent so the redeploy alert shows
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
     },
   })
 }
@@ -1296,6 +1303,12 @@ export function useUpdateFunctionVariable(
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
       })
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
     },
   })
 }
@@ -1324,6 +1337,12 @@ export function useDeleteFunctionVariable(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['variables', 'function', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['function', 'project', projectId, functionId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['functions', 'project', projectId],
       })
     },
   })

@@ -31,6 +31,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to download build output': 'ビルド出力のダウンロードに失敗しました',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Failed to redeploy': '再デプロイに失敗しました',
+  'Settings changes are not live yet': '設定の変更はまだ反映されていません',
+  "You've updated site settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.":
+    'サイトの設定を更新しましたが、再デプロイするまで反映されません。現在のデプロイは、以前の設定のまま実行され続けています。',
   'Deployment activated successfully': 'デプロイを有効化しました',
   'Failed to activate deployment': 'デプロイの有効化に失敗しました',
   'Build cancelled': 'ビルドをキャンセルしました',
