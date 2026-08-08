@@ -37,7 +37,7 @@ class Get extends Action
                     namespace: 'users',
                     group: 'mfa',
                     name: 'getMFAChallenge',
-                    description: 'Get a custom MFA challenge for a user, including the secret to be delivered through your own channel.',
+                    description: 'Get a custom MFA challenge for a user, including the code to be delivered through your own channel.',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
@@ -71,8 +71,6 @@ class Get extends Action
         ) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
-
-        $challenge->setAttribute('secret', $challenge->getAttribute('code'));
 
         $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE_SECRET);
     }

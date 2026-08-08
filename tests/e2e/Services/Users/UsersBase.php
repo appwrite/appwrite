@@ -663,10 +663,11 @@ trait UsersBase
         ]);
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertArrayNotHasKey('code', $challenge['body']);
         $challengeId = $challenge['body']['$id'];
 
         /**
-         * Test for SUCCESS: server (API key) can read the secret
+         * Test for SUCCESS: server (API key) can read the code
          */
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, array_merge([
             'content-type' => 'application/json',
@@ -676,7 +677,7 @@ trait UsersBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($challengeId, $response['body']['$id']);
         $this->assertEquals($userId, $response['body']['userId']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertNotEmpty($response['body']['code']);
 
         /**
          * Test for FAILURE: a client session (not a server key) must be rejected
@@ -735,8 +736,8 @@ trait UsersBase
         /**
          * Test for FAILURE: a non-custom challenge (e.g. totp) must not be readable,
          * even with valid ownership and a valid API key. Native factors deliver their
-         * own secret out of band (email/SMS); this endpoint only exists to hand the
-         * 'custom' factor's secret to the developer's own delivery mechanism.
+         * own code out of band (email/SMS); this endpoint only exists to hand the
+         * 'custom' factor's code to the developer's own delivery mechanism.
          */
         $totpChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', [
             'content-type' => 'application/json',

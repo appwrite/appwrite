@@ -11,9 +11,9 @@ class MFAChallengeSecret extends MFAChallenge
         parent::__construct();
 
         $this
-            ->addRule('secret', [
+            ->addRule('code', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Challenge secret to be delivered to the end user through a custom channel.',
+                'description' => 'Challenge code to be delivered to the end user through a custom channel.',
                 'default' => '',
                 'example' => '446372',
             ]);

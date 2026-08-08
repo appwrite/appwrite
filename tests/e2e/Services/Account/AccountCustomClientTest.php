@@ -4286,27 +4286,29 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        // The challenge code must never be exposed on the client-facing create response
+        $this->assertArrayNotHasKey('code', $challenge['body']);
         $challengeId = $challenge['body']['$id'];
         $userId = $challenge['body']['userId'];
 
-        // Test FAILURE: a client session (no API key) must not be able to read the secret
-        $clientSecretResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, array_merge([
+        // Test FAILURE: a client session (no API key) must not be able to read the code
+        $clientCodeResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals(401, $clientSecretResponse['headers']['status-code']);
+        $this->assertEquals(401, $clientCodeResponse['headers']['status-code']);
 
-        // Server SDK reads the raw secret via the server-only endpoint
-        $secretResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, [
+        // Server SDK reads the raw code via the server-only endpoint
+        $codeResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ]);
 
-        $this->assertEquals(200, $secretResponse['headers']['status-code']);
-        $this->assertNotEmpty($secretResponse['body']['secret']);
-        $secret = $secretResponse['body']['secret'];
+        $this->assertEquals(200, $codeResponse['headers']['status-code']);
+        $this->assertNotEmpty($codeResponse['body']['code']);
+        $code = $codeResponse['body']['code'];
 
         // Test FAILURE: verifying with a random/incorrect otp before the real one is used
         $wrongFirst = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
@@ -4319,13 +4321,13 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $wrongFirst['headers']['status-code']);
 
-        // Test SUCCESS: Verify with the correct secret
+        // Test SUCCESS: Verify with the correct code
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'challengeId' => $challengeId,
-            'otp' => $secret
+            'otp' => $code
         ]);
 
         $this->assertEquals(200, $verification['headers']['status-code']);
@@ -4341,7 +4343,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'challengeId' => $challengeId,
-            'otp' => $secret
+            'otp' => $code
         ]);
 
         $this->assertEquals(401, $reuse['headers']['status-code']);
