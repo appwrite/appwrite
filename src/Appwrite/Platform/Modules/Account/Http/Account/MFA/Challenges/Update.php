@@ -133,6 +133,7 @@ class Update extends Action
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::CUSTOM => Challenge\Custom::challenge($challenge, $user, $otp),
             default => false
         });
 
