@@ -58,7 +58,20 @@ $console = [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
-        'oidcEnabled' => !empty(System::getEnv('_APP_CONSOLE_OIDC_CLIENT_ID', '')),
+        // OIDC is only enabled when a client ID is provided together with a usable
+        // endpoint configuration: either a discovery well-known URL, or all three
+        // explicit endpoints (authorization, token, userinfo). Requiring at least
+        // one of these prevents advertising a login option that cannot redirect to
+        // the identity provider because every endpoint would resolve to an empty URL.
+        'oidcEnabled' => !empty(System::getEnv('_APP_CONSOLE_OIDC_CLIENT_ID', ''))
+            && (
+                !empty(System::getEnv('_APP_CONSOLE_OIDC_WELLKNOWN_ENDPOINT', ''))
+                || (
+                    !empty(System::getEnv('_APP_CONSOLE_OIDC_AUTHORIZATION_ENDPOINT', ''))
+                    && !empty(System::getEnv('_APP_CONSOLE_OIDC_TOKEN_ENDPOINT', ''))
+                    && !empty(System::getEnv('_APP_CONSOLE_OIDC_USERINFO_ENDPOINT', ''))
+                )
+            ),
         'oidcAppid' => System::getEnv('_APP_CONSOLE_OIDC_CLIENT_ID', ''),
         'oidcSecret' => \json_encode([
             'clientSecret' => System::getEnv('_APP_CONSOLE_OIDC_CLIENT_SECRET', ''),

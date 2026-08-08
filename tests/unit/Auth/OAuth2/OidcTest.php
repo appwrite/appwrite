@@ -61,6 +61,85 @@ final class OidcTest extends TestCase
         $this->assertSame('John Doe', $oidc->getUserName('access-token'));
     }
 
+    /**
+     * When all three explicit endpoints are configured, getLoginURL must use
+     * the authorizationEndpoint from the secret without hitting the network.
+     */
+    public function testGetLoginUrlUsesExplicitAuthorizationEndpoint(): void
+    {
+        $oidc = new Oidc('client-id', $this->defaultSecret, 'https://example.com/callback');
+
+        $url = $oidc->getLoginURL();
+
+        $this->assertStringStartsWith('https://example.com/auth?', $url);
+        $this->assertStringContainsString('client_id=client-id', $url);
+        $this->assertStringContainsString('response_type=code', $url);
+        $this->assertStringContainsString('scope=openid+profile+email', $url);
+    }
+
+    /**
+     * When only a well-known endpoint is provided (no explicit endpoints),
+     * getLoginURL must fetch the discovery document to resolve the
+     * authorization URL. Verify it calls the well-known URL exactly once
+     * and builds the redirect using the discovered authorization_endpoint.
+     */
+    public function testGetLoginUrlFallsBackToWellKnownDiscovery(): void
+    {
+        $secret = \json_encode([
+            'clientSecret' => 'client-secret',
+            'wellKnownEndpoint' => 'https://idp.example.com/.well-known/openid-configuration',
+        ], JSON_THROW_ON_ERROR);
+
+        $discovery = \json_encode([
+            'authorization_endpoint' => 'https://idp.example.com/oauth2/authorize',
+            'token_endpoint' => 'https://idp.example.com/oauth2/token',
+            'userinfo_endpoint' => 'https://idp.example.com/oauth2/userinfo',
+        ], JSON_THROW_ON_ERROR);
+
+        /** @var Oidc&MockObject $oidc */
+        $oidc = $this->getMockBuilder(Oidc::class)
+            ->setConstructorArgs(['client-id', $secret, 'https://example.com/callback'])
+            ->onlyMethods(['request'])
+            ->getMock();
+
+        $oidc
+            ->expects($this->once())
+            ->method('request')
+            ->with('GET', 'https://idp.example.com/.well-known/openid-configuration')
+            ->willReturn($discovery);
+
+        $url = $oidc->getLoginURL();
+
+        $this->assertStringStartsWith('https://idp.example.com/oauth2/authorize?', $url);
+        $this->assertStringContainsString('client_id=client-id', $url);
+    }
+
+    /**
+     * A secret with no endpoints at all (client ID only, no well-known, no
+     * explicit endpoints) must throw — confirming the incomplete-config guard
+     * in console.php is necessary to prevent advertising a broken login option.
+     */
+    public function testGetLoginUrlThrowsWhenNoEndpointConfigured(): void
+    {
+        $secret = \json_encode(['clientSecret' => 'client-secret'], JSON_THROW_ON_ERROR);
+
+        /** @var Oidc&MockObject $oidc */
+        $oidc = $this->getMockBuilder(Oidc::class)
+            ->setConstructorArgs(['client-id', $secret, 'https://example.com/callback'])
+            ->onlyMethods(['request'])
+            ->getMock();
+
+        // request() is called once for the empty well-known URL and returns empty
+        $oidc
+            ->expects($this->once())
+            ->method('request')
+            ->willReturn('');
+
+        $this->expectException(\Exception::class);
+
+        $oidc->getLoginURL();
+    }
+
     private function createOidc(string $response, string $code = 'authorization-code'): Oidc&MockObject
     {
         $oidc = $this->getMockBuilder(Oidc::class)
