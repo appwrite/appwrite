@@ -222,6 +222,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Google',
     ],
+    'huggingface' => [
+        'name' => 'Hugging Face',
+        'developers' => 'https://huggingface.co/docs/hub/oauth',
+        'icon' => 'icon-huggingface',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\HuggingFace',
+    ],
     'keycloak' => [
         'name' => 'Keycloak',
         'developers' => 'https://www.keycloak.org/documentation',

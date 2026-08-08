@@ -299,6 +299,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_BOX = 'oAuth2Box';
     public const MODEL_OAUTH2_AUTODESK = 'oAuth2Autodesk';
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
+    public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
