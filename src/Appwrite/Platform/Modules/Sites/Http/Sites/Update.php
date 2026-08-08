@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -117,6 +118,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('bus')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -157,6 +159,7 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         Deployments $deployments,
+        Bus $bus,
         array $platform
     ) {
         if (!empty($adapter)) {
@@ -337,7 +340,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());
