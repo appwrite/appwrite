@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\MFA\Challenges;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -64,7 +65,11 @@ class Get extends Action
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
-        if ($challenge->isEmpty() || $challenge->getAttribute('userId') !== $userId) {
+        if (
+            $challenge->isEmpty()
+            || $challenge->getAttribute('userId') !== $userId
+            || $challenge->getAttribute('type') !== Type::CUSTOM
+        ) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 

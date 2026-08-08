@@ -731,6 +731,30 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE: a non-custom challenge (e.g. totp) must not be readable,
+         * even with valid ownership and a valid API key. Native factors deliver their
+         * own secret out of band (email/SMS); this endpoint only exists to hand the
+         * 'custom' factor's secret to the developer's own delivery mechanism.
+         */
+        $totpChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $sessionSecret,
+        ], [
+            'factor' => 'totp'
+        ]);
+
+        $this->assertEquals(201, $totpChallenge['headers']['status-code']);
+        $totpChallengeId = $totpChallenge['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $totpChallengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
     }
 
 
