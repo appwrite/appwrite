@@ -57,6 +57,11 @@ final class FunctionEventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('databases.books'));
         $this->assertTrue($this->object->isValid('databases.books.tables.chapters'));
         $this->assertTrue($this->object->isValid('databases.books.tables.*'));
+        $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.prolog.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.*.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.*.tables.*.rows.*.create'));
+        $this->assertTrue($this->object->isValid('tablesdb.*.tables.*'));
+        $this->assertTrue($this->object->isValid('tablesdb.*'));
         $this->assertTrue($this->object->isValid('buckets.*'));
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
@@ -72,6 +77,7 @@ final class FunctionEventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('tables'));
         $this->assertFalse($this->object->isValid('tables.*.unknown'));
         $this->assertFalse($this->object->isValid('tables.*.rows.*.unknown'));
+        $this->assertFalse($this->object->isValid('tablesdb.books.collections.chapters.documents.prolog.create'));
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
