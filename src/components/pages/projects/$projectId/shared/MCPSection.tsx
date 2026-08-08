@@ -277,25 +277,27 @@ export function MCPSection({
         selectorAriaLabel={t('Select tool')}
       />
 
-      {selectedTool.installUrl ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-9 text-[13px] gap-1.5"
-          onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
-        >
-          <Download className="h-4 w-4" />
-          {t('Install')}
-        </Button>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        {selectedTool.installUrl ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 text-[13px] gap-1.5"
+            onClick={() => openMcpInstallUrl(selectedTool.installUrl!)}
+          >
+            <Download className="h-4 w-4" />
+            {t('Install')}
+          </Button>
+        ) : null}
 
-      <DocsRouteLink
-        href={MCP_MORE_TOOLS_DOCS_HREF}
-        className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-      >
-        {t('More tools in the docs')}
-        <ExternalLink className="h-3 w-3" />
-      </DocsRouteLink>
+        <DocsRouteLink
+          href={MCP_MORE_TOOLS_DOCS_HREF}
+          className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+        >
+          {t('More tools in the docs')}
+          <ExternalLink className="h-3 w-3" />
+        </DocsRouteLink>
+      </div>
     </div>
   )
 
