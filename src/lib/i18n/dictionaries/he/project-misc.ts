@@ -1877,8 +1877,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '(Host, Port, Username, Password) and': '(מארח, פורט, שם משתמש, סיסמה) וכן',
   '(Region, Subdomain, Admin Secret) and':
     '(אזור, תת-דומיין, Admin Secret) וכן',
-  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using':
-    '(נקרא גם ALIAS או ANAME, למשל Cloudflare, DNSimple, Route 53), אפשר להשאיר את רשומת ה-CNAME שלמעלה. אחרת, יש לאמת באמצעות',
   'A list of domain providers and their DNS settings is available':
     'רשימת ספקי דומיינים והגדרות ה-DNS שלהם זמינה',
   'API Endpoint': 'נקודת קצה של API',
@@ -1913,7 +1911,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Authentication: 'אימות',
   'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.':
     'לפני התקנת Git בפרויקט Appwrite באירוח מקומי, ודאו שמשתני הסביבה שלכם מוגדרים.', // pragma: allowlist secret
-  'CNAME flattening': 'CNAME flattening',
   'Certificate verification (SSL/TLS)': 'אימות תעודה (SSL/TLS)',
   'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.':
     'בחרו אילו שירותים להפעיל או להשבית עבור ה-API של הלקוח. כאשר שירות מושבת, הוא אינו נגיש ל-SDK של לקוח אך נשאר נגיש ל-SDK של שרת.',
@@ -2234,9 +2231,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  'instead.': 'במקום זאת.',
-  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports':
-    'הוא דומיין שורש (apex), ולכן רשומות CNAME אינן נתמכות אצל כל ספקי ה-DNS. אם הספק שלכם תומך ב-',
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
+  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
+    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
   nameservers: 'שרתי שמות',

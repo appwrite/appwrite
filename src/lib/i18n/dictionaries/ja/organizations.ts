@@ -157,6 +157,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Current billing cycle': '現在の請求サイクル',
   'Current plan': '現在のプラン',
   'Custom plan': 'カスタムプラン',
+  'DNS changes can take up to 48 hours to propagate. Confirm the records below at your DNS provider, wait a bit, then try again.':
+    'DNS の変更が反映されるまで最大 48 時間かかることがあります。DNS プロバイダーで下記のレコードを確認し、少し待ってから再試行してください。',
   'DNS Records': 'DNS レコード',
   'DNS record': 'DNS レコード',
   'DNS record created successfully': 'DNS レコードを作成しました',
@@ -188,6 +190,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Domain name does not match': 'ドメイン名が一致しません',
   'Domain not found': 'ドメインが見つかりません',
   'Domain not verified': 'ドメインが未検証です',
+  'Domain not verified yet': 'ドメインはまだ検証されていません',
   'Domain transfer in progress': 'ドメイン移管を実施中',
   'Domain transfer started': 'ドメイン移管を開始しました',
   'Domain verification successful': 'ドメインの検証に成功しました',
@@ -861,6 +864,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.': 'Appwrite API、webhook、SDK と連携する際にこの ID を使用してください。問題対応の際にサポートからこの ID を求められることもあります。',
   'Used for registry contact and invoicing.': 'レジストリの連絡先情報と請求に使用されます。',
   'Used in the public listing URL': '公開掲載ページの URL に使用されます',
+  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
+    'このドメインの Appwrite ネームサーバーをまだ確認できませんでした。DNS の変更が反映されるまで最大 48 時間かかることがあります。レジストラで下記のネームサーバーを確認し、少し待ってから再試行してください。', // pragma: allowlist secret
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.": 'このドメインの見積もりを読み込めませんでした。そのまま続行できます。支払額は支払いを完了した時点で確定します。',
   'We typically respond within 24 hours during support hours (Mon–Fri).': 'サポート時間内 (月〜金) は通常24時間以内に返信します。',
   "We'll countersign and return a fully executed copy within 5 business days.": '当社が署名し、完全に締結された書類を5営業日以内に返送します。',

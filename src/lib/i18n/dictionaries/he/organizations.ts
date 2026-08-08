@@ -310,6 +310,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Custom plan': 'תוכנית מותאמת אישית',
   'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.':
     'תוכניות מותאמות אישית לצוותים שזקוקים למגבלות מוסכמות, ציות, תמיכה פרימיום וחיוב מותאם.',
+  'DNS changes can take up to 48 hours to propagate. Confirm the records below at your DNS provider, wait a bit, then try again.':
+    'שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו שהרשומות למטה מוגדרות אצל ספק ה-DNS, המתינו מעט, ונסו שוב.',
   'DNS Records': 'רשומות DNS',
   'DNS record': 'רשומת DNS',
   'DNS record created successfully': 'רשומת ה-DNS נוצרה בהצלחה',
@@ -357,6 +359,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Domain name does not match': 'שם הדומיין אינו תואם',
   'Domain not found': 'הדומיין לא נמצא',
   'Domain not verified': 'הדומיין לא אומת',
+  'Domain not verified yet': 'הדומיין עדיין לא אומת',
   'Domain transfer in progress': 'העברת דומיין בתהליך',
   'Domain transfer started': 'העברת הדומיין החלה',
   'Domain transfers usually take 5-7 days. ICANN allows the old registrar up to 5 days to release the domain, with .com and .net sometimes taking 1-2 extra days to finalize.':
@@ -1145,6 +1148,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'View invoice': 'צפייה בחשבונית',
   'View members': 'צפייה בחברים',
   'View project': 'צפייה בפרויקט',
+  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.': // pragma: allowlist secret
+    'עדיין לא הצלחנו לאשר שרתי שמות של Appwrite עבור הדומיין הזה. שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו אצל הרשם שהשרתים למטה מוגדרים, המתינו מעט, ונסו שוב.', // pragma: allowlist secret
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
     'לא הצלחנו לטעון הצעת מחיר לדומיין הזה. עדיין אפשר להמשיך, הסכום לתשלום מאושר בעת השלמת התשלום.',
   'We typically respond within 24 hours during support hours (Mon–Fri).':

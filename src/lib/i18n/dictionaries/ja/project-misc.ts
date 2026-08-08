@@ -1384,8 +1384,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '(ホスト、ポート、ユーザー名、パスワード) と',
   '(Region, Subdomain, Admin Secret) and':
     '(リージョン、サブドメイン、Admin Secret) と',
-  '(also called ALIAS or ANAME - e.g. Cloudflare, DNSimple, Route 53), you can keep the CNAME above. Otherwise, please verify using':
-    '(ALIAS または ANAME とも呼ばれます。例: Cloudflare、DNSimple、Route 53)、上記の CNAME を維持できます。それ以外の場合は、次で検証してください',
   'A list of domain providers and their DNS settings is available':
     'ドメインプロバイダーとその DNS 設定のリストが利用可能です',
   'API Endpoint': 'API エンドポイント',
@@ -1422,7 +1420,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Authentication: '認証',
   'Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.':
     'ローカルホストの Appwrite プロジェクトに Git をインストールする前に、環境変数が設定されていることを確認してください。',
-  'CNAME flattening': 'CNAME フラット化',
   'Certificate verification (SSL/TLS)': '証明書の検証 (SSL/TLS)',
   'Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.':
     'クライアント API で有効または無効にするサービスを選択してください。無効にすると、クライアント SDK からはアクセスできませんが、サーバー SDK からは引き続きアクセス可能です。',
@@ -1753,9 +1750,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  'instead.': 'を使用してください。',
-  'is an apex domain, CNAME records are not supported by every DNS provider. If yours supports':
-    'はエイペックスドメインです。すべての DNS プロバイダーが CNAME レコードをサポートしているわけではありません。サポートしている場合',
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
+  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
+    'はエイペックスドメインです。CNAME レコードは一部のプロバイダーでのみサポートされています。サポートされていない場合は、次で検証してください',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
   nameservers: 'ネームサーバー',
