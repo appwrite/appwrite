@@ -94,7 +94,7 @@ class Create extends Action
             ])
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.', enum: new Enum(name: 'AuthenticationFactor'))
+            ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
