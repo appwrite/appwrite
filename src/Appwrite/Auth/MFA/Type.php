@@ -13,6 +13,7 @@ abstract class Type
     public const EMAIL = 'email';
     public const PHONE = 'phone';
     public const RECOVERY_CODE = 'recoveryCode';
+    public const CUSTOM = 'custom';
 
     public function setLabel(string $label): self
     {

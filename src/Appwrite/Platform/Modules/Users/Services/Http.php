@@ -16,6 +16,7 @@ use Appwrite\Platform\Modules\Users\Http\Users\Labels\Update as UpdateLabels;
 use Appwrite\Platform\Modules\Users\Http\Users\MD5\Create as CreateMD5User;
 use Appwrite\Platform\Modules\Users\Http\Users\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\Authenticators\Delete as DeleteAuthenticator;
+use Appwrite\Platform\Modules\Users\Http\Users\MFA\Challenges\Get as GetMFAChallenge;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\Factors\XList as ListFactors;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\RecoveryCodes\Create as CreateRecoveryCodes;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\RecoveryCodes\Get as GetRecoveryCodes;
@@ -109,6 +110,7 @@ class Http extends Service
         // MFA
         $this->addAction(UpdateMFA::getName(), new UpdateMFA());
         $this->addAction(ListFactors::getName(), new ListFactors());
+        $this->addAction(GetMFAChallenge::getName(), new GetMFAChallenge());
         $this->addAction(GetRecoveryCodes::getName(), new GetRecoveryCodes());
         $this->addAction(CreateRecoveryCodes::getName(), new CreateRecoveryCodes());
         $this->addAction(UpdateRecoveryCodes::getName(), new UpdateRecoveryCodes());

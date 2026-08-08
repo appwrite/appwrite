@@ -134,6 +134,7 @@ class Response extends SwooleResponse
     public const MODEL_MFA_FACTORS = 'mfaFactors';
     public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
