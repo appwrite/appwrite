@@ -55,7 +55,7 @@ class Create extends Base
                 namespace: 'sites',
                 group: 'sites',
                 name: 'create',
-                description: <<<EOT
+                description: <<<'EOT'
                 Create a new site.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -63,7 +63,7 @@ class Create extends Base
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_SITE,
-                    )
+                    ),
                 ],
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
@@ -142,34 +142,63 @@ class Create extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks
     ) {
-        if (!empty($adapter)) {
+        if (! empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
             $validator = new WhiteList($adapters, true);
-            if (!$validator->isValid($adapter)) {
+            if (! $validator->isValid($adapter)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
             }
         }
 
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
+        $globalRuntimes = \array_keys(Config::getParam('runtimes'));
 
-        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
+        // Only the runtimes that are both operator-permitted and globally
+        // registered. Guards against stale or misspelled entries in
+        // _APP_SITES_RUNTIMES being selected and later rejected at build time
+        // by Deployments::runtime() with FUNCTION_RUNTIME_UNSUPPORTED.
+        $permittedRuntimes = ! empty($allowList)
+            ? \array_values(\array_intersect(\array_values($allowList), $globalRuntimes))
+            : $globalRuntimes;
+
+        if (empty($buildRuntime)) {
+            // Try the framework's preferred build runtime first, but only if it
+            // is permitted by the operator's allowlist and globally registered.
+            $configFramework = Config::getParam('frameworks')[$framework] ?? [];
+            $frameworkDefault = $configFramework['buildRuntime'] ?? '';
+
+            if (! empty($frameworkDefault) && \in_array($frameworkDefault, $permittedRuntimes, true)) {
+                $buildRuntime = $frameworkDefault;
+            }
+
+            // If the framework default was absent, disallowed, or unregistered,
+            // fall back to the first runtime that is both permitted and valid.
+            if (empty($buildRuntime)) {
+                if (! empty($allowList) && empty($permittedRuntimes)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'No valid runtimes available. Please contact the server administrator.');
+                }
+                $buildRuntime = ! empty($permittedRuntimes) ? $permittedRuntimes[0] : $globalRuntimes[0];
+            }
+        }
+
+        if (! empty($allowList) && ! \in_array($buildRuntime, $allowList, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "'.$buildRuntime.'" is not supported');
         }
 
         $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-        if (!empty($installationId) && $installation->isEmpty()) {
+        if (! empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
+        if (! empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
+        if (! empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
@@ -212,7 +241,7 @@ class Create extends Base
             throw new Exception(Exception::SITE_ALREADY_EXISTS);
         }
 
-        if (!empty($providerRepositoryId)) {
+        if (! empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
                 '$id' => ID::unique(),
@@ -225,14 +254,14 @@ class Create extends Base
                 'resourceId' => $site->getId(),
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
-                'providerPullRequestIds' => []
+                'providerPullRequestIds' => [],
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             try {
                 $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                if (! \in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int) $providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
                     $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
                 }
