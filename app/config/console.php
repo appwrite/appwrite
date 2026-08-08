@@ -57,7 +57,16 @@ $console = [
     'oAuthProviders' => [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
+        'oidcEnabled' => !empty(System::getEnv('_APP_CONSOLE_OIDC_CLIENT_ID', '')),
+        'oidcAppid' => System::getEnv('_APP_CONSOLE_OIDC_CLIENT_ID', ''),
+        'oidcSecret' => \json_encode([
+            'clientSecret' => System::getEnv('_APP_CONSOLE_OIDC_CLIENT_SECRET', ''),
+            'authorizationEndpoint' => System::getEnv('_APP_CONSOLE_OIDC_AUTHORIZATION_ENDPOINT', ''),
+            'tokenEndpoint' => System::getEnv('_APP_CONSOLE_OIDC_TOKEN_ENDPOINT', ''),
+            'userinfoEndpoint' => System::getEnv('_APP_CONSOLE_OIDC_USERINFO_ENDPOINT', ''),
+            'wellKnownEndpoint' => System::getEnv('_APP_CONSOLE_OIDC_WELLKNOWN_ENDPOINT', ''),
+        ]),
     ],
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
 ];
