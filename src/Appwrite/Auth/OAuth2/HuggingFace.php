@@ -59,13 +59,13 @@ class HuggingFace extends OAuth2
             $response = $this->request(
                 'POST',
                 'https://huggingface.co/oauth/token',
-                ['Content-Type: application/x-www-form-urlencoded'],
+                ['Content-Type: application/x-www-form-urlencoded',
+                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
                 ])
             );
 
@@ -85,12 +85,12 @@ class HuggingFace extends OAuth2
         $response = $this->request(
             'POST',
             'https://huggingface.co/oauth/token',
-            ['Content-Type: application/x-www-form-urlencoded'],
+            ['Content-Type: application/x-www-form-urlencoded',
+             'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),],
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
             ])
         );
 
@@ -214,7 +214,13 @@ class HuggingFace extends OAuth2
                 ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
 
-            $this->user = \json_decode($user, true);
+              $decodedUser = \json_decode($user, true);
+  
+              if (!\is_array($decodedUser) || isset($decodedUser['error'])) {
+                  throw new Exception('Hugging Face did not return valid user information.', 400);
+              }
+  
+              $this->user = $decodedUser;
         }
 
         return $this->user;
@@ -223,7 +229,7 @@ class HuggingFace extends OAuth2
     public function verifyCredentials(): void
     {
         $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded', 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),);
 
         $response = $client->fetch(
             url: 'https://huggingface.co/oauth/token',
@@ -233,7 +239,6 @@ class HuggingFace extends OAuth2
                 'code' => 'intentionally-invalid-code',
                 'redirect_uri' => 'intentionally-invalid-redirect',
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
             ]
         );
 

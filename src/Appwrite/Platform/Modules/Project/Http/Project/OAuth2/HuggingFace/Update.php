@@ -40,7 +40,7 @@ class Update extends Base
 
     public static function getClientIdExample(): string
     {
-        return '6874f3c4d3d9f0a123456789';
+        return '<Hugging Face OAuth app client ID>';
     }
 
     public static function getClientSecretName(): string
@@ -50,6 +50,6 @@ class Update extends Base
 
     public static function getClientSecretExample(): string
     {
-        return 'hf_abcdefghijklmnopqrstuvwxyz1234567890';
+        return '<Hugging Face OAuth app client secret>';
     }
 }
