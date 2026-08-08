@@ -4289,6 +4289,14 @@ final class AccountCustomClientTest extends Scope
         $challengeId = $challenge['body']['$id'];
         $userId = $challenge['body']['userId'];
 
+        // Test FAILURE: a client session (no API key) must not be able to read the secret
+        $clientSecretResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $clientSecretResponse['headers']['status-code']);
+
         // Server SDK reads the raw secret via the server-only endpoint
         $secretResponse = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/challenges/' . $challengeId, [
             'content-type' => 'application/json',
@@ -4299,6 +4307,17 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $secretResponse['headers']['status-code']);
         $this->assertNotEmpty($secretResponse['body']['secret']);
         $secret = $secretResponse['body']['secret'];
+
+        // Test FAILURE: verifying with a random/incorrect otp before the real one is used
+        $wrongFirst = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'challengeId' => $challengeId,
+            'otp' => 'random-incorrect-code'
+        ]);
+
+        $this->assertEquals(401, $wrongFirst['headers']['status-code']);
 
         // Test SUCCESS: Verify with the correct secret
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
@@ -4312,6 +4331,9 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $verification['headers']['status-code']);
         $this->assertArrayHasKey('factors', $verification['body']);
         $this->assertContains('custom', $verification['body']['factors']);
+        // The session response must never leak the MFA secret back to a non-privileged/non-key caller
+        $this->assertArrayHasKey('secret', $verification['body']);
+        $this->assertEmpty($verification['body']['secret']);
 
         // Test that the challenge was consumed (can't verify the same one twice)
         $reuse = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([

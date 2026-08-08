@@ -10,7 +10,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -38,7 +37,7 @@ class Get extends Action
                     namespace: 'users',
                     group: 'mfa',
                     name: 'getMFAChallenge',
-                    description: '/docs/references/users/get-mfa-challenge.md',
+                    description: 'Get a custom MFA challenge for a user, including the secret to be delivered through your own channel.',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
@@ -73,14 +72,8 @@ class Get extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $document = new Document([
-            '$id' => $challenge->getId(),
-            '$createdAt' => $challenge->getCreatedAt(),
-            'userId' => $challenge->getAttribute('userId'),
-            'expire' => $challenge->getAttribute('expire'),
-            'secret' => $challenge->getAttribute('code'),
-        ]);
+        $challenge->setAttribute('secret', $challenge->getAttribute('code'));
 
-        $response->dynamic($document, Response::MODEL_MFA_CHALLENGE_SECRET);
+        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE_SECRET);
     }
 }
