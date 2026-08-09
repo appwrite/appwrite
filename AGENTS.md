@@ -1101,8 +1101,8 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Profiles:**
 
-- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent)
-- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off)
+- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup), **cookie banner** (locale-gated GDPR consent). **Notifications** center is off by default in both profiles.
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console; cookie banner off; notifications off)
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 
@@ -1114,7 +1114,7 @@ Profiles control which features are available based on deployment type (cloud vs
 
 **Debug mode:** When debug menu is open (type `pink`, case-insensitive), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
 
-**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.cookieBanner`).
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`, `features.agent`, `features.notifications`, `features.cookieBanner`).
 
 **Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
 

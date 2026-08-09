@@ -82,10 +82,12 @@ import {
   getActivityCountryCode,
   getActivityCountryDisplayName,
   hasHumanEmail,
+  isMcpSdkActivity,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
 
@@ -1088,9 +1090,28 @@ export function View({ projectId }: ViewProps) {
                             className="shadow-none"
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-[13px] font-medium text-foreground">
-                              {activity.actorName}
-                            </p>
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <p className="truncate text-[13px] font-medium text-foreground">
+                                {activity.actorName}
+                              </p>
+                              {isMcpSdkActivity(rawEvent) ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      className="inline-flex shrink-0 text-muted-foreground"
+                                      aria-label={t('Via MCP')}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                      <McpIcon className="h-3.5 w-3.5" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top">
+                                    {t('Via MCP')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : null}
+                            </div>
                             <p
                               className={cn(
                                 'truncate text-[11px] text-muted-foreground',

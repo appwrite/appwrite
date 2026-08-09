@@ -55,6 +55,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Expand all': 'すべて展開',
   'Register your app platform': 'アプリプラットフォームを登録',
   'Add platform': 'プラットフォームの追加',
+  Manage: '管理',
   'Manage apps': 'アプリの管理',
   'Create a server API key': 'サーバー API キーを作成',
   'Add API key': 'API キーの追加',
@@ -367,6 +368,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Could not copy link': 'リンクをコピーできませんでした',
   'Actor ID': 'アクター ID',
   'Actor type': 'アクタータイプ',
+  'Via MCP': 'MCP 経由',
   'Resource type (API)': 'リソースタイプ (API)',
   'Resource path': 'リソースパス',
   'Resource parent': 'リソース親',
@@ -1516,6 +1518,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Global variables': 'グローバル変数',
   'GraphQL API access for queries and mutations.':
     'クエリとミューテーション用の GraphQL API アクセス。',
+  'Manage project variables': 'プロジェクト変数を管理',
   'Import all deployments that are not currently active.':
     '現在アクティブでないすべてのデプロイをインポートします。',
   'Import all environment variables.': 'すべての環境変数をインポートします。',
@@ -1614,6 +1617,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project Settings → Database': 'プロジェクト設定 → データベース',
   'Project name has been updated': 'プロジェクト名を更新しました',
   'Project not found': 'プロジェクトが見つかりません',
+  'Project variables': 'プロジェクト変数',
   Protocol: 'プロトコル',
   'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
     'プロトコル設定は、サービスレベルのアクセスとは独立して、REST、GraphQL、WebSocket API 経由のアクセスを制御します。',
@@ -1671,6 +1675,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Webhook をトリガーするイベントを設定します。最大',
   'Set up webhooks to receive real-time notifications about events in your project':
     'プロジェクトのイベントに関するリアルタイム通知を受信する Webhook を設定',
+  'Shared with all Functions and Sites in this project.':
+    'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
   Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':

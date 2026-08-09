@@ -49,6 +49,8 @@ export type ConsoleProfileFeatures = {
   orgApiKeys: boolean
   /** In-app AI agent (chat panel, header button, /agent routes, and Agent docs) */
   agent: boolean
+  /** Console notifications center (header bell and inbox popover) */
+  notifications: boolean
   /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
   executionLogs: boolean
   /** Database backup policies and archives */
@@ -115,6 +117,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
   agent: 'Agent',
+  notifications: 'Notifications',
   executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
@@ -163,6 +166,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: true,
       orgApiKeys: false,
       agent: true,
+      notifications: false,
       executionLogs: true,
       databaseBackups: true,
       dedicatedDbsSupport: false,
@@ -203,6 +207,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: false,
       orgApiKeys: false,
       agent: false,
+      notifications: false,
       executionLogs: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,

@@ -137,8 +137,8 @@ export const jaFunctionsBatch: Record<string, string> = {
     '関数のために一時的に生成される動的キーに付与するスコープを選択してください。必要な権限のみを許可することを推奨します。',
   'Select the runtime specification for your function':
     '関数のランタイム仕様を選択してください',
-  'Set the environment variables or secret keys that will be passed to this function.':
-    'この関数に渡す環境変数やシークレットキーを設定してください。',
+  'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.':
+    '関数の環境変数を構成します。関数固有の変数はプロジェクト全体の変数を上書きします。この関数へ渡す環境変数またはシークレットキーを設定してください。',
   'Set the events that will trigger your function. Maximum 100 events allowed.':
     '関数をトリガーするイベントを設定してください。最大 100 件まで設定できます。',
   'SSL certificate is being issued. This usually takes a couple of minutes.':

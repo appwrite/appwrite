@@ -98,6 +98,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Map your app's hostname or bundle ID so the SDK can reach this project.":
     'מפו את שם המארח או מזהה החבילה של האפליקציה כדי שה-SDK יוכל להגיע לפרויקט הזה.',
   'Add platform': 'הוספת פלטפורמה',
+  Manage: 'ניהול',
   'Manage apps': 'ניהול אפליקציות',
   'Create a server API key': 'יצירת מפתח API לשרת',
   'Add a scoped secret for servers and CI; client apps use sessions instead.':
@@ -635,6 +636,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Email: 'אימייל',
   'Actor ID': 'מזהה מבצע',
   'Actor type': 'סוג מבצע',
+  'Via MCP': 'דרך MCP',
   'Resource type (API)': 'סוג משאב (API)',
   'Resource path': 'נתיב משאב',
   'Resource parent': 'משאב אב',
@@ -2006,6 +2008,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Global variables': 'משתנים גלובליים',
   'GraphQL API access for queries and mutations.':
     'גישת API של GraphQL לשאילתות ולמוטציות.',
+  'Manage project variables': 'ניהול משתני פרויקט',
   'Import all deployments that are not currently active.':
     'ייבוא כל הפריסות שאינן פעילות כרגע.',
   'Import all environment variables.': 'ייבוא כל משתני הסביבה.',
@@ -2099,6 +2102,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project Settings → Database': 'Project Settings → Database',
   'Project name has been updated': 'שם הפרויקט עודכן',
   'Project not found': 'הפרויקט לא נמצא',
+  'Project variables': 'משתני פרויקט',
   Protocol: 'פרוטוקול',
   'Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.':
     'הגדרות הפרוטוקול שולטות בגישה דרך ממשקי REST, GraphQL ו-WebSocket ללא תלות בגישה ברמת השירות.',
@@ -2154,6 +2158,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הגדירו את האירועים שיפעילו את ה-webhook שלכם. מקסימום',
   'Set up webhooks to receive real-time notifications about events in your project':
     'הגדירו webhooks כדי לקבל התראות בזמן אמת על אירועים בפרויקט שלכם',
+  'Shared with all Functions and Sites in this project.':
+    'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
   Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':

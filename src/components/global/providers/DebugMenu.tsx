@@ -1984,6 +1984,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'UI & tools' },
               ),
               createProfileFeatureFlagItem(
+                'Notifications',
+                'Console notifications center (header bell and inbox popover).',
+                'notifications',
+                profileId,
+                features.notifications,
+                { category: 'UI & tools' },
+              ),
+              createProfileFeatureFlagItem(
                 'Organization marketplace',
                 profileId === 'cloud'
                   ? 'Org Marketplace tab (browse and publish apps). Cloud profile only.'
@@ -2376,6 +2384,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.marketplace,
     features.partnersDocs,
     features.agent,
+    features.notifications,
     features.firewall,
     features.init,
     endpointPreset,
