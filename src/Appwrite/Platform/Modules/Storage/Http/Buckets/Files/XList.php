@@ -106,8 +106,8 @@ class XList extends Action
 
         /**
          * '$createdAt' is not unique, so the database appends '$sequence' as a tie breaker,
-         * but always ASC. That contradicts the requested DESC order for files sharing a
-         * timestamp. Set the tie breaker explicitly so both sort in the same direction.
+         * but always ASC. The resulting mixed direction '_createdAt DESC, _id ASC' matches
+         * neither scan direction of the '_created_at' index, forcing a filesort over the whole bucket.
          */
         $orders = Query::getByType($queries, [
             Query::TYPE_ORDER_ASC,
