@@ -229,31 +229,31 @@ export function DowngradeResourceValidation({
     [targetPlan],
   )
 
-  // The server reports only the resource types a project exceeds, so anything
-  // it omits is within limits and needs no selection.
+  // The server reports only the resource types a project *exceeds*, so it is
+  // authoritative where it speaks but silent about everything within limits.
+  // Fall back to the plan-derived limit for the rest, otherwise compliant
+  // resource types would drop out of the list instead of showing their headroom.
   const limitsForProject = useCallback(
     (projectId: string): DowngradeResourceLimits => {
       if (!planChangeLimits) return clientLimits
 
       const serverLimits = getServerResourceLimits(planChangeLimits, projectId)
       return DOWNGRADE_RESOURCE_TYPES.reduce((acc, { id }) => {
-        acc[id] = serverLimits[id] ?? null
+        acc[id] = serverLimits[id] ?? clientLimits[id]
         return acc
       }, {} as DowngradeResourceLimits)
     },
     [clientLimits, planChangeLimits],
   )
 
-  // Only projects the server flagged need their resource lists enumerated.
-  // While the estimation is in flight we hold off entirely rather than fan out
-  // over every project and immediately narrow; if it failed we fall back to the
-  // client-side derivation, which has to check them all.
-  const projectsNeedingResources = useMemo(() => {
-    if (planChangeLimitsLoading) return EMPTY_PROJECTS
-    if (!planChangeLimits) return projects
+  // Projects the server flagged as over limit. Used only to open the step on a
+  // project that needs attention - every kept project still gets its resources
+  // listed, since the UI shows usage against the limit for compliant ones too.
+  const flaggedProjects = useMemo(() => {
+    if (!planChangeLimits) return EMPTY_PROJECTS
     const nonCompliant = new Set(getNonCompliantProjectIds(planChangeLimits))
     return projects.filter((project) => nonCompliant.has(project.$id))
-  }, [projects, planChangeLimits, planChangeLimitsLoading])
+  }, [projects, planChangeLimits])
 
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
   const [activeResourceType, setActiveResourceType] =
@@ -276,7 +276,7 @@ export function DowngradeResourceValidation({
   )
 
   const resourceQueries = useQueries({
-    queries: projectsNeedingResources.map((project) => ({
+    queries: projects.map((project) => ({
       queryKey: ['downgrade-resources', project.$id],
       queryFn: () => fetchProjectDowngradeResources(project.$id),
       enabled: !!project.$id,
@@ -289,25 +289,25 @@ export function DowngradeResourceValidation({
 
   const resourcesLoadedSignature = useMemo(
     () =>
-      projectsNeedingResources
+      projects
         .map((project, index) => {
           const query = resourceQueries[index]
           return `${project.$id}:${query?.dataUpdatedAt ?? 0}:${query?.isLoading ? 'loading' : 'ready'}`
         })
         .join('|'),
-    [projectsNeedingResources, resourceQueries],
+    [projects, resourceQueries],
   )
 
   const resourcesByProjectId = useMemo(() => {
     const map = new Map<string, ProjectDowngradeResources>()
-    projectsNeedingResources.forEach((project, index) => {
+    projects.forEach((project, index) => {
       const data = resourceQueries[index]?.data
       if (data) {
         map.set(project.$id, data)
       }
     })
     return map
-  }, [projectsNeedingResources, resourcesLoadedSignature])
+  }, [projects, resourcesLoadedSignature])
 
   useEffect(() => {
     setResourceSelections((prev) => {
@@ -329,9 +329,9 @@ export function DowngradeResourceValidation({
       !projects.some((project) => project.$id === activeProjectId)
     ) {
       // Prefer a project that actually has something to resolve.
-      setActiveProjectId((projectsNeedingResources[0] ?? projects[0]).$id)
+      setActiveProjectId((flaggedProjects[0] ?? projects[0]).$id)
     }
-  }, [activeProjectId, projects, projectsNeedingResources])
+  }, [activeProjectId, projects, flaggedProjects])
 
   useEffect(() => {
     setActiveResourceType(null)
