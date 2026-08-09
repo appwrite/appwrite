@@ -299,11 +299,31 @@ if (!isValueOfStringEnum(OAuthProvider, provider.key)) {
 
 Without an SDK that includes your provider, enabling it in the UI fails with **Invalid OAuth2 provider**, even when `PATCH /v1/project/oauth2/{providerId}` works via curl.
 
+After the backend endpoints and models land, regenerate specs and SDKs from a running Appwrite container (`bin/specs` and `bin/sdks` are thin wrappers around `php app/cli.php`):
+
+```bash
+# 1. Regenerate API specs (writes under app/config/specs/)
+docker compose exec appwrite php app/cli.php specs --git=no
+
+# 2. Generate the Console web SDK locally (for local Console development only)
+docker compose exec appwrite php app/cli.php sdks --platform=console --sdk=web --version=latest --git=no
+```
+
+Equivalent shortcuts:
+
+```bash
+docker compose exec appwrite specs --git=no
+docker compose exec appwrite sdks --platform=console --sdk=web --version=latest --git=no
+```
+
+Omit the flags to run the interactive prompts instead. Commit the updated specs with the Appwrite PR; official SDK publishing is handled separately by maintainers.
+
 The release sequence is:
 
-1. Land the backend endpoints and models in Appwrite, then regenerate API specs
-2. Wait for the official `@appwrite.io/console` package to be published with `OAuthProvider` and `updateOAuth2Xxx` for your provider
-3. Finish and undraft the Console PR once that published SDK is available
+1. Land the backend endpoints and models in Appwrite, regenerate specs (`php app/cli.php specs`), and open a **draft** Appwrite PR
+2. Generate a local Console SDK (`php app/cli.php sdks`) only to exercise Console changes locally
+3. Wait for the official `@appwrite.io/console` package to be published with `OAuthProvider` and `updateOAuth2Xxx` for your provider
+4. Finish and undraft the Console PR once that published SDK is available
 
 Linking or patching a local `@appwrite.io/console` build (or temporarily bypassing the enum check) is **only for local development**. Do not treat a local SDK as merge-ready. Open your Appwrite and Console PRs as **drafts** until the official Console SDK release includes your provider, then bump the Console dependency to that release and mark the PRs ready for review.
 
