@@ -235,19 +235,37 @@ class Update extends Base
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => $this->getPermissions($teamId, $project->getId()),
-                'installationId' => $installation->getId(),
-                'installationInternalId' => $installation->getSequence(),
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'providerRepositoryId' => $providerRepositoryId,
-                'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getSequence(),
-                'resourceType' => 'function',
-                'providerPullRequestIds' => [],
-            ]));
+            // A stale row can be left over from a previous connect that raced with (or
+            // preceded) this function's providerRepositoryId being persisted. Reuse it
+            // instead of appending a duplicate, which would double-fire deployments on
+            // every subsequent push.
+            $existingRepository = $dbForPlatform->findOne('repositories', [
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::equal('resourceType', ['function']),
+            ]);
+
+            if (!$existingRepository->isEmpty()) {
+                $repository = $dbForPlatform->updateDocument('repositories', $existingRepository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                    'providerRepositoryId' => $providerRepositoryId,
+                ]));
+            } else {
+                $repository = $dbForPlatform->createDocument('repositories', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => $this->getPermissions($teamId, $project->getId()),
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'providerRepositoryId' => $providerRepositoryId,
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getSequence(),
+                    'resourceType' => 'function',
+                    'providerPullRequestIds' => [],
+                ]));
+            }
 
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
