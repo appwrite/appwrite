@@ -275,7 +275,7 @@ Backend-only changes are **not enough** for the provider to appear or save corre
 
 ### 3.1 Console repository ([appwrite/console](https://github.com/appwrite/console))
 
-Open a companion PR that:
+Open a companion **draft** PR that:
 
 1. Adds the provider to `src/lib/stores/oauth-providers.ts` (name, icon key, docs URL, usually `component: Main`). Auth settings **filters out** providers missing from this map.
 2. Adds a `case` in `src/routes/(console)/project-[region]-[project]/auth/updateOAuth.ts` that calls `projectSdk.updateOAuth2Xxx(...)`.
@@ -297,13 +297,15 @@ if (!isValueOfStringEnum(OAuthProvider, provider.key)) {
 }
 ```
 
-Until the generated SDK enum includes your provider:
+Without an SDK that includes your provider, enabling it in the UI fails with **Invalid OAuth2 provider**, even when `PATCH /v1/project/oauth2/{providerId}` works via curl.
 
-1. Regenerate Appwrite API specs after the backend endpoints/models land
-2. Regenerate / bump the Console SDK so `OAuthProvider` and `updateOAuth2Xxx` exist
-3. Point local Console at that SDK build while developing
+The release sequence is:
 
-Without the SDK update, enabling the provider in the UI fails with **Invalid OAuth2 provider**, even when `PATCH /v1/project/oauth2/{providerId}` works via curl.
+1. Land the backend endpoints and models in Appwrite, then regenerate API specs
+2. Wait for the official `@appwrite.io/console` package to be published with `OAuthProvider` and `updateOAuth2Xxx` for your provider
+3. Finish and undraft the Console PR once that published SDK is available
+
+Linking or patching a local `@appwrite.io/console` build (or temporarily bypassing the enum check) is **only for local development**. Do not treat a local SDK as merge-ready. Open your Appwrite and Console PRs as **drafts** until the official Console SDK release includes your provider, then bump the Console dependency to that release and mark the PRs ready for review.
 
 ### 3.3 Local development tips
 
@@ -326,11 +328,11 @@ Without the SDK update, enabling the provider in the UI fails with **Invalid OAu
 
 3. Exercise login with the [OAuth2 session API](https://appwrite.io/docs/references/cloud/client-web/account#createOAuth2Session) (or a small Web SDK demo). Pass your provider id as the `provider` parameter. Confirm both success and failure (user denies consent) redirects.
 
-If everything goes well, raise pull requests for Appwrite and Console and be ready to respond to code review feedback.
+If everything goes well, open draft pull requests for Appwrite and Console (see [section 3.2](#32-specs-and-console-sdk) for when to mark them ready) and be ready to respond to code review feedback.
 
 ## 5. Raise a pull request
 
-Commit the changes with a clear message such as `Added XXX OAuth2 Provider` and push your branch. Open a PR from your fork. Link the related feature issue, and link the Console PR when you have one.
+Commit the changes with a clear message such as `Added XXX OAuth2 Provider` and push your branch. Open a **draft** PR from your fork. Link the related feature issue, and link the Console draft PR when you have one. Mark both ready for review only after the official `@appwrite.io/console` SDK includes your provider.
 
 ## Stuck?
 
