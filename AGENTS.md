@@ -233,6 +233,24 @@ Register new injections alongside existing ones in `app/init/resources.php` and 
 
 Use `snake_case`; dots only for parent/child relationships (`project.id`, `storage.bucket.id`). See [Tracing with Utopia Span](#tracing-with-utopia-span) for full rules.
 
+## SDK generation exclusions
+
+Two independent mechanisms keep an endpoint out of a generated SDK:
+
+1. **`exclude` in `app/config/sdks.php`** -- per-SDK `services` / `methods` lists, applied at generation time.
+2. **`hide:` on `Appwrite\SDK\Method`** -- `true` drops the endpoint from every spec, an array drops it from the listed platforms only. An endpoint dropped from the spec cannot be recovered at generation time.
+
+Both are lifted when `_APP_SDK_PREVIEW=enabled`. Preview SDKs are built from a PR so a reviewer can see the whole API surface that PR produces, and they publish nothing. Only `.github/workflows/sdk-preview.yml` sets the flag, on **both** the `specs` and `sdks` steps -- setting it on `sdks` alone leaves anything hidden at layer 2 silently missing. Every other run, releases included, leaves it unset and keeps every rule.
+
+Read the flag inline at each call site with a comment, never behind a helper:
+
+```php
+// Preview SDK builds show the whole surface, so they do not hide.
+hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
+```
+
+A new `hide:` must respect the flag. `->label('docs', false)` is a separate mechanism for routes that are not part of the public API at all (mocks, OAuth callbacks) and stays unconditional.
+
 ## Tracing with Utopia Span
 
 In handlers, only call `Span::add($key, $value)`. **Never** call `Span::init`, `setError`, or `Span::finish` -- lifecycle is owned by the entry-point harness (`app/http.php`, `app/worker.php`, `app/realtime.php`, `Bus::dispatch`). For selective export, filter in the sampler in `app/init/span.php`.
