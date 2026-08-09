@@ -38,10 +38,18 @@ import {
   isResourceSelectionValid,
   mergeResourceImpacts,
   type DowngradeResourceImpact,
+  type DowngradeResourceLimits,
   type DowngradeResourceType,
   type ProjectDowngradeResources,
 } from '@/lib/billing/downgrade-plan-limits'
+import {
+  getNonCompliantProjectIds,
+  getServerResourceLimits,
+  type PlanChangeLimits,
+} from '@/lib/billing/plan-change-compliance'
 import type { ProjectResourceImpact } from './DowngradeImpactSummary'
+
+const EMPTY_PROJECTS: Models.Project[] = []
 
 const COLUMN_LIST_PAGE_SIZE = 5
 /** Matches list row (py-2.5 + single line) and space-y-1 gaps for stable pagination height. */
@@ -190,6 +198,13 @@ type ProjectResourceSelections = Partial<
 interface DowngradeResourceValidationProps {
   projects: Models.Project[]
   targetPlan: Record<string, unknown> | null | undefined
+  /**
+   * Server-side compliance for the target plan. When present it is the
+   * authority on which projects and resource types are over limit; the
+   * `targetPlan` derivation is only a fallback for when the estimation failed.
+   */
+  planChangeLimits?: PlanChangeLimits | null
+  planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeResourceValidationHandle | null) => void
   onValidityChange?: (valid: boolean) => void
   onImpactChange?: (
@@ -202,12 +217,43 @@ interface DowngradeResourceValidationProps {
 export function DowngradeResourceValidation({
   projects,
   targetPlan,
+  planChangeLimits = null,
+  planChangeLimitsLoading = false,
   onRef,
   onValidityChange,
   onImpactChange,
 }: DowngradeResourceValidationProps) {
   const t = useT()
-  const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
+  const clientLimits = useMemo(
+    () => getDowngradePlanLimits(targetPlan),
+    [targetPlan],
+  )
+
+  // The server reports only the resource types a project exceeds, so anything
+  // it omits is within limits and needs no selection.
+  const limitsForProject = useCallback(
+    (projectId: string): DowngradeResourceLimits => {
+      if (!planChangeLimits) return clientLimits
+
+      const serverLimits = getServerResourceLimits(planChangeLimits, projectId)
+      return DOWNGRADE_RESOURCE_TYPES.reduce((acc, { id }) => {
+        acc[id] = serverLimits[id] ?? null
+        return acc
+      }, {} as DowngradeResourceLimits)
+    },
+    [clientLimits, planChangeLimits],
+  )
+
+  // Only projects the server flagged need their resource lists enumerated.
+  // While the estimation is in flight we hold off entirely rather than fan out
+  // over every project and immediately narrow; if it failed we fall back to the
+  // client-side derivation, which has to check them all.
+  const projectsNeedingResources = useMemo(() => {
+    if (planChangeLimitsLoading) return EMPTY_PROJECTS
+    if (!planChangeLimits) return projects
+    const nonCompliant = new Set(getNonCompliantProjectIds(planChangeLimits))
+    return projects.filter((project) => nonCompliant.has(project.$id))
+  }, [projects, planChangeLimits, planChangeLimitsLoading])
 
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
   const [activeResourceType, setActiveResourceType] =
@@ -230,7 +276,7 @@ export function DowngradeResourceValidation({
   )
 
   const resourceQueries = useQueries({
-    queries: projects.map((project) => ({
+    queries: projectsNeedingResources.map((project) => ({
       queryKey: ['downgrade-resources', project.$id],
       queryFn: () => fetchProjectDowngradeResources(project.$id),
       enabled: !!project.$id,
@@ -238,29 +284,30 @@ export function DowngradeResourceValidation({
     })),
   })
 
-  const resourcesLoading = resourceQueries.some((query) => query.isLoading)
+  const resourcesLoading =
+    planChangeLimitsLoading || resourceQueries.some((query) => query.isLoading)
 
   const resourcesLoadedSignature = useMemo(
     () =>
-      projects
+      projectsNeedingResources
         .map((project, index) => {
           const query = resourceQueries[index]
           return `${project.$id}:${query?.dataUpdatedAt ?? 0}:${query?.isLoading ? 'loading' : 'ready'}`
         })
         .join('|'),
-    [projects, resourceQueries],
+    [projectsNeedingResources, resourceQueries],
   )
 
   const resourcesByProjectId = useMemo(() => {
     const map = new Map<string, ProjectDowngradeResources>()
-    projects.forEach((project, index) => {
+    projectsNeedingResources.forEach((project, index) => {
       const data = resourceQueries[index]?.data
       if (data) {
         map.set(project.$id, data)
       }
     })
     return map
-  }, [projects, resourcesLoadedSignature])
+  }, [projectsNeedingResources, resourcesLoadedSignature])
 
   useEffect(() => {
     setResourceSelections((prev) => {
@@ -281,9 +328,10 @@ export function DowngradeResourceValidation({
       !activeProjectId ||
       !projects.some((project) => project.$id === activeProjectId)
     ) {
-      setActiveProjectId(projects[0].$id)
+      // Prefer a project that actually has something to resolve.
+      setActiveProjectId((projectsNeedingResources[0] ?? projects[0]).$id)
     }
-  }, [activeProjectId, projects])
+  }, [activeProjectId, projects, projectsNeedingResources])
 
   useEffect(() => {
     setActiveResourceType(null)
@@ -316,12 +364,13 @@ export function DowngradeResourceValidation({
         const resources = resourcesByProjectId.get(project.$id)
         if (!resources) continue
 
+        const projectLimits = limitsForProject(project.$id)
         const current = next[project.$id] ?? {}
         const updated: ProjectResourceSelections = { ...current }
         let projectChanged = false
 
         for (const { id } of DOWNGRADE_RESOURCE_TYPES) {
-          const limit = limits[id]
+          const limit = projectLimits[id]
           const items = resources[id].items
           if (
             !updated[id] &&
@@ -340,20 +389,21 @@ export function DowngradeResourceValidation({
 
       return changed ? next : prev
     })
-  }, [projects, limits, resourcesLoadedSignature])
+  }, [projects, limitsForProject, resourcesLoadedSignature])
 
   const getProjectIssueCount = useCallback(
     (projectId: string) => {
       const resources = resourcesByProjectId.get(projectId)
       if (!resources) return 0
 
+      const projectLimits = limitsForProject(projectId)
       return DOWNGRADE_RESOURCE_TYPES.reduce((count, { id }) => {
-        const limit = limits[id]
+        const limit = projectLimits[id]
         if (limit === null) return count
         return count + getResourceViolationCount(resources[id].total, limit)
       }, 0)
     },
-    [limits, resourcesByProjectId],
+    [limitsForProject, resourcesByProjectId],
   )
 
   const resourceSelectionValid = useMemo(() => {
@@ -361,8 +411,9 @@ export function DowngradeResourceValidation({
       const resources = resourcesByProjectId.get(project.$id)
       if (!resources) return !resourcesLoading
 
+      const projectLimits = limitsForProject(project.$id)
       return DOWNGRADE_RESOURCE_TYPES.every(({ id }) => {
-        const limit = limits[id]
+        const limit = projectLimits[id]
         const selection = resourceSelections[project.$id]?.[id]
         return isResourceSelectionValid(
           resources[id].items,
@@ -373,7 +424,7 @@ export function DowngradeResourceValidation({
     })
   }, [
     projects,
-    limits,
+    limitsForProject,
     resourceSelections,
     resourcesByProjectId,
     resourcesLoading,
@@ -388,7 +439,7 @@ export function DowngradeResourceValidation({
         ? countResourcesToDeleteForProject(
             resources,
             resourceSelections[project.$id] ?? {},
-            limits,
+            limitsForProject(project.$id),
           )
         : {}
 
@@ -398,7 +449,7 @@ export function DowngradeResourceValidation({
         resourceImpact: impact,
       }
     })
-  }, [projects, resourceSelections, resourcesByProjectId, limits])
+  }, [projects, resourceSelections, resourcesByProjectId, limitsForProject])
 
   const resourceImpact = useMemo(() => {
     return mergeResourceImpacts(
@@ -527,15 +578,26 @@ export function DowngradeResourceValidation({
     ? resourceSelections[activeProjectId] ?? {}
     : {}
 
+  const activeProjectLimits = useMemo(
+    () => (activeProjectId ? limitsForProject(activeProjectId) : null),
+    [activeProjectId, limitsForProject],
+  )
+
   const planRelevantResourceTypes = useMemo(
-    () => DOWNGRADE_RESOURCE_TYPES.filter(({ id }) => limits[id] !== null),
-    [limits],
+    () =>
+      DOWNGRADE_RESOURCE_TYPES.filter(
+        ({ id }) => (activeProjectLimits?.[id] ?? null) !== null,
+      ),
+    [activeProjectLimits],
   )
 
   const activeTypeConfig = activeResourceType
     ? DOWNGRADE_RESOURCE_TYPES.find((type) => type.id === activeResourceType)
     : undefined
-  const activeLimit = activeTypeConfig ? limits[activeTypeConfig.id] : null
+  const activeLimit =
+    activeTypeConfig && activeProjectLimits
+      ? activeProjectLimits[activeTypeConfig.id]
+      : null
   const activeItems =
     activeResourceType && activeResources
       ? activeResources[activeResourceType]?.items ?? []
@@ -763,8 +825,8 @@ export function DowngradeResourceValidation({
                   >
                     {paginatedResourceTypes.paginated.map(({ id, label }) => {
                       const total = activeResources[id].total
-                      const limit = limits[id]!
-                      const overLimit = total > limit
+                      const limit = activeProjectLimits?.[id] ?? null
+                      const overLimit = limit !== null && total > limit
                       const isActive = activeResourceType === id
 
                       return (

@@ -20,6 +20,7 @@ import {
   type DowngradeResourceValidationHandle,
 } from './DowngradeResourceValidation'
 import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
+import type { PlanChangeLimits } from '@/lib/billing/plan-change-compliance'
 import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
 
 const DOWNGRADE_SELECTION_PAGE_SIZE = 5
@@ -94,6 +95,9 @@ interface DowngradeValidationProps {
   projects: Models.Project[]
   projectsTotal?: number
   targetPlan: Record<string, unknown> | null | undefined
+  /** Server-side compliance for the target plan; authoritative over `targetPlan`. */
+  planChangeLimits?: PlanChangeLimits | null
+  planChangeLimitsLoading?: boolean
   onRef: (ref: DowngradeValidationHandle | null) => void
   onValidityChange?: (valid: boolean) => void
   deletedOrganizationImpact?: DeletedOrganizationImpact | null
@@ -107,6 +111,8 @@ export function DowngradeValidation({
   projects,
   projectsTotal = projects.length,
   targetPlan,
+  planChangeLimits = null,
+  planChangeLimitsLoading = false,
   onRef,
   onValidityChange,
   deletedOrganizationImpact = null,
@@ -700,6 +706,8 @@ export function DowngradeValidation({
         <DowngradeResourceValidation
           projects={keptProjects}
           targetPlan={targetPlan}
+          planChangeLimits={planChangeLimits}
+          planChangeLimitsLoading={planChangeLimitsLoading}
           onRef={handleResourceRef}
           onValidityChange={handleResourceValidityChange}
           onImpactChange={handleResourceImpactChange}

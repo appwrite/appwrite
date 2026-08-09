@@ -20,7 +20,7 @@ import {
   useBillingPlans,
   useCouponAccount,
   useOrganizationProjects,
-  useEstimationUpdatePlan,
+  usePlanEstimation,
   useEstimationCreateOrganization,
   useUpdateOrganizationPlan,
   useValidateOrganization,
@@ -57,6 +57,10 @@ import {
   DOWNGRADE_RESOURCE_TYPES,
   type DowngradeResourceImpact,
 } from '@/lib/billing/downgrade-plan-limits'
+import {
+  getComplianceErrors,
+  getUnresolvableResources,
+} from '@/lib/billing/plan-change-compliance'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { fetchOrganizationMemberships } from '@/lib/react-query/hooks/teams'
 import { ValidateCreditModal } from './change-plan/ValidateCredit'
@@ -838,10 +842,18 @@ export function ChangePlanWizardFullscreen() {
     ESTIMATION_DEBOUNCE_MS,
   )
 
+  // The plan-change estimation also carries downgrade compliance, so unlike the
+  // create-org estimation it must run for free target plans too - that is the
+  // downgrade case we need the limits for.
+  const debouncedPlanChangePlan = useDebouncedValue(
+    selectedPlan,
+    ESTIMATION_DEBOUNCE_MS,
+  )
+
   const shouldFetchUpdateEstimationDebounced =
     !isCreateMode &&
-    debouncedEstimationPlan &&
-    debouncedEstimationPlan !== currentPlanEnum &&
+    debouncedPlanChangePlan &&
+    debouncedPlanChangePlan !== currentPlanEnum &&
     orgId
 
   const shouldFetchCreateEstimationDebounced =
@@ -849,9 +861,9 @@ export function ChangePlanWizardFullscreen() {
     debouncedEstimationPlan &&
     !!debouncedEstimationPaymentMethodId
 
-  const updateEstimation = useEstimationUpdatePlan(
+  const updateEstimation = usePlanEstimation(
     shouldFetchUpdateEstimationDebounced ? orgId : null,
-    shouldFetchUpdateEstimationDebounced ? debouncedEstimationPlan : null,
+    shouldFetchUpdateEstimationDebounced ? debouncedPlanChangePlan : null,
     shouldFetchUpdateEstimationDebounced ? estimationCouponId : undefined,
   )
 
@@ -866,12 +878,11 @@ export function ChangePlanWizardFullscreen() {
 
   const estimation = isCreateMode ? createEstimation : updateEstimation
 
-  const estimationInputsDebouncing =
-    (selectedPlan && !selectedPlanIsFree ? selectedPlan : null) !==
-      debouncedEstimationPlan ||
-    (isCreateMode &&
-      (estimationPaymentMethodId ?? null) !==
-        debouncedEstimationPaymentMethodId)
+  const estimationInputsDebouncing = isCreateMode
+    ? (selectedPlan && !selectedPlanIsFree ? selectedPlan : null) !==
+        debouncedEstimationPlan ||
+      (estimationPaymentMethodId ?? null) !== debouncedEstimationPaymentMethodId
+    : selectedPlan !== debouncedPlanChangePlan
 
   const awaitingEstimationPaymentMethod =
     isCreateMode &&
@@ -912,6 +923,28 @@ export function ChangePlanWizardFullscreen() {
   const shouldCollectDowngradeFeedback =
     isDowngrade && selectedPlanIsFree
 
+  // Server-side compliance for the target plan. `canChangePlan` being false is
+  // expected while the user still has resources to delete - the selection UI
+  // below resolves that before submit. Only the issues the console cannot
+  // resolve are hard blockers.
+  const planChangeLimits = isCreateMode ? null : updateEstimation.limits
+  const unsupportedAddons = useMemo(
+    () => planChangeLimits?.unsupportedAddons ?? [],
+    [planChangeLimits],
+  )
+  const unresolvableResources = useMemo(
+    () => getUnresolvableResources(planChangeLimits),
+    [planChangeLimits],
+  )
+  const complianceErrors = useMemo(
+    () => getComplianceErrors(planChangeLimits),
+    [planChangeLimits],
+  )
+  const hasPlanChangeBlockers =
+    unsupportedAddons.length > 0 ||
+    unresolvableResources.length > 0 ||
+    complianceErrors.length > 0
+
   useEffect(() => {
     if (!needsDowngradeValidation) {
       downgradeValidationRef.current = null
@@ -939,6 +972,11 @@ export function ChangePlanWizardFullscreen() {
     }
 
     if (selectedPlan === currentPlanEnum) return true
+
+    // Issues the console cannot resolve on the user's behalf (unsupported
+    // addons, resource types with no selection UI, projects the server could
+    // not evaluate). The server fails closed on these, so we do too.
+    if (hasPlanChangeBlockers) return true
 
     // For upgrades: payment method required
     if (isUpgrade) {
@@ -980,6 +1018,7 @@ export function ChangePlanWizardFullscreen() {
     isCreateMode,
     organizationName,
     isSubmitting,
+    hasPlanChangeBlockers,
   ])
 
   // Handle upgrade
@@ -1611,6 +1650,40 @@ export function ChangePlanWizardFullscreen() {
         )}
       </div>
 
+      {/* Plan change blockers reported by the server that the console cannot
+          resolve through the resource selection below. */}
+      {hasPlanChangeBlockers && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t('This plan change is blocked')}</AlertTitle>
+          <AlertDescription className="mt-2">
+            <ul className="list-disc space-y-1 pl-4">
+              {unsupportedAddons.map((addon) => (
+                <li key={`addon-${addon}`}>
+                  {t('The selected plan does not support the')} {addon}{' '}
+                  {t('addon. Remove it before changing plans.')}
+                </li>
+              ))}
+              {unresolvableResources.map(
+                ({ projectId, projectName, resource }) => (
+                  <li key={`resource-${projectId}-${resource.type}`}>
+                    <span className="font-medium">{projectName}</span>:{' '}
+                    {resource.resolutionHint}
+                  </li>
+                ),
+              )}
+              {complianceErrors.map(({ projectId, projectName, error }) => (
+                <li key={`error-${projectId}`}>
+                  <span className="font-medium">{projectName}</span>:{' '}
+                  {t('could not be checked against the new plan limits.')}{' '}
+                  {error}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Upgrade-specific sections */}
       {isUpgrade && selectedPlan && (
         <>
@@ -1659,6 +1732,10 @@ export function ChangePlanWizardFullscreen() {
               projects={allProjects}
               projectsTotal={allProjectsTotal}
               targetPlan={targetPlanInfo}
+              planChangeLimits={planChangeLimits}
+              planChangeLimitsLoading={
+                updateEstimation.isLoading || estimationInputsDebouncing
+              }
               onRef={handleDowngradeValidationRef}
               onValidityChange={handleDowngradeValidationValid}
               deletedOrganizationImpact={effectiveDeletedOrganizationImpact}

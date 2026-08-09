@@ -42,6 +42,15 @@ export type DowngradePlanLimits = Record<
   number | null
 >
 
+/**
+ * Per-project resource limits. Narrower than {@link DowngradePlanLimits} so
+ * server-supplied, per-project limits can be used in the same helpers.
+ */
+export type DowngradeResourceLimits = Record<
+  DowngradeResourceType,
+  number | null
+>
+
 function readPlanLimit(
   targetPlan: Record<string, unknown> | null | undefined,
   key: string,
@@ -151,7 +160,7 @@ export function getResourceViolationCount(
 
 export function projectHasResourceViolations(
   resources: ProjectDowngradeResources | undefined,
-  limits: DowngradePlanLimits,
+  limits: DowngradeResourceLimits,
 ): boolean {
   if (!resources) return false
 
@@ -184,7 +193,7 @@ export function getDefaultKeepIds(
 export function countResourcesToDeleteForProject(
   resources: ProjectDowngradeResources,
   keepSelections: Partial<Record<DowngradeResourceType, Set<string>>>,
-  limits: DowngradePlanLimits,
+  limits: DowngradeResourceLimits,
 ): Partial<Record<DowngradeResourceType, number>> {
   const counts: Partial<Record<DowngradeResourceType, number>> = {}
 
