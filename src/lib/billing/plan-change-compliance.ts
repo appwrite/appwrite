@@ -16,22 +16,28 @@ import {
 export type PlanChangeResourceCompliance = Models.PlanChangeResourceCompliance
 export type PlanChangeProjectCompliance = Models.PlanChangeProjectCompliance
 
-export type PlanChangeOrganizationCompliance = {
-  isCompliant: boolean
-  resources: PlanChangeResourceCompliance[]
-}
-
-/**
- * `organization` is declared locally because the console SDK is regenerated
- * from the cloud spec on its own cadence and does not carry the field yet.
- * Drop this extension once the generated model includes it.
- */
-export type PlanChangeLimits = Models.PlanChangeLimits & {
-  organization?: PlanChangeOrganizationCompliance
-}
-
 /** Organization-level resources, capped per team rather than per project. */
 export type OrganizationResourceType = 'projects' | 'members' | 'domains'
+
+/** `limit` value meaning the target plan does not cap the resource. */
+export const LIMIT_UNLIMITED = -1
+
+/**
+ * The response is already scoped to one organization, so the org-level caps sit
+ * alongside `canChangePlan` rather than under a wrapper, and the per-project
+ * array is `projectCompliance` so `projects` can carry the org-level cap.
+ *
+ * Declared locally because the console SDK is regenerated from the cloud spec on
+ * its own cadence and still carries the older shape. Drop this once it catches
+ * up.
+ */
+export type PlanChangeLimits = Omit<
+  Models.PlanChangeLimits,
+  'projects' | 'totalProjects'
+> &
+  Record<OrganizationResourceType, PlanChangeResourceCompliance> & {
+    projectCompliance: PlanChangeProjectCompliance[]
+  }
 
 const SELECTABLE_RESOURCE_TYPES = new Set<string>(
   DOWNGRADE_RESOURCE_TYPES.map(({ id }) => id),
@@ -49,7 +55,10 @@ export function getProjectCompliance(
   limits: PlanChangeLimits | null | undefined,
   projectId: string,
 ): PlanChangeProjectCompliance | null {
-  return limits?.projects?.find((project) => project.$id === projectId) ?? null
+  return (
+    limits?.projectCompliance?.find((project) => project.$id === projectId) ??
+    null
+  )
 }
 
 /**
@@ -95,7 +104,7 @@ export function getUnresolvableResources(
     resource: PlanChangeResourceCompliance
   }> = []
 
-  for (const project of limits?.projects ?? []) {
+  for (const project of limits?.projectCompliance ?? []) {
     for (const resource of project.resources ?? []) {
       if (!isOverLimit(resource)) continue
       if (isSelectableResourceType(resource.type)) continue
@@ -117,7 +126,7 @@ export function getUnresolvableResources(
 export function getComplianceErrors(
   limits: PlanChangeLimits | null | undefined,
 ): Array<{ projectId: string; projectName: string; error: string }> {
-  return (limits?.projects ?? [])
+  return (limits?.projectCompliance ?? [])
     .filter((project) => !!project.error)
     .map((project) => ({
       projectId: project.$id,
@@ -126,27 +135,42 @@ export function getComplianceErrors(
     }))
 }
 
+const ORGANIZATION_RESOURCE_TYPES: OrganizationResourceType[] = [
+  'projects',
+  'members',
+  'domains',
+]
+
+function getOrganizationResources(
+  limits: PlanChangeLimits | null | undefined,
+): PlanChangeResourceCompliance[] {
+  if (!limits) return []
+  return ORGANIZATION_RESOURCE_TYPES.map((type) => limits[type]).filter(
+    (resource): resource is PlanChangeResourceCompliance => !!resource,
+  )
+}
+
 /**
- * Organization-level limits (projects, members, domains) as reported by the
- * server. Returns null when the server did not report them, which is the case
- * for upgrades and for a console running against an older cloud - callers fall
- * back to deriving them from the plan config.
+ * Organization-level caps (projects, members, domains) as reported by the
+ * server, with uncapped resources omitted rather than passed through as the
+ * unlimited sentinel.
+ *
+ * Returns null when the server reported none, which is the case for a console
+ * running against an older cloud - callers fall back to deriving them from the
+ * plan config.
  */
 export function getOrganizationLimits(
   limits: PlanChangeLimits | null | undefined,
 ): Partial<Record<OrganizationResourceType, number>> | null {
-  const resources = limits?.organization?.resources
-  if (!resources?.length) return null
-
   const result: Partial<Record<OrganizationResourceType, number>> = {}
-  for (const resource of resources) {
-    if (
-      resource.type === 'projects' ||
-      resource.type === 'members' ||
-      resource.type === 'domains'
-    ) {
-      result[resource.type] = resource.limit
-    }
+
+  for (const type of ORGANIZATION_RESOURCE_TYPES) {
+    const resource = limits?.[type]
+    if (!resource) continue
+    // Callers treat a missing limit as "no cap", which is what the sentinel
+    // means - passing -1 through would read as a cap of minus one.
+    if (resource.limit === LIMIT_UNLIMITED) continue
+    result[type] = resource.limit
   }
 
   return Object.keys(result).length > 0 ? result : null
@@ -156,13 +180,13 @@ export function getOrganizationLimits(
 export function getOrganizationViolations(
   limits: PlanChangeLimits | null | undefined,
 ): PlanChangeResourceCompliance[] {
-  return (limits?.organization?.resources ?? []).filter(isOverLimit)
+  return getOrganizationResources(limits).filter(isOverLimit)
 }
 
 export function getNonCompliantProjectIds(
   limits: PlanChangeLimits | null | undefined,
 ): string[] {
-  return (limits?.projects ?? [])
+  return (limits?.projectCompliance ?? [])
     .filter((project) => !project.isCompliant)
     .map((project) => project.$id)
 }

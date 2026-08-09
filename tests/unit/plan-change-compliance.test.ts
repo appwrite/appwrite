@@ -13,6 +13,7 @@ import {
   getNonCompliantProjectIds,
   getOrganizationLimits,
   getOrganizationViolations,
+  LIMIT_UNLIMITED,
   getServerResourceLimits,
   getUnresolvableResources,
   type PlanChangeLimits,
@@ -41,19 +42,13 @@ function withinLimit(type: string, currentUsage: number, limit: number) {
 }
 
 const limits: PlanChangeLimits = {
-  totalProjects: 3,
   nonCompliantProjects: 2,
   canChangePlan: false,
   unsupportedAddons: [],
-  organization: {
-    isCompliant: false,
-    resources: [
-      withinLimit('projects', 1, 2),
-      overLimit('members', 4, 1),
-      withinLimit('domains', 0, 1),
-    ],
-  },
-  projects: [
+  projects: withinLimit('projects', 1, 2),
+  members: overLimit('members', 4, 1),
+  domains: withinLimit('domains', 0, 1),
+  projectCompliance: [
     {
       $id: 'compliant',
       name: 'Compliant',
@@ -120,7 +115,7 @@ describe('getUnresolvableResources', () => {
     // as blockers would block every downgrade.
     const allWithinLimit: PlanChangeLimits = {
       ...limits,
-      projects: [
+      projectCompliance: [
         {
           $id: 'fine',
           name: 'Fine',
@@ -143,11 +138,27 @@ describe('getOrganizationLimits', () => {
     })
   })
 
-  test('returns null when the server did not report them', () => {
-    // Upgrades, and a console running ahead of cloud, have no organization
-    // block - callers must fall back to the plan-config derivation.
-    const { organization: _organization, ...withoutOrg } = limits
-    expect(getOrganizationLimits(withoutOrg)).toBeNull()
+  test('omits uncapped resources rather than leaking the sentinel', () => {
+    // -1 means "no cap". Passing it through would read as a cap of minus one
+    // and flag every organization as over limit.
+    const uncapped: PlanChangeLimits = {
+      ...limits,
+      projects: { ...withinLimit('projects', 9, 0), limit: LIMIT_UNLIMITED },
+    }
+
+    const result = getOrganizationLimits(uncapped)
+    expect(result).not.toBeNull()
+    expect(result).not.toHaveProperty('projects')
+    expect(result?.members).toBe(1)
+  })
+
+  test('returns null when the server reported none', () => {
+    // A console running ahead of cloud gets the older shape - callers must fall
+    // back to the plan-config derivation.
+    const { projects: _p, members: _m, domains: _d, ...withoutOrg } = limits
+    expect(
+      getOrganizationLimits(withoutOrg as unknown as PlanChangeLimits),
+    ).toBeNull()
     expect(getOrganizationLimits(null)).toBeNull()
   })
 })

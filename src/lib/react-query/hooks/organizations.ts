@@ -19,6 +19,7 @@ import {
   type BillingPlanTier as BillingPlanTierType,
 } from '@/lib/constants/billing-plan'
 import type { Organization } from '@/lib/utils/mock-data'
+import type { PlanChangeLimits } from '@/lib/billing/plan-change-compliance'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
@@ -2943,7 +2944,9 @@ export function usePlanEstimation(
 
   return {
     estimation: data,
-    limits: data?.limits ?? null,
+    // The generated SDK model still carries the pre-flattening shape; the local
+    // type is the one that matches what cloud sends.
+    limits: (data?.limits as PlanChangeLimits | undefined) ?? null,
     direction: data?.direction ?? null,
     isLoading,
     isFetching,
