@@ -104,6 +104,23 @@ class XList extends Action
             $queries[] = Query::search('search', $search);
         }
 
+        /**
+         * Ordering by '$createdAt' alone is not deterministic, files created within the
+         * same timestamp can be returned in any order. Break the tie on '$sequence'.
+         */
+        $orders = Query::getByType($queries, [
+            Query::TYPE_ORDER_ASC,
+            Query::TYPE_ORDER_DESC,
+            Query::TYPE_ORDER_RANDOM,
+        ], false);
+
+        if (\count($orders) === 1
+            && $orders[0]->getMethod() === Query::TYPE_ORDER_DESC
+            && $orders[0]->getAttribute() === '$createdAt'
+        ) {
+            $queries[] = Query::orderDesc('$sequence');
+        }
+
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
