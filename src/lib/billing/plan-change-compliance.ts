@@ -9,12 +9,29 @@ import {
  * `POST /v1/organizations/:organizationId/plan/estimations`.
  *
  * The server is the authority on whether a plan change is allowed. It reports
- * only the resources that are *over* the target plan limit, so a resource type
- * missing from a project's `resources` list is within limits.
+ * every plan-limited resource with its usage and limit, flagging the ones over
+ * limit with `status: 'over_limit'`. A resource type absent from the list is
+ * not capped by the target plan at all.
  */
-export type PlanChangeLimits = Models.PlanChangeLimits
-export type PlanChangeProjectCompliance = Models.PlanChangeProjectCompliance
 export type PlanChangeResourceCompliance = Models.PlanChangeResourceCompliance
+export type PlanChangeProjectCompliance = Models.PlanChangeProjectCompliance
+
+export type PlanChangeOrganizationCompliance = {
+  isCompliant: boolean
+  resources: PlanChangeResourceCompliance[]
+}
+
+/**
+ * `organization` is declared locally because the console SDK is regenerated
+ * from the cloud spec on its own cadence and does not carry the field yet.
+ * Drop this extension once the generated model includes it.
+ */
+export type PlanChangeLimits = Models.PlanChangeLimits & {
+  organization?: PlanChangeOrganizationCompliance
+}
+
+/** Organization-level resources, capped per team rather than per project. */
+export type OrganizationResourceType = 'projects' | 'members' | 'domains'
 
 const SELECTABLE_RESOURCE_TYPES = new Set<string>(
   DOWNGRADE_RESOURCE_TYPES.map(({ id }) => id),
@@ -22,6 +39,10 @@ const SELECTABLE_RESOURCE_TYPES = new Set<string>(
 
 function isSelectableResourceType(type: string): type is DowngradeResourceType {
   return SELECTABLE_RESOURCE_TYPES.has(type)
+}
+
+function isOverLimit(resource: PlanChangeResourceCompliance): boolean {
+  return resource.status === 'over_limit'
 }
 
 export function getProjectCompliance(
@@ -32,10 +53,10 @@ export function getProjectCompliance(
 }
 
 /**
- * Per-resource limits the server flagged as exceeded for a project.
+ * Per-resource limits the server reports for a project, over limit or not.
  *
- * Resource types the server did not flag are omitted: they are within the
- * target plan's limits and need no selection.
+ * Resource types the server omits are not capped by the target plan, so they
+ * carry no limit to display and need no selection.
  */
 export function getServerResourceLimits(
   limits: PlanChangeLimits | null | undefined,
@@ -54,9 +75,12 @@ export function getServerResourceLimits(
 }
 
 /**
- * Over-limit resources the console has no selection UI for (for example
- * `collections`). These still block the change, so they are surfaced with the
- * server's resolution hint instead of being silently dropped.
+ * Resources that are over limit and have no selection UI to resolve them (for
+ * example `platforms` or `webhooks`). These still block the change, so they are
+ * surfaced with the server's resolution hint instead of being silently dropped.
+ *
+ * Resources within limits are skipped: the server reports those too, and
+ * treating them as blockers would wedge every downgrade.
  */
 export function getUnresolvableResources(
   limits: PlanChangeLimits | null | undefined,
@@ -73,6 +97,7 @@ export function getUnresolvableResources(
 
   for (const project of limits?.projects ?? []) {
     for (const resource of project.resources ?? []) {
+      if (!isOverLimit(resource)) continue
       if (isSelectableResourceType(resource.type)) continue
       entries.push({
         projectId: project.$id,
@@ -99,6 +124,39 @@ export function getComplianceErrors(
       projectName: project.name || project.$id,
       error: project.error!,
     }))
+}
+
+/**
+ * Organization-level limits (projects, members, domains) as reported by the
+ * server. Returns null when the server did not report them, which is the case
+ * for upgrades and for a console running against an older cloud - callers fall
+ * back to deriving them from the plan config.
+ */
+export function getOrganizationLimits(
+  limits: PlanChangeLimits | null | undefined,
+): Partial<Record<OrganizationResourceType, number>> | null {
+  const resources = limits?.organization?.resources
+  if (!resources?.length) return null
+
+  const result: Partial<Record<OrganizationResourceType, number>> = {}
+  for (const resource of resources) {
+    if (
+      resource.type === 'projects' ||
+      resource.type === 'members' ||
+      resource.type === 'domains'
+    ) {
+      result[resource.type] = resource.limit
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : null
+}
+
+/** Over-limit organization resources, for surfacing the server's hints. */
+export function getOrganizationViolations(
+  limits: PlanChangeLimits | null | undefined,
+): PlanChangeResourceCompliance[] {
+  return (limits?.organization?.resources ?? []).filter(isOverLimit)
 }
 
 export function getNonCompliantProjectIds(

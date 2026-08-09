@@ -20,7 +20,10 @@ import {
   type DowngradeResourceValidationHandle,
 } from './DowngradeResourceValidation'
 import type { DowngradeResourceImpact } from '@/lib/billing/downgrade-plan-limits'
-import type { PlanChangeLimits } from '@/lib/billing/plan-change-compliance'
+import {
+  getOrganizationLimits,
+  type PlanChangeLimits,
+} from '@/lib/billing/plan-change-compliance'
 import type { DeletedOrganizationImpact } from '@/lib/billing/fetch-deleted-org-impact'
 
 const DOWNGRADE_SELECTION_PAGE_SIZE = 5
@@ -123,9 +126,17 @@ export function DowngradeValidation({
   const { account } = useAuth()
   const accountModel = account as Models.User | undefined
   const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
-  const projectsLimit = limits.projects
-  const membersLimit = limits.members
-  const domainsLimit = limits.domains
+
+  // The server reports org-level caps authoritatively; the plan-config
+  // derivation (which leans on plan-name heuristics) is only the fallback for
+  // upgrades and for a console running ahead of cloud.
+  const serverOrgLimits = useMemo(
+    () => getOrganizationLimits(planChangeLimits),
+    [planChangeLimits],
+  )
+  const projectsLimit = serverOrgLimits?.projects ?? limits.projects
+  const membersLimit = serverOrgLimits?.members ?? limits.members
+  const domainsLimit = serverOrgLimits?.domains ?? limits.domains
 
   const needsProjectSelection =
     projectsLimit !== null && projectsTotal > projectsLimit
