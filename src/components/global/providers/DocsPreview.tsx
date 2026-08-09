@@ -1,18 +1,13 @@
 'use client'
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
-  useState,
-  type ReactNode,
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ExternalLink, Loader2, X } from 'lucide-react'
-import { useLocation } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   Breadcrumb,
@@ -38,21 +33,11 @@ import {
   resolveDocsPreviewView,
   type DocsPreviewView,
 } from '@/lib/docs/docs-preview-menu'
-import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigation'
 import { getDocsPage } from '@/lib/docs/content'
-import {
-  isAgentDocsEnabled,
-  isAgentDocsSlug,
-} from '@/lib/docs/agent-docs-feature'
-import {
-  isFirewallDocsEnabled,
-  isFirewallDocsSlug,
-} from '@/lib/docs/firewall-docs-feature'
-import {
-  isPartnersDocsEnabled,
-  isPartnersDocsSlug,
-} from '@/lib/docs/partners-docs-feature'
+import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
+import { isFirewallDocsSlug } from '@/lib/docs/firewall-docs-feature'
+import { isPartnersDocsSlug } from '@/lib/docs/partners-docs-feature'
 import { CLI_SHELL_COLLAPSED_HEIGHT_PX } from '@/lib/cli-shell/constants'
 import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import {
@@ -62,117 +47,10 @@ import {
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
-import { useConsoleRightPane } from './ConsoleRightPaneContext'
-
-const AUTH_ROUTE_PATHNAMES = new Set([
-  '/sign-in',
-  '/sign-up',
-  '/recovery',
-  '/mfa',
-  '/join',
-  '/sign-out',
-  '/verify-email',
-])
-
-function isDocsPreviewBlockedPath(pathname: string): boolean {
-  return AUTH_ROUTE_PATHNAMES.has(pathname)
-}
+import { useDocsPreview } from './DocsPreviewContext'
 
 function getDocsPreviewUrl(slug: string): string {
   return slug ? buildConsoleUrl(`/docs/${slug}`) : buildConsoleUrl('/docs/')
-}
-
-type DocsPreviewOpenOptions = {
-  view?: DocsPreviewView
-}
-
-type DocsPreviewContextValue = {
-  isOpen: boolean
-  slug: string | null
-  view: DocsPreviewView
-  openDocsPreview: (slug: string, options?: DocsPreviewOpenOptions) => void
-  closeDocsPreview: () => void
-}
-
-const DocsPreviewContext = createContext<DocsPreviewContextValue | null>(null)
-
-export function useDocsPreview() {
-  const context = useContext(DocsPreviewContext)
-  if (!context) {
-    return {
-      isOpen: false,
-      slug: null,
-      view: 'article',
-      openDocsPreview: () => {},
-      closeDocsPreview: () => {},
-    }
-  }
-  return context
-}
-
-export function DocsPreviewProvider({ children }: { children: ReactNode }) {
-  const location = useLocation()
-  const { showDocs, hideRightPane } = useConsoleRightPane()
-  const isAuthBlocked = useMemo(
-    () => isDocsPreviewBlockedPath(location.pathname),
-    [location.pathname],
-  )
-  const isPreviewAllowed = useMemo(
-    () => !isAuthBlocked && isConsoleDocsPreviewPath(location.pathname),
-    [isAuthBlocked, location.pathname],
-  )
-  const [isOpen, setIsOpen] = useState(false)
-  const [slug, setSlug] = useState<string | null>(null)
-  const [view, setView] = useState<DocsPreviewView>('article')
-
-  const openDocsPreview = useCallback(
-    (nextSlug: string, options?: DocsPreviewOpenOptions) => {
-      if (!isPreviewAllowed) return
-      if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
-      if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
-      if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
-      showDocs()
-      setSlug(nextSlug)
-      setView(resolveDocsPreviewView(nextSlug, options?.view))
-      setIsOpen(true)
-    },
-    [isPreviewAllowed, showDocs],
-  )
-
-  const closeDocsPreview = useCallback(() => {
-    setIsOpen(false)
-    setSlug(null)
-    setView('article')
-    hideRightPane()
-  }, [hideRightPane])
-
-  useEffect(() => {
-    if (!isPreviewAllowed) {
-      if (isOpen) {
-        setIsOpen(false)
-        setSlug(null)
-        setView('article')
-      }
-      hideRightPane()
-    }
-  }, [hideRightPane, isPreviewAllowed, isOpen])
-
-  const value = useMemo(
-    () => ({
-      isOpen,
-      slug,
-      view,
-      openDocsPreview,
-      closeDocsPreview,
-    }),
-    [isOpen, slug, view, openDocsPreview, closeDocsPreview],
-  )
-
-  return (
-    <DocsPreviewContext.Provider value={value}>
-      {children}
-    </DocsPreviewContext.Provider>
-  )
 }
 
 export function DocsPreviewContent() {

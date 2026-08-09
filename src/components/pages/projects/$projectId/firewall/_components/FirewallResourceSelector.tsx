@@ -323,7 +323,7 @@ export function FirewallResourceSelector({
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="max-h-[280px]">
+          <CommandList className="min-h-[180px] max-h-[280px]">
             {showListSkeleton ? (
               <div className="space-y-0.5 p-1" aria-hidden>
                 {Array.from({ length: 6 }, (_, index) => (

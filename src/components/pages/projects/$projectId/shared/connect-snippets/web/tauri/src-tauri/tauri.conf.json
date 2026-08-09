@@ -1,0 +1,17 @@
+{
+  "productName": "Connect QA",
+  "version": "1.0.0",
+  "identifier": "io.appwrite.connectqa",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": null
+    }
+  }
+}

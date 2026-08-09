@@ -72,6 +72,11 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   vitejs: 'vite.svg',
   'vite-js': 'vite.svg',
 
+  ionic: 'ionic.svg',
+  capacitor: 'capacitor.svg',
+  capacitorjs: 'capacitor.svg',
+  tauri: 'tauri.svg',
+
   flutter: 'flutter.svg',
 
   android: 'android.svg',
@@ -99,6 +104,48 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   elysia: 'elysia.svg',
   elysiajs: 'elysia.svg',
   'elysia-js': 'elysia.svg',
+
+  fastify: 'fastify.svg',
+  nestjs: 'nestjs.svg',
+  'nest-js': 'nestjs.svg',
+  nest: 'nestjs.svg',
+
+  fastapi: 'fastapi.svg',
+  'fast-api': 'fastapi.svg',
+  django: 'django.svg',
+  flask: 'flask.svg',
+
+  laravel: 'laravel.svg',
+  symfony: 'symfony.svg',
+
+  rails: 'rails.svg',
+  'ruby-on-rails': 'rails.svg',
+
+  gin: 'gin.svg',
+  echo: 'go.svg',
+  fiber: 'go.svg',
+
+  axum: 'rust.svg',
+  actix: 'actix.svg',
+  'actix-web': 'actix.svg',
+
+  vapor: 'vapor.svg',
+
+  ktor: 'ktor.svg',
+  spring: 'spring.svg',
+  'spring-boot': 'spring.svg',
+  springboot: 'spring.svg',
+  quarkus: 'quarkus.svg',
+
+  serverpod: 'dart.svg',
+  frog: 'dart.svg',
+  'dart-frog': 'dart.svg',
+  dartfrog: 'dart.svg',
+
+  aspnet: 'dotnet.svg',
+  'aspnet-core': 'dotnet.svg',
+  minimal: 'dotnet.svg',
+  controllers: 'dotnet.svg',
 
   pnpm: 'pnpm.svg',
   npm: 'npm.svg',

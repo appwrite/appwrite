@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AgentsView } from '@/components/pages/agent/AgentsView'
+import { redirectLegacyAgentLocation } from '@/lib/assistant/agent-paths'
 
 export const Route = createFileRoute('/_public/agent/$agentId')({
-  component: AgentDetailPage,
+  beforeLoad: async ({ context, location }) => {
+    await redirectLegacyAgentLocation({
+      queryClient: context.queryClient,
+      pathname: location.pathname,
+    })
+  },
 })
-
-function AgentDetailPage() {
-  const { agentId } = Route.useParams()
-  return <AgentsView agentId={agentId} />
-}

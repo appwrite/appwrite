@@ -23,4 +23,18 @@ export const AGENT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     title: 'MCP connections',
     keywords: ['mcp', 'server', 'oauth', 'tools', 'connect'],
   },
+  {
+    sectionId: 'usage',
+    title: 'Usage',
+    keywords: [
+      'usage',
+      'runs',
+      'messages',
+      'conversations',
+      'tokens',
+      'tool calls',
+      'automations',
+      'metrics',
+    ],
+  },
 ]

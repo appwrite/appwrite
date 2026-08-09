@@ -9,6 +9,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Server Error': 'サーバーエラー',
   'Connection Error': '接続エラー',
   'Request Timeout': 'リクエストがタイムアウトしました',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'データベースがタイムアウトしました。クエリを調整するか、インデックスを追加してください。',
   'Something went wrong. Please try again.':
     '問題が発生しました。もう一度お試しください。',
   // Punctuated fragments and short segments
@@ -873,6 +875,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '購読する Realtime チャンネルを作成します。複数のリソースに一致させるにはワイルドカード (*) を使用してください。',
   'Select events that will trigger your function or webhook.':
     '関数または Webhook をトリガーするイベントを選択してください。',
+  'Select file': 'ファイルを選択',
+  'Select tool': 'ツールを選択',
   'e.g. account or databases.*.tables.*.rows.*':
     '例: account または databases.*.tables.*.rows.*',
   'e.g. databases.*.tables.*.rows.*.create':

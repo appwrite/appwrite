@@ -280,7 +280,7 @@ export function ImpersonateConsoleUserPopover() {
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           </div>
-          <CommandList className="max-h-[280px]">
+          <CommandList className="min-h-[180px] max-h-[280px]">
             {showRecentSection && (
               <CommandGroup heading={t('Recent')}>
                 {recentImpersonationUsers.map((recent) => {

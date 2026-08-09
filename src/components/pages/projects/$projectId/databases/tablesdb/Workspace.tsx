@@ -235,6 +235,12 @@ export function Workspace({
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
   )
 
+  const effectiveTableId = tableId === '-' ? undefined : tableId
+  // Prefer the dedicated table query so the shell stays mounted when the table
+  // is not on the first page of dbTables (or while that list is still settling).
+  const { table: tableDataForStatus, isLoading: tableDetailLoading } =
+    useProjectTable(projectId, databaseId, DB_KIND, effectiveTableId)
+
   // Requested page query (drives fetch when user changes page)
   const { isFetching: sidebarTablesFetching } = useProjectTables(
     projectId,
@@ -286,8 +292,25 @@ export function Workspace({
     sidebarTablesLoading && sidebarTables.length === 0
       ? lastSidebarTablesRef.current
       : sidebarTables
-  const selectedTable =
+  const selectedTableFromList =
     tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
+  const selectedTable = useMemo(() => {
+    if (tableId === '-') return undefined
+    if (selectedTableFromList) return selectedTableFromList
+    if (!tableDataForStatus) return undefined
+    const t = tableDataForStatus as Record<string, unknown>
+    const attrs = t.attributes as unknown[] | undefined
+    const idxs = t.indexes as unknown[] | undefined
+    return {
+      $id: String(t.$id ?? tableId),
+      name: (t.name as string) || 'Unnamed Table',
+      databaseId,
+      rows: (t.total as number) || 0,
+      columns: attrs?.length || 0,
+      indexes: idxs?.length || 0,
+      enabled: t.enabled !== false,
+    }
+  }, [tableId, selectedTableFromList, tableDataForStatus, databaseId])
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   // Sidebar unmounts during loading / "not found" flashes on first table open.
@@ -388,7 +411,7 @@ export function Workspace({
     | undefined
   const { savedAttrKeys: rowsListSelectAttrKeys } = useTablesDbRowsListColumns(
     databaseId,
-    selectedTable?.$id,
+    effectiveTableId,
     accountForPrefs,
   )
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
@@ -626,7 +649,6 @@ export function Workspace({
     },
   })
 
-  const effectiveTableId = tableId === '-' ? undefined : tableId
   const { columns: tableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -634,12 +656,6 @@ export function Workspace({
     effectiveTableId,
   )
   const { indexes: tableIndexes } = useProjectTableIndexes(
-    projectId,
-    databaseId,
-    DB_KIND,
-    effectiveTableId,
-  )
-  const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
     DB_KIND,
@@ -1001,7 +1017,7 @@ export function Workspace({
     )
   }
 
-  if (tableId !== '-' && !selectedTable) {
+  if (tableId !== '-' && !selectedTable && !tableDetailLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -1410,12 +1426,16 @@ export function Workspace({
             )
           ) : (
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate">{selectedTable!.name}</span>
-              <CopyableId
-                id={selectedTable!.$id}
-                size="xs"
-                className="shrink-0"
-              />
+              <span className="truncate">
+                {selectedTable?.name ?? t('Loading...')}
+              </span>
+              {selectedTable ? (
+                <CopyableId
+                  id={selectedTable.$id}
+                  size="xs"
+                  className="shrink-0"
+                />
+              ) : null}
             </div>
           )
         }
@@ -1888,6 +1908,7 @@ export function Workspace({
             {activeTab === 'rows' && selectedTable ? (
               <div className="contents">
                 <RowsSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   canWriteTables={!noCreateTablePermission}
@@ -1914,6 +1935,7 @@ export function Workspace({
             {selectedTable && activeTab === 'documents' && (
               <>
                 <DocumentsJsonSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   rowsUrlSearch={rowsUrlSearch}
@@ -1972,12 +1994,12 @@ export function Workspace({
                 onIndexesAbilityChange={setCanCreateIndex}
               />
             )}
-            {activeTab === 'security' && (
-              <TableSecurity table={selectedTable!} />
-            )}
-            {activeTab === 'settings' && (
-              <TableSettings table={selectedTable!} />
-            )}
+            {activeTab === 'security' && selectedTable ? (
+              <TableSecurity table={selectedTable} />
+            ) : null}
+            {activeTab === 'settings' && selectedTable ? (
+              <TableSettings table={selectedTable} />
+            ) : null}
           </>
         )}
       </div>

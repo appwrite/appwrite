@@ -65,11 +65,12 @@ export function SiteRuntimeImageCard({
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Runtime settings updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })

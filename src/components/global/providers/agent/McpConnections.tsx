@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { Loader2, RefreshCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -513,10 +513,11 @@ export function McpConnectionsPanel() {
 export function McpConnections({
   onOpenSettings,
 }: {
-  /** Prefer in-surface settings (pane) over hard-navigating to /agent. */
+  /** Prefer in-surface settings (pane) over hard-navigating to the org agent page. */
   onOpenSettings?: () => void
 } = {}) {
   const t = useT()
+  const { orgId } = useParams({ strict: false })
   const [open, setOpen] = useState(false)
   const controller = useMcpConnectionsController({
     onConnected: () => setOpen(true),
@@ -583,6 +584,20 @@ export function McpConnections({
               }}
             >
               {t('Open MCP settings')}
+            </Button>
+          ) : orgId ? (
+            <Button
+              asChild
+              type="button"
+              variant="ghost"
+              className="h-8 w-full justify-start px-2 text-[12px] text-muted-foreground hover:text-foreground"
+            >
+              <Link
+                to="/organizations/$orgId/agent/settings/mcp"
+                params={{ orgId }}
+              >
+                {t('Open MCP settings')}
+              </Link>
             </Button>
           ) : (
             <Button

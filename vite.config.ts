@@ -11,6 +11,7 @@ import {
   almostnodeBuildPlugin,
   ensureAlmostnodePatchCache,
 } from './src/lib/cli-shell/vite-almostnode-plugin'
+import { docsContentHmrPlugin } from './src/lib/docs/vite-docs-content-hmr-plugin'
 import {
   getAllMarketingPrerenderPaths,
   getSitesPrerenderBuildSummary,
@@ -132,6 +133,7 @@ export default defineConfig(async () => {
         justBashBrowserEntry,
       }),
       viteReact(),
+      docsContentHmrPlugin(),
       rejectEmptyBuildAssetsPlugin(),
       ...sentryPlugins,
     ],

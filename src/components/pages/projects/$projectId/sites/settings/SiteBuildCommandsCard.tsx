@@ -63,11 +63,12 @@ export function SiteBuildCommandsCard({
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success(t('Build commands updated successfully'))
-      queryClient.invalidateQueries({
-        queryKey: ['site', 'project', projectId, siteId],
-      })
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })

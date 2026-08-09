@@ -12,6 +12,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Server Error': 'שגיאת שרת',
   'Connection Error': 'שגיאת חיבור',
   'Request Timeout': 'חריגת זמן בבקשה',
+  'Database timed out. Try adjusting your queries or adding an index.':
+    'מסד הנתונים חרג מזמן ההמתנה. נסו להתאים את השאילתות או להוסיף אינדקס.',
   'Something went wrong. Please try again.': 'משהו השתבש. נסו שוב.',
   'The requested resource could not be found. It may have been deleted or you may not have permission to access it.':
     'המשאב המבוקש לא נמצא. ייתכן שהוא נמחק או שאין לכם הרשאה לגשת אליו.',
@@ -1145,6 +1147,8 @@ export const heSharedUiDictionary: Record<string, string> = {
     'בנו ערוץ Realtime להרשמה. השתמשו בתווים כלליים (*) כדי להתאים למספר משאבים.',
   'Select events that will trigger your function or webhook.':
     'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
+  'Select file': 'בחירת קובץ',
+  'Select tool': 'בחירת כלי',
   Service: 'שירות',
   'Bucket (optional)': 'באקט (אופציונלי)',
   'Function (optional)': 'פונקציה (אופציונלי)',

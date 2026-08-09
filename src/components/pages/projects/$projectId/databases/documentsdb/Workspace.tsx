@@ -1761,6 +1761,7 @@ export function Workspace({
             {activeTab === 'rows' && selectedTable ? (
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <RowsSpreadsheet
+                  key={selectedTable.$id}
                   table={selectedTable}
                   canWriteRows={!noCreateRowPermission}
                   canWriteTables={!noCreateTablePermission}

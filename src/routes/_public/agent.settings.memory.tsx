@@ -1,16 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AgentPanelContent } from '@/components/global/providers/AgentChat'
+import { redirectLegacyAgentLocation } from '@/lib/assistant/agent-paths'
 
 export const Route = createFileRoute('/_public/agent/settings/memory')({
-  component: SettingsMemoryPage,
+  beforeLoad: async ({ context, location }) => {
+    await redirectLegacyAgentLocation({
+      queryClient: context.queryClient,
+      pathname: location.pathname,
+    })
+  },
 })
-
-function SettingsMemoryPage() {
-  return (
-    <AgentPanelContent
-      variant="page"
-      section="settings"
-      settingsSection="memory"
-    />
-  )
-}

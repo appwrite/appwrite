@@ -1,6 +1,15 @@
 import type { ShortcutRef } from '@/lib/keyboard-shortcuts/global-shortcuts'
 
 /** Display string for shortcuts UI (`mod` → ⌘ on Mac, Ctrl on Windows). */
+export const AGENT_TOGGLE_SHORTCUT_RAW = 'mod+i'
+
+/** Key combos registered for toggling the agent pane (`mod` is not parsed by useKeyboardShortcut). */
+export const AGENT_TOGGLE_SHORTCUT_COMBOS = [
+  'meta+i',
+  'control+i',
+] as const
+
+/** Display string for shortcuts UI (`mod` → ⌘ on Mac, Ctrl on Windows). */
 export const AGENT_NEW_SHORTCUT_RAW = 'mod+shift+n'
 
 /** Key combos registered for creating a new agent (`mod` is not parsed by useKeyboardShortcut). */
@@ -27,6 +36,11 @@ export const AGENT_FOCUS_COMPOSER_SHORTCUT_COMBOS = [
 
 /** Agent shortcuts listed in the keyboard shortcuts reference. */
 export const AGENT_SHORTCUTS: readonly ShortcutRef[] = [
+  {
+    id: 'agent.toggle',
+    description: 'Toggle agent',
+    raw: AGENT_TOGGLE_SHORTCUT_RAW,
+  },
   {
     id: 'agent.new',
     description: 'New agent',

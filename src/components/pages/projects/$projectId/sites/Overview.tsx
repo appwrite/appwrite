@@ -57,6 +57,7 @@ import {
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 
@@ -140,13 +141,10 @@ export function View() {
     return fromList ?? activeDeployment ?? undefined
   }, [recentDeploymentsData?.deployments, site?.deploymentId, activeDeployment])
 
-  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
-    const resolved = activeDeploymentResolved
-    if (!resolved) return undefined
-    const fromHook = activeDeployment
-    if (fromHook?.$id !== resolved.$id) return resolved
-    return { ...fromHook, ...resolved }
-  }, [activeDeployment, activeDeploymentResolved])
+  const activeDeploymentForCard = useMemo(
+    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    [activeDeployment, activeDeploymentResolved],
+  )
   const productionDeployment = productionDeploymentsData?.deployments?.[0]
 
   // Use same site domains as Domains tab, then filter to active deployment

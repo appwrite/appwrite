@@ -806,6 +806,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to load DocumentsDB': 'DocumentsDB の読み込みに失敗しました',
   'Failed to load VectorsDB': 'VectorsDB の読み込みに失敗しました',
   'Failed to load TablesDB': 'TablesDB の読み込みに失敗しました',
+  'Failed to load rows': '行の読み込みに失敗しました',
+  'Failed to load documents': 'ドキュメントの読み込みに失敗しました',
   'Failed to load': '読み込みに失敗しました',
   'Every TablesDB, DocumentsDB, and VectorsDB database in this project.':
     'このプロジェクト内の TablesDB、DocumentsDB、VectorsDB のデータベース一覧です。',

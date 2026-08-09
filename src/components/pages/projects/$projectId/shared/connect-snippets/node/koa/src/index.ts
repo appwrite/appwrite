@@ -1,19 +1,23 @@
 import Koa from 'koa'
 import Router from '@koa/router'
 import { client } from '../lib/appwrite'
-import { Databases } from 'node-appwrite'
+import { Project } from 'node-appwrite'
 
 const app = new Koa()
 const router = new Router()
-const databases = new Databases(client)
+const project = new Project(client)
 
-router.get('/data', async (ctx) => {
-  try {
-    ctx.body = await databases.listCollections('your-database-id')
-  } catch (err) {
-    ctx.status = 500
-    ctx.body = { error: String(err) }
-  }
+router.patch('/v1/policies', async (ctx) => {
+  ctx.body = await project.updatePasswordStrengthPolicy({
+    min: 8,
+    uppercase: true,
+    number: true,
+    symbols: true
+  })
+})
+
+router.get('/v1/policies', async (ctx) => {
+  ctx.body = await project.listPolicies()
 })
 
 app.use(router.routes())

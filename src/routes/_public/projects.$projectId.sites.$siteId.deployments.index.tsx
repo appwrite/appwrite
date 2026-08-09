@@ -30,6 +30,8 @@ const DEPLOYMENTS_SELECT = [
     'providerCommitUrl',
     'providerCommitAuthor',
     'providerCommitAuthorUrl',
+    'screenshotDark',
+    'screenshotLight',
     '$createdAt',
   ]),
 ]

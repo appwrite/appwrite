@@ -520,7 +520,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   // AI chat
   'Add a follow-up': 'הוסיפו הודעת המשך',
   'Add to queue': 'הוספה לתור',
-  'Ask anything, or tell me what to do...': 'שאלו כל דבר, או אמרו לי מה לעשות...',
   'Attach files': 'צירוף קבצים',
   'Voice input': 'קלט קולי',
   'Stop voice input': 'עצירת קלט קולי',
@@ -703,6 +702,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Older: 'ישן יותר',
   'Previous 7 days': '7 הימים הקודמים',
   'Previous 30 days': '30 הימים הקודמים',
+  'Toggle agent': 'פתיחה או סגירה של הסוכן',
   'New agent': 'סוכן חדש',
   'Focus prompt': 'מיקוד בפרומפט',
   'New automation': 'אוטומציה חדשה',

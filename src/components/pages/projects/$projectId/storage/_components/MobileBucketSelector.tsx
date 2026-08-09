@@ -159,7 +159,7 @@ export function MobileBucketSelector() {
                 value={search}
                 onValueChange={setSearch}
               />
-              <CommandList>
+              <CommandList className="min-h-[180px] max-h-[240px]">
                 <CommandEmpty>{t('No buckets found.')}</CommandEmpty>
                 <CommandGroup>
                   {buckets.map((bucket) => (

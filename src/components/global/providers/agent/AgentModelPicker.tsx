@@ -270,7 +270,7 @@ export function AgentModelPicker({
           </div>
           <CommandList
             ref={listScrollRef}
-            className="max-h-[240px] overflow-y-auto overscroll-contain"
+            className="min-h-[180px] max-h-[240px] overflow-y-auto overscroll-contain"
           >
             {showListSkeleton ? (
               <div className="space-y-0.5 p-1" aria-hidden>

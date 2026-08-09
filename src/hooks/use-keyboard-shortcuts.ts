@@ -72,6 +72,29 @@ function eventMatchesRequiredKey(
   ) {
     return true
   }
+  // Quote key: Shift may emit `"` instead of `'`.
+  if (
+    (requiredKey === "'" || requiredKey === '"' || requiredKey === 'quote') &&
+    (pressed === "'" || pressed === '"' || e.code === 'Quote')
+  ) {
+    return true
+  }
+  // Period key: Shift may emit `>` instead of `.`.
+  if (
+    (requiredKey === '.' || requiredKey === '>' || requiredKey === 'period') &&
+    (pressed === '.' || pressed === '>' || e.code === 'Period')
+  ) {
+    return true
+  }
+  // Backslash key (also `|` when Shift is held on some layouts).
+  if (
+    (requiredKey === '\\' ||
+      requiredKey === '|' ||
+      requiredKey === 'backslash') &&
+    (pressed === '\\' || pressed === '|' || e.code === 'Backslash')
+  ) {
+    return true
+  }
   if (
     (requiredKey === 'backquote' || requiredKey === '`') &&
     isBackquoteKey(e)

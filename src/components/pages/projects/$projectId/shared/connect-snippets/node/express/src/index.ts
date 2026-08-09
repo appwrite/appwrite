@@ -1,17 +1,22 @@
 import express from 'express'
 import { client } from '../lib/appwrite'
-import { Databases } from 'node-appwrite'
+import { Project } from 'node-appwrite'
 
 const app = express()
-const databases = new Databases(client)
+const project = new Project(client)
 
-app.get('/data', async (req, res) => {
-  try {
-    const list = await databases.listCollections('your-database-id')
-    res.json(list)
-  } catch (err) {
-    res.status(500).json({ error: String(err) })
-  }
+app.patch('/v1/policies', async (req, res) => {
+  const policy = await project.updatePasswordStrengthPolicy({
+    min: 8,
+    uppercase: true,
+    number: true,
+    symbols: true
+  })
+  res.json(policy)
+})
+
+app.get('/v1/policies', async (req, res) => {
+  res.json(await project.listPolicies())
 })
 
 app.listen(3000, () => console.log('Listening on http://localhost:3000'))

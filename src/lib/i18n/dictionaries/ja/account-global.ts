@@ -347,7 +347,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   // AI chat
   'Add a follow-up': 'フォローアップを追加',
   'Add to queue': 'キューに追加',
-  'Ask anything, or tell me what to do...': '何でも聞いてください。またはやることを指示してください...',
   'Attach files': 'ファイルを添付',
   'Voice input': '音声入力',
   'Stop voice input': '音声入力を停止',
@@ -414,6 +413,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Older: 'それ以前',
   'Previous 7 days': '過去 7 日',
   'Previous 30 days': '過去 30 日',
+  'Toggle agent': 'エージェントの表示を切り替え',
   'New agent': '新しいエージェント',
   'Focus prompt': 'プロンプトにフォーカス',
   'New automation': '新しいオートメーション',

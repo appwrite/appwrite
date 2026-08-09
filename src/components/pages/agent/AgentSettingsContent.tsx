@@ -1,68 +1,82 @@
 import { useMemo, useState } from 'react'
-import { Brain, ChevronLeft, Cpu, ExternalLink, PanelLeft } from 'lucide-react'
+import {
+  BarChart3,
+  Brain,
+  ChevronLeft,
+  Cpu,
+  ExternalLink,
+  PanelLeft,
+  PanelLeftClose,
+} from 'lucide-react'
+import { useParams } from '@tanstack/react-router'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { Models } from '@/components/pages/agent/settings/Models'
 import { Memory } from '@/components/pages/agent/settings/Memory'
 import { Mcp } from '@/components/pages/agent/settings/Mcp'
+import { Usage } from '@/components/pages/agent/settings/Usage'
 import { analyticsAttrs } from '@/lib/analytics-actions'
+import {
+  agentSettingsPath,
+  type AgentSettingsSectionId,
+} from '@/lib/assistant/agent-paths'
 import { AGENT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/agent-settings-cards'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-export type AgentSettingsSectionId = 'models' | 'memory' | 'mcp'
-
-export function agentSettingsPath(section: AgentSettingsSectionId): string {
-  switch (section) {
-    case 'mcp':
-      return '/agent/settings/mcp'
-    case 'memory':
-      return '/agent/settings/memory'
-    case 'models':
-    default:
-      return '/agent/settings/models'
-  }
-}
+export type { AgentSettingsSectionId }
+export { agentSettingsPath }
 
 type AgentSettingsContentProps = {
   section: AgentSettingsSectionId
   onSectionChange: (section: AgentSettingsSectionId) => void
   onBack: () => void
-  /** Right-pane only: open the matching `/agent/settings/...` route in a new tab. */
+  /** Right-pane only: open the matching org agent settings route in a new tab. */
   onOpenInNewTab?: () => void
-  /** Fullscreen page: reopen the conversations sidebar when it is closed. */
-  onOpenSidebar?: () => void
+  /** Page variant: toggle the conversations sidebar. */
+  onToggleSidebar?: () => void
+  /** Page variant: whether the conversations sidebar is open. */
+  sidebarOpen?: boolean
+  /** Optional padding classes for the settings toolbar (match console header). */
+  toolbarClassName?: string
 }
 
 function SettingsSection({ section }: { section: AgentSettingsSectionId }) {
   if (section === 'mcp') return <Mcp />
   if (section === 'memory') return <Memory />
+  if (section === 'usage') return <Usage />
   return <Models />
 }
 
-/** Settings body shared by the /agent page and the right-pane agent surface. */
+/** Settings body shared by the org agent page and the right-pane agent surface. */
 export function AgentSettingsContent({
   section,
   onSectionChange,
   onBack,
   onOpenInNewTab,
-  onOpenSidebar,
+  onToggleSidebar,
+  sidebarOpen,
+  toolbarClassName = 'px-3',
 }: AgentSettingsContentProps) {
   const t = useT()
+  const { orgId } = useParams({ strict: false })
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
-  const navItems = useMemo(
-    () => [
+  const navItems = useMemo(() => {
+    const settingsTo = (id: AgentSettingsSectionId) =>
+      orgId ? agentSettingsPath(orgId, id) : '#'
+    return [
       {
         id: 'models',
         label: t('Models'),
-        to: '/agent/settings/models',
+        to: settingsTo('models'),
         icon: Cpu,
         keywords: ['model', 'llm', 'openai', 'anthropic', 'provider', 'api key'],
       },
       {
         id: 'memory',
         label: t('Memory'),
-        to: '/agent/settings/memory',
+        to: settingsTo('memory'),
         icon: Brain,
         keywords: [
           'memory',
@@ -76,28 +90,53 @@ export function AgentSettingsContent({
       {
         id: 'mcp',
         label: t('MCP'),
-        to: '/agent/settings/mcp',
+        to: settingsTo('mcp'),
         icon: McpIcon,
         keywords: ['mcp', 'server', 'oauth', 'tools', 'connect'],
       },
-    ],
-    [t],
-  )
+      {
+        id: 'usage',
+        label: t('Usage'),
+        to: settingsTo('usage'),
+        icon: BarChart3,
+        keywords: [
+          'usage',
+          'runs',
+          'messages',
+          'conversations',
+          'tokens',
+          'tool calls',
+          'automations',
+          'metrics',
+        ],
+      },
+    ]
+  }, [orgId, t])
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-background">
-      <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
-        <div className="flex min-w-0 items-center gap-1">
-          {onOpenSidebar ? (
+      <div
+        className={cn(
+          'flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border',
+          toolbarClassName,
+        )}
+      >        <div className="flex min-w-0 items-center gap-1">
+          {onToggleSidebar ? (
             <button
               type="button"
-              onClick={onOpenSidebar}
+              onClick={onToggleSidebar}
               className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label={t('Open sidebar')}
-              title={t('Open sidebar')}
-              {...analyticsAttrs('agent-sidebar-open')}
+              aria-label={sidebarOpen ? t('Close sidebar') : t('Open sidebar')}
+              title={sidebarOpen ? t('Close sidebar') : t('Open sidebar')}
+              {...analyticsAttrs(
+                sidebarOpen ? 'agent-sidebar-close' : 'agent-sidebar-open',
+              )}
             >
-              <PanelLeft className="h-3.5 w-3.5" />
+              {sidebarOpen ? (
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              ) : (
+                <PanelLeft className="h-3.5 w-3.5" />
+              )}
             </button>
           ) : null}
           <button
@@ -140,7 +179,8 @@ export function AgentSettingsContent({
               if (
                 sectionId === 'models' ||
                 sectionId === 'memory' ||
-                sectionId === 'mcp'
+                sectionId === 'mcp' ||
+                sectionId === 'usage'
               ) {
                 onSectionChange(sectionId)
               }

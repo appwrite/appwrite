@@ -314,7 +314,12 @@ export async function deleteOrganizationDomain(domainId: string) {
 }
 
 /**
- * Mutation function to update nameservers (retry verification)
+ * Mutation function to verify nameservers (retry verification)
+ *
+ * Checks whether the domain's NS records match Appwrite nameservers and
+ * updates verification status. Use this for external domains after the user
+ * points NS at Appwrite. Do not use updateNameservers here — that endpoint
+ * only changes registrar NS for domains managed (registered) by Appwrite.
  *
  * @param domainId - The domain ID to retry verification for
  * @returns Updated domain object
@@ -323,7 +328,7 @@ export async function retryDomainVerification(domainId: string) {
   if (!domainId) {
     throw new Error('Domain ID is required')
   }
-  const response = await sdk.forConsole.domains.updateNameservers({ domainId })
+  const response = await sdk.forConsole.domains.verifyNameservers({ domainId })
   return response
 }
 
@@ -1040,7 +1045,7 @@ export function useDeleteOrganizationDomain(
 }
 
 /**
- * Hook to retry domain verification (update nameservers)
+ * Hook to retry domain verification (verify nameservers)
  *
  * @param organizationId - The organization ID (for cache invalidation)
  * @returns Mutation hook for retrying verification

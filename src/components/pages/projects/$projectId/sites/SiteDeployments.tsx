@@ -111,6 +111,7 @@ import {
   SITE_SCREENSHOT_CARD_WIDTH,
   SITE_SCREENSHOT_CARD_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
@@ -144,6 +145,10 @@ function detectVcsProvider(
     }
     if (url.includes('gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+      const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -243,6 +248,8 @@ export function SiteDeploymentsView() {
       'providerCommitUrl',
       'providerCommitAuthor',
       'providerCommitAuthorUrl',
+      'screenshotDark',
+      'screenshotLight',
       '$createdAt',
     ]),
   ])
@@ -272,6 +279,8 @@ export function SiteDeploymentsView() {
         'providerCommitUrl',
         'providerCommitAuthor',
         'providerCommitAuthorUrl',
+        'screenshotDark',
+        'screenshotLight',
         '$createdAt',
       ]),
     ],
@@ -322,13 +331,10 @@ export function SiteDeploymentsView() {
     return fromList ?? activeDeployment ?? undefined
   }, [deployments, site?.deploymentId, activeDeployment])
 
-  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
-    const resolved = activeDeploymentResolved
-    if (!resolved) return undefined
-    const fromHook = activeDeployment
-    if (fromHook?.$id !== resolved.$id) return resolved
-    return { ...fromHook, ...resolved }
-  }, [activeDeployment, activeDeploymentResolved])
+  const activeDeploymentForCard = useMemo(
+    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    [activeDeployment, activeDeploymentResolved],
+  )
 
   // Screenshot theme: user override or current active app theme (resolvedTheme when available)
   const defaultScreenshotTheme =

@@ -39,6 +39,9 @@ const EXTENSION_LANGUAGES: Record<string, CodeBlockLanguage> = {
   js: 'javascript',
   vue: 'markup',
   svelte: 'markup',
+  astro: 'markup',
+  yaml: 'yaml',
+  json: 'json',
   dart: 'dart',
   py: 'python',
   php: 'php',
@@ -47,8 +50,10 @@ const EXTENSION_LANGUAGES: Record<string, CodeBlockLanguage> = {
   go: 'go',
   swift: 'swift',
   kt: 'kotlin',
+  kts: 'kotlin',
   java: 'java',
   rs: 'rust',
+  xcconfig: 'plaintext',
 }
 
 function languageForFile(path: string): CodeBlockLanguage | undefined {
@@ -97,12 +102,43 @@ const SAMPLE_OVERRIDES: Record<string, SampleOverride> = {
   node: { dir: 'node/vanilla' },
   deno: { dir: 'deno/vanilla' },
   bun: { dir: 'bun/vanilla' },
-  apple: { envLabel: 'Config (env or xcconfig)' },
-  android: { envLabel: 'Build config / env' },
-  swift: { envLabel: '.env or xcconfig' },
-  dotnet: { envLabel: '.env or launchSettings' },
-  kotlin: { envLabel: '.env or env vars' },
-  java: { envLabel: '.env or env vars' },
+  apple: { envLabel: 'Appwrite.xcconfig' },
+  // android/ only holds language variants (kotlin/, java/), so the bare key
+  // needs an alias per the rule above.
+  android: { dir: 'android/kotlin', envLabel: 'gradle.properties' },
+  'android/kotlin': { envLabel: 'gradle.properties' },
+  'android/java': { envLabel: 'gradle.properties' },
+  flutter: { envLabel: 'env.json', envLanguage: 'json' },
+  'python/python': { dir: 'python/vanilla' },
+  python: { dir: 'python/vanilla' },
+  'php/php': { dir: 'php/vanilla' },
+  php: { dir: 'php/vanilla' },
+  'ruby/ruby': { dir: 'ruby/vanilla' },
+  ruby: { dir: 'ruby/vanilla' },
+  'go/go': { dir: 'go/vanilla' },
+  go: { dir: 'go/vanilla' },
+  'rust/rust': { dir: 'rust/vanilla' },
+  rust: { dir: 'rust/vanilla' },
+  'dart/dart': { dir: 'dart/vanilla' },
+  dart: { dir: 'dart/vanilla' },
+  'swift/swift': { dir: 'swift/vanilla', envLabel: '.env or xcconfig' },
+  swift: { dir: 'swift/vanilla', envLabel: '.env or xcconfig' },
+  'dotnet/dotnet': {
+    dir: 'dotnet/vanilla',
+    envLabel: '.env or launchSettings',
+  },
+  dotnet: { dir: 'dotnet/vanilla', envLabel: '.env or launchSettings' },
+  'kotlin/kotlin': { dir: 'kotlin/vanilla', envLabel: '.env or env vars' },
+  kotlin: { dir: 'kotlin/vanilla', envLabel: '.env or env vars' },
+  'java/java': { dir: 'java/vanilla', envLabel: '.env or env vars' },
+  java: { dir: 'java/vanilla', envLabel: '.env or env vars' },
+  'java/spring': { envLabel: '.env or env vars' },
+  'java/quarkus': { envLabel: '.env or env vars' },
+  'kotlin/spring': { envLabel: '.env or env vars' },
+  'kotlin/ktor': { envLabel: '.env or env vars' },
+  'swift/vapor': { envLabel: '.env or env vars' },
+  'dotnet/minimal': { envLabel: '.env or launchSettings' },
+  'dotnet/controllers': { envLabel: '.env or launchSettings' },
 }
 
 /** Script sources tab-order before same-named markup (+page.ts before +page.svelte). */
@@ -116,11 +152,21 @@ function splitExtension(path: string): [string, string] {
     : [path, '']
 }
 
-/** Appwrite client setup file first, then other appwrite-named files, then the rest. */
+/**
+ * Project config files first (like the generated env entry, they're one-time
+ * setup), then the Appwrite client setup file, then other appwrite-named
+ * files, then the rest.
+ */
 function snippetRank(path: string): number {
-  const [stem] = splitExtension(path.split('/').pop()?.toLowerCase() ?? '')
-  if (stem === 'appwrite') return 0
-  return stem.includes('appwrite') ? 1 : 2
+  const [stem, extension] = splitExtension(
+    path.split('/').pop()?.toLowerCase() ?? '',
+  )
+  if (stem === 'config' || stem.endsWith('.config')) return 0
+  // Build-system config (android/build.gradle.kts) is one-time setup too, but
+  // its stem is 'build.gradle', so match on the extension instead.
+  if (extension === 'kts' || extension === 'gradle') return 0
+  if (stem === 'appwrite') return 1
+  return stem.includes('appwrite') ? 2 : 3
 }
 
 function extensionWeight(extension: string): number {
@@ -159,6 +205,32 @@ function getEnvExample(
   projectId: string,
 ): string {
   const isServer = runtime === 'server' || sdkId === 'node' || sdkId === 'deno'
+  // Client-side mobile SDKs: each platform has its own config channel, and
+  // none of them can read a plain process environment at runtime.
+  if (sdkId === 'react-native') {
+    // Metro only inlines EXPO_PUBLIC_-prefixed variables.
+    return `EXPO_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nEXPO_PUBLIC_APPWRITE_PROJECT_ID=${projectId}`
+  }
+  if (sdkId === 'flutter') {
+    // Consumed by `flutter run --dart-define-from-file=env.json`.
+    return `{\n  "APPWRITE_ENDPOINT": "${endpoint}",\n  "APPWRITE_PROJECT_ID": "${projectId}"\n}`
+  }
+  if (sdkId === 'android') {
+    // Read by build.gradle.kts and baked into BuildConfig.
+    return `APPWRITE_ENDPOINT=${endpoint}\nAPPWRITE_PROJECT_ID=${projectId}`
+  }
+  if (sdkId === 'apple') {
+    // xcconfig treats // as the start of a comment, which would truncate the
+    // endpoint to "https:". $() is an empty variable placed BETWEEN the two
+    // slashes so the raw text never contains //; it expands to nothing, so
+    // the build setting still reads https://host/v1.
+    return [
+      '// Add to the target config, then point both Info.plist keys at',
+      '// $(APPWRITE_ENDPOINT) and $(APPWRITE_PROJECT_ID).',
+      `APPWRITE_ENDPOINT = ${endpoint.replace('//', '/$()/')}`,
+      `APPWRITE_PROJECT_ID = ${projectId}`,
+    ].join('\n')
+  }
   if (sdkId === 'web' && !isServer) {
     if (frameworkId === 'next') {
       return `NEXT_PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nNEXT_PUBLIC_APPWRITE_PROJECT_ID=${projectId}`
@@ -166,7 +238,7 @@ function getEnvExample(
     if (frameworkId === 'react' && usingId === 'cra') {
       return `REACT_APP_APPWRITE_ENDPOINT=${endpoint}\nREACT_APP_APPWRITE_PROJECT_ID=${projectId}`
     }
-    if (frameworkId === 'sveltekit') {
+    if (frameworkId === 'sveltekit' || frameworkId === 'astro') {
       return `PUBLIC_APPWRITE_ENDPOINT=${endpoint}\nPUBLIC_APPWRITE_PROJECT_ID=${projectId}`
     }
     if (frameworkId === 'angular') {
@@ -200,6 +272,9 @@ export function getCodeFiles(
     const vars = {
       DENO_SDK_SPECIFIER:
         packageManagerId === 'npm' ? 'npm:node-appwrite' : 'jsr:@appwrite/sdk',
+      // Used where a snippet needs the id outside the SDK client, e.g. the
+      // capacitor config's appwrite-callback-<id> WebView scheme.
+      PROJECT_ID: projectId,
     }
     return [
       {
@@ -308,7 +383,7 @@ export function getInstallInstructions(
         options: [
           {
             label: '1. Add to pubspec.yaml',
-            code: 'dependencies:\n  appwrite: ^13.0.0',
+            code: 'dependencies:\n  appwrite: ^25.4.0',
             language: 'plaintext',
           },
           {
@@ -329,7 +404,7 @@ export function getInstallInstructions(
           },
           {
             label: 'Package.swift',
-            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-apple",\n  from: "5.0.0"\n)',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-apple",\n  from: "18.3.0"\n)',
             language: 'swift',
           },
         ],
@@ -340,7 +415,7 @@ export function getInstallInstructions(
         options: [
           {
             label: '1. Add to build.gradle.kts (module)',
-            code: 'implementation("io.appwrite:sdk-for-android:5.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-android:26.0.0")',
             language: 'kotlin',
           },
           {
@@ -392,7 +467,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Add to pubspec.yaml',
-            code: 'dependencies:\n  appwrite: ^13.0.0',
+            code: 'dependencies:\n  appwrite: ^25.4.0',
             language: 'plaintext',
           },
           { label: 'Install', code: 'dart pub get', language: 'bash' },
@@ -444,12 +519,12 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Gradle (build.gradle.kts)',
-            code: 'implementation("io.appwrite:sdk-for-kotlin:12.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-kotlin:19.1.0")\nimplementation("com.google.code.gson:gson:2.14.0")',
             language: 'kotlin',
           },
           {
             label: 'Maven (pom.xml)',
-            code: '<dependency>\n  <groupId>io.appwrite</groupId>\n  <artifactId>sdk-for-kotlin</artifactId>\n  <version>12.0.0</version>\n</dependency>',
+            code: '<dependency>\n  <groupId>io.appwrite</groupId>\n  <artifactId>sdk-for-kotlin</artifactId>\n  <version>19.1.0</version>\n</dependency>\n<dependency>\n  <groupId>com.google.code.gson</groupId>\n  <artifactId>gson</artifactId>\n  <version>2.14.0</version>\n</dependency>',
             language: 'markup',
           },
         ],
@@ -471,7 +546,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Package.swift',
-            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-swift",\n  from: "13.0.0"\n)',
+            code: '.package(\n  url: "https://github.com/appwrite/sdk-for-swift",\n  from: "20.0.0"\n)',
             language: 'swift',
           },
         ],
@@ -482,7 +557,7 @@ export function getInstallInstructions(
         options: [
           {
             label: 'Add to build.gradle.kts',
-            code: 'implementation("io.appwrite:sdk-for-kotlin:12.0.0")',
+            code: 'implementation("io.appwrite:sdk-for-kotlin:19.1.0")\nimplementation("com.google.code.gson:gson:2.14.0")',
             language: 'kotlin',
           },
         ],
@@ -490,4 +565,103 @@ export function getInstallInstructions(
     default:
       return getInstallInstructions('web', 'npm')
   }
+}
+
+function markdownFenceLanguage(
+  language: CodeBlockLanguage | undefined,
+  fileLabel: string,
+): string {
+  if (!language || language === 'plaintext') {
+    const ext = fileLabel.split('.').pop()?.toLowerCase()
+    if (ext && ext !== fileLabel.toLowerCase()) return ext
+    return ''
+  }
+  if (language === 'markup') {
+    const ext = fileLabel.split('.').pop()?.toLowerCase()
+    if (ext === 'svelte' || ext === 'vue' || ext === 'html' || ext === 'xml') {
+      return ext
+    }
+    return 'html'
+  }
+  if (language === 'node' || language === 'deno' || language === 'bun') {
+    return 'javascript'
+  }
+  if (language === 'dotnet') return 'csharp'
+  return language
+}
+
+export type ConnectSdkPromptInput = {
+  projectId: string
+  projectName?: string
+  endpoint: string
+  sdkLabel: string
+  runtime: 'client' | 'server'
+  frameworkLabel?: string
+  usingLabel?: string
+  packageManagerLabel?: string
+  installTitle: string
+  installOptions: InstallOption[]
+  codeFiles: CodeFile[]
+}
+
+/** Markdown handoff for coding agents from the Connect SDK tab. */
+export function buildConnectSdkPrompt(input: ConnectSdkPromptInput): string {
+  const lines: string[] = [
+    'Connect this app to Appwrite using the SDK setup below.',
+    'Apply the install step and create each file with the exact contents shown.',
+    '',
+    '## Project',
+    '',
+    `- Project ID: \`${input.projectId}\``,
+  ]
+
+  if (input.projectName?.trim()) {
+    lines.push(`- Project name: ${input.projectName.trim()}`)
+  }
+
+  lines.push(
+    `- Endpoint: \`${input.endpoint}\``,
+    `- SDK / Platform: ${input.sdkLabel} (${input.runtime})`,
+  )
+
+  if (input.frameworkLabel) {
+    lines.push(`- Framework: ${input.frameworkLabel}`)
+  }
+  if (input.usingLabel) {
+    lines.push(`- Using: ${input.usingLabel}`)
+  }
+  if (input.packageManagerLabel) {
+    lines.push(`- Package manager: ${input.packageManagerLabel}`)
+  }
+
+  lines.push('', `## ${input.installTitle}`, '')
+
+  for (const option of input.installOptions) {
+    const fence = markdownFenceLanguage(option.language, option.label)
+    if (input.installOptions.length > 1) {
+      lines.push(`### ${option.label}`, '')
+    }
+    lines.push(`\`\`\`${fence}`, option.code.trimEnd(), '```', '')
+  }
+
+  if (input.codeFiles.length > 0) {
+    lines.push('## Project files', '')
+    for (const file of input.codeFiles) {
+      const fence = markdownFenceLanguage(file.language, file.label)
+      lines.push(`### \`${file.label}\``, '', `\`\`\`${fence}`, file.code.trimEnd(), '```', '')
+    }
+  }
+
+  lines.push('## Notes', '')
+  if (input.runtime === 'server') {
+    lines.push(
+      '- Server and backend code need an Appwrite API key with the right scopes. Create one in the project console and keep it secret (do not commit it).',
+    )
+  }
+  lines.push(
+    '- Prefer the latest Appwrite SDK release when installing packages.',
+    '- Docs: https://appwrite.io/docs',
+  )
+
+  return lines.join('\n').trimEnd() + '\n'
 }

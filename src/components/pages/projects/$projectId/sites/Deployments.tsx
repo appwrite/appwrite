@@ -120,6 +120,7 @@ import {
   SITE_SCREENSHOT_CARD_WIDTH,
   SITE_SCREENSHOT_CARD_HEIGHT,
 } from '@/lib/sites/screenshot-preview-sizes'
+import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
@@ -151,6 +152,8 @@ const DEPLOYMENTS_SELECT = [
     'providerCommitUrl',
     'providerCommitAuthor',
     'providerCommitAuthorUrl',
+    'screenshotDark',
+    'screenshotLight',
     '$createdAt',
   ]),
 ]
@@ -178,6 +181,10 @@ function detectVcsProvider(
     }
     if (url.includes('gitlab.com')) {
       const { label, Icon } = getVcsProvider('gitlab')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) {
+      const { label, Icon } = getVcsProvider('bitbucket')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
@@ -481,15 +488,12 @@ export function View() {
     activeDeploymentResolved != null &&
     isDeploymentInProgress(activeDeploymentResolved.status)
 
-  // Merge list/hook so status/buildDuration update from realtime list while hook keeps fields
-  // omitted from DEPLOYMENTS_SELECT (e.g. screenshots).
-  const activeDeploymentForCard = useMemo((): Models.Deployment | undefined => {
-    const resolved = activeDeploymentResolved
-    if (!resolved) return undefined
-    const fromHook = activeDeployment
-    if (fromHook?.$id !== resolved.$id) return resolved
-    return { ...fromHook, ...resolved }
-  }, [activeDeployment, activeDeploymentResolved])
+  // Merge list/hook so status/buildDuration update from realtime list while hook keeps
+  // screenshot fields when the list row is missing or has empty screenshot IDs.
+  const activeDeploymentForCard = useMemo(
+    () => mergeActiveDeploymentForCard(activeDeployment, activeDeploymentResolved),
+    [activeDeployment, activeDeploymentResolved],
+  )
 
   const handleDownloadSource = () => {
     if (!projectId || !siteId || !activeDeploymentResolved) return

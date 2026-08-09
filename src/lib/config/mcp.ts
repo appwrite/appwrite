@@ -5,7 +5,7 @@
  */
 
 export const MCP_SERVER_NAME = 'appwrite'
-export const MCP_SERVER_URL = 'https://mcp.appwrite.io/mcp'
+export const MCP_SERVER_URL = 'https://mcp.appwrite.io'
 export const MCP_API_KEY_PLACEHOLDER = 'YOUR_API_KEY'
 export const MCP_SELF_HOSTED_DOCS_URL =
   'https://github.com/appwrite/mcp/blob/main/docs/self-hosted.md'

@@ -105,7 +105,6 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  useRetryDomainVerification,
   usePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
@@ -612,39 +611,11 @@ export function View({ initialData }: ViewProps = {}) {
     }
   }
 
-  // Retry verification
-  const retryVerificationMutation = useRetryDomainVerification(orgId)
-
-  const handleRetryVerification = () => {
-    if (!domainId || !domain) return
-    retryVerificationMutation.mutate(domainId, {
-      onSuccess: (updatedDomain) => {
-        // Check if verified
-        const isVerified =
-          updatedDomain.nameservers?.toLowerCase() === 'appwrite'
-        if (isVerified) {
-          // Invalidate domain data to refresh the page
-          queryClient.invalidateQueries({
-            queryKey: ['domain', domainId]})
-          toast.success(`${domain.domain} ${t('has been verified')}`)
-          setRetryDialogOpen(false)
-        } else {
-          // Still not verified - show error
-          toast.error(
-            t(
-              'Domain verification failed. Please check your domain settings or try again later.',
-            ),
-          )
-        }
-      },
-      onError: (error) => {
-        toast.error(
-          getErrorMessage(error) ||
-            t(
-              'Domain verification failed. Please check your domain settings or try again later.',
-            ),
-        )
-      }})
+  const handleDomainVerified = () => {
+    if (!domainId) return
+    queryClient.invalidateQueries({
+      queryKey: ['domain', domainId],
+    })
   }
 
   const handlePageChange = (page: number) => {
@@ -981,16 +952,9 @@ export function View({ initialData }: ViewProps = {}) {
                       <Button
                         size="sm"
                         onClick={() => setRetryDialogOpen(true)}
-                        disabled={retryVerificationMutation.isPending}
                         className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400 gap-1.5 cursor-pointer"
                       >
-                        <RefreshCw
-                          className={cn(
-                            'h-4 w-4',
-                            retryVerificationMutation.isPending &&
-                              'animate-spin',
-                          )}
-                        />
+                        <RefreshCw className="h-4 w-4" />
                         {t('Retry Verification')}
                       </Button>
                     </div>
@@ -1040,9 +1004,6 @@ export function View({ initialData }: ViewProps = {}) {
                                   size="sm"
                                   onClick={() => setRetryDialogOpen(true)}
                                   className={metadataActionClassName}
-                                  disabled={
-                                    retryVerificationMutation.isPending
-                                  }
                                 >
                                   {t('Verify')}
                                 </Button>
@@ -1105,30 +1066,42 @@ export function View({ initialData }: ViewProps = {}) {
                         {t('Auto renewal')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
-                        <div className="flex items-center gap-1.5">
-                          <code
-                            className={cn(
-                              'text-[12px] font-mono font-medium',
-                              domain.autoRenewal
-                                ? 'text-green-600 dark:text-green-500'
-                                : 'text-yellow-600 dark:text-yellow-500',
-                            )}
-                          >
-                            {domain.autoRenewal ? t('Enabled') : t('Disabled')}
+                        {canManageAutoRenewal ? (
+                          <div className="flex items-center gap-1.5">
+                            <code
+                              className={cn(
+                                'text-[12px] font-mono font-medium',
+                                domain.autoRenewal
+                                  ? 'text-green-600 dark:text-green-500'
+                                  : 'text-yellow-600 dark:text-yellow-500',
+                              )}
+                            >
+                              {domain.autoRenewal
+                                ? t('Enabled')
+                                : t('Disabled')}
+                            </code>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className={metadataActionClassName}
+                              onClick={() =>
+                                navigate({
+                                  to: '/organizations/$orgId/domains/$domainId/settings',
+                                  params: {
+                                    orgId: orgId!,
+                                    domainId: domainId!,
+                                  },
+                                })
+                              }
+                            >
+                              {t('Update')}
+                            </Button>
+                          </div>
+                        ) : (
+                          <code className="text-[12px] font-mono text-foreground">
+                            -
                           </code>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className={metadataActionClassName}
-                            onClick={() =>
-                              navigate({
-                                to: '/organizations/$orgId/domains/$domainId/settings',
-                                params: { orgId: orgId!, domainId: domainId! }})
-                            }
-                          >
-                            {t('Update')}
-                          </Button>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -2257,13 +2230,13 @@ export function View({ initialData }: ViewProps = {}) {
       />
 
       {/* Retry Verification Dialog */}
-      {domain && (
+      {domain && orgId && (
         <RetryVerification
           open={retryDialogOpen}
           onOpenChange={setRetryDialogOpen}
           domain={domain}
-          onRetry={handleRetryVerification}
-          isLoading={retryVerificationMutation.isPending}
+          orgId={orgId}
+          onVerified={handleDomainVerified}
         />
       )}
     </>

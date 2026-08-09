@@ -34,7 +34,20 @@ export function GitLabIcon({ className }: { className?: string }) {
   )
 }
 
-export type VcsProviderId = 'github' | 'gitlab'
+export function BitbucketIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M.778 1.213a.768.768 0 0 0-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.892zM14.52 15.53H9.522L8.17 8.466h7.561z" />
+    </svg>
+  )
+}
+
+export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket'
 
 export interface VcsProviderMeta {
   id: VcsProviderId
@@ -56,6 +69,12 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     label: 'GitLab',
     Icon: GitLabIcon,
     baseUrl: (organization) => `https://gitlab.com/${organization}`,
+  },
+  bitbucket: {
+    id: 'bitbucket',
+    label: 'Bitbucket',
+    Icon: BitbucketIcon,
+    baseUrl: (organization) => `https://bitbucket.org/${organization}`,
   },
 }
 

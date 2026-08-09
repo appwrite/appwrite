@@ -13,7 +13,7 @@ export const MCP_ENDPOINT_PRESETS: Record<
 > = {
   production: {
     label: 'Production',
-    url: 'https://mcp.appwrite.io/mcp',
+    url: MCP_SERVER_URL,
     description: 'Hosted Appwrite MCP',
   },
   localhost: {
