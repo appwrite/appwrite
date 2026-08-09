@@ -54,7 +54,8 @@ Http::get('/v1/graphql')
         group: 'graphql',
         name: 'get',
         auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
-        hide: true,
+        // Preview SDK builds show the whole surface, so they do not hide.
+        hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
         description: '/docs/references/graphql/get.md',
         responses: [
             new SDKResponse(

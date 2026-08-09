@@ -1320,7 +1320,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             )
         ],
         contentType: ContentType::HTML,
-        hide: [APP_SDK_PLATFORM_SERVER],
+        // Preview SDK builds show the whole surface, so they do not hide.
+        hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : [APP_SDK_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
