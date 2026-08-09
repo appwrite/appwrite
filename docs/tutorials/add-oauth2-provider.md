@@ -299,21 +299,14 @@ if (!isValueOfStringEnum(OAuthProvider, provider.key)) {
 
 Without an SDK that includes your provider, enabling it in the UI fails with **Invalid OAuth2 provider**, even when `PATCH /v1/project/oauth2/{providerId}` works via curl.
 
-After the backend endpoints and models land, regenerate specs and SDKs from a running Appwrite container (`bin/specs` and `bin/sdks` are thin wrappers around `php app/cli.php`):
+After the backend endpoints and models land, regenerate specs and SDKs from the repo root with PHP (no Docker stack required; `composer install` must already have been run):
 
 ```bash
 # 1. Regenerate API specs (writes under app/config/specs/)
-docker compose exec appwrite php app/cli.php specs --git=no
+php app/cli.php specs --git=no
 
 # 2. Generate the Console web SDK locally (for local Console development only)
-docker compose exec appwrite php app/cli.php sdks --platform=console --sdk=web --version=latest --git=no
-```
-
-Equivalent shortcuts:
-
-```bash
-docker compose exec appwrite specs --git=no
-docker compose exec appwrite sdks --platform=console --sdk=web --version=latest --git=no
+php app/cli.php sdks --platform=console --sdk=web --version=latest --git=no
 ```
 
 Omit the flags to run the interactive prompts instead. Commit the updated specs with the Appwrite PR; official SDK publishing is handled separately by maintainers.
